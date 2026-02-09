@@ -10,7 +10,7 @@ export function usePairList(): PairListState {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ key: 'transactions' | 'address' | 'pair'; asc: boolean }>({
     key: 'transactions',
-    asc: false
+    asc: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +40,11 @@ export function usePairList(): PairListState {
     const term = search.trim().toLowerCase();
     const filtered = pairs.filter((p) => {
       const pairName = `${p.token0Symbol}/${p.token1Symbol}`.toLowerCase();
-      return !term ||
-        pairName.includes(term) ||
-        (p.address || '').toLowerCase().includes(term) ||
-        (p.token0 || p.token0Address || '').toLowerCase().includes(term) ||
-        (p.token1 || p.token1Address || '').toLowerCase().includes(term);
+      return !term
+        || pairName.includes(term)
+        || (p.address || '').toLowerCase().includes(term)
+        || (p.token0 || p.token0Address || '').toLowerCase().includes(term)
+        || (p.token1 || p.token1Address || '').toLowerCase().includes(term);
     });
 
     const sorted = [...filtered].sort((a, b) => {
@@ -68,9 +68,9 @@ export function usePairList(): PairListState {
   }, [pairs, search, sort]);
 
   const toggleSort = (key: 'transactions' | 'address' | 'pair') => {
-    setSort(prev => ({
+    setSort((prev) => ({
       key,
-      asc: prev.key === key ? !prev.asc : true
+      asc: prev.key === key ? !prev.asc : true,
     }));
   };
 

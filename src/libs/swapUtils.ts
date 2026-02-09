@@ -20,7 +20,7 @@ export function getRouteReserves(route: RoutePair[], tokenA: string): Reserves[]
   if (!route || route.length === 0) return [];
   return orderRoute(route, tokenA).reduce<[Reserves[], string]>(
     ([acc, prev], { token0, token1, liquidityInfo: { reserve0, reserve1 } }) => {
-      const [reserves, next] = token0 === prev ? ([ [reserve0, reserve1], token1 ] as const) : ([ [reserve1, reserve0], token0 ] as const);
+      const [reserves, next] = token0 === prev ? ([[reserve0, reserve1], token1] as const) : ([[reserve1, reserve0], token0] as const);
       return [acc.concat([reserves]), next];
     },
     [[], tokenA],
@@ -74,5 +74,3 @@ export function getPriceImpactForRoute(route: RoutePair[], tokenA: string, amoun
   const pairReserves = getRouteReserves(route, tokenA);
   return getPriceImpactForPairReserves(pairReserves, amountA);
 }
-
-

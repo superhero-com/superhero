@@ -45,5 +45,3 @@ export function extractParentId(post: PostDto | any): string | null {
 
   return scan(post?.tx_args);
 }
-
-

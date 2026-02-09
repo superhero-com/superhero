@@ -1,14 +1,14 @@
-import { DexPairService } from "@/api/generated";
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
-import { PoolCandlestickChart } from "../components/charts/PoolCandlestickChart";
+import { DexPairService } from '@/api/generated';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
+import { PoolCandlestickChart } from '../components/charts/PoolCandlestickChart';
 import {
   PoolHeader,
   PoolStatsOverview,
   PoolReserves,
   PoolComposition,
   PoolTransactions,
-} from "../components/PoolDetail";
+} from '../components/PoolDetail';
 
 export default function PoolDetail() {
   const { poolAddress, id } = useParams();
@@ -17,13 +17,13 @@ export default function PoolDetail() {
 
   const { data: pairData } = useQuery({
     queryFn: () => DexPairService.getPairByAddress({ address: address! }),
-    queryKey: ["DexPairService.getPairByAddress", address],
+    queryKey: ['DexPairService.getPairByAddress', address],
     enabled: !!address,
   });
 
   const { data: pairSummary } = useQuery({
     queryFn: () => DexPairService.getPairSummary({ address: address! }),
-    queryKey: ["DexPairService.getPairSummary", address],
+    queryKey: ['DexPairService.getPairSummary', address],
     enabled: !!address,
   });
 

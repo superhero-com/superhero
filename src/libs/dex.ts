@@ -1,13 +1,5 @@
 import BigNumber from 'bignumber.js';
 
-// Mainnet addresses copied from Superhero DEX defaults
-export const DEX_ADDRESSES = {
-  factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW',
-  router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3',
-  wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa',
-  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh', //
-};
-
 // Use deployment ACIs from external dex-contracts to match sdk expectations
 // @ts-ignore
 import RouterAci from 'dex-contracts-v2/deployment/aci/AedexV2Router.aci.json';
@@ -18,10 +10,20 @@ import PairAci from 'dex-contracts-v2/deployment/aci/AedexV2Pair.aci.json';
 // @ts-ignore
 import Aex9Aci from 'dex-contracts-v2/deployment/aci/FungibleTokenFull.aci.json';
 
+// Mainnet addresses copied from Superhero DEX defaults
+export const DEX_ADDRESSES = {
+  factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW',
+  router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3',
+  wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa',
+  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh', //
+};
+
 // Minimal ACIs (only the entrypoints we use)
 const RouterContract = {
   functions: [
-    { name: 'factory', arguments: [], returns: 'address', stateful: false, payable: false },
+    {
+      name: 'factory', arguments: [], returns: 'address', stateful: false, payable: false,
+    },
     {
       name: 'get_amounts_out',
       arguments: [
@@ -150,7 +152,9 @@ const FactoryContract = {
 
 const PairContract = {
   functions: [
-    { name: 'token0', arguments: [], returns: 'address', stateful: false, payable: false },
+    {
+      name: 'token0', arguments: [], returns: 'address', stateful: false, payable: false,
+    },
     {
       name: 'get_reserves',
       arguments: [],
@@ -166,7 +170,9 @@ const PairContract = {
 
 const Aex9Contract = {
   functions: [
-    { name: 'meta_info', arguments: [], returns: { record: [{ name: 'name', type: 'string' }, { name: 'symbol', type: 'string' }, { name: 'decimals', type: 'int' }] }, stateful: false, payable: false },
+    {
+      name: 'meta_info', arguments: [], returns: { record: [{ name: 'name', type: 'string' }, { name: 'symbol', type: 'string' }, { name: 'decimals', type: 'int' }] }, stateful: false, payable: false,
+    },
     {
       name: 'allowance',
       arguments: [{ name: 'allowance_accounts', type: { record: [{ name: 'from_account', type: 'address' }, { name: 'for_account', type: 'address' }] } }],
@@ -403,7 +409,9 @@ export async function getPairInfo(
   const reserve1 = BigInt(reserves.reserve1);
   const reserveA = token0 === tokenA ? reserve0 : reserve1;
   const reserveB = token0 === tokenA ? reserve1 : reserve0;
-  return { pairAddress: addr, totalSupply, reserveA, reserveB };
+  return {
+    pairAddress: addr, totalSupply, reserveA, reserveB,
+  };
 }
 
 export function sortAddresses(a: string, b: string): [string, string] {
@@ -529,6 +537,3 @@ export async function getLpBalance(
   const { decodedResult } = await pair.balance(owner);
   return BigInt(decodedResult ?? 0);
 }
-
-
-

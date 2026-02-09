@@ -17,7 +17,7 @@ interface WrapUnwrapWidgetProps {
   style?: React.CSSProperties;
 }
 
-export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
+export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) => {
   const { t } = useTranslation('common');
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
@@ -90,7 +90,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         decimals: 18,
         pairs_count: 0,
         created_at: new Date().toISOString(),
-        is_ae: true
+        is_ae: true,
       };
 
       const waeToken = {
@@ -100,7 +100,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         decimals: 18,
         pairs_count: 0,
         created_at: new Date().toISOString(),
-        is_ae: false
+        is_ae: false,
       };
 
       // Determine tokenIn and tokenOut based on mode
@@ -116,7 +116,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         path: [], // Will be handled by executeSwap
         slippagePct: 0.5, // Minimal slippage for wrap/unwrap
         deadlineMins: 20,
-        isExactIn: true
+        isExactIn: true,
       });
 
       // Clear the input and reload account data on success
@@ -132,8 +132,8 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   return (
     <div
       className={cn(
-        "max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
-        className
+        'max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
+        className,
       )}
     >
       {/* Header */}
@@ -150,10 +150,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             variant={mode === 'wrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
               mode === 'wrap'
-                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
+                : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
             Wrap
@@ -164,10 +164,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             variant={mode === 'unwrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
               mode === 'unwrap'
-                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
+                : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
             Unwrap
@@ -213,7 +213,9 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           {/* Label and Balance Row */}
           <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
             <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Amount to {mode}
+              Amount to
+              {' '}
+              {mode}
             </label>
 
             {currentBalance && (
@@ -232,7 +234,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     50%
                   </Button>
@@ -242,7 +244,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     MAX
                   </Button>
@@ -288,10 +290,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           onClick={handleExecute}
           disabled={isExecuteDisabled}
           className={cn(
-            "w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            'w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
             isExecuteDisabled
-              ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0',
           )}
         >
           {isLoading ? (
@@ -313,4 +315,4 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       )}
     </div>
   );
-}
+};

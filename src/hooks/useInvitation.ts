@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  useState, useEffect, useCallback, useMemo,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateKeyPair } from '@aeternity/aepp-sdk';
 import type { Encoded } from '@aeternity/aepp-sdk';
@@ -38,12 +40,14 @@ function writeAllInvitations(list: InvitationInfo[]) {
 
 function addGeneratedInvites(
   inviter: Encoded.AccountAddress,
-  items: Array<{ invitee: Encoded.AccountAddress; secretKey: string; amount: number }>
+  items: Array<{ invitee: Encoded.AccountAddress; secretKey: string; amount: number }>,
 ) {
   const now = Date.now();
   const list = readAllInvitations();
   items.forEach(({ invitee, secretKey, amount }) => {
-    list.unshift({ inviter, invitee, secretKey, amount, date: now });
+    list.unshift({
+      inviter, invitee, secretKey, amount, date: now,
+    });
   });
   writeAllInvitations(list);
 }
@@ -66,7 +70,7 @@ export function useInvitation() {
 
   const [invitationCode, setInvitationCode] = useState<string | undefined>();
   const [invitationList, setInvitationList] = useState<InvitationInfo[]>([]);
-  
+
   // Initialize invitation list from localStorage
   useEffect(() => {
     if (!initialized) {
@@ -113,14 +117,14 @@ export function useInvitation() {
       amount,
       date: now,
     }));
-    
+
     // Update localStorage
     const currentList = readAllInvitations();
     newInvitations.forEach((invitation) => {
       currentList.unshift(invitation);
     });
     writeAllInvitations(currentList);
-    
+
     // Update local state
     setInvitationList(currentList);
 
@@ -130,13 +134,13 @@ export function useInvitation() {
   // Remove stored invite function
   const removeStoredInvite = useCallback((invitee: Encoded.AccountAddress, secretKey?: string) => {
     if (!activeAccount) return;
-    
+
     const list = readAllInvitations();
     const filtered = list.filter(
-      (inv) => inv.secretKey !== secretKey || inv.invitee !== invitee
+      (inv) => inv.secretKey !== secretKey || inv.invitee !== invitee,
     );
     writeAllInvitations(filtered);
-    
+
     // Update local state
     setInvitationList(filtered);
   }, [activeAccount]);
@@ -170,7 +174,7 @@ export function useInvitation() {
 
   // Handle URL hash changes for invitation codes (equivalent to Vue watch)
   useEffect(() => {
-    const hash = location.hash;
+    const { hash } = location;
     if (hash) {
       const hashParsed = new URLSearchParams(hash.replace('#', ''));
       const inviteCode = hashParsed.get(INVITE_CODE_QUERY_KEY);

@@ -1,15 +1,15 @@
 interface LeaderboardSkeletonProps {
   rows?: number;
-  variant?: "table" | "card";
+  variant?: 'table' | 'card';
 }
 
-export function LeaderboardSkeleton({
+export const LeaderboardSkeleton = ({
   rows = 5,
-  variant = "table",
-}: LeaderboardSkeletonProps) {
+  variant = 'table',
+}: LeaderboardSkeletonProps) => {
   const items = Array.from({ length: rows });
 
-  if (variant === "card") {
+  if (variant === 'card') {
     return (
       <div className="flex flex-col gap-3">
         {items.map((_, index) => (
@@ -52,6 +52,4 @@ export function LeaderboardSkeleton({
       ))}
     </div>
   );
-}
-
-
+};

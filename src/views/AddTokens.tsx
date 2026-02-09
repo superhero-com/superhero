@@ -5,9 +5,12 @@ import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
-import { ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts } from '../libs/dex';
+import {
+  ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts,
+} from '../libs/dex';
 
 import { useAeSdk } from '../hooks';
+
 export default function AddTokens() {
   const { activeAccount, sdk } = useAeSdk();
   const toast = useToast();
@@ -18,8 +21,6 @@ export default function AddTokens() {
   const [filter, setFilter] = useState('');
   const [poolExists, setPoolExists] = useState<Record<string, boolean>>({});
   const scanSeqRef = React.useRef(0);
-
-
 
   async function discoverWalletTokens() {
     const mySeq = ++scanSeqRef.current;
@@ -54,7 +55,9 @@ export default function AddTokens() {
                   ? bal
                   : BigInt(new BigNumber(String(bal)).integerValue(BigNumber.ROUND_DOWN).toFixed(0));
                 if (bn > 0n) {
-                  tokensFromMdw.push({ address: String(ct), symbol: sym, name: nm, decimals: decs, balance: fromAettos(bn, decs) });
+                  tokensFromMdw.push({
+                    address: String(ct), symbol: sym, name: nm, decimals: decs, balance: fromAettos(bn, decs),
+                  });
                 } else {
                 }
               } catch (e) {
@@ -72,7 +75,11 @@ export default function AddTokens() {
         const pairs = await getPairs(false);
         const candidates = new Map<string, { address: string; symbol?: string; name?: string; decimals?: number }>();
         for (const t of listed || []) {
-          if (t?.address) candidates.set(t.address, { address: t.address, symbol: t.symbol, name: t.name, decimals: t.decimals });
+          if (t?.address) {
+            candidates.set(t.address, {
+              address: t.address, symbol: t.symbol, name: t.name, decimals: t.decimals,
+            });
+          }
         }
         for (const p of pairs || []) {
           const t0 = p.token0 || p.token0Address;
@@ -98,7 +105,9 @@ export default function AddTokens() {
                   dec = Number(meta?.decimals ?? dec) || 18;
                 }
               } catch { }
-              tokensFromMdw.push({ address: t.address, symbol: String(sym), name: String(nm), decimals: dec, balance: fromAettos(bn, dec) });
+              tokensFromMdw.push({
+                address: t.address, symbol: String(sym), name: String(nm), decimals: dec, balance: fromAettos(bn, dec),
+              });
             }
           } catch { }
         }
@@ -109,7 +118,9 @@ export default function AddTokens() {
       for (const t of tokensFromMdw) {
         const prev = map.get(t.address);
         if (!prev) {
-          map.set(t.address, { address: t.address, symbol: String(t.symbol || 'TKN'), name: String(t.name || t.symbol || 'Token'), decimals: Number(t.decimals || 18), balance: String(t.balance) });
+          map.set(t.address, {
+            address: t.address, symbol: String(t.symbol || 'TKN'), name: String(t.name || t.symbol || 'Token'), decimals: Number(t.decimals || 18), balance: String(t.balance),
+          });
         } else {
           const nextHigher = new BigNumber(t.balance).isGreaterThan(prev.balance) ? String(t.balance) : prev.balance;
           map.set(t.address, { ...prev, balance: nextHigher });
@@ -153,17 +164,17 @@ export default function AddTokens() {
         Detect AEX-9 tokens held by your wallet and quickly create pools or add liquidity for them on the DEX.
       </p>
       <div className="flex gap-2 items-center mb-2">
-        <input 
-          placeholder="Filter by symbol/address" 
-          value={filter} 
-          onChange={(e) => setFilter(e.target.value)} 
+        <input
+          placeholder="Filter by symbol/address"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
           className="flex-1 px-2 py-1.5 rounded bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-purple-400"
         />
-        <AeButton 
-          onClick={() => void discoverWalletTokens()} 
-          disabled={loading} 
-          loading={loading} 
-          variant="secondary-dark" 
+        <AeButton
+          onClick={() => void discoverWalletTokens()}
+          disabled={loading}
+          loading={loading}
+          variant="secondary-dark"
           size="small"
         >
           {loading ? 'Scanning…' : 'Rescan'}
@@ -185,43 +196,49 @@ export default function AddTokens() {
             {filtered.map((t) => (
               <tr key={t.address} className="border-b border-white/10 hover:bg-white/5">
                 <td className="p-3">
-                  <span className="text-white font-medium">{t.symbol}</span>{' '}
-                  <span className="text-white/60 text-xs">({t.name})</span>
+                  <span className="text-white font-medium">{t.symbol}</span>
+                  {' '}
+                  <span className="text-white/60 text-xs">
+                    (
+                    {t.name}
+                    )
+                  </span>
                 </td>
                 <td className="p-3 font-mono text-xs text-white/80">{t.address}</td>
                 <td className="text-right p-3 text-white">{t.balance}</td>
                 <td className="text-center p-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    poolExists[t.address] 
-                      ? 'bg-green-500/20 text-green-400' 
+                    poolExists[t.address]
+                      ? 'bg-green-500/20 text-green-400'
                       : 'bg-gray-500/20 text-gray-400'
-                  }`}>
+                  }`}
+                  >
                     {poolExists[t.address] ? 'Exists' : 'Not found'}
                   </span>
                 </td>
                 <td className="text-right p-3">
                   <div className="flex gap-1 justify-end">
                     {poolExists[t.address] ? (
-                      <AeButton 
-                        onClick={() => navigate(`/pool/add?from=AE&to=${t.address}`)} 
-                        variant="secondary-dark" 
+                      <AeButton
+                        onClick={() => navigate(`/pool/add?from=AE&to=${t.address}`)}
+                        variant="secondary-dark"
                         size="small"
                       >
                         Add liquidity
                       </AeButton>
                     ) : (
-                      <AeButton 
-                        onClick={() => navigate(`/pool/deploy?token=${t.address}`)} 
-                        title="Create new pool and add liquidity" 
-                        variant="secondary-dark" 
+                      <AeButton
+                        onClick={() => navigate(`/pool/deploy?token=${t.address}`)}
+                        title="Create new pool and add liquidity"
+                        variant="secondary-dark"
                         size="small"
                       >
                         Create pool
                       </AeButton>
                     )}
-                    <AeButton 
-                      onClick={() => navigate(`/defi/swap?from=AE&to=${t.address}`)} 
-                      variant="secondary-dark" 
+                    <AeButton
+                      onClick={() => navigate(`/defi/swap?from=AE&to=${t.address}`)}
+                      variant="secondary-dark"
                       size="small"
                     >
                       Swap
@@ -243,5 +260,3 @@ export default function AddTokens() {
     </div>
   );
 }
-
-

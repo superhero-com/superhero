@@ -53,5 +53,3 @@ export default function Spinner({ className = 'w-5 h-5' }: SpinnerProps) {
     </svg>
   );
 }
-
-

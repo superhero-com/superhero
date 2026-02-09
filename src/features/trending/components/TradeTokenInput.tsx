@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { Button } from '../../../components/ui/button';
 import { ChevronDown, ArrowUpDown } from 'lucide-react';
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
 import AssetInput from './AssetInput';
-import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from '../../../libs/decimal';
 
 interface TradeTokenInputProps {
@@ -39,14 +39,13 @@ export default function TradeTokenInput({
   readonly = false,
   isInsufficientBalance = false,
 }: TradeTokenInputProps) {
-  
   const handleTokenAUpdate = (value: string) => {
     // Allow empty string, partial decimals like "0." or "."
     if (value === '' || value === '.') {
       onTokenAChange(undefined);
       return;
     }
-    
+
     const numValue = parseFloat(value);
     // Only update if it's a valid number or allow partial input
     if (!isNaN(numValue) || value.endsWith('.')) {
@@ -60,7 +59,7 @@ export default function TradeTokenInput({
       onTokenBChange(undefined);
       return;
     }
-    
+
     const numValue = parseFloat(value);
     // Only update if it's a valid number or allow partial input
     if (!isNaN(numValue) || value.endsWith('.')) {
@@ -125,10 +124,10 @@ export default function TradeTokenInput({
           disabled={readonly}
           onClick={onToggleTradeView}
           className={cn(
-            "absolute -top-5 left-1/2 transform",
-            "bg-card/90 backdrop-blur-sm border-border w-8 h-8 p-0 rounded-full",
-            "hover:bg-card/70 transition-colors duration-200",
-            "shadow-lg"
+            'absolute -top-5 left-1/2 transform',
+            'bg-card/90 backdrop-blur-sm border-border w-8 h-8 p-0 rounded-full',
+            'hover:bg-card/70 transition-colors duration-200',
+            'shadow-lg',
           )}
         >
           <ArrowUpDown className="h-4 w-4" />

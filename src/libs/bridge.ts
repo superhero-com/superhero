@@ -21,7 +21,9 @@ export const BRIDGE_ABI = [
     ],
     outputs: [],
   },
-  { type: 'function', name: 'native_eth_placeholder', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
+  {
+    type: 'function', name: 'native_eth_placeholder', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }],
+  },
 ];
 
 export async function ensureEthProvider() {
@@ -43,5 +45,3 @@ export async function bridgeEthToAe({ amountEth, aeAccount }: { amountEth: strin
   const tx = await bridge.bridge_out(asset, aeAccount, value, 1, { value });
   return tx.wait?.() ?? tx;
 }
-
-

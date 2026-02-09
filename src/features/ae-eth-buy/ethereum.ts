@@ -1,4 +1,6 @@
-import { BrowserProvider, Contract, parseEther, Eip1193Provider } from 'ethers';
+import {
+  BrowserProvider, Contract, parseEther, Eip1193Provider,
+} from 'ethers';
 import { BRIDGE_CONSTANTS, BRIDGE_ABI } from './constants';
 
 /**
@@ -13,23 +15,23 @@ export async function ensureEthProvider(walletProvider?: Eip1193Provider): Promi
       chainId: parseInt(BRIDGE_CONSTANTS.CHAIN_ID_HEX, 16),
     });
   }
-  
+
   // Otherwise fall back to window.ethereum
   const anyWindow = window as any;
-  
+
   if (!anyWindow.ethereum) {
     throw new Error('No Ethereum provider found. Please install MetaMask or another Web3 wallet.');
   }
-  
+
   const provider = new BrowserProvider(anyWindow.ethereum);
-  
+
   try {
     // Request account access
     await anyWindow.ethereum.request({ method: 'eth_requestAccounts' });
   } catch (error) {
     throw new Error('User denied account access');
   }
-  
+
   return provider;
 }
 
@@ -39,7 +41,7 @@ export async function ensureEthProvider(walletProvider?: Eip1193Provider): Promi
 export async function ensureCorrectNetwork(provider: BrowserProvider): Promise<void> {
   const anyWindow = window as any;
   const network = await provider.getNetwork();
-  
+
   // Check if we're on mainnet (chainId 1)
   if (network.chainId !== 1n) {
     try {
@@ -63,14 +65,14 @@ export async function ensureCorrectNetwork(provider: BrowserProvider): Promise<v
  */
 export async function getEthBalance(provider: BrowserProvider, accountAddress?: string): Promise<string> {
   let address: string;
-  
+
   if (accountAddress) {
     address = accountAddress;
   } else {
     const signer = await provider.getSigner();
     address = await signer.getAddress();
   }
-  
+
   const balance = await provider.getBalance(address);
   return balance.toString();
 }
@@ -103,19 +105,19 @@ export async function bridgeEthToAe({
 
   const provider = await ensureEthProvider(walletProvider);
   await ensureCorrectNetwork(provider);
-  
+
   const signer = await provider.getSigner();
   const bridge = new Contract(
     BRIDGE_CONSTANTS.ETH_BRIDGE_ADDRESS,
     BRIDGE_ABI,
-    signer
+    signer,
   );
 
   // Check balance before bridging
   const signerAddress = await signer.getAddress();
   const balance = await provider.getBalance(signerAddress);
   const amountWei = parseEther(amountEth);
-  
+
   if (balance < amountWei) {
     throw new Error(`Insufficient ETH balance. Required: ${amountEth} ETH`);
   }
@@ -127,12 +129,12 @@ export async function bridgeEthToAe({
       aeAccount,
       amountWei,
       BRIDGE_CONSTANTS.ACTION_TYPE.ETH_TO_AE,
-      { value: amountWei }
+      { value: amountWei },
     );
 
     // Wait for transaction confirmation
     const receipt = await tx.wait();
-    
+
     return {
       txHash: tx.hash,
       receipt,

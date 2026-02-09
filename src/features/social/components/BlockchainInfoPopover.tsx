@@ -1,17 +1,19 @@
-import React, { useCallback, useMemo, useState, ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
+import React, {
+  useCallback, useMemo, useState, ReactNode,
+} from 'react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
-import { ShieldCheck, X } from "lucide-react";
-import { CONFIG } from "@/config";
-import { cn } from "@/lib/utils";
-import { useTransactionStatus } from "@/hooks/useTransactionStatus";
-import { TransactionsService } from "@/api/generated";
+} from '@/components/ui/dropdown-menu';
+import { ShieldCheck, X } from 'lucide-react';
+import { CONFIG } from '@/config';
+import { cn } from '@/lib/utils';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { TransactionsService } from '@/api/generated';
 
 type BlockchainInfoPopoverProps = {
   txHash: string;
@@ -25,7 +27,7 @@ type BlockchainInfoPopoverProps = {
   triggerClassName?: string; // optional class for custom trigger
 };
 
-export function BlockchainInfoPopover({
+export const BlockchainInfoPopover = ({
   txHash,
   createdAt,
   sender,
@@ -35,7 +37,7 @@ export function BlockchainInfoPopover({
   showLabel,
   triggerContent,
   triggerClassName,
-}: BlockchainInfoPopoverProps) {
+}: BlockchainInfoPopoverProps) => {
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
   const [extraError, setExtraError] = useState<string | null>(null);
@@ -52,14 +54,14 @@ export function BlockchainInfoPopover({
         await TransactionsService.getTransactionByHash({ txHash });
       } catch (e: any) {
         // ignore; popover still works with base data
-        setExtraError(e?.message || "");
+        setExtraError(e?.message || '');
       } finally {
         setExtraLoading(false);
       }
     }
   }, [txHash]);
 
-  const explorerBase = useMemo(() => (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, ""), []);
+  const explorerBase = useMemo(() => (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, ''), []);
   const txUrl = useMemo(() => `${explorerBase}/transactions/${txHash}`, [explorerBase, txHash]);
   const senderUrl = useMemo(() => (sender ? `${explorerBase}/accounts/${sender}` : undefined), [explorerBase, sender]);
   const contractUrl = useMemo(() => (contract ? `${explorerBase}/contracts/${contract}` : undefined), [explorerBase, contract]);
@@ -81,8 +83,8 @@ export function BlockchainInfoPopover({
           type="button"
           className={cn(
             triggerContent
-              ? cn("inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none hover:shadow-none active:shadow-none", triggerClassName)
-              : cn("inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20", className),
+              ? cn('inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none hover:shadow-none active:shadow-none', triggerClassName)
+              : cn('inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20', className),
           )}
           onClick={(e) => e.stopPropagation()}
           aria-label="Blockchain info"
@@ -120,11 +122,18 @@ export function BlockchainInfoPopover({
           {status?.confirmed && (
             <Badge className="border-green-500/30 bg-green-500/25 text-green-300">Mined</Badge>
           )}
-          {typeof status?.confirmations === "number" && status?.confirmations >= 0 && (
-            <span className="text-xs text-white/80">{status.confirmations} conf</span>
+          {typeof status?.confirmations === 'number' && status?.confirmations >= 0 && (
+            <span className="text-xs text-white/80">
+              {status.confirmations}
+              {' '}
+              conf
+            </span>
           )}
           {status?.blockNumber && (
-            <span className="text-xs text-white/80">• #{status.blockNumber}</span>
+            <span className="text-xs text-white/80">
+              • #
+              {status.blockNumber}
+            </span>
           )}
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
@@ -196,7 +205,7 @@ export function BlockchainInfoPopover({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
 function safeStringify(value: unknown): string {
   try {
@@ -207,5 +216,3 @@ function safeStringify(value: unknown): string {
 }
 
 export default BlockchainInfoPopover;
-
-

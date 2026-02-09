@@ -12,5 +12,3 @@ export default function ImageGallery({ images = [], onClose }: { images: string[
     </div>
   );
 }
-
-

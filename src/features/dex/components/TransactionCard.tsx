@@ -138,18 +138,18 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
         description: 'Transaction',
       };
     }
-    
+
     // Map tx_type to translation keys
     const translationKeyMap: Record<string, string> = {
-      'swap_exact_tokens_for_tokens': 'transactions.swapExactTokensForTokens',
-      'swap_exact_tokens_for_ae': 'transactions.swapExactTokensForAe',
-      'swap_exact_ae_for_tokens': 'transactions.swapExactAeForTokens',
-      'add_liquidity': 'transactions.addLiquidity',
-      'add_liquidity_ae': 'transactions.addLiquidityAe',
-      'remove_liquidity': 'transactions.removeLiquidity',
-      'remove_liquidity_ae': 'transactions.removeLiquidityAe',
+      swap_exact_tokens_for_tokens: 'transactions.swapExactTokensForTokens',
+      swap_exact_tokens_for_ae: 'transactions.swapExactTokensForAe',
+      swap_exact_ae_for_tokens: 'transactions.swapExactAeForTokens',
+      add_liquidity: 'transactions.addLiquidity',
+      add_liquidity_ae: 'transactions.addLiquidityAe',
+      remove_liquidity: 'transactions.removeLiquidity',
+      remove_liquidity_ae: 'transactions.removeLiquidityAe',
     };
-    
+
     const translationKey = translationKeyMap[txType];
     if (translationKey) {
       return {
@@ -158,7 +158,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
         description: t(`${translationKey}.description`),
       };
     }
-    
+
     return baseConfig;
   };
 
@@ -166,12 +166,11 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
   const isLiquidityTransaction = transaction.tx_type.includes('liquidity');
 
-  const hasSwapInfo =
-    !!transaction.swap_info &&
-    (transaction.swap_info.amount0In !== '0' ||
-      transaction.swap_info.amount1In !== '0' ||
-      transaction.swap_info.amount0Out !== '0' ||
-      transaction.swap_info.amount1Out !== '0');
+  const hasSwapInfo = !!transaction.swap_info
+    && (transaction.swap_info.amount0In !== '0'
+      || transaction.swap_info.amount1In !== '0'
+      || transaction.swap_info.amount0Out !== '0'
+      || transaction.swap_info.amount1Out !== '0');
 
   const formatTimestamp = (iso: string) => {
     const date = new Date(iso);
@@ -182,7 +181,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
   const formattedExactTime = useMemo(
     () => moment(transaction.created_at).format('YYYY-MM-DD HH:mm:ss'),
-    [transaction.created_at]
+    [transaction.created_at],
   );
 
   const formatTokenAmount = (amount: string, decimals: number) => {
@@ -317,19 +316,26 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
                   <div className="font-mono text-lg font-semibold text-foreground">
                     {formatTokenAmount(transaction.pair_mint_info.amount0, transaction.pair.token0.decimals)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{transaction.pair.token0.symbol} {t('transactions.amount')}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {transaction.pair.token0.symbol}
+                    {' '}
+                    {t('transactions.amount')}
+                  </div>
                 </div>
                 <div className="rounded-lg bg-background/40 p-3 text-center">
                   <div className="font-mono text-lg font-semibold text-foreground">
                     {formatTokenAmount(transaction.pair_mint_info.amount1, transaction.pair.token1.decimals)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{transaction.pair.token1.symbol} {t('transactions.amount')}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {transaction.pair.token1.symbol}
+                    {' '}
+                    {t('transactions.amount')}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
-
 
         {/* Footer */}
         <div className="mt-4 rounded-xl border border-border/60 bg-gradient-to-r from-slate-500/5 to-gray-500/5 p-3">

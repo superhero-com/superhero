@@ -37,10 +37,10 @@ export default function VoteSubject({ voteState }: VoteSubjectProps) {
     <div className="text-white flex items-center gap-2 flex-wrap">
       <span className="font-medium">{subjectText}</span>
       <div className="flex items-center gap-4">
-      <span className="text-white/80"> to </span>
-      <AddressAvatarWithChainName address={beneficiary} variant="feed" />
+        <span className="text-white/80"> to </span>
+        <AddressAvatarWithChainName address={beneficiary} variant="feed" />
       </div>
-      
+
     </div>
   );
 }

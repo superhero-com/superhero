@@ -10,7 +10,7 @@ export default function FractionFormatter({ fractionalPrice }: FractionFormatter
     <div className="fraction-formatter flex items-center">
       <div>{fractionalPrice.number}</div>
       {fractionalPrice.zerosCount && (
-        <div 
+        <div
           className="text-xs"
           style={{ marginTop: '5px', fontSize: '12px', padding: '0 2px' }}
         >

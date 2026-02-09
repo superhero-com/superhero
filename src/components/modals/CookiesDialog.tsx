@@ -2,7 +2,7 @@ import React from 'react';
 import AeButton from '../AeButton';
 
 export default function CookiesDialog({ onClose }: { onClose: () => void }) {
-    return (
+  return (
     <div className="p-2">
       <h3 className="text-xl font-bold text-white mb-3">Cookies</h3>
       <p className="text-white/80 mb-4 leading-relaxed">We use local storage for preferences. Allow?</p>
@@ -13,5 +13,3 @@ export default function CookiesDialog({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-

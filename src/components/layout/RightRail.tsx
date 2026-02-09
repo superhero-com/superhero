@@ -1,14 +1,14 @@
-import { useMemo } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useMemo } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAccountBalances } from "../../hooks/useAccountBalances";
-import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { BuyAeWidget } from "../../features/ae-eth-buy";
+import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { useAccountBalances } from '../../hooks/useAccountBalances';
+import { useAeSdk } from '../../hooks/useAeSdk';
+import { BuyAeWidget } from '../../features/ae-eth-buy';
 
-import { useWallet } from "../../hooks";
-import { useAddressByChainName } from "../../hooks/useChainName";
-import { useCurrencies } from "@/hooks/useCurrencies";
+import { useWallet } from '../../hooks';
+import { useAddressByChainName } from '../../hooks/useChainName';
 
 export default function RightRail({
   hidePriceSection = true,
@@ -21,16 +21,16 @@ export default function RightRail({
   const params = useParams();
   const { activeAccount } = useAeSdk();
   const { currentCurrencyCode, setCurrentCurrency, currencyRates } = useCurrencies();
-  
+
   // Resolve chain name if present
-  const isChainName = params.address?.endsWith(".chain");
+  const isChainName = params.address?.endsWith('.chain');
   const { address: resolvedAddress } = useAddressByChainName(
-    isChainName ? params.address : undefined
+    isChainName ? params.address : undefined,
   );
-  const effectiveProfileAddress = isChainName && resolvedAddress 
-    ? resolvedAddress 
+  const effectiveProfileAddress = isChainName && resolvedAddress
+    ? resolvedAddress
     : (params.address as string | undefined);
-  
+
   // Check if we're on the user's own profile page
   const isOwnProfile = useMemo(() => {
     const isProfilePage = location.pathname.startsWith('/users/');
@@ -38,19 +38,17 @@ export default function RightRail({
     if (!activeAccount || !effectiveProfileAddress) return false;
     return effectiveProfileAddress === activeAccount;
   }, [location.pathname, effectiveProfileAddress, activeAccount]);
-  const selectedCurrency = (currentCurrencyCode as any) as "usd" | "eur" | "cny";
-  const prices = useMemo(() => {
-    return {
-      usd: (currencyRates as any)?.usd ?? null,
-      eur: (currencyRates as any)?.eur ?? null,
-      cny: (currencyRates as any)?.cny ?? null,
-    };
-  }, [currencyRates]);
+  const selectedCurrency = (currentCurrencyCode as any) as 'usd' | 'eur' | 'cny';
+  const prices = useMemo(() => ({
+    usd: (currencyRates as any)?.usd ?? null,
+    eur: (currencyRates as any)?.eur ?? null,
+    cny: (currencyRates as any)?.cny ?? null,
+  }), [currencyRates]);
 
-  const address = useWallet().address;
+  const { address } = useWallet();
   const accountId = useMemo(
-    () => activeAccount || address || "",
-    [activeAccount, address]
+    () => activeAccount || address || '',
+    [activeAccount, address],
   );
   useAccountBalances(accountId);
 
@@ -58,8 +56,8 @@ export default function RightRail({
   // when accountId changes, so no manual call is needed here
 
   const formatPrice = (price: number, currency: string) => {
-    const formatter = new Intl.NumberFormat("en-US", {
-      style: "currency",
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: currency.toUpperCase(),
       minimumFractionDigits: 2,
       maximumFractionDigits: 6,
@@ -87,13 +85,13 @@ export default function RightRail({
               AE Price
             </h4>
             <div className="flex gap-1">
-              {(["usd", "eur", "cny"] as const).map((currency) => (
+              {(['usd', 'eur', 'cny'] as const).map((currency) => (
                 <button
                   key={currency}
                   className={`bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 ${
                     selectedCurrency === currency
-                      ? "bg-[var(--neon-teal)] text-white border-[var(--neon-teal)]"
-                      : "text-[var(--light-font-color)]"
+                      ? 'bg-[var(--neon-teal)] text-white border-[var(--neon-teal)]'
+                      : 'text-[var(--light-font-color)]'
                   }`}
                   onClick={() => setCurrentCurrency(currency as any)}
                 >
@@ -109,7 +107,7 @@ export default function RightRail({
                 <div className="text-xl font-bold text-[var(--standard-font-color)] mb-1">
                   {prices?.[selectedCurrency]
                     ? formatPrice(prices[selectedCurrency], selectedCurrency)
-                    : "-"}
+                    : '-'}
                 </div>
                 <div className="text-xs font-semibold">
                   {/* 24h stats removed: market-data endpoint is not available right now */}
@@ -173,9 +171,8 @@ export default function RightRail({
 
       {/* Buy AE with ETH widget (compact) */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
-        <BuyAeWidget embedded={true} />
+        <BuyAeWidget embedded />
       </div>
-
 
       {/* Trading Leaderboard promo */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">

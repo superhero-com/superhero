@@ -1,6 +1,6 @@
-import React from "react";
-import { WrapUnwrapWidget } from "../WrapUnwrapWidget";
-import RecentActivity from "../../../components/dex/supporting/RecentActivity";
+import React from 'react';
+import { WrapUnwrapWidget } from '../WrapUnwrapWidget';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
 export default function DexWrap() {
   return (

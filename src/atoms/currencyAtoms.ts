@@ -15,5 +15,3 @@ export const currencyRatesUpdatedAtAtom = atom<number>(0);
 // Updated whenever the global poller fails to fetch rates.
 // Used by UI to distinguish "loading/checking" from "offline".
 export const currencyRatesLastErrorAtAtom = atom<number>(0);
-
-

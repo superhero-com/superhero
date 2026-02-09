@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateKeyPair, toAe } from '@aeternity/aepp-sdk';
@@ -57,48 +59,43 @@ export function useInvitations() {
   const [transactionList, setTransactionList] = useState<ITransaction[]>([]);
 
   // Helper functions
-  const prepareInviteLink = useCallback((secretKey: string): string => {
-    return `${window.location.protocol}//${window.location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`;
-  }, []);
+  const prepareInviteLink = useCallback((secretKey: string): string => `${window.location.protocol}//${window.location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`, []);
 
   const getInvitationRevokeStatus = useCallback((invitee: string): ITransaction | boolean => {
-    const revokeTx =
-      transactionList.find((tx) => {
-        if (tx?.tx?.function !== TX_FUNCTIONS.revoke_invitation_code) return false;
+    const revokeTx = transactionList.find((tx) => {
+      if (tx?.tx?.function !== TX_FUNCTIONS.revoke_invitation_code) return false;
 
-        const arg0 = tx?.tx?.arguments?.[0]?.value;
+      const arg0 = tx?.tx?.arguments?.[0]?.value;
 
-        // Middleware can return either:
-        // - { type: "address", value: "ak_..." }
-        // - { type: "list", value: [{ type: "address", value: "ak_..." }, ...] }
-        if (typeof arg0 === 'string') return arg0 === invitee;
+      // Middleware can return either:
+      // - { type: "address", value: "ak_..." }
+      // - { type: "list", value: [{ type: "address", value: "ak_..." }, ...] }
+      if (typeof arg0 === 'string') return arg0 === invitee;
 
-        if (Array.isArray(arg0)) {
-          return arg0.some((item: any) => item?.value === invitee || item === invitee);
-        }
+      if (Array.isArray(arg0)) {
+        return arg0.some((item: any) => item?.value === invitee || item === invitee);
+      }
 
-        return false;
-      }) ?? false;
+      return false;
+    }) ?? false;
 
     return revokeTx || recentlyRevokedInvitations.includes(invitee);
   }, [transactionList, recentlyRevokedInvitations]);
 
   const determineInvitationStatus = useCallback((
     claimed: boolean,
-    hasRevokeTx: any
-  ): "created" | "claimed" | "revoked" => {
-    if (claimed) return "claimed";
-    if (hasRevokeTx) return "revoked";
-    return "created";
+    hasRevokeTx: any,
+  ): 'created' | 'claimed' | 'revoked' => {
+    if (claimed) return 'claimed';
+    if (hasRevokeTx) return 'revoked';
+    return 'created';
   }, []);
 
-  const getInvitationSecretKey = useCallback((invitee: string): string | undefined => {
-    return activeAccountInviteList.find((item) => item.invitee === invitee)?.secretKey;
-  }, [activeAccountInviteList]);
+  const getInvitationSecretKey = useCallback((invitee: string): string | undefined => activeAccountInviteList.find((item) => item.invitee === invitee)?.secretKey, [activeAccountInviteList]);
 
   const getInvitationStatus = useCallback((
     invitee: Encoded.AccountAddress,
-    transaction: ITransaction
+    transaction: ITransaction,
   ): InvitationStatus => {
     const revokeStatus = getInvitationRevokeStatus(invitee);
     const claimedData = claimedInvitations[invitee];
@@ -116,7 +113,7 @@ export function useInvitations() {
       date: moment(transaction.microTime).format(DATE_LONG),
       amount: Decimal.from(toAe(transaction.tx.arguments[2].value)).prettify(),
       revoked: !!revokeStatus,
-      ...(typeof revokeStatus === "object" && {
+      ...(typeof revokeStatus === 'object' && {
         revokedAt: moment(revokeStatus.microTime).format(DATE_LONG),
         revokeTxHash: revokeStatus.hash,
       }),
@@ -134,11 +131,9 @@ export function useInvitations() {
   const invitations = useMemo(() => {
     const formattedInvitations: InvitationStatus[] = [];
     for (const transaction of transactionList) {
-      if (transaction?.tx?.function !== TX_FUNCTIONS.register_invitation_code)
-        continue;
-      const invitees =
-        transaction.tx.arguments?.[0]?.value?.map((item: any) => item.value) || [];
-      
+      if (transaction?.tx?.function !== TX_FUNCTIONS.register_invitation_code) continue;
+      const invitees = transaction.tx.arguments?.[0]?.value?.map((item: any) => item.value) || [];
+
       for (const invitee of invitees) {
         const invitationStatus = getInvitationStatus(invitee, transaction);
         formattedInvitations.push(invitationStatus);
@@ -150,7 +145,7 @@ export function useInvitations() {
   // Load transactions from middleware
   const loadTransactionsFromMiddleware = useCallback(async (
     url: string,
-    _transactionList: ITransaction[] = []
+    _transactionList: ITransaction[] = [],
   ): Promise<ITransaction[]> => {
     const response = await fetchJson(url);
     const transactions: ITransaction[] = response.data
@@ -161,14 +156,14 @@ export function useInvitations() {
     if (response.next) {
       return await loadTransactionsFromMiddleware(
         `${activeNetwork.middlewareUrl}${response.next}`,
-        _transactionList
+        _transactionList,
       );
     }
     return _transactionList;
   }, [activeNetwork]);
 
   const loadAccountInvitations = useCallback(async (
-    address: string
+    address: string,
   ): Promise<ITransaction[]> => {
     const url = `${activeNetwork.middlewareUrl}/v3/transactions?contract=${INVITATIONS_CONTRACT}&caller_id=${address}`;
     return await loadTransactionsFromMiddleware(url);
@@ -182,7 +177,7 @@ export function useInvitations() {
       const data = await loadAccountInvitations(activeAccount);
       setTransactionList(data);
     } catch (error) {
-      console.error("Failed to load invitation data:", error);
+      console.error('Failed to load invitation data:', error);
       setTransactionList([]);
     } finally {
       setLoading(false);
@@ -208,7 +203,7 @@ export function useInvitations() {
     await treasury.registerInvitationCode(
       keyPairs.map(({ publicKey }) => publicKey),
       redemptionFeeCover,
-      inviteAmount
+      inviteAmount,
     );
 
     // Add to state and localStorage
@@ -220,10 +215,10 @@ export function useInvitations() {
       amount,
       date: now,
     }));
-    
+
     // Update state (this will also update localStorage via atomWithStorage)
     setInvitationList((prev) => [...newInvitations, ...prev]);
-    
+
     // Trigger refresh to update invitation statuses
     triggerRefresh();
 
@@ -233,29 +228,27 @@ export function useInvitations() {
   // Remove stored invite function
   const removeStoredInvite = useCallback((invitee: Encoded.AccountAddress, secretKey?: string) => {
     if (!activeAccount) return;
-    
-    setInvitationList((prev) => 
-      prev.filter((inv) => inv.secretKey !== secretKey || inv.invitee !== invitee)
-    );
+
+    setInvitationList((prev) => prev.filter((inv) => inv.secretKey !== secretKey || inv.invitee !== invitee));
   }, [activeAccount, setInvitationList]);
 
   // Revoke invitation function
   const revokeInvitation = useCallback(async (invitation: InvitationStatus) => {
     if (!sdk) throw new Error('SDK not initialized');
-    
+
     try {
       const affiliationTreasury = await getAffiliationTreasury(sdk as any);
       await (affiliationTreasury as any).revokeInvitationCode(invitation.invitee);
-      
+
       setRecentlyRevokedInvitations((prev) => [...prev, invitation.invitee]);
       removeStoredInvite(invitation.invitee as `ak_${string}`, invitation.secretKey);
       // Kick a refresh so on-chain revoke tx can be picked up as soon as middleware serves it.
       triggerRefresh();
     } catch (error: any) {
-      console.error("Failed to revoke invitation:", error);
-      if (error.message?.includes("INVITATION_NOT_REGISTERED")) {
+      console.error('Failed to revoke invitation:', error);
+      if (error.message?.includes('INVITATION_NOT_REGISTERED')) {
         removeStoredInvite(invitation.invitee as `ak_${string}`, invitation.secretKey);
-      } else if (error.message?.includes("ALREADY_REDEEMED")) {
+      } else if (error.message?.includes('ALREADY_REDEEMED')) {
         // Refresh data to get updated status
         triggerRefresh();
       }
@@ -274,7 +267,7 @@ export function useInvitations() {
 
   // Handle URL hash changes for invitation codes
   useEffect(() => {
-    const hash = location.hash;
+    const { hash } = location;
     if (hash) {
       const hashParsed = new URLSearchParams(hash.replace('#', ''));
       const inviteCode = hashParsed.get(INVITE_CODE_QUERY_KEY);
@@ -288,27 +281,27 @@ export function useInvitations() {
   // Refresh data when active account changes or refresh is triggered
   useEffect(() => {
     if (!activeAccount) return;
-    
+
     const loadData = async () => {
       setLoading(true);
       try {
         const data = await loadAccountInvitations(activeAccount);
         setTransactionList(data);
       } catch (error) {
-        console.error("Failed to load invitation data:", error);
+        console.error('Failed to load invitation data:', error);
         setTransactionList([]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [activeAccount, refreshTrigger, loadAccountInvitations, setLoading]);
 
   // Load claimed invitations when we have invitations to check
   useEffect(() => {
     if (invitations.length === 0) return;
-    
+
     const loadClaimed = async () => {
       await Promise.all(
         invitations.map(async (invitation) => {
@@ -319,17 +312,17 @@ export function useInvitations() {
                 // The claimer's wallet address is passed as the second argument to redeemInvitationCode(secretKey, claimerAddress).
                 // The callerId is the invitation keypair address (invitee), NOT the actual claimer.
                 const claimerAddress = tx.tx?.arguments?.[1]?.value as string | undefined;
-                
+
                 // Always mark as claimed when we see a redeem tx. If we can't extract claimer details,
                 // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
                 setClaimedInvitations((prev) => ({
                   ...prev,
                   [invitation.invitee]: claimerAddress
                     ? {
-                        claimedBy: claimerAddress,
-                        claimedAt: tx.microTime,
-                        claimTxHash: tx.hash,
-                      } as ClaimedInfo
+                      claimedBy: claimerAddress,
+                      claimedAt: tx.microTime,
+                      claimTxHash: tx.hash,
+                    } as ClaimedInfo
                     : true,
                 }));
               }
@@ -337,10 +330,10 @@ export function useInvitations() {
           } catch (error) {
             console.error(`Failed to load claimed status for ${invitation.invitee}:`, error);
           }
-        })
+        }),
       );
     };
-    
+
     loadClaimed();
   }, [invitations.length, loadAccountInvitations, setClaimedInvitations]); // Only depend on length to avoid infinite loops
 
@@ -353,7 +346,7 @@ export function useInvitations() {
     claimedInvitations,
     recentlyRevokedInvitations,
     loading,
-    
+
     // Actions
     generateInviteKeys,
     resetInviteCode,

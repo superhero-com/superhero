@@ -56,14 +56,12 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     setApiStatus((prev) => ({ ...prev, backend: derivedBackendStatus }));
   }, [derivedBackendStatus]);
 
-  const statusEmoji = (s: 'online' | 'offline' | 'checking') =>
-    s === 'online' ? '🟢' : s === 'offline' ? '🔴' : '🟡';
-  const statusColor = (s: 'online' | 'offline' | 'checking') =>
-    s === 'online'
-      ? 'var(--neon-green)'
-      : s === 'offline'
-        ? 'var(--neon-pink)'
-        : 'var(--neon-yellow)';
+  const statusEmoji = (s: 'online' | 'offline' | 'checking') => (s === 'online' ? '🟢' : s === 'offline' ? '🔴' : '🟡');
+  const statusColor = (s: 'online' | 'offline' | 'checking') => (s === 'online'
+    ? 'var(--neon-green)'
+    : s === 'offline'
+      ? 'var(--neon-pink)'
+      : 'var(--neon-yellow)');
 
   return (
     <footer className={`${compact ? 'border-t mt-3 py-3' : 'border-t mt-6 py-4 md:py-5 md:mt-8'}`} style={{ borderTopColor: 'var(--search-nav-border-color)' }}>
@@ -145,7 +143,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             color: '#0a0a0f',
             WebkitTextFillColor: '#0a0a0f',
             backgroundClip: 'padding-box',
-            WebkitBackgroundClip: 'padding-box'
+            WebkitBackgroundClip: 'padding-box',
           }}
           aria-label="Send Feedback on GitHub"
         >
@@ -157,5 +155,3 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     </footer>
   );
 }
-
-

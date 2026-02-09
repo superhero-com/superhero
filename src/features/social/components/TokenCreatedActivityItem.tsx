@@ -1,10 +1,10 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { memo, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { linkify } from "../../../utils/linkify";
-import { useWallet } from "../../../hooks";
-import type { PostDto } from "../../../api/generated";
-import { compactTime } from "../../../utils/time";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { memo, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { linkify } from '../../../utils/linkify';
+import { useWallet } from '../../../hooks';
+import type { PostDto } from '../../../api/generated';
+import { compactTime } from '../../../utils/time';
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
@@ -21,9 +21,9 @@ interface TokenCreatedActivityItemProps {
 function useTokenName(item: PostDto): string | null {
   return useMemo(() => {
     const fromId = () => {
-      const id = String(item?.id || "");
-      if (!id.startsWith("token-created:")) return null;
-      const parts = id.replace(/_v3$/, "").split(":");
+      const id = String(item?.id || '');
+      if (!id.startsWith('token-created:')) return null;
+      const parts = id.replace(/_v3$/, '').split(':');
       const encoded = parts[1];
       if (!encoded) return null;
       try { return decodeURIComponent(encoded); } catch { return encoded; }
@@ -41,11 +41,13 @@ function useTokenName(item: PostDto): string | null {
   }, [item]);
 }
 
-const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false, mobileTightTop = false, mobileTightBottom = false }: TokenCreatedActivityItemProps) => {
+const TokenCreatedActivityItem = memo(({
+  item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false, mobileTightTop = false, mobileTightBottom = false,
+}: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = item.sender_address;
-  const displayName = chainNames?.[creator] || "Legend";
+  const displayName = chainNames?.[creator] || 'Legend';
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -115,5 +117,3 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
 TokenCreatedActivityItem.displayName = 'TokenCreatedActivityItem';
 
 export default TokenCreatedActivityItem;
-
-

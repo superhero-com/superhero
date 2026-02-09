@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  useState, useRef, useEffect, useMemo, useCallback,
+} from 'react';
 import {
   ColorType,
   ISeriesApi,
   CandlestickSeries,
   HistogramSeries,
-} from "lightweight-charts";
-import { Encoded } from "@aeternity/aepp-sdk";
-import moment from "moment";
-import { useInfiniteQuery } from "@tanstack/react-query";
+} from 'lightweight-charts';
+import { Encoded } from '@aeternity/aepp-sdk';
+import moment from 'moment';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { TokenDto, TransactionHistoricalService } from '@/api/generated';
 import { COIN_SYMBOL } from '@/utils/constants';
@@ -15,14 +17,13 @@ import { useChart } from '@/hooks/useChart';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { Decimal } from '@/libs/decimal';
 import WebSocketClient from '@/libs/WebSocketClient';
-import AeButton from '../AeButton';
 import { cn } from '@/lib/utils';
+import AeButton from '../AeButton';
 
 interface IInterval {
   label: string;
   value: number;
 }
-
 
 interface TokenCandlestickChartProps {
   token: TokenDto;
@@ -38,14 +39,14 @@ interface CandlePrice {
 }
 
 const intervals: IInterval[] = [
-  { label: "1m", value: 60 },
-  { label: "5m", value: 5 * 60 },
-  { label: "15m", value: 15 * 60 },
-  { label: "1h", value: 60 * 60 },
-  { label: "4h", value: 4 * 60 * 60 },
-  { label: "D", value: 24 * 60 * 60 },
-  { label: "W", value: 7 * 24 * 60 * 60 },
-  { label: "M", value: 31 * 24 * 60 * 60 },
+  { label: '1m', value: 60 },
+  { label: '5m', value: 5 * 60 },
+  { label: '15m', value: 15 * 60 },
+  { label: '1h', value: 60 * 60 },
+  { label: '4h', value: 4 * 60 * 60 },
+  { label: 'D', value: 24 * 60 * 60 },
+  { label: 'W', value: 7 * 24 * 60 * 60 },
+  { label: 'M', value: 31 * 24 * 60 * 60 },
 ];
 
 //
@@ -60,9 +61,9 @@ export default function TokenCandlestickChart({
   const [intervalBy, setIntervalBy] = useState<IInterval>(intervals[1]); // Default to 5m
 
   // Chart series refs
-  const candlestickSeries = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const volumeSeries = useRef<ISeriesApi<"Histogram"> | null>(null);
-  const marketCapSeries = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const candlestickSeries = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const volumeSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const marketCapSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const touchHandlersCleanup = useRef<(() => void) | null>(null);
 
   // Current price data for legend
@@ -73,25 +74,25 @@ export default function TokenCandlestickChart({
   const { currentCurrencyInfo } = useCurrencies();
   const saleAddress = token?.sale_address;
 
-  const convertTo = useMemo(() =>
-    useCurrentCurrency
+  const convertTo = useMemo(
+    () => (useCurrentCurrency
       ? currentCurrencyInfo.code.toLowerCase()
-      : "ae",
-    [useCurrentCurrency, currentCurrencyInfo]
+      : 'ae'),
+    [useCurrentCurrency, currentCurrencyInfo],
   );
 
   // Infinite query for historical data
-  const { data, fetchNextPage, isFetching, hasNextPage, refetch } = useInfiniteQuery({
-    queryKey: ["TokenCandlestick", saleAddress, intervalBy.value, convertTo],
-    queryFn: ({ pageParam = 1 }) => {
-      return TransactionHistoricalService.getPaginatedHistory({
-        address: saleAddress as Encoded.ContractAddress,
-        interval: intervalBy.value,
-        convertTo: convertTo as any,
-        page: pageParam,
-        limit: 100,
-      });
-    },
+  const {
+    data, fetchNextPage, isFetching, hasNextPage, refetch,
+  } = useInfiniteQuery({
+    queryKey: ['TokenCandlestick', saleAddress, intervalBy.value, convertTo],
+    queryFn: ({ pageParam = 1 }) => TransactionHistoricalService.getPaginatedHistory({
+      address: saleAddress as Encoded.ContractAddress,
+      interval: intervalBy.value,
+      convertTo: convertTo as any,
+      page: pageParam,
+      limit: 100,
+    }),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage || !Array.isArray(lastPage) || lastPage.length === 0) {
         return undefined;
@@ -109,9 +110,9 @@ export default function TokenCandlestickChart({
     return percentage < 0.01 ? percentage.toFixed(3) : percentage.toFixed(2);
   }, [currentCandlePrice]);
 
-  const isTrendingUp = useMemo(() =>
-    currentCandlePrice ? currentCandlePrice.open <= currentCandlePrice.close : true,
-    [currentCandlePrice]
+  const isTrendingUp = useMemo(
+    () => (currentCandlePrice ? currentCandlePrice.open <= currentCandlePrice.close : true),
+    [currentCandlePrice],
   );
 
   // Chart setup
@@ -119,29 +120,27 @@ export default function TokenCandlestickChart({
     height,
     chartOptions: {
       layout: {
-        textColor: "white",
+        textColor: 'white',
         background: {
-          topColor: "rgba(0, 0, 0, 0.00)",
-          bottomColor: "rgba(0, 0, 0, 0.13)",
+          topColor: 'rgba(0, 0, 0, 0.00)',
+          bottomColor: 'rgba(0, 0, 0, 0.13)',
           type: ColorType.VerticalGradient,
         },
       },
       localization: {
-        timeFormatter: (time: any) => {
-          return moment.unix(time).format('MMM DD, HH:mm');
-        },
+        timeFormatter: (time: any) => moment.unix(time).format('MMM DD, HH:mm'),
       },
     },
     onChartReady: (chartInstance) => {
       // Setup candlestick series
       const _candlestickSeries = chartInstance.addSeries(CandlestickSeries, {
-        upColor: "#2BCC61",
-        downColor: "#F5274E",
+        upColor: '#2BCC61',
+        downColor: '#F5274E',
         borderVisible: false,
-        wickUpColor: "#2BCC61",
-        wickDownColor: "#F5274E",
+        wickUpColor: '#2BCC61',
+        wickDownColor: '#F5274E',
         priceFormat: {
-          type: "custom",
+          type: 'custom',
           minMove: 0.00000001,
           formatter: (price) => `${price.toFixed(6)} ${convertTo.toUpperCase()}`,
         },
@@ -150,30 +149,30 @@ export default function TokenCandlestickChart({
       // Setup volume series
       const _volumeSeries = chartInstance.addSeries(HistogramSeries, {
         priceFormat: {
-          type: "custom",
-          formatter: () => "",
+          type: 'custom',
+          formatter: () => '',
         },
-        priceScaleId: "volume",
+        priceScaleId: 'volume',
       });
 
       // Setup market cap series
       const _marketCapSeries = chartInstance.addSeries(HistogramSeries, {
         visible: false,
         priceFormat: {
-          type: "custom",
-          formatter: () => "",
+          type: 'custom',
+          formatter: () => '',
         },
-        priceScaleId: "marketCap",
+        priceScaleId: 'marketCap',
       });
 
       // Configure price scales
-      chartInstance.priceScale("right").applyOptions({
+      chartInstance.priceScale('right').applyOptions({
         visible: true,
-        borderColor: "rgba(255,255,255, 0)",
+        borderColor: 'rgba(255,255,255, 0)',
       });
 
       chartInstance.timeScale().applyOptions({
-        borderColor: "rgba(255,255,255, 0.2)",
+        borderColor: 'rgba(255,255,255, 0.2)',
         rightOffset: 5,
         minBarSpacing: 10,
         timeVisible: true,
@@ -214,11 +213,11 @@ export default function TokenCandlestickChart({
           e.preventDefault();
           e.stopPropagation();
           if (!chartInstance || !container) return;
-          
+
           const touch = e.touches[0];
           const rect = container.getBoundingClientRect();
           const x = touch.clientX - rect.left;
-          
+
           try {
             const time = chartInstance.timeScale().coordinateToTime(x);
             if (time !== null) {
@@ -233,14 +232,14 @@ export default function TokenCandlestickChart({
           e.preventDefault();
           e.stopPropagation();
           if (!chartInstance || !container) return;
-          
+
           const touch = e.touches[0];
           const rect = container.getBoundingClientRect();
           const x = touch.clientX - rect.left;
-          
+
           // Clamp x to chart bounds
           const clampedX = Math.max(0, Math.min(x, rect.width));
-          
+
           try {
             const time = chartInstance.timeScale().coordinateToTime(clampedX);
             if (time !== null) {
@@ -255,7 +254,7 @@ export default function TokenCandlestickChart({
           e.preventDefault();
           e.stopPropagation();
           if (!chartInstance) return;
-          
+
           try {
             chartInstance.setCrosshairPosition(-1, -1, {});
           } catch (error) {
@@ -320,7 +319,7 @@ export default function TokenCandlestickChart({
       }))
       .sort((a, b) => a.time - b.time)
       .reduce((acc: any[], item) => {
-        if (!acc.find(i => i.time === item.time)) {
+        if (!acc.find((i) => i.time === item.time)) {
           acc.push(item);
         }
         return acc;
@@ -336,16 +335,16 @@ export default function TokenCandlestickChart({
         time: item.time,
         value: item.volume,
         market_cap: Number(item.market_cap) ?? 0,
-        color: index === 0 || isGreen ? "#2BCC61" : "#F5274E",
+        color: index === 0 || isGreen ? '#2BCC61' : '#F5274E',
       };
     });
 
     volumeSeries.current.setData(volumeData);
     marketCapSeries.current.setData(
-      volumeData.map(item => ({
+      volumeData.map((item) => ({
         ...item,
         value: item.market_cap,
-      }))
+      })),
     );
 
     if (formattedData.length < 100 && hasNextPage) {
@@ -367,7 +366,6 @@ export default function TokenCandlestickChart({
     refetch();
   }, [refetch]);
 
-
   // Handle real-time updates via WebSocket
   useEffect(() => {
     if (!saleAddress) return;
@@ -388,8 +386,8 @@ export default function TokenCandlestickChart({
         const currentPrice = Number(tx.data.buy_price[convertTo]);
         const currentTime = Math.floor(Date.now() / 1000);
 
-        if (latestCandle && latestVolume && latestMarketCap &&
-          currentTime - (latestCandle.time as number) < intervalBy.value) {
+        if (latestCandle && latestVolume && latestMarketCap
+          && currentTime - (latestCandle.time as number) < intervalBy.value) {
           // Update existing candle
           const candleData = latestCandle as any;
           candlestickSeries.current.update({
@@ -409,14 +407,14 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: volumeData.time,
             value: newVolume,
-            color: isGreen ? "#2BCC61" : "#F5274E",
+            color: isGreen ? '#2BCC61' : '#F5274E',
           });
 
           const marketCapData = latestMarketCap as any;
           marketCapSeries.current.update({
             time: marketCapData.time,
             value: newMarketCap,
-            color: isGreen ? "#2BCC61" : "#F5274E",
+            color: isGreen ? '#2BCC61' : '#F5274E',
           });
         } else {
           // Create new candle
@@ -434,16 +432,16 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: currentTime as any,
             value: parseInt(tx.data.volume),
-            color: "#2BCC61",
+            color: '#2BCC61',
           });
 
           marketCapSeries.current.update({
             time: currentTime as any,
             value: Number(tx.data.market_cap[convertTo]),
-            color: "#2BCC61",
+            color: '#2BCC61',
           });
         }
-      }
+      },
     );
 
     return () => {
@@ -459,21 +457,19 @@ export default function TokenCandlestickChart({
   }, [data]);
 
   // Cleanup touch handlers when component unmounts or chart changes
-  useEffect(() => {
-    return () => {
-      if (touchHandlersCleanup.current) {
-        touchHandlersCleanup.current();
-        touchHandlersCleanup.current = null;
-      }
-    };
+  useEffect(() => () => {
+    if (touchHandlersCleanup.current) {
+      touchHandlersCleanup.current();
+      touchHandlersCleanup.current = null;
+    }
   }, [chart]);
 
   return (
     <div
       ref={chartWrapper}
       className={cn(
-        "max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden",
-        className
+        'max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden',
+        className,
       )}
     >
       <div className="relative" style={{ height }}>
@@ -483,7 +479,9 @@ export default function TokenCandlestickChart({
         <div className="hidden sm:block absolute top-0 left-0 4 z-20 p-4 bg-gradient-to-b from-background/10 via-background/2 to-transparent backdrop-blur-sm">
           <div className="flex flex-wrap items-end gap-1 mb-2">
             <div className="text-lg font-bold text-foreground flex items-center gap-2">
-              {token?.symbol}<span className="font-sans text-xl mx-1">/</span>{COIN_SYMBOL}
+              {token?.symbol}
+              <span className="font-sans text-xl mx-1">/</span>
+              {COIN_SYMBOL}
             </div>
             <div className="flex gap-1 pb-1 pl-2 text-xs text-muted-foreground">
               <div>on</div>
@@ -498,13 +496,15 @@ export default function TokenCandlestickChart({
               <div className="flex gap-4 flex-wrap mb-2">
                 <div className="flex gap-2">
                   <span className="text-muted-foreground">
-                    O{' '}
+                    O
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.open.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
-                    H{' '}
+                    H
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.high.toFixed(6)}
                     </span>
@@ -512,13 +512,15 @@ export default function TokenCandlestickChart({
                 </div>
                 <div className="flex gap-2">
                   <span className="text-muted-foreground">
-                    L{' '}
+                    L
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.low.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
-                    C{' '}
+                    C
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.close.toFixed(6)}
                     </span>
@@ -527,21 +529,26 @@ export default function TokenCandlestickChart({
                 <div className="pl-2">
                   <span className={`font-bold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {isTrendingUp ? '+' : ''}
-                    {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)} (
+                    {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)}
+                    {' '}
+                    (
                     {isTrendingUp ? '+' : ''}
-                    {currentCandleMovePercentage}%)
+                    {currentCandleMovePercentage}
+                    %)
                   </span>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="text-muted-foreground">
-                  Vol{' '}
+                  Vol
+                  {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {currentCandleVolume ? Decimal.from(currentCandleVolume).shorten() : 0}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
-                  MCap{' '}
+                  MCap
+                  {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {currentCandleMarketCap ? Decimal.from(currentCandleMarketCap).shorten() : 0}
                   </span>
@@ -568,7 +575,7 @@ export default function TokenCandlestickChart({
               style={{
                 minWidth: 32,
                 fontSize: 11,
-                fontWeight: 600
+                fontWeight: 600,
               }}
             >
               {interval.label}

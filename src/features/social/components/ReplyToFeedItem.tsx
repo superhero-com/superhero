@@ -1,21 +1,23 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { cn } from "@/lib/utils";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { cn } from '@/lib/utils';
+import {
+  memo, useCallback, useEffect, useMemo, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
-import { PostDto, PostsService } from "../../../api/generated";
-import { IconComment } from "../../../icons";
-import { linkify } from "../../../utils/linkify";
-import { formatAddress } from "../../../utils/address";
-import BlockchainInfoPopover from "./BlockchainInfoPopover";
-import { Badge } from "@/components/ui/badge";
-import { useTransactionStatus } from "@/hooks/useTransactionStatus";
-import SharePopover from "./SharePopover";
-import PostTipButton from "./PostTipButton";
-import { MessageCircle } from "lucide-react";
-import { useWallet } from "../../../hooks";
-import { compactTime, fullTimestamp } from "../../../utils/time";
-import AspectMedia from "@/components/AspectMedia";
+import { useQuery } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { MessageCircle } from 'lucide-react';
+import AspectMedia from '@/components/AspectMedia';
+import { PostDto, PostsService } from '../../../api/generated';
+import { IconComment } from '../../../icons';
+import { linkify } from '../../../utils/linkify';
+import { formatAddress } from '../../../utils/address';
+import BlockchainInfoPopover from './BlockchainInfoPopover';
+import SharePopover from './SharePopover';
+import PostTipButton from './PostTipButton';
+import { useWallet } from '../../../hooks';
+import { compactTime, fullTimestamp } from '../../../utils/time';
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -39,9 +41,9 @@ function useParentId(item: PostDto): string | null {
       const asString = String(value);
       // Match comment:<id> or comment/<id> anywhere in the string
       const m = asString.match(/comment[:/]([^\s,;]+)/i);
-      const id = m?.[1] || (asString.startsWith("comment:") ? asString.split(":")[1] : null);
+      const id = m?.[1] || (asString.startsWith('comment:') ? asString.split(':')[1] : null);
       if (!id) return null;
-      return id.endsWith("_v3") ? id : `${id}_v3`;
+      return id.endsWith('_v3') ? id : `${id}_v3`;
     };
 
     if (Array.isArray((item as any)?.media)) {
@@ -58,13 +60,13 @@ function useParentId(item: PostDto): string | null {
     }
     const scan = (node: any): string | null => {
       if (node == null) return null;
-      if (typeof node === "string") return extract(node);
+      if (typeof node === 'string') return extract(node);
       if (Array.isArray(node)) {
         for (const x of node) {
           const got = scan(x);
           if (got) return got;
         }
-      } else if (typeof node === "object") {
+      } else if (typeof node === 'object') {
         for (const v of Object.values(node)) {
           const got = scan(v);
           if (got) return got;
@@ -90,7 +92,7 @@ const ReplyToFeedItem = memo(({
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || "Legend";
+  const displayName = chainNames?.[authorAddress] || 'Legend';
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -104,10 +106,10 @@ const ReplyToFeedItem = memo(({
     error: childError,
     refetch: refetchChildReplies,
   } = useQuery({
-    queryKey: ["post-comments", postId],
+    queryKey: ['post-comments', postId],
     queryFn: async () => {
-      const normalizedId = String(postId).endsWith("_v3") ? String(postId) : `${String(postId)}_v3`;
-      const result = await PostsService.getComments({ id: normalizedId, orderDirection: "ASC", limit: 50 }) as any;
+      const normalizedId = String(postId).endsWith('_v3') ? String(postId) : `${String(postId)}_v3`;
+      const result = await PostsService.getComments({ id: normalizedId, orderDirection: 'ASC', limit: 50 }) as any;
       return result?.items || [];
     },
     enabled: showReplies,
@@ -132,24 +134,24 @@ const ReplyToFeedItem = memo(({
   }, [parentId, hideParentContext]);
 
   const handleOpen = useCallback(() => {
-    const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, "");
+    const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, '');
     onOpenPost(slugOrId);
   }, [onOpenPost, postId, item]);
   const toggleReplies = useCallback(() => setShowReplies((s) => !s), []);
 
   const media = Array.isArray(item.media)
-    ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
+    ? item.media.filter((m) => (typeof m === 'string' ? !m.startsWith('comment:') : true))
     : [];
 
   // Compute total descendant comments (all levels) for this item
   const { data: descendantCount } = useQuery<number>({
-    queryKey: ["post-desc-count", postId],
+    queryKey: ['post-desc-count', postId],
     // Always enable for this post so counts can update from 0 → N over time.
     enabled: !!postId,
     // Periodically refresh to keep counts from going stale.
     refetchInterval: 120 * 1000,
     queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
+      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
       const root = normalize(String(postId));
       const queue: string[] = [root];
       let total = 0;
@@ -161,7 +163,9 @@ const ReplyToFeedItem = memo(({
         while (true) {
           if (requestBudget <= 0) break;
           requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
+          const res: any = await PostsService.getComments({
+            id: current, orderDirection: 'ASC', page, limit: 50,
+          });
           const items: PostDto[] = res?.items || [];
           total += items.length;
           for (const child of items) {
@@ -177,28 +181,28 @@ const ReplyToFeedItem = memo(({
   });
 
   // Inline mined badge helper
-  function MinedBadge({ txHash }: { txHash: string }) {
+  const MinedBadge = ({ txHash }: { txHash: string }) => {
     const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
     if (!status) return null;
     if (status.confirmed) {
       return <Badge className="border-green-500/30 bg-green-500/20 text-green-300">Mined</Badge>;
     }
     return <Badge variant="secondary" className="border-amber-400/30 bg-amber-400/15 text-amber-300">Pending</Badge>;
-  }
+  };
 
   const isContextMuted = !isActive && allowInlineRepliesToggle === false;
 
   return (
     <article
       className={cn(
-        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors",
-        !isActive && "cursor-pointer hover:bg-white/[0.04]",
-        isActive && "bg-white/[0.06] border-white/25",
-        isContextMuted && "bg-white/[0.02] border-white/10"
+        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
+        !isActive && 'cursor-pointer hover:bg-white/[0.04]',
+        isActive && 'bg-white/[0.06] border-white/25',
+        isContextMuted && 'bg-white/[0.02] border-white/10',
       )}
       onClick={isActive ? undefined : handleOpen}
-      role={isActive ? undefined : "button"}
-      aria-label={isActive ? undefined : "Open post"}
+      role={isActive ? undefined : 'button'}
+      aria-label={isActive ? undefined : 'Open post'}
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (
@@ -229,7 +233,10 @@ const ReplyToFeedItem = memo(({
           {/* Header: name · handle (wide desktop) · time */}
           <div className="flex items-center gap-2 min-w-0">
             <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">@{authorAddress}</span>
+            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">
+              @
+              {authorAddress}
+            </span>
             <span className="text-white/50 shrink-0">·</span>
             {item.tx_hash ? (
               <BlockchainInfoPopover
@@ -238,11 +245,11 @@ const ReplyToFeedItem = memo(({
                 sender={(item as any).sender_address}
                 contract={(item as any).contract_address}
                 postId={String(item.id)}
-                triggerContent={
+                triggerContent={(
                   <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
                     {compactTime(item.created_at as unknown as string)}
                   </span>
-                }
+                )}
               />
             ) : (
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
@@ -258,7 +265,10 @@ const ReplyToFeedItem = memo(({
             <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
               <span className="text-[13px]" aria-hidden="true">🏅</span>
               <span className="uppercase tracking-wide">Holder</span>
-              <span className="text-emerald-100/80">· {tokenHolderLabel}</span>
+              <span className="text-emerald-100/80">
+                ·
+                {tokenHolderLabel}
+              </span>
             </div>
           )}
 
@@ -268,7 +278,7 @@ const ReplyToFeedItem = memo(({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, "");
+                const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, '');
                 onOpenPost(slugOrId);
               }}
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
@@ -287,24 +297,24 @@ const ReplyToFeedItem = memo(({
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
+                    {parent ? chainNames?.[parent.sender_address] || 'Legend' : 'Parent'}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
                 <div className="text-[11px] text-white/60 whitespace-nowrap shrink-0">
                   {parent?.created_at ? (
                     <span title={fullTimestamp(parent.created_at as unknown as string)}>{compactTime(parent.created_at as unknown as string)}</span>
-                  ) : "—"}
+                  ) : '—'}
                 </div>
               </div>
               <div className="text-[12px] text-white line-clamp-2">
                 {parentError || !parent
-                  ? "Parent unavailable/not visible"
+                  ? 'Parent unavailable/not visible'
                   : linkify(parent.content, {
                     knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
                     hashtagVariant: 'post-inline',
                     trendMentions: (parent as any)?.trend_mentions,
-                    })}
+                  })}
               </div>
               <div className="mt-1 text-[11px] text-white/70">Show post</div>
             </button>
@@ -316,17 +326,17 @@ const ReplyToFeedItem = memo(({
               knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
               hashtagVariant: 'post-inline',
               trendMentions: (item as any)?.trend_mentions,
-              })}
+            })}
           </div>
 
           {/* Media */}
           {media.length > 0 && (
             <div
               className={cn(
-                "mt-3 grid gap-2 rounded-xl overflow-hidden",
-                media.length === 1 && "grid-cols-1",
-                media.length === 2 && "grid-cols-2",
-                media.length >= 3 && "grid-cols-2"
+                'mt-3 grid gap-2 rounded-xl overflow-hidden',
+                media.length === 1 && 'grid-cols-1',
+                media.length === 2 && 'grid-cols-2',
+                media.length >= 3 && 'grid-cols-2',
               )}
             >
               {media.slice(0, 4).map((m: string, index: number) => (
@@ -374,7 +384,9 @@ const ReplyToFeedItem = memo(({
               )}
               {childError && (
                 <div className="text-[13px] text-white/70">
-                  Error loading replies. <button className="underline" onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}>Retry</button>
+                  Error loading replies.
+                  {' '}
+                  <button className="underline" onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}>Retry</button>
                 </div>
               )}
               {!childLoading && !childError && childReplies.length === 0 && (
@@ -387,7 +399,7 @@ const ReplyToFeedItem = memo(({
                   commentCount={reply.total_comments ?? 0}
                   hideParentContext
                   allowInlineRepliesToggle={false}
-                  onOpenPost={(_id) => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/,''))}
+                  onOpenPost={(_id) => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
                 />
               ))}
             </div>
@@ -398,8 +410,6 @@ const ReplyToFeedItem = memo(({
   );
 });
 
-ReplyToFeedItem.displayName = "ReplyToFeedItem";
+ReplyToFeedItem.displayName = 'ReplyToFeedItem';
 
 export default ReplyToFeedItem;
-
-

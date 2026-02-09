@@ -59,15 +59,16 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
                   <div className="text-xs text-white/60 mb-1">Voter</div>
                   <AddressChip address={item.address} linkToExplorer />
                 </div>
-                
+
                 {/* Choice and Voting Power Row */}
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="text-xs text-white/60 mb-1">Choice</div>
                     <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${item.choice
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}
+                    >
                       <span className="text-xs">
                         {item.choice ? '✓' : '○'}
                       </span>
@@ -76,7 +77,7 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
                       </span>
                     </span>
                   </div>
-                  
+
                   <div className="flex-1 text-right">
                     <div className="text-xs text-white/60 mb-1">Voting Power</div>
                     <div className="text-sm font-medium">
@@ -111,9 +112,10 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
                 </td>
                 <td className="p-3 lg:p-4">
                   <span className={`inline-flex items-center gap-2 px-2 lg:px-3 py-1 rounded-full text-xs lg:text-sm font-medium ${item.choice
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}
+                  >
                     <span className="text-xs">
                       {item.choice ? '✓' : '○'}
                     </span>

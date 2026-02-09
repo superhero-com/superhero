@@ -1,9 +1,9 @@
+import { cn } from '@/lib/utils';
 import { DexTokenDto } from '../../../api/generated';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import { RouteInfo } from '../types/dex';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
 import { Badge } from '../../ui/badge';
-import { cn } from '@/lib/utils';
 
 interface SwapRouteInfoProps {
   routeInfo: RouteInfo;
@@ -13,7 +13,9 @@ interface SwapRouteInfoProps {
   className?: string;
 }
 
-export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut, className }: SwapRouteInfoProps) {
+export default function SwapRouteInfo({
+  routeInfo, tokens, tokenIn, tokenOut, className,
+}: SwapRouteInfoProps) {
   function routeLabel(addr: string): string {
     if (addr === DEX_ADDRESSES.wae) return 'WAE';
     if (tokenIn?.address === addr) return tokenIn.symbol;
@@ -35,19 +37,18 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut, cl
     return f ? `${i}.${f.slice(0, 6)}` : i;
   }
 
-
   function buildRouteDisplay(): string {
-    const routeLabels = routeInfo.path.map(p => routeLabel(p));
+    const routeLabels = routeInfo.path.map((p) => routeLabel(p));
     let routeDisplay = routeLabels.map((label, i) => (i > 0 ? ' → ' : '') + label).join('');
 
     // If route starts with WAE, prepend AE
     if (routeLabels.length > 0 && routeLabels[0] === 'WAE') {
-      routeDisplay = 'AE → ' + routeDisplay;
+      routeDisplay = `AE → ${routeDisplay}`;
     }
 
     // If route ends with WAE, append AE
     if (routeLabels.length > 0 && routeLabels[routeLabels.length - 1] === 'WAE') {
-      routeDisplay = routeDisplay + ' → AE';
+      routeDisplay += ' → AE';
     }
 
     return routeDisplay;
@@ -56,7 +57,6 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut, cl
   if (!routeInfo.path.length) {
     return null;
   }
-
 
   return (
     <AeCard variant="glass" className={cn('mt-3', className)}>
@@ -85,7 +85,10 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut, cl
                 return (
                   <div key={idx} className="flex justify-between items-center text-xs bg-muted/20 p-2 rounded-lg">
                     <Badge variant="outline" className="text-xs font-mono">
-                      {routeLabel(t0)} / {routeLabel(t1)}
+                      {routeLabel(t0)}
+                      {' '}
+                      /
+                      {routeLabel(t1)}
                     </Badge>
                     <span className="text-muted-foreground font-mono">
                       {hr0 && hr1 ? `${hr0} / ${hr1}` : 'N/A'}

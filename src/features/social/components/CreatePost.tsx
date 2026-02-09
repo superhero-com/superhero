@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import PostForm from './PostForm';
 import { useIsMobile } from '@/hooks';
+import PostForm from './PostForm';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -16,7 +16,9 @@ export interface CreatePostRef {
 }
 
 const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
-  ({ onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated }, ref) => {
+  ({
+    onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated,
+  }, ref) => {
     const postFormRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isMobileViewport = useIsMobile();
@@ -49,22 +51,22 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
       <div ref={containerRef}>
         <PostForm
           ref={postFormRef}
-          isPost={true}
+          isPost
           onClose={onClose}
           onSuccess={onSuccess}
           className={className}
           onTextChange={onTextChange}
           onPostCreated={onPostCreated}
-          showMediaFeatures={true}
-          showEmojiPicker={true}
-          showGifInput={true}
+          showMediaFeatures
+          showEmojiPicker
+          showGifInput
           characterLimit={280}
           minHeight="60px"
           autoFocus={autoFocus}
         />
       </div>
     );
-  }
+  },
 );
 
 CreatePost.displayName = 'CreatePost';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DataTablePagination } from './DataTablePagination';
 import Spinner from '@/components/Spinner';
+import { DataTablePagination } from './DataTablePagination';
 
 export interface DataTableParams {
   page?: number;
@@ -53,7 +53,9 @@ export function DataTable<T>({
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
   const queryKey = useMemo(() => ['DataTable', params, initialParams, queryFn], [params, initialParams, queryFn]);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data, isLoading, error, refetch,
+  } = useQuery({
     queryKey,
     queryFn: () => queryFn({
       ...params,
@@ -63,11 +65,11 @@ export function DataTable<T>({
   });
 
   const handlePageChange = (page: number) => {
-    setParams(prev => ({ ...prev, page }));
+    setParams((prev) => ({ ...prev, page }));
   };
 
   const handleParamsChange = (newParams: Partial<DataTableParams>) => {
-    setParams(prev => ({ ...prev, ...newParams, page: 1 }));
+    setParams((prev) => ({ ...prev, ...newParams, page: 1 }));
   };
 
   // Expose methods for parent components
@@ -147,7 +149,7 @@ export function DataTable<T>({
 // Hook for using DataTable with external state management
 export function useDataTable<T>(
   queryFn: (params: DataTableParams) => Promise<DataTableResponse<T>>,
-  initialParams: DataTableParams = {}
+  initialParams: DataTableParams = {},
 ) {
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
@@ -158,14 +160,16 @@ export function useDataTable<T>(
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
   const queryKey = useMemo(() => ['DataTable', params, queryFn], [params, queryFn]);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data, isLoading, error, refetch,
+  } = useQuery({
     queryKey,
     queryFn: () => queryFn(params),
     placeholderData: (previousData) => previousData,
   });
 
   const updateParams = (newParams: Partial<DataTableParams>) => {
-    setParams(prev => ({ ...prev, ...newParams }));
+    setParams((prev) => ({ ...prev, ...newParams }));
   };
 
   const resetParams = () => {

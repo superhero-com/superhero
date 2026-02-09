@@ -43,9 +43,8 @@ export function validateHash(fullHash?: string): ValidatedHash {
 
   if (fullHash) {
     [prefix, hash] = fullHash.split('_') as [HashPrefix, string];
-    valid =
-      (AE_HASH_PREFIXES_ALLOWED.includes(prefix) && HASH_REGEX.test(hash)) ||
-      isName;
+    valid = (AE_HASH_PREFIXES_ALLOWED.includes(prefix) && HASH_REGEX.test(hash))
+      || isName;
   }
 
   return {
@@ -61,21 +60,21 @@ export function validateHash(fullHash?: string): ValidatedHash {
  */
 export function formatAddress(address: string, length = 6, truncate = false): string {
   if (!address) return '';
-  
+
   if (address.endsWith(AE_AENS_DOMAIN) || !truncate) {
     return address; // Show full AENS names
   }
-  
+
   // Show full Aeternity account addresses (ak_...) without truncation
   const { valid } = validateHash(address);
   if (!valid) {
     return address;
   }
-  
+
   if (address.length <= length * 2 + 3) {
     return address; // Don't truncate short addresses
   }
-  
+
   return `${address.slice(0, (length + 3))}...${address.slice(-length)}`;
 }
 
@@ -96,7 +95,7 @@ function getEndpointByHash(hash: string): string | undefined {
 export function prepareExplorerUrl(
   hash: string,
   explorerUrl: string,
-  prefix?: string
+  prefix?: string,
 ): string | undefined {
   const endpoint = prefix ?? getEndpointByHash(hash);
   return endpoint ? `${explorerUrl}/${endpoint}/${hash}` : undefined;
@@ -118,20 +117,19 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
       return true;
-    } else {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      const success = document.execCommand('copy');
-      textArea.remove();
-      return success;
     }
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const success = document.execCommand('copy');
+    textArea.remove();
+    return success;
   } catch (error) {
     console.error('Failed to copy to clipboard:', error);
     return false;

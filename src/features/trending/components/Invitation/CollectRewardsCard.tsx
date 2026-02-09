@@ -1,41 +1,41 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { useAeSdk } from "@/hooks/useAeSdk";
-import { getAffiliationTreasury } from "@/libs/affiliation";
-import { Decimal } from "@/libs/decimal";
-import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
-import Spinner from "@/components/Spinner";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import { useAeSdk } from '@/hooks/useAeSdk';
+import { getAffiliationTreasury } from '@/libs/affiliation';
+import { Decimal } from '@/libs/decimal';
+import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
+import Spinner from '@/components/Spinner';
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
 const AETTOS_DECIMALS = 18;
 
 type UniqueInviteesState =
-  | "ThresholdReached"
+  | 'ThresholdReached'
   | { ThresholdReached: [] }
   | { WaitingForInvitations: [unknown, unknown] };
 
 function isThresholdReachedState(state: unknown): boolean {
   if (!state) return false;
-  if (state === "ThresholdReached") return true;
-  return typeof state === "object" && "ThresholdReached" in (state as any);
+  if (state === 'ThresholdReached') return true;
+  return typeof state === 'object' && 'ThresholdReached' in (state as any);
 }
 
 function getWaitingForInvitations(state: unknown): [unknown, unknown] | null {
-  if (!state || typeof state !== "object") return null;
+  if (!state || typeof state !== 'object') return null;
   const waiting = (state as any).WaitingForInvitations;
   return Array.isArray(waiting) && waiting.length === 2 ? waiting : null;
 }
 
 function normalizeAddressSetToArray(value: unknown): string[] {
   if (!value) return [];
-  if (Array.isArray(value)) return value.filter((x) => typeof x === "string") as string[];
+  if (Array.isArray(value)) return value.filter((x) => typeof x === 'string') as string[];
   // Some decoders may return Set or custom set-like objects
-  if (value instanceof Set) return Array.from(value).filter((x): x is string => typeof x === "string");
-  if (typeof (value as any).values === "function") {
+  if (value instanceof Set) return Array.from(value).filter((x): x is string => typeof x === 'string');
+  if (typeof (value as any).values === 'function') {
     try {
-      return Array.from((value as any).values()).filter((x): x is string => typeof x === "string");
+      return Array.from((value as any).values()).filter((x): x is string => typeof x === 'string');
     } catch {
       return [];
     }
@@ -47,7 +47,7 @@ function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]
   if (!value) return [];
   if (value instanceof Map) {
     return Array.from(value.entries())
-      .filter(([k]) => typeof k === "string")
+      .filter(([k]) => typeof k === 'string')
       .map(([k, v]) => [k as string, String(v)]);
   }
   if (Array.isArray(value)) {
@@ -55,10 +55,10 @@ function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]
     return value
       .map((item) => (Array.isArray(item) && item.length >= 2 ? [item[0], item[1]] : null))
       .filter((x): x is [unknown, unknown] => !!x)
-      .filter(([k]) => typeof k === "string")
+      .filter(([k]) => typeof k === 'string')
       .map(([k, v]) => [k as string, String(v)]);
   }
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     return Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, String(v)]);
   }
   return [];
@@ -75,7 +75,7 @@ export default function CollectRewardsCard({
 
   // State
   const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<Decimal>(
-    Decimal.ZERO
+    Decimal.ZERO,
   );
   const [inviteesReachedCount, setInviteesReachedCount] = useState<number>(0);
   const [inviteesInProgressCount, setInviteesInProgressCount] = useState<number>(0);
@@ -89,7 +89,7 @@ export default function CollectRewardsCard({
   // Calculate progress percentage
   const progressPercentage = Math.min(
     (inviteesReachedCount / MIN_INVITEES) * 100,
-    100
+    100,
   );
 
   // Check if eligible for rewards
@@ -102,12 +102,12 @@ export default function CollectRewardsCard({
     try {
       const affiliationTreasury = await getAffiliationTreasury(sdk as any);
       const rewards = await affiliationTreasury.getAccumulatedRewards(
-        activeAccount
+        activeAccount,
       );
       const rewardsAe = Number(rewards) / 1e18;
       setAccumulatedRewardsAe(Decimal.from(rewardsAe));
     } catch (error) {
-      console.error("Failed to calculate accumulated rewards:", error);
+      console.error('Failed to calculate accumulated rewards:', error);
       setAccumulatedRewardsAe(Decimal.ZERO);
     }
   }, [activeAccount, sdk]);
@@ -159,7 +159,7 @@ export default function CollectRewardsCard({
         const spent = Decimal.fromBigNumberString(aettosStr);
         const pct = Math.max(
           0,
-          Math.min(100, Number(spent.div(MIN_SPENT_AE).mul(100).toString(0)))
+          Math.min(100, Number(spent.div(MIN_SPENT_AE).mul(100).toString(0))),
         );
         progressItems.push({
           address: addr,
@@ -181,7 +181,7 @@ export default function CollectRewardsCard({
       setInviteesInProgressCount(inProgressCount);
       setInviteeProgress(progressItems);
     } catch (error: any) {
-      console.error("Failed to calculate unique invitees:", error);
+      console.error('Failed to calculate unique invitees:', error);
       setThresholdReached(false);
       setInviteesReachedCount(0);
       setInviteesInProgressCount(0);
@@ -203,17 +203,17 @@ export default function CollectRewardsCard({
       // Refresh rewards after successful withdrawal
       await calculateAccumulatedRewards();
     } catch (error: any) {
-      console.error("Failed to collect rewards:", error);
+      console.error('Failed to collect rewards:', error);
 
       if (
-        error?.message?.includes("MINIMUM_ACCOUNTS_THRESHOLD_NOT_REACHED") ||
-        error?.message?.includes("MINIMUM_OF_4_ACCOUNTS_SHALL_BUY")
+        error?.message?.includes('MINIMUM_ACCOUNTS_THRESHOLD_NOT_REACHED')
+        || error?.message?.includes('MINIMUM_OF_4_ACCOUNTS_SHALL_BUY')
       ) {
         setErrorMessage(
-          `Not eligible yet: you need ${MIN_INVITEES} direct invitees who each spent at least ${MIN_SPENT_AE} AE in token sales.`
+          `Not eligible yet: you need ${MIN_INVITEES} direct invitees who each spent at least ${MIN_SPENT_AE} AE in token sales.`,
         );
       } else {
-        setErrorMessage(error?.message || "An error occurred while collecting rewards.");
+        setErrorMessage(error?.message || 'An error occurred while collecting rewards.');
       }
     } finally {
       setCollectingReward(false);
@@ -250,9 +250,23 @@ export default function CollectRewardsCard({
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once{" "}
-            <span className="font-semibold text-white/80">{MIN_INVITEES} direct invitees</span> have each
-            spent at least <span className="font-semibold text-white/80">{MIN_SPENT_AE} AE</span> (cumulative).
+            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once
+            {' '}
+            <span className="font-semibold text-white/80">
+              {MIN_INVITEES}
+              {' '}
+              direct invitees
+            </span>
+            {' '}
+            have each
+            spent at least
+            <span className="font-semibold text-white/80">
+              {MIN_SPENT_AE}
+              {' '}
+              AE
+            </span>
+            {' '}
+            (cumulative).
           </p>
           <p className="text-xs opacity-60">
             Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
@@ -266,23 +280,32 @@ export default function CollectRewardsCard({
             <div className="flex justify-between items-center font-semibold text-sm md:text-base flex-wrap gap-2">
               <span>Progress to rewards</span>
               <span className="text-teal-400 font-bold text-base md:text-lg text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
-                {inviteesReachedCount}/{MIN_INVITEES} reached
+                {inviteesReachedCount}
+                /
+                {MIN_INVITEES}
+                {' '}
+                reached
               </span>
             </div>
             <div className="w-full h-2 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
               <div
                 className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-md transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] relative z-10"
                 style={{ width: `${progressPercentage}%` }}
-              ></div>
+              />
             </div>
             <div className="text-center font-medium text-slate-400 text-xs md:text-sm p-1 rounded-lg bg-white/2 break-words">
               {thresholdReached
-                ? "🎉 Eligible to withdraw"
+                ? '🎉 Eligible to withdraw'
                 : `${Math.max(0, MIN_INVITEES - inviteesReachedCount)} more invitees need to reach ${MIN_SPENT_AE} AE`}
             </div>
             {!thresholdReached && inviteesInProgressCount > 0 && (
               <div className="text-center text-xs text-white/60">
-                {inviteesInProgressCount} invitee{inviteesInProgressCount === 1 ? "" : "s"} still accumulating
+                {inviteesInProgressCount}
+                {' '}
+                invitee
+                {inviteesInProgressCount === 1 ? '' : 's'}
+                {' '}
+                still accumulating
               </div>
             )}
 
@@ -295,12 +318,12 @@ export default function CollectRewardsCard({
                         {item.address}
                       </div>
                       <div className="text-xs text-white/70 whitespace-nowrap">
-                        {item.reached ? "Reached" : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
+                        {item.reached ? 'Reached' : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 bg-white/10 rounded overflow-hidden">
                       <div
-                        className={`h-full rounded ${item.reached ? "bg-teal-400" : "bg-purple-400"}`}
+                        className={`h-full rounded ${item.reached ? 'bg-teal-400' : 'bg-purple-400'}`}
                         style={{ width: `${item.progressPct}%` }}
                       />
                     </div>
@@ -308,7 +331,10 @@ export default function CollectRewardsCard({
                 ))}
                 {inviteeProgress.length > 6 && (
                   <div className="text-center text-xs text-white/50">
-                    +{inviteeProgress.length - 6} more
+                    +
+                    {inviteeProgress.length - 6}
+                    {' '}
+                    more
                   </div>
                 )}
               </div>
@@ -341,9 +367,9 @@ export default function CollectRewardsCard({
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
               className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${isEligibleForRewards
-                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40"
-                  : "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
-                }`}
+                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40'
+                : 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
+              }`}
             >
               {collectingReward ? (
                 <div className="flex items-center justify-center gap-3">
@@ -351,11 +377,11 @@ export default function CollectRewardsCard({
                   Withdrawing...
                 </div>
               ) : !thresholdReached ? (
-                "Not eligible yet"
+                'Not eligible yet'
               ) : accumulatedRewardsAe.lte(Decimal.ZERO) ? (
-                "No rewards yet"
+                'No rewards yet'
               ) : (
-                "Collect rewards"
+                'Collect rewards'
               )}
             </button>
           </div>

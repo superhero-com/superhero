@@ -5,7 +5,7 @@ import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { DEX_ADDRESSES } from '../../../libs/dex';
-import Spinner from '../../../components/Spinner';
+import Spinner from '../../Spinner';
 
 interface TokenSelectorProps {
   label?: string;
@@ -30,21 +30,20 @@ export default function TokenSelector({
   loading = false,
   searchValue = '',
   onSearchChange,
-  tokens
+  tokens,
 }: TokenSelectorProps) {
   const [open, setOpen] = useState(false);
   const [customAddress, setCustomAddress] = useState('');
   const { aex9Balances, balance } = useAccount();
 
-
   const filteredTokens = useMemo(() => {
     const term = searchValue.trim().toLowerCase();
-    const excludeIds = exclude.map(t => t.address);
+    const excludeIds = exclude.map((t) => t.address);
 
     return tokens.filter((token) => {
-      const matchesSearch = !term ||
-        token.symbol.toLowerCase().includes(term) ||
-        (token.address || '').toLowerCase().includes(term);
+      const matchesSearch = !term
+        || token.symbol.toLowerCase().includes(term)
+        || (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
       // if the token is WAE, skip it
       if (skipToken?.address === DEX_ADDRESSES.wae && token.address === 'AE') {
@@ -87,18 +86,16 @@ export default function TokenSelector({
     setCustomAddress('');
   };
 
-  const isValidAddress = (address: string) => {
+  const isValidAddress = (address: string) =>
     // Basic validation - you might want to make this more robust
-    return address.trim().length > 10 && address.includes('_') || address.startsWith('ak_') || address.startsWith('ct_');
-  };
-
+    address.trim().length > 10 && address.includes('_') || address.startsWith('ak_') || address.startsWith('ct_');
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <div>
         {label && (
-          <div className="text-xs text-white/60 font-semibold mb-1.5 normal-case tracking-wide">
-            {label}
-          </div>
+        <div className="text-xs text-white/60 font-semibold mb-1.5 normal-case tracking-wide">
+          {label}
+        </div>
         )}
 
         <div className="flex gap-2">
@@ -106,7 +103,7 @@ export default function TokenSelector({
             <button
               disabled={disabled || loading}
               onClick={() => {
-                // Clear search when opening dialog
+              // Clear search when opening dialog
                 if (onSearchChange) {
                   onSearchChange('');
                 }
@@ -166,64 +163,69 @@ export default function TokenSelector({
 
           {/* Custom Token Input */}
           {searchValue && isValidAddress(searchValue) && (
+          <div style={{
+            marginBottom: 20,
+            padding: 16,
+            background: 'rgba(0, 255, 157, 0.1)',
+            border: '1px solid rgba(0, 255, 157, 0.3)',
+            borderRadius: 16,
+          }}
+          >
             <div style={{
-              marginBottom: 20,
-              padding: 16,
-              background: 'rgba(0, 255, 157, 0.1)',
-              border: '1px solid rgba(0, 255, 157, 0.3)',
-              borderRadius: 16
-            }}>
-              <div style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--accent-color)',
-                marginBottom: 8
-              }}>
-                Add Custom Token
-              </div>
-              <div style={{
-                fontSize: 12,
-                color: 'var(--light-font-color)',
-                marginBottom: 12
-              }}>
-                Address: {searchValue}
-              </div>
-              <button
-                onClick={() => {
-                  const customToken: DexTokenDto = {
-                    address: searchValue.trim(),
-                    symbol: 'CUSTOM',
-                    name: 'CUSTOM',
-                    pairs_count: 0,
-                    decimals: 18,
-                    is_ae: false,
-                    created_at: new Date().toISOString(),
-                  };
-                  handleSelect(customToken);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 8,
-                  background: 'var(--accent-color)',
-                  border: 'none',
-                  color: 'white',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 157, 0.4)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                Add Token
-              </button>
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--accent-color)',
+              marginBottom: 8,
+            }}
+            >
+              Add Custom Token
             </div>
+            <div style={{
+              fontSize: 12,
+              color: 'var(--light-font-color)',
+              marginBottom: 12,
+            }}
+            >
+              Address:
+              {' '}
+              {searchValue}
+            </div>
+            <button
+              onClick={() => {
+                const customToken: DexTokenDto = {
+                  address: searchValue.trim(),
+                  symbol: 'CUSTOM',
+                  name: 'CUSTOM',
+                  pairs_count: 0,
+                  decimals: 18,
+                  is_ae: false,
+                  created_at: new Date().toISOString(),
+                };
+                handleSelect(customToken);
+              }}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                background: 'var(--accent-color)',
+                border: 'none',
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 157, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              Add Token
+            </button>
+          </div>
           )}
 
           {/* Section Header */}
@@ -233,15 +235,17 @@ export default function TokenSelector({
             alignItems: 'center',
             marginBottom: 12,
             paddingBottom: 8,
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          >
             <span style={{
               fontSize: 14,
               fontWeight: 600,
               color: 'var(--light-font-color)',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
+              letterSpacing: '0.5px',
+            }}
+            >
               Token
             </span>
             <span style={{
@@ -249,8 +253,9 @@ export default function TokenSelector({
               fontWeight: 600,
               color: 'var(--light-font-color)',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
+              letterSpacing: '0.5px',
+            }}
+            >
               Balance/Address
             </span>
           </div>
@@ -261,8 +266,9 @@ export default function TokenSelector({
             gap: 6,
             maxHeight: '350px',
             overflowY: 'auto',
-            paddingRight: 4
-          }}>
+            paddingRight: 4,
+          }}
+          >
             {filteredTokens.map((token) => (
               <button
                 key={token.address}
@@ -278,7 +284,7 @@ export default function TokenSelector({
                   color: 'var(--standard-font-color)',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)'
+                  backdropFilter: 'blur(10px)',
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';
@@ -298,14 +304,16 @@ export default function TokenSelector({
                     marginBottom: 2,
                     color: 'var(--standard-font-color)',
                     textTransform: 'none',
-                  }}>
+                  }}
+                  >
                     {token.symbol}
                   </div>
                   <div style={{
                     fontSize: 11,
                     color: 'var(--light-font-color)',
-                    opacity: 0.8
-                  }}>
+                    opacity: 0.8,
+                  }}
+                  >
                     {token.is_ae ? 'Native Token' : 'Token'}
                   </div>
                 </div>
@@ -315,12 +323,13 @@ export default function TokenSelector({
                     fontSize: 14,
                     fontWeight: 600,
                     color: 'var(--standard-font-color)',
-                    marginBottom: 2
-                  }}>
+                    marginBottom: 2,
+                  }}
+                  >
                     {
-                      token.is_ae ?
-                        Decimal.from(toAe(balance)).prettify() :
-                        Decimal.from(aex9Balances.find(b => b?.contract_id === token.address)?.amount || 0).div(10 ** token.decimals).prettify()
+                      token.is_ae
+                        ? Decimal.from(toAe(balance)).prettify()
+                        : Decimal.from(aex9Balances.find((b) => b?.contract_id === token.address)?.amount || 0).div(10 ** token.decimals).prettify()
                     }
                   </div>
                   <div style={{
@@ -331,43 +340,45 @@ export default function TokenSelector({
                     maxWidth: 120,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
+                    whiteSpace: 'nowrap',
+                  }}
+                  >
                     {token.address.length > 15
                       ? `${token.address.slice(0, 6)}...${token.address.slice(-6)}`
-                      : token.address
-                    }
+                      : token.address}
                   </div>
                 </div>
               </button>
             ))}
 
             {filteredTokens.length === 0 && !searchValue && (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
-                color: 'var(--light-font-color)',
-                fontSize: 14
-              }}>
-                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🪙</div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens available</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>Try adding a custom token by address</div>
-              </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              color: 'var(--light-font-color)',
+              fontSize: 14,
+            }}
+            >
+              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🪙</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens available</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>Try adding a custom token by address</div>
+            </div>
             )}
 
             {filteredTokens.length === 0 && searchValue && !isValidAddress(searchValue) && (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
-                color: 'var(--light-font-color)',
-                fontSize: 14
-              }}>
-                <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens found</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  Can't find the token you're looking for? Try entering the mint address or check token list settings below.
-                </div>
+            <div style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              color: 'var(--light-font-color)',
+              fontSize: 14,
+            }}
+            >
+              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens found</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>
+                Can't find the token you're looking for? Try entering the mint address or check token list settings below.
               </div>
+            </div>
             )}
           </div>
         </Dialog.Content>

@@ -18,11 +18,11 @@ export function linkify(
     knownChainNames?: Set<string>;
     hashtagVariant?: 'post-inline';
     trendMentions?: TrendMention[];
-  }
+  },
 ): React.ReactNode[] {
   if (!text) return [];
   let raw = String(text);
-  
+
   // Decode HTML entities first (in case content is HTML-encoded)
   // Use a safe method that works in both browser and SSR contexts
   const decodeHtmlEntities = (str: string): string => {
@@ -41,11 +41,11 @@ export function linkify(
       .replace(/&#10;|&#xA;|&#x0A;/gi, '\n');
   };
   raw = decodeHtmlEntities(raw);
-  
+
   // Handle various newline representations and convert them to actual newlines
   // This handles cases where content is stored with escaped or encoded newline characters
   // Process in order from most specific to least specific
-  
+
   // 1. Double-escaped: \\\\n -> \n (handle double escaping first)
   raw = raw.replace(/\\\\n/g, '\n');
   // 2. Escaped newlines: \\n -> \n
@@ -79,7 +79,7 @@ export function linkify(
           }}
         >
           {match}
-        </a>
+        </a>,
       );
     } else {
       // Unknown name → keep as plain text
@@ -117,7 +117,7 @@ export function linkify(
           }}
         >
           {display}
-        </a>
+        </a>,
       );
       segLast = off + m.length;
       return m;
@@ -165,7 +165,7 @@ export function linkify(
             title={m}
           >
             {display}
-          </a>
+          </a>,
         );
       }
       segLast = off + m.length;
@@ -210,7 +210,7 @@ export function linkify(
           >
             {m}
           </Link>
-        )
+        ),
       );
       last = off + m.length;
       return m;
@@ -223,7 +223,7 @@ export function linkify(
   const withLineBreaks: React.ReactNode[] = [];
   let brKeyCounter = 0; // Counter to ensure unique keys for <br /> elements
   let previousNodeWasNonString = false; // Track if previous node was a React element (link, etc.)
-  
+
   finalParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
       // Non-string node (link, etc.) - push it and mark that we had a non-string
@@ -231,17 +231,17 @@ export function linkify(
       previousNodeWasNonString = true;
       return;
     }
-    
+
     const segment = node as string;
     // Ensure we have actual newline characters for splitting
     // Split on newline, but also handle cases where newlines might be encoded differently
     const normalizedSegment = segment
-      .replace(/\\n/g, '\n')  // Convert escaped newlines
+      .replace(/\\n/g, '\n') // Convert escaped newlines
       .replace(/\r\n/g, '\n') // Normalize Windows line endings
-      .replace(/\r/g, '\n');   // Normalize Mac line endings
+      .replace(/\r/g, '\n'); // Normalize Mac line endings
     const lines = normalizedSegment.split('\n');
     let previousLineWasEmpty = false;
-    
+
     // If this segment starts with a newline and previous node was non-string, add <br />
     if (lines.length > 1 && lines[0].length === 0 && previousNodeWasNonString) {
       withLineBreaks.push(<br key={`br-${idx}-start-${brKeyCounter++}`} />);
@@ -249,11 +249,11 @@ export function linkify(
       // Remove the empty first line since we've handled it
       lines.shift();
     }
-    
+
     lines.forEach((line, lineIdx) => {
       const isLastLine = lineIdx === lines.length - 1;
       const isTrailingEmptyLine = isLastLine && line.length === 0;
-      
+
       if (line.length > 0) {
         // Non-empty line: add <br /> before it if there was a previous line
         // (but skip if previous line was empty, as we already handled that)
@@ -275,7 +275,7 @@ export function linkify(
         previousLineWasEmpty = true;
       }
     });
-    
+
     // If segment ends with newline, mark that next segment should add <br />
     if (normalizedSegment.endsWith('\n') && lines[lines.length - 1].length === 0) {
       previousNodeWasNonString = false; // Actually, this is text ending with newline
@@ -299,7 +299,5 @@ function formatUrl(url: string): string {
 
 function truncateEnd(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, Math.max(0, max - 1)) + '…';
+  return `${text.slice(0, Math.max(0, max - 1))}…`;
 }
-
-

@@ -1,9 +1,9 @@
-import type { LeaderboardItem } from "../../api/leaderboard";
-import { formatNumber } from "../../../../utils/number";
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import AeButton from "@/components/AeButton";
-import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import AeButton from '@/components/AeButton';
+import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { formatNumber } from '../../../../utils/number';
+import type { LeaderboardItem } from '../../api/leaderboard';
 
 interface LeaderboardCardProps {
   rank: number;
@@ -12,26 +12,24 @@ interface LeaderboardCardProps {
   metricLabel: string;
 }
 
-export function LeaderboardCard({
+export const LeaderboardCard = ({
   rank,
   item,
   timeframeLabel,
   metricLabel,
-}: LeaderboardCardProps) {
+}: LeaderboardCardProps) => {
   const navigate = useNavigate();
 
   const pnlUsd = Number(item.pnl_usd || 0);
   const roiPctRaw = item.roi_pct;
-  const roiPct =
-    roiPctRaw === null || roiPctRaw === undefined
-      ? NaN
-      : Number(roiPctRaw);
+  const roiPct = roiPctRaw === null || roiPctRaw === undefined
+    ? NaN
+    : Number(roiPctRaw);
   const aumUsd = Number(item.aum_usd || 0);
   const mddPctRaw = item.mdd_pct;
-  const mddPct =
-    mddPctRaw === null || mddPctRaw === undefined
-      ? NaN
-      : Number(mddPctRaw);
+  const mddPct = mddPctRaw === null || mddPctRaw === undefined
+    ? NaN
+    : Number(mddPctRaw);
   const buyTrades = Number(item.buy_count || 0);
   const sellTrades = Number(item.sell_count || 0);
   const createdTokens = Number(item.created_tokens_count || 0);
@@ -51,11 +49,10 @@ export function LeaderboardCard({
   }, [hasSparkline, sparkline]);
 
   const gradientId = useMemo(
-    () =>
-      `leaderboardPortfolioFill-${(item.address || "")
-        .toString()
-        .replace(/[^a-zA-Z0-9_-]/g, "")}`,
-    [item.address]
+    () => `leaderboardPortfolioFill-${(item.address || '')
+      .toString()
+      .replace(/[^a-zA-Z0-9_-]/g, '')}`,
+    [item.address],
   );
 
   const buildSparklinePaths = (
@@ -63,9 +60,9 @@ export function LeaderboardCard({
     width: number,
     height: number,
     paddingX = 4,
-    paddingY = 4
+    paddingY = 4,
   ): { line: string; area: string } => {
-    if (!data.length) return { line: "", area: "" };
+    if (!data.length) return { line: '', area: '' };
     const xs = data.map(([t]) => t);
     const ys = data.map(([, v]) => v);
     const minX = Math.min(...xs);
@@ -76,22 +73,20 @@ export function LeaderboardCard({
     const spanY = maxY - minY || 1;
 
     const points = data.map(([t, v]) => {
-      const x =
-        paddingX +
-        ((t - minX) / spanX) * (width - paddingX * 2);
-      const y =
-        height -
-        (paddingY +
-          ((v - minY) / spanY) * (height - paddingY * 2));
+      const x = paddingX
+        + ((t - minX) / spanX) * (width - paddingX * 2);
+      const y = height
+        - (paddingY
+          + ((v - minY) / spanY) * (height - paddingY * 2));
       return { x, y };
     });
 
     const line = points
       .map((p, index) => {
-        const cmd = index === 0 ? "M" : "L";
+        const cmd = index === 0 ? 'M' : 'L';
         return `${cmd}${p.x.toFixed(2)},${p.y.toFixed(2)}`;
       })
-      .join(" ");
+      .join(' ');
 
     const first = points[0];
     const last = points[points.length - 1];
@@ -110,7 +105,8 @@ export function LeaderboardCard({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[11px] sm:text-xs text-white/80">
-            #{rank}
+            #
+            {rank}
           </div>
           <AddressAvatarWithChainName
             address={item.address}
@@ -127,19 +123,21 @@ export function LeaderboardCard({
       <div className="flex items-stretch gap-3 sm:gap-4">
         <div className="flex flex-col gap-1.5 sm:gap-1">
           <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-white/50">
-            {timeframeLabel} PnL (USD)
+            {timeframeLabel}
+            {' '}
+            PnL (USD)
           </span>
           <span
             className={`text-xl sm:text-2xl font-semibold ${
               pnlUsd < 0
-                ? "text-red-400"
+                ? 'text-red-400'
                 : pnlUsd > 0
-                ? "text-emerald-400"
-                : "text-white"
+                  ? 'text-emerald-400'
+                  : 'text-white'
             }`}
           >
-            {pnlUsd < 0 ? "-$" : "$"}
-            {Math.abs(pnlUsd).toLocaleString("en-US", {
+            {pnlUsd < 0 ? '-$' : '$'}
+            {Math.abs(pnlUsd).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -147,20 +145,23 @@ export function LeaderboardCard({
           <span
             className={`text-[10px] sm:text-[11px] ${
               isNaN(roiPct)
-                ? "text-white/40"
+                ? 'text-white/40'
                 : roiPct < 0
-                ? "text-red-300"
-                : roiPct > 0
-                ? "text-emerald-300"
-                : "text-white/70"
+                  ? 'text-red-300'
+                  : roiPct > 0
+                    ? 'text-emerald-300'
+                    : 'text-white/70'
             }`}
           >
-            {timeframeLabel} ROI{" "}
+            {timeframeLabel}
+            {' '}
+            ROI
+            {' '}
             {isNaN(roiPct)
-              ? "--"
-              : `${roiPct > 0 ? "+" : roiPct < 0 ? "-" : ""}${Math.abs(
-                  roiPct
-                ).toFixed(2)}%`}
+              ? '--'
+              : `${roiPct > 0 ? '+' : roiPct < 0 ? '-' : ''}${Math.abs(
+                roiPct,
+              ).toFixed(2)}%`}
           </span>
         </div>
         {/* Portfolio value sparkline */}
@@ -175,7 +176,7 @@ export function LeaderboardCard({
                 const { line, area } = buildSparklinePaths(
                   sparkline,
                   112,
-                  56
+                  56,
                 );
                 return (
                   <svg
@@ -224,7 +225,8 @@ export function LeaderboardCard({
             {isChartHovered && latestPoint && (
               <div className="absolute top-1 right-1 px-2 py-1 rounded-md bg-black/80 border border-white/10 text-[10px] text-white/80 shadow-lg pointer-events-none">
                 <div className="font-semibold">
-                  ${formatNumber(latestPoint.value, 2)}
+                  $
+                  {formatNumber(latestPoint.value, 2)}
                 </div>
                 <div className="text-[9px] text-white/60">
                   Latest portfolio value
@@ -240,15 +242,18 @@ export function LeaderboardCard({
         <div className="flex flex-col gap-1">
           <span className="uppercase tracking-wide">AUM</span>
           <span className="text-xs font-mono text-white">
-            ${formatNumber(aumUsd, 2)}
+            $
+            {formatNumber(aumUsd, 2)}
           </span>
         </div>
         <div className="flex flex-col gap-1">
           <span className="uppercase tracking-wide">
-            {timeframeLabel} MDD
+            {timeframeLabel}
+            {' '}
+            MDD
           </span>
           <span className="text-xs font-mono text-white">
-            {isNaN(mddPct) ? "--" : `${mddPct.toFixed(2)}%`}
+            {isNaN(mddPct) ? '--' : `${mddPct.toFixed(2)}%`}
           </span>
         </div>
         <div className="flex flex-col gap-1">
@@ -262,19 +267,22 @@ export function LeaderboardCard({
       {/* Additional breakdown */}
       <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-white/55 mt-1">
         <span>
-          Buys:{" "}
+          Buys:
+          {' '}
           <span className="text-emerald-300 font-mono">
             {formatNumber(buyTrades, 0)}
           </span>
         </span>
         <span>
-          Sells:{" "}
+          Sells:
+          {' '}
           <span className="text-red-300 font-mono">
             {formatNumber(sellTrades, 0)}
           </span>
         </span>
         <span>
-          Created:{" "}
+          Created:
+          {' '}
           <span className="text-white font-mono">
             {formatNumber(createdTokens, 0)}
           </span>
@@ -293,6 +301,4 @@ export function LeaderboardCard({
       </div>
     </div>
   );
-}
-
-
+};

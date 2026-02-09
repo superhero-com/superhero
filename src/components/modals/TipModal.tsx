@@ -1,16 +1,18 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
-import { useAccount, useAeSdk } from "../../hooks";
-import { toAettos, fromAettos } from "../../libs/dex";
-import { Decimal } from "../../libs/decimal";
-import AeButton from "../AeButton";
-import { IconDiamond } from "../../icons";
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { useChainName } from "../../hooks/useChainName";
-import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
-import { useToast } from "../ToastProvider";
+import React, {
+  useMemo, useState, useRef, useEffect,
+} from 'react';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { encode, Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
-import { tipStatusAtom, type TipPhase, makeTipKey } from '../../atoms/tipAtoms';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAccount, useAeSdk } from '../../hooks';
+import { toAettos, fromAettos } from '../../libs/dex';
+import { Decimal } from '../../libs/decimal';
+import AeButton from '../AeButton';
+import { IconDiamond } from '../../icons';
+import { useChainName } from '../../hooks/useChainName';
+import { useToast } from '../ToastProvider';
+import { tipStatusAtom, type TipPhase, makeTipKey } from '../../atoms/tipAtoms';
 
 export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
@@ -28,22 +30,22 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
     }
   }, [balance]);
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
-  
+
   // Refs to track polling timers and component mount status
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
   const isMountedRef = useRef(true);
-  
+
   // Cleanup effect to clear all timers on unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       // Clear all pending timeouts
-      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.forEach((timeoutId) => clearTimeout(timeoutId));
       timeoutRefs.current.clear();
     };
   }, []);
@@ -81,17 +83,15 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         value.toString() as any,
         toAddress as Encoded.AccountAddress,
         {
-          payload: encode(new TextEncoder().encode(payload ?? 'TIP_PROFILE'), Encoding.Bytearray)
-        }
+          payload: encode(new TextEncoder().encode(payload ?? 'TIP_PROFILE'), Encoding.Bytearray),
+        },
       );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
         // Ensure the button reflects the new total immediately by optimistically updating cache
         // Normalize postId the same way usePostTipSummary does to ensure cache key matches
-        const normalizePostIdV3 = (postId: string): string => {
-          return String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
-        };
+        const normalizePostIdV3 = (postId: string): string => (String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`);
         const idV3 = postIdForKey ? normalizePostIdV3(postIdForKey) : null;
         if (idV3) {
           // Read the cache value ONCE before any optimistic updates to ensure accurate expectedTotal calculation
@@ -102,10 +102,10 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
           const baseTotalNum = Number.isFinite(baseTotal) ? baseTotal : 0;
           const delta = Number(amount);
           const deltaNum = Number.isFinite(delta) ? delta : 0;
-          
+
           // Calculate expectedTotal based on the base value (before optimistic update)
           const expectedTotal = baseTotalNum + deltaNum;
-          
+
           // Optimistic bump: add the sent amount to current cached summary if present
           // This ensures immediate UI update before backend processes the transaction
           // Using updater function ensures React Query properly detects the change
@@ -114,41 +114,41 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
             const sum = (Number.isFinite(currentNum) ? currentNum : 0) + deltaNum;
             return { totalTips: String(sum) } as { totalTips?: string };
           });
-          
+
           // Poll backend until tip is confirmed or max retries reached
           // Backend needs time to process blockchain transaction and update database
           const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
           const retryInterval = 3000; // 3 seconds between retries
-          
+
           const pollForTip = (attempt: number = 0) => {
             // Stop polling if component is unmounted
             if (!isMountedRef.current) {
               return;
             }
-            
+
             if (attempt >= maxRetries) {
               // Final attempt after max retries
               if (isMountedRef.current) {
                 queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
-                queryClient.refetchQueries({ 
+                queryClient.refetchQueries({
                   queryKey: ['post-tip-summary', idV3],
                   type: 'active',
                 });
               }
               return;
             }
-            
+
             const timeoutId = setTimeout(() => {
               // Remove timeout ID from tracking set
               timeoutRefs.current.delete(timeoutId);
-              
+
               // Stop if component unmounted
               if (!isMountedRef.current) {
                 return;
               }
-              
+
               queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
-              queryClient.refetchQueries({ 
+              queryClient.refetchQueries({
                 queryKey: ['post-tip-summary', idV3],
                 type: 'active',
               }).then(() => {
@@ -156,18 +156,18 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
                 if (!isMountedRef.current) {
                   return;
                 }
-                
+
                 // Check if backend has processed the tip
                 const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
                 const currentTotal = current?.totalTips != null ? Number(current.totalTips) : 0;
-                
+
                 // If backend total matches or exceeds expected, we're done
                 // Otherwise, keep polling
                 if (currentTotal >= expectedTotal) {
                   // Backend has confirmed the tip
                   return;
                 }
-                
+
                 // Continue polling
                 pollForTip(attempt + 1);
               }).catch(() => {
@@ -175,27 +175,27 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
                 if (!isMountedRef.current) {
                   return;
                 }
-                
+
                 // On error, continue polling
                 pollForTip(attempt + 1);
               });
             }, retryInterval);
-            
+
             // Track timeout ID for cleanup
             timeoutRefs.current.add(timeoutId);
           };
-          
+
           // Start polling after initial delay to give backend time to start processing
           const initialTimeoutId = setTimeout(() => {
             // Remove timeout ID from tracking set
             timeoutRefs.current.delete(initialTimeoutId);
-            
+
             // Only start polling if component is still mounted
             if (isMountedRef.current) {
               pollForTip(0);
             }
           }, 5000); // 5 second initial delay before first poll
-          
+
           // Track initial timeout ID for cleanup
           timeoutRefs.current.add(initialTimeoutId);
         }
@@ -235,17 +235,18 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   }
 
   const explorerTxUrl = useMemo(() => {
-    if (!txHash) return "";
-    const base = activeNetwork?.explorerUrl?.replace(/\/$/, "") || "";
-    return base ? `${base}/transactions/${txHash}` : "";
+    if (!txHash) return '';
+    const base = activeNetwork?.explorerUrl?.replace(/\/$/, '') || '';
+    return base ? `${base}/transactions/${txHash}` : '';
   }, [txHash, activeNetwork]);
 
   return (
     <div className="w-full">
       {/* Stylish header */}
       <div className="relative overflow-hidden rounded-2xl p-4 mb-4 border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20 blur-2xl"
-          style={{ background: "radial-gradient( circle at 30% 30%, #1161FE 0%, rgba(17,97,254,0) 60% )" }}
+        <div
+          className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20 blur-2xl"
+          style={{ background: 'radial-gradient( circle at 30% 30%, #1161FE 0%, rgba(17,97,254,0) 60% )' }}
         />
         <div className="flex items-center gap-3 relative">
           <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/10 grid place-items-center">
@@ -292,7 +293,11 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       <div className="rounded-2xl p-4 border border-white/10 bg-white/[0.03] backdrop-blur-lg">
         <div className="flex items-center justify-between text-xs text-white/70 mb-2">
           <span>Balance</span>
-          <span>{aeBalanceAe.prettify()} AE</span>
+          <span>
+            {aeBalanceAe.prettify()}
+            {' '}
+            AE
+          </span>
         </div>
 
         <div className="grid gap-2">
@@ -313,24 +318,32 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => handleQuick("1")}
+              onClick={() => handleQuick('1')}
               className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
-            >1 AE</button>
+            >
+              1 AE
+            </button>
             <button
               type="button"
-              onClick={() => handleQuick("10")}
+              onClick={() => handleQuick('10')}
               className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
-            >10 AE</button>
+            >
+              10 AE
+            </button>
             <button
               type="button"
-              onClick={() => handleQuick("100")}
+              onClick={() => handleQuick('100')}
               className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
-            >100 AE</button>
+            >
+              100 AE
+            </button>
             <button
               type="button"
-              onClick={() => handleQuick("500")}
+              onClick={() => handleQuick('500')}
               className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
-            >500 AE</button>
+            >
+              500 AE
+            </button>
           </div>
 
           {insufficient && (
@@ -342,14 +355,12 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       {/* Actions */}
       <div className="flex items-center gap-2 mt-4">
         <AeButton onClick={handleSend} disabled={disabled} loading={sending}>
-          {txHash ? "Send again" : "Send tip"}
+          {txHash ? 'Send again' : 'Send tip'}
         </AeButton>
         <AeButton variant="ghost" onClick={onClose}>
-          {txHash ? "Close" : "Cancel"}
+          {txHash ? 'Close' : 'Cancel'}
         </AeButton>
       </div>
     </div>
   );
 }
-
-

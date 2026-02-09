@@ -1,33 +1,33 @@
-import React, { useEffect, useState, useRef } from "react";
-import { RecentActivity as RecentActivityType } from "../types/dex";
-import { CONFIG } from "../../../config";
+import React, { useEffect, useState, useRef } from 'react';
+import { TokenChip } from '@/components/TokenChip';
+import { RecentActivity as RecentActivityType } from '../types/dex';
+import { CONFIG } from '../../../config';
 import {
   useAccount,
   useRecentActivities,
   useMultipleTransactionStatus,
-} from "../../../hooks";
-import { TokenChip } from "@/components/TokenChip";
+} from '../../../hooks';
 
 interface RecentActivityProps {
   recent?: RecentActivityType[]; // Optional prop for backwards compatibility
 }
 
-const activityTypeLabels: Record<RecentActivityType["type"], string> = {
-  swap: "Swap",
-  wrap: "Wrap",
-  unwrap: "Unwrap",
-  bridge: "ETH Bridge",
-  add_liquidity: "Add Liquidity",
-  remove_liquidity: "Remove Liquidity",
+const activityTypeLabels: Record<RecentActivityType['type'], string> = {
+  swap: 'Swap',
+  wrap: 'Wrap',
+  unwrap: 'Unwrap',
+  bridge: 'ETH Bridge',
+  add_liquidity: 'Add Liquidity',
+  remove_liquidity: 'Remove Liquidity',
 };
 
-const activityTypeIcons: Record<RecentActivityType["type"], string> = {
-  swap: "🔄",
-  wrap: "📦",
-  unwrap: "📤",
-  bridge: "🌉",
-  add_liquidity: "💧",
-  remove_liquidity: "💧",
+const activityTypeIcons: Record<RecentActivityType['type'], string> = {
+  swap: '🔄',
+  wrap: '📦',
+  unwrap: '📤',
+  bridge: '🌉',
+  add_liquidity: '💧',
+  remove_liquidity: '💧',
 };
 
 function formatTimeAgo(timestamp: number): string {
@@ -37,7 +37,7 @@ function formatTimeAgo(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "Just now";
+  if (minutes < 1) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
@@ -45,27 +45,27 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 function formatAmount(amount?: string): string {
-  if (!amount) return "";
+  if (!amount) return '';
   const num = parseFloat(amount);
-  if (isNaN(num)) return "";
-  if (num < 0.01) return "< 0.01";
+  if (isNaN(num)) return '';
+  if (num < 0.01) return '< 0.01';
   if (num < 1) return num.toFixed(3);
   if (num < 1000) return num.toFixed(2);
   if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
   return `${(num / 1000000).toFixed(1)}M`;
 }
 
-function TransactionStatus({
+const TransactionStatus = ({
   hash,
   status,
 }: {
   hash?: string;
-  status?: RecentActivityType["status"];
-}) {
+  status?: RecentActivityType['status'];
+}) => {
   if (!hash || !status) {
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
         <span className="text-white/60">Pending</span>
       </div>
     );
@@ -74,7 +74,7 @@ function TransactionStatus({
   if (status.failed) {
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
         <span className="text-red-400">Failed</span>
       </div>
     );
@@ -83,7 +83,7 @@ function TransactionStatus({
   if (status.pending) {
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
         <span className="text-orange-400">Pending</span>
       </div>
     );
@@ -92,17 +92,18 @@ function TransactionStatus({
   if (status.confirmed) {
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_rgba(76,175,80,0.4)]"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_rgba(76,175,80,0.4)]" />
         <span className="text-green-400">
           {status.confirmations && status.confirmations > 0
             ? `${status.confirmations} conf${
-                status.confirmations === 1 ? "" : "s"
-              }`
-            : "Confirmed"}
+              status.confirmations === 1 ? '' : 's'
+            }`
+            : 'Confirmed'}
         </span>
         {status.blockNumber && (
           <span className="text-white/60 opacity-80 ml-1 text-[9px]">
-            #{status.blockNumber}
+            #
+            {status.blockNumber}
           </span>
         )}
       </div>
@@ -111,11 +112,11 @@ function TransactionStatus({
 
   return (
     <div className="flex items-center gap-1 text-[10px] font-medium">
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
       <span className="text-gray-400">Unknown</span>
     </div>
   );
-}
+};
 
 export default function RecentActivity({
   recent: propRecent,
@@ -128,8 +129,7 @@ export default function RecentActivity({
   } = useRecentActivities();
 
   // Use prop activities if provided, otherwise get from hook for current account
-  const activities =
-    propRecent || (activeAccount ? getActivitiesForAccount(activeAccount) : []);
+  const activities = propRecent || (activeAccount ? getActivitiesForAccount(activeAccount) : []);
 
   // Extract transaction hashes for status fetching
   const txHashes = activities
@@ -147,22 +147,21 @@ export default function RecentActivity({
 
   // Update stored activity statuses when new status data is available
   useEffect(() => {
-    if (!activeAccount || !txStatuses || Object.keys(txStatuses).length === 0)
-      return;
+    if (!activeAccount || !txStatuses || Object.keys(txStatuses).length === 0) return;
 
     // Check if statuses have actually changed
     const statusesChanged = Object.entries(txStatuses).some(
       ([txHash, status]) => {
         const lastStatus = lastProcessedStatusesRef.current[txHash];
         return (
-          !lastStatus ||
-          lastStatus.confirmed !== status.confirmed ||
-          lastStatus.pending !== status.pending ||
-          lastStatus.failed !== status.failed ||
-          lastStatus.blockNumber !== status.blockNumber ||
-          lastStatus.confirmations !== status.confirmations
+          !lastStatus
+          || lastStatus.confirmed !== status.confirmed
+          || lastStatus.pending !== status.pending
+          || lastStatus.failed !== status.failed
+          || lastStatus.blockNumber !== status.blockNumber
+          || lastStatus.confirmations !== status.confirmations
         );
-      }
+      },
     );
 
     if (!statusesChanged) return;
@@ -250,7 +249,9 @@ export default function RecentActivity({
                       {activity.tokenIn && activity.tokenOut && (
                         <span>
                           <TokenChip address={activity.tokenIn} />
-                          → <TokenChip address={activity.tokenOut} />
+                          →
+                          {' '}
+                          <TokenChip address={activity.tokenOut} />
                         </span>
                       )}
 
@@ -268,7 +269,7 @@ export default function RecentActivity({
                             <a
                               href={`${CONFIG.EXPLORER_URL.replace(
                                 /\/$/,
-                                ""
+                                '',
                               )}/transactions/${activity.hash}`}
                               target="_blank"
                               rel="noreferrer"
@@ -301,7 +302,10 @@ export default function RecentActivity({
         {activities.length > 10 && (
           <div className="text-center py-2 mt-1">
             <div className="text-[11px] text-white/60 font-medium opacity-80">
-              +{activities.length - 10} more activities
+              +
+              {activities.length - 10}
+              {' '}
+              more activities
             </div>
           </div>
         )}

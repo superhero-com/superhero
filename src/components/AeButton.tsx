@@ -1,6 +1,6 @@
 import React from 'react';
-import { AeButton as ShadcnAeButton, type AeButtonProps as ShadcnAeButtonProps } from './ui/ae-button';
 import { cn } from '@/lib/utils';
+import { AeButton as ShadcnAeButton, type AeButtonProps as ShadcnAeButtonProps } from './ui/ae-button';
 
 export interface AeButtonProps extends Omit<ShadcnAeButtonProps, 'variant' | 'size'> {
   children: React.ReactNode;
@@ -32,29 +32,29 @@ export default function AeButton({
 }: AeButtonProps) {
   // Map legacy variants to new shadcn variants
   const variantMap: Record<string, ShadcnAeButtonProps['variant']> = {
-    'primary': 'default',
-    'secondary': 'secondary',
-    'accent': 'accent',
-    'success': 'success',
-    'warning': 'warning',
-    'error': 'error',
-    'ghost': 'ghost',
+    primary: 'default',
+    secondary: 'secondary',
+    accent: 'accent',
+    success: 'success',
+    warning: 'warning',
+    error: 'error',
+    ghost: 'ghost',
     'secondary-dark': 'secondary',
-    'tab': 'tab',
-    'utility': 'utility',
+    tab: 'tab',
+    utility: 'utility',
     'disabled-token': 'outline',
   };
 
   // Map legacy sizes to new shadcn sizes
   const sizeMap: Record<string, ShadcnAeButtonProps['size']> = {
-    'xs': 'xs',
-    'sm': 'sm',
-    'md': 'default',
-    'lg': 'lg',
-    'xl': 'xl',
-    'small': 'sm',
-    'medium': 'default',
-    'large': 'lg',
+    xs: 'xs',
+    sm: 'sm',
+    md: 'default',
+    lg: 'lg',
+    xl: 'xl',
+    small: 'sm',
+    medium: 'default',
+    large: 'lg',
   };
 
   const shadcnVariant = variantMap[variant] || 'default';
@@ -75,7 +75,7 @@ export default function AeButton({
         rounded && 'rounded-full',
         outlined && 'border-2',
         gradient && 'bg-gradient-to-r',
-        className
+        className,
       )}
       style={style}
       {...props}
@@ -84,5 +84,3 @@ export default function AeButton({
     </ShadcnAeButton>
   );
 }
-
-

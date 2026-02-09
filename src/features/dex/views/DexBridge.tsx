@@ -1,6 +1,6 @@
-import React from "react";
-import { BuyAeWidget } from "../../ae-eth-buy";
-import RecentActivity from "../../../components/dex/supporting/RecentActivity";
+import React from 'react';
+import { BuyAeWidget } from '../../ae-eth-buy';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
 //
 export default function DexBridge() {

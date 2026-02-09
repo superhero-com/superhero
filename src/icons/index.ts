@@ -44,5 +44,3 @@ export const IconLink = ExternalLinkC;
 export const IconClose = IconCloseC;
 export const IconSmile = IconSmileC;
 export const IconGif = IconGifC;
-
-

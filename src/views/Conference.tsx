@@ -11,11 +11,11 @@ export default function Conference() {
   }, [room]);
   return (
     <div className="max-w-[980px] mx-auto p-4">
-      <iframe 
-        id="jitsiConferenceFrame0" 
-        title="Conference" 
-        src={src} 
-        className="w-full h-[80vh] border-0 rounded-lg shadow-lg" 
+      <iframe
+        id="jitsiConferenceFrame0"
+        title="Conference"
+        src={src}
+        className="w-full h-[80vh] border-0 rounded-lg shadow-lg"
       />
     </div>
   );

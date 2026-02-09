@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react';
+import {
+  Search, Filter, X, RefreshCw, Hash, User,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { DexService } from '../../../api/generated';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '../../../components/ui/select';
 import { DataTable, DataTableResponse } from '../../shared/components/DataTable';
 import { TransactionCard } from '../components/TransactionCard';
-import { Search, Filter, X, RefreshCw, Hash, User } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
 
 // Transaction types mapping with meaningful names
 const TX_TYPES = [
@@ -39,7 +43,7 @@ const fetchTransactions = async (params: any): Promise<DataTableResponse<any>> =
 // Advanced example showing how to use DataTable with filters and custom parameters
 export default function DexExploreTransactions() {
   const [searchParams] = useSearchParams();
-  const tokenAddress = searchParams.get("tokenAddress");
+  const tokenAddress = searchParams.get('tokenAddress');
 
   const [filters, setFilters] = useState({
     txType: 'all',
@@ -48,7 +52,7 @@ export default function DexExploreTransactions() {
   });
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleClearFilters = () => {
@@ -192,7 +196,6 @@ export default function DexExploreTransactions() {
           </div>
         </div>
 
-
         {/* DataTable Implementation */}
         <DataTable
           queryFn={fetchTransactions}
@@ -208,7 +211,7 @@ export default function DexExploreTransactions() {
             txType: filters.txType,
             pairAddress: filters.pairAddress,
             accountAddress: filters.accountAddress,
-            tokenAddress: tokenAddress,
+            tokenAddress,
           }}
           itemsPerPage={10}
           emptyMessage="No transactions found matching your criteria."

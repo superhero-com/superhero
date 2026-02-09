@@ -1,19 +1,21 @@
-import { AlertCircle } from "lucide-react";
-import React, { useCallback, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useAccount } from "../../../../hooks/useAccount";
-import { useAeSdk } from "../../../../hooks/useAeSdk";
-import { Decimal } from "../../../../libs/decimal";
-import { useInvitations } from "../../hooks/useInvitations";
-import WalletConnectBtn from "../../../../components/WalletConnectBtn";
-import CopyText from "../../../../components/ui/CopyText";
-import { AeButton } from "../../../../components/ui/ae-button";
-import Spinner from "../../../../components/Spinner";
-import { Alert, AlertDescription } from "../../../../components/ui/alert";
-import { Checkbox } from "../../../../components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../../components/ui/dialog";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
+import { AlertCircle } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAccount } from '../../../../hooks/useAccount';
+import { useAeSdk } from '../../../../hooks/useAeSdk';
+import { Decimal } from '../../../../libs/decimal';
+import { useInvitations } from '../../hooks/useInvitations';
+import WalletConnectBtn from '../../../../components/WalletConnectBtn';
+import CopyText from '../../../../components/ui/CopyText';
+import { AeButton } from '../../../../components/ui/ae-button';
+import Spinner from '../../../../components/Spinner';
+import { Alert, AlertDescription } from '../../../../components/ui/alert';
+import { Checkbox } from '../../../../components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '../../../../components/ui/dialog';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 
 interface InviteAndEarnCardProps {
   className?: string;
@@ -28,7 +30,7 @@ export default function InviteAndEarnCard({
   const { generateInviteKeys, prepareInviteLink } = useInvitations();
 
   // Form state
-  const [amount, setAmount] = useState<string>("");
+  const [amount, setAmount] = useState<string>('');
   const [invitesNumber, setInvitesNumber] = useState<number>(1);
   const [generatingInviteLink, setGeneratingInviteLink] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -79,16 +81,16 @@ export default function InviteAndEarnCard({
 
       // Use the shared hook to generate invite keys
       const secretKeys = await generateInviteKeys(amountValue, invitesNumber);
-      
+
       // Generate invitation links
       const links = secretKeys.map((secretKey) => prepareInviteLink(secretKey));
       setInvitationLinks(links);
 
       // Reset form and show dialog
-      setAmount("");
+      setAmount('');
       setCopyInviteLinkDialog(true);
     } catch (error: any) {
-      console.error("generateInviteLink error:", error);
+      console.error('generateInviteLink error:', error);
       setErrorMessage(error?.message || t('failedToCreateInvitation'));
     } finally {
       setGeneratingInviteLink(false);
@@ -195,9 +197,7 @@ export default function InviteAndEarnCard({
                   min="1"
                   step="1"
                   value={invitesNumber}
-                  onChange={(e) =>
-                    setInvitesNumber(Math.max(1, Number(e.target.value || 1)))
-                  }
+                  onChange={(e) => setInvitesNumber(Math.max(1, Number(e.target.value || 1)))}
                   disabled={!activeAccount}
                   className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
                 />
@@ -228,7 +228,7 @@ export default function InviteAndEarnCard({
                 disabled={generatingInviteLink || !activeAccount}
                 className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
                   !activeAccount
-                    ? "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
+                    ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
                     : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
                 }`}
               >
@@ -307,8 +307,8 @@ export default function InviteAndEarnCard({
             <div
               className={`flex items-center space-x-2 rounded-lg p-2 transition-colors ${
                 closeBlockedPulse && !linkHasBeenCopied
-                  ? "animate-shake bg-red-500/10 border border-red-500/30"
-                  : ""
+                  ? 'animate-shake bg-red-500/10 border border-red-500/30'
+                  : ''
               }`}
             >
               <Checkbox

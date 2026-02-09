@@ -1,14 +1,14 @@
-import { PriceDataFormatter } from "@/features/shared/components";
-import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
-import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { DexPairService, PairDto } from "../../../api/generated";
-import { TokenChip } from "../../../components/TokenChip";
-import PairLineChart from "../components/charts/PairLineChart";
-import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import { PriceDataFormatter } from '@/features/shared/components';
+import { performanceChartTimeframeAtom } from '@/features/trending/atoms';
+import PerformanceTimeframeSelector from '@/features/trending/components/PerformanceTimeframeSelector';
+import { useQuery } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
+import { useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { DexPairService, PairDto } from '../../../api/generated';
+import { TokenChip } from '../../../components/TokenChip';
+import PairLineChart from '../components/charts/PairLineChart';
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -23,19 +23,19 @@ interface PaginatedResponse<T> {
 export default function DexExplorePools() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tokenAddress = searchParams.get("tokenAddress");
-  const [sort, setSort] = useState<"transactions_count" | "created_at">(
-    "transactions_count"
+  const tokenAddress = searchParams.get('tokenAddress');
+  const [sort, setSort] = useState<'transactions_count' | 'created_at'>(
+    'transactions_count',
   );
-  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const timeBase = useMemo(() => {
-    if (performanceChartTimeframe === "1d") {
-      return "24h";
+    if (performanceChartTimeframe === '1d') {
+      return '24h';
     }
 
     return performanceChartTimeframe;
@@ -44,8 +44,8 @@ export default function DexExplorePools() {
   const { data, isLoading } = useQuery({
     queryFn: async () => {
       const result = await DexPairService.listAllPairs({
-        page: page,
-        limit: limit,
+        page,
+        limit,
         orderBy: sort,
         orderDirection: sortDirection,
         search,
@@ -54,7 +54,7 @@ export default function DexExplorePools() {
       return result as unknown as PaginatedResponse<PairDto>;
     },
     queryKey: [
-      "DexPairService.listAllPairs",
+      'DexPairService.listAllPairs',
       sort,
       sortDirection,
       search,
@@ -87,7 +87,7 @@ export default function DexExplorePools() {
               <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-3">
                 {/* Desktop Filter Label - Hidden on Mobile */}
                 <div className="hidden md:flex items-center gap-1.5">
-                  <div className="w-0.5 h-4 bg-gradient-to-b from-[var(--primary-color)] to-[var(--accent-color)] rounded-sm"></div>
+                  <div className="w-0.5 h-4 bg-gradient-to-b from-[var(--primary-color)] to-[var(--accent-color)] rounded-sm" />
                   <span className="text-sm font-semibold text-[var(--standard-font-color)] bg-gradient-to-r from-[var(--primary-color)] to-[var(--accent-color)] bg-clip-text text-transparent">
                     Filter & Sort
                   </span>
@@ -109,20 +109,18 @@ export default function DexExplorePools() {
 
                   {/* Sort Direction Button */}
                   <button
-                    onClick={() =>
-                      setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC")
-                    }
-                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === "ASC"
-                      ? "bg-[var(--accent-color)] text-white"
-                      : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] hover:bg-[var(--accent-color)] hover:text-white"
-                      }`}
+                    onClick={() => setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC')}
+                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === 'ASC'
+                      ? 'bg-[var(--accent-color)] text-white'
+                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] hover:bg-[var(--accent-color)] hover:text-white'
+                    }`}
                     title={
-                      sortDirection === "ASC"
-                        ? "Sort Ascending"
-                        : "Sort Descending"
+                      sortDirection === 'ASC'
+                        ? 'Sort Ascending'
+                        : 'Sort Descending'
                     }
                   >
-                    {sortDirection === "ASC" ? "↑" : "↓"}
+                    {sortDirection === 'ASC' ? '↑' : '↓'}
                   </button>
 
                   {/* Items per page - Mobile */}
@@ -166,7 +164,7 @@ export default function DexExplorePools() {
                   />
                   {search && (
                     <button
-                      onClick={() => setSearch("")}
+                      onClick={() => setSearch('')}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-white/10 border-0 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-[var(--light-font-color)] text-[10px] transition-all duration-300 outline-none hover:bg-red-500/20 hover:text-red-400 hover:scale-110 active:scale-95"
                       title="Clear search"
                     >
@@ -199,10 +197,11 @@ export default function DexExplorePools() {
 
                   {/* Results Counter */}
                   <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                     <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                      {data?.meta.totalItems}{" "}
-                      {data?.meta.totalItems === 1 ? "pool" : "pools"}
+                      {data?.meta.totalItems}
+                      {' '}
+                      {data?.meta.totalItems === 1 ? 'pool' : 'pools'}
                     </span>
                   </div>
                 </div>
@@ -212,10 +211,11 @@ export default function DexExplorePools() {
             {/* Mobile Results Counter */}
             <div className="md:hidden flex justify-end">
               <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                 <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                  {data?.meta.totalItems}{" "}
-                  {data?.meta.totalItems === 1 ? "pool" : "pools"}
+                  {data?.meta.totalItems}
+                  {' '}
+                  {data?.meta.totalItems === 1 ? 'pool' : 'pools'}
                 </span>
               </div>
             </div>
@@ -228,9 +228,7 @@ export default function DexExplorePools() {
                   <div
                     key={pair.address}
                     className="bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 active:scale-[0.98] active:bg-white/[0.05]"
-                    onClick={() =>
-                      navigate(`/defi/explore/pools/${pair.address}`)
-                    }
+                    onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
                   >
                     {/* Pool Pair Header */}
                     <div className="flex flex-col items-center justify-between mb-3 pb-3 border-b border-white/5">
@@ -261,7 +259,9 @@ export default function DexExplorePools() {
                       {/* Transaction Count Badge */}
                       <div className="bg-[var(--accent-color)]/10 px-2 py-1 rounded-xl border border-[var(--accent-color)]/20 mt-2">
                         <span className="text-xs text-[var(--accent-color)] font-semibold">
-                          {pair.transactions_count || 0} Tx
+                          {pair.transactions_count || 0}
+                          {' '}
+                          Tx
                         </span>
                       </div>
                     </div>
@@ -278,7 +278,8 @@ export default function DexExplorePools() {
                       </div>
                       <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                         <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
-                          Volume{" "}
+                          Volume
+                          {' '}
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
                           <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} bignumber />
@@ -292,7 +293,7 @@ export default function DexExplorePools() {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
-                            `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`
+                            `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
                           );
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
@@ -303,7 +304,7 @@ export default function DexExplorePools() {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
-                            `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`
+                            `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
                           );
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
@@ -329,7 +330,8 @@ export default function DexExplorePools() {
 
                       <th className="text-right py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
                         <div className="flex items-center gap-1.5">
-                          Volume{" "}
+                          Volume
+                          {' '}
                           <PerformanceTimeframeSelector />
                         </div>
                       </th>
@@ -349,9 +351,7 @@ export default function DexExplorePools() {
                       <tr
                         key={pair.address}
                         className="border-b border-white/5 transition-all duration-300 hover:bg-white/[0.03] cursor-pointer"
-                        onClick={() =>
-                          navigate(`/defi/explore/pools/${pair.address}`)
-                        }
+                        onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
                       >
                         <td className="py-4 px-3 flex items-center gap-0.5">
                           <button
@@ -389,10 +389,9 @@ export default function DexExplorePools() {
                           <PairLineChart
                             pairAddres={pair.address}
                             height={48}
-                            hideTimeframe={true}
+                            hideTimeframe
                           />
                         </td>
-
 
                         <td className="text-center py-4 px-3">
                           <div className="flex gap-1.5 justify-center">
@@ -400,7 +399,7 @@ export default function DexExplorePools() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
-                                  `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`
+                                  `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
                                 );
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
@@ -411,7 +410,7 @@ export default function DexExplorePools() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
-                                  `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`
+                                  `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
                                 );
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
@@ -433,9 +432,17 @@ export default function DexExplorePools() {
                 {/* Pagination Info */}
                 <div className="flex items-center gap-2 order-2 md:order-1">
                   <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                    Showing {(page - 1) * limit + 1}-
-                    {Math.min(page * limit, data.meta.totalItems)} of{" "}
-                    {data.meta.totalItems} pools
+                    Showing
+                    {' '}
+                    {(page - 1) * limit + 1}
+                    -
+                    {Math.min(page * limit, data.meta.totalItems)}
+                    {' '}
+                    of
+                    {' '}
+                    {data.meta.totalItems}
+                    {' '}
+                    pools
                   </span>
                 </div>
 
@@ -446,9 +453,9 @@ export default function DexExplorePools() {
                     onClick={() => setPage(1)}
                     disabled={page === 1}
                     className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page === 1
-                      ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                      : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px"
-                      }`}
+                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
+                    }`}
                     title="First page"
                   >
                     ⇤ First
@@ -459,9 +466,9 @@ export default function DexExplorePools() {
                     onClick={() => setPage(page - 1)}
                     disabled={page === 1}
                     className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[80px] md:min-w-auto ${page === 1
-                      ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                      : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95"
-                      }`}
+                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
+                    }`}
                     title="Previous page"
                   >
                     ← Prev
@@ -473,7 +480,9 @@ export default function DexExplorePools() {
                       {page}
                     </span>
                     <span className="text-sm text-[var(--light-font-color)]">
-                      of {Math.ceil(data.meta.totalItems / limit)}
+                      of
+                      {' '}
+                      {Math.ceil(data.meta.totalItems / limit)}
                     </span>
                   </div>
 
@@ -482,9 +491,9 @@ export default function DexExplorePools() {
                     onClick={() => setPage(page + 1)}
                     disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                     className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
-                      ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                      : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95"
-                      }`}
+                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
+                    }`}
                     title="Next page"
                   >
                     Next →
@@ -492,14 +501,12 @@ export default function DexExplorePools() {
 
                   {/* Last Page Button - Desktop Only */}
                   <button
-                    onClick={() =>
-                      setPage(Math.ceil(data.meta.totalItems / limit))
-                    }
+                    onClick={() => setPage(Math.ceil(data.meta.totalItems / limit))}
                     disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                     className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page >= Math.ceil(data.meta.totalItems / limit)
-                      ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                      : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px"
-                      }`}
+                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
+                    }`}
                     title="Last page"
                   >
                     Last ⇥

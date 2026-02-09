@@ -10,11 +10,11 @@ interface ShareModalProps {
   title?: string;
 }
 
-export default function ShareModal({ 
-  isOpen, 
-  onClose, 
-  shareUrl, 
-  title = "Share Token" 
+export default function ShareModal({
+  isOpen,
+  onClose,
+  shareUrl,
+  title = 'Share Token',
 }: ShareModalProps) {
   if (!isOpen) return null;
 
@@ -25,16 +25,17 @@ export default function ShareModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
       <div className={cn(
-        "bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
-        "w-full max-w-md mx-auto",
-        "transform transition-all duration-300 ease-out",
-        isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
-      )}>
+        'bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
+        'w-full max-w-md mx-auto',
+        'transform transition-all duration-300 ease-out',
+        isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
+      )}
+      >
         {/* Header */}
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between">
@@ -57,13 +58,13 @@ export default function ShareModal({
             <label className="block text-sm font-medium text-white/60 mb-2">
               Share this token with others:
             </label>
-            <CopyText 
-              value={shareUrl} 
-              className="w-full" 
-              bordered={true} 
+            <CopyText
+              value={shareUrl}
+              className="w-full"
+              bordered
             />
           </div>
-          
+
           {/* Social sharing buttons */}
           <div className="mb-4">
             <div className="text-sm font-medium text-white/60 mb-3">

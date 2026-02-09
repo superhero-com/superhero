@@ -21,7 +21,7 @@ export function useTransactionList(): TransactionListState {
     try {
       const now = Date.now();
       const since = window === '24h' ? (now - 24 * 3600_000) : (now - 7 * 24 * 3600_000);
-      
+
       const params: any = { limit: 100, since };
       if (type !== 'all') {
         params.type = type;

@@ -3,7 +3,7 @@ export default function TokenRowSkeleton() {
     <>
       {/* Mobile skeleton layout matching TokenListTableRow */}
       <tr className="token-row-skeleton mobile-only-card md:hidden relative">
-        <td className="cell-fake"></td>
+        <td className="cell-fake" />
         <td className="pl-3 pr-3 py-1.5 align-middle text-center">
           <div className="skeleton-loader skeleton-text w-4 h-4 m-0" />
         </td>
@@ -20,10 +20,10 @@ export default function TokenRowSkeleton() {
           </div>
         </td>
       </tr>
-      
+
       {/* Desktop skeleton layout */}
       <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
-        <td className="cell-fake"></td>
+        <td className="cell-fake" />
         <td className="cell cell-rank pl-2 pl-md-4">
           <div className="rank">
             <div className="skeleton-loader skeleton-text w-4 h-4 m-0" />
@@ -46,10 +46,11 @@ export default function TokenRowSkeleton() {
             <div className="skeleton-loader skeleton-text h-10 w-full m-0" />
           </div>
         </td>
-        <td className="cell cell-link"></td>
+        <td className="cell cell-link" />
       </tr>
 
-      <style>{`
+      <style>
+        {`
         .token-row-skeleton {
           opacity: 0.5;
           height: auto;
@@ -124,7 +125,8 @@ export default function TokenRowSkeleton() {
             display: none !important;
           }
         }
-      `}</style>
+      `}
+      </style>
     </>
   );
 }

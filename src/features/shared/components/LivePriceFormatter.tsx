@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
+import { useCurrencies } from '@/hooks/useCurrencies';
 import { Decimal } from '../../../libs/decimal';
 import PriceFormatter from './PriceFormatter';
-import { useCurrencies } from '@/hooks/useCurrencies';
 
 interface LivePriceFormatterProps {
   aePrice: Decimal;
@@ -18,7 +18,6 @@ interface LivePriceFormatterProps {
 
 // Mock fiat conversion - in a real app, this would come from a currency service
 
-
 export default function LivePriceFormatter({
   aePrice,
   fiatPrice,
@@ -32,9 +31,7 @@ export default function LivePriceFormatter({
   className = '',
 }: LivePriceFormatterProps) {
   const { getFiat } = useCurrencies();
-  const computedFiatPrice = useMemo(() => {
-    return getFiat(aePrice);
-  }, [aePrice, fiatPrice]);
+  const computedFiatPrice = useMemo(() => getFiat(aePrice), [aePrice, fiatPrice]);
 
   return (
     <PriceFormatter

@@ -7,14 +7,14 @@ import {
   BridgeStatus,
   BridgeProgressCallback,
   BridgeError,
-  BridgeErrorType
+  BridgeErrorType,
 } from './types';
 import {
   initDexContracts,
   toAettos,
   subSlippage,
   ensureAllowanceForRouter,
-  DEX_ADDRESSES
+  DEX_ADDRESSES,
 } from '../../libs/dex';
 
 /**
@@ -36,7 +36,7 @@ export class BridgeService {
   async bridgeEthToAe(
     sdk: AeSdk,
     options: BridgeOptions,
-    onProgress?: BridgeProgressCallback
+    onProgress?: BridgeProgressCallback,
   ): Promise<BridgeResult> {
     const {
       amountEth,
@@ -61,7 +61,6 @@ export class BridgeService {
 
       updateStatus('connecting', 'Connecting to Ethereum wallet...');
 
-
       const prevAeEthBalance = await getAeEthBalance(sdk, aeAccount);
       const expectedIncrease = BigInt(toAettos(amountEth, 18));
 
@@ -79,13 +78,13 @@ export class BridgeService {
         prevAeEthBalance,
         expectedIncrease,
         depositTimeout,
-        pollInterval
+        pollInterval,
       );
 
       if (!depositReceived) {
         throw new BridgeError(
           BridgeErrorType.DEPOSIT_TIMEOUT,
-          'Timeout waiting for æETH deposit. Please check the transaction status.'
+          'Timeout waiting for æETH deposit. Please check the transaction status.',
         );
       }
 
@@ -100,12 +99,12 @@ export class BridgeService {
             aeAccount,
             expectedIncrease,
             slippagePercent,
-            deadlineMinutes
+            deadlineMinutes,
           );
         } catch (error) {
           throw new BridgeError(
             BridgeErrorType.SWAP_FAILED,
-            `Failed to swap æETH to AE: ${error instanceof Error ? error.message : error}`
+            `Failed to swap æETH to AE: ${error instanceof Error ? error.message : error}`,
           );
         }
       }
@@ -118,14 +117,13 @@ export class BridgeService {
         aeTxHash: swapTxHash,
         status: 'completed',
       };
-
     } catch (error) {
       const bridgeError = error instanceof BridgeError
         ? error
         : new BridgeError(
           BridgeErrorType.UNKNOWN_ERROR,
           error instanceof Error ? error.message : 'Unknown error occurred',
-          error
+          error,
         );
 
       updateStatus('failed', bridgeError.message);
@@ -146,7 +144,7 @@ export class BridgeService {
     aeAccount: string,
     amountAeEth: bigint,
     slippagePercent: number,
-    deadlineMinutes: number
+    deadlineMinutes: number,
   ): Promise<string> {
     const { router } = await initDexContracts(sdk);
 
@@ -169,7 +167,7 @@ export class BridgeService {
       path,
       aeAccount,
       deadline,
-      null
+      null,
     );
 
     return result?.hash || result?.tx?.hash || result?.transactionHash || '';
@@ -184,16 +182,15 @@ export class BridgeService {
     if (!amountEth || Number(amountEth) <= 0) {
       throw new BridgeError(
         BridgeErrorType.UNKNOWN_ERROR,
-        'Amount must be greater than 0'
+        'Amount must be greater than 0',
       );
     }
 
     if (!aeAccount || !aeAccount.startsWith('ak_')) {
       throw new BridgeError(
         BridgeErrorType.UNKNOWN_ERROR,
-        'Invalid æternity account format. Must start with "ak_"'
+        'Invalid æternity account format. Must start with "ak_"',
       );
     }
   }
-
 }

@@ -3,6 +3,8 @@ import { render, act } from '@testing-library/react';
 import { Provider } from 'jotai';
 import { vi } from 'vitest';
 
+import { useAddLiquidity } from '../useAddLiquidity';
+
 // Mocks for external hooks used by useAddLiquidity
 vi.mock('../../../../hooks', async (importOriginal) => {
   const actual = await importOriginal<any>();
@@ -16,11 +18,9 @@ vi.mock('../../../../hooks', async (importOriginal) => {
 });
 
 // Mock toast provider
-vi.mock('../../../../components/ToastProvider', () => {
-  return {
-    useToast: () => ({ push: vi.fn() }),
-  };
-});
+vi.mock('../../../../components/ToastProvider', () => ({
+  useToast: () => ({ push: vi.fn() }),
+}));
 
 // Router and factory doubles (hoisted so vi.mock factories can reference them safely)
 const { mockRouter, mockFactory } = vi.hoisted(() => ({
@@ -55,13 +55,11 @@ vi.mock('../../../../libs/dex', async () => {
   };
 });
 
-import { useAddLiquidity } from '../useAddLiquidity';
-
-function HookHost({ onReady }: { onReady: (api: ReturnType<typeof useAddLiquidity>) => void }) {
+const HookHost = ({ onReady }: { onReady: (api: ReturnType<typeof useAddLiquidity>) => void }) => {
   const api = useAddLiquidity();
   useEffect(() => { onReady(api); }, [api, onReady]);
   return <div data-testid="host" />;
-}
+};
 
 describe('useAddLiquidity add/remove', () => {
   beforeEach(() => {

@@ -71,7 +71,7 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
     }
     return t('insufficientEthBalanceGeneric');
   }
-  
+
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
     return t('insufficientBalance');
   }
@@ -145,5 +145,3 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
       return t('genericError');
   }
 }
-
-

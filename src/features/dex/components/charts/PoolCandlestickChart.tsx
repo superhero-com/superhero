@@ -8,7 +8,9 @@ import {
   ISeriesApi,
 } from 'lightweight-charts';
 import moment from 'moment';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
 import AeButton from '../../../../components/AeButton';
 import { TokenChip } from '../../../../components/TokenChip';
 import { useChart } from '../../../../hooks/useChart';
@@ -45,17 +47,17 @@ const intervals: Interval[] = [
   { label: 'M', value: 31 * 24 * 60 * 60 },
 ];
 
-export function PoolCandlestickChart({
+export const PoolCandlestickChart = ({
   pairAddress,
   height = 600,
   className = '',
   fromTokenAddress,
-}: PoolCandlestickChartProps) {
+}: PoolCandlestickChartProps) => {
   const { data: pair } = useQuery({
     queryKey: ['pair', pairAddress],
     queryFn: () => DexPairService.getPairByAddress({ address: pairAddress }),
     enabled: !!pairAddress,
-  })
+  });
   const [intervalBy, setIntervalBy] = useState<Interval>(intervals[3]); // Default to 1h
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [fromToken, setFromToken] = useState<'token0' | 'token1'>('token0');
@@ -71,9 +73,9 @@ export function PoolCandlestickChart({
   const subscription = useRef<(() => void) | null>(null);
   const touchHandlersCleanup = useRef<(() => void) | null>(null);
 
-  const convertTo = useMemo(() =>
-    useCurrentCurrency ? 'usd' : 'ae',
-    [useCurrentCurrency]
+  const convertTo = useMemo(
+    () => (useCurrentCurrency ? 'usd' : 'ae'),
+    [useCurrentCurrency],
   );
 
   useEffect(() => {
@@ -83,7 +85,6 @@ export function PoolCandlestickChart({
         const WAE_ADDRESS = DEX_ADDRESSES.wae;
         setFromToken(pair?.token0?.address === WAE_ADDRESS ? 'token0' : 'token1');
       } else {
-
         setFromToken(fromTokenAddress === pair?.token0?.address ? 'token0' : 'token1');
       }
     }
@@ -91,8 +92,7 @@ export function PoolCandlestickChart({
 
   const currentCandleMovePercentage = useMemo(() => {
     if (!currentCandlePrice) return '0.00';
-    const percentage =
-      Number((currentCandlePrice.close - currentCandlePrice.open) / currentCandlePrice.open) * 100;
+    const percentage = Number((currentCandlePrice.close - currentCandlePrice.open) / currentCandlePrice.open) * 100;
 
     if (Math.abs(percentage) < 0.01) {
       return percentage.toFixed(3);
@@ -101,8 +101,8 @@ export function PoolCandlestickChart({
   }, [currentCandlePrice]);
 
   const isTrendingUp = useMemo(
-    () => currentCandlePrice ? currentCandlePrice.open <= currentCandlePrice.close : false,
-    [currentCandlePrice]
+    () => (currentCandlePrice ? currentCandlePrice.open <= currentCandlePrice.close : false),
+    [currentCandlePrice],
   );
 
   const fetchHistoricalData = useCallback(async () => {
@@ -118,7 +118,7 @@ export function PoolCandlestickChart({
         convertTo: convertTo as any,
         limit: 100,
         page: 1,
-        fromToken: fromToken,
+        fromToken,
       });
 
       updateSeriesData([result]);
@@ -159,9 +159,7 @@ export function PoolCandlestickChart({
   };
 
   // Helper function to format large numbers for display
-  const formatLargeNumber = (value: number): string => {
-    return Decimal.from(value || '0').shorten();
-  };
+  const formatLargeNumber = (value: number): string => Decimal.from(value || '0').shorten();
 
   const updateSeriesData = useCallback((pages: any[]) => {
     if (!candlestickSeries.current || !volumeSeries.current || !marketCapSeries.current) return;
@@ -257,9 +255,7 @@ export function PoolCandlestickChart({
         },
       },
       localization: {
-        timeFormatter: (time: any) => {
-          return moment.unix(time).format('MMM DD, HH:mm');
-        },
+        timeFormatter: (time: any) => moment.unix(time).format('MMM DD, HH:mm'),
       },
     },
     onChartReady: (chartInstance) => {
@@ -397,11 +393,11 @@ export function PoolCandlestickChart({
         e.preventDefault();
         e.stopPropagation();
         if (!chartInstance || !container) return;
-        
+
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         const x = touch.clientX - rect.left;
-        
+
         try {
           const time = chartInstance.timeScale().coordinateToTime(x);
           if (time !== null) {
@@ -416,14 +412,14 @@ export function PoolCandlestickChart({
         e.preventDefault();
         e.stopPropagation();
         if (!chartInstance || !container) return;
-        
+
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         const x = touch.clientX - rect.left;
-        
+
         // Clamp x to chart bounds
         const clampedX = Math.max(0, Math.min(x, rect.width));
-        
+
         try {
           const time = chartInstance.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
@@ -438,7 +434,7 @@ export function PoolCandlestickChart({
         e.preventDefault();
         e.stopPropagation();
         if (!chartInstance) return;
-        
+
         try {
           chartInstance.setCrosshairPosition(-1, -1, {});
         } catch (error) {
@@ -510,10 +506,10 @@ export function PoolCandlestickChart({
         const currentTime = Math.floor(Date.now() / 1000);
 
         if (
-          latestCandle &&
-          latestVolume &&
-          latestMarketCap &&
-          currentTime - (latestCandle as any).time < intervalBy.value
+          latestCandle
+          && latestVolume
+          && latestMarketCap
+          && currentTime - (latestCandle as any).time < intervalBy.value
         ) {
           // Update existing candle
           const safeOpen = safeParseNumber((latestCandle as any).open, 0);
@@ -532,8 +528,8 @@ export function PoolCandlestickChart({
           const additionalVolume = parseVolume(tx.data?.volume || '0');
           const newVolume = safeParseNumber(currentVolumeValue + additionalVolume, 0);
           const newMarketCap = safeParseNumber(tx.data?.market_cap?.[convertTo], 0);
-          const isGreen = !currentData.length || currentData.length < 2 ||
-            safeParseNumber((currentData[currentData.length - 2] as any).close, 0) < currentPrice;
+          const isGreen = !currentData.length || currentData.length < 2
+            || safeParseNumber((currentData[currentData.length - 2] as any).close, 0) < currentPrice;
 
           volumeSeries.current.update({
             time: (latestVolume as any).time as any,
@@ -570,7 +566,7 @@ export function PoolCandlestickChart({
             color: '#2BCC61',
           });
         }
-      }
+      },
     );
 
     return () => {
@@ -579,13 +575,11 @@ export function PoolCandlestickChart({
   }, [pairAddress, intervalBy.value, convertTo, fromToken]);
 
   // Cleanup touch handlers when component unmounts or chart changes
-  useEffect(() => {
-    return () => {
-      if (touchHandlersCleanup.current) {
-        touchHandlersCleanup.current();
-        touchHandlersCleanup.current = null;
-      }
-    };
+  useEffect(() => () => {
+    if (touchHandlersCleanup.current) {
+      touchHandlersCleanup.current();
+      touchHandlersCleanup.current = null;
+    }
   }, [chart]);
 
   if (hasError) {
@@ -640,13 +634,15 @@ export function PoolCandlestickChart({
               <div className="flex gap-4 flex-wrap mb-2">
                 <div className="flex gap-2">
                   <span className="text-muted-foreground">
-                    O{' '}
+                    O
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.open.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
-                    H{' '}
+                    H
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.high.toFixed(6)}
                     </span>
@@ -654,13 +650,15 @@ export function PoolCandlestickChart({
                 </div>
                 <div className="flex gap-2">
                   <span className="text-muted-foreground">
-                    L{' '}
+                    L
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.low.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
-                    C{' '}
+                    C
+                    {' '}
                     <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                       {currentCandlePrice.close.toFixed(6)}
                     </span>
@@ -669,21 +667,26 @@ export function PoolCandlestickChart({
                 <div className="pl-2">
                   <span className={`font-bold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {isTrendingUp ? '+' : ''}
-                    {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)} (
+                    {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)}
+                    {' '}
+                    (
                     {isTrendingUp ? '+' : ''}
-                    {currentCandleMovePercentage}%)
+                    {currentCandleMovePercentage}
+                    %)
                   </span>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="text-muted-foreground">
-                  Vol{' '}
+                  Vol
+                  {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {formatLargeNumber(currentCandleVolume)}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
-                  MCap{' '}
+                  MCap
+                  {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {formatLargeNumber(currentCandleMarketCap)}
                   </span>
@@ -719,7 +722,7 @@ export function PoolCandlestickChart({
               style={{
                 minWidth: 32,
                 fontSize: 11,
-                fontWeight: 600
+                fontWeight: 600,
               }}
             >
               {interval.label}
@@ -735,7 +738,6 @@ export function PoolCandlestickChart({
       </div>
     </div>
   );
-}
-
+};
 
 export default PoolCandlestickChart;

@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  describe, it, expect, beforeEach, vi,
+} from 'vitest';
 import { fetchAddressInfo, getAllTokenBalancesFromEthplorer } from '../ethplorer';
 
 // Mock fetch for testing
@@ -26,8 +28,8 @@ describe('Ethplorer API', () => {
           volDiff1: 11.626461055660783,
           volDiff7: 28.820726108156663,
           volDiff30: -18.23005626165488,
-          diff30d: -1.0843420309542608
-        }
+          diff30d: -1.0843420309542608,
+        },
       },
       tokens: [
         {
@@ -36,24 +38,24 @@ describe('Ethplorer API', () => {
             decimals: '6',
             name: 'Tether USD',
             symbol: 'USDT',
-            totalSupply: '94775654692250534'
+            totalSupply: '94775654692250534',
           },
           balance: 9000000,
-          rawBalance: '9000000'
-        }
-      ]
+          rawBalance: '9000000',
+        },
+      ],
     };
 
     (fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockResponse
+      json: async () => mockResponse,
     });
 
     const result = await fetchAddressInfo('0x55d07d7b6a0c373a8cd9bb477c3eac55768f0c16');
-    
+
     expect(result).toEqual(mockResponse);
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.ethplorer.io/getAddressInfo/0x55d07d7b6a0c373a8cd9bb477c3eac55768f0c16?apiKey=EK-ibZWr-ja615wd-j9Ghu'
+      'https://api.ethplorer.io/getAddressInfo/0x55d07d7b6a0c373a8cd9bb477c3eac55768f0c16?apiKey=EK-ibZWr-ja615wd-j9Ghu',
     );
   });
 
@@ -61,7 +63,7 @@ describe('Ethplorer API', () => {
     (fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 400,
-      statusText: 'Bad Request'
+      statusText: 'Bad Request',
     });
 
     await expect(fetchAddressInfo('invalid-address')).rejects.toThrow('Ethplorer API error: 400 Bad Request');
@@ -84,8 +86,8 @@ describe('Ethplorer API', () => {
           volDiff1: 11.626461055660783,
           volDiff7: 28.820726108156663,
           volDiff30: -18.23005626165488,
-          diff30d: -1.0843420309542608
-        }
+          diff30d: -1.0843420309542608,
+        },
       },
       tokens: [
         {
@@ -94,24 +96,24 @@ describe('Ethplorer API', () => {
             decimals: '6',
             name: 'Tether USD',
             symbol: 'USDT',
-            totalSupply: '94775654692250534'
+            totalSupply: '94775654692250534',
           },
           balance: 9000000,
-          rawBalance: '9000000'
-        }
-      ]
+          rawBalance: '9000000',
+        },
+      ],
     };
 
     const assets = [
       { symbol: 'ETH', ethAddress: '0x0000000000000000000000000000000000000000', decimals: 18 },
-      { symbol: 'USDT', ethAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7', decimals: 6 }
+      { symbol: 'USDT', ethAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7', decimals: 6 },
     ];
 
     const balances = getAllTokenBalancesFromEthplorer(mockEthplorerData, assets);
-    
+
     expect(balances).toEqual({
       ETH: '0.0026',
-      USDT: '9.0000'
+      USDT: '9.0000',
     });
   });
 });

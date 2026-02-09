@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import ReplyToFeedItem from "./ReplyToFeedItem";
-import PostSkeleton from "./PostSkeleton";
-import { PostsService } from "../../../api/generated";
-import AeButton from "../../../components/AeButton";
-import { SuperheroApi } from "../../../api/backend";
-import { TokensService } from "../../../api/generated/services/TokensService";
-import type { TokenHolderDto } from "../../../api/generated/models/TokenHolderDto";
-import { Decimal } from "@/libs/decimal";
+import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Decimal } from '@/libs/decimal';
+import ReplyToFeedItem from './ReplyToFeedItem';
+import PostSkeleton from './PostSkeleton';
+import { PostsService } from '../../../api/generated';
+import AeButton from '../../../components/AeButton';
+import { SuperheroApi } from '../../../api/backend';
+import { TokensService } from '../../../api/generated/services/TokensService';
+import type { TokenHolderDto } from '../../../api/generated/models/TokenHolderDto';
 
 type TokenTopicFeedProps = {
   topicName: string;
@@ -63,8 +63,10 @@ export default function TokenTopicFeed({
     return `#${base ? base.toUpperCase() : ''}`;
   }, [displayTokenName, topicName]);
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["topic-by-name", lookup],
+  const {
+    data, isLoading, error, refetch, isFetching,
+  } = useQuery({
+    queryKey: ['topic-by-name', lookup],
     queryFn: () => SuperheroApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
     enabled: Boolean(baseName),
     refetchInterval: 120 * 1000,
@@ -76,17 +78,19 @@ export default function TokenTopicFeed({
   // Build a unified hashtag regex early to check if posts match the filter
   // Exclude matches where the hashtag is followed by a hyphen and more characters
   // (e.g., #superhero should not match #superhero-devs)
-  const hashtagRegex = useMemo(() => {
+  const hashtagRegex = useMemo(
+    () =>
     // Match the hashtag only if it's not followed by a hyphen and more characters
     // The negative lookahead checks: not (word char OR hyphen followed by at least one char)
-    return new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_]|-[A-Za-z0-9_])`, 'i');
-  }, [baseName]);
+      new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_]|-[A-Za-z0-9_])`, 'i'),
+    [baseName],
+  );
 
   // Optional: load holders for this Trend token so we can:
   // - filter posts to token holders only
   // - show holder balance badge on each item
   const { data: holdersResponse, isFetching: isFetchingHolders } = useQuery({
-    queryKey: ["TokensService.listTokenHolders-for-topic-feed", tokenSaleAddress],
+    queryKey: ['TokensService.listTokenHolders-for-topic-feed', tokenSaleAddress],
     enabled: !!tokenSaleAddress,
     queryFn: async () => {
       if (!tokenSaleAddress) {
@@ -121,13 +125,11 @@ export default function TokenTopicFeed({
   }, [holdersResponse]);
 
   // Check if any posts match the hashtag filter (not just if posts exist)
-  const hasFilteredPosts = useMemo(() => {
-    return posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
-  }, [posts, hashtagRegex]);
+  const hasFilteredPosts = useMemo(() => posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))), [posts, hashtagRegex]);
 
   // Alternate casing fallback: try original-cased topic if lowercase is empty
   const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
-    queryKey: ["topic-by-name-original", lookupOriginal],
+    queryKey: ['topic-by-name-original', lookupOriginal],
     enabled: !hasFilteredPosts && Boolean(baseName),
     queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
@@ -138,14 +140,15 @@ export default function TokenTopicFeed({
     return items.slice().sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime());
   }, [dataOriginal]);
 
-
   // Include replies that reference the hashtag in their content or topics
   const { data: repliesSearch, isFetching: isFetchingReplies, refetch: refetchReplies } = useQuery({
     // Include baseName in queryKey to ensure different case variations get different cache entries
-    queryKey: ["posts-search-hashtag", baseName],
+    queryKey: ['posts-search-hashtag', baseName],
     enabled: Boolean(baseName),
     // Use full-text search for the hashtag to reduce payload to exact mentions
-    queryFn: () => PostsService.listAll({ orderBy: 'created_at', orderDirection: 'DESC', search: `#${baseName}`, limit: 200 }) as unknown as Promise<any>,
+    queryFn: () => PostsService.listAll({
+      orderBy: 'created_at', orderDirection: 'DESC', search: `#${baseName}`, limit: 200,
+    }) as unknown as Promise<any>,
     refetchInterval: 120 * 1000,
   });
   const replyMatches: any[] = useMemo(() => {
@@ -157,12 +160,8 @@ export default function TokenTopicFeed({
 
   // Merge all sources, ensure uniq (by id/slug) and newest-first sorting
   const allPosts: any[] = useMemo(() => {
-    const postsFiltered = posts.filter((p: any) =>
-      hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))
-    );
-    const altPostsFiltered = altPosts.filter((p: any) =>
-      hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))
-    );
+    const postsFiltered = posts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
+    const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
     const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches];
     const byKey = new Map<string, any>();
     for (const p of merged) {
@@ -181,11 +180,11 @@ export default function TokenTopicFeed({
   const holderPosts: any[] = useMemo(() => {
     if (!tokenSaleAddress) return [];
     return allPosts.filter((p: any) => {
-      const addr = String(p?.sender_address || "").toLowerCase();
+      const addr = String(p?.sender_address || '').toLowerCase();
       const holder = holdersByAddress.get(addr);
       if (!holder) return false;
       try {
-        return Decimal.from(holder.balance || "0").gt("0");
+        return Decimal.from(holder.balance || '0').gt('0');
       } catch {
         return false;
       }
@@ -227,7 +226,9 @@ export default function TokenTopicFeed({
       <div className="grid gap-2">
         <div className="flex items-center justify-between mb-1 px-1 md:px-0">
           <h4 className="m-0 text-white/80 text-sm md:text-[15px] font-medium">
-            Loading posts for {displayTag || `#${baseName.toUpperCase()}`}
+            Loading posts for
+            {' '}
+            {displayTag || `#${baseName.toUpperCase()}`}
           </h4>
           <div className="text-[11px] text-white/55 hidden md:block">
             Fetching latest posts...
@@ -246,7 +247,12 @@ export default function TokenTopicFeed({
     if (!isNotFound) {
       return (
         <div className="text-white/80">
-          Failed to load posts for {lookup.toUpperCase()}. <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">Retry</AeButton>
+          Failed to load posts for
+          {' '}
+          {lookup.toUpperCase()}
+          .
+          {' '}
+          <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">Retry</AeButton>
         </div>
       );
     }
@@ -257,9 +263,16 @@ export default function TokenTopicFeed({
     <div className="grid gap-2">
       {showHeader && (
         <div className="flex items-center justify-between mb-1">
-          <h4 className="m-0 text-white/90 font-semibold">Posts for {displayTag}</h4>
+          <h4 className="m-0 text-white/90 font-semibold">
+            Posts for
+            {displayTag}
+          </h4>
           {postCount != null && (
-            <div className="text-xs text-white/60">{postCount} total</div>
+            <div className="text-xs text-white/60">
+              {postCount}
+              {' '}
+              total
+            </div>
           )}
         </div>
       )}
@@ -273,10 +286,12 @@ export default function TokenTopicFeed({
               No posts from token holders yet.
             </div>
             <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
-              If you hold this token, create a post with{" "}
+              If you hold this token, create a post with
+              {' '}
               <span className="font-semibold text-emerald-100 underline decoration-emerald-300/60 decoration-dashed underline-offset-2">
                 {displayTag}
-              </span>{" "}
+              </span>
+              {' '}
               to appear here.
             </div>
           </div>
@@ -292,10 +307,12 @@ export default function TokenTopicFeed({
               No posts from token holders yet.
             </div>
             <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
-              Showing all posts for{" "}
+              Showing all posts for
+              {' '}
               <span className="font-semibold text-emerald-100">
                 {displayTag}
-              </span>{" "}
+              </span>
+              {' '}
               while we wait for holders to join the conversation.
             </div>
           </div>
@@ -307,37 +324,40 @@ export default function TokenTopicFeed({
         <div className="mt-1 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-5 text-center">
           <div className="text-2xl mb-1" aria-hidden="true">🗯️</div>
           <div className="font-semibold text-white/85 mb-1 text-sm md:text-[15px]">
-            No posts for {displayTag}
+            No posts for
+            {' '}
+            {displayTag}
           </div>
           <div className="text-xs text-white/60 max-w-md mx-auto">
-            Be the first to start a conversation — create a post that includes{" "}
-            <span className="font-medium text-white/80">{displayTag}</span> in the text.
+            Be the first to start a conversation — create a post that includes
+            {' '}
+            <span className="font-medium text-white/80">{displayTag}</span>
+            {' '}
+            in the text.
           </div>
         </div>
       )}
       {displayPosts.map((item: any) => {
         let tokenHolderLabel: string | undefined;
         if (tokenSaleAddress) {
-          const addr = String(item?.sender_address || "").toLowerCase();
+          const addr = String(item?.sender_address || '').toLowerCase();
           const holder = holdersByAddress.get(addr);
           if (holder && holder.balance) {
             try {
-              const balanceDecimal = Decimal.from(holder.balance || "0");
-              if (balanceDecimal.gt("0")) {
-                const decimals = typeof tokenDecimals === "number" && Number.isFinite(tokenDecimals)
+              const balanceDecimal = Decimal.from(holder.balance || '0');
+              if (balanceDecimal.gt('0')) {
+                const decimals = typeof tokenDecimals === 'number' && Number.isFinite(tokenDecimals)
                   ? tokenDecimals
                   : 18;
                 const pretty = balanceDecimal.div(10 ** decimals).prettify();
-                const symbolBase =
-                  (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
-                const symbol = symbolBase ? ` ${symbolBase}` : "";
+                const symbolBase = (displayTokenName || tokenSymbol || baseName || '').toString().replace(/^#/, '');
+                const symbol = symbolBase ? ` ${symbolBase}` : '';
                 tokenHolderLabel = `${pretty}${symbol}`;
               }
             } catch {
               // Fallback: show raw balance if Decimal parsing fails
-              const symbolBase =
-                (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
-              const symbol = symbolBase ? ` ${symbolBase}` : "";
+              const symbolBase = (displayTokenName || tokenSymbol || baseName || '').toString().replace(/^#/, '');
+              const symbol = symbolBase ? ` ${symbolBase}` : '';
               tokenHolderLabel = `${holder.balance}${symbol}`;
             }
           }
@@ -352,7 +372,7 @@ export default function TokenTopicFeed({
             tokenHolderLabel={tokenHolderLabel}
             onOpenPost={(id: string) => {
               try {
-                const cleanId = String(id || item.id).replace(/_v3$/, "");
+                const cleanId = String(id || item.id).replace(/_v3$/, '');
                 const target = (item as any)?.slug || cleanId;
                 window.location.assign(`/post/${target}`);
               } catch {
@@ -377,11 +397,9 @@ export default function TokenTopicFeed({
           size="medium"
           className="min-w-24"
         >
-          {(isFetching || isFetchingOriginal || isFetchingReplies) ? "Loading…" : "Refresh"}
+          {(isFetching || isFetchingOriginal || isFetchingReplies) ? 'Loading…' : 'Refresh'}
         </AeButton>
       </div>
     </div>
   );
 }
-
-

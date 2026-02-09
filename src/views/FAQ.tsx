@@ -212,26 +212,22 @@ export default function FAQ() {
   );
 }
 
-function Badge({ label }: { label: string }) {
-  return (
-    <span className="px-2.5 py-1.5 rounded-full bg-white/12 border border-white/20 text-xs">
-      {label}
-    </span>
-  );
-}
+const Badge = ({ label }: { label: string }) => (
+  <span className="px-2.5 py-1.5 rounded-full bg-white/12 border border-white/20 text-xs">
+    {label}
+  </span>
+);
 
-function Card({ id, children }: { id?: string; children: React.ReactNode }) {
-  return (
-    <section
-      id={id}
-      className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
-    >
-      {children}
-    </section>
-  );
-}
+const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
+  <section
+    id={id}
+    className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+  >
+    {children}
+  </section>
+);
 
-function QAItem({ title, answer }: { title: string; answer: React.ReactNode }) {
+const QAItem = ({ title, answer }: { title: string; answer: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
@@ -250,6 +246,4 @@ function QAItem({ title, answer }: { title: string; answer: React.ReactNode }) {
       )}
     </div>
   );
-}
-
-
+};

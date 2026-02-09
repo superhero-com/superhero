@@ -10,15 +10,16 @@ import {
   setErrorForAccountAtom,
   setLoadingForAccountAtom,
   setPositionsForAccountAtom,
-  shouldRefreshPositionsAtom
+  shouldRefreshPositionsAtom,
 } from '../atoms/positionsAtoms';
 import { LiquidityPosition, PoolListState } from '../types/pool';
+
 export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
-} {
-  const { aex9Balances, loadAccountAex9Balances } = useAccount()
+  } {
+  const { aex9Balances, loadAccountAex9Balances } = useAccount();
 
-  const { activeAccount } = useAeSdk()
+  const { activeAccount } = useAeSdk();
   const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
 
   // Jotai atoms
@@ -48,10 +49,10 @@ export function useLiquidityPositions(): PoolListState & {
     // const pairs = await getPairs(false);
     const pairs: PairDto[] = listAllPairs.items;
 
-    const accountLiquidities = {}
+    const accountLiquidities = {};
     for (const pair of pairs) {
       // this should get from user balances.
-      const balance = accountAex9Balances.find(b => b.contract_id === pair.address)?.amount || 0;
+      const balance = accountAex9Balances.find((b) => b.contract_id === pair.address)?.amount || 0;
       if (balance && balance > 0n) {
         accountLiquidities[pair.address] = {
           accountAddress,
@@ -63,7 +64,7 @@ export function useLiquidityPositions(): PoolListState & {
       }
     }
 
-    setProvidedLiquidity(prev => {
+    setProvidedLiquidity((prev) => {
       const accountLiquidity = prev[accountAddress] || {};
       return {
         ...prev,
@@ -75,7 +76,6 @@ export function useLiquidityPositions(): PoolListState & {
 
     return accountLiquidities;
   }, [loadAccountAex9Balances, aex9Balances]);
-
 
   // Function to load positions from the dex store and cache them
   const loadAndCachePositions = useCallback(async (accountAddress: string) => {

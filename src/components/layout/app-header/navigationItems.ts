@@ -1,4 +1,4 @@
-import configs from "@/configs";
+import configs from '@/configs';
 import { TFunction } from 'i18next';
 
 export interface NavigationItem {
@@ -11,28 +11,28 @@ export interface NavigationItem {
 
 export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   {
-    id: "home",
-    label: "Home",
-    path: "/",
-    icon: "🏠",
+    id: 'home',
+    label: 'Home',
+    path: '/',
+    icon: '🏠',
   },
   configs.features.trending && {
-    id: "explore",
-    label: "Explore",
-    path: "/trends/tokens",
-    icon: "🔍",
+    id: 'explore',
+    label: 'Explore',
+    path: '/trends/tokens',
+    icon: '🔍',
   },
   {
-    id: "dex",
-    label: "DeFi",
-    path: "/defi",
-    icon: "💱",
+    id: 'dex',
+    label: 'DeFi',
+    path: '/defi',
+    icon: '💱',
   },
   configs.features.trending && {
-    id: "refer-earn",
-    label: "Refer & Earn",
-    path: "/trends/invite",
-    icon: "🎁",
+    id: 'refer-earn',
+    label: 'Refer & Earn',
+    path: '/trends/invite',
+    icon: '🎁',
   },
 
   // {

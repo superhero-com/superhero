@@ -44,5 +44,3 @@ export interface BridgeAction {
 export const BRIDGE_TOKEN_ACTION_TYPE = 0;
 export const BRIDGE_ETH_ACTION_TYPE = 1;
 export const BRIDGE_AETERNITY_ACTION_TYPE = 2;
-
-

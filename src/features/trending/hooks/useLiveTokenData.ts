@@ -26,7 +26,7 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
     subscriptionRef.current = WebSocketClient.subscribeForTokenUpdates(
       token.sale_address,
       (newComingTokenData: any) => {
-        setTokenData(currentTokenData => {
+        setTokenData((currentTokenData) => {
           const newTokenData = {
             ...currentTokenData,
             ...newComingTokenData.data,

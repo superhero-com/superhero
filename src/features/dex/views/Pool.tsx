@@ -7,10 +7,12 @@ import { PoolProvider, usePool } from '../context/PoolProvider';
 import { useLiquidityPositions } from '../hooks';
 import Spinner from '../../../components/Spinner';
 
-function PoolContent() {
+const PoolContent = () => {
   const navigate = useNavigate();
   const { activeAccount } = useAccount();
-  const { positions, loading, error, refreshPositions } = useLiquidityPositions();
+  const {
+    positions, loading, error, refreshPositions,
+  } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
 
   const handleFormSelect = () => {
@@ -65,7 +67,8 @@ function PoolContent() {
                   Total Value
                 </div>
                 <div className="text-xl font-bold text-green-400">
-                  ${positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
+                  $
+                  {positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
@@ -97,7 +100,7 @@ function PoolContent() {
                       className={`px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] flex items-center gap-2 ${loading
                         ? 'cursor-not-allowed opacity-60'
                         : 'hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0'
-                        }`}
+                      }`}
                     >
                       {loading ? (
                         <>
@@ -142,7 +145,7 @@ function PoolContent() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {positions.filter(position => position?.pair?.address).map((position, index) => (
+                  {positions.filter((position) => position?.pair?.address).map((position, index) => (
                     <LiquidityPositionCard
                       key={`${position?.pair?.address}-${index}`}
                       position={position}
@@ -169,7 +172,7 @@ function PoolContent() {
 
     </div>
   );
-}
+};
 
 export default function Pool() {
   return (

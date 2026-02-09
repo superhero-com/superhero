@@ -8,12 +8,12 @@ interface UseTransactionStatusOptions {
 }
 
 export const useTransactionStatus = (
-  txHash?: string, 
-  options: UseTransactionStatusOptions = {}
+  txHash?: string,
+  options: UseTransactionStatusOptions = {},
 ) => {
   const { sdk } = useAeSdk();
   const { enabled = true, refetchInterval = 5000 } = options;
-  
+
   const [status, setStatus] = useState<TransactionStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export const useTransactionStatus = (
     try {
       // Get transaction info from the node
       const txInfo = await sdk.getTxInfo(hash);
-      
+
       if (!txInfo) {
         return {
           confirmed: false,
@@ -53,7 +53,7 @@ export const useTransactionStatus = (
           failed: false,
         };
       }
-      
+
       // Other errors might indicate failed transaction
       return {
         confirmed: false,
@@ -107,11 +107,11 @@ export const useTransactionStatus = (
 
 export const useMultipleTransactionStatus = (
   txHashes: string[],
-  options: UseTransactionStatusOptions = {}
+  options: UseTransactionStatusOptions = {},
 ) => {
   const { sdk } = useAeSdk();
   const { enabled = true } = options;
-  
+
   const [statuses, setStatuses] = useState<Record<string, TransactionStatus>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +124,7 @@ export const useMultipleTransactionStatus = (
 
   //   try {
   //     const results: Record<string, TransactionStatus> = {};
-      
+
   //     // Fetch all transaction statuses in parallel
   //     const promises = hashes.map(async (hash) => {
   //       try {
@@ -155,7 +155,7 @@ export const useMultipleTransactionStatus = (
   //     });
 
   //     const responses = await Promise.all(promises);
-      
+
   //     responses.forEach(({ hash, status }) => {
   //       results[hash] = status;
   //     });

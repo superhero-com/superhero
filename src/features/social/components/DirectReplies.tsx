@@ -20,8 +20,9 @@ export default function DirectReplies({
     refetch,
   } = useInfiniteQuery({
     queryKey: ['post-comments', id, 'infinite'],
-    queryFn: ({ pageParam = 1 }) =>
-      PostsService.getComments({ id: `${String(id).replace(/_v3$/,'')}_v3`, orderDirection: 'ASC', page: pageParam, limit: 50 }) as any,
+    queryFn: ({ pageParam = 1 }) => PostsService.getComments({
+      id: `${String(id).replace(/_v3$/, '')}_v3`, orderDirection: 'ASC', page: pageParam, limit: 50,
+    }) as any,
     getNextPageParam: (lastPage: any) => {
       const meta = lastPage?.meta;
       if (meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages) return meta.currentPage + 1;
@@ -32,7 +33,7 @@ export default function DirectReplies({
 
   const list: PostDto[] = useMemo(
     () => data?.pages?.flatMap((p: any) => p?.items || []) || [],
-    [data]
+    [data],
   );
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -67,12 +68,14 @@ export default function DirectReplies({
   }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) return <div className="text-center py-6 text-white/70">Loading replies…</div>;
-  if (error) return (
-    <div className="text-center py-6">
-      <div className="text-white/70 mb-2">Error loading replies.</div>
-      <button className="text-sm underline" onClick={() => refetch()}>Retry</button>
-    </div>
-  );
+  if (error) {
+    return (
+      <div className="text-center py-6">
+        <div className="text-white/70 mb-2">Error loading replies.</div>
+        <button className="text-sm underline" onClick={() => refetch()}>Retry</button>
+      </div>
+    );
+  }
 
   // If empty, do not render placeholder; the comment form below will be shown by the page
 
@@ -85,12 +88,10 @@ export default function DirectReplies({
           commentCount={reply.total_comments ?? 0}
           hideParentContext
           allowInlineRepliesToggle={false}
-          onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))}
+          onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/, ''))}
         />
       ))}
       {hasNextPage && <div ref={sentinelRef} className="h-10" />}
     </div>
   );
 }
-
-

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 type BackToTopProps = {
-  threshold?: number;     // optional override; defaults to .right-rail-bleed height
-  bottomOffset?: number;  // px from viewport bottom when fixed
+  threshold?: number; // optional override; defaults to .right-rail-bleed height
+  bottomOffset?: number; // px from viewport bottom when fixed
 };
 
 export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopProps) {
@@ -63,7 +63,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
 
   const scrollTop = () => {
     try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       window.scrollTo(0, 0);
     }
@@ -81,20 +81,18 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
         aria-label="Back to top"
         onClick={scrollTop}
         className={[
-          "pointer-events-auto select-none transition-opacity duration-200",
-          "rounded-full px-4 py-2 text-xs font-semibold",
+          'pointer-events-auto select-none transition-opacity duration-200',
+          'rounded-full px-4 py-2 text-xs font-semibold',
           // Glass styling
-          "bg-[var(--glass-bg)] text-white border border-white/20",
-          "backdrop-blur-[12px] shadow-[var(--glass-shadow)]",
+          'bg-[var(--glass-bg)] text-white border border-white/20',
+          'backdrop-blur-[12px] shadow-[var(--glass-shadow)]',
           // Hover/active
-          "hover:bg-white/15 transition-colors",
-          visible ? 'opacity-100' : 'opacity-0'
-        ].join(" ")}
+          'hover:bg-white/15 transition-colors',
+          visible ? 'opacity-100' : 'opacity-0',
+        ].join(' ')}
       >
         ↑ Back to top
       </button>
     </div>
   );
 }
-
-

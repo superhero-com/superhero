@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
+import { useAtom } from 'jotai';
+import { Check } from 'lucide-react';
 import { IconDiamond } from '../../../icons';
 import { useModal } from '../../../hooks/useModal';
 import { buildTipPostPayload } from '../utils/tips';
-import { useAtom } from 'jotai';
 import { tipStatusAtom, makeTipKey } from '../../../atoms/tipAtoms';
-import { Check } from 'lucide-react';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import Spinner from '../../../components/Spinner';
 
@@ -28,7 +28,7 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
     const v = totalAe;
     // Compact formatting up to 2 decimals, trim trailing zeros
     const s = v >= 1000 ? Math.round(v).toString() : v.toFixed(v < 1 ? 3 : 2);
-    return s.replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/, '$1');
+    return s.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
   }, [totalAe]);
 
   const handleTip = useCallback((e: React.MouseEvent) => {
@@ -56,5 +56,3 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
     </button>
   );
 }
-
-

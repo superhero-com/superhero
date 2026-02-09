@@ -1,10 +1,10 @@
-import { HeaderLogo as IconGovernance } from "@/icons";
-import MobileCard from "../MobileCard";
-import MobileInput from "../MobileInput";
-import AeButton from "../AeButton";
-import { useAccount, useAeSdk, useGovernance } from "@/hooks";
-import { useEffect, useState } from "react";
-import { Encoding, isAddressValid, toAe } from "@aeternity/aepp-sdk";
+import { HeaderLogo as IconGovernance } from '@/icons';
+import { useAccount, useAeSdk, useGovernance } from '@/hooks';
+import { useEffect, useState } from 'react';
+import { Encoding, isAddressValid, toAe } from '@aeternity/aepp-sdk';
+import MobileCard from '../MobileCard';
+import MobileInput from '../MobileInput';
+import AeButton from '../AeButton';
 
 export default function GovernanceAccount() {
   const { activeAccount } = useAeSdk();
@@ -24,12 +24,12 @@ export default function GovernanceAccount() {
   const revokeDelegationMutation = useRevokeDelegation();
 
   const [delegateAddress, setDelegateAddress] = useState<string>(
-    delegation || ""
+    delegation || '',
   );
 
   // Update delegate address when delegation changes
   useEffect(() => {
-    setDelegateAddress(delegation || "");
+    setDelegateAddress(delegation || '');
   }, [delegation]);
 
   const handleSaveDelegation = () => {
@@ -41,7 +41,7 @@ export default function GovernanceAccount() {
 
   const handleRevokeDelegation = () => {
     revokeDelegationMutation.mutate();
-    setDelegateAddress("");
+    setDelegateAddress('');
   };
 
   const isSaving = setDelegationMutation.isPending;
@@ -100,7 +100,9 @@ export default function GovernanceAccount() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-mono text-white bg-black/20 px-3 py-1 rounded-lg">
-                          {activeAccount.slice(0, 8)}...{activeAccount.slice(-8)}
+                          {activeAccount.slice(0, 8)}
+                          ...
+                          {activeAccount.slice(-8)}
                         </div>
                       </div>
                     </div>
@@ -117,7 +119,9 @@ export default function GovernanceAccount() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-white">
-                          {decimalBalance.prettify()} AE
+                          {decimalBalance.prettify()}
+                          {' '}
+                          AE
                         </div>
                       </div>
                     </div>
@@ -183,7 +187,9 @@ export default function GovernanceAccount() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-emerald-300">Currently Delegated</p>
                       <p className="text-xs text-slate-400 font-mono">
-                        {delegation.slice(0, 12)}...{delegation.slice(-12)}
+                        {delegation.slice(0, 12)}
+                        ...
+                        {delegation.slice(-12)}
                       </p>
                     </div>
                   </div>
@@ -202,9 +208,9 @@ export default function GovernanceAccount() {
                   className="transition-all duration-300"
                   disabled={isSaving || isRevoking}
                 />
-                
+
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  💡 Delegating allows another address to vote on your behalf in governance polls. 
+                  💡 Delegating allows another address to vote on your behalf in governance polls.
                   Choose someone you trust to represent your interests.
                 </p>
               </div>
@@ -220,7 +226,7 @@ export default function GovernanceAccount() {
                   loading={isSaving}
                   className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25"
                 >
-                  {isSaving ? "Saving Delegation..." : "💾 Save Delegation"}
+                  {isSaving ? 'Saving Delegation...' : '💾 Save Delegation'}
                 </AeButton>
 
                 {delegation && (
@@ -233,7 +239,7 @@ export default function GovernanceAccount() {
                     loading={isRevoking}
                     className="h-14 text-base font-semibold rounded-2xl transition-all duration-300"
                   >
-                    {isRevoking ? "Revoking Delegation..." : "❌ Revoke Delegation"}
+                    {isRevoking ? 'Revoking Delegation...' : '❌ Revoke Delegation'}
                   </AeButton>
                 )}
               </div>
@@ -248,10 +254,14 @@ export default function GovernanceAccount() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-white">Your Delegators</h3>
-                    <p className="text-sm text-slate-400">{delegators.length} people trust you with their votes</p>
+                    <p className="text-sm text-slate-400">
+                      {delegators.length}
+                      {' '}
+                      people trust you with their votes
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="grid gap-3">
                   {delegators.map((delegator: any, idx: number) => (
                     <div
@@ -269,7 +279,10 @@ export default function GovernanceAccount() {
                             <p className="text-sm font-mono text-white truncate">
                               {delegator.delegator}
                             </p>
-                            <p className="text-xs text-slate-400">Delegator #{idx + 1}</p>
+                            <p className="text-xs text-slate-400">
+                              Delegator #
+                              {idx + 1}
+                            </p>
                           </div>
                         </div>
                         {delegator.balance && (
@@ -278,7 +291,8 @@ export default function GovernanceAccount() {
                               {Number(toAe(delegator.balance)).toLocaleString(undefined, {
                                 maximumFractionDigits: 6,
                               })}
-                              {" "}AE
+                              {' '}
+                              AE
                             </p>
                             <p className="text-xs text-slate-400">Voting Power</p>
                           </div>

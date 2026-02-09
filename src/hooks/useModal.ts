@@ -7,15 +7,15 @@ export const useModal = () => {
 
   const openModal = useCallback((modal: Omit<ModalItem, 'key'>) => {
     const key = Date.now();
-    setOpenedModals(prev => [...prev, { ...modal, key }]);
+    setOpenedModals((prev) => [...prev, { ...modal, key }]);
   }, []);
 
   const closeModal = useCallback((key: number) => {
-    setOpenedModals(prev => prev.filter(modal => modal.key !== key));
+    setOpenedModals((prev) => prev.filter((modal) => modal.key !== key));
   }, []);
 
   const closeAllModals = useCallback(() => {
-    openedModals.forEach(modal => {
+    openedModals.forEach((modal) => {
       closeModal(modal.key);
     });
   }, [openedModals, closeModal]);
@@ -23,7 +23,7 @@ export const useModal = () => {
   return {
     // State
     openedModals,
-    
+
     // Actions
     openModal,
     closeModal,

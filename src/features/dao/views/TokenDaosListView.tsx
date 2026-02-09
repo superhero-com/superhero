@@ -1,19 +1,23 @@
-import { TokensService } from "@/api/generated";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
-import { useDao } from "@/features/dao/hooks/useDao";
-import { LivePriceFormatter } from "@/features/shared/components";
-import { Decimal } from "@/libs/decimal";
-import { ensureAddress, ensureString } from "@/utils/common";
-import { Encoded, Encoding, toAe } from "@aeternity/aepp-sdk";
-import { useQuery } from "@tanstack/react-query";
-import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { TokensService } from '@/api/generated';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card, CardContent, CardHeader, CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import TokenVoteCard from '@/features/dao/components/TokenVoteCard';
+import { useDao } from '@/features/dao/hooks/useDao';
+import { LivePriceFormatter } from '@/features/shared/components';
+import { Decimal } from '@/libs/decimal';
+import { ensureAddress, ensureString } from '@/utils/common';
+import { Encoded, Encoding, toAe } from '@aeternity/aepp-sdk';
+import { useQuery } from '@tanstack/react-query';
+import { VOTE_TYPE, VoteMetadata } from 'bctsl-sdk';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 const voteTypes = [
   VOTE_TYPE.VotePayout,
@@ -35,11 +39,11 @@ export default function Dao() {
     link?: string;
   }>({});
   const [newVote, setNewVote] = useState<{
-    type: (typeof voteTypes)[number];
+    type:(typeof voteTypes)[number];
     value?: string;
     description?: string;
     link?: string;
-  }>({ type: VOTE_TYPE.VotePayout, value: "" });
+      }>({ type: VOTE_TYPE.VotePayout, value: '' });
 
   const { data: token, isLoading, error } = useQuery({
     queryFn: () => TokensService.findByAddress({ address: saleAddress }),
@@ -54,7 +58,7 @@ export default function Dao() {
 
   const validateForm = () => {
     const errors: { value?: string; description?: string; link?: string } = {};
-    
+
     // Validate subject value (should be an address)
     if (!newVote.value || newVote.value.trim() === '') {
       errors.value = 'Subject value is required';
@@ -65,7 +69,7 @@ export default function Dao() {
         errors.value = 'Subject value must be a valid contract address';
       }
     }
-    
+
     // Validate description (should be a string)
     if (!newVote.description || newVote.description.trim() === '') {
       errors.description = 'Description is required';
@@ -76,7 +80,7 @@ export default function Dao() {
         errors.description = 'Description must be a valid string';
       }
     }
-    
+
     // Validate link (should be a string)
     if (!newVote.link || newVote.link.trim() === '') {
       errors.link = 'Link is required';
@@ -87,38 +91,38 @@ export default function Dao() {
         errors.link = 'Link must be a valid string';
       }
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const clearFieldError = (field: keyof typeof validationErrors) => {
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
   async function createVote() {
     if (!saleAddress) return;
-    
+
     // Validate form before proceeding
     if (!validateForm()) {
       return;
     }
-    
+
     setCreating(true);
     setErrorMessage(null);
     try {
       const metadata: any = {
         subject: { VotePayout: [newVote.value] },
-        description: newVote.description || "",
-        link: newVote.link || "",
+        description: newVote.description || '',
+        link: newVote.link || '',
 
       };
       await addVote(metadata as VoteMetadata);
       await updateState();
     } catch (e: any) {
-      setErrorMessage(e?.message || "Failed to create vote");
+      setErrorMessage(e?.message || 'Failed to create vote');
     } finally {
       setCreating(false);
     }
@@ -132,7 +136,9 @@ export default function Dao() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
-                {token.name || token.symbol} [DAO]
+                {token.name || token.symbol}
+                {' '}
+                [DAO]
               </h1>
               <Badge
                 variant="secondary"
@@ -150,27 +156,27 @@ export default function Dao() {
                       aePrice={Decimal.from(toAe(token?.dao_balance))}
                       watchKey={token?.sale_address}
                       className="text-xs sm:text-base"
-                      hideFiatPrice={true}
+                      hideFiatPrice
                     />
                   ) : (
-                    "—"
+                    '—'
                   )}
                 </div>
               </div>
             </div>
           </div>
         )}
-        
+
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
-            to={`/trends/tokens/${encodeURIComponent(saleAddress || "")}`}
+            to={`/trends/tokens/${encodeURIComponent(saleAddress || '')}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
             ← Back to token sale
           </Link>
           <a
             href={`https://aescan.io/contracts/${encodeURIComponent(
-              saleAddress || ""
+              saleAddress || '',
             )}?type=call-transactions`}
             target="_blank"
             rel="noopener noreferrer"
@@ -188,7 +194,7 @@ export default function Dao() {
           </CardContent>
         </Card>
       )}
-      
+
       {error && (
         <Card className="bg-red-500/10 border-red-500/30">
           <CardContent className="p-6">
@@ -196,7 +202,7 @@ export default function Dao() {
           </CardContent>
         </Card>
       )}
-      
+
       {!isLoading && !error && (
         <div className="grid grid-cols-1 gap-6">
           {/* Stats Card */}
@@ -206,7 +212,8 @@ export default function Dao() {
                 <div>
                   <span className="opacity-75 text-xs text-white/75">
                     Proposals:
-                  </span>{" "}
+                  </span>
+                  {' '}
                   <strong className="text-white">
                     {Array.isArray((state as any)?.votes)
                       ? (state as any).votes.length
@@ -217,7 +224,8 @@ export default function Dao() {
                   <div>
                     <span className="opacity-75 text-xs text-white/75">
                       Holders:
-                    </span>{" "}
+                    </span>
+                    {' '}
                     <strong className="text-white">
                       {Number(token.holders_count).toLocaleString()}
                     </strong>
@@ -227,13 +235,14 @@ export default function Dao() {
                   <div className="flex flex-row gap-2 items-center">
                     <span className="opacity-75 text-xs text-white/75">
                       Market Cap:
-                    </span>{" "}
+                    </span>
+                    {' '}
                     <strong className="text-white">
                       <LivePriceFormatter
                         aePrice={Decimal.from(toAe(token.market_cap))}
                         watchKey={token.sale_address}
                         className="text-xs"
-                        hideFiatPrice={true}
+                        hideFiatPrice
                       />
                     </strong>
                   </div>
@@ -261,9 +270,7 @@ export default function Dao() {
                     </label>
                     <Select
                       value={newVote.type}
-                      onValueChange={(value) =>
-                        setNewVote((v) => ({ ...v, type: value as (typeof voteTypes)[number] }))
-                      }
+                      onValueChange={(value) => setNewVote((v) => ({ ...v, type: value as (typeof voteTypes)[number] }))}
                     >
                       <SelectTrigger className="bg-white/5 border-white/20 text-white">
                         <SelectValue placeholder="Select vote type" />
@@ -277,7 +284,7 @@ export default function Dao() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
                       Subject Value
@@ -297,14 +304,14 @@ export default function Dao() {
                       <p className="text-red-400 text-xs mt-1">{validationErrors.value}</p>
                     )}
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
                       Description
                     </label>
                     <Input
                       placeholder="Description"
-                      value={newVote.description || ""}
+                      value={newVote.description || ''}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, description: e.target.value }));
                         clearFieldError('description');
@@ -317,14 +324,14 @@ export default function Dao() {
                       <p className="text-red-400 text-xs mt-1">{validationErrors.description}</p>
                     )}
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
                       Link
                     </label>
                     <Input
                       placeholder="Link"
-                      value={newVote.link || ""}
+                      value={newVote.link || ''}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, link: e.target.value }));
                         clearFieldError('link');
@@ -337,19 +344,19 @@ export default function Dao() {
                       <p className="text-red-400 text-xs mt-1">{validationErrors.link}</p>
                     )}
                   </div>
-                  
+
                   {errorMessage && (
                     <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                       {errorMessage}
                     </div>
                   )}
-                  
+
                   <Button
                     onClick={createVote}
                     disabled={creating}
                     className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
                   >
-                    {creating ? "Creating…" : "Create vote"}
+                    {creating ? 'Creating…' : 'Create vote'}
                   </Button>
                 </div>
               </CardContent>
@@ -374,16 +381,14 @@ export default function Dao() {
                     </p>
                   </div>
                 ) : (
-                  Array.from(state?.votes).map((vote: any, index: number) =>
-                  (
+                  Array.from(state?.votes).map((vote: any, index: number) => (
                     <TokenVoteCard
                       key={index}
                       address={vote[1][1]}
                       saleAddress={saleAddress as Encoded.ContractAddress}
                       voteId={vote[0]}
                     />
-                  )
-                  )
+                  ))
                 )}
               </CardContent>
             </Card>

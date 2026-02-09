@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import DexTabs from '../components/dex/DexTabs';
 import TokenTable from '../components/explore/components/TokenListTable';
 import { useTokenList } from '../components/explore/hooks/useTokenList';
 import { usePairList } from '../components/explore/hooks/usePairList';
 import { useTransactionList } from '../components/explore/hooks/useTransactionList';
 import { CONFIG } from '../config';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 export default function ExploreRefactored() {
   const [active, setActive] = useState<'Tokens' | 'Pairs' | 'Transactions'>('Tokens');
-  
+
   // Hooks for different data types
   const tokenList = useTokenList();
   const pairList = usePairList();
@@ -18,7 +18,7 @@ export default function ExploreRefactored() {
   return (
     <div className="max-w-[1400px] mx-auto p-5">
       <DexTabs />
-      
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-[32px] font-bold text-white m-0 mb-2">
@@ -34,8 +34,8 @@ export default function ExploreRefactored() {
         <button
           onClick={() => setActive('Tokens')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Tokens' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Tokens'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -44,8 +44,8 @@ export default function ExploreRefactored() {
         <button
           onClick={() => setActive('Pairs')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Pairs' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Pairs'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -54,8 +54,8 @@ export default function ExploreRefactored() {
         <button
           onClick={() => setActive('Transactions')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Transactions' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Transactions'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -74,7 +74,7 @@ export default function ExploreRefactored() {
               Browse and interact with all available tokens on æternity
             </p>
           </div>
-          
+
           <TokenTable
             tokens={tokenList.tokens}
             sort={tokenList.sort}
@@ -96,7 +96,7 @@ export default function ExploreRefactored() {
               Explore trading pairs and their performance metrics
             </p>
           </div>
-          
+
           <div className="overflow-x-auto">
             {/* Controls */}
             <div className="flex gap-2 items-center mb-4">
@@ -111,15 +111,15 @@ export default function ExploreRefactored() {
                 <AppSelectItem value="pair">Pair</AppSelectItem>
                 <AppSelectItem value="address">Address</AppSelectItem>
               </AppSelect>
-              <button 
+              <button
                 onClick={() => pairList.toggleSort(pairList.sort.key)}
                 className="px-2 py-1.5 rounded-md border border-gray-600 bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors"
               >
                 {pairList.sort.asc ? '↑' : '↓'}
               </button>
-              <input 
-                placeholder="Filter pools" 
-                value={pairList.search} 
+              <input
+                placeholder="Filter pools"
+                value={pairList.search}
                 onChange={(e) => pairList.setSearch(e.target.value)}
                 className="ml-auto px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 min-w-[200px] text-sm placeholder-white/50 focus:outline-none focus:border-green-500"
               />
@@ -143,14 +143,14 @@ export default function ExploreRefactored() {
                     <td style={{ padding: '12px 8px' }}>
                       <button
                         onClick={() => window.location.href = `/explore/tokens/${pair.token0 || pair.token0Address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
                           fontSize: 14,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       >
                         {pair.token0Symbol}
@@ -158,14 +158,14 @@ export default function ExploreRefactored() {
                       {' / '}
                       <button
                         onClick={() => window.location.href = `/explore/tokens/${pair.token1 || pair.token1Address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
                           fontSize: 14,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       >
                         {pair.token1Symbol}
@@ -174,22 +174,22 @@ export default function ExploreRefactored() {
                     <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontSize: 12 }}>
                       <button
                         onClick={() => window.location.href = `/explore/pools/${pair.address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          marginRight: 8
+                          marginRight: 8,
                         }}
                       >
                         {pair.address}
                       </button>
                       {CONFIG.EXPLORER_URL && (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${pair.address}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
+                        <a
+                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${pair.address}`}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{ color: '#8bc9ff', textDecoration: 'underline' }}
                         >
                           View
@@ -207,30 +207,30 @@ export default function ExploreRefactored() {
                     </td>
                     <td style={{ textAlign: 'center', padding: '12px 8px' }}>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                        <button 
+                        <button
                           onClick={() => window.location.href = `/defi/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
-                          style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: 6, 
-                            border: '1px solid #3a3a4a', 
-                            background: '#2a2a39', 
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: '1px solid #3a3a4a',
+                            background: '#2a2a39',
                             color: 'white',
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
                           Swap
                         </button>
-                        <button 
+                        <button
                           onClick={() => window.location.href = `/pool/add?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
-                          style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: 6, 
-                            border: '1px solid #3a3a4a', 
-                            background: '#2a2a39', 
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: '1px solid #3a3a4a',
+                            background: '#2a2a39',
                             color: 'white',
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
                           Add
@@ -254,31 +254,34 @@ export default function ExploreRefactored() {
       {active === 'Transactions' && (
         <div>
           <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: 'white',
+              margin: '0 0 8px 0',
+            }}
+            >
               Recent Transactions
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
+            <p style={{
+              fontSize: 14,
+              opacity: 0.7,
+              margin: 0,
+            }}
+            >
               Track recent swaps, liquidity additions, and removals
             </p>
           </div>
-          
+
           <div style={{ overflowX: 'auto' }}>
             {/* Controls */}
-            <div style={{ 
-              display: 'flex', 
-              gap: 8, 
-              alignItems: 'center', 
-              marginBottom: 16 
-            }}>
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              marginBottom: 16,
+            }}
+            >
               <label style={{ fontSize: 12, opacity: 0.85 }}>Type</label>
               <AppSelect
                 value={transactionList.type as string}
@@ -307,30 +310,59 @@ export default function ExploreRefactored() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #3a3a4a' }}>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Type</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Pair</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Amount In</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Amount Out</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Transaction</th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    Type
+                  </th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    Pair
+                  </th>
+                  <th style={{
+                    textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    Amount In
+                  </th>
+                  <th style={{
+                    textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    Amount Out
+                  </th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    Transaction
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {transactionList.transactions.map((tx, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #1a1a23' }}>
                     <td style={{ padding: '12px 8px', fontSize: 14 }}>
-                      <span style={{ 
-                        padding: '2px 6px', 
-                        borderRadius: 4, 
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: 4,
                         fontSize: 12,
                         fontWeight: 600,
                         background: tx.type === 'swap' ? '#4caf50' : tx.type === 'add' ? '#2196f3' : '#ff9800',
-                        color: 'white'
-                      }}>
+                        color: 'white',
+                      }}
+                      >
                         {tx.type || tx.event || '-'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 8px', fontSize: 14 }}>
-                      {tx.tokenInSymbol || tx.token0Symbol} / {tx.tokenOutSymbol || tx.token1Symbol}
+                      {tx.tokenInSymbol || tx.token0Symbol}
+                      {' '}
+                      /
+                      {tx.tokenOutSymbol || tx.token1Symbol}
                     </td>
                     <td style={{ textAlign: 'right', padding: '12px 8px', fontSize: 14 }}>
                       {tx.amountIn || '-'}
@@ -340,10 +372,10 @@ export default function ExploreRefactored() {
                     </td>
                     <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontSize: 12 }}>
                       {tx.txHash && CONFIG.EXPLORER_URL ? (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${tx.txHash}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
+                        <a
+                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${tx.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{ color: '#8bc9ff', textDecoration: 'underline' }}
                         >
                           {tx.txHash}

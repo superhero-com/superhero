@@ -57,5 +57,3 @@ export function AePricePollingProvider({ children }: PropsWithChildren) {
 
   return children as any;
 }
-
-

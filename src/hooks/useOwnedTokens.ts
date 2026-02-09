@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAeSdk } from "./useAeSdk";
-import { AccountTokensService } from "@/api/generated";
+import { useQuery } from '@tanstack/react-query';
+import { AccountTokensService } from '@/api/generated';
+import { useAeSdk } from './useAeSdk';
 
 type AccountTokensResponse = {
   items?: unknown[];
@@ -10,21 +10,20 @@ type AccountTokensResponse = {
 export type OwnedTokenLike = Record<string, any>;
 
 function extractTokenLike(item: unknown): OwnedTokenLike | null {
-  if (!item || typeof item !== "object") return null;
+  if (!item || typeof item !== 'object') return null;
 
   // Matches how other parts of the app treat the account tokens response.
   // Usually it's `{ token, balance, ... }`, but some environments may return
   // "flattened" fields like `token_name` / `token_symbol`.
   const asAny = item as any;
-  if (asAny?.token && typeof asAny.token === "object") return asAny.token;
+  if (asAny?.token && typeof asAny.token === 'object') return asAny.token;
 
   // Fallback: if the API returns token-like fields on the item itself.
-  const maybeTokenLike =
-    asAny?.token_address ||
-    asAny?.token_name ||
-    asAny?.token_symbol ||
-    asAny?.sale_address ||
-    asAny?.address;
+  const maybeTokenLike = asAny?.token_address
+    || asAny?.token_name
+    || asAny?.token_symbol
+    || asAny?.sale_address
+    || asAny?.address;
   if (maybeTokenLike) return asAny;
 
   return null;
@@ -42,14 +41,14 @@ export function useOwnedTokens() {
   const { activeAccount } = useAeSdk();
 
   const { data: ownedTokens = [], isFetching, error } = useQuery<OwnedTokenLike[]>({
-    queryKey: ["AccountTokensService.listTokenHolders", "ownedTokens", activeAccount],
+    queryKey: ['AccountTokensService.listTokenHolders', 'ownedTokens', activeAccount],
     queryFn: async (): Promise<OwnedTokenLike[]> => {
       if (!activeAccount) return [];
 
       const resp = (await AccountTokensService.listTokenHolders({
         address: activeAccount,
-        orderBy: "balance",
-        orderDirection: "DESC",
+        orderBy: 'balance',
+        orderDirection: 'DESC',
         limit: 1000,
         page: 1,
       })) as unknown as AccountTokensResponse;

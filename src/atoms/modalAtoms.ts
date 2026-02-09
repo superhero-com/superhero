@@ -17,7 +17,7 @@ export const modalActionsAtom = atom(
   null,
   (get, set, action: { type: 'open'; modal: Omit<ModalItem, 'key'> } | { type: 'close'; key: number }) => {
     const currentModals = get(openedModalsAtom);
-    
+
     switch (action.type) {
       case 'open':
         set(openedModalsAtom, [...currentModals, { ...action.modal, key: modalCounter++ }]);
@@ -26,5 +26,5 @@ export const modalActionsAtom = atom(
         set(openedModalsAtom, currentModals.filter((m) => m.key !== action.key));
         break;
     }
-  }
+  },
 );

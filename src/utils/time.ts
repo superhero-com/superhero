@@ -27,5 +27,3 @@ export function fullTimestamp(input: string | number | Date | undefined): string
   const seconds = pad(d.getSeconds());
   return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
 }
-
-

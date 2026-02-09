@@ -15,17 +15,17 @@ const API_BASE = 'https://api.superhero.com';
 export default async (request: Request, context: any) => {
   try {
     const url = new URL(request.url);
-    const pathname = url.pathname;
+    const { pathname } = url;
 
     const res = await context.next();
     // Only inject into HTML documents
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('text/html')) return res;
 
-  const html = await res.text();
+    const html = await res.text();
 
-  const meta = await buildMeta(pathname, url);
-  const injected = injectHead(html, meta, url.origin);
+    const meta = await buildMeta(pathname, url);
+    const injected = injectHead(html, meta, url.origin);
 
     const newHeaders = new Headers(res.headers);
     newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));
@@ -219,14 +219,14 @@ function injectHead(html: string, meta: Meta, origin: string): string {
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
   if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property="og:site_name" content="Superhero">`);
+  parts.push('<meta property="og:site_name" content="Superhero">');
   parts.push(`<meta property="og:type" content="${escapeAttr(meta.ogType || 'website')}">`);
   parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
   if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
   parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(absolutize(meta.ogImage, origin) || `${origin}/og-default.png`)}\">`);
-  parts.push(`<meta property=\"og:image:width\" content=\"1200\">`);
-  parts.push(`<meta property=\"og:image:height\" content=\"630\">`);
+  parts.push('<meta property=\"og:image:width\" content=\"1200\">');
+  parts.push('<meta property=\"og:image:height\" content=\"630\">');
   parts.push(`<meta name="twitter:card" content="${meta.ogImage ? 'summary_large_image' : 'summary'}">`);
   parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
@@ -239,17 +239,19 @@ function injectHead(html: string, meta: Meta, origin: string): string {
   const injection = parts.join('\n');
   const idx = html.indexOf('</head>');
   if (idx === -1) return html;
-  return html.slice(0, idx) + '\n' + injection + '\n' + html.slice(idx);
+  return `${html.slice(0, idx)}\n${injection}\n${html.slice(idx)}`;
 }
 
 function truncate(s: string, n: number): string {
   const str = (s || '').trim();
   if (str.length <= n) return str;
-  return str.slice(0, Math.max(0, n - 1)) + '…';
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
+  return s.replace(/[&<>"]/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  } as any)[c]);
 }
 
 function escapeAttr(s: string): string {

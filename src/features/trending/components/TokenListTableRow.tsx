@@ -1,8 +1,7 @@
-import { PriceDataFormatter } from "@/features/shared/components";
-import { useMemo } from "react";
-import { TokenDto } from "@/api/generated/models/TokenDto";
-import { TokenLineChart } from "./TokenLineChart";
-
+import { PriceDataFormatter } from '@/features/shared/components';
+import { useMemo } from 'react';
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import { TokenLineChart } from './TokenLineChart';
 
 interface TokenListTableRowProps {
   token: TokenDto;
@@ -18,15 +17,12 @@ function parseCollectionName(collection: string): string {
   return collection || 'default';
 }
 
-
 // Component for token label
-function TokenLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="px-2 py-1 bg-white/[0.08] text-white/80 rounded-full text-xs font-medium backdrop-blur-[10px]">
-      {children}
-    </span>
-  );
-}
+const TokenLabel = ({ children }: { children: React.ReactNode }) => (
+  <span className="px-2 py-1 bg-white/[0.08] text-white/80 rounded-full text-xs font-medium backdrop-blur-[10px]">
+    {children}
+  </span>
+);
 
 export default function TokenListTableRow({
   token,
@@ -34,9 +30,7 @@ export default function TokenListTableRow({
   showCollectionColumn = false,
   rank,
 }: TokenListTableRowProps) {
-  const tokenAddress = useMemo(() => {
-    return token.address;
-  }, [token.address]);
+  const tokenAddress = useMemo(() => token.address, [token.address]);
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
 
@@ -70,7 +64,7 @@ export default function TokenListTableRow({
               />
             </div>
             <div className="flex items-center gap-4 shrink-0">
-            <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
+              <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
                 <PriceDataFormatter
                   watchPrice={false}
                   hideFiatPrice
@@ -78,16 +72,16 @@ export default function TokenListTableRow({
                   priceData={token.price_data}
                 />
               </div>
-            <div className="flex justify-end">
-              {saleAddress && (
+              <div className="flex justify-end">
+                {saleAddress && (
                 <TokenLineChart
                   saleAddress={saleAddress}
                   height={26}
-                  hideTimeframe={true}
+                  hideTimeframe
                   className="w-[72px]"
                 />
-              )}
-            </div>
+                )}
+              </div>
             </div>
           </div>
           <a
@@ -101,7 +95,7 @@ export default function TokenListTableRow({
       {/* Desktop table row for larger screens (including tablets) */}
       <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
         {/* Fake cell to match header structure */}
-        <td className="cell-fake"></td>
+        <td className="cell-fake" />
 
         {/* Rank */}
         <td className="cell cell-rank pl-2 pl-md-4">
@@ -118,7 +112,7 @@ export default function TokenListTableRow({
           </div>
         </td>
 
-        {/* Collection Label*/}
+        {/* Collection Label */}
         {showCollectionColumn && (
           <td className="cell cell-collection text-right px-1 px-md-3">
             <TokenLabel>
@@ -168,7 +162,7 @@ export default function TokenListTableRow({
               <TokenLineChart
                 saleAddress={token.sale_address || tokenAddress}
                 height={40}
-                hideTimeframe={true}
+                hideTimeframe
               />
             </div>
           )}
@@ -183,7 +177,8 @@ export default function TokenListTableRow({
           />
         </td>
 
-        <style>{`
+        <style>
+          {`
         .bctsl-token-list-table-row {
           position: relative;
           z-index: 1;
@@ -288,7 +283,8 @@ export default function TokenListTableRow({
             display: none;
           }
         }
-      `}</style>
+      `}
+        </style>
       </tr>
     </>
   );

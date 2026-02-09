@@ -1,6 +1,6 @@
-import type { Decimal } from "./decimal";
+import type { Decimal } from './decimal';
 
 export type DifferenceRepresentation = {
-  sign: "" | "+" | "-";
+  sign: '' | '+' | '-';
   absoluteValue: Decimal;
 };

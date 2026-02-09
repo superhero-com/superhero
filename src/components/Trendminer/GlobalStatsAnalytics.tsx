@@ -33,30 +33,28 @@ export default function GlobalStatsAnalytics() {
   });
 
   // Computed values using Decimal for proper formatting (matching Vue component)
-  const totalMarketCapValue = useMemo(() =>
-    Decimal.from(last24HoursData?.total_market_cap_sum ?? 0),
-    [last24HoursData]
+  const totalMarketCapValue = useMemo(
+    () => Decimal.from(last24HoursData?.total_market_cap_sum ?? 0),
+    [last24HoursData],
   );
 
-  const last7DaysTradeVolumeValue = useMemo(() =>
-    Decimal.from(
+  const last7DaysTradeVolumeValue = useMemo(
+    () => Decimal.from(
       Array.isArray(todayTradeVolume)
         ? todayTradeVolume.reduce((sum, day) => sum + Number(day.volume_ae || 0), 0)
-        : 0
+        : 0,
     ),
-    [todayTradeVolume]
+    [todayTradeVolume],
   );
 
   // Helper function to format fiat values (matching Vue component)
-  const formatFiat = (value: Decimal): string => {
-    return `${currentCurrencyInfo.symbol} ${value.shorten()}`;
-  };
+  const formatFiat = (value: Decimal): string => `${currentCurrencyInfo.symbol} ${value.shorten()}`;
 
   // Stats items with both AE amounts and fiat values (matching Vue component structure)
   const statsItems = useMemo((): { name: string; value: string | number; fiat?: string }[] => [
     {
       name: 'Total Market Cap',
-      value:last24HoursData ? `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}` : '-',
+      value: last24HoursData ? `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}` : '-',
       fiat: formatFiat(getFiat(totalMarketCapValue)),
     },
     {
@@ -95,5 +93,3 @@ export default function GlobalStatsAnalytics() {
     </div>
   );
 }
-
-

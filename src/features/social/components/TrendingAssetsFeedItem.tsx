@@ -1,17 +1,17 @@
-import React, { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { SuperheroApi } from "@/api/backend";
-import type { TokenDto } from "@/api/generated";
-import TokenLineChart from "@/features/trending/components/TokenLineChart";
-import { cn } from "@/lib/utils";
-import { TrendingUp } from "lucide-react";
+import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { SuperheroApi } from '@/api/backend';
+import type { TokenDto } from '@/api/generated';
+import TokenLineChart from '@/features/trending/components/TokenLineChart';
+import { cn } from '@/lib/utils';
+import { TrendingUp } from 'lucide-react';
 
 const ITEM_LIMIT = 4;
 const FETCH_LIMIT = 12;
 
 function getTokenAddress(token: TokenDto) {
-  return token.sale_address || token.address || "";
+  return token.sale_address || token.address || '';
 }
 
 function formatChange(changePercent: number) {
@@ -22,13 +22,12 @@ export default function TrendingAssetsFeedItem() {
   const { data: tokensData, isLoading: tokensLoading } = useQuery<{
     items?: TokenDto[];
   }>({
-    queryKey: ["feed-trending-assets", "tokens"],
-    queryFn: () =>
-      SuperheroApi.listTokens({
-        orderBy: "trending_score",
-        orderDirection: "DESC",
-        limit: FETCH_LIMIT,
-      }),
+    queryKey: ['feed-trending-assets', 'tokens'],
+    queryFn: () => SuperheroApi.listTokens({
+      orderBy: 'trending_score',
+      orderDirection: 'DESC',
+      limit: FETCH_LIMIT,
+    }),
     staleTime: 2 * 60 * 1000,
   });
 
@@ -43,7 +42,7 @@ export default function TrendingAssetsFeedItem() {
   const hasItems = topTokens.length > 0;
   const skeletonItems: Array<TokenDto | null> = Array.from(
     { length: ITEM_LIMIT },
-    () => null
+    () => null,
   );
   const itemsToRender: Array<TokenDto | null> = isLoading
     ? skeletonItems
@@ -64,90 +63,89 @@ export default function TrendingAssetsFeedItem() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {itemsToRender.map((item, index) => {
-              if (!item) {
-                return (
-                  <div
-                    key={`trending-asset-skeleton-${index}`}
-                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 animate-pulse"
-                  >
-                    <div className="h-4 w-16 rounded bg-white/10" />
-                    <div className="mt-2 h-3 w-10 rounded bg-white/10" />
-                    <div className="mt-3 h-10 w-full rounded bg-white/10" />
-                  </div>
-                );
-              }
+            if (!item) {
+              return (
+                <div
+                  key={`trending-asset-skeleton-${index}`}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 animate-pulse"
+                >
+                  <div className="h-4 w-16 rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-10 rounded bg-white/10" />
+                  <div className="mt-3 h-10 w-full rounded bg-white/10" />
+                </div>
+              );
+            }
 
-              const token = item;
-              const tokenLabel = token.symbol || token.name || "Unknown";
-              const tokenAddress = getTokenAddress(token);
-              const changeRaw = (
+            const token = item;
+            const tokenLabel = token.symbol || token.name || 'Unknown';
+            const tokenAddress = getTokenAddress(token);
+            const changeRaw = (
                 token as TokenDto & {
                   performance?: {
                     past_7d?: { current_change_percent?: number | string };
                   };
                 }
-              ).performance?.past_7d?.current_change_percent;
-              const parsedChange = Number(changeRaw);
-              const changePercent = Number.isFinite(parsedChange) ? parsedChange : null;
-              const isPositive = changePercent !== null ? changePercent >= 0 : true;
-              const tokenHref = `/trends/tokens/${encodeURIComponent(
-                token.name || token.address || token.symbol || tokenLabel
-              )}`;
+            ).performance?.past_7d?.current_change_percent;
+            const parsedChange = Number(changeRaw);
+            const changePercent = Number.isFinite(parsedChange) ? parsedChange : null;
+            const isPositive = changePercent !== null ? changePercent >= 0 : true;
+            const tokenHref = `/trends/tokens/${encodeURIComponent(
+              token.name || token.address || token.symbol || tokenLabel,
+            )}`;
 
-              return (
-                <Link
-                  key={`trending-asset-${tokenAddress || tokenLabel}-${index}`}
-                  to={tokenHref}
-                  className={cn(
-                    "group rounded-2xl border border-white/10 bg-white/[0.04] p-3",
-                    "hover:bg-white/[0.06] hover:border-white/15 transition-colors",
-                    "no-underline"
-                  )}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between gap-2">
+            return (
+              <Link
+                key={`trending-asset-${tokenAddress || tokenLabel}-${index}`}
+                to={tokenHref}
+                className={cn(
+                  'group rounded-2xl border border-white/10 bg-white/[0.04] p-3',
+                  'hover:bg-white/[0.06] hover:border-white/15 transition-colors',
+                  'no-underline',
+                )}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-center justify-between gap-2">
                   <div
                     className="text-[13px] font-semibold text-[var(--neon-blue)] truncate group-hover:underline underline-offset-2"
                     style={{
-                      background: "none",
-                      WebkitTextFillColor: "currentColor",
-                      WebkitBackgroundClip: "initial",
-                      backgroundClip: "initial",
+                      background: 'none',
+                      WebkitTextFillColor: 'currentColor',
+                      WebkitBackgroundClip: 'initial',
+                      backgroundClip: 'initial',
                     }}
                   >
-                      <span className="text-[var(--neon-blue)] mr-0.5">#</span>
-                      {tokenLabel}
-                    </div>
-                    <div
-                      className={cn(
-                        "text-[12px] font-semibold tabular-nums",
-                        changePercent === null
-                          ? "text-white/60"
-                          : isPositive
-                            ? "text-emerald-400"
-                            : "text-rose-400"
-                      )}
-                    >
-                      {changePercent === null
-                        ? "--"
-                        : `${isPositive ? "+" : "-"}${formatChange(changePercent)}`}
-                    </div>
+                    <span className="text-[var(--neon-blue)] mr-0.5">#</span>
+                    {tokenLabel}
                   </div>
-                  <div className="mt-3 h-10">
-                    {tokenAddress && (
-                      <TokenLineChart
-                        saleAddress={tokenAddress}
-                        height={40}
-                        hideTimeframe={true}
-                        timeframe="7d"
-                        className="h-10 w-full pointer-events-none"
-                      />
+                  <div
+                    className={cn(
+                      'text-[12px] font-semibold tabular-nums',
+                      changePercent === null
+                        ? 'text-white/60'
+                        : isPositive
+                          ? 'text-emerald-400'
+                          : 'text-rose-400',
                     )}
+                  >
+                    {changePercent === null
+                      ? '--'
+                      : `${isPositive ? '+' : '-'}${formatChange(changePercent)}`}
                   </div>
-                </Link>
-              );
-            }
-          )}
+                </div>
+                <div className="mt-3 h-10">
+                  {tokenAddress && (
+                  <TokenLineChart
+                    saleAddress={tokenAddress}
+                    height={40}
+                    hideTimeframe
+                    timeframe="7d"
+                    className="h-10 w-full pointer-events-none"
+                  />
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
         <div className="mt-3 flex justify-end">
           <Link

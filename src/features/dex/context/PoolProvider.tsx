@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext, useContext, useState, ReactNode,
+} from 'react';
+import { useSetAtom } from 'jotai';
 import { LiquidityPosition } from '../types/pool';
 import { useAccount } from '../../../hooks';
-import { useSetAtom } from 'jotai';
 import { invalidatePositionsAtom } from '../atoms/positionsAtoms';
 
 export type PoolAction = 'add' | 'remove' | null;
@@ -10,25 +12,25 @@ interface PoolContextType {
   // Current action state
   currentAction: PoolAction;
   setCurrentAction: (action: PoolAction) => void;
-  
+
   // Selected position for operations
   selectedPosition: LiquidityPosition | null;
   setSelectedPosition: (position: LiquidityPosition | null) => void;
-  
+
   // Token selection for new liquidity
   selectedTokenA: string;
   selectedTokenB: string;
   setSelectedTokens: (tokenA: string, tokenB: string) => void;
-  
+
   // Position refresh functionality
   refreshPositions: (() => Promise<void>) | null;
   setRefreshPositions: (refreshFn: (() => Promise<void>) | null) => void;
-  
+
   // Helper functions
   selectPositionForAdd: (position: LiquidityPosition) => void;
   selectPositionForRemove: (position: LiquidityPosition) => void;
   clearSelection: () => void;
-  
+
   // Auto-refresh after operations
   onPositionUpdated: () => Promise<void>;
 }
@@ -39,7 +41,7 @@ interface PoolProviderProps {
   children: ReactNode;
 }
 
-export function PoolProvider({ children }: PoolProviderProps) {
+export const PoolProvider = ({ children }: PoolProviderProps) => {
   const { activeAccount } = useAccount();
   const invalidatePositions = useSetAtom(invalidatePositionsAtom);
   const [currentAction, setCurrentAction] = useState<PoolAction>(null);
@@ -103,7 +105,7 @@ export function PoolProvider({ children }: PoolProviderProps) {
       {children}
     </PoolContext.Provider>
   );
-}
+};
 
 export function usePool() {
   const context = useContext(PoolContext);

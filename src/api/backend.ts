@@ -9,24 +9,24 @@ export const SuperheroApi = {
     // Create timeout controller if no signal provided
     let timeoutController: AbortController | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
-    
+
     if (!init?.signal && typeof AbortController !== 'undefined') {
       timeoutController = new AbortController();
       // Increased timeout to 90 seconds for portfolio data queries that process large date ranges
       timeoutId = setTimeout(() => timeoutController!.abort(), 90000); // 90 second timeout
     }
-    
+
     try {
       const res = await fetch(url, {
         ...init,
         signal: init?.signal || timeoutController?.signal,
       });
-      
+
       // Clear timeout if request succeeded
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       if (!res.ok) {
         let errorMessage = `Request failed with status ${res.status}`;
         try {
@@ -44,25 +44,25 @@ export const SuperheroApi = {
           // If we can't read the body, use the status text
           errorMessage = res.statusText || errorMessage;
         }
-        
+
         const error = new Error(`Superhero API error (${res.status}): ${errorMessage}`);
         throw error;
       }
-      
+
       // Check if response has content before trying to parse JSON
       const contentType = res.headers.get('content-type');
       const contentLength = res.headers.get('content-length');
-      
+
       if (contentLength === '0' || (!contentType?.includes('application/json') && !contentType?.includes('text/json'))) {
         // Return null for empty responses instead of throwing
         return null;
       }
-      
+
       const text = await res.text();
       if (!text || text.trim().length === 0) {
         return null;
       }
-      
+
       try {
         return JSON.parse(text);
       } catch (parseError) {
@@ -73,7 +73,7 @@ export const SuperheroApi = {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       // Enhanced error handling for network errors and timeouts
       if (err instanceof Error) {
         if (err.name === 'AbortError' || err.message.includes('aborted')) {

@@ -1,7 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Head from '../../../seo/Head';
 import { useCallback, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Decimal } from '@/libs/decimal';
+import { useAeSdk } from '@/hooks/useAeSdk';
+import { useWallet } from '@/hooks';
+import { formatAddress } from '@/utils/address';
+import Head from '../../../seo/Head';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
 import LeftRail from '../../../components/layout/LeftRail';
@@ -13,13 +17,8 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
 import { resolvePostByKey } from '../utils/resolvePost';
-import { Decimal } from '@/libs/decimal';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
-import { useAeSdk } from '@/hooks/useAeSdk';
-import { useWallet } from '@/hooks';
-import { Link } from 'react-router-dom';
-import { formatAddress } from '@/utils/address';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { slug } = useParams();
@@ -32,7 +31,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     data: postData,
     isLoading: isPostLoading,
     error: postError,
-    refetch: refetchPost
+    refetch: refetchPost,
   } = useQuery({
     queryKey: ['post', slug],
     queryFn: async () => {
@@ -52,8 +51,6 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-
 
   // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
@@ -110,7 +107,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         while (true) {
           if (requestBudget <= 0) break;
           requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
+          const res: any = await PostsService.getComments({
+            id: current, orderDirection: 'ASC', page, limit: 50,
+          });
           const items: PostDto[] = res?.items || [];
           total += items.length;
           // enqueue children that have further replies
@@ -151,9 +150,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const renderErrorState = () => (
     <div className="text-center py-8 text-light-font-color">
       Error loading post.
-      <AeButton variant="ghost" size="sm" onClick={() => {
-        refetchPost();
-      }}>
+      <AeButton
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          refetchPost();
+        }}
+      >
         Retry
       </AeButton>
     </div>
@@ -186,7 +189,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
-          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/,'')}`}
+          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/, '')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
           jsonLd={{
             '@context': 'https://schema.org',
@@ -250,7 +253,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   );
 }
 
-function PostTipOverview({ post, explorerUrl }: { post: any; explorerUrl?: string }) {
+const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
   const { chainNames } = useWallet();
   const postId = String(post?.id || '');
   const receiver = String(post?.sender_address || post?.senderAddress || '');
@@ -267,7 +270,11 @@ function PostTipOverview({ post, explorerUrl }: { post: any; explorerUrl?: strin
     <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-white/70">
-          Total tipped: <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span> AE
+          Total tipped:
+          {' '}
+          <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
+          {' '}
+          AE
         </div>
         <div className="text-xs text-white/50">{tips.length ? `${tips.length} tips` : ''}</div>
       </div>
@@ -293,7 +300,9 @@ function PostTipOverview({ post, explorerUrl }: { post: any; explorerUrl?: strin
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="text-sm text-white font-semibold">
-                  {Decimal.from(t.amountAe).prettify()} AE
+                  {Decimal.from(t.amountAe).prettify()}
+                  {' '}
+                  AE
                 </div>
                 {explorerBase && (
                   <a
@@ -309,10 +318,15 @@ function PostTipOverview({ post, explorerUrl }: { post: any; explorerUrl?: strin
             </div>
           ))}
           {tips.length > top.length && (
-            <div className="text-xs text-white/50 pt-1">Showing latest {top.length} tips.</div>
+            <div className="text-xs text-white/50 pt-1">
+              Showing latest
+              {top.length}
+              {' '}
+              tips.
+            </div>
           )}
         </div>
       )}
     </div>
   );
-}
+};

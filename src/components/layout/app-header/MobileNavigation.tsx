@@ -39,11 +39,9 @@ export default function MobileNavigation() {
   const activeNavPath = React.useMemo(() => {
     const matches = navigationItems
       .filter((item: any) => !!item?.path && !item?.isExternal)
-      .filter((item: any) =>
-        item.path === '/'
-          ? pathname === '/'
-          : pathname === item.path || pathname.startsWith(`${item.path}/`)
-      )
+      .filter((item: any) => (item.path === '/'
+        ? pathname === '/'
+        : pathname === item.path || pathname.startsWith(`${item.path}/`)))
       .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
     return matches[0]?.path || '';
   }, [navigationItems, pathname]);
@@ -73,7 +71,6 @@ export default function MobileNavigation() {
             <HeaderLogo className="h-7 w-auto" />
           </Link>
           <div className="flex-grow" />
-          
 
           <button
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
@@ -105,7 +102,6 @@ export default function MobileNavigation() {
           >
             <IconMobileMenu />
           </button>
-          
 
         </div>
       )}
@@ -130,9 +126,8 @@ export default function MobileNavigation() {
                 .filter((item: any) => !!item && !!item.id)
                 .map((item: any) => {
                   const isActive = isActiveRoute(item.path);
-                  const baseClass =
-                    "flex items-center py-4 px-5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3";
-                  const activeClass = isActive ? "bg-white/15" : "bg-white/5";
+                  const baseClass = 'flex items-center py-4 px-5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3';
+                  const activeClass = isActive ? 'bg-white/15' : 'bg-white/5';
 
                   if (item.isExternal) {
                     return (
@@ -169,5 +164,3 @@ export default function MobileNavigation() {
     </div>
   );
 }
-
-

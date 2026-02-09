@@ -1,7 +1,9 @@
 import { AeSdk, AeSdkAepp } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { BrowserProvider } from 'ethers';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { getTokenBalance } from '../../../libs/dex';
 import { BridgeConstants } from '../constants';
@@ -17,7 +19,9 @@ interface UseTokenBalancesProps {
   sdk?: AeSdk | AeSdkAepp;
 }
 
-export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk }: UseTokenBalancesProps) {
+export function useTokenBalances({
+  assets, direction, aeAccount, ethAccount, sdk,
+}: UseTokenBalancesProps) {
   const [aeBalances, setAeBalances] = useState<Record<string, string>>({});
   const [ethBalances, setEthBalances] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -108,14 +112,12 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                   const tokenContract = new Ethereum.Contract(
                     asset.ethAddress,
                     BridgeConstants.ethereum.asset_abi,
-                    signer
+                    signer,
                   );
 
                   // Simple timeout approach
                   const balancePromise = tokenContract.balanceOf(userAddress);
-                  const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error(`Balance fetch timeout for ${asset.symbol}`)), 8000)
-                  );
+                  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Balance fetch timeout for ${asset.symbol}`)), 8000));
 
                   const balance = await Promise.race([balancePromise, timeoutPromise]);
                   const balanceFormatted = new BigNumber(balance.toString())
@@ -129,7 +131,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
             } catch (error) {
               newEthBalances[asset.symbol] = '0';
             }
-          })
+          }),
         );
       }
     } catch (error) {
@@ -170,7 +172,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
       middlewareBalances.forEach((balance: any) => {
         balanceMap.set(balance.contract_id, {
           amount: balance.amount,
-          decimals: balance.decimals
+          decimals: balance.decimals,
         });
       });
 
@@ -210,7 +212,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
           } catch (error) {
             newAeBalances[asset.symbol] = '0';
           }
-        })
+        }),
       );
     } catch (error) {
       // Fallback to individual contract calls if middleware fails
@@ -234,7 +236,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
             } catch (fallbackError) {
               newAeBalances[asset.symbol] = '0';
             }
-          })
+          }),
         );
       } catch (fallbackError) {
       }
@@ -302,7 +304,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
     aeLoading,
     refetch: fetchBalances,
     refetchEth: fetchEthereumBalances,
-    refetchAe: fetchAeternityBalances
+    refetchAe: fetchAeternityBalances,
   };
 }
-

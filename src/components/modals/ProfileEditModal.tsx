@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
-import { useProfile } from "../../hooks/useProfile";
-import { useToast } from "../ToastProvider";
-import { useAeSdk } from "@/hooks/useAeSdk";
+import { useAeSdk } from '@/hooks/useAeSdk';
+import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
+import { CONFIG } from '@/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { AccountsService } from '@/api/generated/services/AccountsService';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '../ui/dialog';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { Button } from '../ui/button';
+import { useProfile } from '../../hooks/useProfile';
+import { useToast } from '../ToastProvider';
 // @ts-ignore
-import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
-import { CONFIG } from "@/config";
-import { useQueryClient } from "@tanstack/react-query";
-import { AccountsService } from "@/api/generated/services/AccountsService";
 
 export default function ProfileEditModal({
   open,
@@ -28,9 +30,9 @@ export default function ProfileEditModal({
   const { getProfile, canEdit } = useProfile(address);
   const { push } = useToast();
   const { sdk, activeAccount } = useAeSdk();
-  const [bio, setBio] = useState("");
+  const [bio, setBio] = useState('');
   const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState('');
   const BIO_CHAR_LIMIT = 280;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Track which bio value we already selected for; ensures selection runs after async loads and on each open
@@ -57,8 +59,8 @@ export default function ProfileEditModal({
       } catch {}
       const p = await getProfile();
       if (!userTypedRef.current) {
-        setBio(p?.biography || "");
-        setAvatarUrl(p?.avatar_url || "");
+        setBio(p?.biography || '');
+        setAvatarUrl(p?.avatar_url || '');
         prefilledRef.current = true;
       }
     }
@@ -89,10 +91,10 @@ export default function ProfileEditModal({
 
   async function onSave() {
     try {
-      const text = (bio || "").slice(0, BIO_CHAR_LIMIT).trim();
+      const text = (bio || '').slice(0, BIO_CHAR_LIMIT).trim();
       if (!text) {
         // Do not enable loading state if validation fails
-        push(<div style={{ color: "#ffb3b3" }}>{t('messages.bioCannotBeEmpty')}</div>);
+        push(<div style={{ color: '#ffb3b3' }}>{t('messages.bioCannotBeEmpty')}</div>);
         return;
       }
       setLoading(true);
@@ -100,10 +102,10 @@ export default function ProfileEditModal({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
       });
-      const res: any = await contract.post_without_tip(text, ["bio-update", "hidden"]);
+      const res: any = await contract.post_without_tip(text, ['bio-update', 'hidden']);
       // Notify listeners that a bio update post was submitted; parent can show a spinner and poll
       try {
-        const evt = new CustomEvent("profile-bio-posted", {
+        const evt = new CustomEvent('profile-bio-posted', {
           detail: {
             address: (address as string) || (activeAccount as string),
             bio: text,
@@ -116,9 +118,9 @@ export default function ProfileEditModal({
       onClose();
     } catch (e: any) {
       push(
-        <div style={{ color: "#ffb3b3" }}>
+        <div style={{ color: '#ffb3b3' }}>
           {e?.message || t('messages.failedToUpdateProfile')}
-        </div>
+        </div>,
       );
     } finally {
       setLoading(false);
@@ -156,7 +158,11 @@ export default function ProfileEditModal({
               className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus:border-[#4ecdc4] focus:outline-none"
               maxLength={BIO_CHAR_LIMIT}
             />
-            <div className="mt-1 text-white/50 text-xs text-right">{bio.length}/{BIO_CHAR_LIMIT}</div>
+            <div className="mt-1 text-white/50 text-xs text-right">
+              {bio.length}
+              /
+              {BIO_CHAR_LIMIT}
+            </div>
           </div>
           {/* Avatar editing temporarily disabled; keep existing avatar on save */}
           <div className="flex gap-2 justify-end">

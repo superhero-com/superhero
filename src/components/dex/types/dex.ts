@@ -1,4 +1,4 @@
-import { DexTokenDto } from "../../../api/generated";
+import { DexTokenDto } from '../../../api/generated';
 
 export interface TokenBalance {
   in?: string;

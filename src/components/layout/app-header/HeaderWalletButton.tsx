@@ -1,13 +1,14 @@
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import { AeButton } from '@/components/ui/ae-button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/ae-dropdown-menu';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/ae-dropdown-menu';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAccount } from '../../../hooks';
+import { useAccount, useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import { useModal } from '../../../hooks';
 import Favicon from '../../../svg/favicon.svg?react';
 import { IconThreeDots } from '../../../icons';
 
@@ -62,8 +63,8 @@ export default function HeaderWalletButton() {
           overlaySize={18}
           showBalance={false}
           showAddressAndChainName={false}
-          showPrimaryOnly={true}
-          hideFallbackName={true}
+          showPrimaryOnly
+          hideFallbackName
           contentClassName="px-2 pb-0 max-w-[160px] overflow-hidden"
           className="w-full max-w-[210px]"
         />
@@ -92,7 +93,7 @@ export default function HeaderWalletButton() {
             address={activeAccount}
             size={40}
             overlaySize={18}
-            showAddressAndChainName={true}
+            showAddressAndChainName
             truncateAddress={false}
             contentClassName="px-3 pb-2"
           />
@@ -100,9 +101,14 @@ export default function HeaderWalletButton() {
           <DropdownMenuSeparator className="my-3" />
 
           <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg mb-3">
-            <span className="text-sm text-muted-foreground">{t('labels.balance')}:</span>
+            <span className="text-sm text-muted-foreground">
+              {t('labels.balance')}
+              :
+            </span>
             <span className="font-semibold text-foreground font-mono">
-              {decimalBalance.prettify()} AE
+              {decimalBalance.prettify()}
+              {' '}
+              AE
             </span>
           </div>
 

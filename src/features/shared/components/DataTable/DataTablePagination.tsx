@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from '../../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '../../../../components/ui/select';
 import { DataTableMeta } from './DataTable';
 
 export interface DataTablePaginationProps {
@@ -13,7 +15,7 @@ export interface DataTablePaginationProps {
   itemsPerPageOptions?: number[];
 }
 
-export function DataTablePagination({
+export const DataTablePagination = ({
   meta,
   onPageChange,
   onItemsPerPageChange,
@@ -21,7 +23,7 @@ export function DataTablePagination({
   className = '',
   showItemsPerPage = true,
   itemsPerPageOptions = [5, 10, 20, 50, 100],
-}: DataTablePaginationProps) {
+}: DataTablePaginationProps) => {
   const {
     totalItems,
     itemCount,
@@ -85,11 +87,29 @@ export function DataTablePagination({
       {/* Page info */}
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
+          Page
+          {' '}
+          {currentPage}
+          {' '}
+          of
+          {' '}
+          {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <p className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {totalItems} results
+            Showing
+            {' '}
+            {startItem}
+            {' '}
+            to
+            {' '}
+            {endItem}
+            {' '}
+            of
+            {' '}
+            {totalItems}
+            {' '}
+            results
           </p>
         </div>
       </div>
@@ -187,4 +207,4 @@ export function DataTablePagination({
       </div>
     </div>
   );
-}
+};

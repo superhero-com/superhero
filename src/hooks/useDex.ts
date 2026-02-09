@@ -22,7 +22,6 @@ export const useDex = () => {
     } catch { }
   }, [setDeadlineMins]);
 
-
   // TODO: should improve this, it should come from a cached API
 
   return {

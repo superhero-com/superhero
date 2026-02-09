@@ -19,8 +19,8 @@ export default function Landing() {
   const { t } = useTranslation('landing');
 
   return (
-    <div className='bg-black-900'>
-      
+    <div className="bg-black-900">
+
       {/* Hero */}
       <section className="h-screen overflow-hidden flex items-center relative bg-gradient-to-br from-[#0a0a0f] via-[#0f0f23] to-[#1a1a2e]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,107,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(0,255,157,0.15)_0%,transparent_50%),radial-gradient(circle_at_40%_40%,rgba(69,183,209,0.1)_0%,transparent_50%)]" />
@@ -33,8 +33,8 @@ export default function Landing() {
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-10 max-w-4xl">
               {t('hero.description')}
             </p>
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30 relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
@@ -76,10 +76,10 @@ export default function Landing() {
           <div className="flex flex-wrap -mx-4">
             <div className="w-full lg:w-1/4 px-4 mb-8 lg:mb-0">
               <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 h-full min-w-[280px] lg:min-w-0">
-                <img 
-                  src={votingSvg} 
-                  alt="Decentralized" 
-                  className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]" 
+                <img
+                  src={votingSvg}
+                  alt="Decentralized"
+                  className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]"
                 />
                 <h4 className="text-[var(--neon-teal)] text-xl font-bold mb-6">
                   {t('features.decentralized.title')}
@@ -108,8 +108,16 @@ export default function Landing() {
               WHY ON‑CHAIN IDENTITY AND POSTS?
             </span>
             <h2 className="text-4xl md:text-5xl font-normal text-white mt-4">
-              Wallet login makes your identity <b>portable</b>. On‑chain posts are <b>provable</b>
-              and <b>remixable</b>.
+              Wallet login makes your identity
+              {' '}
+              <b>portable</b>
+              . On‑chain posts are
+              {' '}
+              <b>provable</b>
+              and
+              {' '}
+              <b>remixable</b>
+              .
             </h2>
           </div>
           <ul className="list-none mt-8 space-y-3 max-w-2xl mx-auto">
@@ -139,7 +147,10 @@ export default function Landing() {
                   TIPPING
                 </h3>
                 <p className="text-3xl md:text-4xl font-bold text-white">
-                  <b>Sending crypto</b> has never been <b>easier</b>
+                  <b>Sending crypto</b>
+                  {' '}
+                  has never been
+                  <b>easier</b>
                 </p>
               </div>
               <div className="space-y-6">
@@ -175,7 +186,9 @@ export default function Landing() {
         <div className="max-w-[1180px] mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-normal text-white mb-4">
-              Full of <b>powerful features</b>
+              Full of
+              {' '}
+              <b>powerful features</b>
             </h2>
             <p className="text-lg text-gray-400 leading-relaxed max-w-4xl mx-auto">
               Tip what you value, meet with your community, vote on what matters, and embed tipping
@@ -184,7 +197,7 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center mt-16">
-              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8"></div>
+              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8" />
               <h4 className="text-white text-xl font-semibold mb-5">
                 Superhero Meet
               </h4>
@@ -194,7 +207,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="text-center mt-16">
-              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8"></div>
+              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8" />
               <h4 className="text-white text-xl font-semibold mb-5">
                 Superhero Voting
               </h4>
@@ -211,10 +224,10 @@ export default function Landing() {
                 Add a simple, customizable tip button to your website or blog and let people reward
                 your work.
               </p>
-              <a 
+              <a
                 className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
-                href="https://github.com/aeternity/superhero-utils" 
-                target="_blank" 
+                href="https://github.com/aeternity/superhero-utils"
+                target="_blank"
                 rel="noreferrer"
               >
                 Learn More
@@ -246,13 +259,13 @@ export default function Landing() {
                   Dive under the hood, use the code, fork it, or run it locally. Join a global
                   community pushing the ecosystem forward.
                 </p>
-                <a 
+                <a
                   className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
-                  href="https://github.com/aeternity/superhero-ui/" 
-                  target="_blank" 
+                  href="https://github.com/aeternity/superhero-ui/"
+                  target="_blank"
                   rel="noreferrer"
                 >
-                  <img src={githubSvg} alt="GitHub" className="w-5 h-5" /> 
+                  <img src={githubSvg} alt="GitHub" className="w-5 h-5" />
                   Contribute on GitHub
                 </a>
               </div>
@@ -264,8 +277,8 @@ export default function Landing() {
       {/* CTA */}
       <section className="bg-black py-10">
         <div className="max-w-[570px] mx-auto text-center px-4">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
           >
             Become a Superhero Today
@@ -275,5 +288,3 @@ export default function Landing() {
     </div>
   );
 }
-
-

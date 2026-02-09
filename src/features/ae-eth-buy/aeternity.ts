@@ -10,9 +10,8 @@ export async function waitForAeEthDeposit(
   prevAeEthBalance: bigint,
   expectedIncrease: bigint,
   timeoutMs: number = 300_000,
-  pollIntervalMs: number = 6000
+  pollIntervalMs: number = 6000,
 ): Promise<boolean> {
-
   const startTime = Date.now();
   while (Date.now() - startTime < timeoutMs) {
     try {
@@ -30,7 +29,7 @@ export async function waitForAeEthDeposit(
     }
 
     // Wait before next poll
-    await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
   }
 
   return false;
@@ -53,7 +52,7 @@ export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bi
 export async function hasMinimumAeEthBalance(
   sdk: AeSdk,
   aeAccount: string,
-  minAmount: bigint
+  minAmount: bigint,
 ): Promise<boolean> {
   try {
     const balance = await getAeEthBalance(sdk, aeAccount);

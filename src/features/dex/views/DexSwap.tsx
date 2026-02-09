@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import Head from "../../../seo/Head";
-import { DexTokenDto, PairDto } from "../../../api/generated";
-import SwapForm from "../../../components/dex/core/SwapForm";
-import RecentActivity from "../../../components/dex/supporting/RecentActivity";
-import PoolCandlestickChart from "../components/charts/PoolCandlestickChart";
+import React, { useState } from 'react';
+import Head from '../../../seo/Head';
+import { DexTokenDto, PairDto } from '../../../api/generated';
+import SwapForm from '../../../components/dex/core/SwapForm';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
+import PoolCandlestickChart from '../components/charts/PoolCandlestickChart';
 
 export default function DexSwap() {
   const [selectedPair, setSelectedPair] = useState<PairDto | null>(null);

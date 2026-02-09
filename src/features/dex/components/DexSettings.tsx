@@ -8,7 +8,9 @@ interface DexSettingsProps {
 }
 
 export default function DexSettings({ children, title = 'DEX Settings' }: DexSettingsProps) {
-  const { slippagePct, deadlineMins, setSlippage, setDeadline } = useDex();
+  const {
+    slippagePct, deadlineMins, setSlippage, setDeadline,
+  } = useDex();
   const [open, setOpen] = useState(false);
   const [tempSlippage, setTempSlippage] = useState(slippagePct.toString());
   const [tempDeadline, setTempDeadline] = useState(deadlineMins.toString());
@@ -16,15 +18,15 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
   const handleSave = () => {
     const newSlippage = parseFloat(tempSlippage);
     const newDeadline = parseInt(tempDeadline);
-    
+
     if (!isNaN(newSlippage) && newSlippage > 0 && newSlippage <= 50) {
       setSlippage(newSlippage);
     }
-    
+
     if (!isNaN(newDeadline) && newDeadline > 0 && newDeadline <= 180) {
       setDeadline(newDeadline);
     }
-    
+
     setOpen(false);
   };
 
@@ -61,7 +63,7 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
               Slippage Tolerance
             </label>
             <div className="flex gap-2 mb-2">
-              {[0.1, 0.5, 1.0].map(preset => (
+              {[0.1, 0.5, 1.0].map((preset) => (
                 <button
                   key={preset}
                   onClick={() => setTempSlippage(preset.toString())}
@@ -71,7 +73,8 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
                       : 'border-white/10 bg-white/5 text-standard-font-color'
                   }`}
                 >
-                  {preset}%
+                  {preset}
+                  %
                 </button>
               ))}
               <div className="flex-1 relative">
@@ -101,7 +104,7 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
               Transaction Deadline
             </label>
             <div className="flex gap-2 mb-2">
-              {[10, 20, 30].map(preset => (
+              {[10, 20, 30].map((preset) => (
                 <button
                   key={preset}
                   onClick={() => setTempDeadline(preset.toString())}
@@ -111,7 +114,8 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
                       : 'border-white/10 bg-white/5 text-standard-font-color'
                   }`}
                 >
-                  {preset}m
+                  {preset}
+                  m
                 </button>
               ))}
               <div className="flex-1 relative">

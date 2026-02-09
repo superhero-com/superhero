@@ -1,9 +1,9 @@
-import { BrowserWindowMessageConnection, Encoded, Tag } from "@aeternity/aepp-sdk";
+import { BrowserWindowMessageConnection, Encoded, Tag } from '@aeternity/aepp-sdk';
 import {
   TX_FUNCTIONS,
   WEB_SOCKET_CHANNELS,
-} from "@/utils/constants";
-import { CancelablePromise } from "@/api/generated/core/CancelablePromise";
+} from '@/utils/constants';
+import { CancelablePromise } from '@/api/generated/core/CancelablePromise';
 
 export interface INetwork {
   url: string;
@@ -19,7 +19,7 @@ export interface INetwork {
   disabled?: boolean;
 }
 
-export type NetworkId = "ae_mainnet" | "ae_uat";
+export type NetworkId = 'ae_mainnet' | 'ae_uat';
 
 export interface IAppConfigs {
   app: {
@@ -57,15 +57,15 @@ export interface Wallets {
 }
 
 export type CurrencyCode =
-  | "usd"
-  | "eur"
-  | "cny"
-  | "aud"
-  | "brl"
-  | "cad"
-  | "chf"
-  | "gbp"
-  | "xau";
+  | 'usd'
+  | 'eur'
+  | 'cny'
+  | 'aud'
+  | 'brl'
+  | 'cad'
+  | 'chf'
+  | 'gbp'
+  | 'xau';
 
 export interface ICurrency {
   name: string;
@@ -136,7 +136,7 @@ export interface IWebSocketSubscriptionMessage {
   target?: string;
 }
 export interface ITxArguments {
-  type: "tuple" | "list" | "int";
+  type: 'tuple' | 'list' | 'int';
   value: any; // TODO find type, this was not correct: (string | number | any[])
 }
 /**

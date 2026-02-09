@@ -1,5 +1,5 @@
-import React from "react";
-import { Helmet } from "react-helmet-async";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
 
 type HeadProps = {
   title?: string;
@@ -10,9 +10,9 @@ type HeadProps = {
   jsonLd?: Array<Record<string, any>> | Record<string, any> | null;
 };
 
-const CANONICAL_ORIGIN = "https://superhero.com";
+const CANONICAL_ORIGIN = 'https://superhero.com';
 
-export function Head(props: HeadProps) {
+export const Head = (props: HeadProps) => {
   const {
     title,
     description,
@@ -23,7 +23,7 @@ export function Head(props: HeadProps) {
   } = props;
 
   const canonicalUrl = canonicalPath
-    ? `${CANONICAL_ORIGIN}${canonicalPath.startsWith("/") ? "" : "/"}${canonicalPath}`
+    ? `${CANONICAL_ORIGIN}${canonicalPath.startsWith('/') ? '' : '/'}${canonicalPath}`
     : undefined;
 
   // Helper function to ensure image URLs are absolute
@@ -36,7 +36,7 @@ export function Head(props: HeadProps) {
       return imageUrl;
     }
     // Convert relative path to absolute URL
-    const path = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+    const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
     return `${CANONICAL_ORIGIN}${path}`;
   };
 
@@ -45,8 +45,8 @@ export function Head(props: HeadProps) {
   const jsonLdArray = Array.isArray(jsonLd)
     ? jsonLd
     : jsonLd
-    ? [jsonLd]
-    : [];
+      ? [jsonLd]
+      : [];
 
   return (
     <Helmet>
@@ -68,7 +68,7 @@ export function Head(props: HeadProps) {
       <meta property="og:type" content="website" />
 
       {/* Twitter */}
-      <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+      <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
       {title ? <meta name="twitter:title" content={title} /> : null}
       {description ? (
         <meta name="twitter:description" content={description} />
@@ -83,8 +83,6 @@ export function Head(props: HeadProps) {
       ))}
     </Helmet>
   );
-}
+};
 
 export default Head;
-
-

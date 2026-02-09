@@ -1,7 +1,7 @@
 import React from 'react';
+import { formatFractionalPrice } from '@/utils/common';
 import { Decimal } from '../../../libs/decimal';
 import FractionFormatter, { FormattedFractionalPrice } from './FractionFormatter';
-import { formatFractionalPrice } from '@/utils/common';
 import Spinner from '../../../components/Spinner';
 
 interface SymbolPriceFormatterProps {
@@ -25,7 +25,6 @@ export default function SymbolPriceFormatter({
   priceJustDecreased = false,
   className = '',
 }: SymbolPriceFormatterProps) {
-
   return (
     <div className={`inline-flex items-center ${className}`}>
       {priceJustIncreased && (

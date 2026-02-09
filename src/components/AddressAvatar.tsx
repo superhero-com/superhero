@@ -11,7 +11,6 @@ interface AddressAvatarProps {
   borderRadius?: string;
 }
 
-
 export const AVATAR_CONFIG = {
   mode: 'exclude',
   accessoriesChance: 28,
@@ -39,7 +38,7 @@ export default function AddressAvatar({
   size = 24,
   className = '',
   borderRadius = '50%',
-  style = {}
+  style = {},
 }: AddressAvatarProps) {
   // Generate avatar SVG using dicebear or jdenticon based on address
   const avatarSvg = useMemo(() => {
@@ -56,10 +55,9 @@ export default function AddressAvatar({
         const avatar = new Avatars(sprites, AVATAR_CONFIG);
 
         return avatar.create(address);
-      } else {
-        // Use jdenticon for non-.chain addresses
-        return jdenticon.toSvg(address, (avatarSize * 0.95), JDENTICON_CONFIG);
       }
+      // Use jdenticon for non-.chain addresses
+      return jdenticon.toSvg(address, (avatarSize * 0.95), JDENTICON_CONFIG);
     } catch (error) {
       console.warn('Failed to generate avatar:', error);
       return null;
@@ -73,7 +71,7 @@ export default function AddressAvatar({
       return {
         initials: '??',
         backgroundColor: 'hsl(0deg, 0%, 50%)',
-        fontSize: '12px'
+        fontSize: '12px',
       };
     }
 
@@ -103,7 +101,7 @@ export default function AddressAvatar({
         width: typeof size === 'string' ? size : `${size}px`,
         height: typeof size === 'string' ? size : `${size}px`,
         borderRadius: '50%',
-        ...style
+        ...style,
       }}
     >
       {avatarSvg ? (
@@ -129,4 +127,3 @@ export default function AddressAvatar({
     </div>
   );
 }
-

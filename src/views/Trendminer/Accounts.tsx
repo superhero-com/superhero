@@ -18,10 +18,12 @@ export default function Accounts() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await SuperheroApi.listAccounts({ orderBy, orderDirection, limit: 20, page: reset ? 1 : page });
+        const resp = await SuperheroApi.listAccounts({
+          orderBy, orderDirection, limit: 20, page: reset ? 1 : page,
+        });
         const items = resp?.items ?? resp ?? [];
         if (!cancel) {
-          setRows((prev) => reset ? items : [...prev, ...items]);
+          setRows((prev) => (reset ? items : [...prev, ...items]));
           const currentPage = resp?.meta?.currentPage ?? (reset ? 1 : page);
           const totalPages = resp?.meta?.totalPages ?? (items.length === 20 ? currentPage + 1 : currentPage);
           setHasMore(currentPage < totalPages);
@@ -75,17 +77,28 @@ export default function Accounts() {
               {r.address}
             </div>
             <div className="flex gap-4 opacity-85 text-sm text-white/85">
-              <div>Vol: {Number(r.total_volume || 0).toLocaleString()} AE</div>
-              <div>Tx: {r.total_tx_count || 0}</div>
-              <div>Tokens: {r.total_created_tokens || 0}</div>
+              <div>
+                Vol:
+                {Number(r.total_volume || 0).toLocaleString()}
+                {' '}
+                AE
+              </div>
+              <div>
+                Tx:
+                {r.total_tx_count || 0}
+              </div>
+              <div>
+                Tokens:
+                {r.total_created_tokens || 0}
+              </div>
             </div>
           </div>
         ))}
       </div>
       {hasMore && (
         <div className="text-center mt-3">
-          <button 
-            onClick={() => setPage((p) => p)} 
+          <button
+            onClick={() => setPage((p) => p)}
             disabled={loading}
             className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
@@ -96,5 +109,3 @@ export default function Accounts() {
     </div>
   );
 }
-
-

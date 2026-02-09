@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { toAe } from '@aeternity/aepp-sdk';
 import { SuperheroApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
-import { toAe } from '@aeternity/aepp-sdk';
 import Spinner from '../../../../components/Spinner';
 
 interface TokenRankingProps {
@@ -51,14 +51,14 @@ export default function TokenRanking({ token }: TokenRankingProps) {
 
     async function fetchRankings() {
       if (!token.sale_address) return;
-      
+
       setLoading(true);
       try {
         const data = await SuperheroApi.listTokenRankings(token.sale_address, {
           limit: tokenRankingLimit,
           page: 1,
         });
-        
+
         if (!cancelled) {
           setRankingData(data as RankingData);
         }
@@ -83,14 +83,12 @@ export default function TokenRanking({ token }: TokenRankingProps) {
   const rankingTokens = rankingData?.items || [];
 
   // Find current token rank from ranking data or use prop
-  const tokenRank = useMemo(() => {
-    return rankingTokens.find(item => item.sale_address === token.sale_address)?.rank || token.rank || 1;
-  }, [rankingTokens, token.sale_address, token.rank]);
+  const tokenRank = useMemo(() => rankingTokens.find((item) => item.sale_address === token.sale_address)?.rank || token.rank || 1, [rankingTokens, token.sale_address, token.rank]);
 
   // Calculate tokens ahead to level up
   const tokensAhead = useMemo(() => {
     const nextRankToken = rankingTokens.find(({ rank }) => rank === tokenRank - 1);
-    
+
     if (!nextRankToken || !token.total_supply) return '0';
 
     const nextTokenSupply = getDecimalValue(nextRankToken.total_supply);
@@ -101,11 +99,9 @@ export default function TokenRanking({ token }: TokenRankingProps) {
   }, [rankingTokens, tokenRank, token.total_supply]);
 
   // Find closest chaser (token behind current)
-  const closestChaser = useMemo(() => {
-    return tokenRank <= 1 
-      ? undefined 
-      : rankingTokens.find(item => item.rank === tokenRank + 1);
-  }, [rankingTokens, tokenRank]);
+  const closestChaser = useMemo(() => (tokenRank <= 1
+    ? undefined
+    : rankingTokens.find((item) => item.rank === tokenRank + 1)), [rankingTokens, tokenRank]);
 
   // Calculate tokens behind
   const tokensBehind = useMemo(() => {
@@ -134,15 +130,15 @@ export default function TokenRanking({ token }: TokenRankingProps) {
   function calculateDifference(currentSupply: string, compareSupply: string): { value: string; isPositive: boolean } {
     const current = getDecimalValue(currentSupply);
     const compare = getDecimalValue(compareSupply);
-    
+
     // If current token supply is less than compare token supply, show positive (red)
     // If current token supply is greater than compare token supply, show negative (green)
     const isCurrentLess = current.lt(compare);
     const difference = isCurrentLess ? compare.sub(current) : current.sub(compare);
-    
+
     return {
       value: difference.shorten(),
-      isPositive: isCurrentLess // Red when current token has less supply (behind)
+      isPositive: isCurrentLess, // Red when current token has less supply (behind)
     };
   }
 
@@ -166,15 +162,24 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       <div className="mb-6 text-sm font-medium text-white/70 leading-relaxed">
         {tokenRank > 1 ? (
           <div>
-            Buy <strong className="text-[#4ecdc4]">{tokensAhead === '0' ? 'any amount' : tokensAhead}</strong> more{' '}
-            <span className="font-bold text-white">{token.name}</span> to level up!
+            Buy
+            {' '}
+            <strong className="text-[#4ecdc4]">{tokensAhead === '0' ? 'any amount' : tokensAhead}</strong>
+            {' '}
+            more
+            {' '}
+            <span className="font-bold text-white">{token.name}</span>
+            {' '}
+            to level up!
           </div>
         ) : (
           <div>
             Highest ranked token!
             {closestChaser && (
               <div className="mt-1">
-                <strong className="text-[#4ecdc4]">{tokensBehind}</strong> tokens ahead of the next token.
+                <strong className="text-[#4ecdc4]">{tokensBehind}</strong>
+                {' '}
+                tokens ahead of the next token.
               </div>
             )}
           </div>
@@ -190,8 +195,8 @@ export default function TokenRanking({ token }: TokenRankingProps) {
               ?
             </button> */}
             <button className="p-2 rounded-full bg-white/[0.05] border border-white/10 text-white cursor-pointer text-base">
-                !
-              </button>
+              !
+            </button>
             <div className="absolute bottom-6 left-0 bg-white/10 border border-white/20 rounded-lg p-2 text-xs text-white/80 backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
               Market Cap Ranking Information
             </div>
@@ -207,15 +212,15 @@ export default function TokenRanking({ token }: TokenRankingProps) {
           const difference = token.total_supply ? calculateDifference(token.total_supply, item.total_supply) : null;
 
           return (
-            
+
             <Link
               key={item.sale_address}
               to={`/trending/tokens/${item.name}`}
               className={`
                 flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ease-out text-decoration-none
-                ${isCurrentToken 
-                  ? 'bg-white/20 border-white/30 text-white' 
-                  : 'bg-white/[0.05] border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white'
+                ${isCurrentToken
+                ? 'bg-white/20 border-white/30 text-white'
+                : 'bg-white/[0.05] border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white'
                 }
               `}
             >
@@ -223,13 +228,15 @@ export default function TokenRanking({ token }: TokenRankingProps) {
                 <div className={`
                   text-sm font-bold text-right min-w-[20px] tracking-tight
                   
-                `}>
+                `}
+                >
                   {item.rank}
                 </div>
                 <div className={`
                   font-bold text-sm tracking-tight truncate transition-all duration-200 text-[#4ecdc4] opacity-100
                   
-                `}>
+                `}
+                >
                   {item.symbol}
                 </div>
               </div>
@@ -241,7 +248,8 @@ export default function TokenRanking({ token }: TokenRankingProps) {
                   </span>
                 ) : difference ? (
                   <span className={difference.isPositive ? 'text-red-400' : 'text-green-400'}>
-                    {difference.isPositive ? '+' : '-'}{difference.value}
+                    {difference.isPositive ? '+' : '-'}
+                    {difference.value}
                   </span>
                 ) : (
                   <span className="text-white/60">

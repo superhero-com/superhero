@@ -1,22 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { TokenListTable, TrendminerBanner, PerformanceTimeframeSelector } from "..";
-import { TokensService } from "../../../api/generated";
-import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
-import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
-import RepositoriesList from "../components/RepositoriesList";
-import { useAccount } from "../../../hooks";
+import {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import AeButton from '@/components/AeButton';
+import Spinner from '@/components/Spinner';
+import { TokenListTable, TrendminerBanner, PerformanceTimeframeSelector } from '..';
+import { TokensService } from '../../../api/generated';
+import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
+import TrendingPillsCarousel from '../../../components/Trendminer/TrendingPillsCarousel';
+import RepositoriesList from '../components/RepositoriesList';
+import { useAccount } from '../../../hooks';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
-import AeButton from "@/components/AeButton";
-import Head from "../../../seo/Head";
-import Spinner from "@/components/Spinner";
-
+} from '../../../components/ui/select';
+import Head from '../../../seo/Head';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -44,8 +45,8 @@ export default function TokenList() {
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap); // Default to trending score like Vue
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [ownedOnly, setOwnedOnly] = useState(false);
-  const [search, setSearch] = useState("");
-  const [searchThrottled, setSearchThrottled] = useState("");
+  const [search, setSearch] = useState('');
+  const [searchThrottled, setSearchThrottled] = useState('');
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
 
   // Throttle search input (2000ms delay like Vue)
@@ -106,38 +107,35 @@ export default function TokenList() {
     return orderDirection;
   }, [orderBy, orderDirection]);
 
-  const ownerAddress = useMemo(() => {
-    return ownedOnly ? activeAccount : undefined;
-  }, [ownedOnly, activeAccount]);
+  const ownerAddress = useMemo(() => (ownedOnly ? activeAccount : undefined), [ownedOnly, activeAccount]);
 
-  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
-    useInfiniteQuery({
-      initialPageParam: 1,
-      queryFn: ({ pageParam = 1 }) =>
-        TokensService.listAll({
-          orderBy: orderByMapped as any,
-          orderDirection: finalOrderDirection,
-          collection: collection === 'all' ? undefined : (collection as any),
-          search: searchThrottled || undefined,
-          ownerAddress: ownerAddress,
-          limit: 20,
-          page: pageParam,
-        }),
-      getNextPageParam: (lastPage: any, allPages, lastPageParam) =>
-        lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
-          ? undefined
-          : lastPageParam + 1,
-      queryKey: [
-        "TokensService.listAll",
-        orderBy,
-        orderByMapped,
-        finalOrderDirection,
-        collection,
-        searchThrottled,
-        ownerAddress,
-      ],
-      staleTime: 1000 * 60, // 1 minute
-    });
+  const {
+    data, isFetching, fetchNextPage, hasNextPage, refetch,
+  } = useInfiniteQuery({
+    initialPageParam: 1,
+    queryFn: ({ pageParam = 1 }) => TokensService.listAll({
+      orderBy: orderByMapped as any,
+      orderDirection: finalOrderDirection,
+      collection: collection === 'all' ? undefined : (collection as any),
+      search: searchThrottled || undefined,
+      ownerAddress,
+      limit: 20,
+      page: pageParam,
+    }),
+    getNextPageParam: (lastPage: any, allPages, lastPageParam) => (lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
+      ? undefined
+      : lastPageParam + 1),
+    queryKey: [
+      'TokensService.listAll',
+      orderBy,
+      orderByMapped,
+      finalOrderDirection,
+      collection,
+      searchThrottled,
+      ownerAddress,
+    ],
+    staleTime: 1000 * 60, // 1 minute
+  });
 
   function updateOrderBy(val: OrderByOption) {
     setOrderBy(val);
@@ -145,9 +143,9 @@ export default function TokenList() {
   }
 
   function handleSort(sortKey: OrderByOption) {
-    if (orderBy === sortKey ||
-      (orderBy === 'newest' && sortKey === 'oldest') ||
-      (orderBy === 'oldest' && sortKey === 'newest')) {
+    if (orderBy === sortKey
+      || (orderBy === 'newest' && sortKey === 'oldest')
+      || (orderBy === 'oldest' && sortKey === 'newest')) {
       // Toggle direction if same column (or newest/oldest pair)
       if (sortKey === 'newest' || sortKey === 'oldest') {
         // For date-based sorting, toggle between newest and oldest
@@ -171,7 +169,7 @@ export default function TokenList() {
           fetchNextPage();
         }
       },
-      { threshold: 1 }
+      { threshold: 1 },
     );
 
     if (loadMoreBtn.current) {
@@ -182,7 +180,6 @@ export default function TokenList() {
       observer.disconnect();
     };
   }, [hasNextPage, isFetching, fetchNextPage]);
-
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
@@ -228,11 +225,11 @@ export default function TokenList() {
               {activeAccount && (
                 <div className={`w-full md:w-auto flex-shrink-0 ${ownedOnly ? '' : 'rounded-2xl border-2 border-pink-500/80'}`}>
                   <AeButton
-                    variant={ownedOnly ? "primary" : "ghost"}
+                    variant={ownedOnly ? 'primary' : 'ghost'}
                     className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
                       : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
-                      }`}
+                    }`}
                     onClick={() => setOwnedOnly(!ownedOnly)}
                   >
                     <span className="text-xs">Owned Only</span>
@@ -289,7 +286,7 @@ export default function TokenList() {
             className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
-              }`}
+            }`}
           >
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">

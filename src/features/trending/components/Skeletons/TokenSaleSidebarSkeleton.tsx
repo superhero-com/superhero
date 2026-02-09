@@ -7,12 +7,12 @@ interface TokenSaleSidebarSkeletonProps {
   boilerplate?: boolean;
 }
 
-export default function TokenSaleSidebarSkeleton({ 
-  boilerplate = false 
+export default function TokenSaleSidebarSkeleton({
+  boilerplate = false,
 }: TokenSaleSidebarSkeletonProps) {
   const skeletonClass = cn(
     'bg-gradient-to-r from-white/10 via-white/20 to-white/10',
-    'bg-[length:200%_100%] animate-skeleton-loading rounded'
+    'bg-[length:200%_100%] animate-skeleton-loading rounded',
   );
 
   return (

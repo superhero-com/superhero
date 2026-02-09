@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-import SpaceEffects from "./SpaceEffects";
-import BannerA from "./BannerA";
-import BannerB from "./BannerB";
-import BannerC from "./BannerC";
+import React, { useCallback, useEffect, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+import SpaceEffects from './SpaceEffects';
+import BannerA from './BannerA';
+import BannerB from './BannerB';
+import BannerC from './BannerC';
 // Removed BannerD to make the carousel 3 slides
-import "./banner.styles.css";
+import './banner.styles.css';
 
-const DISMISS_KEY = "hero_banner_dismissed_until";
+const DISMISS_KEY = 'hero_banner_dismissed_until';
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
@@ -19,12 +19,12 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 8000, stopOnInteraction: false })
+    Autoplay({ delay: 8000, stopOnInteraction: false }),
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, duration: 20 },
-    [autoplayPlugin.current]
+    [autoplayPlugin.current],
   );
 
   // Check if banner was dismissed
@@ -45,11 +45,11 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       setSelectedIndex(emblaApi.selectedScrollSnap());
     };
 
-    emblaApi.on("select", onSelect);
+    emblaApi.on('select', onSelect);
     onSelect();
 
     return () => {
-      emblaApi.off("select", onSelect);
+      emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
 
@@ -88,7 +88,7 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
     (index: number) => {
       if (emblaApi) emblaApi.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi],
   );
 
   if (hidden) return null;
@@ -103,7 +103,7 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
         className="hero-banner"
         style={{
           background:
-            "radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)",
+            'radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)',
         }}
         aria-label="Superhero banner"
       >
@@ -195,7 +195,7 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
             key={index}
             type="button"
             onClick={() => scrollTo(index)}
-            className={`carousel-dot ${selectedIndex === index ? "active" : ""}`}
+            className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
@@ -203,4 +203,3 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
     </div>
   );
 }
-

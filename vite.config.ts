@@ -1,42 +1,40 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import path from 'path';
+import path, { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
-import { resolve } from 'path';
+
 import { existsSync } from 'fs';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 
 // Plugin to handle JSON imports from node_modules
-const jsonPlugin = (): Plugin => {
-  return {
-    name: 'json-resolver',
-    enforce: 'pre', // Run before Vite's default JSON plugin
-    resolveId(id: string, importer?: string) {
-      // Only handle JSON imports from dex-contracts-v2
-      if (id.endsWith('.json') && id.startsWith('dex-contracts-v2/')) {
-        try {
-          // Try to resolve using Node's module resolution
-          const resolvedPath = require.resolve(id, { paths: [process.cwd(), importer ? path.dirname(importer) : process.cwd()] });
-          // Return the resolved path - Vite's JSON plugin will handle loading it
-          return resolvedPath;
-        } catch (e) {
-          // If require.resolve fails, try manual resolution
-          const parts = id.split(/[/\\]/);
-          const packageName = parts[0];
-          const filePath = parts.slice(1).join('/');
-          const fullPath = resolve(process.cwd(), 'node_modules', packageName, filePath);
-          if (existsSync(fullPath)) {
-            return fullPath;
-          }
+const jsonPlugin = (): Plugin => ({
+  name: 'json-resolver',
+  enforce: 'pre', // Run before Vite's default JSON plugin
+  resolveId(id: string, importer?: string) {
+    // Only handle JSON imports from dex-contracts-v2
+    if (id.endsWith('.json') && id.startsWith('dex-contracts-v2/')) {
+      try {
+        // Try to resolve using Node's module resolution
+        const resolvedPath = require.resolve(id, { paths: [process.cwd(), importer ? path.dirname(importer) : process.cwd()] });
+        // Return the resolved path - Vite's JSON plugin will handle loading it
+        return resolvedPath;
+      } catch (e) {
+        // If require.resolve fails, try manual resolution
+        const parts = id.split(/[/\\]/);
+        const packageName = parts[0];
+        const filePath = parts.slice(1).join('/');
+        const fullPath = resolve(process.cwd(), 'node_modules', packageName, filePath);
+        if (existsSync(fullPath)) {
+          return fullPath;
         }
       }
-      return null; // Let Vite handle other JSON files
-    },
-    // Don't override load - let Vite's JSON plugin handle it
-  };
-};
+    }
+    return null; // Let Vite handle other JSON files
+  },
+  // Don't override load - let Vite's JSON plugin handle it
+});
 
 export default defineConfig(({ mode }) => {
   // Load all envs from the app directory (where .env is located)
@@ -45,7 +43,7 @@ export default defineConfig(({ mode }) => {
   console.log('[Vite Config] Loading env from:', envDir);
   console.log('[Vite Config] Mode:', mode);
   console.log('[Vite Config] VITE_SUPERHERO_API_URL:', env.VITE_SUPERHERO_API_URL);
-  
+
   return {
     plugins: [react(), svgr(), jsonPlugin()],
     ssr: {
@@ -53,14 +51,14 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     optimizeDeps: {},
 
     // Ensure env is loaded from the app directory
     // Vite will automatically expose VITE_* vars to import.meta.env
-    envDir: envDir,
+    envDir,
     define: {
       // Define process.env for compatibility - use object mapping to allow runtime access
       'process.env': env,
@@ -77,7 +75,7 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@use "./src/styles/variables.scss" as *; @use "./src/styles/mixins.scss" as *;`,
+          additionalData: '@use "./src/styles/variables.scss" as *; @use "./src/styles/mixins.scss" as *;',
         },
       },
     },
@@ -89,7 +87,6 @@ export default defineConfig(({ mode }) => {
       setupFiles: './vitest.setup.ts',
       testTimeout: 30000,
     },
-    
+
   };
 });
-

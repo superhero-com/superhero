@@ -7,7 +7,6 @@ import { getNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useModal } from '../../../hooks';
 
-
 export default function WebAppHeader() {
   const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
@@ -15,7 +14,7 @@ export default function WebAppHeader() {
   const navigationItems = getNavigationItems(tNav);
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
-  
+
   useEffect(() => {
     // force theme to be dark
     document.documentElement.dataset.theme = 'dark';
@@ -25,10 +24,10 @@ export default function WebAppHeader() {
   const sidebarItems = useMemo(() => {
     const items = [...navigationItems];
     items.push({
-      id: "account",
-      label: "Account",
-      path: activeAccount ? `/users/${activeAccount}` : "",
-      icon: "👤",
+      id: 'account',
+      label: 'Account',
+      path: activeAccount ? `/users/${activeAccount}` : '',
+      icon: '👤',
     });
     return items;
   }, [navigationItems, activeAccount]);
@@ -38,11 +37,9 @@ export default function WebAppHeader() {
   const activeNavPath = React.useMemo(() => {
     const matches = sidebarItems
       .filter((item: any) => !!item?.path && !item?.isExternal)
-      .filter((item: any) =>
-        item.path === '/'
-          ? pathname === '/'
-          : pathname === item.path || pathname.startsWith(`${item.path}/`)
-      )
+      .filter((item: any) => (item.path === '/'
+        ? pathname === '/'
+        : pathname === item.path || pathname.startsWith(`${item.path}/`)))
       .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
     return matches[0]?.path || '';
   }, [sidebarItems, pathname]);
@@ -75,8 +72,7 @@ export default function WebAppHeader() {
         {sidebarItems
           .filter((item: any) => !!item && !!item.id)
           .map((item: any) => {
-            const commonClass =
-              "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium";
+            const commonClass = 'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium';
             const isActive = isActiveRoute(item.path);
             const activeStyles = {
               color: 'var(--standard-font-color)',
@@ -87,7 +83,7 @@ export default function WebAppHeader() {
               backgroundColor: 'transparent',
             };
 
-            if (item.id === "account" && !activeAccount) {
+            if (item.id === 'account' && !activeAccount) {
               return (
                 <button
                   key={item.id}

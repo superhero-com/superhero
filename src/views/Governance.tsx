@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import AeButton from '../components/AeButton';
-import Shell from '../components/layout/Shell';
 
 import GovernanceAccount from '@/components/governance/GovernanceAccount';
 import GovernancePolls from '@/components/governance/GovernancePolls';
 import GovernanceVote from '@/components/governance/GovernanceVote';
 import GovernanceCreate from '@/components/governance/GovernanceCreate';
+import Shell from '../components/layout/Shell';
+import AeButton from '../components/AeButton';
+
 type TabType = 'polls' | 'vote' | 'account' | 'create';
 
 export default function Governance() {
@@ -28,10 +29,10 @@ export default function Governance() {
   }, [pollId, location.pathname]);
 
   return (
-    <Shell> 
+    <Shell>
       {/* Enhanced Tab Navigation */}
       <div className="flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('polls')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'polls'
@@ -42,7 +43,7 @@ export default function Governance() {
           📊 Polls
         </AeButton>
         {pollId && (
-          <AeButton 
+          <AeButton
             onClick={() => setActiveTab('vote')}
             className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
               activeTab === 'vote'
@@ -53,7 +54,7 @@ export default function Governance() {
             🗳️ Vote
           </AeButton>
         )}
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('account')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'account'
@@ -63,7 +64,7 @@ export default function Governance() {
         >
           👤 My Account
         </AeButton>
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('create')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'create'
@@ -83,5 +84,3 @@ export default function Governance() {
     </Shell>
   );
 }
-
-

@@ -10,7 +10,7 @@ export function formatNumber(num: number | string | undefined, decimals = 2) {
 
   // Handle very small magnitudes symmetrically for positive/negative values.
   // For |n| < 10^-decimals, show as "< threshold" or ">-threshold" instead of 0.00 / -0.00.
-  const threshold = Math.pow(10, -decimals);
+  const threshold = 10 ** -decimals;
   const thresholdStr = threshold.toFixed(decimals);
   if (value < threshold) {
     return negative ? `>-${thresholdStr}` : `< ${thresholdStr}`;
@@ -53,5 +53,3 @@ export function formatCompactNumber(
 
   return negative ? `-${formatted}` : formatted;
 }
-
-

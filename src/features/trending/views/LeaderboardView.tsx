@@ -1,36 +1,36 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Head from "../../../seo/Head";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import Head from '../../../seo/Head';
 import {
   LeaderboardFilters,
   LeaderboardCard,
   LeaderboardSkeleton,
-} from "../components";
+} from '../components';
 import {
   fetchLeaderboard,
   type LeaderboardMetric,
   type LeaderboardTimeframe,
   type PaginatedResponse,
   type LeaderboardItem,
-} from "../api/leaderboard";
+} from '../api/leaderboard';
 import {
   LEADERBOARD_TIMEFRAME_OPTIONS,
   LEADERBOARD_METRIC_OPTIONS,
-} from "../constants/leaderboard";
+} from '../constants/leaderboard';
 
 export default function LeaderboardView() {
-  const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>("7d");
-  const [metric, setMetric] = useState<LeaderboardMetric>("pnl");
+  const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('7d');
+  const [metric, setMetric] = useState<LeaderboardMetric>('pnl');
   const [page, setPage] = useState(1);
 
   const timeframeOption = LEADERBOARD_TIMEFRAME_OPTIONS.find(
-    (option) => option.value === timeframe
+    (option) => option.value === timeframe,
   );
-  const timeframeLabel = timeframeOption?.label ?? "7D";
+  const timeframeLabel = timeframeOption?.label ?? '7D';
   const metricOption = LEADERBOARD_METRIC_OPTIONS.find(
-    (option) => option.value === metric
+    (option) => option.value === metric,
   );
-  const metricLabel = metricOption?.label ?? "PnL";
+  const metricLabel = metricOption?.label ?? 'PnL';
 
   const {
     data,
@@ -39,15 +39,14 @@ export default function LeaderboardView() {
     refetch,
     isFetching,
   } = useQuery<PaginatedResponse<LeaderboardItem>>({
-    queryKey: ["leaderboard", timeframe, metric, page],
-    queryFn: () =>
-      fetchLeaderboard({
-        timeframe,
-        metric,
-        page,
-        limit: 15,
-        sortDir: metric === "mdd" ? "ASC" : "DESC",
-      }),
+    queryKey: ['leaderboard', timeframe, metric, page],
+    queryFn: () => fetchLeaderboard({
+      timeframe,
+      metric,
+      page,
+      limit: 15,
+      sortDir: metric === 'mdd' ? 'ASC' : 'DESC',
+    }),
     staleTime: 60 * 1000, // cache results per window/metric for 1 minute
     gcTime: 5 * 60 * 1000, // keep cached windows around for 5 minutes
   });
@@ -164,11 +163,14 @@ export default function LeaderboardView() {
               {/* Pagination */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
                 <div className="text-xs text-white/60">
-                  Page{" "}
+                  Page
+                  {' '}
                   <span className="font-semibold text-white">
                     {currentPage}
-                  </span>{" "}
-                  of{" "}
+                  </span>
+                  {' '}
+                  of
+                  {' '}
                   <span className="font-semibold text-white">
                     {totalPages}
                   </span>
@@ -180,8 +182,8 @@ export default function LeaderboardView() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
                       currentPage <= 1 || isFetching
-                        ? "bg-white/5 text-white/30 cursor-not-allowed"
-                        : "bg-white/5 text-white/80 hover:bg-white/10"
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        : 'bg-white/5 text-white/80 hover:bg-white/10'
                     }`}
                   >
                     Previous
@@ -189,13 +191,11 @@ export default function LeaderboardView() {
                   <button
                     type="button"
                     disabled={currentPage >= totalPages || isFetching}
-                    onClick={() =>
-                      setPage((p) => (p < totalPages ? p + 1 : p))
-                    }
+                    onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
                     className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
                       currentPage >= totalPages || isFetching
-                        ? "bg-white/5 text-white/30 cursor-not-allowed"
-                        : "bg-white/5 text-white/80 hover:bg-white/10"
+                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                        : 'bg-white/5 text-white/80 hover:bg-white/10'
                     }`}
                   >
                     Next

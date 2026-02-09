@@ -101,7 +101,5 @@ export function cryptoCurrencySchema(token: {
 function truncate(s: string, n: number): string {
   const str = (s || '').trim();
   if (str.length <= n) return str;
-  return str.slice(0, Math.max(0, n - 1)) + '…';
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
 }
-
-

@@ -13,28 +13,22 @@ interface AddressFormattedProps {
   chunked?: boolean;
 }
 
-export function AddressFormatted({
+export const AddressFormatted = ({
   address,
   columnCount = 6,
   alignRight = false,
   className,
   truncate = false,
   truncateFixed = false,
-  chunked = false
-}: AddressFormattedProps) {
+  chunked = false,
+}: AddressFormattedProps) => {
   const maxLength = 3;
 
-  const prepareChunk = (chunk: string): string => {
-    return chunk.length === maxLength ? chunk : `${chunk}${' '.repeat(maxLength - chunk.length)}`;
-  };
+  const prepareChunk = (chunk: string): string => (chunk.length === maxLength ? chunk : `${chunk}${' '.repeat(maxLength - chunk.length)}`);
 
-  const isAddress = useMemo(() => {
-    return validateHash(address).valid;
-  }, [address]);
+  const isAddress = useMemo(() => validateHash(address).valid, [address]);
 
-  const addressChunks = useMemo(() => {
-    return address?.match(/.{1,3}/g)?.map(prepareChunk) || [];
-  }, [address]);
+  const addressChunks = useMemo(() => address?.match(/.{1,3}/g)?.map(prepareChunk) || [], [address]);
 
   const cssVariables = useMemo(() => ({
     '--column-width': `${100 / columnCount}%`,
@@ -69,9 +63,9 @@ export function AddressFormatted({
     return (
       <div
         className={cn(
-          "inline-flex flex-wrap",
-          "tracking-[0.15em]",
-          className
+          'inline-flex flex-wrap',
+          'tracking-[0.15em]',
+          className,
         )}
         style={cssVariables}
       >
@@ -79,8 +73,8 @@ export function AddressFormatted({
           <span
             key={index}
             className={cn(
-              "flex-none whitespace-nowrap text-left",
-              alignRight && "text-right whitespace-pre-wrap"
+              'flex-none whitespace-nowrap text-left',
+              alignRight && 'text-right whitespace-pre-wrap',
             )}
             style={{
               flexBasis: 'var(--column-width)',
@@ -92,15 +86,17 @@ export function AddressFormatted({
       </div>
     );
   }
-  
+
   return (
     <span className={cn(
       className,
       // Smaller font for ak_ full addresses; even smaller on mobile
-      address.startsWith('ak_') && 'text-[8.5px] md:text-[11px] font-light font-mono'
-    )}>{formatAddress(address, 10, true)}</span>
+      address.startsWith('ak_') && 'text-[8.5px] md:text-[11px] font-light font-mono',
+    )}
+    >
+      {formatAddress(address, 10, true)}
+    </span>
   );
-  
-}
+};
 
 export default AddressFormatted;

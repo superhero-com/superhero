@@ -14,5 +14,3 @@ export function isAmountGreaterThanBalance(amount: string, balance: string): boo
 
   return a.gt(b);
 }
-
-

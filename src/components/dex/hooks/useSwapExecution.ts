@@ -11,14 +11,14 @@ import {
   getRouterTokenAllowance,
   initDexContracts,
   subSlippage,
-  toAettos
+  toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
 import { SwapExecutionParams } from '../types/dex';
 
 export function useSwapExecution() {
-  const { sdk, activeAccount } = useAeSdk()
+  const { sdk, activeAccount } = useAeSdk();
   const { addActivity } = useRecentActivities();
 
   const toast = useToast();
@@ -36,7 +36,7 @@ export function useSwapExecution() {
   async function wrapAeToWae(amountAe: string): Promise<string | null> {
     const wae = await sdk.initializeContract({
       aci: waeACI,
-      address: DEX_ADDRESSES.wae as `ct_${string}`
+      address: DEX_ADDRESSES.wae as `ct_${string}`,
     });
     const aettos = Decimal.from(amountAe).bigNumber;
     const result = await wae.deposit({ amount: aettos });
@@ -60,7 +60,7 @@ export function useSwapExecution() {
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
     const wae = await sdk.initializeContract({
       aci: waeACI,
-      address: DEX_ADDRESSES.wae as `ct_${string}`
+      address: DEX_ADDRESSES.wae as `ct_${string}`,
     });
     const aettos = Decimal.from(amountWae).bigNumber;
     const result = await wae.withdraw(aettos, null);
@@ -155,15 +155,17 @@ export function useSwapExecution() {
             const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
             const actionName = params.tokenIn.address === 'AE' ? 'Wrap' : 'Unwrap';
             toast.push(
-              React.createElement('div', {},
+              React.createElement(
+                'div',
+                {},
                 React.createElement('div', {}, `${actionName} submitted`),
                 CONFIG.EXPLORER_URL && React.createElement('a', {
                   href: url,
                   target: '_blank',
                   rel: 'noreferrer',
-                  style: { color: '#8bc9ff', textDecoration: 'underline' }
-                }, 'View on explorer')
-              )
+                  style: { color: '#8bc9ff', textDecoration: 'underline' },
+                }, 'View on explorer'),
+              ),
             );
           } catch { }
         }
@@ -200,7 +202,6 @@ export function useSwapExecution() {
       }
 
       let txHash: string | undefined;
-
 
       if (!isInAe && !isOutAe) {
         if (params.isExactIn) {
@@ -312,15 +313,17 @@ export function useSwapExecution() {
       try {
         const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash || ''}` : '';
         toast.push(
-          React.createElement('div', {},
+          React.createElement(
+            'div',
+            {},
             React.createElement('div', {}, 'Swap submitted'),
             txHash && CONFIG.EXPLORER_URL && React.createElement('a', {
               href: url,
               target: '_blank',
               rel: 'noreferrer',
-              style: { color: '#8bc9ff', textDecoration: 'underline' }
-            }, 'View on explorer')
-          )
+              style: { color: '#8bc9ff', textDecoration: 'underline' },
+            }, 'View on explorer'),
+          ),
         );
       } catch { }
 
@@ -329,13 +332,15 @@ export function useSwapExecution() {
       const errorMsg = errorToUserMessage(e, {
         action: 'swap',
         slippagePct: params.slippagePct,
-        deadlineMins: params.deadlineMins
+        deadlineMins: params.deadlineMins,
       });
 
       try {
-        toast.push(React.createElement('div', {},
+        toast.push(React.createElement(
+          'div',
+          {},
           React.createElement('div', {}, 'Swap failed'),
-          React.createElement('div', { style: { opacity: 0.9 } }, errorMsg)
+          React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
         ));
       } catch { }
 

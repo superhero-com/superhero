@@ -1,17 +1,17 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { Separator } from "@/components/ui/separator";
-import CopyText from "@/components/ui/CopyText";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { Separator } from '@/components/ui/separator';
+import CopyText from '@/components/ui/CopyText';
 
-import { useAeSdk } from "@/hooks/useAeSdk";
-import { useAccountBalances } from "@/hooks/useAccountBalances";
-import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
-import { Decimal } from "@/libs/decimal";
+import { useAeSdk } from '@/hooks/useAeSdk';
+import { useAccountBalances } from '@/hooks/useAccountBalances';
+import { AccountTokensService } from '@/api/generated/services/AccountTokensService';
+import { Decimal } from '@/libs/decimal';
 
-type Currency = "usd" | "eur" | "cny";
+type Currency = 'usd' | 'eur' | 'cny';
 
 type WalletOverviewCardProps = {
   selectedCurrency?: Currency;
@@ -20,31 +20,29 @@ type WalletOverviewCardProps = {
 };
 
 export default function WalletOverviewCard({
-  selectedCurrency = "usd",
+  selectedCurrency = 'usd',
   prices = null,
   className,
 }: WalletOverviewCardProps) {
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
   const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
-  
+
   // Immediately reload balance when account changes
   // Note: loadAccountData is already called by useAccountBalances when selectedAccount changes
   // So we don't need to call it again here to avoid duplicate calls
 
   // Persisted expand/collapse state
-  const [open, setOpen] = useState<boolean>(() =>
-    typeof window !== "undefined"
-      ? localStorage.getItem("walletCard.open") === "1"
-      : false
-  );
+  const [open, setOpen] = useState<boolean>(() => (typeof window !== 'undefined'
+    ? localStorage.getItem('walletCard.open') === '1'
+    : false));
   useEffect(() => {
     try {
-      localStorage.setItem("walletCard.open", open ? "1" : "0");
+      localStorage.setItem('walletCard.open', open ? '1' : '0');
     } catch {}
   }, [open]);
 
-  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
   const balanceAe = useMemo(() => Number(decimalBalance?.toString() || 0), [
     decimalBalance,
@@ -58,16 +56,15 @@ export default function WalletOverviewCard({
   // Top 3 holdings by balance from backend (fallbacks handled by caller later if needed)
   const { data: topHoldingsResp } = useQuery({
     queryKey: [
-      "AccountTokensService.listTokenHolders-top3",
+      'AccountTokensService.listTokenHolders-top3',
       activeAccount,
     ],
-    queryFn: () =>
-      AccountTokensService.listTokenHolders({
-        address: activeAccount,
-        orderBy: "balance" as any,
-        orderDirection: "DESC" as any,
-        limit: 3,
-      }) as unknown as Promise<{ items: any[]; meta?: any }>,
+    queryFn: () => AccountTokensService.listTokenHolders({
+      address: activeAccount,
+      orderBy: 'balance' as any,
+      orderDirection: 'DESC' as any,
+      limit: 3,
+    }) as unknown as Promise<{ items: any[]; meta?: any }>,
     enabled: !!activeAccount,
     staleTime: 60_000,
   });
@@ -80,8 +77,8 @@ export default function WalletOverviewCard({
     return (
       <div
         className={
-          "grid gap-2 " +
-          (className || "")
+          `grid gap-2 ${
+            className || ''}`
         }
       >
         <div className="py-1">
@@ -91,7 +88,7 @@ export default function WalletOverviewCard({
           <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
             {prices?.[selectedCurrency]
               ? formatPrice(prices[selectedCurrency], selectedCurrency)
-              : "-"}
+              : '-'}
           </div>
         </div>
         <div className="flex justify-between items-center py-2 border-t border-white/5">
@@ -101,11 +98,11 @@ export default function WalletOverviewCard({
           <span
             className={`text-[12px] font-semibold ${
               isOnline
-                ? "text-[var(--neon-green)]"
-                : "text-[var(--neon-pink)]"
+                ? 'text-[var(--neon-green)]'
+                : 'text-[var(--neon-pink)]'
             }`}
           >
-            {isOnline ? "🟢 Connected" : "🔴 Offline"}
+            {isOnline ? '🟢 Connected' : '🔴 Offline'}
           </span>
         </div>
         {currentBlockHeight != null && (
@@ -114,7 +111,8 @@ export default function WalletOverviewCard({
               Block
             </span>
             <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-              #{Number(currentBlockHeight).toLocaleString()}
+              #
+              {Number(currentBlockHeight).toLocaleString()}
             </span>
           </div>
         )}
@@ -123,7 +121,7 @@ export default function WalletOverviewCard({
   }
 
   return (
-    <div className={"grid gap-2 " + (className || "")}>
+    <div className={`grid gap-2 ${className || ''}`}>
       {/* Summary Row */}
       <div className="py-1">
         <div className="flex items-center justify-between mb-1">
@@ -141,12 +139,12 @@ export default function WalletOverviewCard({
             </button>
             <button
               type="button"
-              aria-label={open ? "Collapse wallet" : "Expand wallet"}
+              aria-label={open ? 'Collapse wallet' : 'Expand wallet'}
               aria-expanded={open}
               className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
               onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
             >
-              {open ? "▲" : "▼"}
+              {open ? '▲' : '▼'}
             </button>
           </div>
         </div>
@@ -159,20 +157,25 @@ export default function WalletOverviewCard({
             overlaySize={18}
             showBalance={false}
             showAddressAndChainName={false}
-            showPrimaryOnly={true}
-            hideFallbackName={true}
+            showPrimaryOnly
+            hideFallbackName
             contentClassName="px-2 pb-0"
             secondary={(
               <div className="text-[11px] text-[var(--light-font-color)]">
-                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE
+                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                {' '}
+                AE
                 {aeFiat != null && (
-                  <>
-                    {" "}
-                    <span className="opacity-70">·</span>{" "}
-                    <span>
-                      ≈ {formatPrice(aeFiat, selectedCurrency)}
-                    </span>
-                  </>
+                <>
+                  {' '}
+                  <span className="opacity-70">·</span>
+                  {' '}
+                  <span>
+                    ≈
+                    {' '}
+                    {formatPrice(aeFiat, selectedCurrency)}
+                  </span>
+                </>
                 )}
               </div>
             )}
@@ -182,18 +185,19 @@ export default function WalletOverviewCard({
             <span
               className={`text-[12px] font-semibold ${
                 isOnline
-                  ? "text-[var(--neon-green)]"
-                  : "text-[var(--neon-pink)]"
+                  ? 'text-[var(--neon-green)]'
+                  : 'text-[var(--neon-pink)]'
               }`}
-              title={isOnline ? "Connected" : "Offline"}
+              title={isOnline ? 'Connected' : 'Offline'}
               role="status"
               aria-live="polite"
             >
-              {isOnline ? "●" : "○"}
+              {isOnline ? '●' : '○'}
             </span>
             {currentBlockHeight != null && (
               <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-                #{Number(currentBlockHeight).toLocaleString()}
+                #
+                {Number(currentBlockHeight).toLocaleString()}
               </span>
             )}
           </div>
@@ -235,8 +239,8 @@ export default function WalletOverviewCard({
                 {topHoldings.map((it: any, idx: number) => {
                   const label = getTokenLabelSafe(it);
                   const balanceLabel = getBalanceLabelSafe(it);
-                   return (
-                     <div key={idx} className="flex items-center justify-between text-sm">
+                  return (
+                    <div key={idx} className="flex items-center justify-between text-sm">
                       <div className="truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent" title={label}>
                         <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
                         <span className="font-bold">{(label || '').toString()}</span>
@@ -266,8 +270,8 @@ export default function WalletOverviewCard({
 }
 
 function formatPrice(value: number, currency: string): string {
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
     currency: currency.toUpperCase(),
     minimumFractionDigits: 2,
     maximumFractionDigits: 6,
@@ -283,7 +287,7 @@ function formatCompact(value: number): string {
   try {
     // Use Intl compact notation when available
     return new Intl.NumberFormat(undefined, {
-      notation: "compact",
+      notation: 'compact',
       maximumFractionDigits: 2,
     }).format(Number(value));
   } catch {
@@ -294,19 +298,18 @@ function formatCompact(value: number): string {
 function getTokenLabelSafe(item: any): string {
   try {
     const token = item?.token || {};
-    const label =
-      item?.token_symbol ||
-      item?.symbol ||
-      token?.symbol ||
-      item?.token_name ||
-      item?.name ||
-      token?.name ||
-      item?.address ||
-      token?.address;
-    if (typeof label === "string") return label;
-    return "Token";
+    const label = item?.token_symbol
+      || item?.symbol
+      || token?.symbol
+      || item?.token_name
+      || item?.name
+      || token?.name
+      || item?.address
+      || token?.address;
+    if (typeof label === 'string') return label;
+    return 'Token';
   } catch {
-    return "Token";
+    return 'Token';
   }
 }
 
@@ -315,11 +318,9 @@ function getBalanceLabelSafe(item: any): string {
     const token = item?.token || item || {};
     const decimals = Number(token?.decimals ?? 18);
     const raw = item?.balance ?? item?.holder_balance ?? item?.amount ?? item?.token_balance;
-    if (raw == null) return "-";
+    if (raw == null) return '-';
     return Decimal.from(raw).div(10 ** decimals).prettify();
   } catch {
-    return "-";
+    return '-';
   }
 }
-
-

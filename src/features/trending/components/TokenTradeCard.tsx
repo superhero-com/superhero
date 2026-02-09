@@ -1,19 +1,19 @@
-import { formatFractionalPrice } from "@/utils/common";
-import { COIN_SYMBOL } from "@/utils/constants";
-import { useEffect, useState } from "react";
-import { Button } from "../../../components/ui/button";
-import WalletConnectBtn from "../../../components/WalletConnectBtn";
-import { useAeSdk } from "../../../hooks/useAeSdk";
-import { cn } from "../../../lib/utils";
-import FractionFormatter from "../../shared/components/FractionFormatter";
-import LivePriceFormatter from "../../shared/components/LivePriceFormatter";
-import { useTokenTrade } from "../hooks/useTokenTrade";
-import { TokenDto } from "@/api/generated/models/TokenDto";
-import ImpactBadge from "./ImpactBadge";
-import MessageBox from "./MessageBox";
-import TradeTokenInput from "./TradeTokenInput";
-import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
-import Spinner from "@/components/Spinner";
+import { formatFractionalPrice } from '@/utils/common';
+import { COIN_SYMBOL } from '@/utils/constants';
+import { useEffect, useState } from 'react';
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import Spinner from '@/components/Spinner';
+import { Button } from '../../../components/ui/button';
+import WalletConnectBtn from '../../../components/WalletConnectBtn';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import { cn } from '../../../lib/utils';
+import FractionFormatter from '../../shared/components/FractionFormatter';
+import LivePriceFormatter from '../../shared/components/LivePriceFormatter';
+import { useTokenTrade } from '../hooks/useTokenTrade';
+import ImpactBadge from './ImpactBadge';
+import MessageBox from './MessageBox';
+import TradeTokenInput from './TradeTokenInput';
+import TransactionConfirmDetailRow from './TransactionConfirmDetailRow';
 
 interface TokenTradeCardProps {
   token: TokenDto;
@@ -63,13 +63,13 @@ export default function TokenTradeCard({
   }, [settingsDialogVisible]);
 
   const commitSlippageInput = () => {
-    const normalized = (slippageInput || "").replace(/,/g, ".");
-    const trimmed = normalized.endsWith(".") ? normalized.slice(0, -1) : normalized;
+    const normalized = (slippageInput || '').replace(/,/g, '.');
+    const trimmed = normalized.endsWith('.') ? normalized.slice(0, -1) : normalized;
 
     // If user cleared the input (or typed only '.'), fall back to 0
-    if (trimmed === "" || trimmed === ".") {
+    if (trimmed === '' || trimmed === '.') {
       setSlippage(0);
-      setSlippageInput("0");
+      setSlippageInput('0');
       return;
     }
 
@@ -84,7 +84,7 @@ export default function TokenTradeCard({
     setSlippageInput(String(clamped));
   };
 
-  const currentStepText = isBuying ? "" : "1/2";
+  const currentStepText = isBuying ? '' : '1/2';
 
   if (!token?.sale_address) {
     return null;
@@ -103,26 +103,26 @@ export default function TokenTradeCard({
       <div className="flex p-0 mb-6">
         <div className="grid grid-cols-2 w-full gap-1">
           <Button
-            variant={isBuying ? "default" : "outline"}
+            variant={isBuying ? 'default' : 'outline'}
             size="lg"
             className={cn(
-              "w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+              'w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
               isBuying
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
-                : "bg-white/10 border border-white/10 hover:bg-white/20"
+                ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-white/10 border border-white/10 hover:bg-white/20',
             )}
             onClick={() => switchTradeView(true)}
           >
             Buy
           </Button>
           <Button
-            variant={!isBuying ? "default" : "outline"}
+            variant={!isBuying ? 'default' : 'outline'}
             size="lg"
             className={cn(
-              "w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+              'w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
               !isBuying
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
-                : "bg-white/10 border border-white/10 hover:bg-white/20"
+                ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-white/10 border border-white/10 hover:bg-white/20',
             )}
             onClick={() => switchTradeView(false)}
           >
@@ -170,12 +170,13 @@ export default function TokenTradeCard({
                 onClick={() => setDetailsShown(!detailsShown)}
                 className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
               >
-                {detailsShown ? "Hide Details" : "Show Details"}
+                {detailsShown ? 'Hide Details' : 'Show Details'}
               </button>
 
               <TransactionConfirmDetailRow label="Allowed Slippage">
                 <div className="flex items-center gap-2">
-                  {Number(slippage ?? 0).toFixed(2)}%
+                  {Number(slippage ?? 0).toFixed(2)}
+                  %
                   <button
                     onClick={() => setSettingsDialogVisible(true)}
                     className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
@@ -188,16 +189,17 @@ export default function TokenTradeCard({
               <TransactionConfirmDetailRow label="Price Impact">
                 <div
                   className={cn(
-                    "flex items-center gap-4",
-                    isBuying ? "text-green-600" : "text-red-600"
+                    'flex items-center gap-4',
+                    isBuying ? 'text-green-600' : 'text-red-600',
                   )}
                 >
                   <div className="flex items-center">
-                    {priceImpactDiff.isZero ? "" : isBuying ? "+" : "-"}
+                    {priceImpactDiff.isZero ? '' : isBuying ? '+' : '-'}
                     <FractionFormatter
                       fractionalPrice={formatFractionalPrice(priceImpactDiff)}
                     />
-                    &nbsp;{COIN_SYMBOL}
+                    &nbsp;
+                    {COIN_SYMBOL}
                   </div>
                   <ImpactBadge
                     isPositive={isBuying}
@@ -211,7 +213,8 @@ export default function TokenTradeCard({
 
               {isBuying && (
                 <TransactionConfirmDetailRow label="Protocol Token Reward">
-                  ~{protocolTokenReward}
+                  ~
+                  {protocolTokenReward}
                 </TransactionConfirmDetailRow>
               )}
             </div>
@@ -232,10 +235,10 @@ export default function TokenTradeCard({
           {activeAccount && (
             <Button
               className={cn(
-                "w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                'w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                 loadingTransaction || isInsufficientBalance
-                  ? "bg-white/10 cursor-not-allowed opacity-60"
-                  : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+                  ? 'bg-white/10 cursor-not-allowed opacity-60'
+                  : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0',
               )}
               size="lg"
               disabled={loadingTransaction || isInsufficientBalance}
@@ -248,7 +251,7 @@ export default function TokenTradeCard({
                   {currentStepText && <span>{currentStepText}</span>}
                 </div>
               ) : (
-                "Place Order"
+                'Place Order'
               )}
             </Button>
           )}
@@ -276,14 +279,26 @@ export default function TokenTradeCard({
             >
               <div>
                 <span>
-                  {successTxData.isBuying ? "Bought" : "Sold"}{" "}
-                  {successTxData.destAmount.prettify()} {successTxData.symbol}{" "}
-                  for {successTxData.sourceAmount.prettify()} AE. New balance:{" "}
+                  {successTxData.isBuying ? 'Bought' : 'Sold'}
+                  {' '}
+                  {successTxData.destAmount.prettify()}
+                  {' '}
+                  {successTxData.symbol}
+                  {' '}
+                  for
+                  {' '}
+                  {successTxData.sourceAmount.prettify()}
+                  {' '}
+                  AE. New balance:
+                  {' '}
                   {successTxData.userBalance.prettify()}
                 </span>
                 {successTxData.protocolReward && (
                   <span className="ml-1">
-                    Earned {successTxData.protocolReward.prettify()}{" "}
+                    Earned
+                    {' '}
+                    {successTxData.protocolReward.prettify()}
+                    {' '}
                     {successTxData.protocolSymbol}
                   </span>
                 )}
@@ -309,9 +324,9 @@ export default function TokenTradeCard({
                 inputMode="decimal"
                 value={slippageInput}
                 onChange={(e) => {
-                  const next = (e.target.value || "").replace(/,/g, ".");
+                  const next = (e.target.value || '').replace(/,/g, '.');
                   // Allow intermediate states: "", ".", "0."
-                  if (next === "" || next === ".") {
+                  if (next === '' || next === '.') {
                     setSlippageInput(next);
                     setSlippage(0);
                     return;

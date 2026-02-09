@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface BannerContentProps {
   title: string;
@@ -24,13 +24,14 @@ export default function BannerContent({
 }: BannerContentProps) {
   const renderTitle = () => {
     // Insert a mobile-only line break after the first period
-    const parts = title.split(". ");
+    const parts = title.split('. ');
     if (parts.length <= 1) return title;
     const first = parts.shift() as string;
-    const rest = parts.join(". ");
+    const rest = parts.join('. ');
     return (
       <>
-        {first}.
+        {first}
+        .
         <br className="mobile-break" />
         {rest}
       </>
@@ -55,7 +56,7 @@ export default function BannerContent({
             {primaryButtonText}
           </button>
         ) : (
-          <Link to={primaryButtonLink || "#"} className="banner-btn banner-btn--primary">
+          <Link to={primaryButtonLink || '#'} className="banner-btn banner-btn--primary">
             {primaryButtonText}
           </Link>
         )}
@@ -66,4 +67,3 @@ export default function BannerContent({
     </div>
   );
 }
-

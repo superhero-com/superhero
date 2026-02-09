@@ -1,9 +1,9 @@
-import { useCurrencies } from "@/hooks/useCurrencies";
-import { toAe } from "@aeternity/aepp-sdk";
-import { useMemo } from "react";
-import { PriceDto } from "../../../api/generated";
-import { Decimal } from "../../../libs/decimal";
-import PriceFormatter from "./PriceFormatter";
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { toAe } from '@aeternity/aepp-sdk';
+import { useMemo } from 'react';
+import { PriceDto } from '../../../api/generated';
+import { Decimal } from '../../../libs/decimal';
+import PriceFormatter from './PriceFormatter';
 
 interface PriceDataFormatterProps {
   priceData: PriceDto;
@@ -52,11 +52,11 @@ export default function PriceDataFormatter({
     }
 
     if (!priceData[currentCurrencyCode]) {
-      if (priceData["ae"]) {
+      if (priceData.ae) {
         return getFiat(
           bignumber
-            ? Decimal.from(toAe(priceData["ae"]))
-            : Decimal.from(priceData["ae"])
+            ? Decimal.from(toAe(priceData.ae))
+            : Decimal.from(priceData.ae),
         );
       }
 

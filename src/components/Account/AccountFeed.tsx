@@ -1,12 +1,14 @@
-import { PostsService } from "@/api/generated/services/PostsService";
-import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
-import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
-import PostSkeleton from "@/features/social/components/PostSkeleton";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { SuperheroApi } from "@/api/backend";
-import type { PostDto } from "@/api/generated";
+import { PostsService } from '@/api/generated/services/PostsService';
+import ReplyToFeedItem from '@/features/social/components/ReplyToFeedItem';
+import TokenCreatedActivityItem from '@/features/social/components/TokenCreatedActivityItem';
+import PostSkeleton from '@/features/social/components/PostSkeleton';
+import { useNavigate } from 'react-router-dom';
+import {
+  useEffect, useMemo, useRef, useState, useCallback,
+} from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { SuperheroApi } from '@/api/backend';
+import type { PostDto } from '@/api/generated';
 
 interface AccountFeedProps {
   address: string;
@@ -24,14 +26,14 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
   } = useInfiniteQuery<PostDto[], Error>({
-    queryKey: ["profile-activities", address],
-    enabled: !!address && tab === "feed",
+    queryKey: ['profile-activities', address],
+    enabled: !!address && tab === 'feed',
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const resp = await SuperheroApi.listTokens({
         creatorAddress: address,
-        orderBy: "created_at",
-        orderDirection: "DESC",
+        orderBy: 'created_at',
+        orderDirection: 'DESC',
         limit: ACTIVITY_PAGE_SIZE,
         page: pageParam as number,
       }).catch(() => ({ items: [] }));
@@ -44,7 +46,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   });
   const createdActivities: PostDto[] = useMemo(
     () => (createdActivitiesPages?.pages ? (createdActivitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
-    [createdActivitiesPages]
+    [createdActivitiesPages],
   );
 
   // Infinite posts for this profile
@@ -55,22 +57,21 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["profile-posts", address],
-    enabled: !!address && tab === "feed",
+    queryKey: ['profile-posts', address],
+    enabled: !!address && tab === 'feed',
     initialPageParam: 1,
-    queryFn: ({ pageParam = 1 }) =>
-      PostsService.listAll({
-        accountAddress: address,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        limit: 10,
-        page: pageParam,
-      }) as any,
+    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+      accountAddress: address,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+      limit: 10,
+      page: pageParam,
+    }) as any,
     getNextPageParam: (lastPage: any) => {
       if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
+        lastPage?.meta?.currentPage
+        && lastPage?.meta?.totalPages
+        && lastPage.meta.currentPage < lastPage.meta.totalPages
       ) {
         return lastPage.meta.currentPage + 1;
       }
@@ -82,7 +83,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
 
   const list = useMemo(
     () => data?.pages?.flatMap((p: any) => p?.items ?? []) ?? [],
-    [data]
+    [data],
   );
 
   // Combine posts with token-created events and sort by created_at DESC
@@ -99,7 +100,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   const fetchingRef = useRef(false);
   const initialLoading = aLoading || isLoading;
   useEffect(() => {
-    if (tab !== "feed" || initialLoading) return;
+    if (tab !== 'feed' || initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -120,24 +121,24 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
 
   // Map Trendminer token -> Post-like activity item
   function mapTokenCreatedToPost(payload: any): PostDto {
-    const saleAddress: string = payload?.sale_address || payload?.address || "";
-    const name: string = payload?.token_name || payload?.name || "Unknown";
+    const saleAddress: string = payload?.sale_address || payload?.address || '';
+    const name: string = payload?.token_name || payload?.name || 'Unknown';
     const createdAt: string = payload?.created_at || new Date().toISOString();
     const encodedName = encodeURIComponent(name);
     const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
     return {
       id,
-      tx_hash: payload?.tx_hash || "",
+      tx_hash: payload?.tx_hash || '',
       tx_args: [
         { token_name: name },
         { sale_address: saleAddress },
-        { kind: "token-created" },
+        { kind: 'token-created' },
       ],
-      sender_address: payload?.creator_address || address || "",
-      contract_address: saleAddress || "",
-      type: "TOKEN_CREATED",
-      content: "",
-      topics: ["token:created", `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
+      sender_address: payload?.creator_address || address || '',
+      contract_address: saleAddress || '',
+      type: 'TOKEN_CREATED',
+      content: '',
+      topics: ['token:created', `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
       media: [],
       total_comments: 0,
       created_at: createdAt,
@@ -163,7 +164,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     while (i < combinedList.length) {
       const item: any = combinedList[i];
       const postId = item.id;
-      const isTokenCreated = String(postId).startsWith("token-created:");
+      const isTokenCreated = String(postId).startsWith('token-created:');
 
       if (!isTokenCreated) {
         nodes.push(
@@ -172,8 +173,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
             item={item}
             commentCount={item.total_comments ?? 0}
             allowInlineRepliesToggle={false}
-            onOpenPost={(slugOrId: string) => navigate(`/post/${slugOrId.replace(/_v3$/,'')}`)}
-          />
+            onOpenPost={(slugOrId: string) => navigate(`/post/${slugOrId.replace(/_v3$/, '')}`)}
+          />,
         );
         i += 1;
         continue;
@@ -183,8 +184,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       const startIndex = i;
       const groupItems: PostDto[] = [];
       while (
-        i < combinedList.length &&
-        String(combinedList[i].id).startsWith("token-created:")
+        i < combinedList.length
+        && String(combinedList[i].id).startsWith('token-created:')
       ) {
         groupItems.push(combinedList[i] as PostDto);
         i += 1;
@@ -212,7 +213,9 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
             onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
             onMouseDown={(e) => e.stopPropagation()}
             className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
-            style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
+            style={{
+              WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none',
+            }}
             aria-expanded={!collapsed}
           >
             {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
@@ -230,7 +233,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
             mobileTightTop={mobileTightTop}
             mobileTightBottom={mobileTightBottom}
             footer={footer}
-          />
+          />,
         );
       }
 
@@ -242,12 +245,14 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
               type="button"
               onClick={() => toggleGroup(groupId)}
               className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
-              style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
+              style={{
+                WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none',
+              }}
               aria-expanded={!collapsed}
             >
               {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
             </button>
-          </div>
+          </div>,
         );
       }
     }

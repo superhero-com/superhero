@@ -104,5 +104,3 @@ export default function FromTo(props: FromToProps) {
     </div>
   );
 }
-
-

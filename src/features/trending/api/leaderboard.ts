@@ -1,4 +1,4 @@
-import { SuperheroApi } from "../../../api/backend";
+import { SuperheroApi } from '../../../api/backend';
 
 // Generic pagination shape used across the app
 export interface PaginatedResponse<T> {
@@ -11,11 +11,11 @@ export interface PaginatedResponse<T> {
 }
 
 // Timeframe options: 7d, 30d, all-time
-export const LEADERBOARD_TIMEFRAMES = ["7d", "30d", "all"] as const;
+export const LEADERBOARD_TIMEFRAMES = ['7d', '30d', 'all'] as const;
 export type LeaderboardTimeframe = (typeof LEADERBOARD_TIMEFRAMES)[number];
 
 // Metrics map directly to /api/accounts/leaderboard?sortBy=<metric>.
-export type LeaderboardMetric = "pnl" | "roi" | "aum" | "mdd";
+export type LeaderboardMetric = 'pnl' | 'roi' | 'aum' | 'mdd';
 
 export type LeaderboardItem = {
   address: string;
@@ -36,48 +36,50 @@ export interface LeaderboardQueryParams {
   metric: LeaderboardMetric;
   page?: number;
   limit?: number;
-  sortDir?: "ASC" | "DESC";
+  sortDir?: 'ASC' | 'DESC';
 }
 
 function mapTimeframeToWindow(timeframe: LeaderboardTimeframe): string {
   switch (timeframe) {
-    case "7d":
-      return "7d";
-    case "30d":
-      return "30d";
-    case "all":
+    case '7d':
+      return '7d';
+    case '30d':
+      return '30d';
+    case 'all':
     default:
-      return "all";
+      return 'all';
   }
 }
 
 function mapTimeframeToPoints(timeframe: LeaderboardTimeframe): number {
   switch (timeframe) {
-    case "7d":
+    case '7d':
       return 7;
-    case "30d":
+    case '30d':
       return 30;
-    case "all":
+    case 'all':
     default:
       return 30;
   }
 }
 
 export async function fetchLeaderboard(
-  params: LeaderboardQueryParams
+  params: LeaderboardQueryParams,
 ): Promise<PaginatedResponse<LeaderboardItem>> {
-  const { timeframe, metric, page = 1, limit = 20, sortDir = "DESC" } = params;
+  const {
+    timeframe, metric, page = 1, limit = 20, sortDir = 'DESC',
+  } = params;
 
   const windowParam = mapTimeframeToWindow(timeframe);
   const points = mapTimeframeToPoints(timeframe);
 
   const searchParams = new URLSearchParams();
-  searchParams.set("window", windowParam);
-  searchParams.set("sortBy", metric);
-  searchParams.set("sortDir", sortDir);
-  searchParams.set("page", String(page));
-  searchParams.set("limit", String(limit));
-  searchParams.set("points", String(points));
+  searchParams.set('window', windowParam);
+  searchParams.set('sortBy', metric);
+  searchParams.set('sortDir', sortDir);
+  searchParams.set('page', String(page));
+  searchParams.set('limit', String(limit));
+  searchParams.set('points', String(points));
 
   const path = `/api/accounts/leaderboard?${searchParams.toString()}`;
 

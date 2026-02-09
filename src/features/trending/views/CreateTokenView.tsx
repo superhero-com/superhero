@@ -2,14 +2,17 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { AssetInput } from '@/features/trending';
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
-import { toAe } from "@aeternity/aepp-sdk";
-import { createCommunity } from "bctsl-sdk";
-import BigNumber from "bignumber.js";
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { toAe } from '@aeternity/aepp-sdk';
+import { createCommunity } from 'bctsl-sdk';
+import BigNumber from 'bignumber.js';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { SuperheroApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
@@ -21,7 +24,6 @@ import type {
   IAllowedNameChars,
   ICollectionData,
 } from '../../../utils/types';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -60,7 +62,7 @@ export default function CreateTokenView() {
     activeFactorySchema,
     activeFactoryCollections,
     loadFactorySchema,
-    getFactory
+    getFactory,
   } = useCommunityFactory();
 
   // Parse URL query params
@@ -103,14 +105,14 @@ export default function CreateTokenView() {
   const tokenNameDebounced = useDebounce(tokenName, 400);
 
   // Computed values - use from the hook
-  const activeFactoryCollectionsArr = useMemo(() =>
-    activeFactoryCollections,
-    [activeFactoryCollections]
+  const activeFactoryCollectionsArr = useMemo(
+    () => activeFactoryCollections,
+    [activeFactoryCollections],
   );
 
-  const selectedCollection = useMemo((): ICollectionData =>
-    (activeFactorySchema?.collections || {})[collectionModel!],
-    [activeFactorySchema, collectionModel]
+  const selectedCollection = useMemo(
+    (): ICollectionData => (activeFactorySchema?.collections || {})[collectionModel!],
+    [activeFactorySchema, collectionModel],
   );
 
   // Load factory schema on mount
@@ -199,7 +201,7 @@ export default function CreateTokenView() {
         return rule.SingleChar.map((code) => String.fromCharCode(code))
           .map((char) => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
           .join('|');
-      } else if (rule.CharRangeFromTo) {
+      } if (rule.CharRangeFromTo) {
         const [start, end] = rule.CharRangeFromTo;
         return `${String.fromCharCode(start)}-${String.fromCharCode(end)}`;
       }
@@ -223,7 +225,7 @@ export default function CreateTokenView() {
       .map((rule) => {
         if (rule.SingleChar) {
           return rule.SingleChar.map((code) => String.fromCharCode(code)).join(', ');
-        } else if (rule.CharRangeFromTo) {
+        } if (rule.CharRangeFromTo) {
           const [start, end] = rule.CharRangeFromTo;
           return `${String.fromCharCode(start)}-${String.fromCharCode(end)}`;
         }
@@ -317,7 +319,7 @@ export default function CreateTokenView() {
     let sanitized = value.replace(/,/g, '').replace(/[^0-9.]/g, '');
     const parts = sanitized.split('.');
     if (parts.length > 2) {
-      sanitized = parts[0] + '.' + parts.slice(1).join('');
+      sanitized = `${parts[0]}.${parts.slice(1).join('')}`;
     }
     const [intPart, decPart = ''] = sanitized.split('.');
     const limitedDec = decPart.substring(0, 21);
@@ -414,7 +416,7 @@ export default function CreateTokenView() {
           initialBuyCount,
         },
         undefined,
-        factory.address
+        factory.address,
       );
 
       // Navigate to token details
@@ -431,7 +433,7 @@ export default function CreateTokenView() {
           const searchItems = searchResult?.items || [];
           setAlreadyRegisteredName(tokenName);
           setAlreadyRegisteredAs(
-            searchItems.find(({ name }: any) => name === tokenName)?.address
+            searchItems.find(({ name }: any) => name === tokenName)?.address,
           );
         } catch {
           // ignore search error
@@ -453,15 +455,15 @@ export default function CreateTokenView() {
       <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
         <div className="p-6">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-700 rounded w-2/3 mb-8"></div>
+            <div className="h-8 bg-gray-700 rounded w-1/3 mb-4" />
+            <div className="h-4 bg-gray-700 rounded w-2/3 mb-8" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-700 rounded"></div>
+                  <div key={i} className="h-16 bg-gray-700 rounded" />
                 ))}
               </div>
-              <div className="h-96 bg-gray-700 rounded"></div>
+              <div className="h-96 bg-gray-700 rounded" />
             </div>
           </div>
         </div>
@@ -491,7 +493,7 @@ export default function CreateTokenView() {
                   Price moves with buys/sells, no order books. Each token mints a DAO treasury
                   that can fund initiatives via on-chain votes.
                 </p>
-                
+
                 {/* Explainer Section */}
                 <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
@@ -501,18 +503,28 @@ export default function CreateTokenView() {
                     <div>
                       <h4 className="font-semibold text-white mb-2">Price Discovery Mechanism</h4>
                       <p>
-                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices. 
-                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery 
+                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices.
+                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery
                         based on supply and demand.
                       </p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-white mb-2">The Math Behind It</h4>
                       <p className="mb-2">
-                        The bonding curve follows a quadratic formula: <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
+                        The bonding curve follows a quadratic formula:
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
                       </p>
                       <p className="mb-2">
-                        Where <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code> is a constant and <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code> is the total number of tokens in circulation.
+                        Where
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
+                        {' '}
+                        is a constant and
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
+                        {' '}
+                        is the total number of tokens in circulation.
                       </p>
                       <p>
                         This means:
@@ -527,16 +539,16 @@ export default function CreateTokenView() {
                     <div>
                       <h4 className="font-semibold text-white mb-2">DAO Treasury</h4>
                       <p>
-                        A portion of every transaction goes into a DAO treasury controlled by token holders. 
-                        This treasury can fund community initiatives through on-chain governance votes, 
+                        A portion of every transaction goes into a DAO treasury controlled by token holders.
+                        This treasury can fund community initiatives through on-chain governance votes,
                         allowing the community to collectively decide how to grow and develop the token.
                       </p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-white mb-2">Fees & Affiliations</h4>
                       <p>
-                        When creating a token, you can set an initial buy amount. A small protocol fee (5%) 
-                        is applied to support the platform and protocol token rewards. The rest goes into 
+                        When creating a token, you can set an initial buy amount. A small protocol fee (5%)
+                        is applied to support the platform and protocol token rewards. The rest goes into
                         the bonding curve, ensuring fair price discovery from the start.
                       </p>
                     </div>
@@ -551,9 +563,9 @@ export default function CreateTokenView() {
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
-                      <div className="h-12 bg-gray-700 rounded mb-4"></div>
-                      <div className="h-12 bg-gray-700 rounded mb-4"></div>
-                      <div className="h-20 bg-gray-700 rounded"></div>
+                      <div className="h-12 bg-gray-700 rounded mb-4" />
+                      <div className="h-12 bg-gray-700 rounded mb-4" />
+                      <div className="h-20 bg-gray-700 rounded" />
                     </div>
                   </div>
                 ) : (
@@ -596,11 +608,11 @@ export default function CreateTokenView() {
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
                         <Input
                           ref={nameInputRef}
-                        value={tokenName}
-                        onChange={(e) => onNameUpdate(e.target.value)}
-                          placeholder={'TREND'}
-                        maxLength={20}
-                        required
+                          value={tokenName}
+                          onChange={(e) => onNameUpdate(e.target.value)}
+                          placeholder="TREND"
+                          maxLength={20}
+                          required
                           className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
                         />
                         {/* Inline status icon */}
@@ -616,7 +628,10 @@ export default function CreateTokenView() {
                       </div>
                       {/* Helper/status text - fixed height, no layout jumps */}
                       <div className="text-xs text-white/60 mt-1 flex items-center justify-between min-h-[20px]" aria-live="polite">
-                        <span>{tokenName.length}/20 characters</span>
+                        <span>
+                          {tokenName.length}
+                          /20 characters
+                        </span>
                         <span className="opacity-80">
                           {nameStatus === 'invalid' ? 'Invalid characters' : 'Allowed: A–Z, 0–9, and -'}
                         </span>
@@ -633,23 +648,29 @@ export default function CreateTokenView() {
                           <div className="flex items-center gap-3 flex-wrap w-full">
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/30">
                               <span className="relative inline-flex">
-                                <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+                                <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                               </span>
-                            <span className="font-medium">Trading live</span>
+                              <span className="font-medium">Trading live</span>
                             </span>
                             <div className="flex-1 w-full flex flex-wrap items-center gap-x-6 gap-y-2 justify-between">
                               <div className="text-white/80">
-                                <span className="text-white/60">Token</span> <span className="font-mono font-bold text-white">{alreadyRegisteredName || foundToken?.name}</span>
+                                <span className="text-white/60">Token</span>
+                                {' '}
+                                <span className="font-mono font-bold text-white">{alreadyRegisteredName || foundToken?.name}</span>
                               </div>
                               {foundToken?.price != null && (
                                 <div className="text-white/80">
-                                  <span className="text-white/60">Price</span> <strong className="text-white">{foundToken.price}</strong>
+                                  <span className="text-white/60">Price</span>
+                                  {' '}
+                                  <strong className="text-white">{foundToken.price}</strong>
                                 </div>
                               )}
                               {foundToken?.holders != null && (
                                 <div className="text-white/80">
-                                  <span className="text-white/60">Holders</span> <strong className="text-white">{foundToken.holders.toLocaleString?.() || foundToken.holders}</strong>
+                                  <span className="text-white/60">Holders</span>
+                                  {' '}
+                                  <strong className="text-white">{foundToken.holders.toLocaleString?.() || foundToken.holders}</strong>
                                 </div>
                               )}
                             </div>
@@ -675,13 +696,13 @@ export default function CreateTokenView() {
                         <div className="flex items-center gap-2">
                           <label className="block text-sm font-medium text-white/80">
                             {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
-                      </label>
+                          </label>
                           {/* Tooltip */}
                           <div className="relative group inline-block align-middle">
                             <span
                               tabIndex={0}
                               className="text-white/70 cursor-help select-none leading-none px-1"
-                              aria-label={inputMode === 'AE' 
+                              aria-label={inputMode === 'AE'
                                 ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
                                 : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
                             >
@@ -699,7 +720,9 @@ export default function CreateTokenView() {
                           onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
                           className="text-xs underline text-purple-300 hover:text-purple-200"
                         >
-                          Switch to {inputMode === 'AE' ? 'Tokens' : 'AE'}
+                          Switch to
+                          {' '}
+                          {inputMode === 'AE' ? 'Tokens' : 'AE'}
                         </button>
                       </div>
 
@@ -716,7 +739,7 @@ export default function CreateTokenView() {
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
-                              title={"This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                              title="This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
@@ -729,9 +752,11 @@ export default function CreateTokenView() {
                             <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
                           </div>
                           <div className="text-sm text-white/70">
-                            Estimated tokens you'll receive: <span className="text-white">{estimatedTokens.prettify()}</span>
+                            Estimated tokens you'll receive:
+                            {' '}
+                            <span className="text-white">{estimatedTokens.prettify()}</span>
                           </div>
-                          
+
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -756,14 +781,14 @@ export default function CreateTokenView() {
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
                               <span>Estimated cost:</span>
-                          <LivePriceFormatter
-                            row
-                            aePrice={price}
-                            watchPrice={false}
-                            priceLoading={loadingPrice}
-                          />
+                              <LivePriceFormatter
+                                row
+                                aePrice={price}
+                                watchPrice={false}
+                                priceLoading={loadingPrice}
+                              />
                               <span>(incl. fees)</span>
-                    </div>
+                            </div>
                           </div>
                         </div>
                       )}

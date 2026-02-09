@@ -1,9 +1,13 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType, LineSeries, HistogramSeries } from 'lightweight-charts';
+import React, {
+  useEffect, useRef, useState, useCallback,
+} from 'react';
+import {
+  createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType, LineSeries, HistogramSeries,
+} from 'lightweight-charts';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
 import { AeCard } from '../../../../components/ui/ae-card';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 interface ChartType {
   type: string;
@@ -25,7 +29,7 @@ const TIME_FRAMES = {
   '1W': 24 * 7,
   '1M': 24 * 30,
   '1Y': 24 * 365,
-  'MAX': Infinity,
+  MAX: Infinity,
 } as const;
 
 type TimeFrame = keyof typeof TIME_FRAMES;
@@ -44,7 +48,7 @@ export default function TokenPricePerformance({
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
   const touchHandlersCleanup = useRef<(() => void) | null>(null);
-  
+
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>(initialTimeFrame as TimeFrame);
   const [selectedChart, setSelectedChart] = useState<ChartType>(initialChart);
   const [loading, setLoading] = useState(false);
@@ -105,7 +109,7 @@ export default function TokenPricePerformance({
         });
       }
     };
-    
+
     handleResize(); // Initial resize
     window.addEventListener('resize', handleResize);
 
@@ -116,11 +120,11 @@ export default function TokenPricePerformance({
         e.preventDefault();
         e.stopPropagation();
         if (!chart || !container) return;
-        
+
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         const x = touch.clientX - rect.left;
-        
+
         try {
           const time = chart.timeScale().coordinateToTime(x);
           if (time !== null) {
@@ -135,14 +139,14 @@ export default function TokenPricePerformance({
         e.preventDefault();
         e.stopPropagation();
         if (!chart || !container) return;
-        
+
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         const x = touch.clientX - rect.left;
-        
+
         // Clamp x to chart bounds
         const clampedX = Math.max(0, Math.min(x, rect.width));
-        
+
         try {
           const time = chart.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
@@ -157,7 +161,7 @@ export default function TokenPricePerformance({
         e.preventDefault();
         e.stopPropagation();
         if (!chart) return;
-        
+
         try {
           chart.setCrosshairPosition(-1, -1, {});
         } catch (error) {
@@ -257,7 +261,7 @@ export default function TokenPricePerformance({
     // Remove duplicate timestamps and ensure strict ascending order
     const formattedData: typeof rawData = [];
     let lastTime = 0;
-    
+
     for (const item of rawData) {
       if (item.time > lastTime) {
         formattedData.push(item);
@@ -269,15 +273,15 @@ export default function TokenPricePerformance({
         // If it's the first item with this timestamp, add a small increment
         formattedData.push({
           time: (lastTime + 1) as any,
-          value: item.value
+          value: item.value,
         });
-        lastTime = lastTime + 1;
+        lastTime += 1;
       }
     }
 
     if (formattedData.length > 0) {
       seriesRef.current.setData(formattedData);
-      
+
       // Fit content
       if (chartRef.current) {
         chartRef.current.timeScale().fitContent();
@@ -301,7 +305,7 @@ export default function TokenPricePerformance({
       }
 
       const result = await getGraph(options);
-      
+
       if (result) {
         setChartData({
           labels: result.labels?.map((l: any) => Number(l)) || [],
@@ -330,7 +334,7 @@ export default function TokenPricePerformance({
     setSelectedChart(chartType);
   };
 
-  const showNoData = !chartData.data.length || chartData.data.every(d => d === 0);
+  const showNoData = !chartData.data.length || chartData.data.every((d) => d === 0);
 
   return (
     <div className={`${className}`}>
@@ -359,7 +363,7 @@ export default function TokenPricePerformance({
             <AppSelect
               value={selectedChart.type}
               onValueChange={(v) => {
-                const chartType = availableGraphTypes.find(c => c.type === v);
+                const chartType = availableGraphTypes.find((c) => c.type === v);
                 if (chartType) handleChartTypeChange(chartType);
               }}
               triggerClassName="block bg-transparent text-foreground outline-0"
@@ -381,7 +385,7 @@ export default function TokenPricePerformance({
           ref={chartContainerRef}
           className="w-full h-full"
         />
-        
+
         {/* Loading Overlay */}
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center text-3xl bg-background/20 rounded-xl">

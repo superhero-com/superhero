@@ -1,6 +1,8 @@
 import FractionFormatter from '@/features/shared/components/FractionFormatter';
 import { formatFractionalPrice } from '@/utils/common';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState,
+} from 'react';
 import { Button } from '../../../components/ui/button';
 import { useCurrencies } from '../../../hooks/useCurrencies';
 import { cn } from '../../../lib/utils';
@@ -29,7 +31,7 @@ export interface AssetInputRef {
 }
 
 const AETERNITY_TOKEN_BASE_DATA = {
-  symbol: 'AE'
+  symbol: 'AE',
 };
 
 const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
@@ -52,13 +54,10 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   const inputRef = useRef<HTMLInputElement>(null);
   const { getFiat, currentCurrencyInfo } = useCurrencies();
 
-
   // Internal state for handling decimal input (like Vue model)
   const [internalValue, setInternalValue] = useState<string>(String(modelValue));
 
-  const fiatPrice = useMemo(() => {
-    return getFiat(isCoin ? Decimal.from(modelValue) : aeValue);
-  }, [modelValue, aeValue, isCoin, getFiat]);
+  const fiatPrice = useMemo(() => getFiat(isCoin ? Decimal.from(modelValue) : aeValue), [modelValue, aeValue, isCoin, getFiat]);
 
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {
@@ -77,7 +76,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   useImperativeHandle(ref, () => ({
     focus: () => {
       inputRef.current?.focus();
-    }
+    },
   }));
 
   const sanitizeValue = (value: string): string => {
@@ -91,14 +90,14 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     // Ensure only one decimal point
     const parts = sanitized.split('.');
     if (parts.length > 2) {
-      sanitized = parts[0] + '.' + parts.slice(1).join('');
+      sanitized = `${parts[0]}.${parts.slice(1).join('')}`;
     }
 
     // Limit decimal places to 8 (common for crypto)
-    const decimalLimit = 21; 
+    const decimalLimit = 21;
     const nextParts = sanitized.split('.');
     if (nextParts.length === 2 && nextParts[1].length > decimalLimit) {
-      sanitized = nextParts[0] + '.' + nextParts[1].substring(0, decimalLimit);
+      sanitized = `${nextParts[0]}.${nextParts[1].substring(0, decimalLimit)}`;
     }
 
     return sanitized;
@@ -106,7 +105,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
   const formatMoney = (value: string): string => {
     if (!value || value === '') return '';
-    
+
     // Keep display unformatted to avoid conflicts between thousands separators (",")
     // and decimal separator on some iOS locales (",").
     return value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
@@ -116,7 +115,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     const rawValue = e.target.value;
     const normalizedRawValue = rawValue.replace(/,/g, '.');
     const sanitizedValue = sanitizeValue(normalizedRawValue);
-    
+
     // Use raw value for display if it ends with decimal point or has trailing zeros after decimal
     // Use formatted value for complete numbers
     let displayValue;
@@ -158,7 +157,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
         'asset-input',
         `color-${color}`,
         { disabled },
-        className
+        className,
       )}
     >
       {label && (
@@ -169,10 +168,10 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
       <label
         className={cn(
-          "input-container block rounded cursor-text px-3 py-2 md:py-3 relative overflow-hidden min-h-[56px] transition-all duration-200",
-          "border border-white/40 hover:border-white focus-within:border-white focus-within:border-2",
-          hasError && "border-red-500 shadow-[inset_0_0_10px_rgb(239,68,68)]",
-          color === 'success' && "border-green-500"
+          'input-container block rounded cursor-text px-3 py-2 md:py-3 relative overflow-hidden min-h-[56px] transition-all duration-200',
+          'border border-white/40 hover:border-white focus-within:border-white focus-within:border-2',
+          hasError && 'border-red-500 shadow-[inset_0_0_10px_rgb(239,68,68)]',
+          color === 'success' && 'border-green-500',
         )}
       >
         <div className="flex items-center gap-5">
@@ -185,11 +184,11 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
             onFocus={handleFocus}
             disabled={disabled}
             className={cn(
-              "flex-1 input w-full text-xl leading-7 h-7 text-ellipsis whitespace-nowrap overflow-hidden",
-              "border-none outline-none bg-transparent text-white placeholder-white/60",
-              "focus:border-none focus:outline-none focus:ring-0",
-              "min-w-[40%]",
-              "shadow-none"
+              'flex-1 input w-full text-xl leading-7 h-7 text-ellipsis whitespace-nowrap overflow-hidden',
+              'border-none outline-none bg-transparent text-white placeholder-white/60',
+              'focus:border-none focus:outline-none focus:ring-0',
+              'min-w-[40%]',
+              'shadow-none',
             )}
             placeholder="0.00"
             autoFocus
@@ -203,7 +202,10 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
           <div className="flex items-center justify-between mt-2">
             {isCoin ? (
               <div className="flex items-center gap-1 text-sm text-white/70">
-                <span>{currentCurrencyInfo.symbol} </span>
+                <span>
+                  {currentCurrencyInfo.symbol}
+                  {' '}
+                </span>
                 <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice) as any} />
               </div>
             ) : (
@@ -214,7 +216,10 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
                 </div>
                 {!aeValue.isZero && (
                   <div className="flex items-center gap-1 opacity-80">
-                    <span>{currentCurrencyInfo.symbol} </span>
+                    <span>
+                      {currentCurrencyInfo.symbol}
+                      {' '}
+                    </span>
                     <FractionFormatter fractionalPrice={formatFractionalPrice(getFiat(aeValue)) as any} />
                   </div>
                 )}

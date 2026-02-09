@@ -1,13 +1,13 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { cn } from "@/lib/utils";
-import { memo, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { linkify } from "../../../utils/linkify";
-import BlockchainInfoPopover from "./BlockchainInfoPopover";
-import SharePopover from "./SharePopover";
-import { useWallet } from "../../../hooks";
-import type { PostDto } from "../../../api/generated";
-import { compactTime, fullTimestamp } from "../../../utils/time";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { cn } from '@/lib/utils';
+import { memo, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { linkify } from '../../../utils/linkify';
+import BlockchainInfoPopover from './BlockchainInfoPopover';
+import SharePopover from './SharePopover';
+import { useWallet } from '../../../hooks';
+import type { PostDto } from '../../../api/generated';
+import { compactTime, fullTimestamp } from '../../../utils/time';
 
 interface TokenCreatedFeedItemProps {
   item: PostDto;
@@ -17,9 +17,9 @@ interface TokenCreatedFeedItemProps {
 function useTokenName(item: PostDto): string | null {
   return useMemo(() => {
     const fromId = () => {
-      const id = String(item?.id || "");
-      if (!id.startsWith("token-created:")) return null;
-      const parts = id.replace(/_v3$/, "").split(":");
+      const id = String(item?.id || '');
+      if (!id.startsWith('token-created:')) return null;
+      const parts = id.replace(/_v3$/, '').split(':');
       const encoded = parts[1];
       if (!encoded) return null;
       try { return decodeURIComponent(encoded); } catch { return encoded; }
@@ -42,7 +42,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || "Legend";
+  const displayName = chainNames?.[authorAddress] || 'Legend';
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -52,7 +52,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   return (
     <article
       className={cn(
-        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]"
+        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]',
       )}
       onClick={handleOpen}
       role="button"
@@ -107,7 +107,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                     knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
                     hashtagVariant: 'post-inline',
                     trendMentions: (item as any)?.trend_mentions,
-                    })}
+                  })}
                 </span>
               )}
             </div>
@@ -135,8 +135,6 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   );
 });
 
-TokenCreatedFeedItem.displayName = "TokenCreatedFeedItem";
+TokenCreatedFeedItem.displayName = 'TokenCreatedFeedItem';
 
 export default TokenCreatedFeedItem;
-
-

@@ -1,12 +1,12 @@
-import { PriceDto } from "@/api/generated/models/PriceDto";
-import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
+import { PriceDto } from '@/api/generated/models/PriceDto';
+import { AccountTokensService } from '@/api/generated/services/AccountTokensService';
 import {
   DataTable,
   DataTableResponse,
-} from "@/features/shared/components/DataTable/DataTable";
-import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
-import { Decimal } from "@/libs/decimal";
-import { useState } from "react";
+} from '@/features/shared/components/DataTable/DataTable';
+import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
+import { Decimal } from '@/libs/decimal';
+import { useState } from 'react';
 
 interface AccountOwnedTokensProps {
   address: string;
@@ -19,8 +19,8 @@ export default function AccountOwnedTokens({
 }: AccountOwnedTokensProps) {
   // Owned tokens with balances (account tokens endpoint)
   const [ownedOrderDirection, setOwnedOrderDirection] = useState<
-    "ASC" | "DESC"
-  >("DESC");
+    'ASC' | 'DESC'
+  >('DESC');
 
   const fetchOwnedTokens = async (params: any) => {
     const response = (await AccountTokensService.listTokenHolders({
@@ -36,7 +36,6 @@ export default function AccountOwnedTokens({
       return acc;
     }, {} as PriceDto);
   }
-  
 
   return (
     <div className="mt-3">
@@ -47,14 +46,14 @@ export default function AccountOwnedTokens({
           <div>Price</div>
           <button
             className="text-left hover:opacity-80"
-            onClick={() =>
-              setOwnedOrderDirection(
-                ownedOrderDirection === "DESC" ? "ASC" : "DESC"
-              )
-            }
+            onClick={() => setOwnedOrderDirection(
+              ownedOrderDirection === 'DESC' ? 'ASC' : 'DESC',
+            )}
             title="Sort by balance"
           >
-            Balance {ownedOrderDirection === "DESC" ? "↓" : "↑"}
+            Balance
+            {' '}
+            {ownedOrderDirection === 'DESC' ? '↓' : '↑'}
           </button>
           <div>Total Value</div>
         </div>
@@ -65,19 +64,16 @@ export default function AccountOwnedTokens({
             queryFn={fetchOwnedTokens}
             renderRow={({ item, index }) => {
               const token = item?.token || item;
-              const tokenName =
-                token?.name ||
-                token?.symbol ||
-                token?.address ||
-                `Token ${index + 1}`;
-              const tokenHref =
-                token?.name || token?.address
-                  ? `/trends/tokens/${encodeURIComponent(
-                      token?.name || token?.address
-                    )}`
-                  : undefined;
-              const balance =
-                item?.balance ?? item?.holder_balance ?? item?.amount;
+              const tokenName = token?.name
+                || token?.symbol
+                || token?.address
+                || `Token ${index + 1}`;
+              const tokenHref = token?.name || token?.address
+                ? `/trends/tokens/${encodeURIComponent(
+                  token?.name || token?.address,
+                )}`
+                : undefined;
+              const balance = item?.balance ?? item?.holder_balance ?? item?.amount;
               const balanceData = item?.balance_data;
               const priceData = token?.price_data;
 
@@ -121,7 +117,7 @@ export default function AccountOwnedTokens({
                             watchPrice={false}
                             className="text-[11px] text-white/70"
                             priceData={calculateTotalValue(balance, priceData)}
-                            rowOnSm={true}
+                            rowOnSm
                           />
                         </div>
                       </div>
@@ -164,23 +160,23 @@ export default function AccountOwnedTokens({
                     </div>
 
                     <div className="flex items-center">
-                        <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                          <PriceDataFormatter
-                            bignumber
-                            watchPrice={false}
-                            priceData={calculateTotalValue(balance, priceData)}
-                          />
-                        </div>
+                      <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                        <PriceDataFormatter
+                          bignumber
+                          watchPrice={false}
+                          priceData={calculateTotalValue(balance, priceData)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             }}
             initialParams={{
-              address: address,
-              orderBy: "balance",
+              address,
+              orderBy: 'balance',
               orderDirection: ownedOrderDirection,
-              enabled: !!address && tab === "owned",
+              enabled: !!address && tab === 'owned',
               staleTime: 60_000,
             }}
             itemsPerPage={10}
@@ -188,7 +184,8 @@ export default function AccountOwnedTokens({
             className="space-y-2 md:space-y-1"
           />
         </div>
-        <style>{`
+        <style>
+          {`
                 .owned-token-row:hover .token-name {
                   background: linear-gradient(to right, #fb923c, #fbbf24);
                   -webkit-background-clip: text;
@@ -201,7 +198,8 @@ export default function AccountOwnedTokens({
                 .owned-token-row:active {
                   transform: translateY(0);
                 }
-              `}</style>
+              `}
+        </style>
       </div>
     </div>
   );

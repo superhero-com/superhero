@@ -1,4 +1,4 @@
-import { Encoded } from "@aeternity/aepp-sdk";
+import { Encoded } from '@aeternity/aepp-sdk';
 
 export type AppConfig = {
   BACKEND_URL: string;
@@ -19,30 +19,30 @@ export type AppConfig = {
 };
 
 const defaultConfig: AppConfig = {
-  BACKEND_URL: "https://api.superhero.com",
-  SUPERHERO_API_URL: "https://api.superhero.com",
-  NODE_URL: "https://mdw.wordcraft.fun",
-  WALLET_URL: "https://wallet.superhero.com",
-  MIDDLEWARE_URL: "https://mdw.wordcraft.fun/mdw",
-  JITSI_DOMAIN: "meet.jit.si",
-  EXPLORER_URL: "https://aescan.io",
+  BACKEND_URL: 'https://api.superhero.com',
+  SUPERHERO_API_URL: 'https://api.superhero.com',
+  NODE_URL: 'https://mdw.wordcraft.fun',
+  WALLET_URL: 'https://wallet.superhero.com',
+  MIDDLEWARE_URL: 'https://mdw.wordcraft.fun/mdw',
+  JITSI_DOMAIN: 'meet.jit.si',
+  EXPLORER_URL: 'https://aescan.io',
   GIPHY_API_KEY: process.env.VITE_GIPHY_API_KEY ?? 'P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM',
-  DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
-  MAINNET_DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
-  TESTNET_DEX_BACKEND_URL: "https://dex-backend-testnet.prd.service.aepps.com",
-  CONTRACT_V3_ADDRESS: "ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb",
+  DEX_BACKEND_URL: 'https://dex-backend-mainnet.prd.service.aepps.com',
+  MAINNET_DEX_BACKEND_URL: 'https://dex-backend-mainnet.prd.service.aepps.com',
+  TESTNET_DEX_BACKEND_URL: 'https://dex-backend-testnet.prd.service.aepps.com',
+  CONTRACT_V3_ADDRESS: 'ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb',
   POPULAR_FEED_ENABLED: true,
   GOVERNANCE_API_URL:
-    "https://governance-server-mainnet.prd.service.aepps.com/",
+    'https://governance-server-mainnet.prd.service.aepps.com/',
   GOVERNANCE_CONTRACT_ADDRESS:
-    "ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq",
+    'ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq',
 };
 
 // Allow local development overrides via Vite env vars set at build time
 // e.g. VITE_SUPERHERO_API_URL
 // Try import.meta.env first, then fallback to process.env (for Vite compatibility)
-const envApiUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_API_URL || 
-  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_API_URL)) as string | undefined;
+const envApiUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_API_URL
+  || (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_API_URL)) as string | undefined;
 
 declare global {
   interface Window {
@@ -51,9 +51,9 @@ declare global {
 }
 
 function toBool(v: any): boolean {
-  if (typeof v === "boolean") return v;
-  if (typeof v === "number") return v !== 0;
-  if (typeof v === "string") return v.toLowerCase() === "true" || v === "1";
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v !== 0;
+  if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1';
   return false;
 }
 
@@ -69,10 +69,10 @@ function coerceValue(key: keyof AppConfig, v: any): any {
 const runtimeRaw = (typeof window !== 'undefined' ? window.__SUPERCONFIG__ : undefined) as Partial<AppConfig> | undefined;
 const runtimeConfig: Partial<AppConfig> = runtimeRaw
   ? Object.fromEntries(
-      Object.entries(runtimeRaw)
-        .filter(([, v]) => v !== undefined && v !== null && !isPlaceholder(v))
-        .map(([k, v]) => [k, coerceValue(k as keyof AppConfig, v)])
-    ) as Partial<AppConfig>
+    Object.entries(runtimeRaw)
+      .filter(([, v]) => v !== undefined && v !== null && !isPlaceholder(v))
+      .map(([k, v]) => [k, coerceValue(k as keyof AppConfig, v)]),
+  ) as Partial<AppConfig>
   : {};
 
 export const CONFIG: AppConfig = {

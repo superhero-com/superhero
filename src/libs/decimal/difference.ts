@@ -1,5 +1,5 @@
-import { Decimal, Decimalish } from "./decimal";
-import { DifferenceRepresentation } from "./types";
+import { Decimal, Decimalish } from './decimal';
+import { DifferenceRepresentation } from './types';
 
 export class Difference {
   private _number?: DifferenceRepresentation;
@@ -21,28 +21,27 @@ export class Difference {
 
     if (d1.infinite && d2.infinite) {
       return new Difference(undefined);
-    } else if (d1.infinite) {
-      return new Difference({ sign: "+", absoluteValue: d1 });
-    } else if (d2.infinite) {
-      return new Difference({ sign: "-", absoluteValue: d2 });
-    } else if (d1.gt(d2)) {
+    } if (d1.infinite) {
+      return new Difference({ sign: '+', absoluteValue: d1 });
+    } if (d2.infinite) {
+      return new Difference({ sign: '-', absoluteValue: d2 });
+    } if (d1.gt(d2)) {
       return new Difference({
-        sign: "+",
+        sign: '+',
         absoluteValue: Decimal.from(d1).sub(d2),
       });
-    } else if (d2.gt(d1)) {
+    } if (d2.gt(d1)) {
       return new Difference({
-        sign: "-",
+        sign: '-',
         absoluteValue: Decimal.from(d2).sub(d1),
       });
-    } else {
-      return new Difference({ sign: "", absoluteValue: Decimal.ZERO });
     }
+    return new Difference({ sign: '', absoluteValue: Decimal.ZERO });
   }
 
   toString(precision?: number): string {
     if (!this._number) {
-      return "N/A";
+      return 'N/A';
     }
 
     return this._number.sign + this._number.absoluteValue.toString(precision);
@@ -70,11 +69,11 @@ export class Difference {
   }
 
   get positive(): this | undefined {
-    return this._number?.sign === "+" ? this : undefined;
+    return this._number?.sign === '+' ? this : undefined;
   }
 
   get negative(): this | undefined {
-    return this._number?.sign === "-" ? this : undefined;
+    return this._number?.sign === '-' ? this : undefined;
   }
 
   get absoluteValue(): Decimal | undefined {

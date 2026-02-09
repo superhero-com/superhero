@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMemo, useState } from 'react';
-import { Asset, Direction } from '../types';
 import Spinner from '@/components/Spinner';
+import { Asset, Direction } from '../types';
 
 interface BridgeTokenSelectorProps {
   label?: string;
@@ -17,7 +17,7 @@ interface BridgeTokenSelectorProps {
 }
 
 const getTokenDisplayName = (asset: Asset, direction?: Direction) => {
-  let symbol = asset.symbol;
+  let { symbol } = asset;
   if (direction === Direction.AeternityToEthereum) {
     symbol = `æ${symbol}`;
     if (symbol === 'æWAE') {
@@ -82,10 +82,10 @@ export default function BridgeTokenSelector({
               className={`flex-1 max-w-[max(120px,100%)] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
                 ? 'cursor-not-allowed opacity-50 bg-white/[0.05]'
                 : 'cursor-pointer hover:-translate-y-0.5'
-                } ${selected
-                  ? 'bg-white/10 text-white border-[#4ecdc4]/30'
-                  : 'bg-white/[0.05] text-white hover:bg-white/10'
-                }`}
+              } ${selected
+                ? 'bg-white/10 text-white border-[#4ecdc4]/30'
+                : 'bg-white/[0.05] text-white hover:bg-white/10'
+              }`}
             >
               {loading ? (
                 <Spinner className="w-3.5 h-3.5" />
@@ -143,15 +143,17 @@ export default function BridgeTokenSelector({
             alignItems: 'center',
             marginBottom: 12,
             paddingBottom: 8,
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+          >
             <span style={{
               fontSize: 14,
               fontWeight: 600,
               color: 'var(--light-font-color)',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
+              letterSpacing: '0.5px',
+            }}
+            >
               Token
             </span>
             <span style={{
@@ -159,8 +161,9 @@ export default function BridgeTokenSelector({
               fontWeight: 600,
               color: 'var(--light-font-color)',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
+              letterSpacing: '0.5px',
+            }}
+            >
               Balance
             </span>
           </div>
@@ -171,8 +174,9 @@ export default function BridgeTokenSelector({
             gap: 6,
             maxHeight: '350px',
             overflowY: 'auto',
-            paddingRight: 4
-          }}>
+            paddingRight: 4,
+          }}
+          >
             {filteredAssets.map((asset) => (
               <button
                 key={asset.symbol}
@@ -188,7 +192,7 @@ export default function BridgeTokenSelector({
                   color: 'var(--standard-font-color)',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)'
+                  backdropFilter: 'blur(10px)',
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';
@@ -209,7 +213,7 @@ export default function BridgeTokenSelector({
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      objectFit: 'cover'
+                      objectFit: 'cover',
                     }}
                   />
                   <div style={{ textAlign: 'left' }}>
@@ -219,14 +223,16 @@ export default function BridgeTokenSelector({
                       marginBottom: 2,
                       color: 'var(--standard-font-color)',
                       textTransform: 'none',
-                    }}>
+                    }}
+                    >
                       {getTokenDisplayName(asset, direction)}
                     </div>
                     <div style={{
                       fontSize: 11,
                       color: 'var(--light-font-color)',
-                      opacity: 0.8
-                    }}>
+                      opacity: 0.8,
+                    }}
+                    >
                       {asset.name}
                     </div>
                   </div>
@@ -243,8 +249,9 @@ export default function BridgeTokenSelector({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-end',
-                    gap: 6
-                  }}>
+                    gap: 6,
+                  }}
+                  >
                     {
                       direction === Direction.AeternityToEthereum ? (
                         <span>{aeBalances[asset.symbol] || '—'}</span>
@@ -254,8 +261,12 @@ export default function BridgeTokenSelector({
                     }
                   </div>
 
-                  <div className='text-white/60 font-medium tracking-wider' style={{ fontSize: 10 }}>
-                    on {direction === Direction.AeternityToEthereum ? 'Aeternity' : 'Ethereum'} Blockchain
+                  <div className="text-white/60 font-medium tracking-wider" style={{ fontSize: 10 }}>
+                    on
+                    {' '}
+                    {direction === Direction.AeternityToEthereum ? 'Aeternity' : 'Ethereum'}
+                    {' '}
+                    Blockchain
                   </div>
 
                 </div>
@@ -267,8 +278,9 @@ export default function BridgeTokenSelector({
                 textAlign: 'center',
                 padding: '40px 20px',
                 color: 'var(--light-font-color)',
-                fontSize: 14
-              }}>
+                fontSize: 14,
+              }}
+              >
                 <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens found</div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>
@@ -283,13 +295,15 @@ export default function BridgeTokenSelector({
             marginTop: 20,
             paddingTop: 16,
             borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            textAlign: 'center'
-          }}>
+            textAlign: 'center',
+          }}
+          >
             <div style={{
               fontSize: 12,
               color: 'var(--light-font-color)',
-              opacity: 0.7
-            }}>
+              opacity: 0.7,
+            }}
+            >
               Bridge tokens between Aeternity and Ethereum networks
             </div>
           </div>
@@ -298,4 +312,3 @@ export default function BridgeTokenSelector({
     </Dialog.Root>
   );
 }
-

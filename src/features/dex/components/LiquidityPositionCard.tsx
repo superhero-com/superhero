@@ -1,9 +1,9 @@
-import { toAe } from "@aeternity/aepp-sdk";
-import AddressChip from "../../../components/AddressChip";
-import { TokenChip } from "../../../components/TokenChip";
-import { Decimal } from "../../../libs/decimal";
-import { usePool } from "../context/PoolProvider";
-import { LiquidityPosition } from "../types/pool";
+import { toAe } from '@aeternity/aepp-sdk';
+import AddressChip from '../../../components/AddressChip';
+import { TokenChip } from '../../../components/TokenChip';
+import { Decimal } from '../../../libs/decimal';
+import { usePool } from '../context/PoolProvider';
+import { LiquidityPosition } from '../types/pool';
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
@@ -22,9 +22,9 @@ export default function LiquidityPositionCard({
   return (
     <div
       className={`flex justify-between flex-col p-4 gap-2 rounded-2xl backdrop-blur-sm transition-all duration-300 ${isSelected
-        ? "bg-red-500/10 border border-accent-color"
-        : "bg-white/[0.05] border border-glass-border"
-        }`}
+        ? 'bg-red-500/10 border border-accent-color'
+        : 'bg-white/[0.05] border border-glass-border'
+      }`}
     >
       <div className="flex-col md:flex-row flex gap-3 mb-2 ">
         <div className="flex items-center gap-3 mb-2 ">
@@ -58,7 +58,7 @@ export default function LiquidityPositionCard({
               LP Tokens
             </span>
             <span className="font-semibold text-standard-font-color">
-              {Decimal.from(toAe(position.balance ?? "0")).prettify()}
+              {Decimal.from(toAe(position.balance ?? '0')).prettify()}
             </span>
           </div>
           {position.sharePct && (
@@ -67,7 +67,8 @@ export default function LiquidityPositionCard({
                 Pool Share
               </span>
               <span className="font-semibold text-standard-font-color">
-                {Decimal.from(position.sharePct ?? "0").prettify()}%
+                {Decimal.from(position.sharePct ?? '0').prettify()}
+                %
               </span>
             </div>
           )}

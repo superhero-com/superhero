@@ -1,17 +1,17 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { cn } from "@/lib/utils";
-import { memo, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import PostHashtagLink from "@/components/social/PostHashtagLink";
-import { Badge } from "@/components/ui/badge";
-import { Plus, RefreshCw } from "lucide-react";
-import { useWallet } from "../../../hooks";
-import { compactTime, fullTimestamp } from "../../../utils/time";
-import { formatCompactNumber } from "../../../utils/number";
-import { Decimal } from "../../../libs/decimal";
-import { formatFractionalPrice } from "../../../utils/common";
-import FractionFormatter from "../../shared/components/FractionFormatter";
-import type { TokenDto } from "../../../api/generated/models/TokenDto";
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { cn } from '@/lib/utils';
+import { memo, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PostHashtagLink from '@/components/social/PostHashtagLink';
+import { Badge } from '@/components/ui/badge';
+import { Plus, RefreshCw } from 'lucide-react';
+import { useWallet } from '../../../hooks';
+import { compactTime, fullTimestamp } from '../../../utils/time';
+import { formatCompactNumber } from '../../../utils/number';
+import { Decimal } from '../../../libs/decimal';
+import { formatFractionalPrice } from '../../../utils/common';
+import FractionFormatter from '../../shared/components/FractionFormatter';
+import type { TokenDto } from '../../../api/generated/models/TokenDto';
 
 export type TradeActivityItemData = {
   id: string;
@@ -32,15 +32,15 @@ interface TradeActivityItemProps {
 const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
-  const account = item.account || item.address || "";
-  const displayName = chainNames?.[account] || "Legend";
-  const tokenName = item?.token?.name || item?.token?.symbol || "";
-  const tokenLabel = item?.token?.symbol || item?.token?.name || "Token";
+  const account = item.account || item.address || '';
+  const displayName = chainNames?.[account] || 'Legend';
+  const tokenName = item?.token?.name || item?.token?.symbol || '';
+  const tokenLabel = item?.token?.symbol || item?.token?.name || 'Token';
   const tokenTag = tokenName || tokenLabel;
-  const tokenLink = tokenTag ? `/trends/tokens/${encodeURIComponent(tokenTag)}` : "";
+  const tokenLink = tokenTag ? `/trends/tokens/${encodeURIComponent(tokenTag)}` : '';
   const copyTradeLink = tokenTag
-    ? `/trends/tokens/${encodeURIComponent(tokenTag)}?trade=buy&amount=${encodeURIComponent(String(item?.volume || ""))}&showTrade=1`
-    : "";
+    ? `/trends/tokens/${encodeURIComponent(tokenTag)}?trade=buy&amount=${encodeURIComponent(String(item?.volume || ''))}&showTrade=1`
+    : '';
 
   const onOpen = useCallback(() => {
     if (tokenLink) navigate(tokenLink);
@@ -48,10 +48,10 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
 
   const volumeText = useMemo(
     () => formatCompactNumber(item?.volume, 2, 2),
-    [item?.volume]
+    [item?.volume],
   );
   const priceFraction = useMemo(() => {
-    if (item?.priceUsd == null || item.priceUsd === "") return null;
+    if (item?.priceUsd == null || item.priceUsd === '') return null;
     const value = Number(item.priceUsd);
     if (!Number.isFinite(value) || value === 0) return null;
     return formatFractionalPrice(Decimal.from(value));
@@ -60,8 +60,8 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   return (
     <article
       className={cn(
-        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors",
-        "cursor-pointer hover:bg-white/[0.04]"
+        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
+        'cursor-pointer hover:bg-white/[0.04]',
       )}
       onClick={onOpen}
       role="button"
@@ -124,7 +124,8 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
                 <span className="text-white/60">at</span>
                 <span className="text-white/80 inline-flex items-center gap-0.5">
                   <span>$</span>
-                  <FractionFormatter fractionalPrice={priceFraction} />.
+                  <FractionFormatter fractionalPrice={priceFraction} />
+                  .
                 </span>
               </>
             )}
@@ -150,6 +151,6 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   );
 });
 
-TradeActivityItem.displayName = "TradeActivityItem";
+TradeActivityItem.displayName = 'TradeActivityItem';
 
 export default TradeActivityItem;

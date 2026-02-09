@@ -38,11 +38,11 @@ export type ListedToken = {
 };
 
 export async function getListedTokens(): Promise<ListedToken[] | null> {
-  return safeFetch<ListedToken[]>(`tokens/listed`);
+  return safeFetch<ListedToken[]>('tokens/listed');
 }
 
 export async function getAllTokens(): Promise<any[] | null> {
-  return safeFetch<any[]>(`tokens`);
+  return safeFetch<any[]>('tokens');
 }
 
 export async function getTokenWithUsd(tokenId: string): Promise<any | null> {
@@ -78,5 +78,3 @@ export async function getHistory(params: Record<string, any>): Promise<any[] | n
   const qs = new URLSearchParams(params as any).toString();
   return safeFetch<any[]>(`history?${qs}`);
 }
-
-

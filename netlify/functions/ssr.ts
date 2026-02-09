@@ -127,7 +127,9 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
           title: `${display} – Profile – Superhero`,
           description: truncate(bio || `View ${display} on Superhero, the crypto social network.`, 160),
           canonical: `${ORIGIN}/users/${address}`,
-          jsonLd: { '@context': 'https://schema.org', '@type': 'Person', name: display, identifier: address, description: bio || undefined },
+          jsonLd: {
+            '@context': 'https://schema.org', '@type': 'Person', name: display, identifier: address, description: bio || undefined,
+          },
         };
       }
     } catch {}
@@ -149,7 +151,9 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
           title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 160),
           canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
-          jsonLd: { '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address },
+          jsonLd: {
+            '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address,
+          },
         };
       }
     } catch {}
@@ -164,8 +168,8 @@ function buildHead(meta: Meta): string {
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
   if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property="og:site_name" content="Superhero">`);
-  parts.push(`<meta property="og:type" content="website">`);
+  parts.push('<meta property="og:site_name" content="Superhero">');
+  parts.push('<meta property="og:type" content="website">');
   parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
   if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
@@ -198,11 +202,13 @@ function buildHtml(head: string) {
 function truncate(s: string, n: number): string {
   const str = (s || '').trim();
   if (str.length <= n) return str;
-  return str.slice(0, Math.max(0, n - 1)) + '…';
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
+  return s.replace(/[&<>"]/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  } as any)[c]);
 }
 
 function escapeAttr(s: string): string {

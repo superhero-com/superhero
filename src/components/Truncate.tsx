@@ -1,6 +1,8 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { cn } from '../lib/utils';
+import React, {
+  useMemo, useRef, useEffect, useState,
+} from 'react';
 import { useIsMobile } from '@/hooks';
+import { cn } from '../lib/utils';
 
 // AENS domain constant - could be imported from utils/address.ts if needed
 const AE_AENS_DOMAIN = '.chain';
@@ -12,7 +14,9 @@ interface TruncateProps {
   className?: string;
 }
 
-export function Truncate({ str, fixed = false, right = false, className }: TruncateProps) {
+export const Truncate = ({
+  str, fixed = false, right = false, className,
+}: TruncateProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [overflowAmount, setOverflowAmount] = useState<number>(0);
@@ -20,9 +24,7 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
   const isMobile = useIsMobile();
 
   // Extract name component (remove .chain domain if present)
-  const nameComponent = useMemo(() => {
-    return str?.endsWith(AE_AENS_DOMAIN) ? str.replace(AE_AENS_DOMAIN, '') : str;
-  }, [str]);
+  const nameComponent = useMemo(() => (str?.endsWith(AE_AENS_DOMAIN) ? str.replace(AE_AENS_DOMAIN, '') : str), [str]);
 
   // Calculate overflow amount and responsive animation duration
   useEffect(() => {
@@ -61,23 +63,23 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
   return (
     <div
       className={cn(
-        "flex w-full min-w-0",
-        right && "justify-end",
-        className
+        'flex w-full min-w-0',
+        right && 'justify-end',
+        className,
       )}
     >
       <div
         ref={containerRef}
         className={cn(
-          "flex-1 overflow-hidden whitespace-nowrap",
-          fixed && "text-ellipsis"
+          'flex-1 overflow-hidden whitespace-nowrap',
+          fixed && 'text-ellipsis',
         )}
       >
         <div
           ref={textRef}
           className={cn(
-            "inline-block",
-            !fixed && overflowAmount > 0 && "animate-truncate-scroll"
+            'inline-block',
+            !fixed && overflowAmount > 0 && 'animate-truncate-scroll',
           )}
           style={!fixed && overflowAmount > 0 ? {
             '--animation-translate': `-${overflowAmount}px`,
@@ -85,7 +87,7 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
             '--animation-delay': '1s !important',
           } as React.CSSProperties : undefined}
         >
-          <div className='chain-name text-[14px] md:text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent'>{nameComponent}</div>
+          <div className="chain-name text-[14px] md:text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">{nameComponent}</div>
         </div>
       </div>
       {nameComponent !== str && (
@@ -95,6 +97,6 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
       )}
     </div>
   );
-}
+};
 
 export default Truncate;

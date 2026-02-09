@@ -16,7 +16,7 @@ export class Percent<
   }
 
   nonZeroish(precision: number): this | undefined {
-    const zeroish = `0.${"0".repeat(precision)}5`;
+    const zeroish = `0.${'0'.repeat(precision)}5`;
 
     if (this._percent.absoluteValue?.gte(zeroish)) {
       return this;
@@ -25,18 +25,17 @@ export class Percent<
 
   toString(precision: number): string {
     return (
-      this._percent.toString(precision) +
-      (this._percent.absoluteValue && !this._percent.infinite ? "%" : "")
+      this._percent.toString(precision)
+      + (this._percent.absoluteValue && !this._percent.infinite ? '%' : '')
     );
   }
 
   prettify(): string {
-    if (this._percent.absoluteValue?.gte("1000")) {
+    if (this._percent.absoluteValue?.gte('1000')) {
       return this.toString(0);
-    } else if (this._percent.absoluteValue?.gte("10")) {
+    } if (this._percent.absoluteValue?.gte('10')) {
       return this.toString(1);
-    } else {
-      return this.toString(2);
     }
+    return this.toString(2);
   }
 }

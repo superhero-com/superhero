@@ -12,9 +12,13 @@ export interface AeWebSocketMessage {
 
 export class AeWebSocketService {
   private ws: WebSocket | null = null;
+
   private listeners: Map<string, Set<(message: AeWebSocketMessage) => void>> = new Map();
+
   private reconnectAttempts = 0;
+
   private maxReconnectAttempts = 5;
+
   private reconnectDelay = 1000; // Start with 1 second
 
   constructor(private wsUrl: string) {}
@@ -26,7 +30,7 @@ export class AeWebSocketService {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.wsUrl);
-        
+
         this.ws.onopen = () => {
           this.reconnectAttempts = 0;
           this.reconnectDelay = 1000;
@@ -72,12 +76,12 @@ export class AeWebSocketService {
    */
   subscribe(
     messageType: string,
-    callback: (message: AeWebSocketMessage) => void
+    callback: (message: AeWebSocketMessage) => void,
   ): () => void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, new Set());
     }
-    
+
     const callbacks = this.listeners.get(messageType)!;
     callbacks.add(callback);
 
@@ -96,7 +100,7 @@ export class AeWebSocketService {
   waitForAeEthDeposit(
     aeAccount: string,
     expectedAmount: bigint,
-    timeoutMs: number = 300_000
+    timeoutMs: number = 300_000,
   ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -106,9 +110,9 @@ export class AeWebSocketService {
 
       const unsubscribe = this.subscribe('bridge_deposit', (message) => {
         if (
-          message.account === aeAccount &&
-          message.amount &&
-          BigInt(message.amount) >= expectedAmount
+          message.account === aeAccount
+          && message.amount
+          && BigInt(message.amount) >= expectedAmount
         ) {
           clearTimeout(timeout);
           unsubscribe();
@@ -138,7 +142,7 @@ export class AeWebSocketService {
   private handleMessage(message: AeWebSocketMessage): void {
     const callbacks = this.listeners.get(message.type);
     if (callbacks) {
-      callbacks.forEach(callback => {
+      callbacks.forEach((callback) => {
         try {
           callback(message);
         } catch (error) {
@@ -153,10 +157,10 @@ export class AeWebSocketService {
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
 
     setTimeout(() => {
-      this.connect().catch(error => {
+      this.connect().catch((error) => {
       });
     }, delay);
   }
@@ -171,10 +175,10 @@ export function getWebSocketService(wsUrl?: string): AeWebSocketService {
   if (!globalWsService && wsUrl) {
     globalWsService = new AeWebSocketService(wsUrl);
   }
-  
+
   if (!globalWsService) {
     throw new Error('WebSocket service not initialized. Provide wsUrl on first call.');
   }
-  
+
   return globalWsService;
 }

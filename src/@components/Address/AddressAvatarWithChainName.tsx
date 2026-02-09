@@ -18,6 +18,7 @@ interface AddressAvatarWithChainNameProps {
     // otherwise the address. Useful for compact header displays.
     showPrimaryOnly?: boolean;
     showBalance?: boolean;
+    showBalanceInHover?: boolean;
     truncateAddress?: boolean;
     className?: string;
     isHoverEnabled?: boolean;
@@ -25,6 +26,7 @@ interface AddressAvatarWithChainNameProps {
     hideFallbackName?: boolean;
     secondary?: React.ReactNode;
     contentClassName?: string;
+    variant?: 'default' | 'feed';
 }
 
 export const AddressAvatarWithChainName = memo(({
@@ -34,13 +36,15 @@ export const AddressAvatarWithChainName = memo(({
     showAddressAndChainName = true,
     showPrimaryOnly = false,
     showBalance = false,
+    showBalanceInHover,
     truncateAddress = false,
     className,
     isHoverEnabled = true,
     avatarBackground = false,
     hideFallbackName = false,
     secondary,
-    contentClassName
+    contentClassName,
+    variant = 'default',
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
     
@@ -118,6 +122,9 @@ export const AddressAvatarWithChainName = memo(({
         navigate(`/users/${address}`);
     };
 
+    const resolvedShowBalanceInHover =
+        showBalanceInHover ?? (variant === 'feed' ? showBalance : true);
+
     const renderContent = () => (
         <>
             <div className="relative flex-shrink-0">
@@ -131,8 +138,16 @@ export const AddressAvatarWithChainName = memo(({
             {(() => {
                 const shouldShowText = showPrimaryOnly || showAddressAndChainName || showBalance || !!secondary;
                 if (!shouldShowText) return null;
+                const contentBaseClass =
+                    variant === 'feed'
+                        ? 'flex flex-col items-start min-w-0'
+                        : 'flex flex-col items-start min-w-0 px-[12px] pb-[20px]';
+                const chainNameClass =
+                    variant === 'feed'
+                        ? 'chain-name text-[14px] md:text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent'
+                        : 'chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent';
                 return (
-            <div className={cn("flex flex-col items-start min-w-0 px-[12px] pb-[20px]", contentClassName)}>
+            <div className={cn(contentBaseClass, contentClassName)}>
                 {showPrimaryOnly ? (
                     (() => {
                         const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
@@ -158,7 +173,7 @@ export const AddressAvatarWithChainName = memo(({
                 ) : (
                     showAddressAndChainName && (
                         <>
-                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            <span className={chainNameClass}>
                                 {chainName || (hideFallbackName ? '' : 'Legend')}
                             </span>
                             <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
@@ -173,7 +188,7 @@ export const AddressAvatarWithChainName = memo(({
                     )
                 )}
                 <div>
-                    {showBalance && (
+                                {showBalance && (
                         <div className="text-sm font-bold text-white">
                             {decimalBalance.prettify()} AE
                         </div>
@@ -221,10 +236,12 @@ export const AddressAvatarWithChainName = memo(({
                             </div>
                             <div className="min-w-0 flex-1">
                                 {/* AE Balance */}
-                                <div className="text-xs text-muted-foreground mb-2">
-                                    <span className="font-semibold">AE Balance: </span>
-                                    <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
-                                </div>
+                                {resolvedShowBalanceInHover && (
+                                    <div className="text-xs text-muted-foreground mb-2">
+                                        <span className="font-semibold">AE Balance: </span>
+                                        <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
+                                    </div>
+                                )}
 
                                 {/* Top 3 Token Holdings */}
                                 {aex9Balances.length > 0 && (
@@ -278,13 +295,15 @@ export const AddressAvatarWithChainName = memo(({
         prevProps.showPrimaryOnly === nextProps.showPrimaryOnly &&
         prevProps.showAddressAndChainName === nextProps.showAddressAndChainName &&
         prevProps.showBalance === nextProps.showBalance &&
+        prevProps.showBalanceInHover === nextProps.showBalanceInHover &&
         prevProps.truncateAddress === nextProps.truncateAddress &&
         prevProps.className === nextProps.className &&
         prevProps.isHoverEnabled === nextProps.isHoverEnabled &&
         prevProps.avatarBackground === nextProps.avatarBackground &&
         prevProps.hideFallbackName === nextProps.hideFallbackName &&
         prevProps.secondary === nextProps.secondary &&
-        prevProps.contentClassName === nextProps.contentClassName;
+        prevProps.contentClassName === nextProps.contentClassName &&
+        prevProps.variant === nextProps.variant;
 });
 
 AddressAvatarWithChainName.displayName = 'AddressAvatarWithChainName';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { VOTE_TYPE, VoteState } from 'bctsl-sdk';
 import AddressChip from '@/components/AddressChip';
-import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 
 interface VoteSubjectProps {
   voteState: VoteState;
@@ -38,7 +38,7 @@ export default function VoteSubject({ voteState }: VoteSubjectProps) {
       <span className="font-medium">{subjectText}</span>
       <div className="flex items-center gap-4">
       <span className="text-white/80"> to </span>
-      <AddressAvatarWithChainNameFeed address={beneficiary} />
+      <AddressAvatarWithChainName address={beneficiary} variant="feed" />
       </div>
       
     </div>

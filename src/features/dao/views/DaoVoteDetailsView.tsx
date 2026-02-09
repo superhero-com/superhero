@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 // Custom Components
-import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import TokenSummary from "@/features/bcl/components/TokenSummary";
 import VoteSubject from "@/features/dao/components/VoteSubject";
 import VotersTable from "@/features/dao/components/VotersTable";
@@ -209,7 +209,7 @@ export default function DaoVoteDetailsView() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white/60 font-medium min-w-[120px]">Proposed By:</span>
-                          <AddressAvatarWithChainNameFeed address={voteState.author} />
+                          <AddressAvatarWithChainName address={voteState.author} variant="feed" />
                         </div>
                         
                         {voteState?.create_height && (

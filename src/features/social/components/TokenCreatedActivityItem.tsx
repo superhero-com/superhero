@@ -1,4 +1,4 @@
-import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import { memo, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { linkify } from "../../../utils/linkify";
@@ -64,7 +64,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
     >
       <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
-          <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
+          <AddressAvatarWithChainName address={creator} size={20} overlaySize={12} showAddressAndChainName={false} variant="feed" />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <a
               href={`/users/${creator}`}

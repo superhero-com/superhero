@@ -18,7 +18,6 @@ import TokenInput from './TokenInput';
 import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
-import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from '../../../components/Spinner';
 
@@ -31,7 +30,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const { t } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { activeNetwork } = useAeSdk();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -54,9 +52,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   })
 
   useEffect(() => {
-    console.log('[SwapForm] Pair found:', pair, tokenIn?.address, tokenOut?.address);
     if (pair) {
-      console.log('[SwapForm] Pair found:', pair);
       onPairSelected?.(pair);
     }
   }, [pair, onPairSelected]);
@@ -99,7 +95,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
       return null;
     }
-  }, [activeNetwork.middlewareUrl]);
+  }, []);
 
   // Helper function to find token by address or symbol
   const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
@@ -154,7 +150,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     let cancelled = false;
 
     const initializeTokens = async () => {
-      console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
@@ -215,10 +210,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       tokenOut,
       isExactIn
     };
-    console.log("call debouncedQuote::", params);
     debouncedQuote(params, handleQuoteResult);
-  }, [isExactIn, amountIn, tokenIn, tokenOut]);
-  // }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
+  }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
 
   // Quote for exact-out mode when amountOut or tokens change
   useEffect(() => {
@@ -234,13 +227,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [isExactIn, amountOut, tokenIn, tokenOut, debouncedQuote]);
 
   // Handle quote results
-  useEffect(() => {
-    if (routeInfo.path.length > 0 && isExactIn && amountIn) {
-      // The quote hook should handle updating amountOut
-      // This effect can be used for additional side effects if needed
-    }
-  }, [routeInfo, isExactIn, amountIn]);
-
   const handleSwap = async () => {
     if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
 
@@ -279,8 +265,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       }
     } catch (error) {
       console.error('Swap failed:', error);
-      console.log("======")
-      console.log('Swap failed message:', error.message || error);
     }
   };
 

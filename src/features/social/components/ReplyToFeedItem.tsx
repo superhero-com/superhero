@@ -1,4 +1,4 @@
-import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ import SharePopover from "./SharePopover";
 import PostTipButton from "./PostTipButton";
 import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
-import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
+import { compactTime, fullTimestamp } from "../../../utils/time";
 import AspectMedia from "@/components/AspectMedia";
 
 interface ReplyToFeedItemProps {
@@ -218,10 +218,10 @@ const ReplyToFeedItem = memo(({
       <div className="flex gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={36} overlaySize={16} showAddressAndChainName={false} />
+            <AddressAvatarWithChainName address={authorAddress} size={36} overlaySize={16} showAddressAndChainName={false} variant="feed" />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} />
+            <AddressAvatarWithChainName address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} variant="feed" />
           </div>
         </div>
 
@@ -278,11 +278,12 @@ const ReplyToFeedItem = memo(({
                 <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>
                 <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
                   <div className="translate-y-[2px]">
-                    <AddressAvatarWithChainNameFeed
+                    <AddressAvatarWithChainName
                       address={parent?.sender_address || authorAddress}
                       size={16}
                       overlaySize={12}
                       showAddressAndChainName={false}
+                      variant="feed"
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">

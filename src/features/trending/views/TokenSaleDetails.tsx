@@ -10,7 +10,6 @@ import { useIsMobile } from "@/hooks";
 import TokenNotFound from "../../../components/TokenNotFound";
 
 // Components
-// import CommentsList from "../../../components/Trendminer/CommentsList";
 import TokenTopicFeed from "../../social/components/TokenTopicFeed";
 import TokenTopicComposer from "../../social/components/TokenTopicComposer";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";

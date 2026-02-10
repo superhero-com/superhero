@@ -116,8 +116,10 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     if (!force && isFresh) return;
 
+    // When not forcing, coalesce with in-flight request to avoid duplicate network calls.
+    // When forcing (e.g. after a tx), always run a fresh load so the user sees updated balances.
     const inFlightRequest = accountLoadRequests.get(account);
-    if (inFlightRequest) {
+    if (!force && inFlightRequest) {
       await inFlightRequest;
       return;
     }
@@ -126,12 +128,20 @@ export const useAccountBalances = (selectedAccount: string) => {
       await getAccountBalance();
       await loadAccountAex9Balances();
       accountLastLoadedAt.set(account, Date.now());
-    })().finally(() => {
-      accountLoadRequests.delete(account);
-    });
+    })();
+
+    const cleanup = () => {
+      if (accountLoadRequests.get(account) === request) {
+        accountLoadRequests.delete(account);
+      }
+    };
 
     accountLoadRequests.set(account, request);
-    await request;
+    try {
+      await request;
+    } finally {
+      cleanup();
+    }
   }, [getAccountBalance, loadAccountAex9Balances]);
 
   // Store loadAccountData in a ref to avoid including it in effect dependencies

@@ -107,7 +107,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     // Poll every 1 second for faster account change detection
     const interval = setInterval(checkAccountChange, 1000);
 
-    clearInterval(interval);
+    // eslint-disable-next-line consistent-return
+    return () => {
+      clearInterval(interval);
+    };
   }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
 
   const getCurrentGeneration = useCallback((sdk?: AeSdkAepp) => {

@@ -17,23 +17,57 @@ type QuestionDef = {
 };
 
 const QUESTION_DEFS: QuestionDef[] = [
-  { id: 'what-is-superhero', categoryKey: 'categoryOverview', titleKey: 'qWhatIsSuperheroTitle', answerKey: 'qWhatIsSuperheroAnswer' },
-  { id: 'chat-powered-by-quali', categoryKey: 'categoryChatCommunity', titleKey: 'qChatPoweredByQualiTitle', answerKey: 'qChatPoweredByQualiAnswer' },
-  { id: 'what-is-trending', categoryKey: 'categoryOverview', titleKey: 'qWhatIsTrendingTitle', answerKey: 'qWhatIsTrendingAnswer' },
-  { id: 'quick-start', categoryKey: 'categoryGettingStarted', titleKey: 'qQuickStartTitle', listKeys: ['qQuickStartLi1', 'qQuickStartLi2', 'qQuickStartLi3', 'qQuickStartLi4'] },
-  { id: 'buy-sell', categoryKey: 'categoryTrading', titleKey: 'qBuySellTitle', answerKey: 'qBuySellAnswer' },
-  { id: 'fees', categoryKey: 'categoryTrading', titleKey: 'qFeesTitle', answerKey: 'qFeesAnswer' },
-  { id: 'holders-vs-tx', categoryKey: 'categoryTrading', titleKey: 'qHoldersVsTxTitle', answerKey: 'qHoldersVsTxAnswer' },
-  { id: 'dao', categoryKey: 'categoryDaoGovernance', titleKey: 'qDaoTitle', answerKey: 'qDaoAnswer' },
-  { id: 'governance', categoryKey: 'categoryDaoGovernance', titleKey: 'qGovernanceTitle', answerKey: 'qGovernanceAnswer' },
-  { id: 'social', categoryKey: 'categorySocialFeed', titleKey: 'qSocialTitle', answerKey: 'qSocialAnswer' },
-  { id: 'accounts', categoryKey: 'categoryAccountsRankings', titleKey: 'qAccountsTitle', answerKey: 'qAccountsAnswer' },
-  { id: 'invites', categoryKey: 'categoryInvitesRewards', titleKey: 'qInvitesTitle', answerKey: 'qInvitesAnswer' },
-  { id: 'analytics', categoryKey: 'categoryPricingAnalytics', titleKey: 'qAnalyticsTitle', answerKey: 'qAnalyticsAnswer' },
-  { id: 'wallet', categoryKey: 'categoryWalletSecurity', titleKey: 'qWalletTitle', answerKey: 'qWalletAnswer' },
-  { id: 'risks', categoryKey: 'categoryWalletSecurity', titleKey: 'qRisksTitle', answerKey: 'qRisksAnswer' },
-  { id: 'help', categoryKey: 'categorySupport', titleKey: 'qHelpTitle', answerKey: 'qHelpAnswer' },
-  { id: 'glossary', categoryKey: 'categoryGlossary', titleKey: 'qGlossaryTitle', listKeys: ['qGlossaryLi1', 'qGlossaryLi2', 'qGlossaryLi3', 'qGlossaryLi4'] },
+  {
+    id: 'what-is-superhero', categoryKey: 'categoryOverview', titleKey: 'qWhatIsSuperheroTitle', answerKey: 'qWhatIsSuperheroAnswer',
+  },
+  {
+    id: 'chat-powered-by-quali', categoryKey: 'categoryChatCommunity', titleKey: 'qChatPoweredByQualiTitle', answerKey: 'qChatPoweredByQualiAnswer',
+  },
+  {
+    id: 'what-is-trending', categoryKey: 'categoryOverview', titleKey: 'qWhatIsTrendingTitle', answerKey: 'qWhatIsTrendingAnswer',
+  },
+  {
+    id: 'quick-start', categoryKey: 'categoryGettingStarted', titleKey: 'qQuickStartTitle', listKeys: ['qQuickStartLi1', 'qQuickStartLi2', 'qQuickStartLi3', 'qQuickStartLi4'],
+  },
+  {
+    id: 'buy-sell', categoryKey: 'categoryTrading', titleKey: 'qBuySellTitle', answerKey: 'qBuySellAnswer',
+  },
+  {
+    id: 'fees', categoryKey: 'categoryTrading', titleKey: 'qFeesTitle', answerKey: 'qFeesAnswer',
+  },
+  {
+    id: 'holders-vs-tx', categoryKey: 'categoryTrading', titleKey: 'qHoldersVsTxTitle', answerKey: 'qHoldersVsTxAnswer',
+  },
+  {
+    id: 'dao', categoryKey: 'categoryDaoGovernance', titleKey: 'qDaoTitle', answerKey: 'qDaoAnswer',
+  },
+  {
+    id: 'governance', categoryKey: 'categoryDaoGovernance', titleKey: 'qGovernanceTitle', answerKey: 'qGovernanceAnswer',
+  },
+  {
+    id: 'social', categoryKey: 'categorySocialFeed', titleKey: 'qSocialTitle', answerKey: 'qSocialAnswer',
+  },
+  {
+    id: 'accounts', categoryKey: 'categoryAccountsRankings', titleKey: 'qAccountsTitle', answerKey: 'qAccountsAnswer',
+  },
+  {
+    id: 'invites', categoryKey: 'categoryInvitesRewards', titleKey: 'qInvitesTitle', answerKey: 'qInvitesAnswer',
+  },
+  {
+    id: 'analytics', categoryKey: 'categoryPricingAnalytics', titleKey: 'qAnalyticsTitle', answerKey: 'qAnalyticsAnswer',
+  },
+  {
+    id: 'wallet', categoryKey: 'categoryWalletSecurity', titleKey: 'qWalletTitle', answerKey: 'qWalletAnswer',
+  },
+  {
+    id: 'risks', categoryKey: 'categoryWalletSecurity', titleKey: 'qRisksTitle', answerKey: 'qRisksAnswer',
+  },
+  {
+    id: 'help', categoryKey: 'categorySupport', titleKey: 'qHelpTitle', answerKey: 'qHelpAnswer',
+  },
+  {
+    id: 'glossary', categoryKey: 'categoryGlossary', titleKey: 'qGlossaryTitle', listKeys: ['qGlossaryLi1', 'qGlossaryLi2', 'qGlossaryLi3', 'qGlossaryLi4'],
+  },
 ];
 
 const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
@@ -44,14 +78,16 @@ export default function FAQ() {
     const title = t(q.titleKey);
     const answer: React.ReactNode = q.listKeys
       ? (
-          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
-            {q.listKeys.map((key) => (
-              <li key={key}>{t(key)}</li>
-            ))}
-          </ul>
-        )
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+          {q.listKeys.map((key) => (
+            <li key={key}>{t(key)}</li>
+          ))}
+        </ul>
+      )
       : t(q.answerKey!);
-    return { id: q.id, title, answer, categoryKey: q.categoryKey };
+    return {
+      id: q.id, title, answer, categoryKey: q.categoryKey,
+    };
   }), [t]);
   const categories = useMemo(
     () => CATEGORY_ORDER.filter((key) => questions.some((q) => q.categoryKey === key)),
@@ -143,7 +179,9 @@ const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   </section>
 );
 
-const QAItem = ({ title, answer, expandLabel, collapseLabel }: { title: string; answer: React.ReactNode; expandLabel: string; collapseLabel: string }) => {
+const QAItem = ({
+  title, answer, expandLabel, collapseLabel,
+}: { title: string; answer: React.ReactNode; expandLabel: string; collapseLabel: string }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]">

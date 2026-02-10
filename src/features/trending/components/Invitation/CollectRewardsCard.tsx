@@ -182,6 +182,20 @@ const CollectRewardsCard = () => {
       setInviteesInProgressCount(inProgressCount);
       setInviteeProgress(progressItems);
     } catch (error: any) {
+      const msg = error?.message
+        ?? error?.reason
+        ?? (error?.cause && typeof error.cause === 'object' && (error.cause as any)?.message)
+        ?? String(error);
+      const isKeyNotFound = typeof msg === 'string'
+        && (msg.includes('Key does not exist') || msg.includes('Maps:'));
+      if (isKeyNotFound) {
+        // Account has no invitee data in the contract map yet (never invited or no state)
+        setThresholdReached(false);
+        setInviteesReachedCount(0);
+        setInviteesInProgressCount(0);
+        setInviteeProgress([]);
+        return;
+      }
       console.error('Failed to calculate unique invitees:', error);
       setThresholdReached(false);
       setInviteesReachedCount(0);

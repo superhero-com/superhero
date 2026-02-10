@@ -4,7 +4,9 @@ import {
   walletDetector,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect, useRef, useState,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from '../utils/constants';

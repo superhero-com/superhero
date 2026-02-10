@@ -120,7 +120,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
 
       // Clear the input and reload account data on success
       setCurrentAmount('');
-      loadAccountData();
+      loadAccountData({ force: true });
     } catch (e: any) {
       setError(e.message || `Failed to ${mode} tokens`);
     }

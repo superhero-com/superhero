@@ -3,9 +3,11 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import AddressAvatar from '@/components/AddressAvatar';
 import { AddressFormatted } from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
+import { SuperheroApi } from '@/api/backend';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
@@ -48,6 +50,13 @@ export const AddressAvatarWithChainName = memo(({
   // Use empty string as fallback to ensure hooks are always called with a valid value
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address || '');
   const { chainName } = useChainName(address || '');
+  const { data: cachedProfile } = useQuery({
+    queryKey: ['SuperheroApi.getProfile', address || ''],
+    queryFn: () => SuperheroApi.getProfile(address || ''),
+    enabled: !!address,
+    staleTime: 20_000,
+    refetchOnWindowFocus: false,
+  });
 
   // Hover state management (same as UserBadge)
   const [hover, setHover] = useState(false);
@@ -122,12 +131,20 @@ export const AddressAvatarWithChainName = memo(({
     return null;
   }
 
+  const preferredName = (cachedProfile?.public_name || cachedProfile?.profile?.chain_name || chainName || '').trim();
+  const avatarUrl = (cachedProfile?.profile?.avatarurl || '').trim() || null;
+
   const renderContent = () => (
     <>
       <div className="relative flex-shrink-0">
         <div className="relative">
           <div className="rounded-full overflow-hidden shadow-md">
-            <AddressAvatar address={address} size={size} borderRadius="50%" />
+            <AddressAvatar
+              address={address}
+              imageUrl={avatarUrl}
+              size={size}
+              borderRadius="50%"
+            />
           </div>
         </div>
       </div>
@@ -156,7 +173,7 @@ export const AddressAvatarWithChainName = memo(({
           <div className={cn(contentBaseClass, contentClassName)}>
             {showPrimaryOnly ? (
               (() => {
-                const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
+                const displayName = preferredName || (!hideFallbackName ? 'Legend' : '');
                 return displayName ? (
                   <span
                     className={[
@@ -184,7 +201,7 @@ export const AddressAvatarWithChainName = memo(({
               showAddressAndChainName && (
               <>
                 <span className={chainNameClass}>
-                  {chainName || (hideFallbackName ? '' : 'Legend')}
+                  {preferredName || (hideFallbackName ? '' : 'Legend')}
                 </span>
                 <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
                   <AddressFormatted

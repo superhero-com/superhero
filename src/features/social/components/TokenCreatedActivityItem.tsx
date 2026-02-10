@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
@@ -51,10 +52,11 @@ const TokenCreatedActivityItem = memo(({
   mobileTightTop = false,
   mobileTightBottom = false,
 }: TokenCreatedActivityItemProps) => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { chainNames } = useWallet();
+  const { chainNames, profileDisplayNames } = useWallet();
   const creator = item.sender_address;
-  const displayName = chainNames?.[creator] || 'Legend';
+  const displayName = profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? t('defaultDisplayName');
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 

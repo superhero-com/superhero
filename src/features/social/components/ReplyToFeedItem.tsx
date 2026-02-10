@@ -81,8 +81,8 @@ const ReplyToFeedItem = memo(({
   const { t } = useTranslation(['common', 'social']);
   const postId = item.id;
   const authorAddress = item.sender_address;
-  const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const { chainNames, profileDisplayNames } = useWallet();
+  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -291,7 +291,7 @@ const ReplyToFeedItem = memo(({
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? chainNames?.[parent.sender_address] || t('common:defaultDisplayName') : t('parent')}
+                    {parent ? (profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? t('common:defaultDisplayName')) : t('parent')}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>

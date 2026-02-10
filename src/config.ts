@@ -16,11 +16,15 @@ export type AppConfig = {
   GOVERNANCE_CONTRACT_ADDRESS: Encoded.ContractAddress;
   EXPLORER_URL?: string;
   GIPHY_API_KEY?: string;
+  /** X (Twitter) OAuth 2.0 client id for "Connect X" (PKCE flow). If unset, Connect X is hidden. */
+  X_OAUTH_CLIENT_ID?: string;
+  /** Profile registry contract used for profile writes/reads. */
+  PROFILE_REGISTRY_CONTRACT_ADDRESS?: Encoded.ContractAddress;
 };
 
 const defaultConfig: AppConfig = {
-  BACKEND_URL: 'https://api.superhero.com',
-  SUPERHERO_API_URL: 'https://api.superhero.com',
+  BACKEND_URL: 'http://localhost:3000',
+  SUPERHERO_API_URL: 'http://localhost:3000',
   NODE_URL: 'https://mdw.wordcraft.fun',
   WALLET_URL: 'https://wallet.superhero.com',
   MIDDLEWARE_URL: 'https://mdw.wordcraft.fun/mdw',
@@ -36,6 +40,12 @@ const defaultConfig: AppConfig = {
     'https://governance-server-mainnet.prd.service.aepps.com/',
   GOVERNANCE_CONTRACT_ADDRESS:
     'ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq',
+  X_OAUTH_CLIENT_ID: (process.env as any).VITE_X_OAUTH_CLIENT_ID ?? '',
+  PROFILE_REGISTRY_CONTRACT_ADDRESS: (
+    (import.meta as any)?.env?.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS
+    || (typeof process !== 'undefined' && (process as any).env?.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS)
+    || ''
+  ) as Encoded.ContractAddress,
 };
 
 // Allow local development overrides via Vite env vars set at build time

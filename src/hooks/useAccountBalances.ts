@@ -9,6 +9,10 @@ import { useAeSdk } from './useAeSdk';
 import { Decimal } from '../libs/decimal';
 import { DEX_ADDRESSES, getTokenBalance } from '../libs/dex';
 
+const ACCOUNT_DATA_TTL_MS = 30_000;
+const accountLoadRequests = new Map<string, Promise<void>>();
+const accountLastLoadedAt = new Map<string, number>();
+
 export const useAccountBalances = (selectedAccount: string) => {
   const { sdk } = useAeSdk();
   const [chainNames] = useAtom(chainNamesAtom);
@@ -26,12 +30,16 @@ export const useAccountBalances = (selectedAccount: string) => {
   // Use refs to store stable references and avoid recreating callbacks
   const sdkRef = useRef(sdk);
   const selectedAccountRef = useRef(selectedAccount);
+  const balanceRef = useRef(_balance);
+  const aex9BalancesRef = useRef(_aex9Balances);
 
   // Keep refs updated
   useEffect(() => {
     sdkRef.current = sdk;
     selectedAccountRef.current = selectedAccount;
-  }, [sdk, selectedAccount]);
+    balanceRef.current = _balance;
+    aex9BalancesRef.current = _aex9Balances;
+  }, [sdk, selectedAccount, _balance, _aex9Balances]);
 
   const getAccountBalance = useCallback(async () => {
     const account = selectedAccountRef.current;
@@ -39,7 +47,7 @@ export const useAccountBalances = (selectedAccount: string) => {
     const accountBalance = await sdkRef.current.getBalance(account as any);
     // Convert balance to number if it's a string
     const balanceNum = typeof accountBalance === 'string' ? Number(accountBalance) : accountBalance;
-    setBalance((prev) => ({ ...prev, [account]: balanceNum }));
+    setBalance((prev) => (prev[account] === balanceNum ? prev : { ...prev, [account]: balanceNum }));
   }, [setBalance]);
 
   const loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
@@ -96,12 +104,34 @@ export const useAccountBalances = (selectedAccount: string) => {
     return balances;
   }, [loadAex9DataFromMdw, setAex9Balances]);
 
-  const loadAccountData = useCallback(async () => {
+  const loadAccountData = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
     const account = selectedAccountRef.current;
-    if (account) {
+    if (!account) return;
+
+    const cachedBalance = balanceRef.current[account];
+    const cachedAex9 = aex9BalancesRef.current[account];
+    const hasCachedData = cachedBalance != null && Array.isArray(cachedAex9);
+    const lastLoadedAt = accountLastLoadedAt.get(account) || 0;
+    const isFresh = hasCachedData && Date.now() - lastLoadedAt < ACCOUNT_DATA_TTL_MS;
+
+    if (!force && isFresh) return;
+
+    const inFlightRequest = accountLoadRequests.get(account);
+    if (inFlightRequest) {
+      await inFlightRequest;
+      return;
+    }
+
+    const request = (async () => {
       await getAccountBalance();
       await loadAccountAex9Balances();
-    }
+      accountLastLoadedAt.set(account, Date.now());
+    })().finally(() => {
+      accountLoadRequests.delete(account);
+    });
+
+    accountLoadRequests.set(account, request);
+    await request;
   }, [getAccountBalance, loadAccountAex9Balances]);
 
   // Store loadAccountData in a ref to avoid including it in effect dependencies

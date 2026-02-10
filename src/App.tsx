@@ -41,16 +41,23 @@ const App = () => {
   const { checkWalletConnection } = useWalletConnect();
   // Use a ref to store the latest loadAccountData to avoid dependency issues
   const loadAccountDataRef = useRef(loadAccountData);
+  const checkWalletConnectionRef = useRef(checkWalletConnection);
 
   useEffect(() => {
     initSdk();
   }, [initSdk]);
 
+  // Keep the ref updated with the latest checkWalletConnection function
+  useEffect(() => {
+    checkWalletConnectionRef.current = checkWalletConnection;
+  }, [checkWalletConnection]);
+
+  // Run wallet connection check only when SDK initialization flips to ready
   useEffect(() => {
     if (sdkInitialized) {
-      checkWalletConnection();
+      checkWalletConnectionRef.current();
     }
-  }, [checkWalletConnection, sdkInitialized]);
+  }, [sdkInitialized]);
 
   // Keep the ref updated with the latest loadAccountData function
   useEffect(() => {

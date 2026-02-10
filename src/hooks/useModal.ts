@@ -1,21 +1,21 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { openedModalsAtom, modalActionsAtom, ModalItem } from '../atoms/modalAtoms';
+import { openedModalsAtom, ModalItem } from '../atoms/modalAtoms';
 
 export const useModal = () => {
   const [openedModals, setOpenedModals] = useAtom(openedModalsAtom);
 
   const openModal = useCallback((modal: Omit<ModalItem, 'key'>) => {
     const key = Date.now();
-    setOpenedModals(prev => [...prev, { ...modal, key }]);
-  }, []);
+    setOpenedModals((prev) => [...prev, { ...modal, key }]);
+  }, [setOpenedModals]);
 
   const closeModal = useCallback((key: number) => {
-    setOpenedModals(prev => prev.filter(modal => modal.key !== key));
-  }, []);
+    setOpenedModals((prev) => prev.filter((modal) => modal.key !== key));
+  }, [setOpenedModals]);
 
   const closeAllModals = useCallback(() => {
-    openedModals.forEach(modal => {
+    openedModals.forEach((modal) => {
       closeModal(modal.key);
     });
   }, [openedModals, closeModal]);
@@ -23,7 +23,7 @@ export const useModal = () => {
   return {
     // State
     openedModals,
-    
+
     // Actions
     openModal,
     closeModal,

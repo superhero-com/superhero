@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+/* eslint-disable */
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DexPairService, DexService, DexTokenDto, PairDto } from '../../../api/generated';
+import { useQuery } from '@tanstack/react-query';
+import {
+  DexPairService, DexService, DexTokenDto, PairDto,
+} from '../../../api/generated';
 import DexSettings from '../../../features/dex/components/DexSettings';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import ConnectWalletButton from '../../ConnectWalletButton';
@@ -18,9 +24,7 @@ import TokenInput from './TokenInput';
 import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
-import { useAeSdk } from '../../../hooks/useAeSdk';
-import { useQuery } from '@tanstack/react-query';
-import Spinner from '../../../components/Spinner';
+import Spinner from '../../Spinner';
 
 export interface SwapFormProps {
   onPairSelected?: (pair: PairDto) => void;
@@ -31,7 +35,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const { t } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { activeNetwork } = useAeSdk();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -47,16 +50,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       if (!tokenIn || !tokenOut) return null;
       return DexPairService.getPairByFromTokenAndToToken({
         fromToken: tokenIn.address == 'AE' ? DEX_ADDRESSES.wae : tokenIn.address,
-        toToken: tokenOut.address == 'AE' ? DEX_ADDRESSES.wae : tokenOut.address
+        toToken: tokenOut.address == 'AE' ? DEX_ADDRESSES.wae : tokenOut.address,
       });
     },
     enabled: !!tokenIn?.address && !!tokenOut?.address,
-  })
+  });
 
   useEffect(() => {
-    console.log('[SwapForm] Pair found:', pair, tokenIn?.address, tokenOut?.address);
     if (pair) {
-      console.log('[SwapForm] Pair found:', pair);
       onPairSelected?.(pair);
     }
   }, [pair, onPairSelected]);
@@ -75,7 +76,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const [searchOut, setSearchOut] = useState('');
 
   // Quote and execution
-  const { quoteLoading, error, routeInfo, debouncedQuote } = useSwapQuote();
+  const {
+    quoteLoading, error, routeInfo, debouncedQuote,
+  } = useSwapQuote();
   const { loading: swapLoading, swapStep, executeSwap } = useSwapExecution();
 
   const handleQuoteResult = (result: { amountOut?: string; amountIn?: string; path: string[]; priceImpact?: number }) => {
@@ -96,10 +99,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       const _token = DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
-      console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
       return null;
     }
-  }, [activeNetwork.middlewareUrl]);
+  }, []);
 
   // Helper function to find token by address or symbol
   const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
@@ -107,11 +109,11 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
     // If identifier is 'AE', find the AE token
     if (identifier === 'AE') {
-      return tokens.find(t => t.is_ae) || null;
+      return tokens.find((t) => t.is_ae) || null;
     }
 
     // First, try to find in the local token list
-    const localToken = tokens.find(t => t.address === identifier);
+    const localToken = tokens.find((t) => t.address === identifier);
     if (localToken) return localToken;
 
     // If not found locally and it looks like a contract address, fetch from middleware
@@ -143,7 +145,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
 
     // Update the URL without causing a page reload
-    const newUrl = `${location.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const newUrl = `${location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     navigate(newUrl, { replace: true });
   }, [location.pathname, location.search, navigate]);
 
@@ -154,7 +156,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     let cancelled = false;
 
     const initializeTokens = async () => {
-      console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
@@ -213,12 +214,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       amountOut,
       tokenIn,
       tokenOut,
-      isExactIn
+      isExactIn,
     };
-    console.log("call debouncedQuote::", params);
     debouncedQuote(params, handleQuoteResult);
-  }, [isExactIn, amountIn, tokenIn, tokenOut]);
-  // }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
+  }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
 
   // Quote for exact-out mode when amountOut or tokens change
   useEffect(() => {
@@ -228,30 +227,21 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       amountOut,
       tokenIn,
       tokenOut,
-      isExactIn
+      isExactIn,
     };
     debouncedQuote(params, handleQuoteResult);
   }, [isExactIn, amountOut, tokenIn, tokenOut, debouncedQuote]);
 
   // Handle quote results
-  useEffect(() => {
-    if (routeInfo.path.length > 0 && isExactIn && amountIn) {
-      // The quote hook should handle updating amountOut
-      // This effect can be used for additional side effects if needed
-    }
-  }, [routeInfo, isExactIn, amountIn]);
-
   const handleSwap = async () => {
     if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
 
     // Additional validation before executing swap
     if (routeInfo.path.length === 0) {
-      console.error('No valid route found for swap');
       return;
     }
 
     if (error) {
-      console.error('Cannot execute swap with existing quote error:', error);
       return;
     }
 
@@ -260,7 +250,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       // Display amounts (amountIn/amountOut) are ratio-based for correct pricing display
       const executionAmountOut = routeInfo.routerAmountOut || amountOut;
       const executionAmountIn = routeInfo.routerAmountIn || amountIn;
-      
+
       const txHash = await executeSwap({
         amountIn: isExactIn ? amountIn : executionAmountIn,
         amountOut: isExactIn ? executionAmountOut : amountOut,
@@ -269,7 +259,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         path: routeInfo.path,
         slippagePct,
         deadlineMins,
-        isExactIn
+        isExactIn,
       });
 
       if (txHash) {
@@ -279,15 +269,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       }
     } catch (error) {
       console.error('Swap failed:', error);
-      console.log("======")
-      console.log('Swap failed message:', error.message || error);
     }
   };
 
   const filteredInTokens = useMemo(() => {
     const term = searchIn.trim().toLowerCase();
-    const matches = (t: DexTokenDto) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const matches = (t: DexTokenDto) => !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
@@ -300,8 +287,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   const filteredOutTokens = useMemo(() => {
     const term = searchOut.trim().toLowerCase();
-    const matches = (t: DexTokenDto) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const matches = (t: DexTokenDto) => !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
@@ -353,10 +339,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
     // Check if we have a meaningful output amount
     const hasValidOutput = amountOut && Number(amountOut) > 0;
-    
+
     // If we don't have a valid output and no route was found, it's likely no liquidity
     const hasNoRoute = routeInfo.path.length === 0;
-    
+
     return !hasValidOutput || hasNoRoute;
   }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length, routeInfo.liquidityStatus]);
 
@@ -378,7 +364,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
             aria-label={t('labels.openSettings', { ns: 'common' })}
             className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
           >
-            ⚙️ {t('swap.settings')}
+            ⚙️
+            {' '}
+            {t('swap.settings')}
           </button>
         </DexSettings>
       </div>
@@ -471,10 +459,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       {/* Insufficient Balance Warning */}
       {hasInsufficientBalance && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {t('swap.insufficientBalance', { 
-            symbol: tokenIn?.symbol || '', 
-            needed: Decimal.from(amountIn || '0').prettify(), 
-            have: balances.in ? Decimal.from(balances.in).prettify() : '0' 
+          {t('swap.insufficientBalance', {
+            symbol: tokenIn?.symbol || '',
+            needed: Decimal.from(amountIn || '0').prettify(),
+            have: balances.in ? Decimal.from(balances.in).prettify() : '0',
           })}
         </div>
       )}

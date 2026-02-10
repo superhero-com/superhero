@@ -1,17 +1,22 @@
-import { useState } from "react";
-import { 
-  CollectRewardsCard, 
-  InvitationList, 
-  InviteAndEarnCard 
-} from "../../features/trending/components/Invitation";
-import Shell from "../../components/layout/Shell";
-import { useAeSdk } from "../../hooks";
+/* eslint-disable
+  react/function-component-definition,
+  react/button-has-type,
+  no-empty
+*/
+import { useState } from 'react';
+import {
+  CollectRewardsCard,
+  InvitationList,
+  InviteAndEarnCard,
+} from '../../features/trending/components/Invitation';
+import Shell from '../../components/layout/Shell';
+import { useAeSdk } from '../../hooks';
 
 export default function Invite() {
   const { activeAccount } = useAeSdk();
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("invite_info_dismissed") !== "1";
+      return localStorage.getItem('invite_info_dismissed') !== '1';
     } catch {
       return true;
     }
@@ -38,7 +43,7 @@ export default function Invite() {
             <button
               onClick={() => {
                 try {
-                  localStorage.setItem("invite_info_dismissed", "1");
+                  localStorage.setItem('invite_info_dismissed', '1');
                 } catch { }
                 setShowInfo(false);
               }}

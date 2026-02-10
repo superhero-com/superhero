@@ -1,18 +1,19 @@
+/* eslint-disable */
 import { useRef, useState } from 'react';
+import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
+import BigNumber from 'bignumber.js';
 import { useAeSdk } from '../../../hooks';
 import {
   DEX_ADDRESSES,
   fetchPairReserves,
   fromAettos,
   initDexContracts,
-  toAettos
+  toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { getPriceImpactForRoute } from '../../../libs/swapUtils';
 import { RouteInfo, SwapQuoteParams } from '../types/dex';
-import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
 import { Decimal } from '../../../libs/decimal';
-import BigNumber from 'bignumber.js';
 
 // Helper types
 interface PairWithReserves {
@@ -64,7 +65,7 @@ function calculateDirectPairAmount(
   params: SwapQuoteParams,
   pair: PairWithReserves,
   tokenInAddr: string,
-  tokenOutAddr: string
+  tokenOutAddr: string,
 ): {
   amountOut?: string;
   amountIn?: string;
@@ -104,40 +105,39 @@ function calculateDirectPairAmount(
       liquidityStatus = {
         exceedsLiquidity: true,
         maxAvailable: maxAvailableDecimal.toString(),
-        pairAddress: pair.address
+        pairAddress: pair.address,
       };
     } else {
       liquidityStatus = { exceedsLiquidity: false, pairAddress: pair.address };
     }
 
     return { amountOut, maxOut, liquidityStatus };
-  } else {
-    const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-    const amountOutAettosBN = new BigNumber(amountOutAettos.toString());
-    const calculatedAmountInAettosBN = amountOutAettosBN.div(ratio);
-    const calculatedAmountInAettos = BigInt(calculatedAmountInAettosBN.toFixed(0));
-    const amountIn = fromAettos(calculatedAmountInAettosBN.toFixed(0), params.tokenIn.decimals);
-
-    let maxOut: string | undefined;
-    let liquidityStatus: LiquidityStatus | undefined;
-
-    if (calculatedAmountInAettos > reserveInAettos) {
-      const maxAvailableInAettos = reserveInAettos;
-      const maxAvailableInDecimal = Decimal.from(fromAettos(maxAvailableInAettos, params.tokenIn.decimals));
-      const maxAvailableInAettosBN = new BigNumber(maxAvailableInAettos.toString());
-      const maxAvailableOutAettosBN = maxAvailableInAettosBN.multipliedBy(ratio);
-      maxOut = fromAettos(maxAvailableOutAettosBN.toFixed(0), params.tokenOut.decimals);
-      liquidityStatus = {
-        exceedsLiquidity: true,
-        maxAvailable: maxAvailableInDecimal.toString(),
-        pairAddress: pair.address
-      };
-    } else {
-      liquidityStatus = { exceedsLiquidity: false, pairAddress: pair.address };
-    }
-
-    return { amountIn, maxOut, liquidityStatus };
   }
+  const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
+  const amountOutAettosBN = new BigNumber(amountOutAettos.toString());
+  const calculatedAmountInAettosBN = amountOutAettosBN.div(ratio);
+  const calculatedAmountInAettos = BigInt(calculatedAmountInAettosBN.toFixed(0));
+  const amountIn = fromAettos(calculatedAmountInAettosBN.toFixed(0), params.tokenIn.decimals);
+
+  let maxOut: string | undefined;
+  let liquidityStatus: LiquidityStatus | undefined;
+
+  if (calculatedAmountInAettos > reserveInAettos) {
+    const maxAvailableInAettos = reserveInAettos;
+    const maxAvailableInDecimal = Decimal.from(fromAettos(maxAvailableInAettos, params.tokenIn.decimals));
+    const maxAvailableInAettosBN = new BigNumber(maxAvailableInAettos.toString());
+    const maxAvailableOutAettosBN = maxAvailableInAettosBN.multipliedBy(ratio);
+    maxOut = fromAettos(maxAvailableOutAettosBN.toFixed(0), params.tokenOut.decimals);
+    liquidityStatus = {
+      exceedsLiquidity: true,
+      maxAvailable: maxAvailableInDecimal.toString(),
+      pairAddress: pair.address,
+    };
+  } else {
+    liquidityStatus = { exceedsLiquidity: false, pairAddress: pair.address };
+  }
+
+  return { amountIn, maxOut, liquidityStatus };
 }
 
 /**
@@ -146,7 +146,7 @@ function calculateDirectPairAmount(
 function calculateMultiHopAmount(
   params: SwapQuoteParams,
   pathPairs: PairWithReserves[],
-  path: string[]
+  path: string[],
 ): {
   amountOut?: string;
   amountIn?: string;
@@ -178,28 +178,27 @@ function calculateMultiHopAmount(
       currentAmount = Decimal.from(fromAettos(nextAmountAettosBN.toFixed(0), nextDecimals));
     }
     return { amountOut: currentAmount.toString() };
-  } else {
-    // Backward calculation: divide ratios
-    for (let i = pathPairs.length - 1; i >= 0; i--) {
-      const pair = pathPairs[i];
-      const currentTokenAddr = path[i + 1];
-      const prevTokenAddr = path[i];
-      const isToken0ToToken1 = pair.token0.address === prevTokenAddr && pair.token1.address === currentTokenAddr;
-
-      const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-      const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
-
-      if (!reserveIn || !reserveOut) continue;
-
-      const hopRatio = calculateRatio(reserveIn, reserveOut);
-      const currentAmountAettos = toAettos(currentAmount.toString(), isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals);
-      const currentAmountAettosBN = new BigNumber(currentAmountAettos.toString());
-      const prevAmountAettosBN = currentAmountAettosBN.div(hopRatio);
-      const prevDecimals = isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals;
-      currentAmount = Decimal.from(fromAettos(prevAmountAettosBN.toFixed(0), prevDecimals));
-    }
-    return { amountIn: currentAmount.toString() };
   }
+  // Backward calculation: divide ratios
+  for (let i = pathPairs.length - 1; i >= 0; i--) {
+    const pair = pathPairs[i];
+    const currentTokenAddr = path[i + 1];
+    const prevTokenAddr = path[i];
+    const isToken0ToToken1 = pair.token0.address === prevTokenAddr && pair.token1.address === currentTokenAddr;
+
+    const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
+    const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
+
+    if (!reserveIn || !reserveOut) continue;
+
+    const hopRatio = calculateRatio(reserveIn, reserveOut);
+    const currentAmountAettos = toAettos(currentAmount.toString(), isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals);
+    const currentAmountAettosBN = new BigNumber(currentAmountAettos.toString());
+    const prevAmountAettosBN = currentAmountAettosBN.div(hopRatio);
+    const prevDecimals = isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals;
+    currentAmount = Decimal.from(fromAettos(prevAmountAettosBN.toFixed(0), prevDecimals));
+  }
+  return { amountIn: currentAmount.toString() };
 }
 
 /**
@@ -209,7 +208,7 @@ function checkMultiHopLiquidity(
   params: SwapQuoteParams,
   pathPairs: PairWithReserves[],
   path: string[],
-  calculatedAmountIn?: string
+  calculatedAmountIn?: string,
 ): {
   maxOut?: string;
   liquidityStatus?: LiquidityStatus;
@@ -229,13 +228,13 @@ function checkMultiHopLiquidity(
 
   const amountInAettos = toAettos(
     params.isExactIn ? params.amountIn : (calculatedAmountIn || '0'),
-    params.tokenIn.decimals
+    params.tokenIn.decimals,
   );
   const reserveAettos = BigInt(reserveToCheck);
 
   if (amountInAettos <= reserveAettos) {
     return {
-      liquidityStatus: { exceedsLiquidity: false, pairAddress: firstPair.address }
+      liquidityStatus: { exceedsLiquidity: false, pairAddress: firstPair.address },
     };
   }
 
@@ -270,8 +269,8 @@ function checkMultiHopLiquidity(
     liquidityStatus: {
       exceedsLiquidity: true,
       maxAvailable: fromAettos(reserveAettos, params.tokenIn.decimals),
-      pairAddress: firstPair.address
-    }
+      pairAddress: firstPair.address,
+    },
   };
 }
 
@@ -285,7 +284,7 @@ export function useSwapQuote() {
 
   async function buildBestPath(
     tokenIn: DexTokenDto,
-    tokenOut: DexTokenDto
+    tokenOut: DexTokenDto,
   ): Promise<{
     path: string[] | null;
     pairData?: {
@@ -293,8 +292,6 @@ export function useSwapQuote() {
       paths?: PairDto[][];
     };
   }> {
-    console.log('[dex] Building best path', { tokenIn, tokenOut });
-
     if (isAeToWae(tokenIn, tokenOut)) {
       return { path: [DEX_ADDRESSES.wae] };
     }
@@ -307,33 +304,22 @@ export function useSwapQuote() {
 
       if (!tokenInAddr || !tokenOutAddr) return { path: null };
 
-      console.info('[dex] Building best path', {
-        from: tokenIn.symbol,
-        to: tokenOut.symbol,
-        fromAddr: tokenInAddr,
-        toAddr: tokenOutAddr
-      });
-
       // Use the providers API endpoint to find swap routes
       try {
         const result = await DexPairService.findPairsForTokens({
           fromToken: tokenInAddr,
-          toToken: tokenOutAddr
+          toToken: tokenOutAddr,
         });
-
-        console.info('[dex] Querying providers API for routes…');
-        console.log('[dex] Providers API response::', result);
 
         // Check for direct pairs first
         if (result?.hasDirectPath && result?.directPairs?.length) {
           const directPair = result.directPairs[0];
-          console.info('[dex] Direct pair found via providers API', { directPair });
           return {
             path: [tokenInAddr, tokenOutAddr],
             pairData: {
               directPairs: result.directPairs as PairDto[],
-              paths: result.paths
-            }
+              paths: result.paths,
+            },
           };
         }
 
@@ -344,30 +330,28 @@ export function useSwapQuote() {
 
           for (const pair of firstPath) {
             const last = hops[hops.length - 1];
-            const next =
-              pair.token0?.address === last
-                ? pair.token1?.address
-                : pair.token1?.address === last
-                  ? pair.token0?.address
-                  : null;
+            const next = pair.token0?.address === last
+              ? pair.token1?.address
+              : pair.token1?.address === last
+                ? pair.token0?.address
+                : null;
 
             if (!next) break;
             hops.push(next);
           }
 
           if (hops[hops.length - 1] === tokenOutAddr) {
-            console.info('[dex] Route found via providers API', { hops });
             return {
               path: hops,
               pairData: {
                 directPairs: result.directPairs,
-                paths: result.paths
-              }
+                paths: result.paths,
+              },
             };
           }
         }
       } catch (e) {
-        console.warn('[dex] Providers API route discovery failed, falling back to on-chain', e);
+        // Ignore provider route discovery failures and fall back to on-chain.
       }
 
       // Fallback via contracts
@@ -375,7 +359,6 @@ export function useSwapQuote() {
       const { factory } = await initDexContracts(sdk);
       const direct = await fetchPairReserves(sdk, factory, tokenInAddr, tokenOutAddr);
       if (direct) {
-        console.info('[dex] Direct pair found');
         return { path: [tokenInAddr, tokenOutAddr] };
       }
 
@@ -383,24 +366,19 @@ export function useSwapQuote() {
         const legA = await fetchPairReserves(sdk, factory, tokenInAddr, DEX_ADDRESSES.wae);
         const legB = await fetchPairReserves(sdk, factory, DEX_ADDRESSES.wae, tokenOutAddr);
         if (legA && legB) {
-          console.info('[dex] Two-leg route via WAE found');
           return { path: [tokenInAddr, DEX_ADDRESSES.wae, tokenOutAddr] };
         }
       }
-
-      console.info('[dex] No route found');
       return { path: null };
     } catch (e) {
-      console.warn('[dex] Failed to build path', e);
       return { path: null };
     }
   }
 
   async function refreshQuote(
     params: SwapQuoteParams,
-    onQuoteResult?: (result: QuoteResult) => void
+    onQuoteResult?: (result: QuoteResult) => void,
   ): Promise<QuoteResult> {
-    console.log('[dex] Refresh quote', { params });
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
@@ -410,7 +388,9 @@ export function useSwapQuote() {
     }
 
     if (Number(drivingAmount) === 0) {
-      const result: QuoteResult = { amountOut: '', amountIn: '', path: [], priceImpact: 0 };
+      const result: QuoteResult = {
+        amountOut: '', amountIn: '', path: [], priceImpact: 0,
+      };
       setRouteInfo({ path: [], priceImpact: 0 });
       onQuoteResult?.(result);
       return result;
@@ -428,13 +408,13 @@ export function useSwapQuote() {
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
         const path = [
           params.tokenIn.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae,
-          params.tokenOut.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae
+          params.tokenOut.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae,
         ];
         const result: QuoteResult = {
           amountOut: params.isExactIn ? params.amountIn : undefined,
           amountIn: params.isExactIn ? undefined : params.amountOut,
           path,
-          priceImpact: 0
+          priceImpact: 0,
         };
 
         if (seq === quoteSeqRef.current) {
@@ -446,20 +426,12 @@ export function useSwapQuote() {
         return result;
       }
 
-      console.info('[dex] Quoting amount out…', {
-        amountIn: params.amountIn,
-        tokenIn: params.tokenIn.symbol,
-        tokenOut: params.tokenOut.symbol
-      });
-
       const tokenInAddr = getTokenAddress(params.tokenIn);
       const tokenOutAddr = getTokenAddress(params.tokenOut);
 
       const { path, pairData } = await buildBestPath(params.tokenIn, params.tokenOut);
 
       if (!path) throw new Error('No route found');
-
-      console.info('[dex] Using path for quote', { path, pairData });
 
       let amountOut: string | undefined;
       let amountIn: string | undefined;
@@ -502,7 +474,7 @@ export function useSwapQuote() {
           const outAettos = decodedResult[decodedResult.length - 1];
           routerAmountOut = fromAettos(outAettos, params.tokenOut.decimals);
         } catch (e) {
-          console.warn('[dex] Failed to get router amounts_out, using ratio-based calculation', e);
+          // Ignore and fall back to ratio-based calculation.
         }
       } else if (!params.isExactIn && amountIn !== undefined) {
         try {
@@ -511,7 +483,7 @@ export function useSwapQuote() {
           const inAettos = decodedResult[0];
           routerAmountIn = fromAettos(inAettos, params.tokenIn.decimals);
         } catch (e) {
-          console.warn('[dex] Failed to get router amounts_in, using ratio-based calculation', e);
+          // Ignore and fall back to ratio-based calculation.
         }
       }
 
@@ -544,36 +516,29 @@ export function useSwapQuote() {
         priceImpact = undefined;
       }
 
-      console.info('[dex] Quote result', {
-        path,
-        amountIn: params.amountIn || amountIn,
-        amountOut,
-        maxOut,
-        routerAmountOut,
-        routerAmountIn,
-        liquidityStatus
-      });
-
       if (seq === quoteSeqRef.current) {
         setRouteInfo({
           path,
           priceImpact,
           pairData: pairData
             ? {
-                directPairs: pairData.directPairs as any,
-                paths: pairData.paths as any
-              }
+              directPairs: pairData.directPairs as any,
+              paths: pairData.paths as any,
+            }
             : undefined,
           liquidityStatus,
           routerAmountOut: routerAmountOut || amountOut,
-          routerAmountIn: routerAmountIn || amountIn
+          routerAmountIn: routerAmountIn || amountIn,
         });
-        onQuoteResult?.({ amountOut, amountIn, path, priceImpact, maxOut });
+        onQuoteResult?.({
+          amountOut, amountIn, path, priceImpact, maxOut,
+        });
       }
 
-      return { amountOut, amountIn, path, priceImpact, maxOut };
+      return {
+        amountOut, amountIn, path, priceImpact, maxOut,
+      };
     } catch (e: any) {
-      console.warn('[dex] Quote failed', e);
       if (seq === quoteSeqRef.current) {
         setError(errorToUserMessage(e, { action: 'quote' }));
       }
@@ -586,7 +551,7 @@ export function useSwapQuote() {
   const debouncedQuote = (
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
-    delay = 300
+    delay = 300,
   ) => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
     quoteTimerRef.current = window.setTimeout(() => {
@@ -600,6 +565,6 @@ export function useSwapQuote() {
     routeInfo,
     refreshQuote,
     debouncedQuote,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
   };
 }

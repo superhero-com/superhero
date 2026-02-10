@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { DAO, initFallBack, TokenSale, Vote, VoteMetadata } from 'bctsl-sdk';
-import { Encoded, toAe } from '@aeternity/aepp-sdk';
-import { Contract } from '@aeternity/aepp-sdk';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
+import {
+  DAO, initFallBack, TokenSale, Vote, VoteMetadata,
+} from 'bctsl-sdk';
+import { Encoded, toAe, Contract } from '@aeternity/aepp-sdk';
 import type { ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useAtom } from 'jotai';
@@ -21,12 +24,12 @@ export interface DAOState {
 export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const { sdk } = useAeSdk();
   const [activeAccount] = useAtom(activeAccountAtom);
-  
+
   // Refs for contract instances
   const tokenSaleFactoryRef = useRef<TokenSale>();
   const tokenInstanceRef = useRef<Contract<ContractMethodsBase>>();
   const daoRef = useRef<DAO>();
-  
+
   // State
   const [state, setState] = useState<DAOState>();
   const [balance, setBalance] = useState<number>();
@@ -59,8 +62,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
         const balanceResult = await tokenInstanceRef.current.balance(activeAccount);
         setUserTokenBalance(balanceResult.decodedResult || 0n);
       }
-    } catch (error) {
-      console.error('Error updating DAO state:', error);
+    } catch {
+      // Ignore DAO state update errors
     }
   }, [activeAccount]);
 
@@ -74,10 +77,10 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
         tokenInstanceRef.current = await tokenSaleFactoryRef.current.tokenContractInstance();
         daoRef.current = await tokenSaleFactoryRef.current.checkAndGetDAO();
       }
-      
+
       await updateState();
-    } catch (error) {
-      console.error('Error initializing DAO:', error);
+    } catch {
+      // Ignore DAO init errors
     }
   }, [sdk, tokenSaleAddress, updateState]);
 
@@ -87,8 +90,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
       const vote = await daoRef.current.addVote(metadata);
       await updateState();
       return vote;
-    } catch (error) {
-      console.error('Error adding vote:', error);
+    } catch {
+      // Ignore vote add errors
       return undefined;
     }
   }, [updateState]);

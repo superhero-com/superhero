@@ -9,39 +9,90 @@ type Meta = {
   ogType?: string;
 };
 
-const ORIGIN = 'https://superhero.com';
 const API_BASE = 'https://api.superhero.com';
 
-export default async (request: Request, context: any) => {
-  try {
-    const url = new URL(request.url);
-    const pathname = url.pathname;
+function truncate(s: string, n: number): string {
+  const str = (s || '').trim();
+  if (str.length <= n) return str;
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
+}
 
-    const res = await context.next();
-    // Only inject into HTML documents
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) return res;
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  } as Record<string, string>)[c]);
+}
 
-  const html = await res.text();
+function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/'/g, '&#39;');
+}
 
-  const meta = await buildMeta(pathname, url);
-  const injected = injectHead(html, meta, url.origin);
+function absolutize(url?: string, origin?: string): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('//')) return `https:${url}`;
+  if (url.startsWith('/')) return `${origin || ''}${url}`;
+  return `${origin || ''}/${url}`;
+}
 
-    const newHeaders = new Headers(res.headers);
-    newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));
-    return new Response(injected, { status: res.status, headers: newHeaders });
-  } catch (_e) {
-    // On any error, continue with the original response
-    return context.next();
+async function fetchPostBySegment(baseApi: string, seg: string): Promise<any | null> {
+  const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
+  const r = await fetch(url, { headers: { accept: 'application/json' } });
+  if (r.ok) return r.json();
+  return null;
+}
+
+function injectHead(html: string, meta: Meta, origin: string): string {
+  const parts: string[] = [];
+  parts.push(`<title>${escapeHtml(meta.title)}</title>`);
+  if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
+  if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
+  parts.push('<meta property="og:site_name" content="Superhero">');
+  parts.push(`<meta property="og:type" content="${escapeAttr(meta.ogType || 'website')}">`);
+  parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
+  if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
+  if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
+  parts.push(
+    `<meta property="og:image" content="${escapeAttr(
+      absolutize(meta.ogImage, origin) || `${origin}/og-default.png`,
+    )}">`,
+  );
+  parts.push('<meta property="og:image:width" content="1200">');
+  parts.push('<meta property="og:image:height" content="630">');
+  parts.push(`<meta name="twitter:card" content="${meta.ogImage ? 'summary_large_image' : 'summary'}">`);
+  parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
+  if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
+  parts.push(
+    `<meta name="twitter:image" content="${escapeAttr(
+      absolutize(meta.ogImage, origin) || `${origin}/og-default.png`,
+    )}">`,
+  );
+  let jsonLdArray: Record<string, unknown>[] = [];
+  if (Array.isArray(meta.jsonLd)) {
+    jsonLdArray = meta.jsonLd;
+  } else if (meta.jsonLd) {
+    jsonLdArray = [meta.jsonLd];
   }
-};
+  jsonLdArray.forEach((schema) => {
+    parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+  });
+
+  const injection = parts.join('\n');
+  const idx = html.indexOf('</head>');
+  if (idx === -1) return html;
+  return `${html.slice(0, idx)}\n${injection}\n${html.slice(idx)}`;
+}
 
 async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   // Root
   if (pathname === '/' || pathname === '') {
+    const rootDescription = [
+      'Discover crypto-native conversations, trending tokens, and on-chain activity.',
+      'Join the æternity-powered social network.',
+    ].join(' ');
     return {
       title: 'Superhero.com – The All‑in‑One Social + Crypto App',
-      description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
+      description: rootDescription,
       canonical: `${fullUrl.origin}/`,
       ogImage: `${fullUrl.origin}/og-default.png`,
       jsonLd: {
@@ -55,9 +106,13 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
 
   // Trends page
   if (pathname === '/trends' || pathname === '/trends/tokens') {
+    const trendsDescription = [
+      'Discover and tokenize trending topics.',
+      'Trade tokens, build communities, and own the hype on Superhero.',
+    ].join(' ');
     return {
       title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
-      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      description: trendsDescription,
       canonical: `${fullUrl.origin}/trends/tokens`,
       ogImage: `${fullUrl.origin}/og-default.png`,
       jsonLd: {
@@ -74,18 +129,12 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   if (postMatch) {
     const segment = postMatch[1];
     const baseApi = API_BASE.replace(/\/$/, '');
-    async function fetchPostBySegment(seg: string): Promise<any | null> {
-      const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
-      const r = await fetch(url, { headers: { accept: 'application/json' } });
-      if (r.ok) return r.json();
-      return null;
-    }
     try {
       // Try direct by segment (works for slug or id)
-      let data: any | null = await fetchPostBySegment(segment);
+      let data: any | null = await fetchPostBySegment(baseApi, segment);
       // If not found and bare numeric id, try with _v3
       if (!data && /^\d+$/.test(segment)) {
-        data = await fetchPostBySegment(`${segment}_v3`);
+        data = await fetchPostBySegment(baseApi, `${segment}_v3`);
       }
       // If still not found, try search by slug/content and refetch by id
       if (!data) {
@@ -95,7 +144,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
           const sdata: any = await sr.json();
           const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
           if (first?.id) {
-            data = await fetchPostBySegment(String(first.id));
+            data = await fetchPostBySegment(baseApi, String(first.id));
           }
         }
       }
@@ -127,7 +176,9 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
           },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return {
       title: 'Post – Superhero',
       canonical: `${fullUrl.origin}/post/${segment}`,
@@ -162,7 +213,9 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
           },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return {
       title: `${address} – Profile – Superhero`,
       canonical: `${fullUrl.origin}/users/${address}`,
@@ -183,7 +236,11 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const data: any = await r.json();
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
-        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo) as string | undefined, fullUrl.origin);
+        const rawTokenImg = data?.logo_url || data?.image_url || data?.logo;
+        const tokenImg = absolutize(
+          rawTokenImg as string | undefined,
+          fullUrl.origin,
+        );
         return {
           title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 200),
@@ -199,7 +256,9 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
           },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return {
       title: `Buy #${address} on Superhero.com`,
       canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
@@ -214,52 +273,26 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   };
 }
 
-function injectHead(html: string, meta: Meta, origin: string): string {
-  const parts: string[] = [];
-  parts.push(`<title>${escapeHtml(meta.title)}</title>`);
-  if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
-  if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property="og:site_name" content="Superhero">`);
-  parts.push(`<meta property="og:type" content="${escapeAttr(meta.ogType || 'website')}">`);
-  parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
-  if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
-  if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(absolutize(meta.ogImage, origin) || `${origin}/og-default.png`)}\">`);
-  parts.push(`<meta property=\"og:image:width\" content=\"1200\">`);
-  parts.push(`<meta property=\"og:image:height\" content=\"630\">`);
-  parts.push(`<meta name="twitter:card" content="${meta.ogImage ? 'summary_large_image' : 'summary'}">`);
-  parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
-  if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
-  parts.push(`<meta name=\"twitter:image\" content=\"${escapeAttr(absolutize(meta.ogImage, origin) || `${origin}/og-default.png`)}\">`);
-  const jsonLdArray = Array.isArray(meta.jsonLd) ? meta.jsonLd : meta.jsonLd ? [meta.jsonLd] : [];
-  for (const schema of jsonLdArray) {
-    parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+export default async (request: Request, context: any) => {
+  try {
+    const url = new URL(request.url);
+    const { pathname } = url;
+
+    const res = await context.next();
+    // Only inject into HTML documents
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) return res;
+
+    const html = await res.text();
+
+    const meta = await buildMeta(pathname, url);
+    const injected = injectHead(html, meta, url.origin);
+
+    const newHeaders = new Headers(res.headers);
+    newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));
+    return new Response(injected, { status: res.status, headers: newHeaders });
+  } catch {
+    // On any error, continue with the original response
+    return context.next();
   }
-
-  const injection = parts.join('\n');
-  const idx = html.indexOf('</head>');
-  if (idx === -1) return html;
-  return html.slice(0, idx) + '\n' + injection + '\n' + html.slice(idx);
-}
-
-function truncate(s: string, n: number): string {
-  const str = (s || '').trim();
-  if (str.length <= n) return str;
-  return str.slice(0, Math.max(0, n - 1)) + '…';
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
-}
-
-function escapeAttr(s: string): string {
-  return escapeHtml(s).replace(/'/g, '&#39;');
-}
-
-function absolutize(url?: string, origin?: string): string | undefined {
-  if (!url) return undefined;
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('//')) return `https:${url}`;
-  if (url.startsWith('/')) return `${origin || ''}${url}`;
-  return `${origin || ''}/${url}`;
-}
+};

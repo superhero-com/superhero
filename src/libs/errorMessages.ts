@@ -12,7 +12,7 @@ export type ErrorContext = {
  * Convert low-level SDK/contract errors into concise, user-friendly messages.
  */
 export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string {
-  const t = (key: string, options?: any) => i18n.t(key, { ns: 'errors', ...options });
+  const t = (key: string, options?: any) => String(i18n.t(key, { ns: 'errors', ...options }));
   const raw = String((err as any)?.message || String(err || ''));
   const lc = raw.toLowerCase();
 
@@ -71,7 +71,7 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
     }
     return t('insufficientEthBalanceGeneric');
   }
-  
+
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
     return t('insufficientBalance');
   }
@@ -130,9 +130,11 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
     case 'quote':
       return t('quoteFailed');
     case 'swap':
+    {
       // In development, include the raw error for debugging
       const debugInfo = process.env.NODE_ENV === 'development' && raw ? ` (Debug: ${raw.slice(0, 100)})` : '';
       return t('swapFailed', { debugInfo });
+    }
     case 'add-liquidity':
       return t('addLiquidityFailed');
     case 'remove-liquidity':
@@ -145,5 +147,3 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
       return t('genericError');
   }
 }
-
-

@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useAccount } from '@/hooks';
-import { Decimal } from '../../../libs/decimal';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Decimal } from '../../../libs/decimal';
 import {
   tokenTradeTokenAtom,
   userBalanceAtom,
@@ -48,7 +48,7 @@ export function useTokenTradeStore() {
   const priceImpactDiff = useAtomValue(priceImpactDiffAtom);
   const priceImpactPercent = useAtomValue(priceImpactPercentAtom);
   const estimatedNextTokenPriceImpactDifferenceFormattedPercentage = useAtomValue(
-    estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
   );
 
   // Computed: spendableAeBalance (similar to Pinia store)
@@ -66,11 +66,9 @@ export function useTokenTradeStore() {
   })();
 
   // Computed: isInsufficientBalance
-  const isInsufficientBalance = (() => {
-    return isBuying
-      ? Decimal.from(tokenA || 0).gt(spendableAeBalance)
-      : Decimal.from(tokenB || 0).gt(Decimal.from(userBalance || 0));
-  })();
+  const isInsufficientBalance = (() => (isBuying
+    ? Decimal.from(tokenA || 0).gt(spendableAeBalance)
+    : Decimal.from(tokenB || 0).gt(Decimal.from(userBalance || 0))))();
 
   // Actions (similar to Pinia store methods) - using direct setters
   const switchTradeView = (state: boolean) => setIsBuying(state);

@@ -1,17 +1,3 @@
-import BigNumber from 'bignumber.js';
-
-export function shiftDecimalPlaces(amount: string | number, decimals: number) {
-  return new BigNumber(amount || 0).shiftedBy(decimals);
-}
-
-export function formatTokenAmount(
-  amount: string | number,
-  decimals: number = 18,
-  round: number = 2,
-) {
-  return shiftDecimalPlaces(amount, -decimals).toFixed(round);
-}
-
 // Generic formatter used across the app (cards, leaderboards, etc.)
 export function formatNumber(num: number | string | undefined, decimals = 2) {
   const n = Number(num);
@@ -24,7 +10,7 @@ export function formatNumber(num: number | string | undefined, decimals = 2) {
 
   // Handle very small magnitudes symmetrically for positive/negative values.
   // For |n| < 10^-decimals, show as "< threshold" or ">-threshold" instead of 0.00 / -0.00.
-  const threshold = Math.pow(10, -decimals);
+  const threshold = 10 ** -decimals;
   const thresholdStr = threshold.toFixed(decimals);
   if (value < threshold) {
     return negative ? `>-${thresholdStr}` : `< ${thresholdStr}`;
@@ -67,5 +53,3 @@ export function formatCompactNumber(
 
   return negative ? `-${formatted}` : formatted;
 }
-
-

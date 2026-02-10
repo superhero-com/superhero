@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
-import { cn } from '../lib/utils';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { cn } from '../lib/utils';
 
 interface BaseMobileInputProps {
   label?: string;
@@ -25,21 +25,21 @@ interface MobileSelectProps extends BaseMobileInputProps, Omit<React.SelectHTMLA
 type MobileInputComponentProps = MobileInputProps | MobileSelectProps;
 
 const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInputComponentProps>(
-  ({ 
-    label, 
-    error, 
-    helperText, 
-    leftIcon, 
-    rightIcon, 
-    variant = 'default', 
+  ({
+    label,
+    error,
+    helperText,
+    leftIcon,
+    rightIcon,
+    variant = 'default',
     size = 'medium',
     className = '',
     as = 'input',
     children,
-    ...props 
+    ...props
   }, ref) => {
     const inputId = React.useId();
-    
+
     const baseInputClasses = cn(
       // Base styles
       'w-full font-inherit transition-all duration-200 outline-none',
@@ -66,41 +66,47 @@ const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInput
       error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
       // Icon padding adjustments
       leftIcon && 'pl-14 sm:pl-13',
-      rightIcon && 'pr-14 sm:pr-13'
+      rightIcon && 'pr-14 sm:pr-13',
     );
 
     const iconClasses = cn(
-      'absolute flex items-center justify-center text-white/60 pointer-events-none z-10 min-w-6 text-center'
+      'absolute flex items-center justify-center text-white/60 pointer-events-none z-10 min-w-6 text-center',
     );
+    const selectValue = (
+      props as React.SelectHTMLAttributes<HTMLSelectElement>
+    ).value as string | undefined;
+    const handleSelectChange = (value: string) => {
+      (props as any).onChange?.({ target: { value } } as any);
+    };
 
     return (
       <div className={cn('flex flex-col gap-2 w-full', className)}>
         {label && (
-          <label 
-            htmlFor={inputId} 
+          <label
+            htmlFor={inputId}
             className={cn(
               'text-sm font-medium mb-1 text-[var(--standard-font-color)]',
               'sm:text-xs',
               // Focus-within color change
               'peer-focus-within:text-green-500',
-              error && 'text-red-500'
+              error && 'text-red-500',
             )}
           >
             {label}
           </label>
         )}
-        
+
         <div className="relative flex items-center w-full peer">
           {leftIcon && (
             <div className={cn(iconClasses, 'left-5 sm:left-4')}>
               {leftIcon}
             </div>
           )}
-          
+
           {as === 'select' ? (
             <AppSelect
-              value={(props as React.SelectHTMLAttributes<HTMLSelectElement>).value as string | undefined}
-              onValueChange={(v) => (props as any).onChange?.({ target: { value: v } } as any)}
+              value={selectValue}
+              onValueChange={handleSelectChange}
               triggerClassName={baseInputClasses}
             >
               {React.Children.map(children, (child) => {
@@ -122,25 +128,26 @@ const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInput
               {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
             />
           )}
-          
+
           {rightIcon && (
             <div className={cn(iconClasses, 'right-5 sm:right-4')}>
               {rightIcon}
             </div>
           )}
         </div>
-        
+
         {(error || helperText) && (
           <div className={cn(
             'text-xs leading-relaxed sm:text-xs',
-            error ? 'text-red-500' : 'text-white/60'
-          )}>
+            error ? 'text-red-500' : 'text-white/60',
+          )}
+          >
             {error || helperText}
           </div>
         )}
       </div>
     );
-  }
+  },
 );
 
 MobileInput.displayName = 'MobileInput';

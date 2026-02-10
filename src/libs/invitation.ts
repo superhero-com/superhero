@@ -28,7 +28,9 @@ export function addGeneratedInvites(inviter: string, items: Array<{ invitee: str
   const now = Date.now();
   const list = readAll();
   items.forEach(({ invitee, secretKey, amount }) => {
-    list.unshift({ inviter, invitee, secretKey, amount, date: now });
+    list.unshift({
+      inviter, invitee, secretKey, amount, date: now,
+    });
   });
   writeAll(list);
 }
@@ -48,7 +50,5 @@ export function getSecretKeyByInvitee(inviter: string, invitee: string): string 
 }
 
 export function prepareInviteLink(secretKey: string) {
-  return `${location.protocol}//${location.host}#invite_code=${secretKey}`;
+  return `${window.location.protocol}//${window.location.host}#invite_code=${secretKey}`;
 }
-
-

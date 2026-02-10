@@ -1,20 +1,20 @@
 interface LeaderboardSkeletonProps {
   rows?: number;
-  variant?: "table" | "card";
+  variant?: 'table' | 'card';
 }
 
-export function LeaderboardSkeleton({
+export const LeaderboardSkeleton = ({
   rows = 5,
-  variant = "table",
-}: LeaderboardSkeletonProps) {
-  const items = Array.from({ length: rows });
+  variant = 'table',
+}: LeaderboardSkeletonProps) => {
+  const items = Array.from({ length: rows }, (_, idx) => `row-${idx + 1}`);
 
-  if (variant === "card") {
+  if (variant === 'card') {
     return (
       <div className="flex flex-col gap-3">
-        {items.map((_, index) => (
+        {items.map((rowKey) => (
           <div
-            key={index}
+            key={rowKey}
             className="animate-pulse flex flex-col gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.01]"
           >
             <div className="flex items-center gap-3">
@@ -36,9 +36,9 @@ export function LeaderboardSkeleton({
 
   return (
     <div className="flex flex-col gap-2">
-      {items.map((_, index) => (
+      {items.map((rowKey) => (
         <div
-          key={index}
+          key={rowKey}
           className="animate-pulse grid grid-cols-[60px,minmax(0,2fr),minmax(0,1fr),minmax(0,1fr)] items-center py-3 px-3 border border-white/5 rounded-xl bg-white/[0.01]"
         >
           <div className="w-6 h-4 rounded bg-white/[0.06] mx-auto" />
@@ -52,6 +52,4 @@ export function LeaderboardSkeleton({
       ))}
     </div>
   );
-}
-
-
+};

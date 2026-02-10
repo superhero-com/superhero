@@ -31,9 +31,8 @@ export class QualiChatService {
     return fetch(url).then((res) => {
       if (res.status === 200) {
         return res.json();
-      } else {
-        throw res;
       }
+      throw res;
     });
   }
 
@@ -50,5 +49,3 @@ export class QualiChatService {
     });
   }
 }
-
-

@@ -1,5 +1,4 @@
 // Views
-export { default as Pool } from './views/Pool';
 export * from './views';
 
 // Layout

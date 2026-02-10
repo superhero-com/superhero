@@ -1,5 +1,7 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '../ui/dialog';
 import { Button } from '../ui/button';
 import { useWallet } from '../../hooks';
 
@@ -9,10 +11,10 @@ interface TokenSelectProps {
   onClose: () => void;
 }
 
-export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProps) {
+const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
   const { tokenInfo } = useWallet();
   const tokens = Object.entries(tokenInfo || {});
-  
+
   const handleSelect = (token: string) => {
     onSelect(token);
     onClose();
@@ -24,7 +26,7 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
         <DialogHeader>
           <DialogTitle className="text-white">Select Token</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-3 py-4 max-h-96 overflow-y-auto">
           <Button
             variant="ghost"
@@ -41,7 +43,7 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
               </div>
             </div>
           </Button>
-          
+
           {tokens.map(([address, info]: any) => (
             <Button
               key={address}
@@ -54,7 +56,10 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
                   {info?.symbol?.slice(0, 2) || '??'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium">#{info?.symbol || 'Unknown'}</div>
+                  <div className="font-medium">
+                    #
+                    {info?.symbol || 'Unknown'}
+                  </div>
                   <div className="text-xs text-gray-400 truncate">{address}</div>
                 </div>
               </div>
@@ -64,6 +69,6 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
       </DialogContent>
     </Dialog>
   );
-}
+};
 
-
+export default TokenSelect;

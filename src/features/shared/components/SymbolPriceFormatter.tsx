@@ -1,7 +1,7 @@
 import React from 'react';
-import { Decimal } from '../../../libs/decimal';
-import FractionFormatter, { FormattedFractionalPrice } from './FractionFormatter';
 import { formatFractionalPrice } from '@/utils/common';
+import { Decimal } from '../../../libs/decimal';
+import FractionFormatter from './FractionFormatter';
 import Spinner from '../../../components/Spinner';
 
 interface SymbolPriceFormatterProps {
@@ -16,7 +16,7 @@ interface SymbolPriceFormatterProps {
 
 const COIN_SYMBOL = 'AE';
 
-export default function SymbolPriceFormatter({
+const SymbolPriceFormatter = ({
   aePrice,
   symbol = COIN_SYMBOL,
   priceLoading = false,
@@ -24,23 +24,22 @@ export default function SymbolPriceFormatter({
   priceJustIncreased = false,
   priceJustDecreased = false,
   className = '',
-}: SymbolPriceFormatterProps) {
+}: SymbolPriceFormatterProps) => (
+  <div className={`inline-flex items-center ${className}`}>
+    {priceJustIncreased && (
+    <span className="text-green-400 mr-1">↗</span>
+    )}
+    {priceJustDecreased && (
+    <span className="text-red-400 mr-1">↘</span>
+    )}
+    <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} />
+    {priceLoading && (
+    <Spinner className="w-4 h-4 ml-2" />
+    )}
+    {!hideSymbol && !priceLoading && (
+    <span className="pl-1 ">{symbol}</span>
+    )}
+  </div>
+);
 
-  return (
-    <div className={`inline-flex items-center ${className}`}>
-      {priceJustIncreased && (
-        <span className="text-green-400 mr-1">↗</span>
-      )}
-      {priceJustDecreased && (
-        <span className="text-red-400 mr-1">↘</span>
-      )}
-      <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} />
-      {priceLoading && (
-        <Spinner className="w-4 h-4 ml-2" />
-      )}
-      {!hideSymbol && !priceLoading && (
-        <span className="pl-1 ">{symbol}</span>
-      )}
-    </div>
-  );
-}
+export default SymbolPriceFormatter;

@@ -1,47 +1,46 @@
-import { TokensService } from "@/api/generated/services/TokensService";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import TokenListTable from "@/features/trending/components/TokenListTable";
-import { DataTablePagination } from "@/features/shared/components/DataTable/DataTablePagination";
+import { TokensService } from '@/api/generated/services/TokensService';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import TokenListTable from '@/features/trending/components/TokenListTable';
+import { DataTablePagination } from '@/features/shared/components/DataTable/DataTablePagination';
 
 interface AccountCreatedTokenProps {
   address: string;
   tab: string;
 }
 
-export default function AccountCreatedToken({
+const AccountCreatedToken = ({
   address,
   tab,
-}: AccountCreatedTokenProps) {
+}: AccountCreatedTokenProps) => {
   const { t } = useTranslation('trending');
   // Token list sorting state shared by Owned/Created
   const [orderBy, setOrderBy] = useState<
-    "market_cap" | "name" | "price" | "created_at" | "holders_count"
-  >("market_cap");
-  const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("DESC");
+    'market_cap' | 'name' | 'price' | 'created_at' | 'holders_count'
+  >('market_cap');
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   // Created tokens (paged like Owned tab)
   const { data: createdResp, isFetching: loadingCreated } = useQuery({
     queryKey: [
-      "TokensService.listAll",
-      "created",
+      'TokensService.listAll',
+      'created',
       address,
       orderBy,
       orderDirection,
       page,
       limit,
     ],
-    enabled: !!address && tab === "created",
-    queryFn: () =>
-      TokensService.listAll({
-        creatorAddress: address,
-        orderBy,
-        orderDirection,
-        limit,
-        page,
-      }) as unknown as Promise<{ items: any[]; meta?: any }>,
+    enabled: !!address && tab === 'created',
+    queryFn: () => TokensService.listAll({
+      creatorAddress: address,
+      orderBy,
+      orderDirection,
+      limit,
+      page,
+    }) as unknown as Promise<{ items: any[]; meta?: any }>,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
     refetchOnMount: false, // Use cached data when switching tabs
@@ -64,24 +63,26 @@ export default function AccountCreatedToken({
         orderBy={orderBy as any}
         orderDirection={orderDirection}
         onSort={(key) => {
-          if (key === "newest") {
-            setOrderBy("created_at");
-            setOrderDirection("DESC");
+          if (key === 'newest') {
+            setOrderBy('created_at');
+            setOrderDirection('DESC');
             setPage(1);
-          } else if (key === "oldest") {
-            setOrderBy("created_at");
-            setOrderDirection("ASC");
+          } else if (key === 'oldest') {
+            setOrderBy('created_at');
+            setOrderDirection('ASC');
             setPage(1);
           } else if (key === orderBy) {
-            setOrderDirection(orderDirection === "DESC" ? "ASC" : "DESC");
+            setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
             setPage(1);
           } else {
             setOrderBy(key as any);
-            setOrderDirection("DESC");
+            setOrderDirection('DESC');
             setPage(1);
           }
         }}
-        rankOffset={((createdResp?.meta?.currentPage || page) - 1) * (createdResp?.meta?.itemsPerPage || limit)}
+        rankOffset={(
+          (createdResp?.meta?.currentPage || page) - 1
+        ) * (createdResp?.meta?.itemsPerPage || limit)}
       />
       <div className="mt-2">
         {createdResp?.meta && (
@@ -98,4 +99,6 @@ export default function AccountCreatedToken({
       </div>
     </div>
   );
-}
+};
+
+export default AccountCreatedToken;

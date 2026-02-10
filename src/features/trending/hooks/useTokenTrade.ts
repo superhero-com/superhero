@@ -1,7 +1,7 @@
-import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -10,9 +10,8 @@ import {
   calculateSellReturn,
   calculateTokensFromAE,
   toAe,
-  toDecimals
+  toDecimals,
 } from '../../../utils/bondingCurve';
-import { TokenDto } from '@/api/generated/models/TokenDto';
 import {
   setupContractInstance,
   fetchUserTokenBalance,
@@ -31,14 +30,22 @@ interface UseTokenTradeProps {
 }
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
-  const { sdk, activeAccount, staticAeSdk } = useAeSdk();
+  const {
+    sdk, aeSdk, activeAccount, staticAeSdk,
+  } = useAeSdk();
   const queryClient = useQueryClient();
-  
+
   // Use the new token trade store
   const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
   const errorMessage = useRef<string | undefined>();
+
+  const getConnectedWalletAddress = useCallback(() => {
+    // eslint-disable-next-line no-underscore-dangle
+    const currentAccounts = (aeSdk as any)?._accounts?.current || {};
+    return Object.keys(currentAccounts)[0] as string | undefined;
+  }, [aeSdk]);
 
   // Calculate next price using bonding curve
   const calculateNextPrice = useCallback((currentSupply: Decimal) => {
@@ -56,7 +63,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       console.error('Error calculating bonding curve price:', error);
       store.updateNextPrice(Decimal.ZERO);
     }
-  }, []);
+  }, [store]);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -84,18 +91,16 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         );
         currentSupply = currentSupply.add(tokenAmountCostDecimal.toString());
       }
+    } else if (_isUsingToken) {
+      currentSupply = currentSupply.sub(Decimal.from(amount));
+      tokenAmountCostDecimal = Decimal.from(
+        toAe(calculateSellReturn(tokenSupply, tokenAmountBigNumber)),
+      );
     } else {
-      if (_isUsingToken) {
-        currentSupply = currentSupply.sub(Decimal.from(amount));
-        tokenAmountCostDecimal = Decimal.from(
-          toAe(calculateSellReturn(tokenSupply, tokenAmountBigNumber)),
-        );
-      } else {
-        tokenAmountCostDecimal = Decimal.from(
-          calculateTokensFromAE(tokenSupply, amount).toFixed(2),
-        );
-        currentSupply = currentSupply.sub(tokenAmountCostDecimal.toString());
-      }
+      tokenAmountCostDecimal = Decimal.from(
+        calculateTokensFromAE(tokenSupply, amount).toFixed(2),
+      );
+      currentSupply = currentSupply.sub(tokenAmountCostDecimal.toString());
     }
 
     calculateNextPrice(currentSupply);
@@ -114,7 +119,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       if (!token.sale_address) return null;
       const currentSdk = sdk || staticAeSdk;
       if (!currentSdk) return null;
-      
+
       try {
         return await setupContractInstance(currentSdk, token);
       } catch (error) {
@@ -126,6 +131,11 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const getTokenSaleInstance = useCallback(
+    () => getContractInstances().tokenSaleInstance || contractInstances?.tokenSaleInstance,
+    [contractInstances?.tokenSaleInstance],
+  );
+
   // Fetch user balance when account or contract changes
   const { data: fetchedUserBalance } = useQuery({
     queryKey: ['tokenTrade', 'userBalance', token.sale_address, activeAccount],
@@ -133,12 +143,12 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       if (!contractInstances?.tokenSaleInstance || !activeAccount || !token) {
         return '0';
       }
-      
+
       try {
         return await fetchUserTokenBalance(
           contractInstances.tokenSaleInstance,
           token,
-          activeAccount
+          activeAccount,
         );
       } catch (error) {
         console.error('Error fetching user balance:', error);
@@ -154,39 +164,37 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     if (fetchedUserBalance !== undefined) {
       store.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance]);
+  }, [fetchedUserBalance, store]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
     if (
       // store.tokenA === undefined ||
       // store.tokenA <= 0 ||
-      !store.tokenAFocused ||
-      !tokenRef.current.sale_address ||
-      !contractInstances?.tokenSaleInstance
+      !store.tokenAFocused
+      || !tokenRef.current.sale_address
+      || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-    if ( store.tokenA === undefined || store.tokenA <= 0) {
+    if (store.tokenA === undefined || store.tokenA <= 0) {
       store.updateTokenB(undefined);
       return;
     }
     const calculatedTokenB = calculateTokenCost(
       store.tokenA,
       store.isBuying,
-      !store.isBuying
+      !store.isBuying,
     );
-    console.log('calculatedTokenB', calculatedTokenB);
-
     store.updateTokenB(calculatedTokenB);
-  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+  }, [store, store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
-  // Watch tokenB changes and calculate tokenA automatically  
+  // Watch tokenB changes and calculate tokenA automatically
   useEffect(() => {
     if (
-      store.tokenAFocused ||
-      !tokenRef.current.sale_address ||
-      !contractInstances?.tokenSaleInstance
+      store.tokenAFocused
+      || !tokenRef.current.sale_address
+      || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
@@ -197,11 +205,11 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     const calculatedTokenA = calculateTokenCost(
       store.tokenB,
       store.isBuying,
-      store.isBuying
+      store.isBuying,
     );
 
     store.updateTokenA(calculatedTokenA);
-  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+  }, [store, store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {
     store.resetFormData(true);
@@ -231,20 +239,43 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     }
   }, [store]);
 
-
   // Calculate protocol DAO reward for buying
   const protocolTokenReward = useCallback((): number => {
     if (!store.isBuying) return 0;
     const aeValue = store.isBuying ? store.tokenA || 0 : store.tokenB || 0;
     return Math.round(
-      (1 - PROTOCOL_DAO_AFFILIATION_FEE) * PROTOCOL_DAO_TOKEN_AE_RATIO * aeValue * 100
+      (1 - PROTOCOL_DAO_AFFILIATION_FEE) * PROTOCOL_DAO_TOKEN_AE_RATIO * aeValue * 100,
     ) / 100;
   }, [store.isBuying, store.tokenA, store.tokenB]);
+
+  // Handle transaction completion
+  const onTransactionComplete = useCallback(async () => {
+    queryClient.invalidateQueries({
+      queryKey: ['TokensService.findByAddress', token.sale_address],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
+    });
+
+    // Refetch user balance
+    const saleInstance = getTokenSaleInstance();
+    if (saleInstance && activeAccount) {
+      const balance = await fetchUserTokenBalance(
+        saleInstance,
+        token,
+        activeAccount,
+      );
+      store.updateUserBalance(balance);
+      return balance;
+    }
+    return '0';
+  }, [queryClient, getTokenSaleInstance, activeAccount, token, store]);
 
   // Buy tokens
   const buy = useCallback(async () => {
     errorMessage.current = undefined;
-    if (!contractInstances?.tokenSaleInstance) {
+    const saleInstance = getTokenSaleInstance();
+    if (!saleInstance) {
       errorMessage.current = 'Contract not initialized';
       return;
     }
@@ -256,19 +287,19 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
     store.updateLoadingTransaction(true);
     try {
-      const buyResult = await contractInstances.tokenSaleInstance.buy(
+      const buyResult = await saleInstance.buy(
         store.tokenB,
         undefined,
         store.slippage,
       ) as any;
-      
+
       const mints: any[] = buyResult.decodedEvents.filter((data: any) => data.name === 'Mint');
-      const _userBalance = await onTransactionComplete();
+      const userBalanceValue = await onTransactionComplete();
       const protocolSymbol = await getTokenSymbolName(
-        mints[0].contract.address, 
-        CONFIG.MIDDLEWARE_URL
+        mints[0].contract.address,
+        CONFIG.MIDDLEWARE_URL,
       );
-      
+
       store.updateSuccessTxData({
         isBuying: true,
         destAmount: Decimal.from(toAe(mints.at(-1).args[1])),
@@ -278,18 +309,19 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         symbol: token.symbol || '',
         protocolReward: Decimal.from(toAe(mints[0].args[1])),
         protocolSymbol,
-        userBalance: Decimal.from(_userBalance),
+        userBalance: Decimal.from(userBalanceValue),
       });
     } catch (error: any) {
       errorMessage.current = error?.message;
     }
     store.updateLoadingTransaction(false);
-  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
+  }, [getTokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   // Sell tokens
   const sell = useCallback(async () => {
     errorMessage.current = undefined;
-    if (!contractInstances?.tokenSaleInstance) {
+    const saleInstance = getTokenSaleInstance();
+    if (!saleInstance) {
       errorMessage.current = 'Contract not initialized';
       return;
     }
@@ -303,18 +335,18 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     try {
       store.updateIsAllowSelling(true);
 
-      const countTokenDecimals = await contractInstances.tokenSaleInstance.createSellAllowance(
+      const countTokenDecimals = await saleInstance.createSellAllowance(
         store.tokenA?.toString(),
       );
 
       store.updateIsAllowSelling(false);
 
-      const sellResult = await contractInstances.tokenSaleInstance.sellWithExistingAllowance(
+      const sellResult = await saleInstance.sellWithExistingAllowance(
         countTokenDecimals,
         store.slippage,
       ) as any;
-      
-      const _userBalance = await onTransactionComplete();
+
+      const userBalanceValue = await onTransactionComplete();
       store.updateSuccessTxData({
         isBuying: false,
         destAmount: Decimal.from(
@@ -324,7 +356,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           toAe(sellResult.decodedEvents.find((data: any) => data.name === 'Sell').args[0]),
         ),
         symbol: token.symbol || '',
-        userBalance: Decimal.from(_userBalance),
+        userBalance: Decimal.from(userBalanceValue),
       });
 
       await onTransactionComplete();
@@ -332,36 +364,25 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       errorMessage.current = error?.message;
     }
     store.updateLoadingTransaction(false);
-  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
-
-  // Handle transaction completion
-  const onTransactionComplete = useCallback(async () => {
-    queryClient.invalidateQueries({
-      queryKey: ['TokensService.findByAddress', token.sale_address],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
-    });
-    
-    // Refetch user balance
-    if (contractInstances?.tokenSaleInstance && activeAccount) {
-      const balance = await fetchUserTokenBalance(
-        contractInstances.tokenSaleInstance,
-        token,
-        activeAccount
-      );
-      store.updateUserBalance(balance);
-      return balance;
-    }
-    return '0';
-  }, [queryClient, token.sale_address, contractInstances?.tokenSaleInstance, activeAccount, token, store]);
+  }, [getTokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
     store.updateLoadingTransaction(true);
     errorMessage.current = undefined;
-    
+
     try {
-      if (!sdk || !activeAccount) {
+      const connectedWalletAddress = getConnectedWalletAddress();
+      const normalizedActiveAccount = typeof activeAccount === 'string' && activeAccount.startsWith('ak_')
+        ? activeAccount
+        : undefined;
+      const normalizedConnectedWalletAddress = typeof connectedWalletAddress === 'string' && connectedWalletAddress.startsWith('ak_')
+        ? connectedWalletAddress
+        : undefined;
+
+      // After refresh, wallet account sync can lag behind persisted account state.
+      // Prefer wallet signer when available, otherwise fallback to static/deeplink signer.
+      const signingSdk = normalizedConnectedWalletAddress ? aeSdk : staticAeSdk;
+      if (!signingSdk || !normalizedActiveAccount) {
         throw new Error('Wallet not connected');
       }
 
@@ -369,12 +390,9 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       tokenRef.current = tokenToTrade;
       store.updateToken(tokenToTrade);
 
-      // Setup contract if needed
-      if (contractInstances?.tokenSaleInstance?.address !== tokenToTrade.sale_address) {
-        // Contract will be setup by the query hook
-        await setupContractInstance(sdk, tokenToTrade);
-        return;
-      }
+      // Rebind contract calls to the signer SDK selected above.
+      // This prevents undefined signer state right after page refresh.
+      await setupContractInstance(signingSdk, tokenToTrade);
 
       if (store.isBuying) {
         await buy();
@@ -388,7 +406,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       // Reset form data
       store.resetFormData();
     }
-  }, [sdk, activeAccount, contractInstances?.tokenSaleInstance, store, buy, sell]);
+  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell]);
 
   return {
     // State
@@ -403,7 +421,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     slippage: store.slippage,
     errorMessage: errorMessage.current,
     successTxData: store.successTxData,
-    
+
     // Computed values
     averageTokenPrice: store.averageTokenPrice,
     priceImpactDiff: store.priceImpactDiff,
@@ -412,10 +430,10 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     protocolTokenReward: protocolTokenReward(),
     spendableAeBalance: store.spendableAeBalance,
     isInsufficientBalance: store.isInsufficientBalance,
-    
+
     // Contract instances
     contractInstances,
-    
+
     // Actions
     resetFormState,
     switchTradeView,

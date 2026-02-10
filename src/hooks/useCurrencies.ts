@@ -12,14 +12,14 @@ import { ICurrency, CurrencyCode as AllCurrencyCode } from '../utils/types';
 
 /**
  * useCurrencies - React hook for currency management and conversion
- * 
+ *
  * This hook provides functionality equivalent to the Vue composable:
  * - Managing current currency selection
  * - Fetching AE price data from backend API
  * - Converting AE amounts to fiat currencies
  * - Formatting currency values
  * - Loading currency rates and market data
- * 
+ *
  * @returns Object with currency data, rates, and utility functions
  */
 export function useCurrencies() {
@@ -34,16 +34,17 @@ export function useCurrencies() {
 
   const currentCurrencyRate = useMemo(
     (): number => currencyRates?.[currentCurrencyCode] || 0,
-    [currencyRates, currentCurrencyCode]
+    [currencyRates, currentCurrencyCode],
   );
 
   const currentCurrencyInfo = useMemo(
     (): ICurrency => CURRENCIES.find(({ code }) => code === currentCurrencyCode)!,
-    [currentCurrencyCode]
+    [currentCurrencyCode],
   );
 
   const loadCurrencyRates = useCallback(async () => {
-    // Rates are normally handled by AePricePollingProvider, but keep this as an imperative fallback.
+    // Rates are normally handled by AePricePollingProvider,
+    // but keep this as an imperative fallback.
     try {
       const raw = await SuperheroApi.getCurrencyRates();
       if (!raw || typeof raw !== 'object' || Object.keys(raw).length === 0) {
@@ -84,18 +85,15 @@ export function useCurrencies() {
    * @param value - Decimal value to format
    * @returns Formatted currency string (e.g., "$ 25,269.00")
    */
-  const formatCurrency = useCallback((value: Decimal): string => {
-    return `${currentCurrencyInfo.symbol} ${value.moneyPrettify()}`;
-  }, [currentCurrencyInfo.symbol]);
+  const formatCurrency = useCallback((value: Decimal): string => `${currentCurrencyInfo.symbol} ${value.moneyPrettify()}`, [currentCurrencyInfo.symbol]);
 
   /**
    * Converts AE amount to fiat currency
    * @param value - AE amount as Decimal
    * @returns Converted fiat amount as Decimal
    */
-  const getFiat = useCallback((value: Decimal): Decimal => {
-    return value?.mul(currentCurrencyRate);
-  }, [currentCurrencyRate]);
+  const getFiat = useCallback((value: Decimal): Decimal => value
+    ?.mul(currentCurrencyRate), [currentCurrencyRate]);
 
   /**
    * Gets formatted fiat value from PriceDto for current active currency
@@ -130,9 +128,9 @@ export function useCurrencies() {
    * @param value - AE amount as Decimal
    * @returns Formatted currency string
    */
-  const getFormattedFiat = useCallback((value: Decimal): string => {
-    return formatCurrency(getFiat(value));
-  }, [formatCurrency, getFiat]);
+  const getFormattedFiat = useCallback((value: Decimal): string => formatCurrency(
+    getFiat(value),
+  ), [formatCurrency, getFiat]);
 
   /**
    * Like getFormattedFiat but rounds small fractions to avoid displaying tiny amounts

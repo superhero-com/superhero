@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useWallet } from '../hooks';
 
-export default function GlobalNewAccountEducation() {
-  const { address, balance, isNewAccount, setIsNewAccount } = useWallet();
+const GlobalNewAccountEducation = () => {
+  const {
+    address, isNewAccount, setIsNewAccount,
+  } = useWallet();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Check if this is a new account (no AE balance and marked as new)
@@ -28,8 +30,9 @@ export default function GlobalNewAccountEducation() {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
       padding: 3,
       boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
-      animation: 'slideIn 0.5s ease-out'
-    }}>
+      animation: 'slideIn 0.5s ease-out',
+    }}
+    >
       {/* Animated background elements */}
       <div style={{
         position: 'absolute',
@@ -39,19 +42,24 @@ export default function GlobalNewAccountEducation() {
         height: 60,
         background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
         borderRadius: '50%',
-        animation: 'pulse 3s ease-in-out infinite'
-      }} />
-      
+        animation: 'pulse 3s ease-in-out infinite',
+      }}
+      />
+
       <div style={{
         background: 'linear-gradient(145deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
         borderRadius: 17,
         padding: 20,
         position: 'relative',
         zIndex: 1,
-        border: '1px solid rgba(255,255,255,0.1)'
-      }}>
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+      >
         {/* Header with close button */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16,
+        }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 40,
@@ -63,8 +71,9 @@ export default function GlobalNewAccountEducation() {
               justifyContent: 'center',
               fontSize: 20,
               boxShadow: '0 8px 20px rgba(255,107,107,0.3)',
-              border: '2px solid rgba(255,255,255,0.2)'
-            }}>
+              border: '2px solid rgba(255,255,255,0.2)',
+            }}
+            >
               🚀
             </div>
             <div>
@@ -76,13 +85,15 @@ export default function GlobalNewAccountEducation() {
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.5px'
-              }}>
+                letterSpacing: '-0.5px',
+              }}
+              >
                 New to æternity? ✨
               </h4>
             </div>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
             style={{
               background: 'rgba(255,255,255,0.1)',
@@ -96,7 +107,7 @@ export default function GlobalNewAccountEducation() {
               cursor: 'pointer',
               color: '#b8c5d6',
               fontSize: 14,
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
@@ -118,26 +129,45 @@ export default function GlobalNewAccountEducation() {
             fontSize: 14,
             color: '#b8c5d6',
             lineHeight: 1.4,
-            fontWeight: 400
-          }}>
+            fontWeight: 400,
+          }}
+          >
             Your account is fresh and ready to explore! 🌟
           </p>
-          
+
           <div style={{
             background: 'rgba(255,255,255,0.05)',
             borderRadius: 12,
             padding: 12,
             border: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            backdropFilter: 'blur(10px)',
+          }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+            }}
+            >
               <span style={{ fontSize: 16 }}>💡</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: '#4ecdc4' }}>Quick Start Guide:</span>
             </div>
             <div style={{ fontSize: 12, color: '#b8c5d6', lineHeight: 1.4 }}>
-              1. <strong>Swap ETH</strong> from Ethereum to get AE tokens<br/>
-              2. <strong>Visit the DEX</strong> to start trading<br/>
-              3. <strong>Explore</strong> the æternity ecosystem! 🎉
+              1.
+              {' '}
+              <strong>Swap ETH</strong>
+              {' '}
+              from Ethereum to get AE tokens
+              <br />
+              2.
+              {' '}
+              <strong>Visit the DEX</strong>
+              {' '}
+              to start trading
+              <br />
+              3.
+              {' '}
+              <strong>Explore</strong>
+              {' '}
+              the æternity ecosystem! 🎉
             </div>
           </div>
         </div>
@@ -145,7 +175,10 @@ export default function GlobalNewAccountEducation() {
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => window.location.href = '/defi'}
+            type="button"
+            onClick={() => {
+              window.location.href = '/defi';
+            }}
             style={{
               flex: 1,
               padding: '8px 12px',
@@ -157,7 +190,7 @@ export default function GlobalNewAccountEducation() {
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(78,205,196,0.3)'
+              boxShadow: '0 4px 12px rgba(78,205,196,0.3)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
@@ -171,6 +204,7 @@ export default function GlobalNewAccountEducation() {
             🎯 Go to DEX
           </button>
           <button
+            type="button"
             onClick={handleDismiss}
             style={{
               padding: '8px 12px',
@@ -181,7 +215,7 @@ export default function GlobalNewAccountEducation() {
               fontSize: 12,
               fontWeight: 500,
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
@@ -197,7 +231,8 @@ export default function GlobalNewAccountEducation() {
         </div>
       </div>
 
-      <style>{`
+      <style>
+        {`
         @keyframes slideIn {
           from {
             transform: translateX(100%);
@@ -213,7 +248,10 @@ export default function GlobalNewAccountEducation() {
           0%, 100% { transform: scale(1); opacity: 0.7; }
           50% { transform: scale(1.1); opacity: 1; }
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
-}
+};
+
+export default GlobalNewAccountEducation;

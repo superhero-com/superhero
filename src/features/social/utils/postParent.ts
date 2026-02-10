@@ -13,37 +13,28 @@ export function extractParentId(post: PostDto | any): string | null {
 
   // media
   if (Array.isArray(post?.media)) {
-    for (const m of post.media) {
-      const got = extract(m);
-      if (got) return got;
-    }
+    const found = post.media.map((m: unknown) => extract(m)).find(Boolean);
+    if (found) return found;
   }
   // topics
   if (Array.isArray(post?.topics)) {
-    for (const t of post.topics) {
-      const got = extract(t);
-      if (got) return got;
-    }
+    const found = post.topics.map((t: unknown) => extract(t)).find(Boolean);
+    if (found) return found;
   }
   // tx_args recursive scan
   const scan = (node: any): string | null => {
     if (node == null) return null;
     if (typeof node === 'string') return extract(node);
     if (Array.isArray(node)) {
-      for (const x of node) {
-        const got = scan(x);
-        if (got) return got;
-      }
-    } else if (typeof node === 'object') {
-      for (const v of Object.values(node)) {
-        const got = scan(v);
-        if (got) return got;
-      }
+      const found = node.map((x) => scan(x)).find(Boolean);
+      return found || null;
+    }
+    if (typeof node === 'object') {
+      const found = Object.values(node).map((v) => scan(v)).find(Boolean);
+      return found || null;
     }
     return null;
   };
 
   return scan(post?.tx_args);
 }
-
-

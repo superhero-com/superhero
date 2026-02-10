@@ -1,50 +1,47 @@
-import { TokenDto } from "@/api/generated/models/TokenDto";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import Head from "../../../seo/Head";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { TokensService } from "../../../api/generated/services/TokensService";
-import { useAeSdk } from "../../../hooks/useAeSdk";
-import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
-import { useIsMobile } from "@/hooks";
-import TokenNotFound from "../../../components/TokenNotFound";
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import { useQuery } from '@tanstack/react-query';
+import {
+  useEffect, useMemo, useRef, useState, type PointerEvent,
+} from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks';
+import { Plus } from 'lucide-react';
+import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
+import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
+import { Head } from '../../../seo/Head';
+import { TokensService } from '../../../api/generated/services/TokensService';
+import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
+import TokenNotFound from '../../../components/TokenNotFound';
 
 // Components
-// import CommentsList from "../../../components/Trendminer/CommentsList";
-import TokenTopicFeed from "../../social/components/TokenTopicFeed";
-import TokenTopicComposer from "../../social/components/TokenTopicComposer";
-import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
-import Token24hChange from "../../../components/Trendminer/Token24hChange";
-import TokenHolders from "../../../components/Trendminer/TokenHolders";
-import TokenTrades from "../../../components/Trendminer/TokenTrades";
-import TokenChat from "../../../components/Trendminer/TokenChat";
-import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
+import TokenTopicFeed from '../../social/components/TokenTopicFeed';
+import TokenTopicComposer from '../../social/components/TokenTopicComposer';
+import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
+import Token24hChange from '../../../components/Trendminer/Token24hChange';
+import TokenHolders from '../../../components/Trendminer/TokenHolders';
+import TokenTrades from '../../../components/Trendminer/TokenTrades';
+import TokenChat from '../../../components/Trendminer/TokenChat';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
 import {
-  Card
-} from "../../../components/ui/card";
-import ShareModal from "../../../components/ui/ShareModal";
-import { Plus } from "lucide-react";
+  Card,
+} from '../../../components/ui/card';
+import ShareModal from '../../../components/ui/ShareModal';
 
 // Feature components
-import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
-import TokenLineChart from "@/features/trending/components/TokenLineChart";
-import {
-  TokenCandlestickChartSkeleton,
-  TokenRanking,
-  TokenSaleSidebarSkeleton,
-  TokenTradeCard
-} from "..";
-import { TokenSummary } from "../../bcl/components";
-import { useLiveTokenData } from "../hooks/useLiveTokenData";
-import { useTokenTradeStore } from "../hooks/useTokenTradeStore";
-
+import TokenCandlestickChartSkeleton from '../components/Skeletons/TokenCandlestickChartSkeleton';
+import TokenSaleSidebarSkeleton from '../components/Skeletons/TokenSaleSidebarSkeleton';
+import TokenRanking from '../components/TokenRanking/TokenRanking';
+import TokenTradeCard from '../components/TokenTradeCard';
+import { TokenSummary } from '../../bcl/components';
+import { useLiveTokenData } from '../hooks/useLiveTokenData';
+import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
 
 // Tab constants
-const TAB_DETAILS = "details";
-const TAB_CHAT = "posts";
-const TAB_TRANSACTIONS = "transactions";
-const TAB_HOLDERS = "holders";
+const TAB_DETAILS = 'details';
+const TAB_CHAT = 'posts';
+const TAB_TRANSACTIONS = 'transactions';
+const TAB_HOLDERS = 'holders';
 
 type TabType =
   | typeof TAB_DETAILS
@@ -53,11 +50,10 @@ type TabType =
   | typeof TAB_HOLDERS;
 
 //
-export default function TokenSaleDetails() {
+const TokenSaleDetails = () => {
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeAccount } = useAeSdk();
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>(TAB_CHAT);
@@ -65,15 +61,15 @@ export default function TokenSaleDetails() {
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
-  const [performance, setPerformance] = useState<any | null>(null);
+  const [performance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
-    const showTradeParam = params.get("showTrade");
+    const showTradeParam = params.get('showTrade');
     if (showTradeParam === null) return true;
     const normalized = showTradeParam.toLowerCase();
-    return !(normalized === "0" || normalized === "false" || normalized === "off");
+    return !(normalized === '0' || normalized === 'false' || normalized === 'off');
   });
   const { ownedTokens } = useOwnedTokens();
   const [holdersOnly, setHoldersOnly] = useState(true);
@@ -90,8 +86,8 @@ export default function TokenSaleDetails() {
   const closeTradeActionSheet = () => {
     setTradeActionSheet(false);
     const params = new URLSearchParams(location.search);
-    if (params.has("openTrade")) {
-      params.delete("openTrade");
+    if (params.has('openTrade')) {
+      params.delete('openTrade');
       navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
     }
   };
@@ -109,16 +105,15 @@ export default function TokenSaleDetails() {
     setShowComposer(!isMobile);
   }, [tokenName, isMobile]);
 
-
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const showTradeParam = params.get("showTrade");
+    const showTradeParam = params.get('showTrade');
     if (showTradeParam === null) {
       setShowTradePanels(true);
       return;
     }
     const normalized = showTradeParam.toLowerCase();
-    setShowTradePanels(!(normalized === "0" || normalized === "false" || normalized === "off"));
+    setShowTradePanels(!(normalized === '0' || normalized === 'false' || normalized === 'off'));
   }, [location.search, tokenName]);
 
   useEffect(() => {
@@ -129,8 +124,8 @@ export default function TokenSaleDetails() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const openTrade = params.get("openTrade");
-    if (openTrade === "1" && showTradePanels) {
+    const openTrade = params.get('openTrade');
+    if (openTrade === '1' && showTradePanels) {
       if (isMobile) {
         setTradeActionSheet(true);
       }
@@ -141,7 +136,7 @@ export default function TokenSaleDetails() {
   const isTokenNewlyCreated = useMemo(() => {
     try {
       const recentTokens = JSON.parse(
-        localStorage.getItem("recentlyCreatedTokens") || "[]"
+        localStorage.getItem('recentlyCreatedTokens') || '[]',
       );
       return recentTokens.includes(tokenName);
     } catch {
@@ -156,18 +151,18 @@ export default function TokenSaleDetails() {
     data: _token,
     error,
   } = useQuery<TokenDto | null>({
-    queryKey: ["TokensService.findByAddress", tokenName],
+    queryKey: ['TokensService.findByAddress', tokenName],
     queryFn: async () => {
-      if (!tokenName) throw new Error("Token name is required");
+      if (!tokenName) throw new Error('Token name is required');
       try {
-      const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
         if (!result) {
-          throw new Error("Token not found");
+          throw new Error('Token not found');
         }
         return result;
-      } catch (error) {
-        console.error("Error fetching token:", error);
-        throw new Error("Token not found");
+      } catch (err) {
+        console.error('Error fetching token:', err);
+        throw new Error('Token not found');
       }
     },
     retry: (failureCount) => {
@@ -183,12 +178,10 @@ export default function TokenSaleDetails() {
 
   const { tokenData } = useLiveTokenData({ token: _token });
 
-  const token = useMemo(() => {
-    return {
-      ..._token,
-      ...(tokenData || {}),
-    };
-  }, [tokenData, _token]);
+  const token = useMemo(() => ({
+    ..._token,
+    ...(tokenData || {}),
+  }), [tokenData, _token]);
   const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
   const tokenHeaderTitle = useMemo(() => {
     const raw = String(token?.symbol || token?.name || tokenName || '');
@@ -196,8 +189,8 @@ export default function TokenSaleDetails() {
   }, [token?.symbol, token?.name, tokenName]);
   const openTradePanel = () => {
     const params = new URLSearchParams(location.search);
-    params.set("showTrade", "1");
-    params.set("openTrade", "1");
+    params.set('showTrade', '1');
+    params.set('openTrade', '1');
     navigate({ pathname: location.pathname, search: params.toString() });
   };
   const handleTradeClick = () => {
@@ -208,7 +201,7 @@ export default function TokenSaleDetails() {
     openTradePanel();
   };
   const handleTradePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
-    if (event.pointerType !== "touch") return;
+    if (event.pointerType !== 'touch') return;
     tradeTouchHandledRef.current = true;
     openTradePanel();
   };
@@ -219,9 +212,9 @@ export default function TokenSaleDetails() {
   useEffect(() => {
     if (tradePrefillAppliedRef.current) return;
     const params = new URLSearchParams(location.search);
-    const tradeType = params.get("trade");
-    const amountRaw = params.get("amount");
-    if (tradeType !== "buy" || !amountRaw) return;
+    const tradeType = params.get('trade');
+    const amountRaw = params.get('amount');
+    if (tradeType !== 'buy' || !amountRaw) return;
     const amount = Number(amountRaw);
     if (!Number.isFinite(amount) || amount <= 0) return;
     if (!showTradePanels) return;
@@ -236,9 +229,7 @@ export default function TokenSaleDetails() {
   }, [location.search, isMobile, switchTradeView, updateTokenA, updateTokenB, updateTokenAFocused, showTradePanels]);
 
   // Share URL
-  const shareUrl = useMemo(() => {
-    return window.location.href;
-  }, []);
+  const shareUrl = useMemo(() => window.location.href, []);
 
   // Check if user owns this token
   const ownsThisToken = useMemo(() => {
@@ -246,23 +237,23 @@ export default function TokenSaleDetails() {
 
     // `useOwnedTokens` returns the nested `row.token` objects from
     // `/api/accounts/{address}/tokens`, so we can match directly by address.
-    const tokenAddress = String((token as any)?.address || "").toLowerCase();
-    const tokenSaleAddress = String((token as any)?.sale_address || "").toLowerCase();
-    const target = tokenSaleAddress || tokenAddress;
+    const tokenAddressValue = String((token as any)?.address || '').toLowerCase();
+    const tokenSaleAddress = String((token as any)?.sale_address || '').toLowerCase();
+    const target = tokenSaleAddress || tokenAddressValue;
     if (!target) return false;
 
     return ownedTokens.some((t: any) => {
-      const addr = String(t?.address || "").toLowerCase();
-      const sale = String(t?.sale_address || "").toLowerCase();
+      const addr = String(t?.address || '').toLowerCase();
+      const sale = String(t?.sale_address || '').toLowerCase();
       return addr === target || sale === target;
     });
-  }, [activeAccount, token, ownedTokens]);
+  }, [token, ownedTokens]);
 
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
     return (
       <TokenNotFound
-        tokenName={tokenName || ""}
+        tokenName={tokenName || ''}
         errorMessage={error instanceof Error ? error.message : undefined}
       />
     );
@@ -285,11 +276,11 @@ export default function TokenSaleDetails() {
           </h2>
           <p className="text-white/70">
             {pendingLastsLong
-              ? "Oops, the miners seem to be busy at the moment. The creation might take a bit longer than expected."
-              : "Your transaction has been sent to the network. Waiting for it to be picked up and mined."}
+              ? 'Oops, the miners seem to be busy at the moment. The creation might take a bit longer than expected.'
+              : 'Your transaction has been sent to the network. Waiting for it to be picked up and mined.'}
           </p>
           <div className="w-full bg-white/10 rounded-full h-2 mt-4">
-            <div className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-2 rounded-full animate-pulse w-1/2"></div>
+            <div className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-2 rounded-full animate-pulse w-1/2" />
           </div>
         </div>
       </div>
@@ -297,14 +288,14 @@ export default function TokenSaleDetails() {
   }
 
   if (!isLoading && !token) {
-    return <TokenNotFound tokenName={tokenName || ""} />;
+    return <TokenNotFound tokenName={tokenName || ''} />;
   }
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
         title={`Buy #${token?.symbol || token?.name || tokenName} on Superhero.com`}
-        description={(token?.metaInfo?.description || `Explore ${token?.symbol || token?.name || tokenName} token, trades, holders and posts.`).slice(0,160)}
+        description={(token?.metaInfo?.description || `Explore ${token?.symbol || token?.name || tokenName} token, trades, holders and posts.`).slice(0, 160)}
         canonicalPath={`/trends/tokens/${tokenName}`}
         jsonLd={{
           '@context': 'https://schema.org',
@@ -373,8 +364,8 @@ export default function TokenSaleDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2 lg:col-start-1"
-            } flex flex-col gap-6`}
+          className={`${isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1'
+          } flex flex-col gap-6`}
         >
           {/* Token Header */}
           {!isMobile && (
@@ -385,8 +376,11 @@ export default function TokenSaleDetails() {
                     <div className="flex items-center gap-3 flex-1">
                       <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
                       <div className="flex items-center gap-2">
-                        {Array.from({ length: isTokenPending ? 1 : 2 }).map((_, index) => (
-                          <div key={index} className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6" />
+                        {(isTokenPending ? ['pending'] : ['first', 'second']).map((type) => (
+                          <div
+                            key={`skeleton-badge-${type}`}
+                            className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6"
+                          />
                         ))}
                       </div>
                     </div>
@@ -409,7 +403,8 @@ export default function TokenSaleDetails() {
                             variant="secondary"
                             className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
                           >
-                            RANK #{token.rank}
+                            RANK #
+                            {token.rank}
                           </Badge>
                         )}
                         {ownsThisToken && (
@@ -442,9 +437,9 @@ export default function TokenSaleDetails() {
                 {!isLoading && !isTokenPending && token.metaInfo?.description && (
                   <div className="text-white/75 text-sm leading-relaxed mt-3 max-w-[720px]">
                     <span>
-                      {descriptionExpanded ||
-                        !isMobile ||
-                        token.metaInfo.description.length <= 150
+                      {descriptionExpanded
+                        || !isMobile
+                        || token.metaInfo.description.length <= 150
                         ? token.metaInfo.description
                         : `${token.metaInfo.description.substring(0, 150)}...`}
                     </span>
@@ -452,12 +447,10 @@ export default function TokenSaleDetails() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                          setDescriptionExpanded(!descriptionExpanded)
-                        }
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                         className="text-purple-400 hover:text-white ml-2 p-0 h-auto font-medium underline-offset-2 hover:underline"
                       >
-                        {descriptionExpanded ? "Show Less" : "Show More"}
+                        {descriptionExpanded ? 'Show Less' : 'Show More'}
                       </Button>
                     )}
                   </div>
@@ -506,41 +499,47 @@ export default function TokenSaleDetails() {
           <div className="flex border-b border-white/10">
             {isMobile && (
               <button
+                type="button"
                 onClick={() => setActiveTab(TAB_DETAILS)}
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
-                  ? "text-white border-b-2 border-[#4ecdc4]"
-                  : "text-white/60 hover:text-white"
-                  }`}
+                  ? 'text-white border-b-2 border-[#4ecdc4]'
+                  : 'text-white/60 hover:text-white'
+                }`}
               >
                 Info
               </button>
             )}
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_CHAT)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
-                ? "text-white border-b-2 border-[#4ecdc4]"
-                : "text-white/60 hover:text-white"
-                }`}
+                ? 'text-white border-b-2 border-[#4ecdc4]'
+                : 'text-white/60 hover:text-white'
+              }`}
             >
               Posts
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_TRANSACTIONS)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
-                ? "text-white border-b-2 border-[#4ecdc4]"
-                : "text-white/60 hover:text-white"
-                }`}
+                ? 'text-white border-b-2 border-[#4ecdc4]'
+                : 'text-white/60 hover:text-white'
+              }`}
             >
-              {isMobile ? "History" : "Transactions"}
+              {isMobile ? 'History' : 'Transactions'}
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_HOLDERS)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
-                ? "text-white border-b-2 border-[#4ecdc4]"
-                : "text-white/60 hover:text-white"
-                }`}
+                ? 'text-white border-b-2 border-[#4ecdc4]'
+                : 'text-white/60 hover:text-white'
+              }`}
             >
-              Holders ({token.holders_count || 0})
+              Holders (
+              {token.holders_count || 0}
+              )
             </button>
           </div>
 
@@ -566,9 +565,10 @@ export default function TokenSaleDetails() {
             {activeTab === TAB_CHAT && (
               <div className="grid">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                {!isMobile && (
+                  {!isMobile && (
                   <h3 className="m-0 text-white/90 font-semibold">
-                    Posts for #{String(token.name || token.symbol || '').toUpperCase()}
+                    Posts for #
+                    {String(token.name || token.symbol || '').toUpperCase()}
                   </h3>
                   )}
                   {!isMobile && (
@@ -579,11 +579,11 @@ export default function TokenSaleDetails() {
                         aria-pressed={showTradePanels}
                         className={`px-3.5 py-1.5 rounded-full text-[18px] font-bold tracking-wide transition-colors ${
                           showTradePanels
-                            ? "bg-white/10 text-white/80 hover:text-white"
-                            : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                            ? 'bg-white/10 text-white/80 hover:text-white'
+                            : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md'
                         }`}
                       >
-                        {showTradePanels ? "Hide graphs": "Trade"}
+                        {showTradePanels ? 'Hide graphs' : 'Trade'}
                       </button>
                     </div>
                   )}
@@ -598,8 +598,8 @@ export default function TokenSaleDetails() {
                       onClick={() => setHoldersOnly(true)}
                       className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
                         holdersOnly
-                          ? "bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm"
-                          : "bg-transparent text-white/65 hover:text-white"
+                          ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
+                          : 'bg-transparent text-white/65 hover:text-white'
                       }`}
                     >
                       Holders only
@@ -609,8 +609,8 @@ export default function TokenSaleDetails() {
                       onClick={() => setHoldersOnly(false)}
                       className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
                         !holdersOnly
-                          ? "bg-white text-black shadow-sm"
-                          : "bg-transparent text-white/65 hover:text-white"
+                          ? 'bg-white text-black shadow-sm'
+                          : 'bg-transparent text-white/65 hover:text-white'
                       }`}
                     >
                       All posts
@@ -642,7 +642,7 @@ export default function TokenSaleDetails() {
         {!isMobile && (
           <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6">
             {!token?.sale_address ? (
-              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+              <TokenSaleSidebarSkeleton />
             ) : (
               <>
                 {showTradePanels && <TokenTradeCard token={token} />}
@@ -701,7 +701,7 @@ export default function TokenSaleDetails() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         shareUrl={shareUrl}
-        title={`Share ${token.name || token.symbol || "Token"}`}
+        title={`Share ${token.name || token.symbol || 'Token'}`}
       />
 
       {isMobile && activeTab === TAB_CHAT && !showComposer && !tradeActionSheet && (
@@ -724,4 +724,6 @@ export default function TokenSaleDetails() {
       )}
     </div>
   );
-}
+};
+
+export default TokenSaleDetails;

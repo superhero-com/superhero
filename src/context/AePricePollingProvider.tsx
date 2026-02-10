@@ -18,11 +18,18 @@ export function AePricePollingProvider({ children }: PropsWithChildren) {
   const normalizeRates = (raw: any): CurrencyRates | null => {
     if (!raw || typeof raw !== 'object') return null;
     const out: Record<string, number> = {};
-    for (const [k, v] of Object.entries(raw)) {
+    Object.entries(raw).forEach(([k, v]) => {
       const key = String(k).toLowerCase();
-      const num = typeof v === 'number' ? v : v == null ? NaN : Number(v);
-      if (Number.isFinite(num)) out[key] = num;
-    }
+      let num = NaN;
+      if (typeof v === 'number') {
+        num = v;
+      } else if (v != null) {
+        num = Number(v);
+      }
+      if (Number.isFinite(num)) {
+        out[key] = num;
+      }
+    });
     return Object.keys(out).length ? (out as CurrencyRates) : null;
   };
 
@@ -57,5 +64,3 @@ export function AePricePollingProvider({ children }: PropsWithChildren) {
 
   return children as any;
 }
-
-

@@ -1,4 +1,4 @@
-import { DexService, DexPairService, PairDto } from '@/api/generated';
+import { DexPairService, PairDto } from '@/api/generated';
 
 import { providedLiquidityAtom, useAccount, useAeSdk } from '@/hooks';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -10,16 +10,17 @@ import {
   setErrorForAccountAtom,
   setLoadingForAccountAtom,
   setPositionsForAccountAtom,
-  shouldRefreshPositionsAtom
+  shouldRefreshPositionsAtom,
 } from '../atoms/positionsAtoms';
 import { LiquidityPosition, PoolListState } from '../types/pool';
+
 export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
-} {
-  const { aex9Balances, loadAccountAex9Balances } = useAccount()
+  } {
+  const { loadAccountAex9Balances } = useAccount();
 
-  const { activeAccount } = useAeSdk()
-  const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
+  const { activeAccount } = useAeSdk();
+  const [, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
 
   // Jotai atoms
   const getPositionsForAccount = useAtomValue(getPositionsForAccountAtom);
@@ -31,8 +32,8 @@ export function useLiquidityPositions(): PoolListState & {
   const setErrorForAccount = useSetAtom(setErrorForAccountAtom);
 
   // Local UI state
-  const [showImport, setShowImport] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showImport] = useState(false);
+  const [showCreate] = useState(false);
 
   // Get cached positions or empty array
   const cachedPositions = activeAccount ? getPositionsForAccount(activeAccount) : [];
@@ -41,29 +42,28 @@ export function useLiquidityPositions(): PoolListState & {
   const shouldRefresh = activeAccount ? shouldRefreshPositions(activeAccount) : false;
 
   const scanAccountLiquidity = useCallback(async (accountAddress: string) => {
-    if (!accountAddress) return;
+    if (!accountAddress) return {};
 
     const accountAex9Balances = await loadAccountAex9Balances();
     const listAllPairs: any = await DexPairService.listAllPairs({ limit: 1000, page: 1 });
     // const pairs = await getPairs(false);
     const pairs: PairDto[] = listAllPairs.items;
 
-    const accountLiquidities = {}
-    for (const pair of pairs) {
+    const accountLiquidities: Record<string, LiquidityPosition> = {};
+    pairs.forEach((pair) => {
       // this should get from user balances.
-      const balance = accountAex9Balances.find(b => b.contract_id === pair.address)?.amount || 0;
+      const balance = accountAex9Balances.find((b) => b.contract_id === pair.address)?.amount || 0;
       if (balance && balance > 0n) {
         accountLiquidities[pair.address] = {
-          accountAddress,
           pair,
           token0: pair.token0.address,
           token1: pair.token1.address,
           balance: balance.toString(),
         };
       }
-    }
+    });
 
-    setProvidedLiquidity(prev => {
+    setProvidedLiquidity((prev) => {
       const accountLiquidity = prev[accountAddress] || {};
       return {
         ...prev,
@@ -74,8 +74,7 @@ export function useLiquidityPositions(): PoolListState & {
     });
 
     return accountLiquidities;
-  }, [loadAccountAex9Balances, aex9Balances]);
-
+  }, [loadAccountAex9Balances, setProvidedLiquidity]);
 
   // Function to load positions from the dex store and cache them
   const loadAndCachePositions = useCallback(async (accountAddress: string) => {
@@ -98,7 +97,7 @@ export function useLiquidityPositions(): PoolListState & {
       setErrorForAccount({ address: accountAddress, error: errorMessage });
       setLoadingForAccount({ address: accountAddress, loading: false });
     }
-  }, [scanAccountLiquidity, providedLiquidity, setPositionsForAccount, setLoadingForAccount, setErrorForAccount]);
+  }, [scanAccountLiquidity, setPositionsForAccount, setLoadingForAccount, setErrorForAccount]);
 
   // Refresh positions manually
   const refreshPositions = useCallback(async () => {
@@ -114,7 +113,7 @@ export function useLiquidityPositions(): PoolListState & {
     if (cachedPositions.length === 0 || shouldRefresh) {
       loadAndCachePositions(activeAccount);
     }
-  }, [activeAccount, cachedPositions.length, shouldRefresh]);
+  }, [activeAccount, cachedPositions.length, shouldRefresh, loadAndCachePositions]);
 
   return {
     positions: cachedPositions,

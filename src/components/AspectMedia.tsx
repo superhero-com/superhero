@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 
 interface AspectMediaProps {
   src: string;
@@ -10,7 +12,9 @@ interface AspectMediaProps {
 // Renders media preserving its intrinsic aspect ratio.
 // - Parses optional w/h from URL hash (e.g. #w=480&h=270)
 // - Falls back to natural dimensions on load
-export function AspectMedia({ src, alt = "media", className = "", maxHeight = "50vh" }: AspectMediaProps) {
+export const AspectMedia = ({
+  src, alt = 'media', className = '', maxHeight = '50vh',
+}: AspectMediaProps) => {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
@@ -23,7 +27,9 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "5
 
   useEffect(() => {
     const el = mediaRef.current as any;
-    if (!el) return;
+    if (!el) {
+      return () => {};
+    }
 
     const onLoad = () => {
       const w = isVideo ? el.videoWidth : el.naturalWidth;
@@ -32,15 +38,13 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "5
     };
 
     if (isVideo) {
-      el.addEventListener("loadedmetadata", onLoad, { once: true });
-    } else {
-      if (el.complete) onLoad();
-      else el.addEventListener("load", onLoad, { once: true });
-    }
+      el.addEventListener('loadedmetadata', onLoad, { once: true });
+    } else if (el.complete) onLoad();
+    else el.addEventListener('load', onLoad, { once: true });
 
     return () => {
-      if (isVideo) el.removeEventListener("loadedmetadata", onLoad);
-      else el.removeEventListener("load", onLoad);
+      if (isVideo) el.removeEventListener('loadedmetadata', onLoad);
+      else el.removeEventListener('load', onLoad);
     };
   }, [src, isVideo]);
 
@@ -48,6 +52,7 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "5
   return (
     <div className={`inline-block max-w-full rounded-xl overflow-hidden ${className}`} style={ratioStyle}>
       {isVideo ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           ref={mediaRef as any}
           src={src}
@@ -64,8 +69,6 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "5
       )}
     </div>
   );
-}
+};
 
 export default AspectMedia;
-
-

@@ -1,1 +1,1 @@
-export { default } from './TokenRanking';
+export { default as TokenRanking } from './TokenRanking';

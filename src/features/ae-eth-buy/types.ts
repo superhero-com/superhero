@@ -3,7 +3,7 @@ import { Eip1193Provider } from 'ethers';
 /**
  * Bridge operation status
  */
-export type BridgeStatus = 
+export type BridgeStatus =
   | 'idle'
   | 'connecting'
   | 'bridging'
@@ -71,7 +71,7 @@ export class BridgeError extends Error {
   constructor(
     public type: BridgeErrorType,
     message: string,
-    public originalError?: any
+    public originalError?: any,
   ) {
     super(message);
     this.name = 'BridgeError';

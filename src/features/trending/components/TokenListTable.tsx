@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TokenDto } from "@/api/generated/models/TokenDto";
-import TokenListTableRow from "./TokenListTableRow";
-import TokenRowSkeleton from "./TokenRowSkeleton";
-import { useIsMobile } from "@/hooks";
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import { useIsMobile } from '@/hooks';
+import TokenListTableRow from './TokenListTableRow';
+import TokenRowSkeleton from './TokenRowSkeleton';
 
 type OrderByOption = 'market_cap' | 'newest' | 'oldest' | 'holders_count' | 'trending_score' | 'name' | 'price';
 type OrderDirection = 'ASC' | 'DESC';
@@ -18,21 +18,20 @@ interface SortableColumnHeaderProps {
   title?: string;
 }
 
-function SortableColumnHeader({ 
-  children, 
-  sortKey, 
-  currentSort, 
-  currentDirection, 
-  onSort, 
-  className = "",
-  title 
-}: SortableColumnHeaderProps) {
+const SortableColumnHeader = ({
+  children,
+  sortKey,
+  currentSort,
+  currentDirection,
+  onSort,
+  className = '',
+  title,
+}: SortableColumnHeaderProps) => {
   const isRankHeader = typeof children === 'string' && (children === 'Rank' || children === '#');
-  const isActive =
-    currentSort === sortKey || 
-    (sortKey === 'newest' && currentSort === 'oldest') ||
-    (sortKey === 'oldest' && currentSort === 'newest');
-  
+  const isActive = currentSort === sortKey
+    || (sortKey === 'newest' && currentSort === 'oldest')
+    || (sortKey === 'oldest' && currentSort === 'newest');
+
   const getDisplayDirection = () => {
     if (isRankHeader) {
       // For rank, show the opposite direction (since rank 1 is highest value)
@@ -56,8 +55,16 @@ function SortableColumnHeader({
     }
   };
 
+  const displayDirection = getDisplayDirection();
+  let activeDirectionIndicator: string;
+  if (isRankHeader) {
+    activeDirectionIndicator = displayDirection;
+  } else {
+    activeDirectionIndicator = displayDirection === 'DESC' ? '↓' : '↑';
+  }
+
   return (
-    <th 
+    <th
       className={`${className} cursor-pointer hover:opacity-75 transition-opacity select-none`}
       onClick={handleClick}
       title={title}
@@ -66,13 +73,13 @@ function SortableColumnHeader({
         {children}
         {isActive && (
           <span className="text-[#1161FE] text-xs">
-            {isRankHeader ? getDisplayDirection() : (getDisplayDirection() === 'DESC' ? '↓' : '↑')}
+            {activeDirectionIndicator}
           </span>
         )}
       </div>
     </th>
   );
-}
+};
 
 interface TokenListTableProps {
   pages?: Array<{ items: TokenDto[] }> | null;
@@ -87,12 +94,18 @@ interface TokenListTableProps {
   onLoadMore?: () => void;
 }
 
-export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore }: TokenListTableProps) {
+const TokenListTable = ({
+  pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore,
+}: TokenListTableProps) => {
   const { t } = useTranslation('common');
 
-  const allItems = useMemo(() => 
-    pages?.length ? pages.map((page) => page.items).flat() : [],
-    [pages]
+  const allItems = useMemo(
+    () => (pages?.length ? pages.map((page) => page.items).flat() : []),
+    [pages],
+  );
+  const skeletonRows = useMemo(
+    () => Array.from({ length: 12 }, (_, idx) => `row-${idx + 1}`),
+    [],
   );
 
   // Detect mobile viewport to map the "Market cap" header to market_cap sorting
@@ -173,8 +186,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
         {loading && !allItems?.length ? (
           <tbody className="token-list-skeleton">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <TokenRowSkeleton key={index} />
+            {skeletonRows.map((rowKey) => (
+              <TokenRowSkeleton key={rowKey} />
             ))}
           </tbody>
         ) : (
@@ -195,6 +208,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
       {hasNextPage && onLoadMore && (
         <div className="md:hidden text-center pt-2 pb-3">
           <button
+            type="button"
             onClick={() => onLoadMore()}
             disabled={isFetching}
             className={`${isFetching
@@ -206,7 +220,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
         </div>
       )}
 
-      <style>{`
+      <style>
+        {`
         .bctsl-token-list-table {
           border-collapse: separate;
           border-spacing: 0 8px;
@@ -411,7 +426,10 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             display: none;
           }
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
-}
+};
+
+export default TokenListTable;

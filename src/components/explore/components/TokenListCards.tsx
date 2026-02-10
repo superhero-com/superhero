@@ -1,67 +1,68 @@
-import { useNavigate } from "react-router-dom";
-import { Token } from "../types/explore";
-import { DexTokenDto } from "../../../api/generated";
-import { PriceDataFormatter } from "@/features/shared/components";
+/* eslint-disable */
+import { useNavigate } from 'react-router-dom';
+import { PriceDataFormatter } from '@/features/shared/components';
 import { useMemo } from 'react';
-import { useAtomValue } from "jotai";
-import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
-import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
-import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
-import Spinner from "@/components/Spinner";
-import { Decimal } from "@/libs/decimal";
+import { useAtomValue } from 'jotai';
+import { performanceChartTimeframeAtom } from '@/features/trending/atoms';
+import PerformanceTimeframeSelector from '@/features/trending/components/PerformanceTimeframeSelector';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import Spinner from '@/components/Spinner';
+import { Decimal } from '@/libs/decimal';
+import { DexTokenDto } from '../../../api/generated';
+import { Token } from '../types/explore';
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
-    | "pairs_count"
-    | "name"
-    | "symbol"
-    | "created_at"
-    | "price"
-    | "tvl"
-    | "24hchange"
-    | "24hvolume"
-    | "7dchange"
-    | "7dvolume"
-    | "30dchange"
-    | "30dvolume";
+    | 'pairs_count'
+    | 'name'
+    | 'symbol'
+    | 'created_at'
+    | 'price'
+    | 'tvl'
+    | '24hchange'
+    | '24hvolume'
+    | '7dchange'
+    | '7dvolume'
+    | '30dchange'
+    | '30dvolume';
     asc: boolean;
   };
   onSortChange: (
     key:
-      | "pairs_count"
-      | "name"
-      | "symbol"
-      | "created_at"
-      | "price"
-      | "tvl"
-      | "24hchange"
-      | "24hvolume"
-      | "7dchange"
-      | "7dvolume"
-      | "30dchange"
-      | "30dvolume"
+      | 'pairs_count'
+      | 'name'
+      | 'symbol'
+      | 'created_at'
+      | 'price'
+      | 'tvl'
+      | '24hchange'
+      | '24hvolume'
+      | '7dchange'
+      | '7dvolume'
+      | '30dchange'
+      | '30dvolume'
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
 }
-export function TokenListCards({
+export const TokenListCards = ({
   tokens,
   sort,
   onSortChange,
   search,
   onSearchChange,
   loading,
-}: TokenListCardsProps) {
+}: TokenListCardsProps) => {
   const navigate = useNavigate();
 
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const timeBase = useMemo(() => {
-    if (performanceChartTimeframe === "1d") {
-      return "24h";
+    if (performanceChartTimeframe === '1d') {
+      return '24h';
     }
 
     return performanceChartTimeframe;
@@ -69,18 +70,18 @@ export function TokenListCards({
 
   const handleSort = (
     key:
-      | "pairs_count"
-      | "name"
-      | "symbol"
-      | "created_at"
-      | "price"
-      | "tvl"
-      | "24hchange"
-      | "24hvolume"
-      | "7dchange"
-      | "7dvolume"
-      | "30dchange"
-      | "30dvolume"
+      | 'pairs_count'
+      | 'name'
+      | 'symbol'
+      | 'created_at'
+      | 'price'
+      | 'tvl'
+      | '24hchange'
+      | '24hvolume'
+      | '7dchange'
+      | '7dvolume'
+      | '30dchange'
+      | '30dvolume',
   ) => {
     onSortChange(key);
   };
@@ -143,12 +144,12 @@ export function TokenListCards({
               <button
                 onClick={() => handleSort(sort.key)}
                 className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${sort.asc
-                    ? "bg-green-500 text-white"
-                    : "bg-white/10 text-white hover:bg-green-500 hover:text-white"
-                  }`}
-                title={sort.asc ? "Sort Ascending" : "Sort Descending"}
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white/10 text-white hover:bg-green-500 hover:text-white'
+                }`}
+                title={sort.asc ? 'Sort Ascending' : 'Sort Descending'}
               >
-                {sort.asc ? "↑" : "↓"}
+                {sort.asc ? '↑' : '↓'}
               </button>
             </div>
             <div className="flex items-center justify-center w-auto flex-shrink-0">
@@ -159,7 +160,7 @@ export function TokenListCards({
           {/* Results Counter */}
           <div className="flex items-center justify-between gap-2 sm:gap-[10px] flex-shrink-0 flex-wrap sm:flex-nowrap">
             {/* Compact Active Filters Display */}
-            {(search || sort.key !== "name") ? (
+            {(search || sort.key !== 'name') ? (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] text-gray-300 font-medium opacity-80">
                   Active:
@@ -169,22 +170,26 @@ export function TokenListCards({
                     <span>
                       Search: "
                       {search.length > 15
-                        ? search.substring(0, 15) + "..."
+                        ? `${search.substring(0, 15)}...`
                         : search}
                       "
                     </span>
                     <button
-                      onClick={() => onSearchChange("")}
+                      onClick={() => onSearchChange('')}
                       className="bg-none border-none text-green-500 cursor-pointer text-[9px] p-0 outline-none opacity-70 hover:opacity-100"
                     >
                       ✕
                     </button>
                   </div>
                 )}
-                {sort.key !== "name" && (
+                {sort.key !== 'name' && (
                   <div className="flex items-center gap-1 bg-green-500/[0.12] px-[6px] py-[2px] rounded-lg text-[11px] text-green-500 border border-green-500/20">
                     <span>
-                      Sort: {sort.key} {sort.asc ? "↑" : "↓"}
+                      Sort:
+                      {' '}
+                      {sort.key}
+                      {' '}
+                      {sort.asc ? '↑' : '↓'}
                     </span>
                   </div>
                 )}
@@ -193,9 +198,11 @@ export function TokenListCards({
               <div />
             )}
             <div className="flex items-center gap-[6px] bg-green-500/10 px-[10px] py-[6px] rounded-2xl border border-green-500/20 flex-shrink-0">
-              <div className="w-[5px] h-[5px] rounded-full bg-green-500 animate-pulse"></div>
+              <div className="w-[5px] h-[5px] rounded-full bg-green-500 animate-pulse" />
               <span className="text-[11px] text-green-500 font-semibold">
-                {tokens.length} {tokens.length === 1 ? "token" : "tokens"}
+                {tokens.length}
+                {' '}
+                {tokens.length === 1 ? 'token' : 'tokens'}
               </span>
             </div>
           </div>
@@ -222,7 +229,9 @@ export function TokenListCards({
                 {/* Pools Count Badge */}
                 <div className="bg-green-500/10 px-2 py-1 rounded-xl border border-green-500/20 mt-2">
                   <span className="text-xs text-green-500 font-semibold">
-                    {token.pairs_count || 0} Pools
+                    {token.pairs_count || 0}
+                    {' '}
+                    Pools
                   </span>
                 </div>
               </div>
@@ -252,21 +261,25 @@ export function TokenListCards({
                 {/* 24h Change */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {timeBase} Change
+                    {timeBase}
+                    {' '}
+                    Change
                   </div>
                   <div className={`text-sm font-semibold ${
-                    token.summary?.change?.[timeBase]?.percentage && 
-                    Number(token.summary.change[timeBase].percentage) >= 0 
-                      ? "text-green-400" 
-                      : "text-red-400"
-                  }`}>
+                    token.summary?.change?.[timeBase]?.percentage
+                    && Number(token.summary.change[timeBase].percentage) >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                  }`}
+                  >
                     {token.summary?.change?.[timeBase]?.percentage ? (
                       <>
-                        {Number(token.summary.change[timeBase].percentage) >= 0 ? "+" : ""}
-                        {Decimal.from(token.summary.change[timeBase].percentage).prettify(2)}%
+                        {Number(token.summary.change[timeBase].percentage) >= 0 ? '+' : ''}
+                        {Decimal.from(token.summary.change[timeBase].percentage).prettify(2)}
+                        %
                       </>
                     ) : (
-                      "-"
+                      '-'
                     )}
                   </div>
                 </div>
@@ -274,7 +287,9 @@ export function TokenListCards({
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {timeBase} Volume
+                    {timeBase}
+                    {' '}
+                    Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
                     <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
@@ -320,7 +335,6 @@ export function TokenListCards({
       </div>
     </div>
   );
-}
-
+};
 
 export default TokenListCards;

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -6,9 +6,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Share, Link as LinkIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/dropdown-menu';
+import { Share, Link as LinkIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type SharePopoverProps = {
   postId: string | number;
@@ -18,7 +18,9 @@ type SharePopoverProps = {
   label?: string; // copy context: 'post' (default) or custom like 'trend'
 };
 
-export default function SharePopover({ postId, postSlug, className, urlOverride, label = "post" }: SharePopoverProps) {
+const SharePopover = ({
+  postId, postSlug, className, urlOverride, label = 'post',
+}: SharePopoverProps) => {
   const { t } = useTranslation('social');
   const shareLabel = label === 'post' ? t('sharePost') : t('shareComment');
   const url = useMemo(() => {
@@ -26,7 +28,7 @@ export default function SharePopover({ postId, postSlug, className, urlOverride,
       const isAbsolute = /^https?:\/\//i.test(urlOverride);
       return isAbsolute ? urlOverride : `${window.location.origin}${urlOverride.startsWith('/') ? '' : '/'}${urlOverride}`;
     }
-    const path = `/post/${(postSlug || String(postId).replace(/_v3$/, ""))}`;
+    const path = `/post/${(postSlug || String(postId).replace(/_v3$/, ''))}`;
     return `${window.location.origin}${path}`;
   }, [postId, postSlug, urlOverride]);
 
@@ -36,8 +38,8 @@ export default function SharePopover({ postId, postSlug, className, urlOverride,
         <button
           type="button"
           className={cn(
-            "inline-flex items-center justify-center gap-1.5 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-2 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors",
-            className
+            'inline-flex items-center justify-center gap-1.5 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-2 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors',
+            className,
           )}
           aria-label={`${t('share')} ${shareLabel}`}
           title={`${t('share')} ${shareLabel}`}
@@ -51,7 +53,11 @@ export default function SharePopover({ postId, postSlug, className, urlOverride,
           className="flex items-center gap-3 py-2.5 px-3 text-[14px] hover:bg-white/10 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            try { navigator.clipboard.writeText(url); } catch {}
+            try {
+              navigator.clipboard.writeText(url);
+            } catch {
+              // Ignore clipboard errors
+            }
           }}
         >
           <LinkIcon className="w-4 h-4 opacity-85" />
@@ -66,7 +72,11 @@ export default function SharePopover({ postId, postSlug, className, urlOverride,
             if (nav?.share) {
               nav.share({ url, title: t('superheroPost') }).catch(() => {});
             } else {
-              try { navigator.clipboard.writeText(url); } catch {}
+              try {
+                navigator.clipboard.writeText(url);
+              } catch {
+                // Ignore clipboard errors
+              }
             }
           }}
         >
@@ -76,6 +86,6 @@ export default function SharePopover({ postId, postSlug, className, urlOverride,
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
-
+export default SharePopover;

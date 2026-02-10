@@ -10,47 +10,37 @@ export async function waitForAeEthDeposit(
   prevAeEthBalance: bigint,
   expectedIncrease: bigint,
   timeoutMs: number = 300_000,
-  pollIntervalMs: number = 6000
+  pollIntervalMs: number = 6000,
 ): Promise<boolean> {
-
   const startTime = Date.now();
-  console.info('[Bridge] Waiting for æETH deposit…', {
-    expectedIncrease: expectedIncrease.toString(),
-    account: aeAccount
+  const delay = (ms: number) => new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
   });
 
-  while (Date.now() - startTime < timeoutMs) {
+  const poll = async (): Promise<boolean> => {
+    if (Date.now() - startTime >= timeoutMs) {
+      return false;
+    }
     try {
       const currentBalance = await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
-
-      console.info('[Bridge] æETH balance check', {
-        previous: prevAeEthBalance.toString(),
-        current: currentBalance.toString(),
-        expectedIncrease: expectedIncrease.toString()
-      });
 
       // Check if we received the expected amount (with some tolerance for precision)
       const actualIncrease = currentBalance - prevAeEthBalance;
       const tolerance = expectedIncrease / 1000n; // 0.1% tolerance
 
       if (actualIncrease >= (expectedIncrease - tolerance)) {
-        console.info('[Bridge] æETH deposit confirmed', {
-          actualIncrease: actualIncrease.toString(),
-          expectedIncrease: expectedIncrease.toString()
-        });
         return true;
       }
-    } catch (error) {
-      console.warn('[Bridge] Error checking æETH balance:', error);
+    } catch {
       // Continue polling despite errors
     }
 
     // Wait before next poll
-    await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
-  }
+    await delay(pollIntervalMs);
+    return poll();
+  };
 
-  console.warn('[Bridge] Timeout waiting for æETH deposit');
-  return false;
+  return poll();
 }
 
 /**
@@ -61,7 +51,7 @@ export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bi
     throw new Error('æternity SDK not available');
   }
 
-  return await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
+  return getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
 }
 
 /**
@@ -70,13 +60,12 @@ export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bi
 export async function hasMinimumAeEthBalance(
   sdk: AeSdk,
   aeAccount: string,
-  minAmount: bigint
+  minAmount: bigint,
 ): Promise<boolean> {
   try {
     const balance = await getAeEthBalance(sdk, aeAccount);
     return balance >= minAmount;
-  } catch (error) {
-    console.error('[Bridge] Error checking æETH balance:', error);
+  } catch {
     return false;
   }
 }

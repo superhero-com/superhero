@@ -1,26 +1,28 @@
-import { PriceDto } from "@/api/generated/models/PriceDto";
-import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
+import { PriceDto } from '@/api/generated/models/PriceDto';
+import { AccountTokensService } from '@/api/generated/services/AccountTokensService';
 import {
   DataTable,
   DataTableResponse,
-} from "@/features/shared/components/DataTable/DataTable";
-import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
-import { Decimal } from "@/libs/decimal";
-import { useState } from "react";
+} from '@/features/shared/components/DataTable/DataTable';
+import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
+import { Decimal } from '@/libs/decimal';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AccountOwnedTokensProps {
   address: string;
   tab: string;
 }
 
-export default function AccountOwnedTokens({
+const AccountOwnedTokens = ({
   address,
   tab,
-}: AccountOwnedTokensProps) {
+}: AccountOwnedTokensProps) => {
+  const { t } = useTranslation('common');
   // Owned tokens with balances (account tokens endpoint)
   const [ownedOrderDirection, setOwnedOrderDirection] = useState<
-    "ASC" | "DESC"
-  >("DESC");
+    'ASC' | 'DESC'
+  >('DESC');
 
   const fetchOwnedTokens = async (params: any) => {
     const response = (await AccountTokensService.listTokenHolders({
@@ -36,27 +38,27 @@ export default function AccountOwnedTokens({
       return acc;
     }, {} as PriceDto);
   }
-  
 
   return (
     <div className="mt-3">
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-4 py-2.5 border-b border-white/10 text-[11px] font-semibold text-white/60 uppercase tracking-wide">
-          <div>Token</div>
-          <div>Price</div>
+          <div>{t('account.token')}</div>
+          <div>{t('account.price')}</div>
           <button
+            type="button"
             className="text-left hover:opacity-80"
-            onClick={() =>
-              setOwnedOrderDirection(
-                ownedOrderDirection === "DESC" ? "ASC" : "DESC"
-              )
-            }
-            title="Sort by balance"
+            onClick={() => setOwnedOrderDirection(
+              ownedOrderDirection === 'DESC' ? 'ASC' : 'DESC',
+            )}
+            title={t('titles.sortByBalance')}
           >
-            Balance {ownedOrderDirection === "DESC" ? "↓" : "↑"}
+            Balance
+            {' '}
+            {ownedOrderDirection === 'DESC' ? '↓' : '↑'}
           </button>
-          <div>Total Value</div>
+          <div>{t('account.totalValue')}</div>
         </div>
 
         {/* Rows */}
@@ -65,20 +67,16 @@ export default function AccountOwnedTokens({
             queryFn={fetchOwnedTokens}
             renderRow={({ item, index }) => {
               const token = item?.token || item;
-              const tokenName =
-                token?.name ||
-                token?.symbol ||
-                token?.address ||
-                `Token ${index + 1}`;
-              const tokenHref =
-                token?.name || token?.address
-                  ? `/trends/tokens/${encodeURIComponent(
-                      token?.name || token?.address
-                    )}`
-                  : undefined;
-              const balance =
-                item?.balance ?? item?.holder_balance ?? item?.amount;
-              const balanceData = item?.balance_data;
+              const tokenName = token?.name
+                || token?.symbol
+                || token?.address
+                || `Token ${index + 1}`;
+              const tokenHref = token?.name || token?.address
+                ? `/trends/tokens/${encodeURIComponent(
+                  token?.name || token?.address,
+                )}`
+                : undefined;
+              const balance = item?.balance ?? item?.holder_balance ?? item?.amount;
               const priceData = token?.price_data;
 
               return (
@@ -105,13 +103,13 @@ export default function AccountOwnedTokens({
                     {/* Two columns aligned: Price | Amount (with labels) */}
                     <div className="mt-1 grid grid-cols-2 gap-3 items-start">
                       <div>
-                        <div className="text-white/60 text-xs font-medium mb-0.5">Price</div>
+                        <div className="text-white/60 text-xs font-medium mb-0.5">{t('account.price')}</div>
                         <div className="bg-gradient-to-r text-[12px] from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
                           <PriceDataFormatter watchPrice={false} priceData={priceData} />
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-white/60 text-xs font-medium mb-0.5">Amount</div>
+                        <div className="text-white/60 text-xs font-medium mb-0.5">{t('account.amount')}</div>
                         <div className="bg-gradient-to-r text-[12px] from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
                           {Decimal.from(balance).div(10 ** (token?.decimals || 18)).prettify()}
                         </div>
@@ -121,7 +119,7 @@ export default function AccountOwnedTokens({
                             watchPrice={false}
                             className="text-[11px] text-white/70"
                             priceData={calculateTotalValue(balance, priceData)}
-                            rowOnSm={true}
+                            rowOnSm
                           />
                         </div>
                       </div>
@@ -164,31 +162,32 @@ export default function AccountOwnedTokens({
                     </div>
 
                     <div className="flex items-center">
-                        <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                          <PriceDataFormatter
-                            bignumber
-                            watchPrice={false}
-                            priceData={calculateTotalValue(balance, priceData)}
-                          />
-                        </div>
+                      <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                        <PriceDataFormatter
+                          bignumber
+                          watchPrice={false}
+                          priceData={calculateTotalValue(balance, priceData)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             }}
             initialParams={{
-              address: address,
-              orderBy: "balance",
+              address,
+              orderBy: 'balance',
               orderDirection: ownedOrderDirection,
-              enabled: !!address && tab === "owned",
+              enabled: !!address && tab === 'owned',
               staleTime: 60_000,
             }}
             itemsPerPage={10}
-            emptyMessage="This user doesn't own any Trendminer tokens yet."
+            emptyMessage={t('explore:noOwnedTokens')}
             className="space-y-2 md:space-y-1"
           />
         </div>
-        <style>{`
+        <style>
+          {`
                 .owned-token-row:hover .token-name {
                   background: linear-gradient(to right, #fb923c, #fbbf24);
                   -webkit-background-clip: text;
@@ -201,8 +200,11 @@ export default function AccountOwnedTokens({
                 .owned-token-row:active {
                   transform: translateY(0);
                 }
-              `}</style>
+              `}
+        </style>
       </div>
     </div>
   );
-}
+};
+
+export default AccountOwnedTokens;

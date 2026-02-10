@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {
+  useCallback, useState, useEffect, useMemo,
+} from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { Decimal } from '@/libs/decimal';
 import { SuperheroApi } from '../../../api/backend';
 import { Input } from '../../../components/ui/input';
-import AeButton from '../../../components/AeButton';
 import { cn } from '../../../lib/utils';
-import { Decimal } from '@/libs/decimal';
 
 interface Repository {
   fullName: string;
@@ -24,11 +26,6 @@ interface Repository {
 interface RepositoriesListProps {
   className?: string;
 }
-
-const sortBySelectItems = [
-  { value: 'score' as const, name: 'Most Trending' },
-  { value: 'source' as const, name: 'Source' },
-];
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -51,37 +48,38 @@ function formatCompact(value: number | string): string {
   const n = Number(value) || 0;
   const abs = Math.abs(n);
   if (abs >= 1_000_000) {
-    return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   }
   if (abs >= 1_000) {
-    return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
   }
   return n.toFixed(1).replace(/\.0$/, '');
 }
 
 function hasToken(repo: Repository): boolean {
   return !!(
-    repo?.token_sale_address ||
-    repo?.sale_address ||
-    repo?.token_address ||
-    repo?.tokenSaleAddress ||
-    repo?.saleAddress ||
-    repo?.token?.address
+    repo?.token_sale_address
+    || repo?.sale_address
+    || repo?.token_address
+    || repo?.tokenSaleAddress
+    || repo?.saleAddress
+    || repo?.token?.address
   );
 }
 
-export default function RepositoriesList({ className }: RepositoriesListProps) {
+const RepositoriesList = ({ className }: RepositoriesListProps) => {
+  const { t } = useTranslation('explore');
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'score' | 'source'>('score');
+  const [sortBy] = useState<'score' | 'source'>('score');
   const [isLoading, setIsLoading] = useState(true);
   const [repositoriesResponse, setRepositoriesResponse] = useState<any>(null);
 
   const searchDebounced = useDebounce(search, 300);
 
-  const currentRepositoriesList = useMemo(() =>
-    (repositoriesResponse?.items || []).slice(0, 50),
-    [repositoriesResponse]
+  const currentRepositoriesList = useMemo(
+    () => (repositoriesResponse?.items || []).slice(0, 50),
+    [repositoriesResponse],
   );
 
   const onCardAction = (repo: Repository) => {
@@ -92,7 +90,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
     }
   };
 
-  const fetchTrendingRepositories = async () => {
+  const fetchTrendingRepositories = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await SuperheroApi.listTrendingTags({
@@ -100,7 +98,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
         orderDirection: 'DESC',
         limit: 20, // shouldn't be bigger than the tokens list as it can break the scroll
         page: 1,
-        search: search || undefined,
+        search: searchDebounced || undefined,
       });
       setRepositoriesResponse(response);
     } catch (error) {
@@ -108,17 +106,17 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortBy, searchDebounced]);
 
   useEffect(() => {
     fetchTrendingRepositories();
-  }, [searchDebounced, sortBy, search]);
+  }, [fetchTrendingRepositories]);
 
   return (
     <div className={cn('repositories-list ', className)}>
       {/* Header and Controls */}
       <div className="flex flex-col gap-4 mb-6">
-        <h2 className="text-xl font-bold text-white">Explore Trends</h2>
+        <h2 className="text-xl font-bold text-white">{t('exploreTrends')}</h2>
 
         {/* Search and Sort on single line */}
         <div className="flex items-center gap-3">
@@ -126,7 +124,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search trends..."
+              placeholder={t('searchTrendsPlaceholder')}
               className="bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl placeholder:text-white/50 focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] h-10"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60">
@@ -153,22 +151,22 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       {/* Loading State */}
       {isLoading && (
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="animate-pulse">
+          {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey) => (
+            <div key={rowKey} className="animate-pulse">
               <div className="px-4 py-2.5">
                 {/* Single Line Layout Skeleton */}
                 <div className="flex items-center justify-between gap-3">
                   {/* Left: Tag Name */}
-                  <div className="bg-white/10 h-4 w-24 rounded flex-shrink-0"></div>
+                  <div className="bg-white/10 h-4 w-24 rounded flex-shrink-0" />
 
                   {/* Center: Score and Source */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="bg-white/10 h-3.5 w-12 rounded"></div>
-                    <div className="bg-white/10 h-3 w-16 rounded"></div>
+                    <div className="bg-white/10 h-3.5 w-12 rounded" />
+                    <div className="bg-white/10 h-3 w-16 rounded" />
                   </div>
 
                   {/* Right: Action Button */}
-                  <div className="bg-white/10 h-6 w-16 rounded flex-shrink-0"></div>
+                  <div className="bg-white/10 h-6 w-16 rounded flex-shrink-0" />
                 </div>
               </div>
             </div>
@@ -179,8 +177,8 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       {/* No Results */}
       {!currentRepositoriesList.length && !isLoading && (
         <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80">
-          <h3 className="font-semibold mb-2 text-white">No repositories found</h3>
-          <p>Try adjusting your search terms or filters.</p>
+          <h3 className="font-semibold mb-2 text-white">{t('noRepositoriesFound')}</h3>
+          <p>{t('tryAdjustingSearch')}</p>
         </div>
       )}
 
@@ -214,8 +212,11 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                   {
                     hasToken(repo) ? (
                       <div className="text-xs text-white/60 font-medium truncate">
-                        {Decimal.from((repo as any).token?.price || 0).prettify()} AE
-                        Holders: {(repo as any).token?.holders_count ?? 0}
+                        {Decimal.from((repo as any).token?.price || 0).prettify()}
+                        {' '}
+                        AE
+                        Holders:
+                        {(repo as any).token?.holders_count ?? 0}
 
                       </div>
                     ) : (
@@ -233,9 +234,13 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                                 e.stopPropagation();
                               }}
                               target="_blank"
-                              href={`https://x.com/search?q=${encodeURIComponent('#' + repo.tag)}&src=typed_query`}
-                              className="text-xs text-white/60 font-medium">
-                              Via: {repo.source}
+                              href={`https://x.com/search?q=${encodeURIComponent(`#${repo.tag}`)}&src=typed_query`}
+                              className="text-xs text-white/60 font-medium"
+                              rel="noreferrer"
+                            >
+                              Via:
+                              {' '}
+                              {repo.source}
                             </a>
                           )
                         }
@@ -243,11 +248,11 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                     )
                   }
 
-
                   {/* Right: Action Button */}
                   <div className="flex-shrink-0">
                     {hasToken(repo) ? (
                       <button
+                        type="button"
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -258,6 +263,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                       </button>
                     ) : (
                       <button
+                        type="button"
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -270,12 +276,13 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                   </div>
                 </div>
               </div>
-            </div >
-          ))
-          }
-        </div >
+            </div>
+          ))}
+        </div>
       )}
 
-    </div >
+    </div>
   );
-}
+};
+
+export default RepositoriesList;

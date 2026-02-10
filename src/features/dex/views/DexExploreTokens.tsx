@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { DexService } from "../../../api/generated";
-import { TokenListCards } from "../../../components/explore/components/TokenListCards";
-import { TokenListTable } from "../../../components/explore/components/TokenListTable";
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { DexService } from '../../../api/generated';
+import { TokenListCards } from '../../../components/explore/components/TokenListCards';
+import { TokenListTable } from '../../../components/explore/components/TokenListTable';
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -14,38 +14,38 @@ interface PaginatedResponse<T> {
   };
 }
 
-export default function DexExploreTokens() {
-  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume" | "30dchange" | "30dvolume">(
-    "30dvolume"
+const DexExploreTokens = () => {
+  const [sort, setSort] = useState<'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume'>(
+    '30dvolume',
   );
-  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
+  const [limit] = useState(10);
+  const [search, setSearch] = useState('');
 
   const handleSortChange = (key: typeof sort) => {
     if (key === sort) {
       // Toggle direction if same key
-      setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+      setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
     } else {
       // New key, reset to DESC
       setSort(key);
-      setSortDirection("DESC");
+      setSortDirection('DESC');
     }
   };
 
   const { data, isLoading } = useQuery({
     queryFn: async () => {
       const result = await DexService.listAllDexTokens({
-        page: page,
-        limit: limit,
+        page,
+        limit,
         orderBy: sort,
         orderDirection: sortDirection,
-        search: search,
+        search,
       });
       return result as unknown as PaginatedResponse<any>;
     },
-    queryKey: ["DexService.listAllDexTokens", sort, sortDirection, page, limit, search],
+    queryKey: ['DexService.listAllDexTokens', sort, sortDirection, page, limit, search],
   });
 
   return (
@@ -67,7 +67,7 @@ export default function DexExploreTokens() {
         <div className="md:hidden">
           <TokenListCards
             tokens={data?.items ?? []}
-            sort={{ key: sort, asc: sortDirection === "ASC" }}
+            sort={{ key: sort, asc: sortDirection === 'ASC' }}
             onSortChange={handleSortChange}
             search={search}
             onSearchChange={setSearch}
@@ -77,7 +77,7 @@ export default function DexExploreTokens() {
         <div className="hidden md:block">
           <TokenListTable
             tokens={data?.items ?? []}
-            sort={{ key: sort, asc: sortDirection === "ASC" }}
+            sort={{ key: sort, asc: sortDirection === 'ASC' }}
             onSortChange={handleSortChange}
             search={search}
             onSearchChange={setSearch}
@@ -92,7 +92,17 @@ export default function DexExploreTokens() {
             {/* Pagination Info */}
             <div className="flex items-center gap-2 order-2 md:order-1">
               <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                Showing {(page - 1) * limit + 1}-{Math.min(page * limit, data.meta.totalItems)} of {data.meta.totalItems} tokens
+                Showing
+                {' '}
+                {(page - 1) * limit + 1}
+                -
+                {Math.min(page * limit, data.meta.totalItems)}
+                {' '}
+                of
+                {' '}
+                {data.meta.totalItems}
+                {' '}
+                tokens
               </span>
             </div>
 
@@ -100,12 +110,13 @@ export default function DexExploreTokens() {
             <div className="flex items-center gap-1.5 md:gap-2 order-1 md:order-2 flex-wrap justify-center md:justify-start">
               {/* Previous Page Button */}
               <button
+                type="button"
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
                 className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[80px] md:min-w-auto ${page === 1
-                  ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                  : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px"
-                  }`}
+                  ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                  : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
+                }`}
                 title="Previous page"
               >
                 ← Prev
@@ -117,18 +128,21 @@ export default function DexExploreTokens() {
                   {page}
                 </span>
                 <span className="text-sm text-[var(--light-font-color)]">
-                  of {Math.ceil(data.meta.totalItems / limit)}
+                  of
+                  {' '}
+                  {Math.ceil(data.meta.totalItems / limit)}
                 </span>
               </div>
 
               {/* Next Page Button */}
               <button
+                type="button"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                 className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
-                  ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
-                  : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px"
-                  }`}
+                  ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
+                  : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
+                }`}
                 title="Next page"
               >
                 Next →
@@ -150,4 +164,6 @@ export default function DexExploreTokens() {
       </div>
     </div>
   );
-}
+};
+
+export default DexExploreTokens;

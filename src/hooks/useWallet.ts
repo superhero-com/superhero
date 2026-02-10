@@ -48,7 +48,7 @@ export const useWallet = () => {
   }, [setAddress, setBalance, setProfile, setCookiesConsent]);
 
   const addTokenBalance = useCallback((tokenBalance: TokenBalance) => {
-    setTokenBalances(prev => {
+    setTokenBalances((prev) => {
       const map = new Map(prev.map((b) => [b.token, b] as const));
       map.set(tokenBalance.token, tokenBalance);
       return Array.from(map.values()).sort((a, b) => a.token.localeCompare(b.token));
@@ -56,14 +56,14 @@ export const useWallet = () => {
   }, [setTokenBalances]);
 
   const addTokenPrice = useCallback((token: string, price: string) => {
-    setTokenPrices(prev => ({
+    setTokenPrices((prev) => ({
       ...prev,
       [token]: price,
     }));
   }, [setTokenPrices]);
 
   const setCookieConsent = useCallback((scope: string, status: boolean) => {
-    setCookiesConsent(prev => ({
+    setCookiesConsent((prev) => ({
       ...prev,
       [scope]: status,
     }));
@@ -88,7 +88,7 @@ export const useWallet = () => {
     isNewAccount,
     isConnected,
     hasBalance,
-    
+
     // Actions
     setAddress,
     setBalance,

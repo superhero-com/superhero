@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input } from './ui/input';
-import { cn } from '@/lib/utils';
 
-export default function SearchInput() {
+const SearchInput = () => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const [q, setQ] = useState(params.get('search') || '');
-  
+
   return (
     <form
       onSubmit={(e) => {
@@ -29,6 +28,6 @@ export default function SearchInput() {
       />
     </form>
   );
-}
+};
 
-
+export default SearchInput;

@@ -1,13 +1,14 @@
-import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
-import { cn } from "@/lib/utils";
-import { memo, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { linkify } from "../../../utils/linkify";
-import BlockchainInfoPopover from "./BlockchainInfoPopover";
-import SharePopover from "./SharePopover";
-import { useWallet } from "../../../hooks";
-import type { PostDto } from "../../../api/generated";
-import { compactTime, fullTimestamp } from "../../../utils/time";
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { cn } from '@/lib/utils';
+import { memo, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { linkify } from '../../../utils/linkify';
+import { BlockchainInfoPopover } from './BlockchainInfoPopover';
+import SharePopover from './SharePopover';
+import { useWallet } from '../../../hooks';
+import type { PostDto } from '../../../api/generated';
+import { compactTime, fullTimestamp } from '../../../utils/time';
 
 interface TokenCreatedFeedItemProps {
   item: PostDto;
@@ -17,9 +18,9 @@ interface TokenCreatedFeedItemProps {
 function useTokenName(item: PostDto): string | null {
   return useMemo(() => {
     const fromId = () => {
-      const id = String(item?.id || "");
-      if (!id.startsWith("token-created:")) return null;
-      const parts = id.replace(/_v3$/, "").split(":");
+      const id = String(item?.id || '');
+      if (!id.startsWith('token-created:')) return null;
+      const parts = id.replace(/_v3$/, '').split(':');
       const encoded = parts[1];
       if (!encoded) return null;
       try { return decodeURIComponent(encoded); } catch { return encoded; }
@@ -41,8 +42,9 @@ function useTokenName(item: PostDto): string | null {
 const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
+  const { t } = useTranslation(['common', 'social']);
   const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || "Legend";
+  const displayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -50,13 +52,21 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const navigate = useNavigate();
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <article
       className={cn(
-        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]"
+        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]',
       )}
       onClick={handleOpen}
-      role="button"
-      aria-label="Open post"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleOpen();
+        }
+      }}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+      aria-label={t('social:openPost')}
     >
       {item.tx_hash && (
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
@@ -75,10 +85,10 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
       <div className="flex gap-2 md:gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={34} overlaySize={16} showAddressAndChainName={false} />
+            <AddressAvatarWithChainName address={authorAddress} size={34} showAddressAndChainName={false} variant="feed" />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} />
+            <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
           </div>
         </div>
 
@@ -96,18 +106,20 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
           {/* Tokenized trend header */}
           <div
             className="mt-3 mb-2 w-full text-left bg-white/[0.04] rounded-xl p-3"
-            title="Open token"
+            title={t('social:openToken')}
           >
             <div className="flex items-center gap-1 min-w-0">
               <span className="text-[11px] text-white/65 shrink-0">{displayName}</span>
-              <span className="text-[11px] text-white/65 shrink-0">created</span>
+              <span className="text-[11px] text-white/65 shrink-0">{t('social:created')}</span>
               {tokenName && (
                 <span className="text-[12px] truncate">
                   {linkify(`#${tokenName}`, {
-                    knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
+                    knownChainNames: new Set(
+                      Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
+                    ),
                     hashtagVariant: 'post-inline',
                     trendMentions: (item as any)?.trend_mentions,
-                    })}
+                  })}
                 </span>
               )}
             </div>
@@ -121,9 +133,9 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                   type="button"
                   onClick={(e) => { e.stopPropagation(); navigate(tokenLink); }}
                   className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors"
-                  title="Buy"
+                  title={t('social:buy')}
                 >
-                  Buy
+                  {t('social:buy')}
                 </button>
               )}
             </div>
@@ -135,8 +147,6 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   );
 });
 
-TokenCreatedFeedItem.displayName = "TokenCreatedFeedItem";
+TokenCreatedFeedItem.displayName = 'TokenCreatedFeedItem';
 
 export default TokenCreatedFeedItem;
-
-

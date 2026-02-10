@@ -12,7 +12,7 @@ export interface InvitationInfo {
 
 export interface InvitationStatus {
   hash: string;
-  status: "created" | "claimed" | "revoked";
+  status: 'created' | 'claimed' | 'revoked';
   invitee: string;
   date?: string;
   amount: string;
@@ -60,5 +60,5 @@ export const refreshInvitationsAtom = atom(
   (get, set) => {
     const current = get(invitationRefreshTriggerAtom);
     set(invitationRefreshTriggerAtom, current + 1);
-  }
+  },
 );

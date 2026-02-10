@@ -7,15 +7,13 @@ import { getNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useModal } from '../../../hooks';
 
-
-export default function WebAppHeader() {
-  const { t: tNav } = useTranslation('navigation');
+const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = getNavigationItems();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
-  
+
   useEffect(() => {
     // force theme to be dark
     document.documentElement.dataset.theme = 'dark';
@@ -25,10 +23,10 @@ export default function WebAppHeader() {
   const sidebarItems = useMemo(() => {
     const items = [...navigationItems];
     items.push({
-      id: "account",
-      label: "Account",
-      path: activeAccount ? `/users/${activeAccount}` : "",
-      icon: "👤",
+      id: 'account',
+      label: 'Account',
+      path: activeAccount ? `/users/${activeAccount}` : '',
+      icon: '👤',
     });
     return items;
   }, [navigationItems, activeAccount]);
@@ -38,11 +36,9 @@ export default function WebAppHeader() {
   const activeNavPath = React.useMemo(() => {
     const matches = sidebarItems
       .filter((item: any) => !!item?.path && !item?.isExternal)
-      .filter((item: any) =>
-        item.path === '/'
-          ? pathname === '/'
-          : pathname === item.path || pathname.startsWith(`${item.path}/`)
-      )
+      .filter((item: any) => (item.path === '/'
+        ? pathname === '/'
+        : pathname === item.path || pathname.startsWith(`${item.path}/`)))
       .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
     return matches[0]?.path || '';
   }, [sidebarItems, pathname]);
@@ -58,7 +54,7 @@ export default function WebAppHeader() {
         WebkitBackdropFilter: 'blur(16px)',
         borderRightColor: 'rgba(255, 255, 255, 0.12)',
       }}
-      aria-label="Primary"
+      aria-label={t('aria.primary')}
     >
       <div className="flex items-center h-16 px-6">
         <Link
@@ -71,12 +67,11 @@ export default function WebAppHeader() {
         </Link>
       </div>
 
-      <nav className="flex flex-col gap-1 px-3" aria-label="Main">
+      <nav className="flex flex-col gap-1 px-3" aria-label={t('aria.main')}>
         {sidebarItems
           .filter((item: any) => !!item && !!item.id)
           .map((item: any) => {
-            const commonClass =
-              "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium";
+            const commonClass = 'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium';
             const isActive = isActiveRoute(item.path);
             const activeStyles = {
               color: 'var(--standard-font-color)',
@@ -87,7 +82,7 @@ export default function WebAppHeader() {
               backgroundColor: 'transparent',
             };
 
-            if (item.id === "account" && !activeAccount) {
+            if (item.id === 'account' && !activeAccount) {
               return (
                 <button
                   key={item.id}
@@ -149,4 +144,6 @@ export default function WebAppHeader() {
       </div>
     </aside>
   );
-}
+};
+
+export default WebAppHeader;

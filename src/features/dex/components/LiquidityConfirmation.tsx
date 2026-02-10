@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '@/libs/decimal';
 import Spinner from '@/components/Spinner';
+import { DexTokenDto } from '../../../api/generated';
 
 interface LiquidityConfirmationProps {
   show: boolean;
@@ -22,7 +22,7 @@ interface LiquidityConfirmationProps {
   loading: boolean;
 }
 
-export default function LiquidityConfirmation({
+const LiquidityConfirmation = ({
   show,
   onClose,
   onConfirm,
@@ -33,8 +33,8 @@ export default function LiquidityConfirmation({
   slippagePct,
   deadlineMins,
   pairPreview,
-  loading
-}: LiquidityConfirmationProps) {
+  loading,
+}: LiquidityConfirmationProps) => {
   if (!tokenA || !tokenB) return null;
 
   return (
@@ -48,7 +48,10 @@ export default function LiquidityConfirmation({
               Confirm Add Liquidity
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0">
+              <button
+                type="button"
+                className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
+              >
                 ✕
               </button>
             </Dialog.Close>
@@ -59,7 +62,7 @@ export default function LiquidityConfirmation({
             <div className="text-sm font-semibold text-white/60 mb-4 text-center">
               You will deposit
             </div>
-            
+
             <div className="grid gap-3">
               <div className="flex justify-between items-center px-4 py-3 bg-white/[0.03] rounded-xl border border-white/10">
                 <div className="flex items-center gap-3">
@@ -107,7 +110,15 @@ export default function LiquidityConfirmation({
                   <div className="flex justify-between text-xs text-white/60">
                     <span>Exchange Rate</span>
                     <span className="text-white">
-                      1 {tokenA.symbol} = {Decimal.from(pairPreview.ratioBinA || '0').prettify()} {tokenB.symbol}
+                      1
+                      {' '}
+                      {tokenA.symbol}
+                      {' '}
+                      =
+                      {' '}
+                      {Decimal.from(pairPreview.ratioBinA || '0').prettify()}
+                      {' '}
+                      {tokenB.symbol}
                     </span>
                   </div>
                 )}
@@ -116,7 +127,8 @@ export default function LiquidityConfirmation({
                   <div className="flex justify-between text-xs text-white/60">
                     <span>Your Pool Share</span>
                     <span className="text-[#1161FE] font-semibold">
-                      {Decimal.from(pairPreview.sharePct || '0').prettify()}%
+                      {Decimal.from(pairPreview.sharePct || '0').prettify()}
+                      %
                     </span>
                   </div>
                 )}
@@ -138,11 +150,18 @@ export default function LiquidityConfirmation({
             <div className="grid gap-2 text-xs">
               <div className="flex justify-between text-white/60">
                 <span>Slippage Tolerance</span>
-                <span className="text-white">{slippagePct}%</span>
+                <span className="text-white">
+                  {slippagePct}
+                  %
+                </span>
               </div>
               <div className="flex justify-between text-white/60">
                 <span>Transaction Deadline</span>
-                <span className="text-white">{deadlineMins} minutes</span>
+                <span className="text-white">
+                  {deadlineMins}
+                  {' '}
+                  minutes
+                </span>
               </div>
             </div>
           </div>
@@ -150,6 +169,7 @@ export default function LiquidityConfirmation({
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={onClose}
               disabled={loading}
               className={`flex-1 px-5 py-3 rounded-full border border-white/10 bg-white/[0.02] text-white text-sm font-semibold cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out ${
@@ -159,11 +179,12 @@ export default function LiquidityConfirmation({
               Cancel
             </button>
             <button
+              type="button"
               onClick={onConfirm}
               disabled={loading}
               className={`flex-[2] px-5 py-3 rounded-full border-none text-white text-sm font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 ${
-                loading 
-                  ? 'bg-white/10 cursor-not-allowed opacity-60' 
+                loading
+                  ? 'bg-white/10 cursor-not-allowed opacity-60'
                   : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
               }`}
             >
@@ -177,7 +198,9 @@ export default function LiquidityConfirmation({
           </div>
         </Dialog.Content>
       </Dialog.Portal>
-      
+
     </Dialog.Root>
   );
-}
+};
+
+export default LiquidityConfirmation;

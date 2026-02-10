@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -7,12 +8,17 @@ interface TokenCandlestickChartSkeletonProps {
   boilerplate?: boolean;
 }
 
-export default function TokenCandlestickChartSkeleton({ 
-  boilerplate = false 
-}: TokenCandlestickChartSkeletonProps) {
+const TokenCandlestickChartSkeleton = ({
+  boilerplate = false,
+}: TokenCandlestickChartSkeletonProps) => {
+  const { t } = useTranslation('explore');
   const skeletonClass = cn(
     'bg-gradient-to-r from-white/10 via-white/20 to-white/10',
-    'bg-[length:200%_100%] animate-skeleton-loading rounded'
+    'bg-[length:200%_100%] animate-skeleton-loading rounded',
+  );
+  const makeKeys = (count: number, prefix: string) => Array.from(
+    { length: count },
+    (_, idx) => `${prefix}-${idx + 1}`,
   );
 
   return (
@@ -30,13 +36,13 @@ export default function TokenCandlestickChartSkeleton({
             {/* Price info */}
             <div className="price-info mt-3">
               <div className="flex gap-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className={cn(skeletonClass, 'price-item w-44 h-2')} />
+                {makeKeys(4, 'price').map((key) => (
+                  <div key={key} className={cn(skeletonClass, 'price-item w-44 h-2')} />
                 ))}
               </div>
               <div className="flex gap-2 mt-2">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div key={index} className={cn(skeletonClass, 'volume-item w-24 h-2')} />
+                {makeKeys(2, 'volume').map((key) => (
+                  <div key={key} className={cn(skeletonClass, 'volume-item w-24 h-2')} />
                 ))}
               </div>
             </div>
@@ -51,18 +57,21 @@ export default function TokenCandlestickChartSkeleton({
                   {/* Chart Icon */}
                   <div className="chart-icon w-[30px] h-[30px] p-1 text-white">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                      <path opacity="0.44"
+                      <path
+                        opacity="0.44"
                         d="M12.5502 22C10.0943 22.0008 7.73533 21.0415 5.97689 19.327C4.21846 17.6126 3.19983 15.2787 3.13843 12.8235L13.7266 14.9412V3.24884C16.1044 3.54537 18.2795 4.73764 19.8085 6.58256C21.3375 8.42749 22.1053 10.7861 21.9552 13.1776C21.8052 15.569 20.7486 17.8132 19.001 19.4526C17.2534 21.0919 14.9463 22.003 12.5502 22Z"
-                        fill="currentColor" />
+                        fill="currentColor"
+                      />
                       <path
                         d="M11.3706 12.1176L2.03003 10.25C2.31442 7.97291 3.42048 5.87803 5.14043 4.3589C6.86037 2.83977 9.07583 2.00094 11.3706 2V12.1176Z"
-                        fill="currentColor" />
+                        fill="currentColor"
+                      />
                     </svg>
                   </div>
 
                   <div className="loading-text text-white">
-                    <div className="title text-base">Loading</div>
-                    <div className="subtitle opacity-30">Data will be shown shortly</div>
+                    <div className="title text-base">{t('loadingChart')}</div>
+                    <div className="subtitle opacity-30">{t('dataWillBeShownShortly')}</div>
                   </div>
                 </div>
               </div>
@@ -70,8 +79,8 @@ export default function TokenCandlestickChartSkeleton({
 
             {/* Price points on the right */}
             <div className="price-points absolute right-0 -top-1 -bottom-1 w-[75px] flex flex-col justify-between">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className={cn(skeletonClass, 'skeleton-line w-full h-2')} />
+              {makeKeys(8, 'price-point').map((key) => (
+                <div key={key} className={cn(skeletonClass, 'skeleton-line w-full h-2')} />
               ))}
             </div>
 
@@ -79,14 +88,14 @@ export default function TokenCandlestickChartSkeleton({
             <div className="grid-lines relative flex flex-col justify-between w-full opacity-50 mr-[85px]">
               {/* Horizontal lines */}
               <div className="absolute top-0 left-0 right-0 bottom-0 flex flex-col justify-between">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className={cn(skeletonClass, 'horizontal-line w-full h-px')} />
+                {makeKeys(8, 'horizontal-line').map((key) => (
+                  <div key={key} className={cn(skeletonClass, 'horizontal-line w-full h-px')} />
                 ))}
               </div>
               {/* Vertical lines */}
               <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-between px-10 md:px-14">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className={cn(skeletonClass, 'vertical-line w-px h-full')} />
+                {makeKeys(5, 'vertical-line').map((key) => (
+                  <div key={key} className={cn(skeletonClass, 'vertical-line w-px h-full')} />
                 ))}
               </div>
             </div>
@@ -94,8 +103,8 @@ export default function TokenCandlestickChartSkeleton({
 
           {/* Footer Section */}
           <div className="chart-footer flex items-center justify-between gap-4 mt-4">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className={cn(skeletonClass, 'skeleton-dot w-[14px] h-[14px] rounded-full')} />
+            {makeKeys(8, 'footer-dot').map((key) => (
+              <div key={key} className={cn(skeletonClass, 'skeleton-dot w-[14px] h-[14px] rounded-full')} />
             ))}
 
             <div className="ml-auto flex items-center gap-2">
@@ -108,4 +117,6 @@ export default function TokenCandlestickChartSkeleton({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TokenCandlestickChartSkeleton;

@@ -1,9 +1,9 @@
-import { toAe } from "@aeternity/aepp-sdk";
-import AddressChip from "../../../components/AddressChip";
-import { TokenChip } from "../../../components/TokenChip";
-import { Decimal } from "../../../libs/decimal";
-import { usePool } from "../context/PoolProvider";
-import { LiquidityPosition } from "../types/pool";
+import { toAe } from '@aeternity/aepp-sdk';
+import { AddressChip } from '../../../components/AddressChip';
+import { TokenChip } from '../../../components/TokenChip';
+import { Decimal } from '../../../libs/decimal';
+import { usePool } from '../context/PoolProvider';
+import { LiquidityPosition } from '../types/pool';
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
@@ -11,20 +11,20 @@ interface LiquidityPositionCardProps {
   onAdd?: (position: LiquidityPosition) => void;
 }
 
-export default function LiquidityPositionCard({
+const LiquidityPositionCard = ({
   position,
   onRemove,
   onAdd,
-}: LiquidityPositionCardProps) {
-  const { currentAction, selectedPosition } = usePool();
+}: LiquidityPositionCardProps) => {
+  const { selectedPosition } = usePool();
   const isSelected = selectedPosition?.pair.address === position.pair.address;
 
   return (
     <div
       className={`flex justify-between flex-col p-4 gap-2 rounded-2xl backdrop-blur-sm transition-all duration-300 ${isSelected
-        ? "bg-red-500/10 border border-accent-color"
-        : "bg-white/[0.05] border border-glass-border"
-        }`}
+        ? 'bg-red-500/10 border border-accent-color'
+        : 'bg-white/[0.05] border border-glass-border'
+      }`}
     >
       <div className="flex-col md:flex-row flex gap-3 mb-2 ">
         <div className="flex items-center gap-3 mb-2 ">
@@ -34,11 +34,6 @@ export default function LiquidityPositionCard({
             <TokenChip token={position.pair.token1} />
           </div>
         </div>
-        {/* {position.valueUsd && (
-          <div className="text-xs text-success-color font-semibold px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20">
-            ${Decimal.from(position.valueUsd ?? "0").prettify()}
-          </div>
-        )} */}
         <div className="flex items-center gap-3 mb-2 ">
           <div className="text-[10px] text-light-font-color">View Pair:</div>
           <AddressChip
@@ -58,7 +53,7 @@ export default function LiquidityPositionCard({
               LP Tokens
             </span>
             <span className="font-semibold text-standard-font-color">
-              {Decimal.from(toAe(position.balance ?? "0")).prettify()}
+              {Decimal.from(toAe(position.balance ?? '0')).prettify()}
             </span>
           </div>
           {position.sharePct && (
@@ -67,7 +62,8 @@ export default function LiquidityPositionCard({
                 Pool Share
               </span>
               <span className="font-semibold text-standard-font-color">
-                {Decimal.from(position.sharePct ?? "0").prettify()}%
+                {Decimal.from(position.sharePct ?? '0').prettify()}
+                %
               </span>
             </div>
           )}
@@ -75,6 +71,7 @@ export default function LiquidityPositionCard({
         <div className="flex flex-wrap gap-2">
           {onAdd && (
             <button
+              type="button"
               onClick={() => onAdd(position)}
               className="px-4 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-accent-color hover:-translate-y-0.5"
             >
@@ -83,6 +80,7 @@ export default function LiquidityPositionCard({
           )}
           {onRemove && (
             <button
+              type="button"
               onClick={() => onRemove(position)}
               className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-error-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-red-500/20 hover:-translate-y-0.5"
             >
@@ -93,4 +91,6 @@ export default function LiquidityPositionCard({
       </div>
     </div>
   );
-}
+};
+
+export default LiquidityPositionCard;

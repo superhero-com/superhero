@@ -1,6 +1,10 @@
+/* eslint-disable max-len */
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { DexTokenDto } from "@/api/generated";
+import { DexTokenDto } from '@/api/generated';
+
+// Import RecentActivity type
+import type { RecentActivity } from '../components/dex/types/dex';
 
 // Type for individual liquidity position data
 export type LiquidityPositionData = {
@@ -13,25 +17,22 @@ export type LiquidityPositionData = {
 
 // DEX settings with localStorage persistence
 export const slippagePctAtom = atomWithStorage<number>('dex:slippage', (() => {
-  try { 
-    const v = localStorage.getItem('dex:slippage'); 
-    return v != null ? Math.max(0, Math.min(50, Number(v) || 5)) : 5; 
-  } catch { 
-    return 5; 
+  try {
+    const v = localStorage.getItem('dex:slippage');
+    return v != null ? Math.max(0, Math.min(50, Number(v) || 5)) : 5;
+  } catch {
+    return 5;
   }
 })());
 
 export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', (() => {
-  try { 
-    const v = localStorage.getItem('dex:deadline'); 
-    return v != null ? Math.max(1, Math.min(60, Number(v) || 30)) : 30; 
-  } catch { 
-    return 30; 
+  try {
+    const v = localStorage.getItem('dex:deadline');
+    return v != null ? Math.max(1, Math.min(60, Number(v) || 30)) : 30;
+  } catch {
+    return 30;
   }
 })());
-
-// Import RecentActivity type
-import type { RecentActivity } from '../components/dex/types/dex';
 
 // DEX state atoms
 // Structure: {[accountAddress]: {[pairAddress]: LiquidityPositionData}}

@@ -1,12 +1,12 @@
 import { createAppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
 import { AppKitNetwork, mainnet, sepolia } from '@reown/appkit/networks';
+import type { ReactNode } from 'react';
 import { BRIDGE_CONSTANTS } from '../constants';
 
 // WalletConnect / Reown project ID (must be provided via env)
-const projectId =
-  (import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID as string | undefined) ||
-  (typeof process !== 'undefined'
+const projectId = (import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID as string | undefined)
+  || (typeof process !== 'undefined'
     ? ((process.env as any).VITE_WALLET_CONNECT_PROJECT_ID as
         | string
         | undefined)
@@ -78,6 +78,4 @@ createAppKit({
   },
 });
 
-export function AppKitProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
+export const AppKitProvider = ({ children }: { children: ReactNode }) => children;

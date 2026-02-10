@@ -32,5 +32,3 @@ describe('errorToUserMessage', () => {
     expect(errorToUserMessage(new Error('foo'), { action: 'remove-liquidity' }).toLowerCase()).toContain('removing liquidity failed');
   });
 });
-
-

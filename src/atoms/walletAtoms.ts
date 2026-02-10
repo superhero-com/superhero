@@ -4,8 +4,8 @@ import { atomWithStorage } from 'jotai/utils';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 
 // Types from rootSlice
-export interface TokenBalance { 
-  token: string; 
+export interface TokenBalance {
+  token: string;
   balance: string;
 }
 
@@ -35,7 +35,6 @@ export const hasBalanceAtom = atom((get) => {
   const balance = get(balanceAtom);
   return typeof balance === 'number' ? balance > 0 : parseFloat(balance) > 0;
 });
-
 
 // New Atoms
 export const walletInfoAtom = atomWithStorage<WalletInfo | undefined>('wallet:walletInfo', undefined);

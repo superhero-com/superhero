@@ -1,17 +1,19 @@
-import React, { useCallback, useMemo, useState, ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
+import React, {
+  useCallback, useMemo, useState, ReactNode,
+} from 'react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
-import { ShieldCheck, X } from "lucide-react";
-import { CONFIG } from "@/config";
-import { cn } from "@/lib/utils";
-import { useTransactionStatus } from "@/hooks/useTransactionStatus";
-import { TransactionsService } from "@/api/generated";
+} from '@/components/ui/dropdown-menu';
+import { ShieldCheck, X } from 'lucide-react';
+import { CONFIG } from '@/config';
+import { cn } from '@/lib/utils';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { TransactionsService } from '@/api/generated';
 
 type BlockchainInfoPopoverProps = {
   txHash: string;
@@ -25,7 +27,7 @@ type BlockchainInfoPopoverProps = {
   triggerClassName?: string; // optional class for custom trigger
 };
 
-export function BlockchainInfoPopover({
+export const BlockchainInfoPopover = ({
   txHash,
   createdAt,
   sender,
@@ -35,7 +37,7 @@ export function BlockchainInfoPopover({
   showLabel,
   triggerContent,
   triggerClassName,
-}: BlockchainInfoPopoverProps) {
+}: BlockchainInfoPopoverProps) => {
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
   const [extraError, setExtraError] = useState<string | null>(null);
@@ -52,14 +54,14 @@ export function BlockchainInfoPopover({
         await TransactionsService.getTransactionByHash({ txHash });
       } catch (e: any) {
         // ignore; popover still works with base data
-        setExtraError(e?.message || "");
+        setExtraError(e?.message || '');
       } finally {
         setExtraLoading(false);
       }
     }
   }, [txHash]);
 
-  const explorerBase = useMemo(() => (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, ""), []);
+  const explorerBase = useMemo(() => (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, ''), []);
   const txUrl = useMemo(() => `${explorerBase}/transactions/${txHash}`, [explorerBase, txHash]);
   const senderUrl = useMemo(() => (sender ? `${explorerBase}/accounts/${sender}` : undefined), [explorerBase, sender]);
   const contractUrl = useMemo(() => (contract ? `${explorerBase}/contracts/${contract}` : undefined), [explorerBase, contract]);
@@ -71,7 +73,9 @@ export function BlockchainInfoPopover({
     if (e) e.stopPropagation();
     try {
       await navigator.clipboard.writeText(value);
-    } catch {}
+    } catch {
+      // Ignore clipboard errors
+    }
   }, []);
 
   return (
@@ -81,16 +85,14 @@ export function BlockchainInfoPopover({
           type="button"
           className={cn(
             triggerContent
-              ? cn("inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none hover:shadow-none active:shadow-none", triggerClassName)
-              : cn("inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20", className),
+              ? cn('inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none hover:shadow-none active:shadow-none', triggerClassName)
+              : cn('inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20', className),
           )}
           onClick={(e) => e.stopPropagation()}
           aria-label="Blockchain info"
           title="Blockchain info"
         >
-          {triggerContent ? (
-            <>{triggerContent}</>
-          ) : (
+          {triggerContent || (
             <>
               <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
               {showLabel && (
@@ -120,11 +122,18 @@ export function BlockchainInfoPopover({
           {status?.confirmed && (
             <Badge className="border-green-500/30 bg-green-500/25 text-green-300">Mined</Badge>
           )}
-          {typeof status?.confirmations === "number" && status?.confirmations >= 0 && (
-            <span className="text-xs text-white/80">{status.confirmations} conf</span>
+          {typeof status?.confirmations === 'number' && status?.confirmations >= 0 && (
+            <span className="text-xs text-white/80">
+              {status.confirmations}
+              {' '}
+              conf
+            </span>
           )}
           {status?.blockNumber && (
-            <span className="text-xs text-white/80">• #{status.blockNumber}</span>
+            <span className="text-xs text-white/80">
+              • #
+              {status.blockNumber}
+            </span>
           )}
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
@@ -139,7 +148,13 @@ export function BlockchainInfoPopover({
             <div className="text-xs text-white/70">Tx hash</div>
             <div className="flex items-center justify-end gap-2 min-w-0">
               <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
-              <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
+              <button
+                type="button"
+                className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                onClick={(e) => handleCopy(txHash, e)}
+              >
+                Copy
+              </button>
             </div>
           </div>
           {sender && (
@@ -149,7 +164,13 @@ export function BlockchainInfoPopover({
                 <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${sender.slice(0, 6)}...${sender.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(sender!, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -160,7 +181,13 @@ export function BlockchainInfoPopover({
                 <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${contract.slice(0, 6)}...${contract.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(contract!, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -169,7 +196,13 @@ export function BlockchainInfoPopover({
               <div className="text-xs text-white/70">Post ID</div>
               <div className="flex items-center justify-end gap-2 min-w-0">
                 <div className="text-xs text-white/90 truncate min-h-0">{postId}</div>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(postId, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(postId, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -196,16 +229,6 @@ export function BlockchainInfoPopover({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
-
-function safeStringify(value: unknown): string {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
+};
 
 export default BlockchainInfoPopover;
-
-

@@ -1,17 +1,21 @@
-import React from "react";
-import BannerContent from "./BannerContent";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import BannerContent from './BannerContent';
 
-export default function BannerC() {
+const BannerC = () => {
+  const { t } = useTranslation('banners');
+  const chips = t('bannerC.chips', { returnObjects: true }) as string[];
   return (
     <BannerContent
-      title="From signal → treasury: Purpose‑DAOs."
-      description="Buy fees on #trends auto‑seed DAOs so the best ideas get budgets and milestones."
-      chips={["Fees → Treasury", "Creator payouts"]}
-      primaryButtonText="Start a Purpose‑DAO"
+      title={t('bannerC.title')}
+      description={t('bannerC.description')}
+      chips={chips}
+      primaryButtonText={t('bannerC.primaryButton')}
       primaryButtonLink="/trends/create"
-      secondaryButtonText="See DAOs"
+      secondaryButtonText={t('bannerC.secondaryButton')}
       secondaryButtonLink="/trends/daos"
     />
   );
-}
+};
 
+export default BannerC;

@@ -105,5 +105,3 @@ export function usePostTips(postId?: string, receiverAddress?: string) {
     },
   });
 }
-
-

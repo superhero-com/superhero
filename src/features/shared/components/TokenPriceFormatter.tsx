@@ -26,11 +26,11 @@ interface TokenPriceFormatterProps {
  * - AE value: tokens * token.price_data.ae (or fallback to token.price if needed)
  * - Fiat value: tokens * token.price_data[currentCurrency] (or fallback via getFiat(AE))
  */
-export default function TokenPriceFormatter({
+const TokenPriceFormatter = ({
   token,
   price,
   ...priceFormatterProps
-}: TokenPriceFormatterProps) {
+}: TokenPriceFormatterProps) => {
   const { currentCurrencyCode, getFiat } = useCurrencies();
 
   // Calculate AE price by multiplying the token amount with the token's AE price
@@ -39,11 +39,12 @@ export default function TokenPriceFormatter({
 
     // Prefer structured price_data.ae; fall back to legacy token.price string
     const priceData = token.price_data as PriceDto | undefined;
-    const perTokenAe = priceData?.ae
-      ? Decimal.from(priceData.ae)
-      : token.price
-        ? Decimal.from(token.price)
-        : Decimal.ZERO;
+    let perTokenAe = Decimal.ZERO;
+    if (priceData?.ae) {
+      perTokenAe = Decimal.from(priceData.ae);
+    } else if (token.price) {
+      perTokenAe = Decimal.from(token.price);
+    }
 
     if (perTokenAe.isZero) return Decimal.ZERO;
     return price.mul(perTokenAe);
@@ -75,4 +76,6 @@ export default function TokenPriceFormatter({
       {...priceFormatterProps}
     />
   );
-}
+};
+
+export default TokenPriceFormatter;

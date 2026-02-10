@@ -1,30 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DEX_ADDRESSES } from "../../../libs/dex";
-import ConnectWalletButton from "../../../components/ConnectWalletButton";
-import { useAddLiquidity } from "../hooks";
-import { useTokenList } from "../../../components/dex/hooks/useTokenList";
-import { useTokenBalances } from "../../../components/dex/hooks/useTokenBalances";
-import { DexTokenDto, DexService } from "../../../api/generated";
-import TokenInput from "../../../components/dex/core/TokenInput";
-import DexSettings from "./DexSettings";
-import LiquidityConfirmation from "./LiquidityConfirmation";
-import LiquidityPreview from "./LiquidityPreview";
-import LiquiditySuccessNotification from "../../../components/dex/core/LiquiditySuccessNotification";
-import { Decimal } from "../../../libs/decimal";
+import { TokenChip } from '@/components/TokenChip';
+import Spinner from '@/components/Spinner';
+import { DEX_ADDRESSES } from '../../../libs/dex';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
+import { useAddLiquidity } from '../hooks';
+import { useTokenList } from '../../../components/dex/hooks/useTokenList';
+import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
+import { DexTokenDto, DexService } from '../../../api/generated';
+import TokenInput from '../../../components/dex/core/TokenInput';
+import DexSettings from './DexSettings';
+import LiquidityConfirmation from './LiquidityConfirmation';
+import LiquidityPreview from './LiquidityPreview';
+import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
+import { Decimal } from '../../../libs/decimal';
 
-import { useAccount, useDex } from "../../../hooks";
-import { useAeSdk } from "../../../hooks/useAeSdk";
-import { usePool } from "../context/PoolProvider";
-import { TokenChip } from "@/components/TokenChip";
-import Spinner from "@/components/Spinner";
+import { useAccount, useDex } from '../../../hooks';
+import { usePool } from '../context/PoolProvider';
 
-export default function AddLiquidityForm() {
+const AddLiquidityForm = () => {
   const { t } = useTranslation('common');
+  const { t: tDex } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { activeNetwork } = useAeSdk();
   const location = useLocation();
   const navigate = useNavigate();
   const {
@@ -42,11 +43,11 @@ export default function AddLiquidityForm() {
   const { balances } = useTokenBalances(tokenA, tokenB);
 
   // Amounts and liquidity state
-  const [amountA, setAmountA] = useState<string>("");
-  const [amountB, setAmountB] = useState<string>("");
-  const [searchA, setSearchA] = useState("");
-  const [searchB, setSearchB] = useState("");
-  const [lastEdited, setLastEdited] = useState<"A" | "B" | null>(null);
+  const [amountA, setAmountA] = useState<string>('');
+  const [amountB, setAmountB] = useState<string>('');
+  const [searchA, setSearchA] = useState('');
+  const [searchB, setSearchB] = useState('');
+  const [lastEdited, setLastEdited] = useState<'A' | 'B' | null>(null);
 
   // Liquidity hook
   const { state, setState, executeAddLiquidity } = useAddLiquidity();
@@ -54,47 +55,49 @@ export default function AddLiquidityForm() {
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successTxHash, setSuccessTxHash] = useState<string>("");
+  const [successTxHash, setSuccessTxHash] = useState<string>('');
   const [successAmounts, setSuccessAmounts] = useState<{
     amountA: string;
     amountB: string;
-  }>({ amountA: "", amountB: "" });
+  }>({ amountA: '', amountB: '' });
 
   // Helper function to find token by symbol or contract address
-  const findToken = (identifier: string): DexTokenDto | null => {
+  const findToken = useCallback((identifier: string): DexTokenDto | null => {
     if (!identifier || !tokens.length) return null;
 
     // First try to find by symbol (case insensitive)
     const bySymbol = tokens.find(
-      (t) => t.symbol.toLowerCase() === identifier.toLowerCase()
+      (token) => token.symbol.toLowerCase() === identifier.toLowerCase(),
     );
     if (bySymbol) return bySymbol;
 
     // Then try to find by contract address
     const byAddress = tokens.find(
-      (t) => t.address === identifier || t.address === identifier.toLowerCase()
+      (token) => token.address === identifier || token.address === identifier.toLowerCase(),
     );
     if (byAddress) return byAddress;
 
     // For AE, check if it's the native token
-    if (identifier.toLowerCase() === "ae") {
-      const aeToken = tokens.find((t) => t.is_ae);
+    if (identifier.toLowerCase() === 'ae') {
+      const aeToken = tokens.find((token) => token.is_ae);
       if (aeToken) return aeToken;
     }
 
     return null;
-  };
+  }, [tokens]);
 
   // Function to fetch token metadata from middleware
-  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
-    try {
-      const _token = DexService.getDexTokenByAddress({ address });
-      return _token;
-    } catch (error) {
-      console.warn('[AddLiquidityForm] Failed to fetch token from middleware:', address, error);
-      return null;
-    }
-  }, [activeNetwork.middlewareUrl]);
+  const fetchTokenFromMiddleware = useCallback(
+    async (tokenAddress: string): Promise<DexTokenDto | null> => {
+      try {
+        const tokenResult = DexService.getDexTokenByAddress({ address: tokenAddress });
+        return tokenResult;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
 
   // Helper function to find token by address or symbol
   const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
@@ -102,23 +105,26 @@ export default function AddLiquidityForm() {
 
     // If identifier is 'AE', find the AE token
     if (identifier === 'AE') {
-      return tokens.find(t => t.is_ae) || null;
+      return tokens.find((token) => token.is_ae) || null;
     }
 
     // First, try to find in the local token list
-    const localToken = tokens.find(t => t.address === identifier);
-    if (localToken) return localToken;
+    const token = tokens.find((tokenItem) => tokenItem.address === identifier);
+    if (token) return token;
 
     // If not found locally and it looks like a contract address, fetch from middleware
     if (identifier.startsWith('ct_')) {
-      return await fetchTokenFromMiddleware(identifier);
+      return fetchTokenFromMiddleware(identifier);
     }
 
     return null;
   }, [tokens, fetchTokenFromMiddleware]);
 
   // Function to update URL parameters based on current token selection
-  const updateUrlParams = useCallback((newTokenA: DexTokenDto | null, newTokenB: DexTokenDto | null) => {
+  const updateUrlParams = useCallback((
+    newTokenA: DexTokenDto | null,
+    newTokenB: DexTokenDto | null,
+  ) => {
     const searchParams = new URLSearchParams(location.search);
 
     // Update or remove 'from' parameter (tokenA)
@@ -138,7 +144,7 @@ export default function AddLiquidityForm() {
     }
 
     // Update the URL without causing a page reload
-    const newUrl = `${location.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const newUrl = `${location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     navigate(newUrl, { replace: true });
   }, [location.pathname, location.search, navigate]);
 
@@ -149,7 +155,6 @@ export default function AddLiquidityForm() {
     let cancelled = false;
 
     const initializeTokens = async () => {
-      console.log('[AddLiquidityForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
@@ -169,7 +174,7 @@ export default function AddLiquidityForm() {
         }
       } else if (!tokenA && !fromParam && !selectedTokenA) {
         // Default: AE as input token
-        const ae = tokens.find((t) => t.is_ae) || null;
+        const ae = tokens.find((token) => token.is_ae) || null;
         setTokenA(ae || tokens[0] || null);
       }
 
@@ -196,23 +201,33 @@ export default function AddLiquidityForm() {
 
     initializeTokens();
 
+    // eslint-disable-next-line consistent-return
     return () => {
       cancelled = true;
     };
-  }, [tokens, location.search, tokenA, tokenB, selectedTokenA, selectedTokenB, findTokenByAddressOrSymbol, findToken]);
+  }, [
+    tokens,
+    location.search,
+    tokenA,
+    tokenB,
+    selectedTokenA,
+    selectedTokenB,
+    findTokenByAddressOrSymbol,
+    findToken,
+  ]);
 
   // Sync tokens from Pool context when a position is selected for adding liquidity
   useEffect(() => {
     if (!tokens.length) return;
-    if (currentAction !== "add") return;
+    if (currentAction !== 'add') return;
 
     const nextA = selectedTokenA ? findToken(selectedTokenA) : null;
     const nextB = selectedTokenB ? findToken(selectedTokenB) : null;
 
-    const currentAId = tokenA?.is_ae ? "AE" : tokenA?.address;
-    const currentBId = tokenB?.is_ae ? "AE" : tokenB?.address;
-    const nextAId = nextA?.is_ae ? "AE" : nextA?.address;
-    const nextBId = nextB?.is_ae ? "AE" : nextB?.address;
+    const currentAId = tokenA?.is_ae ? 'AE' : tokenA?.address;
+    const currentBId = tokenB?.is_ae ? 'AE' : tokenB?.address;
+    const nextAId = nextA?.is_ae ? 'AE' : nextA?.address;
+    const nextBId = nextB?.is_ae ? 'AE' : nextB?.address;
 
     if (nextA && nextAId !== currentAId) {
       setTokenA(nextA);
@@ -220,7 +235,7 @@ export default function AddLiquidityForm() {
     if (nextB && nextBId !== currentBId) {
       setTokenB(nextB);
     }
-  }, [tokens, currentAction, selectedTokenA, selectedTokenB]);
+  }, [tokens, currentAction, selectedTokenA, selectedTokenB, tokenA, tokenB, findToken]);
 
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
@@ -236,15 +251,15 @@ export default function AddLiquidityForm() {
   // Update hook state when tokens change
   useEffect(() => {
     // For AE tokens, use 'AE' as the address for the hook state
-    const tokenAAddress = tokenA?.is_ae ? "AE" : tokenA?.address || "";
-    const tokenBAddress = tokenB?.is_ae ? "AE" : tokenB?.address || "";
+    const tokenAAddress = tokenA?.is_ae ? 'AE' : tokenA?.address || '';
+    const tokenBAddress = tokenB?.is_ae ? 'AE' : tokenB?.address || '';
 
     setState((prev) => ({
       ...prev,
       tokenA: tokenAAddress,
       tokenB: tokenBAddress,
-      symbolA: tokenA?.symbol || "",
-      symbolB: tokenB?.symbol || "",
+      symbolA: tokenA?.symbol || '',
+      symbolB: tokenB?.symbol || '',
       decA: tokenA?.decimals || 18,
       decB: tokenB?.decimals || 18,
     }));
@@ -263,77 +278,80 @@ export default function AddLiquidityForm() {
     if (!state.pairPreview?.ratioAinB) return;
     try {
       const ratio = Decimal.from(state.pairPreview.ratioAinB);
-      if (lastEdited === "A") {
+      if (lastEdited === 'A') {
         if (amountA) {
           const amountANum = Decimal.from(amountA);
           const calculatedAmountB = amountANum.eq(0)
-            ? "0"
+            ? '0'
             : amountANum.div(ratio).toString();
           setAmountB(calculatedAmountB);
         }
-      } else if (lastEdited === "B") {
+      } else if (lastEdited === 'B') {
         if (amountB) {
           const amountBNum = Decimal.from(amountB);
           const calculatedAmountA = amountBNum.eq(0)
-            ? "0"
+            ? '0'
             : amountBNum.mul(ratio).toString();
           setAmountA(calculatedAmountA);
         }
       }
-    } catch {}
-  }, [state.pairPreview, lastEdited]);
+    } catch {
+      // Ignore invalid ratio values
+    }
+  }, [state.pairPreview, lastEdited, amountA, amountB]);
 
   // Handle Token A amount change and auto-calculate Token B
   const handleAmountAChange = (newAmountA: string) => {
-    setLastEdited("A");
+    setLastEdited('A');
     setAmountA(newAmountA);
-    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token B based on ratio using Decimal to avoid float drift
     if (state.pairPreview?.ratioAinB && newAmountA) {
       try {
         const ratio = Decimal.from(state.pairPreview.ratioAinB);
         const amountANum = Decimal.from(newAmountA);
         const calculatedAmountB = amountANum.eq(0)
-          ? "0"
+          ? '0'
           : amountANum.div(ratio).toString();
         setAmountB(calculatedAmountB);
-      } catch {}
+      } catch {
+        // Ignore invalid ratio values
+      }
     } else if (!newAmountA) {
       // Clear Token B when Token A is cleared
-      setAmountB("");
+      setAmountB('');
     }
   };
 
   // Handle Token B amount change and auto-calculate Token A
   const handleAmountBChange = (newAmountB: string) => {
-    setLastEdited("B");
+    setLastEdited('B');
     setAmountB(newAmountB);
-    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token A based on ratio using Decimal to avoid float drift
     if (state.pairPreview?.ratioAinB && newAmountB) {
       try {
         const ratio = Decimal.from(state.pairPreview.ratioAinB);
         const amountBNum = Decimal.from(newAmountB);
         const calculatedAmountA = amountBNum.eq(0)
-          ? "0"
+          ? '0'
           : amountBNum.mul(ratio).toString();
         setAmountA(calculatedAmountA);
-      } catch {}
+      } catch {
+        // Ignore invalid ratio values
+      }
     } else if (!newAmountB) {
       // Clear Token A when Token B is cleared
-      setAmountA("");
+      setAmountA('');
     }
   };
 
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
-    const matches = (t: DexTokenDto) =>
-      !term ||
-      t.symbol.toLowerCase().includes(term) ||
-      (t.address || "").toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
-    const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
+    const matches = (token: DexTokenDto) => !term
+      || token.symbol.toLowerCase().includes(term)
+      || (token.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((token) => token.is_ae);
+    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
@@ -343,13 +361,12 @@ export default function AddLiquidityForm() {
 
   const filteredTokensB = useMemo(() => {
     const term = searchB.trim().toLowerCase();
-    const matches = (t: DexTokenDto) =>
-      !term ||
-      t.symbol.toLowerCase().includes(term) ||
-      (t.address || "").toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
-    const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
+    const matches = (token: DexTokenDto) => !term
+      || token.symbol.toLowerCase().includes(term)
+      || (token.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((token) => token.is_ae);
+    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
@@ -370,13 +387,13 @@ export default function AddLiquidityForm() {
           slippagePct,
           deadlineMins,
           isAePair:
-            tokenA.address === "AE" ||
-            tokenB.address === "AE" ||
-            tokenA.is_ae ||
-            tokenB.is_ae ||
-            false,
+            tokenA.address === 'AE'
+            || tokenB.address === 'AE'
+            || tokenA.is_ae
+            || tokenB.is_ae
+            || false,
         },
-        { suppressToast: true }
+        { suppressToast: true },
       ); // Suppress toast since we're using the custom success notification
 
       if (txHash) {
@@ -386,20 +403,20 @@ export default function AddLiquidityForm() {
         setShowSuccess(true);
 
         // Clear form
-        setAmountA("");
-        setAmountB("");
+        setAmountA('');
+        setAmountB('');
         setShowConfirm(false);
 
         // Clear selection if we were adding to existing position
-        if (currentAction === "add") {
+        if (currentAction === 'add') {
           clearSelection();
         }
 
         // Refresh positions after successful transaction
         await onPositionUpdated();
       }
-    } catch (error) {
-      console.error("Add liquidity failed:", error);
+    } catch {
+      // Ignore execution errors here; UI already shows notifications.
     }
   };
 
@@ -422,67 +439,69 @@ export default function AddLiquidityForm() {
     }
   }, [amountB, balances.out]);
 
-  const hasInsufficientBalance =
-    hasInsufficientBalanceA || hasInsufficientBalanceB;
+  const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
 
-  const isAddDisabled =
-    state.loading ||
-    !amountA ||
-    Number(amountA) <= 0 ||
-    !amountB ||
-    Number(amountB) <= 0 ||
-    !tokenA ||
-    !tokenB ||
-    !!state.error ||
-    hasInsufficientBalance;
+  const isAddDisabled = state.loading
+    || !amountA
+    || Number(amountA) <= 0
+    || !amountB
+    || Number(amountB) <= 0
+    || !tokenA
+    || !tokenB
+    || !!state.error
+    || hasInsufficientBalance;
 
   return (
     <div className="max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold m-0 sh-dex-title">Add Liquidity</h2>
+          <h2 className="text-xl font-bold m-0 sh-dex-title">{tDex('addLiquidityForm.title')}</h2>
         </div>
 
         <div className="flex gap-2 items-center">
-          {currentAction === "add" && (
+          {currentAction === 'add' && (
             <button
+              type="button"
               onClick={clearSelection}
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
-              ✕ Cancel
+              {tDex('addLiquidityForm.cancel')}
             </button>
           )}
 
           <DexSettings title={t('titles.liquiditySettings')}>
             <button
+              type="button"
               aria-label="open-settings"
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
-              ⚙️ Settings
+              {tDex('addLiquidityForm.settings')}
             </button>
           </DexSettings>
         </div>
       </div>
       <div className="flex-wrap text-sm text-white/60 text-left mb-6 opacity-90">
-        {currentAction === "add" && selectedTokenA && selectedTokenB && (
+        {currentAction === 'add' && selectedTokenA && selectedTokenB && (
           <p className="text-xs text-white/60 mt-1">
-            Adding to
+            {tDex('addLiquidityForm.addingTo')}
+            {' '}
             <TokenChip address={selectedTokenA} />
             <span className="text-lg text-light-font-color">/</span>
             <TokenChip address={selectedTokenB} />
-            position
+            {' '}
+            {tDex('addLiquidityForm.position')}
           </p>
         )}
       </div>
       <div className="text-sm text-white/60 text-center mb-6 opacity-90">
-        Provide liquidity to earn trading fees from swaps
+        {tDex('addLiquidityForm.provideLiquidityHint')}
       </div>
 
       {/* Token A Input */}
       <div className="mb-2">
         <TokenInput
-          label="Token A"
+          label={tDex('addLiquidityForm.tokenA')}
           token={tokenA}
           skipToken={tokenB}
           amount={amountA}
@@ -509,7 +528,7 @@ export default function AddLiquidityForm() {
       {/* Token B Input */}
       <div className="mb-5">
         <TokenInput
-          label="Token B"
+          label={tDex('addLiquidityForm.tokenB')}
           token={tokenB}
           skipToken={tokenA}
           amount={amountB}
@@ -549,21 +568,21 @@ export default function AddLiquidityForm() {
       {/* Insufficient Balance Warning */}
       {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
+          {/* eslint-disable-next-line no-nested-ternary */}
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
-            <>
-              Insufficient balance for both {tokenA?.symbol} and{" "}
-              {tokenB?.symbol}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceBoth', { symbolA: tokenA?.symbol ?? '', symbolB: tokenB?.symbol ?? '' })
           ) : hasInsufficientBalanceA ? (
-            <>
-              Insufficient {tokenA?.symbol} balance. You need {Decimal.from(amountA || '0').prettify()} but only
-              have {balances.in ? Decimal.from(balances.in).prettify() : "0"}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceNeed', {
+              symbol: tokenA?.symbol ?? '',
+              needed: Decimal.from(amountA || '0').prettify(),
+              have: balances.in ? Decimal.from(balances.in).prettify() : '0',
+            })
           ) : (
-            <>
-              Insufficient {tokenB?.symbol} balance. You need {Decimal.from(amountB || '0').prettify()} but only
-              have {balances.out ? Decimal.from(balances.out).prettify() : "0"}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceNeed', {
+              symbol: tokenB?.symbol ?? '',
+              needed: Decimal.from(amountB || '0').prettify(),
+              have: balances.out ? Decimal.from(balances.out).prettify() : '0',
+            })
           )}
         </div>
       )}
@@ -571,21 +590,22 @@ export default function AddLiquidityForm() {
       {/* Add Liquidity Button */}
       {address ? (
         <button
+          type="button"
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
           className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
-              ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
           }`}
         >
           {state.loading ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="w-4 h-4" />
-              Confirm in wallet…
+              {t('buttons.confirmInWallet')}
             </div>
           ) : (
-            "Add Liquidity"
+            tDex('addLiquidityForm.addLiquidityButton')
           )}
         </button>
       ) : (
@@ -624,4 +644,6 @@ export default function AddLiquidityForm() {
       />
     </div>
   );
-}
+};
+
+export default AddLiquidityForm;

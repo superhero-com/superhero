@@ -1,30 +1,30 @@
-import React, { useCallback, useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-import SpaceEffects from "./SpaceEffects";
-import BannerA from "./BannerA";
-import BannerB from "./BannerB";
-import BannerC from "./BannerC";
+import React, { useCallback, useEffect, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+import SpaceEffects from './SpaceEffects';
+import BannerA from './BannerA';
+import BannerB from './BannerB';
+import BannerC from './BannerC';
 // Removed BannerD to make the carousel 3 slides
-import "./banner.styles.css";
+import './banner.styles.css';
 
-const DISMISS_KEY = "hero_banner_dismissed_until";
+const DISMISS_KEY = 'hero_banner_dismissed_until';
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
 }
 
-export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouselProps = {}) {
+const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const [hidden, setHidden] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 8000, stopOnInteraction: false })
+    Autoplay({ delay: 8000, stopOnInteraction: false }),
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, duration: 20 },
-    [autoplayPlugin.current]
+    [autoplayPlugin.current],
   );
 
   // Check if banner was dismissed
@@ -34,22 +34,26 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       if (!until) return;
       const ts = Date.parse(until);
       if (!Number.isNaN(ts) && ts > Date.now()) setHidden(true);
-    } catch {}
+    } catch {
+      // Ignore localStorage read failures
+    }
   }, []);
 
   // Update selected index when carousel changes
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi) {
+      return () => {};
+    }
 
     const onSelect = () => {
       setSelectedIndex(emblaApi.selectedScrollSnap());
     };
 
-    emblaApi.on("select", onSelect);
+    emblaApi.on('select', onSelect);
     onSelect();
 
     return () => {
-      emblaApi.off("select", onSelect);
+      emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
 
@@ -70,7 +74,9 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
     try {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       localStorage.setItem(DISMISS_KEY, expiresAt.toISOString());
-    } catch {}
+    } catch {
+      // Ignore localStorage write failures
+    }
     setHidden(true);
     // Dispatch custom event so parent components can react
     window.dispatchEvent(new CustomEvent('heroBannerDismissed'));
@@ -88,7 +94,7 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
     (index: number) => {
       if (emblaApi) emblaApi.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi],
   );
 
   if (hidden) return null;
@@ -103,7 +109,7 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
         className="hero-banner"
         style={{
           background:
-            "radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)",
+            'radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)',
         }}
         aria-label="Superhero banner"
       >
@@ -192,15 +198,16 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       <div className="carousel-controls">
         {[0, 1, 2].map((index) => (
           <button
-            key={index}
             type="button"
+            key={index}
             onClick={() => scrollTo(index)}
-            className={`carousel-dot ${selectedIndex === index ? "active" : ""}`}
+            className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
     </div>
   );
-}
+};
 
+export default HeroBannerCarousel;

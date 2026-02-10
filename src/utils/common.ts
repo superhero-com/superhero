@@ -1,12 +1,12 @@
-import { Decimal } from "@/libs/decimal";
-import { FormattedFractionalPrice } from "./types";
-import moment, { Moment } from "moment";
-import { DATE_LONG } from "./constants";
-import { Encoded, Encoding, isAddressValid } from "@aeternity/aepp-sdk";
+import { Decimal } from '@/libs/decimal';
+import moment, { Moment } from 'moment';
+import { Encoded, Encoding, isAddressValid } from '@aeternity/aepp-sdk';
+import { FormattedFractionalPrice } from './types';
+import { DATE_LONG } from './constants';
 
 export async function fetchJson<T = any>(
   url: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T | null> {
   const response = await fetch(url, options);
   if (response.status === 204) {
@@ -62,7 +62,7 @@ export function formatFractionalPrice(input: Decimal): FormattedFractionalPrice 
 
 export function formatLongDate(value: string | Moment) {
   const date = moment(value);
-  return date.isBefore(moment().subtract(1, "days"))
+  return date.isBefore(moment().subtract(1, 'days'))
     ? date.format(DATE_LONG)
     : date.fromNow();
 }
@@ -80,11 +80,11 @@ export function ensureString(value: unknown): asserts value is string {
   if (typeof value !== 'string') throw new Error(`value must be a string, got ${value}`);
 }
 export function formatVolume(volume: string | number): string {
-  if (!volume) return "0";
-  const num = typeof volume === "string" ? parseFloat(volume) : volume;
-  if (!isFinite(num)) return "0";
-  if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-  if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-  if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+  if (!volume) return '0';
+  const num = typeof volume === 'string' ? parseFloat(volume) : volume;
+  if (!Number.isFinite(num)) return '0';
+  if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+  if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+  if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
   return num.toFixed(2);
 }

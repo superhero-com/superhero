@@ -1,25 +1,26 @@
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Contract, Eip1193Provider, formatEther } from 'ethers';
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import BigNumber from 'bignumber.js';
-import { ConnectWalletButton } from "../../../components/ConnectWalletButton";
-import { useToast } from "../../../components/ToastProvider";
-import { CONFIG } from "../../../config";
-import { errorToUserMessage } from "../../../libs/errorMessages";
-import { ensureEthProvider, getEthBalance } from "../ethereum";
-import { BridgeOptions, BridgeService, BridgeStatus } from "../index";
-import { AppKitProvider } from '../providers/AppKitProvider';
-import { ConnectEthereumWallet } from "./ConnectEthereumWallet";
-
-import { Decimal } from "@/libs/decimal";
-import { useAeSdk, useDex, useRecentActivities } from "../../../hooks";
-import { FromTo } from "@/features/shared/components";
-import { useSwapQuote } from "../../../components/dex/hooks/useSwapQuote";
-import { DexService } from "../../../api/generated";
-import { DEX_ADDRESSES } from "../../../libs/dex";
-import Spinner from "@/components/Spinner";
+import { Decimal } from '@/libs/decimal';
+import { FromTo } from '@/features/shared/components';
+import Spinner from '@/components/Spinner';
 import { isAmountGreaterThanBalance } from '@/utils/balance';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
+import { useToast } from '../../../components/ToastProvider';
+import { CONFIG } from '../../../config';
+import { errorToUserMessage } from '../../../libs/errorMessages';
+import { ensureEthProvider, getEthBalance } from '../ethereum';
+import { BridgeService } from '../service';
+import { BridgeOptions, BridgeStatus } from '../types';
+import { AppKitProvider } from '../providers/AppKitProvider';
+import { ConnectEthereumWallet } from './ConnectEthereumWallet';
+
+import { useAeSdk, useDex, useRecentActivities } from '../../../hooks';
+import { useSwapQuote } from '../../../components/dex/hooks/useSwapQuote';
+import { DexService } from '../../../api/generated';
+import { DEX_ADDRESSES } from '../../../libs/dex';
 import { BRIDGE_ABI, BRIDGE_CONSTANTS } from '../constants';
 
 interface BuyAeWidgetProps {
@@ -27,24 +28,24 @@ interface BuyAeWidgetProps {
 }
 
 //
-function BuyAeWidgetContent({
+const BuyAeWidgetContent = ({
   embedded = false,
-}: BuyAeWidgetProps) {
+}: BuyAeWidgetProps) => {
   const { t } = useTranslation('common');
   const { activeAccount, sdk } = useAeSdk();
-  const slippagePct = useDex().slippagePct;
-  const deadlineMins = useDex().deadlineMins;
+  const { slippagePct } = useDex();
+  const { deadlineMins } = useDex();
   const { addActivity } = useRecentActivities();
   const toast = useToast();
   const { walletProvider } = useAppKitProvider<Eip1193Provider>('eip155');
   const { address: ethAddress, isConnected: ethConnected } = useAppKitAccount();
 
-  const [ethBridgeIn, setEthBridgeIn] = useState("");
-  const [ethBridgeOutAe, setEthBridgeOutAe] = useState("");
+  const [ethBridgeIn, setEthBridgeIn] = useState('');
+  const [ethBridgeOutAe, setEthBridgeOutAe] = useState('');
   const [ethBridgeQuoting, setEthBridgeQuoting] = useState(false);
   const [ethBridgeProcessing, setEthBridgeProcessing] = useState(false);
   const [ethBridgeError, setEthBridgeError] = useState<string | null>(null);
-  const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>("idle");
+  const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>('idle');
   const [ethBalance, setEthBalance] = useState<string | null>(null);
   const [ethSpendable, setEthSpendable] = useState<string | null>(null);
   const [fetchingBalance, setFetchingBalance] = useState(false);
@@ -53,7 +54,6 @@ function BuyAeWidgetContent({
   const [liquidityExceeded, setLiquidityExceeded] = useState(false);
   const [maxAvailable, setMaxAvailable] = useState<string | undefined>(undefined);
 
-  const bridgeService = BridgeService.getInstance();
   const { refreshQuote, routeInfo } = useSwapQuote();
 
   // Fetch ETH balance
@@ -71,7 +71,8 @@ function BuyAeWidgetContent({
       const balanceEth = formatEther(balanceWei);
       setEthBalance(balanceEth);
 
-      // Estimate a conservative gas reserve for the bridge tx so "Max" won’t exceed spendable funds.
+      // Estimate a conservative gas reserve
+      // for the bridge tx so "Max" won’t exceed spendable funds.
       try {
         if (activeAccount?.startsWith('ak_')) {
           const signer = await provider.getSigner();
@@ -97,7 +98,8 @@ function BuyAeWidgetContent({
           setEthSpendable(balanceEth);
         }
       } catch {
-        // If estimation fails, still reserve a conservative fee budget (feeData × default gas limit).
+        // If estimation fails, still reserve
+        // a conservative fee budget (feeData × default gas limit).
         try {
           const feeData = await provider.getFeeData();
           const feePerGas = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n;
@@ -111,9 +113,8 @@ function BuyAeWidgetContent({
           setEthSpendable(balanceEth);
         }
       }
-    } catch (error) {
-      setEthBridgeError("Failed to fetch ETH balance");
-      console.error("Failed to fetch ETH balance:", error);
+    } catch {
+      setEthBridgeError('Failed to fetch ETH balance');
       setEthBalance(null);
       setEthSpendable(null);
     } finally {
@@ -139,16 +140,18 @@ function BuyAeWidgetContent({
         // Load aeETH token
         const aeEth = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.aeeth });
         setAeEthToken(aeEth);
-        
+
         // Load AE token (find by is_ae flag or use WAE address)
         const ae = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.wae });
         // Create AE token object
-        setAeToken({ ...ae, is_ae: true, address: 'AE', symbol: 'AE' });
-      } catch (e) {
-        console.warn('[BuyAeWidget] Failed to load tokens:', e);
+        setAeToken({
+          ...ae, is_ae: true, address: 'AE', symbol: 'AE',
+        });
+      } catch {
+        setEthBridgeError('Failed to load token data');
       }
     };
-    
+
     if (sdk) {
       loadTokens();
     }
@@ -158,43 +161,43 @@ function BuyAeWidgetContent({
   const handleEthDisconnected = useCallback(() => {
     setEthBalance(null);
     setEthSpendable(null);
-    setEthBridgeIn("");
-    setEthBridgeOutAe("");
+    setEthBridgeIn('');
+    setEthBridgeOutAe('');
     setEthBridgeError(null);
   }, []);
 
   // Automated ETH Bridge quoting using refreshQuote
   useEffect(() => {
     if (!ethBridgeIn || Number(ethBridgeIn) <= 0 || !aeEthToken || !aeToken) {
-      setEthBridgeOutAe("");
+      setEthBridgeOutAe('');
       setLiquidityExceeded(false);
       setMaxAvailable(undefined);
-      return;
+      return () => {};
     }
 
     const timer = setTimeout(async () => {
       try {
         setEthBridgeQuoting(true);
         setEthBridgeError(null);
-        
+
         const result = await refreshQuote({
           amountIn: ethBridgeIn,
           amountOut: '',
           tokenIn: aeEthToken,
           tokenOut: aeToken,
-          isExactIn: true
+          isExactIn: true,
         });
-        
-        setEthBridgeOutAe(result.amountOut || "");
+
+        setEthBridgeOutAe(result.amountOut || '');
       } catch (e: any) {
-        setEthBridgeError(errorToUserMessage(e, { action: "quote" }));
+        setEthBridgeError(errorToUserMessage(e, { action: 'quote' }));
       } finally {
         setEthBridgeQuoting(false);
       }
     }, 300); // 300ms delay to avoid too many requests
 
     return () => clearTimeout(timer);
-  }, [ethBridgeIn, aeEthToken, aeToken]);
+  }, [ethBridgeIn, aeEthToken, aeToken, refreshQuote]);
 
   // Monitor liquidity status from routeInfo
   useEffect(() => {
@@ -213,7 +216,6 @@ function BuyAeWidgetContent({
       setEthBridgeProcessing(true);
       setEthBridgeError(null);
 
-
       const bridgeOptions: BridgeOptions = {
         amountEth: ethBridgeIn,
         aeAccount: activeAccount,
@@ -225,39 +227,33 @@ function BuyAeWidgetContent({
         walletProvider: walletProvider || undefined,
       };
 
-      const result = await bridgeService.bridgeEthToAe(
+      const result = await BridgeService.bridgeEthToAe(
         sdk as any,
         bridgeOptions,
-        (status: BridgeStatus, message?: string) => {
+        (status: BridgeStatus) => {
           setEthBridgeStep(status);
-          console.info(
-            `[Bridge] Status: ${status}${message ? ` - ${message}` : ""}`
-          );
-        }
+        },
       );
-      console.log("==== result:", result);
 
       if (result.success) {
         // Show success notification
         try {
-          const explorerUrl = CONFIG.EXPLORER_URL?.replace(/\/$/, "");
-          const ethTxUrl =
-            result.ethTxHash && explorerUrl
-              ? `https://etherscan.io/tx/${result.ethTxHash}`
-              : null;
-          const aeTxUrl =
-            result.aeTxHash && explorerUrl
-              ? `${explorerUrl}/transactions/${result.aeTxHash}`
-              : null;
+          const explorerUrl = CONFIG.EXPLORER_URL?.replace(/\/$/, '');
+          const ethTxUrl = result.ethTxHash && explorerUrl
+            ? `https://etherscan.io/tx/${result.ethTxHash}`
+            : null;
+          const aeTxUrl = result.aeTxHash && explorerUrl
+            ? `${explorerUrl}/transactions/${result.aeTxHash}`
+            : null;
 
           // Track the bridge activity
           if (activeAccount && result.aeTxHash) {
             addActivity({
-              type: "bridge",
+              type: 'bridge',
               hash: result.aeTxHash,
               account: activeAccount,
-              tokenIn: "ETH",
-              tokenOut: "AE",
+              tokenIn: 'ETH',
+              tokenOut: 'AE',
               amountIn: ethBridgeIn,
               amountOut: ethBridgeOutAe,
             });
@@ -265,60 +261,60 @@ function BuyAeWidgetContent({
 
           toast.push(
             React.createElement(
-              "div",
+              'div',
               {},
               React.createElement(
-                "div",
+                'div',
                 {},
-                "ETH→AE bridge completed successfully!"
+                'ETH→AE bridge completed successfully!',
               ),
-              ethTxUrl &&
-              React.createElement(
-                "a",
+              ethTxUrl
+              && React.createElement(
+                'a',
                 {
                   href: ethTxUrl,
-                  target: "_blank",
-                  rel: "noreferrer",
+                  target: '_blank',
+                  rel: 'noreferrer',
                   style: {
-                    color: "#8bc9ff",
-                    textDecoration: "underline",
-                    display: "block",
+                    color: '#8bc9ff',
+                    textDecoration: 'underline',
+                    display: 'block',
                   },
                 },
-                "View ETH transaction"
+                'View ETH transaction',
               ),
-              aeTxUrl &&
-              React.createElement(
-                "a",
+              aeTxUrl
+              && React.createElement(
+                'a',
                 {
                   href: aeTxUrl,
-                  target: "_blank",
-                  rel: "noreferrer",
+                  target: '_blank',
+                  rel: 'noreferrer',
                   style: {
-                    color: "#8bc9ff",
-                    textDecoration: "underline",
-                    display: "block",
+                    color: '#8bc9ff',
+                    textDecoration: 'underline',
+                    display: 'block',
                   },
                 },
-                "View AE swap transaction"
-              )
-            )
+                'View AE swap transaction',
+              ),
+            ),
           );
-        } catch (toastError) {
-          console.warn("[Bridge] Toast notification failed:", toastError);
+        } catch {
+          // ignore toast failures
         }
 
-        setEthBridgeStep("completed");
-        setEthBridgeIn("");
-        setEthBridgeOutAe("");
+        setEthBridgeStep('completed');
+        setEthBridgeIn('');
+        setEthBridgeOutAe('');
       } else {
-        throw new Error(result.error || "Bridge operation failed");
+        throw new Error(result.error || 'Bridge operation failed');
       }
     } catch (e: any) {
       setEthBridgeError(
-        errorToUserMessage(e, { action: "generic", slippagePct, deadlineMins })
+        errorToUserMessage(e, { action: 'generic', slippagePct, deadlineMins }),
       );
-      setEthBridgeStep("idle");
+      setEthBridgeStep('idle');
     } finally {
       setEthBridgeProcessing(false);
     }
@@ -336,40 +332,38 @@ function BuyAeWidgetContent({
     }
   };
 
-  const isDisabled =
-    ethBridgeProcessing ||
-    !activeAccount ||
-    !ethConnected ||
-    !ethBridgeIn ||
-    Number(ethBridgeIn) <= 0 ||
-    liquidityExceeded ||
-    !ethBridgeOutAe ||
-    Number(ethBridgeOutAe) <= 0;
+  const isDisabled = ethBridgeProcessing
+    || !activeAccount
+    || !ethConnected
+    || !ethBridgeIn
+    || Number(ethBridgeIn) <= 0
+    || liquidityExceeded
+    || !ethBridgeOutAe
+    || Number(ethBridgeOutAe) <= 0;
 
   const balanceForValidation = ethSpendable ?? ethBalance;
-  const hasInsufficientEthBalance =
-    !!balanceForValidation &&
-    !!ethBridgeIn &&
-    !fetchingBalance &&
-    isAmountGreaterThanBalance(ethBridgeIn, balanceForValidation);
+  const hasInsufficientEthBalance = !!balanceForValidation
+    && !!ethBridgeIn
+    && !fetchingBalance
+    && isAmountGreaterThanBalance(ethBridgeIn, balanceForValidation);
 
   const isDisabledWithBalanceCheck = isDisabled || hasInsufficientEthBalance;
 
-  const sectionBase = "border border-white/10 rounded-2xl p-3 sm:p-4";
+  const sectionBase = 'border border-white/10 rounded-2xl p-3 sm:p-4';
   const sectionBg = embedded
-    ? "bg-transparent"
-    : "bg-white/[0.05] backdrop-blur-[10px]";
-  const sectionSpacingLarge = "mb-4 sm:mb-5";
+    ? 'bg-transparent'
+    : 'bg-white/[0.05] backdrop-blur-[10px]';
+  const sectionSpacingLarge = 'mb-4 sm:mb-5';
   const chipBg = embedded
-    ? "bg-transparent"
-    : "bg-white/[0.02] backdrop-blur-[10px]";
+    ? 'bg-transparent'
+    : 'bg-white/[0.02] backdrop-blur-[10px]';
 
   return (
     <div
       className={
         embedded
-          ? "w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-visible box-border"
-          : "w-full max-w-[min(480px,100vw)] mx-auto bg-transparent border-0 p-0 relative overflow-visible box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]"
+          ? 'w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-visible box-border'
+          : 'w-full max-w-[min(480px,100vw)] mx-auto bg-transparent border-0 p-0 relative overflow-visible box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]'
       }
     >
       {/* Header */}
@@ -437,42 +431,45 @@ function BuyAeWidgetContent({
 
       {hasInsufficientEthBalance && (
         <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5">
-          Insufficient balance. Available: {Decimal.from(balanceForValidation ?? '0').prettify(6)} ETH
+          Insufficient balance. Available:
+          {' '}
+          {Decimal.from(balanceForValidation ?? '0').prettify(6)}
+          {' '}
+          ETH
         </div>
       )}
 
       {/* Bridge Process Info */}
-      {ethBridgeStep !== "idle" && (
+      {ethBridgeStep !== 'idle' && (
         <div className={`${sectionBase} ${sectionBg} ${sectionSpacingLarge}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-white/60">Bridge Status</span>
             <span
-              className={`text-sm font-semibold ${ethBridgeStep === "completed"
-                ? "text-green-400"
-                : ethBridgeStep === "failed"
-                  ? "text-red-400"
-                  : "text-yellow-400"
-                }`}
+              className={`text-sm font-semibold ${(() => {
+                switch (ethBridgeStep) {
+                  case 'completed':
+                    return 'text-green-400';
+                  case 'failed':
+                    return 'text-red-400';
+                  default:
+                    return 'text-yellow-400';
+                }
+              })()}`}
             >
-              {ethBridgeStep === "connecting"
-                ? "Connecting to wallets"
-                : ethBridgeStep === "bridging"
-                  ? "Bridging ETH → æETH"
-                  : ethBridgeStep === "waiting"
-                    ? "Waiting for æETH deposit"
-                    : ethBridgeStep === "swapping"
-                      ? "Swapping æETH → AE"
-                      : ethBridgeStep === "completed"
-                        ? "Completed successfully"
-                        : ethBridgeStep === "failed"
-                          ? "Failed"
-                          : "Processing"}
+              {{
+                connecting: 'Connecting to wallets',
+                bridging: 'Bridging ETH → æETH',
+                waiting: 'Waiting for æETH deposit',
+                swapping: 'Swapping æETH → AE',
+                completed: 'Completed successfully',
+                failed: 'Failed',
+              }[ethBridgeStep] ?? 'Processing'}
             </span>
           </div>
 
           {ethBridgeProcessing && (
             <div className="w-full h-1 bg-white/10 rounded overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] rounded animate-pulse"></div>
+              <div className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] rounded animate-pulse" />
             </div>
           )}
         </div>
@@ -483,7 +480,11 @@ function BuyAeWidgetContent({
         <div className="text-yellow-400 text-sm py-3 px-3 sm:px-4 bg-yellow-400/10 border border-yellow-400/20 rounded-xl mb-4 sm:mb-5">
           <div className="font-semibold mb-1">Insufficient Liquidity</div>
           <div className="text-white/80">
-            The requested amount exceeds available liquidity. Maximum available: {Decimal.from(maxAvailable).prettify()} æETH.
+            The requested amount exceeds available liquidity. Maximum available:
+            {' '}
+            {Decimal.from(maxAvailable).prettify()}
+            {' '}
+            æETH.
             Please reduce the amount or add liquidity to the pool.
           </div>
         </div>
@@ -508,35 +509,41 @@ function BuyAeWidgetContent({
         <>
           <ConnectEthereumWallet
             label="Connect Ethereum Wallet"
-            showConnectedState={true}
+            showConnectedState
             onDisconnected={handleEthDisconnected}
           />
 
           {/* Bridge Button - Only show when both wallets are connected */}
           {ethConnected && (
             <button
+              type="button"
               onClick={handleEthBridge}
               disabled={isDisabledWithBalanceCheck}
               className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabledWithBalanceCheck
-                ? "bg-white/10 cursor-not-allowed opacity-60"
-                : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
-                }`}
+                ? 'bg-white/10 cursor-not-allowed opacity-60'
+                : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+              }`}
             >
               {ethBridgeProcessing ? (
                 <div className="flex items-center justify-center gap-2">
                   <Spinner className="w-4 h-4" />
-                  {ethBridgeStep === "connecting"
-                    ? "Connecting…"
-                    : ethBridgeStep === "bridging"
-                      ? "Bridging…"
-                      : ethBridgeStep === "waiting"
-                        ? "Waiting for æETH…"
-                        : ethBridgeStep === "swapping"
-                          ? "Swapping…"
-                          : "Processing…"}
+                  {(() => {
+                    switch (ethBridgeStep) {
+                      case 'connecting':
+                        return 'Connecting…';
+                      case 'bridging':
+                        return 'Bridging…';
+                      case 'waiting':
+                        return 'Waiting for æETH…';
+                      case 'swapping':
+                        return 'Swapping…';
+                      default:
+                        return 'Processing…';
+                    }
+                  })()}
                 </div>
               ) : (
-                "Buy AE with ETH"
+                'Buy AE with ETH'
               )}
             </button>
           )}
@@ -544,15 +551,13 @@ function BuyAeWidgetContent({
       )}
     </div>
   );
-}
+};
 
 // Export wrapped with AppKitProvider
-export function BuyAeWidget(props: BuyAeWidgetProps) {
-  return (
-    <AppKitProvider>
-      <BuyAeWidgetContent {...props} />
-    </AppKitProvider>
-  );
-}
+export const BuyAeWidget = (props: BuyAeWidgetProps) => (
+  <AppKitProvider>
+    <BuyAeWidgetContent {...props} />
+  </AppKitProvider>
+);
 
 export default BuyAeWidget;

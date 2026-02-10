@@ -31,5 +31,3 @@ export function aeToAettos(amountAe: number): bigint {
   const combined = `${intPart}${fracPart}`.replace(/^0+/, '') || '0';
   return BigInt(combined);
 }
-
-

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks';
 
-export default function FeedbackButton() {
+const FeedbackButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
   const isMobile = useIsMobile();
@@ -21,6 +21,7 @@ export default function FeedbackButton() {
   return (
     <>
       <button
+        type="button"
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -32,12 +33,12 @@ export default function FeedbackButton() {
         aria-label="Send Feedback"
         title="Send Feedback"
       >
-        <MessageSquare 
+        <MessageSquare
           className={`w-5 h-5 transition-transform duration-300 ${isHovered ? 'rotate-12' : ''}`}
           style={{ color: '#0a0a0f' }}
         />
         {isHovered && !isMobile && (
-          <span 
+          <span
             className="text-sm font-semibold whitespace-nowrap animate-in fade-in slide-in-from-right-2 duration-300"
             style={{ color: '#0a0a0f' }}
           >
@@ -48,26 +49,35 @@ export default function FeedbackButton() {
 
       {/* Mobile Popup */}
       {showMobilePopup && (
-        <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setShowMobilePopup(false)}
-        >
-          <div 
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close feedback modal"
+            onClick={() => setShowMobilePopup(false)}
+          />
+          <div
             className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
           >
             <button
+              type="button"
               onClick={() => setShowMobilePopup(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"
               aria-label="Close"
             >
               <X className="w-5 h-5 text-white" />
             </button>
-            
+
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{
-                background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
-              }}>
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
+                }}
+              >
                 <MessageSquare className="w-6 h-6" style={{ color: '#0a0a0f' }} />
               </div>
               <div>
@@ -75,21 +85,23 @@ export default function FeedbackButton() {
                 <p className="text-sm text-white/70">Help us improve Superhero</p>
               </div>
             </div>
-            
+
             <p className="text-sm text-white/80 mb-6">
               Found a bug or have a suggestion?
               <br />
               Click below to report it on GitHub and help us make Superhero better!
             </p>
-            
+
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setShowMobilePopup(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   window.open('https://github.com/superhero-com/superhero/issues', '_blank', 'noopener,noreferrer');
                   setShowMobilePopup(false);
@@ -108,5 +120,6 @@ export default function FeedbackButton() {
       )}
     </>
   );
-}
+};
 
+export default FeedbackButton;

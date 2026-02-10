@@ -1,5 +1,4 @@
-import { useNavigate } from 'react-router-dom';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 import { useAccount } from '../../../hooks';
 import { AddLiquidityForm, LiquidityPositionCard, RemoveLiquidityForm } from '../components';
@@ -7,10 +6,11 @@ import { PoolProvider, usePool } from '../context/PoolProvider';
 import { useLiquidityPositions } from '../hooks';
 import Spinner from '../../../components/Spinner';
 
-function PoolContent() {
-  const navigate = useNavigate();
+const PoolContent = () => {
   const { activeAccount } = useAccount();
-  const { positions, loading, error, refreshPositions } = useLiquidityPositions();
+  const {
+    positions, loading, error, refreshPositions,
+  } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
 
   const handleFormSelect = () => {
@@ -65,7 +65,8 @@ function PoolContent() {
                   Total Value
                 </div>
                 <div className="text-xl font-bold text-green-400">
-                  ${positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
+                  $
+                  {positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
@@ -92,12 +93,13 @@ function PoolContent() {
                 <div className="flex gap-2">
                   {activeAccount && (
                     <button
+                      type="button"
                       onClick={() => refreshPositions()}
                       disabled={loading}
                       className={`px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] flex items-center gap-2 ${loading
                         ? 'cursor-not-allowed opacity-60'
                         : 'hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0'
-                        }`}
+                      }`}
                     >
                       {loading ? (
                         <>
@@ -112,52 +114,66 @@ function PoolContent() {
                 </div>
               </div>
 
-              {loading && positions.length === 0 ? (
-                <div className="text-center py-10 text-white/60 flex flex-col items-center gap-4">
-                  <Spinner className="w-8 h-8" />
-                  Loading your positions...
-                </div>
-              ) : error ? (
-                <div className="text-center p-5 text-red-400 bg-red-400/10 rounded-2xl border border-red-400/20 backdrop-blur-[10px]">
-                  {error}
-                </div>
-              ) : positions.length === 0 ? (
-                <div className="text-center p-10 bg-white/[0.03] rounded-2xl border border-white/10 backdrop-blur-[10px]">
-                  <div className="text-5xl mb-4 opacity-30">
-                    💧
+              {(() => {
+                if (loading && positions.length === 0) {
+                  return (
+                    <div className="text-center py-10 text-white/60 flex flex-col items-center gap-4">
+                      <Spinner className="w-8 h-8" />
+                      Loading your positions...
+                    </div>
+                  );
+                }
+
+                if (error) {
+                  return (
+                    <div className="text-center p-5 text-red-400 bg-red-400/10 rounded-2xl border border-red-400/20 backdrop-blur-[10px]">
+                      {error}
+                    </div>
+                  );
+                }
+
+                if (positions.length === 0) {
+                  return (
+                    <div className="text-center p-10 bg-white/[0.03] rounded-2xl border border-white/10 backdrop-blur-[10px]">
+                      <div className="text-5xl mb-4 opacity-30">
+                        💧
+                      </div>
+                      <div className="text-base font-semibold mb-2 text-white">
+                        No liquidity positions found
+                      </div>
+                      <div className="text-sm text-white/60 mb-5 leading-relaxed">
+                        Start earning fees by providing liquidity to trading pairs
+                      </div>
+                      {!activeAccount && (
+                        <ConnectWalletButton
+                          label="CONNECT WALLET"
+                          variant="dex"
+                          className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                        />
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col gap-3">
+                    {positions.filter((item) => item?.pair?.address).map((item) => (
+                      <LiquidityPositionCard
+                        key={item?.pair?.address}
+                        position={item}
+                        onRemove={(selectedPosition) => {
+                          selectPositionForRemove(selectedPosition);
+                          handleFormSelect();
+                        }}
+                        onAdd={(selectedPosition) => {
+                          selectPositionForAdd(selectedPosition);
+                          handleFormSelect();
+                        }}
+                      />
+                    ))}
                   </div>
-                  <div className="text-base font-semibold mb-2 text-white">
-                    No liquidity positions found
-                  </div>
-                  <div className="text-sm text-white/60 mb-5 leading-relaxed">
-                    Start earning fees by providing liquidity to trading pairs
-                  </div>
-                  {!activeAccount && (
-                    <ConnectWalletButton
-                      label="CONNECT WALLET"
-                      variant="dex"
-                      className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {positions.filter(position => position?.pair?.address).map((position, index) => (
-                    <LiquidityPositionCard
-                      key={`${position?.pair?.address}-${index}`}
-                      position={position}
-                      onRemove={(position) => {
-                        selectPositionForRemove(position);
-                        handleFormSelect();
-                      }}
-                      onAdd={(position) => {
-                        selectPositionForAdd(position);
-                        handleFormSelect();
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
           {/* Recent Activity under Your Liquidity Positions */}
@@ -169,12 +185,12 @@ function PoolContent() {
 
     </div>
   );
-}
+};
 
-export default function Pool() {
-  return (
-    <PoolProvider>
-      <PoolContent />
-    </PoolProvider>
-  );
-}
+const Pool = () => (
+  <PoolProvider>
+    <PoolContent />
+  </PoolProvider>
+);
+
+export default Pool;

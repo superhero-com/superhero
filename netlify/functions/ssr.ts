@@ -120,7 +120,7 @@ async function buildMeta(pathname: string): Promise<Meta> {
         };
       }
     } catch {
-      return { title: 'Post – Superhero', canonical: `${ORIGIN}/post/${segment}` };
+      // Fall through to shared fallback below
     }
     return { title: 'Post – Superhero', canonical: `${ORIGIN}/post/${segment}` };
   }
@@ -149,7 +149,7 @@ async function buildMeta(pathname: string): Promise<Meta> {
         };
       }
     } catch {
-      return { title: `${address} – Profile – Superhero`, canonical: `${ORIGIN}/users/${address}` };
+      // Fall through to shared fallback below
     }
     return { title: `${address} – Profile – Superhero`, canonical: `${ORIGIN}/users/${address}` };
   }
@@ -179,7 +179,7 @@ async function buildMeta(pathname: string): Promise<Meta> {
         };
       }
     } catch {
-      return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
+      // Fall through to shared fallback below
     }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
   }

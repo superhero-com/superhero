@@ -177,11 +177,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         };
       }
     } catch {
-      return {
-        title: 'Post – Superhero',
-        canonical: `${fullUrl.origin}/post/${segment}`,
-        ogType: 'article',
-      };
+      // Fall through to shared fallback below
     }
     return {
       title: 'Post – Superhero',
@@ -218,12 +214,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         };
       }
     } catch {
-      return {
-        title: `${address} – Profile – Superhero`,
-        canonical: `${fullUrl.origin}/users/${address}`,
-        ogImage: `${fullUrl.origin}/og-default.png`,
-        ogType: 'profile',
-      };
+      // Fall through to shared fallback below
     }
     return {
       title: `${address} – Profile – Superhero`,
@@ -266,11 +257,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         };
       }
     } catch {
-      return {
-        title: `Buy #${address} on Superhero.com`,
-        canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
-        ogImage: `${fullUrl.origin}/og-default.png`,
-      };
+      // Fall through to shared fallback below
     }
     return {
       title: `Buy #${address} on Superhero.com`,

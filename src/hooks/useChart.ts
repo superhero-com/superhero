@@ -23,7 +23,13 @@ export function useChart({
 }: UseChartProps = {}) {
   const chartContainer = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
+  const onChartReadyRef = useRef(onChartReady);
+  const [chartApi, setChartApi] = useState<IChartApi | null>(null);
   const [isDarkMode] = useState(true); // For now, assuming dark mode
+
+  useEffect(() => {
+    onChartReadyRef.current = onChartReady;
+  }, [onChartReady]);
 
   const resizeHandler = useCallback(() => {
     if (!chart.current || !chartContainer.current) return;
@@ -69,9 +75,10 @@ export function useChart({
 
     const chartInstance = createChart(chartContainer.current, defaultChartOptions);
     chart.current = chartInstance;
+    setChartApi(chartInstance);
 
-    onChartReady?.(chartInstance);
-  }, [chartOptions, height, isDarkMode, onChartReady]);
+    onChartReadyRef.current?.(chartInstance);
+  }, [height, isDarkMode]);
 
   useEffect(() => {
     initChart();
@@ -82,9 +89,15 @@ export function useChart({
         chart.current.remove();
         chart.current = null;
       }
+      setChartApi(null);
       window.removeEventListener('resize', resizeHandler);
     };
   }, [initChart, resizeHandler]);
+
+  useEffect(() => {
+    if (!chart.current) return;
+    chart.current.applyOptions(chartOptions);
+  }, [chartOptions]);
 
   // Update chart colors when dark mode changes
   useEffect(() => {
@@ -98,6 +111,6 @@ export function useChart({
 
   return {
     chartContainer,
-    chart: chart.current,
+    chart: chartApi,
   };
 }

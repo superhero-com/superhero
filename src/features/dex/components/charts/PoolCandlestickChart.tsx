@@ -72,6 +72,7 @@ export const PoolCandlestickChart = ({
   const marketCapSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const subscription = useRef<(() => void) | null>(null);
   const touchHandlersCleanup = useRef<(() => void) | null>(null);
+  const crosshairMoveCleanup = useRef<(() => void) | null>(null);
 
   const convertTo = useMemo(
     () => (useCurrentCurrency ? 'usd' : 'ae'),
@@ -252,26 +253,33 @@ export const PoolCandlestickChart = ({
   ) => {
     // Clear existing series only if we're reinitializing and they exist
     if (shouldRemoveExisting) {
+      if (crosshairMoveCleanup.current) {
+        crosshairMoveCleanup.current();
+        crosshairMoveCleanup.current = null;
+      }
       if (candlestickSeries.current) {
+        const existingSeries = candlestickSeries.current;
+        candlestickSeries.current = null;
         try {
-          chartInstance.removeSeries(candlestickSeries.current);
-          candlestickSeries.current = null;
+          chartInstance.removeSeries(existingSeries);
         } catch (error) {
           console.warn('Error removing candlestick series:', error);
         }
       }
       if (volumeSeries.current) {
+        const existingSeries = volumeSeries.current;
+        volumeSeries.current = null;
         try {
-          chartInstance.removeSeries(volumeSeries.current);
-          volumeSeries.current = null;
+          chartInstance.removeSeries(existingSeries);
         } catch (error) {
           console.warn('Error removing volume series:', error);
         }
       }
       if (marketCapSeries.current) {
+        const existingSeries = marketCapSeries.current;
+        marketCapSeries.current = null;
         try {
-          chartInstance.removeSeries(marketCapSeries.current);
-          marketCapSeries.current = null;
+          chartInstance.removeSeries(existingSeries);
         } catch (error) {
           console.warn('Error removing market cap series:', error);
         }
@@ -352,7 +360,7 @@ export const PoolCandlestickChart = ({
     });
 
     // Subscribe to crosshair moves
-    chartInstance.subscribeCrosshairMove((param) => {
+    const handleCrosshairMove = (param: any) => {
       if (param.time) {
         const candleData = param.seriesData.get(candlestickSeriesInstance) as any;
         const volumeData = param.seriesData.get(volumeSeriesInstance) as any;
@@ -364,7 +372,15 @@ export const PoolCandlestickChart = ({
         setCurrentCandleVolume(volumeData?.value || 0);
         setCurrentCandleMarketCap(marketCapData?.value || 0);
       }
-    });
+    };
+    chartInstance.subscribeCrosshairMove(handleCrosshairMove);
+    crosshairMoveCleanup.current = () => {
+      try {
+        chartInstance.unsubscribeCrosshairMove(handleCrosshairMove);
+      } catch (error) {
+        console.warn('[PoolCandlestickChart] Error unsubscribing crosshair handler:', error);
+      }
+    };
 
     // Add touch handlers for mobile drag support
     // Clean up any existing touch handlers first to prevent memory leaks
@@ -583,6 +599,10 @@ export const PoolCandlestickChart = ({
 
   // Cleanup touch handlers when component unmounts or chart changes
   useEffect(() => () => {
+    if (crosshairMoveCleanup.current) {
+      crosshairMoveCleanup.current();
+      crosshairMoveCleanup.current = null;
+    }
     if (touchHandlersCleanup.current) {
       touchHandlersCleanup.current();
       touchHandlersCleanup.current = null;

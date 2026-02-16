@@ -30,7 +30,7 @@ const TokenSummary = ({
       className={`${className} p-0 bg-transparent border-0 rounded-none shadow-none backdrop-blur-none sm:p-6 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:rounded-[24px] sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:backdrop-blur-[20px]`}
     >
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 hidden sm:block">
         <h3 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
           Token Information
         </h3>

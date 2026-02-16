@@ -9,20 +9,24 @@
 */
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import moment from 'moment';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { TransactionDto } from '@/api/generated/models/TransactionDto';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import { formatLongDate } from '@/utils/common';
 import { TX_FUNCTIONS } from '@/utils/constants';
+import { TxFunction } from '@/utils/types';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import { formatCompactNumber } from '@/utils/number';
+import { Decimal } from '@/libs/decimal';
 import AddressChip from '../AddressChip';
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
-  items: TokenDto[];
+  items: TransactionDto[];
   meta: {
     totalItems: number;
     totalPages: number;
@@ -32,6 +36,116 @@ interface PaginatedTransactionsResponse {
 
 interface TokenTradesProps {
   token: TokenDto;
+}
+
+// Mobile Transaction Card Component
+interface TransactionCardProps {
+  transaction: TransactionDto;
+  txStyling: {
+    bgColor: string;
+    borderColor: string;
+    textColor: string;
+    chipBg: string;
+  };
+}
+
+function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps) {
+  const isBuy = transaction.tx_type === 'buy';
+  const isSell = transaction.tx_type === 'sell';
+
+  const typeColor = isBuy ? 'text-emerald-400' : isSell ? 'text-red-400' : 'text-blue-400';
+  const typeGlow = isBuy ? 'bg-emerald-400/10' : isSell ? 'bg-red-400/10' : 'bg-blue-400/10';
+
+  const timeAgo = React.useMemo(() => {
+    try {
+      return moment(transaction.created_at).fromNow();
+    } catch {
+      return 'just now';
+    }
+  }, [transaction.created_at]);
+
+  const handleOpenTx = React.useCallback(() => {
+    if (transaction.tx_hash) {
+      // Open transaction in explorer - you can customize this URL based on your needs
+      window.open(`https://explorer.aeternity.io/transactions/${transaction.tx_hash}`, '_blank');
+    }
+  }, [transaction.tx_hash]);
+
+  const getDisplayName = (txType: string): string => {
+    const normalizedType = txType?.toLowerCase();
+    switch (normalizedType) {
+      case 'buy':
+        return 'Buy';
+      case 'sell':
+        return 'Sell';
+      default:
+        return txType;
+    }
+  };
+
+  return (
+    <button
+      onClick={handleOpenTx}
+      className="w-full text-left active:opacity-80 transition-opacity"
+    >
+      <div className="my-2 border border-[#222222] bg-[#141414]/50 overflow-hidden rounded-lg px-3 py-2 space-y-2">
+        {/* Compact Header: Account, Badge & Time */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {transaction.address && (
+              <>
+                <AddressAvatarWithChainName 
+                  address={transaction.address}
+                />
+                <span className="text-xs text-white/60">•</span>
+                <span className="text-xs text-white/60">{timeAgo}</span>
+              </>
+            )}
+          </div>
+
+          {/* Compact TX Type Badge */}
+          {transaction.tx_type && (
+            <div className={`px-2 py-0.5 rounded-full flex items-center gap-1 ${typeGlow}`}>
+              <span className={`text-xs font-semibold ${typeColor}`}>
+                {getDisplayName(transaction.tx_type)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Compact Price Info - Single Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div>
+              <div className="text-[10px] text-white/60 mb-0.5">Price</div>
+              <PriceDataFormatter
+                watchPrice={false}
+                priceData={transaction.price_data}
+                className="text-xs font-semibold"
+              />
+            </div>
+            <span className="text-white/60">×</span>
+            <div>
+              <div className="text-[10px] text-white/60 mb-0.5">Amount</div>
+              <div className="text-xs font-semibold text-white">
+                {Decimal.from(transaction.volume).shorten()}
+              </div>
+            </div>
+          </div>
+
+          {/* Total - Right Aligned */}
+          <div className="text-right">
+            <div className="text-[10px] text-white/60 mb-0.5">Total</div>
+            <PriceDataFormatter
+              watchPrice={false}
+              priceData={transaction.spent_amount_data}
+              className="text-xs font-bold"
+            />
+          </div>
+        </div>
+      </div>
+    </button>
+  );
 }
 
 export default function TokenTrades({ token }: TokenTradesProps) {
@@ -222,9 +336,9 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   }, [currentPage, transactions.length, isFetching, error, refetch]);
 
   return (
-    <div className="space-y-4">
+    <div className="md:space-y-4">
       {/* Data Table */}
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="md:bg-white/[0.02] md:border md:border-white/10 md:rounded-2xl overflow-hidden">
         {/* Table Header */}
         <div className="hidden lg:grid gap-4 px-2 xl:px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px]">
           {headers.map((header) => (
@@ -235,96 +349,85 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         </div>
 
         {/* Table Body */}
-        <div className="divide-y divide-white/5">
+        <div className="md:divide-y md:divide-white/5">
           {transactions.map((transaction) => {
             const txStyling = getTxStyling(transaction.tx_type || '');
 
             return (
-              <div
-                key={transaction.id}
-                className="grid grid-cols-1 lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px] gap-4 px-2 xl:px-6 py-4 hover:bg-white/[0.02] transition-colors"
-              >
-                {/* Account */}
-                {transaction.address ? (
+              <React.Fragment key={transaction.id}>
+                {/* Mobile Card View */}
+                <div className="lg:hidden">
+                  <MobileTransactionCard 
+                    transaction={transaction}
+                    txStyling={txStyling}
+                  />
+                </div>
+
+                {/* Desktop Table Row */}
+                <div
+                  className="hidden lg:grid lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px] gap-4 px-2 xl:px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                >
+                  {/* Account */}
+                  {transaction.address ? (
+                    <div className="flex items-center">
+                      <AddressAvatarWithChainName address={transaction.address} />
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+
+                  {/* Type */}
+                  {transaction.tx_type ? (
+                    <div className="flex items-center">
+                      <div
+                        className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${txStyling.textColor} ${txStyling.chipBg} border ${txStyling.borderColor}`}
+                      >
+                        {getDisplayName(transaction.tx_type)}
+                      </div>
+                    </div>
+                  ) : <div />}
+
+                  {/* Volume */}
                   <div className="flex items-center">
-                    <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                      Account:
+                    <div className="text-white text-xs font-medium">
+                      {formatCompactNumber(transaction.volume, 2, 2)}
                     </div>
-                    <AddressAvatarWithChainName address={transaction.address} />
                   </div>
-                ) : (
-                  <div />
-                )}
 
-                {/* Type */}
-                {transaction.tx_type ? (
+                  {/* Unit Price */}
                   <div className="flex items-center">
-                    <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                      Type:
+                    <PriceDataFormatter
+                      watchPrice={false}
+                      priceData={transaction.price_data}
+                      className="text-xs"
+                    />
+                  </div>
+
+                  {/* Total Price */}
+                  <div className="flex items-center">
+                    <PriceDataFormatter
+                      watchPrice={false}
+                      priceData={transaction.spent_amount_data}
+                      className="text-xs"
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div className="flex items-center">
+                    <div className="text-white/70 text-xs">
+                      {formatLongDate(transaction.created_at)}
                     </div>
-                    <div
-                      className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${txStyling.textColor} ${txStyling.chipBg} border ${txStyling.borderColor}`}
-                    >
-                      {getDisplayName(transaction.tx_type)}
-                    </div>
                   </div>
-                ) : <div />}
 
-                {/* Volume */}
-                <div className="flex items-center">
-                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Volume:
-                  </div>
-                  <div className="text-white text-xs font-medium">
-                    {formatCompactNumber(transaction.volume, 2, 2)}
+                  {/* Transaction Hash */}
+                  <div className="flex items-center">
+                    <AddressChip
+                      address={transaction.tx_hash}
+                      linkToExplorer
+                    />
                   </div>
                 </div>
-
-                {/* Unit Price */}
-                <div className="flex items-center">
-                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Unit Price:
-                  </div>
-                  <PriceDataFormatter
-                    watchPrice={false}
-                    priceData={transaction.unit_price}
-                    className="text-xs"
-                  />
-                </div>
-
-                {/* Total Price */}
-                <div className="flex items-center">
-                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Total:
-                  </div>
-                  <PriceDataFormatter
-                    watchPrice={false}
-                    priceData={transaction.amount}
-                    className="text-xs"
-                  />
-                </div>
-
-                {/* Date */}
-                <div className="flex items-center">
-                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Date:
-                  </div>
-                  <div className="text-white/70 text-xs">
-                    {formatLongDate(transaction.created_at)}
-                  </div>
-                </div>
-
-                {/* Transaction Hash */}
-                <div className="flex items-center">
-                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Tx:
-                  </div>
-                  <AddressChip
-                    address={transaction.tx_hash}
-                    linkToExplorer
-                  />
-                </div>
-              </div>
+              </React.Fragment>
             );
           })}
         </div>

@@ -94,7 +94,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {transaction.address && (
               <>
-                <AddressAvatarWithChainName 
+                <AddressAvatarWithChainName
                   address={transaction.address}
                 />
                 <span className="text-xs text-white/60">•</span>
@@ -357,7 +357,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
               <React.Fragment key={transaction.id}>
                 {/* Mobile Card View */}
                 <div className="lg:hidden">
-                  <MobileTransactionCard 
+                  <MobileTransactionCard
                     transaction={transaction}
                     txStyling={txStyling}
                   />
@@ -470,49 +470,44 @@ export default function TokenTrades({ token }: TokenTradesProps) {
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="space-y-4 pb-8">
-          {/* Items per page selector */}
-          <div className="flex items-center flex-col lg:flex-row justify-between text-sm text-white/60">
-            <div className="flex items-center gap-2">
-              <span>Show:</span>
-              <AppSelect
-                value={String(itemsPerPage)}
-                onValueChange={(v) => {
-                  setItemsPerPage(Number(v));
-                  setCurrentPage(1);
-                }}
-                triggerClassName="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none transition-colors"
-                contentClassName="bg-gray-800 border-white/10"
-              >
-                {[10, 20, 50, 100].map((option) => (
-                  <AppSelectItem key={option} value={String(option)}>
-                    {option}
-                  </AppSelectItem>
-                ))}
-              </AppSelect>
-              <span>items per page</span>
+          {/* Items per page selector and info */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-white/60">
+            {/* Left: Items per page selector */}
+            <div className="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-start">
+              <span className="whitespace-nowrap">Show</span>
+              <div>
+                <AppSelect
+                  value={String(itemsPerPage)}
+                  onValueChange={(v) => {
+                    setItemsPerPage(Number(v));
+                    setCurrentPage(1);
+                  }}
+                  triggerClassName="px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none transition-colors hover:bg-white/[0.08]"
+                  contentClassName="bg-gray-800 border-white/10"
+                >
+                  {[10, 20, 50, 100].map((option) => (
+                    <AppSelectItem key={option} value={String(option)}>
+                      {option}
+                    </AppSelectItem>
+                  ))}
+                </AppSelect>
+              </div>
+              <span className="whitespace-nowrap">items per page</span>
             </div>
-            <div>
-              Showing
-              {' '}
-              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
-              {' '}
-              to
-              {' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)}
-              {' '}
-              of
-              {totalItems}
-              {' '}
-              transactions
+
+            {/* Right: Showing info */}
+            <div className="text-center lg:text-right whitespace-nowrap">
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{' '}
+              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} transactions
             </div>
           </div>
 
           {/* Page navigation */}
-          <div className="flex items-center flex-col md:flex-row justify-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => updatePage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
-              className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -535,11 +530,10 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                   <button
                     key={pageNum}
                     onClick={() => updatePage(pageNum)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 ${
-                      currentPage === pageNum
-                        ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
-                        : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
-                    }`}
+                    className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentPage === pageNum
+                      ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                      : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -550,7 +544,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
             <button
               onClick={() => updatePage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage >= totalPages}
-              className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

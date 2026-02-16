@@ -663,27 +663,7 @@ const TokenSaleDetails = () => {
       {/* Mobile Trading Modal */}
       {(showTradePanels && tradeActionSheet && token?.sale_address) && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
-          <div className="w-full max-h-[85vh] overflow-y-auto bg-white/[0.02] border-t border-white/10 rounded-t-3xl p-6 backdrop-blur-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Trade Token</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeTradeActionSheet}
-                className="text-white"
-              >
-                ×
-              </Button>
-            </div>
-            {isMobile && (
-              <div className="mb-4">
-                <TokenCandlestickChart
-                  token={token}
-                  height={160}
-                  className="w-full"
-                />
-              </div>
-            )}
+          <div className="w-full max-h-[85vh] overflow-y-auto">
             <TokenTradeCard
               token={token}
               onClose={closeTradeActionSheet}

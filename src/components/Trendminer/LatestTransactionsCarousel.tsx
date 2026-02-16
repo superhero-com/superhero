@@ -18,7 +18,7 @@ const LatestTransactionsCarousel = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const skeletonKeys = useMemo(
-    () => Array.from({ length: itemsToShow }, () => crypto.randomUUID()),
+    () => Array.from({ length: itemsToShow }, () => crypto?.randomUUID?.()),
     [itemsToShow],
   );
 

@@ -150,7 +150,7 @@ export const TokenTradeTab = ({
           <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
         ) : (
           token?.sale_address ? (
-            <TokenCandlestickChart token={token} height={520} className="w-full" />
+            <TokenCandlestickChart token={token} height={window.innerHeight * 0.4} className="w-full" />
           ) : null
         )}
       </div>

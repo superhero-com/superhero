@@ -24,6 +24,21 @@ const toContractDisplaySource = (source: DisplaySource): DisplaySourceVariant =>
   return { Custom: [] };
 };
 
+type OptionVariant<T> = { Some: [T] } | { None: [] };
+const toOption = <T>(value: T | null | undefined): OptionVariant<T> => (
+  value == null ? { None: [] } : { Some: [value] }
+);
+
+const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
+  const current = candidate?._accounts?.current;
+  if (!current || typeof current !== 'object') return false;
+  const addresses = Object.keys(current);
+  if (!addresses.length) return false;
+  if (!expectedAddress) return true;
+  const target = normalizeAddress(expectedAddress);
+  return addresses.some((addr) => normalizeAddress(addr) === target);
+};
+
 const fromContractDisplaySource = (source: unknown): DisplaySource | undefined => {
   if (!source || typeof source !== 'object') return undefined;
   if ('Chain' in (source as Record<string, unknown>)) return 'chain';
@@ -78,14 +93,42 @@ export function useProfile(targetAddress?: string) {
     timeoutMs = 25_000,
   ): Promise<string> => {
     const knownAddress = expectedAddress || targetAddress;
+    const normalizedKnownAddress = knownAddress ? normalizeAddress(knownAddress) : '';
     const matchesExpectedAddress = (account?: string) => {
       if (!account) return false;
       if (!knownAddress) return true;
-      return normalizeAddress(account) === normalizeAddress(knownAddress);
+      return normalizeAddress(account) === normalizedKnownAddress;
+    };
+    const hasKnownSignerReady = () => (
+      Boolean(knownAddress)
+      && (
+        sdkHasAccount(staticAeSdk, knownAddress)
+        || sdkHasAccount(sdk, knownAddress)
+      )
+    );
+    const getReconnectAddress = (): string | null => {
+      const current = activeAccountRef.current;
+      if (matchesExpectedAddress(current)) {
+        return current as string;
+      }
+      if (hasKnownSignerReady()) {
+        return knownAddress as string;
+      }
+      return null;
     };
 
-    const immediate = activeAccountRef.current;
-    if (matchesExpectedAddress(immediate)) return immediate as string;
+    const immediate = getReconnectAddress();
+    if (immediate) {
+      // Ensure static signer is ready as a fallback on refresh/reconnect races.
+      if (knownAddress) {
+        try {
+          await addStaticAccount(knownAddress);
+        } catch {
+          // aepp signer may still be available; continue.
+        }
+      }
+      return immediate as string;
+    }
 
     if (knownAddress) {
       try {
@@ -96,15 +139,19 @@ export function useProfile(targetAddress?: string) {
       if (matchesExpectedAddress(activeAccountRef.current)) {
         return activeAccountRef.current as string;
       }
+      if (hasKnownSignerReady()) {
+        return knownAddress as string;
+      }
     }
 
     return new Promise<string>((resolve, reject) => {
       const startedAt = Date.now();
       let restoreAttempted = false;
       const interval = setInterval(() => {
-        if (matchesExpectedAddress(activeAccountRef.current)) {
+        const resolvedAddress = getReconnectAddress();
+        if (resolvedAddress) {
           clearInterval(interval);
-          resolve(activeAccountRef.current as string);
+          resolve(resolvedAddress);
           return;
         }
         if (!restoreAttempted && knownAddress && Date.now() - startedAt > 3_000) {
@@ -119,7 +166,7 @@ export function useProfile(targetAddress?: string) {
         }
       }, 300);
     });
-  }, [addStaticAccount, targetAddress]);
+  }, [addStaticAccount, sdk, staticAeSdk, targetAddress]);
 
   const canEdit = useMemo(
     () => !!activeAccount && (!targetAddress || targetAddress === activeAccount),
@@ -136,20 +183,39 @@ export function useProfile(targetAddress?: string) {
     }
   }, [targetAddress, activeAccount]);
 
-  const initializeProfileContract = useCallback(async () => {
+  const initializeProfileContract = useCallback(async (
+    expectedAddress?: string,
+    options?: { restoreSigner?: boolean; preferStaticSigner?: boolean },
+  ) => {
     const profileContractAddress = CONFIG.PROFILE_REGISTRY_CONTRACT_ADDRESS as `ct_${string}` | undefined;
     if (!profileContractAddress?.trim()) {
       throw new Error('PROFILE_REGISTRY_CONTRACT_ADDRESS is not configured');
     }
-    // Prefer static SDK for post-redirect flows: it can sign via deep link once
-    // addStaticAccount(address) has restored the account, even if aepp wallet
-    // reconnection is still in progress.
-    const signerSdk = staticAeSdk || sdk;
+
+    const shouldRestoreSigner = Boolean(options?.restoreSigner);
+    const shouldPreferStaticSigner = Boolean(options?.preferStaticSigner);
+    if (shouldRestoreSigner && expectedAddress && !sdkHasAccount(staticAeSdk, expectedAddress)) {
+      try {
+        await addStaticAccount(expectedAddress);
+      } catch {
+        // Keep fallback logic below.
+      }
+    }
+
+    let signerSdk = sdkHasAccount(staticAeSdk, expectedAddress)
+      ? staticAeSdk
+      : (sdkHasAccount(sdk, expectedAddress) ? sdk : (sdk || staticAeSdk));
+    if (shouldPreferStaticSigner && staticAeSdk) {
+      signerSdk = staticAeSdk;
+    }
+    if (!signerSdk) {
+      throw new Error('SDK is not initialized');
+    }
     return signerSdk.initializeContract({
       aci: PROFILE_REGISTRY_ACI as any,
       address: profileContractAddress,
     });
-  }, [sdk, staticAeSdk]);
+  }, [sdk, staticAeSdk, addStaticAccount]);
 
   /** Dry-run get_profile(owner) on the ProfileRegistry contract. Returns profile record or null. */
   const getProfileOnChain = useCallback(async (address?: string): Promise<{
@@ -165,7 +231,7 @@ export function useProfile(targetAddress?: string) {
     try {
       const addr = (address || targetAddress || activeAccount) as string | undefined;
       if (!addr) return null;
-      const contract = await initializeProfileContract();
+      const contract = await initializeProfileContract(addr, { restoreSigner: false });
       const tx: any = await (contract as any).get_profile(addr);
       const raw = tx?.decodedResult ?? tx?.result?.decodedResult ?? tx;
       if (raw == null) return null;
@@ -186,7 +252,7 @@ export function useProfile(targetAddress?: string) {
   const setProfile = useCallback(async (data: SetProfileInput): Promise<string | undefined> => {
     const connectedAddress = await waitForWalletReconnect(targetAddress);
     const target = targetAddress || connectedAddress;
-    const contract = await initializeProfileContract();
+    const contract = await initializeProfileContract(target, { restoreSigner: true });
     const current = await getProfileOnChain(target);
     const nextFullname = data.fullname || '';
     const nextBio = data.bio || '';
@@ -197,6 +263,65 @@ export function useProfile(targetAddress?: string) {
       || current.fullname !== nextFullname
       || current.bio !== nextBio
       || current.avatarurl !== nextAvatar;
+
+    const normalizedUsername = normalizeName(data.username || '');
+    const currentUsername = normalizeName(current?.username || '');
+    const shouldUpdateUsername = normalizedUsername !== currentUsername
+      && (normalizedUsername.length > 0 || currentUsername.length > 0);
+
+    const normalizedChainName = normalizeName(data.chainName || '');
+    const currentChainName = normalizeName(current?.chain_name || '');
+    const currentChainExpiresAt = Number(current?.chain_expires_at || 0);
+    const nextChainExpiresAt = Number(data.chainExpiresAt || 0);
+    const hasValidChainExpiry = Number.isFinite(nextChainExpiresAt) && nextChainExpiresAt > 0;
+    const shouldSetChainName = normalizedChainName.length > 0 && (
+      normalizedChainName !== currentChainName
+      || (hasValidChainExpiry && currentChainExpiresAt !== nextChainExpiresAt)
+    );
+    const shouldClearChainName = !normalizedChainName && !!currentChainName;
+
+    const currentDisplaySource = fromContractDisplaySource(current?.display_source);
+    const targetDisplaySource = data.displaySource || currentDisplaySource || 'custom';
+    const shouldUpdateDisplaySource = currentDisplaySource !== targetDisplaySource;
+
+    const shouldChangeChain = shouldSetChainName || shouldClearChainName;
+    const changeCount = Number(shouldSetProfile)
+      + Number(shouldUpdateUsername)
+      + Number(shouldChangeChain)
+      + Number(shouldUpdateDisplaySource);
+
+    if (shouldSetProfile && !shouldUpdateUsername && !shouldChangeChain && !shouldUpdateDisplaySource) {
+      const setProfileResult: any = await (contract as any).set_profile(
+        nextFullname,
+        nextBio,
+        nextAvatar,
+      );
+      txHash = extractTxHash(setProfileResult) || txHash;
+      return txHash;
+    }
+
+    /**
+     * Use the full entrypoint only when there are multiple field changes in one submit.
+     * For single-field updates, keep using dedicated entrypoints to avoid resending
+     * unrelated profile fields.
+     */
+    if (changeCount > 1 && typeof (contract as any).set_profile_full === 'function') {
+      if (normalizedChainName && !hasValidChainExpiry) {
+        throw new Error('Missing chain name expiration');
+      }
+      const fullResult: any = await (contract as any).set_profile_full(
+        nextFullname,
+        nextBio,
+        nextAvatar,
+        toOption(normalizedUsername || null),
+        toOption(normalizedChainName || null),
+        toOption(hasValidChainExpiry ? nextChainExpiresAt : null),
+        toContractDisplaySource(targetDisplaySource),
+      );
+      txHash = extractTxHash(fullResult) || txHash;
+      return txHash;
+    }
+
     if (shouldSetProfile) {
       const setProfileResult: any = await (contract as any).set_profile(
         nextFullname,
@@ -206,41 +331,26 @@ export function useProfile(targetAddress?: string) {
       txHash = extractTxHash(setProfileResult);
     }
 
-    const normalizedUsername = normalizeName(data.username || '');
-    const currentUsername = normalizeName(current?.username || '');
-    const shouldUpdateUsername = normalizedUsername !== currentUsername
-      && (normalizedUsername.length > 0 || currentUsername.length > 0);
     if (shouldUpdateUsername) {
       const tx: any = await (contract as any).set_custom_name(normalizedUsername);
       txHash = extractTxHash(tx) || txHash;
     }
 
-    const normalizedChainName = normalizeName(data.chainName || '');
-    const currentChainName = normalizeName(current?.chain_name || '');
-    const currentChainExpiresAt = Number(current?.chain_expires_at || 0);
-    const nextChainExpiresAt = Number(data.chainExpiresAt || 0);
-    if (normalizedChainName) {
-      const shouldSetChainName = normalizedChainName !== currentChainName
-        || (Number.isFinite(nextChainExpiresAt)
-          && nextChainExpiresAt > 0
-          && currentChainExpiresAt !== nextChainExpiresAt);
-      if (shouldSetChainName) {
-        if (!Number.isFinite(nextChainExpiresAt) || nextChainExpiresAt <= 0) {
-          throw new Error('Missing chain name expiration');
-        }
-        const tx: any = await (contract as any).set_chain_name(
-          normalizedChainName,
-          nextChainExpiresAt,
-        );
-        txHash = extractTxHash(tx) || txHash;
+    if (shouldSetChainName) {
+      if (!Number.isFinite(nextChainExpiresAt) || nextChainExpiresAt <= 0) {
+        throw new Error('Missing chain name expiration');
       }
-    } else if (currentChainName) {
+      const tx: any = await (contract as any).set_chain_name(
+        normalizedChainName,
+        nextChainExpiresAt,
+      );
+      txHash = extractTxHash(tx) || txHash;
+    } else if (shouldClearChainName) {
       const tx: any = await (contract as any).clear_chain_name();
       txHash = extractTxHash(tx) || txHash;
     }
 
     if (data.displaySource) {
-      const currentDisplaySource = fromContractDisplaySource(current?.display_source);
       if (currentDisplaySource !== data.displaySource) {
         const tx: any = await (contract as any).set_display_source(
           toContractDisplaySource(data.displaySource),
@@ -252,7 +362,20 @@ export function useProfile(targetAddress?: string) {
   }, [getProfileOnChain, initializeProfileContract, targetAddress, waitForWalletReconnect]);
 
   const verifyXAndSave = useCallback(async (params: { address?: string; accessToken: string }) => {
-    const connectedAddress = await waitForWalletReconnect(params.address || targetAddress);
+    const expectedAddress = params.address || targetAddress;
+    let connectedAddress: string | undefined;
+    try {
+      connectedAddress = await waitForWalletReconnect(expectedAddress);
+    } catch {
+      if (expectedAddress) {
+        try {
+          await addStaticAccount(expectedAddress);
+          connectedAddress = expectedAddress;
+        } catch {
+          // Keep the original reconnect error path below if signer restore fails.
+        }
+      }
+    }
     const target = params.address || targetAddress || connectedAddress;
     if (!target) {
       throw new Error('Missing address for X verification');
@@ -260,7 +383,7 @@ export function useProfile(targetAddress?: string) {
     if (!params.accessToken?.trim()) {
       throw new Error('Missing X OAuth token');
     }
-    const contract = await initializeProfileContract();
+    const contract = await initializeProfileContract(target, { restoreSigner: true });
     const attestation = await SuperheroApi.createXAttestation(target, params.accessToken.trim());
     const res: any = await (contract as any).set_x_name_with_attestation(
       attestation.x_username,
@@ -269,12 +392,20 @@ export function useProfile(targetAddress?: string) {
       hexToUint8Array(attestation.signature_hex),
     );
     return res?.hash || res?.transactionHash || res?.tx?.hash;
-  }, [targetAddress, initializeProfileContract, waitForWalletReconnect]);
+  }, [addStaticAccount, targetAddress, initializeProfileContract, waitForWalletReconnect]);
 
   /** Complete X verification using an attestation (e.g. from OAuth callback). */
   const completeXWithAttestation = useCallback(async (attestation: XAttestationResponse) => {
-    await waitForWalletReconnect(targetAddress);
-    const contract = await initializeProfileContract();
+    if (!targetAddress) {
+      throw new Error('Missing address for X verification');
+    }
+    // In OAuth callback flow we already have the expected address from PKCE state.
+    // Restoring signer directly is enough and avoids transient reconnect races.
+    await addStaticAccount(targetAddress);
+    const contract = await initializeProfileContract(targetAddress, {
+      restoreSigner: true,
+      preferStaticSigner: true,
+    });
     const res: any = await (contract as any).set_x_name_with_attestation(
       attestation.x_username,
       attestation.expiry,
@@ -282,7 +413,7 @@ export function useProfile(targetAddress?: string) {
       hexToUint8Array(attestation.signature_hex),
     );
     return res?.hash || res?.transactionHash || res?.tx?.hash;
-  }, [initializeProfileContract, targetAddress, waitForWalletReconnect]);
+  }, [addStaticAccount, initializeProfileContract, targetAddress]);
 
   return {
     canEdit,

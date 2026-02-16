@@ -7,7 +7,6 @@ import {
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks';
 import {
-  ArrowLeft,
   BarChart3,
   Clock,
   Flame,
@@ -90,6 +89,7 @@ const TokenSaleDetails = () => {
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);
   const tradeTouchHandledRef = useRef(false);
+  const tabAutoScrollInitRef = useRef(false);
   const {
     switchTradeView,
     updateTokenA,
@@ -110,6 +110,15 @@ const TokenSaleDetails = () => {
   useEffect(() => {
     try { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); } catch { window.scrollTo(0, 0); }
   }, []);
+
+  // On tab change, auto-scroll to top (skip initial render)
+  useEffect(() => {
+    if (!tabAutoScrollInitRef.current) {
+      tabAutoScrollInitRef.current = true;
+      return;
+    }
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { window.scrollTo(0, 0); }
+  }, [activeTab]);
 
   useEffect(() => {
     tradePrefillAppliedRef.current = false;
@@ -346,8 +355,8 @@ const TokenSaleDetails = () => {
       {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
 
       {isMobile && (
-        <div className="sticky top-0 z-40 -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl">
-          <div className="pb-2">
+        <div className="sticky top-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] z-[1000] -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+          <div className="pt-2 pb-2">
             <div className="overflow-x-auto px-3">
               <div className="flex items-center gap-4 min-w-max">
                 {([

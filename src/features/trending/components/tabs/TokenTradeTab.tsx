@@ -67,7 +67,7 @@ export const TokenTradeTab = ({
   return (
     <div className="pb-24">
       {/* Price header */}
-      <div className="px-4 pt-2">
+      <div className="pt-2">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -145,12 +145,12 @@ export const TokenTradeTab = ({
       </div>
 
       {/* Chart */}
-      <div className="mt-3 px-3">
+      <div className="mt-12">
         {(isLoading && !token?.sale_address) ? (
           <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
         ) : (
           token?.sale_address ? (
-            <TokenCandlestickChart token={token} height={window.innerHeight * 0.4} className="w-full" />
+            <TokenCandlestickChart token={token} height={window.innerHeight * 0.4} className="w-full" noBackground />
           ) : null
         )}
       </div>

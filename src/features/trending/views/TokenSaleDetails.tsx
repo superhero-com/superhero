@@ -1,4 +1,5 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import type { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
 import { useQuery } from '@tanstack/react-query';
 import {
   useEffect, useMemo, useRef, useState, type PointerEvent,
@@ -22,13 +23,8 @@ import { TokensService } from '../../../api/generated/services/TokensService';
 import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
 import TokenNotFound from '../../../components/TokenNotFound';
 
-// Components
-import TokenTopicFeed from '../../social/components/TokenTopicFeed';
-import TokenTopicComposer from '../../social/components/TokenTopicComposer';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import Token24hChange from '../../../components/Trendminer/Token24hChange';
-import TokenHolders from '../../../components/Trendminer/TokenHolders';
-import TokenTrades from '../../../components/Trendminer/TokenTrades';
 import TokenChat from '../../../components/Trendminer/TokenChat';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -45,6 +41,13 @@ import TokenTradeCard from '../components/TokenTradeCard';
 import { TokenSummary } from '../../bcl/components';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
+import {
+  TokenFeedTab,
+  TokenHoldersTab,
+  TokenInfoTab,
+  TokenTradeTab,
+  TokenTransactionsTab,
+} from '../components/tabs';
 
 // Tab constants
 const TAB_DETAILS = 'details';
@@ -72,7 +75,6 @@ const TokenSaleDetails = () => {
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
-  const [performance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
@@ -195,6 +197,15 @@ const TokenSaleDetails = () => {
     ...(tokenData || {}),
   }), [tokenData, _token]);
   const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
+
+  const { data: tokenPerformance } = useQuery<TokenPriceMovementDto>({
+    queryKey: ['TokensService.performance', token?.sale_address],
+    queryFn: () => TokensService.performance({ address: String(token?.sale_address || '') }),
+    enabled: !!token?.sale_address,
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
+  });
+
   const tokenHeaderTitle = useMemo(() => {
     const raw = String(token?.symbol || token?.name || tokenName || '');
     return raw ? `#${raw.toUpperCase()}` : '#TOKEN';
@@ -226,6 +237,10 @@ const TokenSaleDetails = () => {
   const handleTradePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType !== 'touch') return;
     tradeTouchHandledRef.current = true;
+    openTradePanel();
+  };
+  const openTradeFor = (buy: boolean) => {
+    switchTradeView(buy);
     openTradePanel();
   };
 
@@ -455,7 +470,7 @@ const TokenSaleDetails = () => {
                       <Token24hChange
                         tokenAddress={token.address || token.sale_address}
                         createdAt={token.created_at}
-                        performance24h={performance}
+                        performance24h={tokenPerformance?.past_24h ?? null}
                       />
                       <Button
                         variant="outline"
@@ -572,178 +587,41 @@ const TokenSaleDetails = () => {
           {/* Tab Content */}
           <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
-              <div className="space-y-4">
-                <TokenSummary
-                  token={{ ...token, decimals: String(token.decimals ?? '') as any }}
-                />
-                <TokenRanking token={token} />
-                {/* Quali.chat CTA visible on mobile Info tab */}
-                <TokenChat
-                  token={{
-                    name: String(token.name || token.symbol || ''),
-                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
-                  }}
-                  mode="ctaOnly"
-                />
-              </div>
+              <TokenInfoTab token={token} />
             )}
 
             {isMobile && activeTab === TAB_TRADE && (
-              <div className="space-y-4 pb-4">
-                {(isLoading && !token?.sale_address) ? (
-                  <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
-                ) : (
-                  token?.sale_address ? (
-                    <div className="px-1">
-                      <TokenCandlestickChart
-                        token={token}
-                        height={220}
-                        className="w-full"
-                      />
-                    </div>
-                  ) : null
-                )}
-
-                <div className="px-1">
-                  {!token?.sale_address ? (
-                    <TokenSaleSidebarSkeleton />
-                  ) : (
-                    <TokenTradeCard token={token} />
-                  )}
-                </div>
-              </div>
+              <TokenTradeTab
+                token={token}
+                tokenPerformance={tokenPerformance}
+                isLoading={isLoading}
+                isTokenPending={isTokenPending}
+                onBuy={() => openTradeFor(true)}
+                onSell={() => openTradeFor(false)}
+              />
             )}
 
             {activeTab === TAB_CHAT && (
-              <div className="grid">
-                {isMobile && (
-                  <div className="px-3 py-2.5 border-b border-white/10">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setHoldersOnly(true)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                            holdersOnly
-                              ? 'bg-[#4ecdc4] text-black'
-                              : 'bg-white/5 text-white/60 hover:text-white'
-                          }`}
-                          aria-pressed={holdersOnly}
-                        >
-                          <Flame className="h-3.5 w-3.5" />
-                          Popular
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setHoldersOnly(false)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                            !holdersOnly
-                              ? 'bg-[#4ecdc4] text-black'
-                              : 'bg-white/5 text-white/60 hover:text-white'
-                          }`}
-                          aria-pressed={!holdersOnly}
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                          Latest
-                        </button>
-                      </div>
-
-                      {holdersOnly && (
-                        <div className="flex items-center gap-1">
-                          {(['24h', '7d', 'all'] as const).map((window) => (
-                            <button
-                              key={window}
-                              type="button"
-                              onClick={() => setPopularWindow(window)}
-                              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                                popularWindow === window
-                                  ? 'bg-white/15 text-white'
-                                  : 'bg-white/5 text-white/60 hover:text-white'
-                              }`}
-                              aria-pressed={popularWindow === window}
-                            >
-                              {window === '24h' ? '24h' : window === '7d' ? '7d' : 'All'}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between gap-2 flex-wrap px-1">
-                  {!isMobile && (
-                  <h3 className="m-0 text-white/90 font-semibold">
-                    Posts for #
-                    {String(token.name || token.symbol || '').toUpperCase()}
-                  </h3>
-                  )}
-                  {!isMobile && (
-                    <div className="inline-flex items-center rounded-full bg-white/10 border border-white/25 p-1">
-                      <button
-                        type="button"
-                        onClick={() => setShowTradePanels((prev) => !prev)}
-                        aria-pressed={showTradePanels}
-                        className={`px-3.5 py-1.5 rounded-full text-[18px] font-bold tracking-wide transition-colors ${
-                          showTradePanels
-                            ? 'bg-white/10 text-white/80 hover:text-white'
-                            : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md'
-                        }`}
-                      >
-                        {showTradePanels ? 'Hide graphs' : 'Trade'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {showComposer && (
-                  <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
-                )}
-                {!isMobile && (
-                  <div className="flex items-center justify-center">
-                    <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
-                      <button
-                        type="button"
-                        onClick={() => setHoldersOnly(true)}
-                        className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                          holdersOnly
-                            ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
-                            : 'bg-transparent text-white/65 hover:text-white'
-                        }`}
-                      >
-                        Holders only
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHoldersOnly(false)}
-                        className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                          !holdersOnly
-                            ? 'bg-white text-black shadow-sm'
-                            : 'bg-transparent text-white/65 hover:text-white'
-                        }`}
-                      >
-                        All posts
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <TokenTopicFeed
-                  topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
-                  displayTokenName={(token.name || token.symbol || '').toString()}
-                  showEmptyMessage
-                  tokenSaleAddress={String((token as any).sale_address || (token as any).address || (token as any).token_address || '')}
-                  tokenDecimals={Number((token as any).decimals ?? 18)}
-                  tokenSymbol={String(token.symbol || token.name || '').toString()}
-                  holdersOnly={holdersOnly}
-                  onAutoDisableHoldersOnly={() => setHoldersOnly(false)}
-                />
-              </div>
+              <TokenFeedTab
+                token={token}
+                isMobile={isMobile}
+                showComposer={showComposer}
+                holdersOnly={holdersOnly}
+                setHoldersOnly={setHoldersOnly}
+                popularWindow={popularWindow}
+                setPopularWindow={setPopularWindow}
+                showTradePanels={showTradePanels}
+                setShowTradePanels={setShowTradePanels}
+              />
             )}
 
             {activeTab === TAB_TRANSACTIONS && (
-              <TokenTrades token={token} />
+              <TokenTransactionsTab token={token} />
             )}
 
-            {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
+            {activeTab === TAB_HOLDERS && (
+              <TokenHoldersTab token={token} />
+            )}
           </div>
         </div>
 

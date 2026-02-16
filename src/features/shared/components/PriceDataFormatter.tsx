@@ -5,7 +5,7 @@ import { PriceDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
 import PriceFormatter, { PriceFormatterProps } from './PriceFormatter';
 
-interface PriceDataFormatterProps extends PriceFormatterProps {
+interface PriceDataFormatterProps extends Partial<PriceFormatterProps> {
   priceData: PriceDto;
   bignumber?: boolean;
   rowOnSm?: boolean;

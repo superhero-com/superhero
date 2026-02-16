@@ -77,7 +77,9 @@ export const TokenTradeTab = ({
             {token?.price_data ? (
               <PriceDataFormatter
                 priceData={token.price_data}
-                className="text-3xl font-bold leading-tight"
+                className="text-sm font-semibold"
+                symbolTextClassName="text-2xl font-bold"
+                fiatPriceTextClassName="text-xs"
               />
             ) : (
               <div className="text-3xl font-bold">—</div>
@@ -91,9 +93,9 @@ export const TokenTradeTab = ({
               {tokenPerformance?.past_24h?.high ? (
                 <PriceDataFormatter
                   priceData={tokenPerformance.past_24h.high}
+                  symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
-                  className="text-xs font-semibold"
                 />
               ) : (
                 <div className="text-xs font-semibold text-white/70">—</div>
@@ -104,9 +106,9 @@ export const TokenTradeTab = ({
               {tokenPerformance?.all_time?.high ? (
                 <PriceDataFormatter
                   priceData={tokenPerformance.all_time.high}
+                  symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
-                  className="text-xs font-semibold"
                 />
               ) : (
                 <div className="text-xs font-semibold text-white/70">—</div>
@@ -117,9 +119,9 @@ export const TokenTradeTab = ({
               {tokenPerformance?.past_24h?.low ? (
                 <PriceDataFormatter
                   priceData={tokenPerformance.past_24h.low}
+                  symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
-                  className="text-xs font-semibold"
                 />
               ) : (
                 <div className="text-xs font-semibold text-white/70">—</div>

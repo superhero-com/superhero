@@ -5,7 +5,16 @@ import {
 } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks';
-import { Plus } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart3,
+  Clock,
+  Flame,
+  Info,
+  Plus,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
 import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { Head } from '../../../seo/Head';
@@ -40,16 +49,18 @@ import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
 // Tab constants
 const TAB_DETAILS = 'details';
 const TAB_CHAT = 'posts';
+const TAB_TRADE = 'trade';
 const TAB_TRANSACTIONS = 'transactions';
 const TAB_HOLDERS = 'holders';
 
 type TabType =
   | typeof TAB_DETAILS
   | typeof TAB_CHAT
+  | typeof TAB_TRADE
   | typeof TAB_TRANSACTIONS
   | typeof TAB_HOLDERS;
 
-//
+// .
 const TokenSaleDetails = () => {
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
@@ -73,6 +84,7 @@ const TokenSaleDetails = () => {
   });
   const { ownedTokens } = useOwnedTokens();
   const [holdersOnly, setHoldersOnly] = useState(true);
+  const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>('24h');
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);
   const tradeTouchHandledRef = useRef(false);
@@ -193,6 +205,17 @@ const TokenSaleDetails = () => {
     params.set('openTrade', '1');
     navigate({ pathname: location.pathname, search: params.toString() });
   };
+  const ensureTradePanelsVisible = () => {
+    const params = new URLSearchParams(location.search);
+    const showTradeParam = params.get('showTrade');
+    const normalized = (showTradeParam || '').toLowerCase();
+    if (showTradeParam && (normalized === '0' || normalized === 'false' || normalized === 'off')) {
+      params.set('showTrade', '1');
+    }
+    if (params.has('openTrade')) params.delete('openTrade');
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    setShowTradePanels(true);
+  };
   const handleTradeClick = () => {
     if (tradeTouchHandledRef.current) {
       tradeTouchHandledRef.current = false;
@@ -307,31 +330,61 @@ const TokenSaleDetails = () => {
       />
       {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
 
-      {isMobile && tokenAddress && (
-        <button
-          type="button"
-          onClick={handleTradeClick}
-          onPointerUp={handleTradePointerUp}
-          className="w-full mb-4 mt-2 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-transparent px-4 py-3 text-left shadow-[0_8px_24px_rgba(16,185,129,0.18)] transition-all duration-200 hover:border-emerald-300/60 hover:shadow-[0_10px_28px_rgba(16,185,129,0.28)] active:scale-[0.99]"
-          aria-label="Open trade"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-white">{tokenHeaderTitle}</span>
-            <span className="text-emerald-400 text-sm font-semibold">▲</span>
+      {isMobile && (
+        <div className="sticky top-0 z-40 -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl">
+          <div className="pb-2">
+            <div className="flex items-center justify-between px-1 pt-2 pb-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="text-white/90 hover:text-white hover:bg-white/10"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1 min-w-0 px-1">
+                <div className="text-lg font-bold truncate">{tokenHeaderTitle}</div>
+              </div>
+              {/* Right placeholder to balance the back button */}
+              <div className="w-9" />
+            </div>
+
+            <div className="overflow-x-auto px-3">
+              <div className="flex items-center gap-4 min-w-max">
+                {([
+                  { id: TAB_CHAT, label: 'Feed', Icon: Flame },
+                  { id: TAB_TRADE, label: 'Trade', Icon: BarChart3 },
+                  { id: TAB_DETAILS, label: 'Info', Icon: Info },
+                  { id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp },
+                  { id: TAB_HOLDERS, label: 'Holders', Icon: Users },
+                ] as const).map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        if (tab.id === TAB_TRADE) {
+                          ensureTradePanelsVisible();
+                        }
+                        setActiveTab(tab.id);
+                      }}
+                      className={`pb-1 transition-colors ${isActive ? 'border-b-2 border-[#4ecdc4]' : 'border-b-2 border-transparent'}`}
+                    >
+                      <span className="flex items-center gap-1">
+                        <tab.Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                        <span className={`text-xs ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
+                          {tab.label}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div className="mt-2 h-6 w-full">
-            <TokenLineChart
-              saleAddress={String(tokenAddress)}
-              height={24}
-              hideTimeframe
-              showCrosshair
-              allTime
-              showDateLegend
-              allowParentClick
-              className="h-full w-full"
-            />
-          </div>
-        </button>
+        </div>
       )}
 
       {/* Deploy Success Message */}
@@ -496,52 +549,42 @@ const TokenSaleDetails = () => {
           )}
           {/* Tabs Section */}
           {/* Tab Headers */}
-          <div className="flex border-b border-white/10">
-            {isMobile && (
+          {!isMobile && (
+            <div className="flex border-b border-white/10">
               <button
                 type="button"
-                onClick={() => setActiveTab(TAB_DETAILS)}
-                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
+                onClick={() => setActiveTab(TAB_CHAT)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
                   ? 'text-white border-b-2 border-[#4ecdc4]'
                   : 'text-white/60 hover:text-white'
                 }`}
               >
-                Info
+                Posts
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setActiveTab(TAB_CHAT)}
-              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
-                ? 'text-white border-b-2 border-[#4ecdc4]'
-                : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Posts
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
-                ? 'text-white border-b-2 border-[#4ecdc4]'
-                : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {isMobile ? 'History' : 'Transactions'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab(TAB_HOLDERS)}
-              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
-                ? 'text-white border-b-2 border-[#4ecdc4]'
-                : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Holders (
-              {token.holders_count || 0}
-              )
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab(TAB_TRANSACTIONS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
+                  ? 'text-white border-b-2 border-[#4ecdc4]'
+                  : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Transactions
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab(TAB_HOLDERS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
+                  ? 'text-white border-b-2 border-[#4ecdc4]'
+                  : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Holders (
+                {token.holders_count || 0}
+                )
+              </button>
+            </div>
+          )}
 
           {/* Tab Content */}
           <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
@@ -562,9 +605,90 @@ const TokenSaleDetails = () => {
               </div>
             )}
 
+            {isMobile && activeTab === TAB_TRADE && (
+              <div className="space-y-4 pb-4">
+                {(isLoading && !token?.sale_address) ? (
+                  <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
+                ) : (
+                  token?.sale_address ? (
+                    <div className="px-1">
+                      <TokenCandlestickChart
+                        token={token}
+                        height={220}
+                        className="w-full"
+                      />
+                    </div>
+                  ) : null
+                )}
+
+                <div className="px-1">
+                  {!token?.sale_address ? (
+                    <TokenSaleSidebarSkeleton />
+                  ) : (
+                    <TokenTradeCard token={token} />
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeTab === TAB_CHAT && (
               <div className="grid">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
+                {isMobile && (
+                  <div className="px-3 py-2.5 border-b border-white/10">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setHoldersOnly(true)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            holdersOnly
+                              ? 'bg-[#4ecdc4] text-black'
+                              : 'bg-white/5 text-white/60 hover:text-white'
+                          }`}
+                          aria-pressed={holdersOnly}
+                        >
+                          <Flame className="h-3.5 w-3.5" />
+                          Popular
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHoldersOnly(false)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            !holdersOnly
+                              ? 'bg-[#4ecdc4] text-black'
+                              : 'bg-white/5 text-white/60 hover:text-white'
+                          }`}
+                          aria-pressed={!holdersOnly}
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          Latest
+                        </button>
+                      </div>
+
+                      {holdersOnly && (
+                        <div className="flex items-center gap-1">
+                          {(['24h', '7d', 'all'] as const).map((window) => (
+                            <button
+                              key={window}
+                              type="button"
+                              onClick={() => setPopularWindow(window)}
+                              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                                popularWindow === window
+                                  ? 'bg-white/15 text-white'
+                                  : 'bg-white/5 text-white/60 hover:text-white'
+                              }`}
+                              aria-pressed={popularWindow === window}
+                            >
+                              {window === '24h' ? '24h' : window === '7d' ? '7d' : 'All'}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2 flex-wrap px-1">
                   {!isMobile && (
                   <h3 className="m-0 text-white/90 font-semibold">
                     Posts for #
@@ -591,32 +715,34 @@ const TokenSaleDetails = () => {
                 {showComposer && (
                   <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
                 )}
-                <div className="flex items-center justify-center">
-                  <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => setHoldersOnly(true)}
-                      className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                        holdersOnly
-                          ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
-                          : 'bg-transparent text-white/65 hover:text-white'
-                      }`}
-                    >
-                      Holders only
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHoldersOnly(false)}
-                      className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                        !holdersOnly
-                          ? 'bg-white text-black shadow-sm'
-                          : 'bg-transparent text-white/65 hover:text-white'
-                      }`}
-                    >
-                      All posts
-                    </button>
+                {!isMobile && (
+                  <div className="flex items-center justify-center">
+                    <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setHoldersOnly(true)}
+                        className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
+                          holdersOnly
+                            ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
+                            : 'bg-transparent text-white/65 hover:text-white'
+                        }`}
+                      >
+                        Holders only
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHoldersOnly(false)}
+                        className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
+                          !holdersOnly
+                            ? 'bg-white text-black shadow-sm'
+                            : 'bg-transparent text-white/65 hover:text-white'
+                        }`}
+                      >
+                        All posts
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
                 <TokenTopicFeed
                   topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
                   displayTokenName={(token.name || token.symbol || '').toString()}
@@ -640,7 +766,7 @@ const TokenSaleDetails = () => {
 
         {/* Desktop Sidebar (Right Column) */}
         {!isMobile && (
-          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6">
+          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6 lg:sticky lg:top-6 self-start">
             {!token?.sale_address ? (
               <TokenSaleSidebarSkeleton />
             ) : (

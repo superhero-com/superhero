@@ -333,23 +333,6 @@ const TokenSaleDetails = () => {
       {isMobile && (
         <div className="sticky top-0 z-40 -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl">
           <div className="pb-2">
-            <div className="flex items-center justify-between px-1 pt-2 pb-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-                className="text-white/90 hover:text-white hover:bg-white/10"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex-1 min-w-0 px-1">
-                <div className="text-lg font-bold truncate">{tokenHeaderTitle}</div>
-              </div>
-              {/* Right placeholder to balance the back button */}
-              <div className="w-9" />
-            </div>
-
             <div className="overflow-x-auto px-3">
               <div className="flex items-center gap-4 min-w-max">
                 {([

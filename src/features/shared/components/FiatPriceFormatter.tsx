@@ -6,6 +6,7 @@ interface FiatPriceFormatterProps {
   fiatPrice: Decimal;
   currencySymbol?: string;
   className?: string;
+  textClassName?: string;
 }
 
 const DEFAULT_CURRENCY_SYMBOL = '$';
@@ -14,10 +15,11 @@ const FiatPriceFormatter = ({
   fiatPrice,
   currencySymbol = DEFAULT_CURRENCY_SYMBOL,
   className = '',
+  textClassName = '',
 }: FiatPriceFormatterProps) => (
   <div className={`inline-flex items-center ${className}`}>
-    <div className={className}>{currencySymbol}</div>
-    <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice)} />
+    <div className={textClassName}>{currencySymbol}</div>
+    <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice)} textClassName={textClassName} />
   </div>
 );
 

@@ -3,9 +3,9 @@ import { toAe } from '@aeternity/aepp-sdk';
 import { useMemo } from 'react';
 import { PriceDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
-import PriceFormatter from './PriceFormatter';
+import PriceFormatter, { PriceFormatterProps } from './PriceFormatter';
 
-interface PriceDataFormatterProps {
+interface PriceDataFormatterProps extends PriceFormatterProps {
   priceData: PriceDto;
   bignumber?: boolean;
   rowOnSm?: boolean;

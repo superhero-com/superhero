@@ -12,6 +12,7 @@ interface SymbolPriceFormatterProps {
   priceJustIncreased?: boolean;
   priceJustDecreased?: boolean;
   className?: string;
+  textClassName?: string;
 }
 
 const COIN_SYMBOL = 'AE';
@@ -24,6 +25,7 @@ const SymbolPriceFormatter = ({
   priceJustIncreased = false,
   priceJustDecreased = false,
   className = '',
+  textClassName = '',
 }: SymbolPriceFormatterProps) => (
   <div className={`inline-flex items-center ${className}`}>
     {priceJustIncreased && (
@@ -32,12 +34,12 @@ const SymbolPriceFormatter = ({
     {priceJustDecreased && (
     <span className="text-red-400 mr-1">↘</span>
     )}
-    <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} />
+    <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} textClassName={textClassName} />
     {priceLoading && (
     <Spinner className="w-4 h-4 ml-2" />
     )}
     {!hideSymbol && !priceLoading && (
-    <span className="pl-1 ">{symbol}</span>
+    <span className={`pl-1 ${textClassName}`}>{symbol}</span>
     )}
   </div>
 );

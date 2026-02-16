@@ -3,7 +3,7 @@ import { Decimal } from '../../../libs/decimal';
 import SymbolPriceFormatter from './SymbolPriceFormatter';
 import FiatPriceFormatter from './FiatPriceFormatter';
 
-interface PriceFormatterProps {
+export interface PriceFormatterProps {
   aePrice: Decimal;
   fiatPrice: Decimal;
   symbol?: string;
@@ -14,6 +14,9 @@ interface PriceFormatterProps {
   hideSymbol?: boolean;
   rowOnSm?: boolean;
   className?: string;
+
+  symbolTextClassName?: string;
+  fiatPriceTextClassName?: string;
 }
 
 const PRICE_CHANGE_DISPLAY_TIME = 1000;
@@ -29,6 +32,8 @@ const PriceFormatter = ({
   hideSymbol = false,
   rowOnSm = false,
   className = '',
+  symbolTextClassName = '',
+  fiatPriceTextClassName = '',
 }: PriceFormatterProps) => {
   const [priceJustIncreased, setPriceJustIncreased] = useState(false);
   const [priceJustDecreased, setPriceJustDecreased] = useState(false);
@@ -80,12 +85,13 @@ const PriceFormatter = ({
         priceJustIncreased={priceJustIncreased}
         priceJustDecreased={priceJustDecreased}
         className="price"
+        textClassName={symbolTextClassName}
       />
       {!hideFiatPrice && (
         <FiatPriceFormatter
           fiatPrice={fiatPrice}
-          className={`fiat flex items-center gap-1 font-normal ${rowOnSm ? 'justify-end' : ''
-          }`}
+          className={`fiat flex items-center gap-1 font-normal ${rowOnSm ? 'justify-end' : ''}`}
+          textClassName={fiatPriceTextClassName}
         />
       )}
     </div>

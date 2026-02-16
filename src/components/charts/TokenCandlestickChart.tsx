@@ -496,7 +496,7 @@ export default function TokenCandlestickChart({
           {currentCandlePrice && (
             <div className="text-sm">
               <div className="flex gap-4 flex-wrap mb-2">
-                <div className="hidden sm:block flex gap-2">
+                <div className="hidden md:block flex gap-2">
                   <span className="text-muted-foreground">
                     O
                     {' '}
@@ -512,7 +512,7 @@ export default function TokenCandlestickChart({
                     </span>
                   </span>
                 </div>
-                <div className="hidden sm:block flex gap-2">
+                <div className="hidden md:block flex gap-2">
                   <span className="text-muted-foreground">
                     L
                     {' '}

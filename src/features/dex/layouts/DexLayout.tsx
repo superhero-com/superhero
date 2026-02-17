@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeftRight, 
+  Droplet, 
+  Package, 
+  Network, 
+  Gem, 
+  Coins, 
+  Waves, 
+  ClipboardList, 
+  Search,
+  X,
+  LucideIcon
+} from 'lucide-react';
 import './DexLayout.scss';
 
 interface NavigationItem {
   id: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   path: string;
   description: string;
 }
@@ -14,35 +27,35 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'swap',
     label: 'SWAP',
-    icon: '🔄',
+    icon: ArrowLeftRight,
     path: '/defi/swap',
     description: 'Trade any supported AEX-9 tokens',
   },
   {
     id: 'pool',
     label: 'POOL',
-    icon: '💧',
+    icon: Droplet,
     path: '/defi/pool',
     description: 'Manage liquidity positions',
   },
   {
     id: 'wrap',
     label: 'WRAP',
-    icon: '📦',
+    icon: Package,
     path: '/defi/wrap',
     description: 'Convert AE ↔ WAE',
   },
   {
     id: 'bridge',
     label: 'BRIDGE',
-    icon: '🌉',
+    icon: Network,
     path: '/defi/bridge',
     description: 'Bridge tokens between Ethereum and æternity',
   },
   {
     id: 'buy-ae',
     label: 'BUY AE',
-    icon: '💎',
+    icon: Gem,
     path: '/defi/buy-ae-with-eth',
     description: 'Buy AE with ETH',
   },
@@ -52,21 +65,21 @@ const exploreItems: NavigationItem[] = [
   {
     id: 'tokens',
     label: 'Tokens',
-    icon: '🪙',
+    icon: Coins,
     path: '/defi/explore/tokens',
     description: 'Browse all available tokens',
   },
   {
     id: 'pools',
     label: 'Pools',
-    icon: '🏊',
+    icon: Waves,
     path: '/defi/explore/pools',
     description: 'Explore liquidity pools',
   },
   {
     id: 'transactions',
     label: 'Transactions',
-    icon: '📋',
+    icon: ClipboardList,
     path: '/defi/explore/transactions',
     description: 'Track recent activity',
   },
@@ -107,114 +120,100 @@ const DexLayout = ({ children }: DexLayoutProps) => {
     {
       id: 'explore',
       label: 'Explore',
-      icon: '🔍',
+      icon: Search,
       path: '/defi/explore',
       description: 'Explore tokens, pools, and transactions',
     },
   ];
 
-  const renderMobileNavigationButton = (item: NavigationItem) => (
-    <button
-      key={item.id}
-      type="button"
-      onClick={() => handleNavigation(item.path)}
-      className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
-        isActiveRoute(item.path)
-          ? 'text-primary bg-primary/10'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-      }`}
-      title={item.description}
-      style={{
-        minWidth: '60px',
-        height: '56px',
-      }}
-    >
-      <span className="text-xl">{item.icon}</span>
-      <span className="text-xs font-medium leading-none">{item.label}</span>
-    </button>
-  );
+  const renderMobileNavigationButton = (item: NavigationItem) => {
+    const isActive = isActiveRoute(item.path);
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => handleNavigation(item.path)}
+        className={`pb-1 transition-colors flex-1 ${
+          isActive
+            ? 'border-b-2 border-[#4ecdc4]'
+            : 'border-b-2 border-transparent'
+        }`}
+        title={item.description}
+      >
+        <span className="flex flex-col items-center gap-1">
+          <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+          <span className={`text-[11px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
+            {item.label}
+          </span>
+        </span>
+      </button>
+    );
+  };
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-24 md:pt-0">
+      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 md:pt-0">
         {/* Top pill navigation for tablet/desktop */}
         <div className="hidden md:block sticky top-0 z-30 md:mb-2">
           <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleNavigation(item.path)}
-                  aria-label={item.label}
-                  title={item.description}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 9999,
-                    // Keep border width constant to avoid layout shift
-                    border: isActiveRoute(item.path)
-                      ? '1.5px solid var(--accent-color, #4caf50)'
-                      : '1.5px solid rgba(255,255,255,0.08)',
-                    background: isActiveRoute(item.path)
-                      ? 'rgba(76, 175, 80, 0.12)'
-                      : 'rgba(255,255,255,0.06)',
-                    color: isActiveRoute(item.path)
-                      ? 'var(--standard-font-color, #ffffff)'
-                      : 'var(--light-font-color, #9aa)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    boxShadow: 'none',
-                    backdropFilter: 'blur(10px)',
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
-
-              {/* Explore group */}
-              <div className="hidden md:flex items-center gap-2 md:pl-[76px]">
-                <span
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.7,
-                    paddingLeft: 6,
-                    paddingRight: 4,
-                  }}
-                >
-                  Explore
-                </span>
-                {exploreItems.map((item) => (
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = isActiveRoute(item.path);
+                return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleNavigation(item.path)}
                     aria-label={item.label}
                     title={item.description}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: 9999,
-                      // Keep border width constant to avoid layout shift
-                      border: isActiveRoute(item.path)
-                        ? '1.5px solid var(--accent-color, #4caf50)'
-                        : '1.5px solid rgba(255,255,255,0.08)',
-                      background: isActiveRoute(item.path)
-                        ? 'rgba(76, 175, 80, 0.12)'
-                        : 'rgba(255,255,255,0.06)',
-                      color: isActiveRoute(item.path)
-                        ? 'var(--standard-font-color, #ffffff)'
-                        : 'var(--light-font-color, #9aa)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      boxShadow: 'none',
-                    }}
+                    className={`
+                      flex items-center gap-2 px-3.5 py-2.5 rounded-full
+                      border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
+                      transition-all duration-200
+                      ${isActive
+                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
+                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
+                      }
+                    `}
                   >
-                    {item.label}
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
                   </button>
-                ))}
+                );
+              })}
+
+              {/* Explore group */}
+              <div className="hidden md:flex items-center gap-2 md:pl-[76px]">
+                <span className="text-xs opacity-70 pl-1.5 pr-1">
+                  Explore
+                </span>
+                {exploreItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = isActiveRoute(item.path);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavigation(item.path)}
+                      aria-label={item.label}
+                      title={item.description}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-2 rounded-full
+                        border-[1.5px] text-xs font-semibold
+                        transition-all duration-200
+                        ${isActive
+                          ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
+                          : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
+                        }
+                      `}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -226,68 +225,57 @@ const DexLayout = ({ children }: DexLayoutProps) => {
         </div>
       </div>
 
-      {/* Mobile: Horizontal top navigation (positioned after header) */}
-      <div
-        className="block md:hidden w-full fixed top-16 left-0 right-0 z-[900] p-2 pt-3 border-b"
-        style={{
-          backgroundColor: 'rgba(12, 12, 20, 0.5)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottomColor: 'rgba(255, 255, 255, 0.14)',
-          boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
-        }}
-      >
-        <div
-          className={`flex items-center justify-around gap-1 ${
-            isExploreExpanded ? 'explore-expanded' : ''
-          }`}
-        >
-          {!isExploreExpanded ? (
-            mobileNavigationItems.map((item) => {
-              if (item.id === 'explore') {
-                return (
+      {/* Mobile: Horizontal top navigation tabs (positioned after header) */}
+      <div className="block md:hidden w-full fixed top-16 left-0 right-0 z-[900] border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+        <div className="pt-4 pb-2">
+          <div className="px-2">
+            <div className="flex items-center justify-between w-full">
+              {!isExploreExpanded ? (
+                mobileNavigationItems.map((item) => {
+                  if (item.id === 'explore') {
+                    const isActive = isExploreActive();
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={handleExploreToggle}
+                        className={`pb-1 transition-colors flex-1 ${
+                          isActive
+                            ? 'border-b-2 border-[#4ecdc4]'
+                            : 'border-b-2 border-transparent'
+                        }`}
+                        title={item.description}
+                      >
+                        <span className="flex flex-col items-center gap-1">
+                          <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                          <span className={`text-[14px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
+                            {item.label}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  }
+                  return renderMobileNavigationButton(item);
+                })
+              ) : (
+                <>
+                  {exploreItems.map((item) => renderMobileNavigationButton(item))}
                   <button
-                    key={item.id}
                     type="button"
-                    onClick={handleExploreToggle}
-                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
-                      isExploreActive()
-                        ? 'text-primary bg-primary/10'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                    }`}
-                    title={item.description}
-                    style={{
-                      minWidth: '60px',
-                      height: '56px',
-                    }}
+                    onClick={handleCloseExplore}
+                    className="pb-1 transition-colors border-b-2 border-transparent flex-1"
+                    title="Close explore menu"
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="text-xs font-medium leading-none">
-                      {item.label}
+                    <span className="flex flex-col items-center gap-1">
+                      <X className="h-5 w-5 text-destructive" />
+                      <span className="text-[11px] leading-tight text-destructive">Close</span>
                     </span>
                   </button>
-                );
-              }
-              return renderMobileNavigationButton(item);
-            })
-          ) : (
-            <>
-              {exploreItems.map((item) => renderMobileNavigationButton(item))}
-              <button
-                type="button"
-                onClick={handleCloseExplore}
-                className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 text-destructive hover:bg-destructive/10"
-                title="Close explore menu"
-                style={{
-                  minWidth: '60px',
-                  height: '56px',
-                }}
-              >
-                <span className="text-xl">✕</span>
-                <span className="text-xs font-medium leading-none">Close</span>
-              </button>
-            </>
-          )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>

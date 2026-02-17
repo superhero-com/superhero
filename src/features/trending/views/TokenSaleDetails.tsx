@@ -76,6 +76,10 @@ const TokenSaleDetails = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
+  const [showCreatedOverlay, setShowCreatedOverlay] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('created') === 'true';
+  });
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
@@ -158,6 +162,13 @@ const TokenSaleDetails = () => {
 
   // Check if token is newly created (from local storage or state)
   const isTokenNewlyCreated = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const hasCreatedParam = params.get('created') === 'true';
+    
+    if (hasCreatedParam) {
+      return true;
+    }
+    
     try {
       const recentTokens = JSON.parse(
         localStorage.getItem('recentlyCreatedTokens') || '[]',
@@ -166,7 +177,7 @@ const TokenSaleDetails = () => {
     } catch {
       return false;
     }
-  }, [tokenName]);
+  }, [tokenName, location.search]);
 
   // Token data query
   const {
@@ -207,6 +218,22 @@ const TokenSaleDetails = () => {
     ...(tokenData || {}),
   }), [tokenData, _token]);
   const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
+
+  // Handle successful token load after creation
+  useEffect(() => {
+    if (showCreatedOverlay && token?.sale_address && !isLoading) {
+      // Token successfully loaded, hide overlay and remove query param
+      setShowCreatedOverlay(false);
+      const params = new URLSearchParams(location.search);
+      if (params.get('created') === 'true') {
+        params.delete('created');
+        navigate(
+          { pathname: location.pathname, search: params.toString() },
+          { replace: true }
+        );
+      }
+    }
+  }, [showCreatedOverlay, token?.sale_address, isLoading, location.pathname, location.search, navigate]);
 
   const { data: tokenPerformance } = useQuery<TokenPriceMovementDto>({
     queryKey: ['TokensService.performance', token?.sale_address],
@@ -310,33 +337,6 @@ const TokenSaleDetails = () => {
     }
   }, [tokenDoesNotExist, activeTab]);
 
-  // Render pending state
-  if (isTokenPending) {
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
-        <Head
-          title={`Buy #${tokenName} on Superhero.com`}
-          description={`Explore ${tokenName} token, trades, holders and posts.`}
-          canonicalPath={`/trends/tokens/${tokenName}`}
-        />
-        {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
-
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Token Creation Pending...
-          </h2>
-          <p className="text-white/70">
-            {pendingLastsLong
-              ? 'Oops, the miners seem to be busy at the moment. The creation might take a bit longer than expected.'
-              : 'Your transaction has been sent to the network. Waiting for it to be picked up and mined.'}
-          </p>
-          <div className="w-full bg-white/10 rounded-full h-2 mt-4">
-            <div className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-2 rounded-full animate-pulse w-1/2" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
@@ -878,6 +878,54 @@ const TokenSaleDetails = () => {
             Add new post
           </span>
         </button>
+      )}
+
+      {/* Token Creation Banner */}
+      {showCreatedOverlay && (
+        <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-24 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-2xl mx-auto px-4">
+          <div className="bg-gradient-to-br from-[#4ecdc4]/20 to-[#44a08d]/20 border-2 border-[#4ecdc4]/50 rounded-2xl p-6 shadow-2xl backdrop-blur-xl animate-in slide-in-from-top duration-500">
+            <div className="flex items-start gap-4">
+              {/* Animated Icon */}
+              <div className="relative flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#44a08d] flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-white animate-pulse" />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#44a08d] animate-ping opacity-20" />
+              </div>
+
+              {/* Message */}
+              <div className="flex-1 space-y-2">
+                <h3 className="text-lg font-bold text-white">
+                  Token Creation in Progress
+                </h3>
+                <p className="text-white/90 text-sm leading-relaxed">
+                  Your token
+                  {' '}
+                  <span className="font-semibold text-[#4ecdc4]">#{tokenName}</span>
+                  {' '}
+                  is being confirmed on the blockchain. This usually takes a few seconds.
+                </p>
+                
+                {/* Loading Bar */}
+                <div className="w-full bg-white/20 rounded-full h-1.5 mt-3">
+                  <div className="bg-gradient-to-r from-[#4ecdc4] to-white h-1.5 rounded-full animate-pulse w-3/4 transition-all duration-300" />
+                </div>
+              </div>
+
+              {/* Close button (optional - auto-closes anyway) */}
+              <button
+                type="button"
+                onClick={() => setShowCreatedOverlay(false)}
+                className="flex-shrink-0 text-white/60 hover:text-white transition-colors"
+                aria-label="Dismiss notification"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

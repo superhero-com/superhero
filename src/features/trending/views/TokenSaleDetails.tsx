@@ -206,7 +206,7 @@ const TokenSaleDetails = () => {
       }
       return isTokenNewlyCreated ? true : failureCount <= 3;
     },
-    retryDelay: 5000,
+    retryDelay: 10000,
     staleTime: 60000,
     enabled: !!tokenName,
   });

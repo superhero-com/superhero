@@ -107,39 +107,9 @@ const TokenNotFound = ({ tokenName, errorMessage }: TokenNotFoundProps) => {
           </p>
 
           <p className="text-white/50 text-base mb-8 max-w-md mx-auto leading-relaxed">
-            This Solana BCL token doesn&apos;t exist yet on this cluster.
+            This Token doesn&apos;t exist yet on this cluster.
             It may not have been created or the address might be incorrect.
           </p>
-
-          {/* Error message if present */}
-          {errorMessage && (
-            <div
-              className="mb-8 p-4 rounded-xl text-left"
-              style={{
-                background: 'rgba(255, 107, 107, 0.1)',
-                border: '1px solid rgba(255, 107, 107, 0.2)',
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <svg
-                  className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                <p className="text-sm text-red-300/80 break-words">
-                  {errorMessage}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

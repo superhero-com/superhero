@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -60,6 +60,9 @@ export function useInvitations() {
 
   // Transaction list state for invitation statuses
   const [transactionList, setTransactionList] = useState<ITransaction[]>([]);
+  
+  // Track which invitees we've already checked for claimed status to prevent infinite loops
+  const checkedInviteesRef = useRef<Set<string>>(new Set());
 
   // Helper functions
   const prepareInviteLink = useCallback((secretKey: string): string => `${window.location.protocol}//${window.location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`, []);
@@ -179,6 +182,10 @@ export function useInvitations() {
   // Manual refresh function for external use
   const refreshInvitationData = useCallback(async () => {
     if (!activeAccount) return;
+    
+    // Reset checked invitees on manual refresh to re-check everything
+    checkedInviteesRef.current.clear();
+    
     setLoading(true);
     try {
       const data = await loadAccountInvitations(activeAccount);
@@ -293,6 +300,9 @@ export function useInvitations() {
   useEffect(() => {
     if (!activeAccount) return;
 
+    // Reset checked invitees when account changes
+    checkedInviteesRef.current.clear();
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -310,15 +320,27 @@ export function useInvitations() {
   }, [activeAccount, refreshTrigger, loadAccountInvitations, setLoading]);
 
   // Load claimed invitations when we have invitations to check
+  // Use transactionList as dependency to avoid infinite loop caused by claimedInvitations updates
   useEffect(() => {
-    if (invitations.length === 0) return;
+    if (transactionList.length === 0) return;
+    
+    // Get list of invitees that need to be checked (haven't been checked yet)
+    const inviteesToCheck = invitations
+      .filter((inv) => !checkedInviteesRef.current.has(inv.invitee))
+      .map((inv) => inv.invitee);
+    
+    if (inviteesToCheck.length === 0) return;
 
     const loadClaimed = async () => {
-      await Promise.all(
-        invitations.map(async (invitation) => {
+      const _claimed: Record<string, ClaimedInfo | boolean>[] = await Promise.all(
+        inviteesToCheck.map(async (invitee) => {
+          // Mark as checked immediately to prevent duplicate requests
+          checkedInviteesRef.current.add(invitee);
+          
           try {
-            const inviteeTransactions = await loadAccountInvitations(invitation.invitee);
-            inviteeTransactions.forEach((tx: ITransaction) => {
+            const inviteeTransactions = await loadAccountInvitations(invitee);
+            
+            for (const tx of inviteeTransactions) {
               if (tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code) {
                 // The claimer's wallet address is passed
                 // as the second argument to redeemInvitationCode(secretKey, claimerAddress).
@@ -328,27 +350,40 @@ export function useInvitations() {
                 // Always mark as claimed when we see a redeem tx.
                 // If we can't extract claimer details,
                 // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
-                setClaimedInvitations((prev) => ({
-                  ...prev,
-                  [invitation.invitee]: claimerAddress
+                return {
+                  [invitee]: claimerAddress
                     ? {
                       claimedBy: claimerAddress,
                       claimedAt: tx.microTime,
                       claimTxHash: tx.hash,
                     } as ClaimedInfo
                     : true,
-                }));
+                };
               }
-            });
+            }
           } catch (error) {
-            console.error(`Failed to load claimed status for ${invitation.invitee}:`, error);
+            console.error(`Failed to load claimed status for ${invitee}:`, error);
           }
+          return {};
         }),
       );
-    };
 
+      let newClaimedInvitations: Record<string, ClaimedInfo | boolean> = {};
+      _claimed.forEach((claimed: Record<string, ClaimedInfo | boolean>) => {
+        newClaimedInvitations = {
+          ...newClaimedInvitations,
+          ...claimed,
+        };
+      });
+
+      setClaimedInvitations((prev) => ({
+        ...prev,
+        ...newClaimedInvitations,
+      }));
+    };
+    
     loadClaimed();
-  }, [invitations, loadAccountInvitations, setClaimedInvitations]);
+  }, [transactionList, invitations, loadAccountInvitations, setClaimedInvitations]);
 
   return {
     // Data

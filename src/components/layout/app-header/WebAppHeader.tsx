@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { User } from 'lucide-react';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
@@ -26,7 +27,7 @@ const WebAppHeader = () => {
       id: 'account',
       label: 'Account',
       path: activeAccount ? `/users/${activeAccount}` : '',
-      icon: '👤',
+      icon: User,
     });
     return items;
   }, [navigationItems, activeAccount]);
@@ -81,6 +82,7 @@ const WebAppHeader = () => {
               color: 'var(--light-font-color)',
               backgroundColor: 'transparent',
             };
+            const Icon = item.icon;
 
             if (item.id === 'account' && !activeAccount) {
               return (
@@ -91,7 +93,9 @@ const WebAppHeader = () => {
                   style={idleStyles}
                   onClick={handleConnect}
                 >
-                  <span className="text-lg w-6 text-center">{item.icon}</span>
+                  <span className="w-6 flex items-center justify-center">
+                    <Icon className="w-[18px] h-[18px]" />
+                  </span>
                   <span className="truncate">{item.label}</span>
                 </button>
               );
@@ -119,7 +123,9 @@ const WebAppHeader = () => {
                     }
                   }}
                 >
-                  <span className="text-lg w-6 text-center">{item.icon}</span>
+                  <span className="w-6 flex items-center justify-center">
+                    <Icon className="w-[18px] h-[18px]" />
+                  </span>
                   <span className="truncate">{item.label}</span>
                 </a>
               );
@@ -132,7 +138,9 @@ const WebAppHeader = () => {
                 className={`${commonClass} no-gradient-text`}
                 style={isActive ? activeStyles : idleStyles}
               >
-                <span className="text-lg w-6 text-center">{item.icon}</span>
+                <span className="w-6 flex items-center justify-center">
+                  <Icon className="w-[18px] h-[18px]" />
+                </span>
                 <span className="truncate">{item.label}</span>
               </Link>
             );

@@ -1,36 +1,40 @@
-import { AeSdk, CompilerHttp, MemoryAccount } from "@aeternity/aepp-sdk";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { AeSdk, CompilerHttp, MemoryAccount } from '@aeternity/aepp-sdk';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
+import { useLocation } from 'react-router-dom';
 
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import ConnectWalletButton from "@/components/ConnectWalletButton";
-import { AeButton } from "@/components/ui/ae-button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
-import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
-import { useAeSdk } from "@/hooks/useAeSdk";
-import { useCommunityFactory } from "@/hooks/useCommunityFactory";
-import { useInvitation } from "@/hooks/useInvitation";
-import { cn } from "@/lib/utils";
-import { Decimal } from "@/libs/decimal";
-import { SETTINGS } from "@/utils/constants";
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
+import { AeButton } from '@/components/ui/ae-button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
+import { useAeSdk } from '@/hooks/useAeSdk';
+import { useCommunityFactory } from '@/hooks/useCommunityFactory';
+import { useInvitation } from '@/hooks/useInvitation';
+import { cn } from '@/lib/utils';
+import { Decimal } from '@/libs/decimal';
+import { SETTINGS } from '@/utils/constants';
 
 interface CollectInvitationLinkCardProps {
   className?: string;
 }
 
-export default function CollectInvitationLinkCard({
+const CollectInvitationLinkCard = ({
   className,
-}: CollectInvitationLinkCardProps) {
+}: CollectInvitationLinkCardProps) => {
   const location = useLocation();
-  const { sdk, staticAeSdk, activeAccount, activeNetwork, nodes } = useAeSdk();
+  const {
+    sdk, staticAeSdk, activeAccount, activeNetwork, nodes,
+  } = useAeSdk();
   const { getAffiliationTreasury } = useCommunityFactory();
   const { invitationCode, resetInviteCode } = useInvitation();
 
   // State management
   const [invitationAmount, setInvitationAmount] = useState<Decimal>(
-    Decimal.ZERO
+    Decimal.ZERO,
   );
   const [invitationSender, setInvitationSender] = useState<
     string | undefined
@@ -46,7 +50,7 @@ export default function CollectInvitationLinkCard({
   // Computed values
   const isRevoking = useMemo(
     () => invitationSender && invitationSender === activeAccount,
-    [invitationSender, activeAccount]
+    [invitationSender, activeAccount],
   );
 
   const appName = SETTINGS.app.name;
@@ -65,41 +69,41 @@ export default function CollectInvitationLinkCard({
     try {
       const account = new MemoryAccount(invitationCode);
 
-      const sdk = new AeSdk({
-        onCompiler: new CompilerHttp("https://v7.compiler.aepps.com"),
+      const tempSdk = new AeSdk({
+        onCompiler: new CompilerHttp('https://v7.compiler.aepps.com'),
         nodes,
         ttl: 10000,
         accounts: [account],
       });
-      sdk.selectNode(activeNetwork.name);
+      tempSdk.selectNode(activeNetwork.name);
 
-      const affiliationTreasury = await getAffiliationTreasury(sdk);
+      const affiliationTreasury = await getAffiliationTreasury(tempSdk);
       const invitation = await affiliationTreasury.getInvitationCode(
-        account.address
+        account.address,
       );
 
       if (invitation) {
         setInvitationSender(invitation[0]);
         setInvitationAmount(
-          Decimal.fromBigNumberString(invitation[1] as unknown as string)
+          Decimal.fromBigNumberString(invitation[1] as unknown as string),
         );
         setInvitationClaimed(invitation[2]);
 
         if (invitation[2]) {
-          setErrorMessage("This invitation has already been claimed.");
+          setErrorMessage('This invitation has already been claimed.');
         }
       }
     } catch (error: any) {
-      console.error("Failed to get invitation reward amount:", error);
-      if (error?.message?.includes("Trying to call undefined function")) {
-        setErrorMessage("Please switch to the correct network.");
+      console.error('Failed to get invitation reward amount:', error);
+      if (error?.message?.includes('Trying to call undefined function')) {
+        setErrorMessage('Please switch to the correct network.');
       } else {
-        setErrorMessage(error?.message || "Failed to load invitation details.");
+        setErrorMessage(error?.message || 'Failed to load invitation details.');
       }
     } finally {
       setLoadingInvitation(false);
     }
-  }, [invitationCode, getAffiliationTreasury]);
+  }, [invitationCode, getAffiliationTreasury, activeNetwork.name, nodes]);
 
   /**
    * Claims or revokes the invitation reward
@@ -118,37 +122,37 @@ export default function CollectInvitationLinkCard({
 
       if (isRevoking) {
         // Revoke invitation
-        if (!sdk) throw new Error("SDK not available");
+        if (!sdk) throw new Error('SDK not available');
 
         const affiliationTreasury = await getAffiliationTreasury(sdk);
         await affiliationTreasury.revokeInvitationCode(account.address);
-        setSuccessMessage("Invitation reward has been revoked successfully.");
+        setSuccessMessage('Invitation reward has been revoked successfully.');
       } else {
         // Claim invitation
         staticAeSdk.addAccount(account, { select: true });
         const affiliationTreasury = await getAffiliationTreasury(staticAeSdk);
         await affiliationTreasury.redeemInvitationCode(
           invitationCode,
-          activeAccount
+          activeAccount,
         );
-        setSuccessMessage("Invitation reward has been claimed successfully!");
+        setSuccessMessage('Invitation reward has been claimed successfully!');
       }
 
       setInvitationClaimed(true);
     } catch (error: any) {
-      console.error("Failed to claim/revoke reward:", error);
+      console.error('Failed to claim/revoke reward:', error);
 
-      if (error?.message?.includes("INVITEE_ALREADY_REGISTERED")) {
+      if (error?.message?.includes('INVITEE_ALREADY_REGISTERED')) {
         setErrorMessage(
-          "This account has already claimed an invitation reward."
+          'This account has already claimed an invitation reward.',
         );
-      } else if (error?.message?.includes("ALREADY_REDEEMED")) {
-        setErrorMessage("This invitation has already been claimed.");
+      } else if (error?.message?.includes('ALREADY_REDEEMED')) {
+        setErrorMessage('This invitation has already been claimed.');
       } else {
         setErrorMessage(
-          `Failed to ${isRevoking ? "revoke" : "claim"} reward. ${
-            error?.message || "Unknown error"
-          }`
+          `Failed to ${isRevoking ? 'revoke' : 'claim'} reward. ${
+            error?.message || 'Unknown error'
+          }`,
         );
       }
     } finally {
@@ -177,7 +181,7 @@ export default function CollectInvitationLinkCard({
     if (!didMountRef.current) {
       didMountRef.current = true;
       setIsCollapsed(false);
-      return;
+      return () => {};
     }
 
     if (successMessage) {
@@ -192,11 +196,12 @@ export default function CollectInvitationLinkCard({
     // If we still have an invitation code, keep expanded
     if (invitationCode) {
       setIsCollapsed(false);
-      return;
+      return () => {};
     }
 
     // Collapse when navigating to different routes after initial mount
     setIsCollapsed(true);
+    return () => {};
   }, [location.pathname, successMessage, resetInviteCode, invitationCode]);
 
   // Toggle app-level layout class so routes below don't add extra spacing
@@ -221,7 +226,7 @@ export default function CollectInvitationLinkCard({
   }
 
   return (
-    <div className={cn("relative z-10 mb-2", className)}>
+    <div className={cn('relative z-10 mb-2', className)}>
       {/* Collapsed state */}
       {isCollapsed ? (
         <Card
@@ -230,11 +235,15 @@ export default function CollectInvitationLinkCard({
         >
           <CardContent className="p-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-primary">
-              Collect your {appName} invitation reward
+              Collect your
+              {' '}
+              {appName}
+              {' '}
+              invitation reward
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="hidden sm:inline">View invitation</span>
-              <button className="p-4 rounded-full hover:bg-accent transition-colors">
+              <button type="button" className="p-4 rounded-full hover:bg-accent transition-colors">
                 <ChevronDown className="w-4 h-4" />
               </button>
             </div>
@@ -246,6 +255,7 @@ export default function CollectInvitationLinkCard({
           <CardContent className="p-6 relative">
             {/* Collapse button */}
             <button
+              type="button"
               onClick={() => setIsCollapsed(true)}
               className="absolute top-4 right-4 p-4 rounded-full hover:bg-accent transition-colors"
             >
@@ -256,7 +266,11 @@ export default function CollectInvitationLinkCard({
               {/* Left column - Text content */}
               <div className="pr-0 md:pr-10">
                 <h2 className="text-2xl md:text-3xl font-bold text-primary pb-4">
-                  Collect your {appName} invitation reward
+                  Collect your
+                  {' '}
+                  {appName}
+                  {' '}
+                  invitation reward
                 </h2>
                 <p className="text-sm text-foreground mb-4">
                   Easily create and manage Token Sales with a bonding curve
@@ -276,8 +290,8 @@ export default function CollectInvitationLinkCard({
                 <div className="flex flex-col items-center">
                   <h3 className="text-xl font-semibold mb-2">
                     {isRevoking
-                      ? "You can revoke the invite reward of:"
-                      : "You can claim the invite reward of:"}
+                      ? 'You can revoke the invite reward of:'
+                      : 'You can claim the invite reward of:'}
                   </h3>
 
                   <div className="mb-4">
@@ -294,7 +308,10 @@ export default function CollectInvitationLinkCard({
                   {invitationSender && !isRevoking && (
                     <div className="mb-4 flex items-center gap-2 text-sm">
                       <AddressAvatarWithChainName address={invitationSender} />
-                      <span>has invited you to join {appName}</span>
+                      <span>
+                        has invited you to join
+                        {appName}
+                      </span>
                     </div>
                   )}
 
@@ -321,7 +338,7 @@ export default function CollectInvitationLinkCard({
                           disabled={!!errorMessage}
                           onClick={claimOrRevokeReward}
                         >
-                          {isRevoking ? "Revoke Invitation" : "Claim Reward"}
+                          {isRevoking ? 'Revoke Invitation' : 'Claim Reward'}
                         </AeButton>
                       ) : (
                         <ConnectWalletButton
@@ -353,4 +370,6 @@ export default function CollectInvitationLinkCard({
       )}
     </div>
   );
-}
+};
+
+export default CollectInvitationLinkCard;

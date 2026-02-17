@@ -1,7 +1,10 @@
+/* eslint-disable */
 import * as Dialog from '@radix-ui/react-dialog';
 import { DexTokenDto } from '../../../api/generated';
-import { addSlippage, fromAettos, subSlippage, toAettos } from '../../../libs/dex';
-import Spinner from '../../../components/Spinner';
+import {
+  addSlippage, fromAettos, subSlippage, toAettos,
+} from '../../../libs/dex';
+import Spinner from '../../Spinner';
 
 interface SwapConfirmationProps {
   show: boolean;
@@ -34,7 +37,7 @@ export default function SwapConfirmation({
   priceImpactPct,
   path,
   loading = false,
-  swapStep = null
+  swapStep = null,
 }: SwapConfirmationProps) {
   if (!tokenIn || !tokenOut) return null;
 
@@ -85,13 +88,15 @@ export default function SwapConfirmation({
               background: 'rgba(255, 255, 255, 0.03)',
               borderRadius: 12,
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              marginBottom: 12
-            }}>
+              marginBottom: 12,
+            }}
+            >
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12
-              }}>
+                gap: 12,
+              }}
+              >
                 <div style={{
                   width: 32,
                   height: 32,
@@ -102,8 +107,9 @@ export default function SwapConfirmation({
                   justifyContent: 'center',
                   fontSize: 14,
                   fontWeight: 700,
-                  color: 'white'
-                }}>
+                  color: 'white',
+                }}
+                >
                   {tokenIn.symbol.charAt(0)}
                 </div>
                 <div>
@@ -112,8 +118,9 @@ export default function SwapConfirmation({
                   </div>
                   <div style={{
                     fontSize: 12,
-                    color: 'var(--light-font-color)'
-                  }}>
+                    color: 'var(--light-font-color)',
+                  }}
+                  >
                     From
                   </div>
                 </div>
@@ -121,8 +128,9 @@ export default function SwapConfirmation({
               <div style={{
                 fontWeight: 700,
                 fontSize: 18,
-                color: 'var(--standard-font-color)'
-              }}>
+                color: 'var(--standard-font-color)',
+              }}
+              >
                 {Number(amountIn).toFixed(6)}
               </div>
             </div>
@@ -131,8 +139,9 @@ export default function SwapConfirmation({
             <div style={{
               display: 'flex',
               justifyContent: 'center',
-              marginBottom: 12
-            }}>
+              marginBottom: 12,
+            }}
+            >
               <div style={{
                 width: 32,
                 height: 32,
@@ -141,8 +150,9 @@ export default function SwapConfirmation({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 16
-              }}>
+                fontSize: 16,
+              }}
+              >
                 ↓
               </div>
             </div>
@@ -155,13 +165,15 @@ export default function SwapConfirmation({
               padding: '12px 16px',
               background: 'rgba(255, 255, 255, 0.03)',
               borderRadius: 12,
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+            >
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12
-              }}>
+                gap: 12,
+              }}
+              >
                 <div style={{
                   width: 32,
                   height: 32,
@@ -172,8 +184,9 @@ export default function SwapConfirmation({
                   justifyContent: 'center',
                   fontSize: 14,
                   fontWeight: 700,
-                  color: 'white'
-                }}>
+                  color: 'white',
+                }}
+                >
                   {tokenOut.symbol.charAt(0)}
                 </div>
                 <div>
@@ -182,8 +195,9 @@ export default function SwapConfirmation({
                   </div>
                   <div style={{
                     fontSize: 12,
-                    color: 'var(--light-font-color)'
-                  }}>
+                    color: 'var(--light-font-color)',
+                  }}
+                  >
                     To
                   </div>
                 </div>
@@ -191,8 +205,9 @@ export default function SwapConfirmation({
               <div style={{
                 fontWeight: 700,
                 fontSize: 18,
-                color: 'var(--success-color)'
-              }}>
+                color: 'var(--success-color)',
+              }}
+              >
                 {Number(amountOut).toFixed(6)}
               </div>
             </div>
@@ -204,14 +219,16 @@ export default function SwapConfirmation({
             border: '1px solid var(--glass-border)',
             borderRadius: 16,
             padding: 16,
-            marginBottom: 20
-          }}>
+            marginBottom: 20,
+          }}
+          >
             <div style={{
               fontSize: 14,
               fontWeight: 600,
               color: 'var(--light-font-color)',
-              marginBottom: 12
-            }}>
+              marginBottom: 12,
+            }}
+            >
               Swap Details
             </div>
 
@@ -220,11 +237,20 @@ export default function SwapConfirmation({
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: 13,
-                color: 'var(--light-font-color)'
-              }}>
+                color: 'var(--light-font-color)',
+              }}
+              >
                 <span>Exchange Rate</span>
                 <span style={{ color: 'var(--standard-font-color)' }}>
-                  1 {tokenIn.symbol} = {rate.toFixed(6)} {tokenOut.symbol}
+                  1
+                  {' '}
+                  {tokenIn.symbol}
+                  {' '}
+                  =
+                  {' '}
+                  {rate.toFixed(6)}
+                  {' '}
+                  {tokenOut.symbol}
                 </span>
               </div>
 
@@ -232,11 +258,20 @@ export default function SwapConfirmation({
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: 13,
-                color: 'var(--light-font-color)'
-              }}>
+                color: 'var(--light-font-color)',
+              }}
+              >
                 <span>Inverse Rate</span>
                 <span style={{ color: 'var(--standard-font-color)' }}>
-                  1 {tokenOut.symbol} = {inverseRate.toFixed(6)} {tokenIn.symbol}
+                  1
+                  {' '}
+                  {tokenOut.symbol}
+                  {' '}
+                  =
+                  {' '}
+                  {inverseRate.toFixed(6)}
+                  {' '}
+                  {tokenIn.symbol}
                 </span>
               </div>
 
@@ -245,15 +280,18 @@ export default function SwapConfirmation({
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: 13,
-                  color: 'var(--light-font-color)'
-                }}>
+                  color: 'var(--light-font-color)',
+                }}
+                >
                   <span>Price Impact</span>
                   <span style={{
-                    color: priceImpactPct > 10 ? 'var(--error-color)' :
-                      priceImpactPct > 5 ? '#ffb86b' : 'var(--success-color)',
-                    fontWeight: 600
-                  }}>
-                    {priceImpactPct.toFixed(2)}%
+                    color: priceImpactPct > 10 ? 'var(--error-color)'
+                      : priceImpactPct > 5 ? '#ffb86b' : 'var(--success-color)',
+                    fontWeight: 600,
+                  }}
+                  >
+                    {priceImpactPct.toFixed(2)}
+                    %
                   </span>
                 </div>
               )}
@@ -263,8 +301,9 @@ export default function SwapConfirmation({
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: 13,
-                  color: 'var(--light-font-color)'
-                }}>
+                  color: 'var(--light-font-color)',
+                }}
+                >
                   <span>Minimum Received</span>
                   <span style={{ color: 'var(--standard-font-color)' }}>
                     {minReceivedText}
@@ -277,8 +316,9 @@ export default function SwapConfirmation({
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontSize: 13,
-                  color: 'var(--light-font-color)'
-                }}>
+                  color: 'var(--light-font-color)',
+                }}
+                >
                   <span>Maximum Sold</span>
                   <span style={{ color: 'var(--standard-font-color)' }}>
                     {maxSoldText}
@@ -292,15 +332,17 @@ export default function SwapConfirmation({
                   justifyContent: 'space-between',
                   fontSize: 13,
                   color: 'var(--light-font-color)',
-                  alignItems: 'flex-start'
-                }}>
+                  alignItems: 'flex-start',
+                }}
+                >
                   <span>Route</span>
                   <span style={{
                     color: 'var(--standard-font-color)',
                     textAlign: 'right',
                     maxWidth: '60%',
-                    wordBreak: 'break-all'
-                  }}>
+                    wordBreak: 'break-all',
+                  }}
+                  >
                     {path.map((p, i) => (i > 0 ? ' → ' : '') + p).join('')}
                   </span>
                 </div>
@@ -320,8 +362,9 @@ export default function SwapConfirmation({
               marginBottom: 20,
               display: 'flex',
               alignItems: 'center',
-              gap: 12
-            }}>
+              gap: 12,
+            }}
+            >
               <div style={{ fontSize: 18 }}>⚠️</div>
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>High Price Impact</div>
@@ -337,24 +380,34 @@ export default function SwapConfirmation({
             background: 'rgba(255, 255, 255, 0.03)',
             borderRadius: 12,
             padding: 16,
-            marginBottom: 24
-          }}>
+            marginBottom: 24,
+          }}
+          >
             <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                color: 'var(--light-font-color)'
-              }}>
+                color: 'var(--light-font-color)',
+              }}
+              >
                 <span>Slippage Tolerance</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>{slippagePct}%</span>
+                <span style={{ color: 'var(--standard-font-color)' }}>
+                  {slippagePct}
+                  %
+                </span>
               </div>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                color: 'var(--light-font-color)'
-              }}>
+                color: 'var(--light-font-color)',
+              }}
+              >
                 <span>Transaction Deadline</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>{deadlineMins} minutes</span>
+                <span style={{ color: 'var(--standard-font-color)' }}>
+                  {deadlineMins}
+                  {' '}
+                  minutes
+                </span>
               </div>
             </div>
           </div>
@@ -369,9 +422,9 @@ export default function SwapConfirmation({
                 padding: '16px 24px',
                 borderRadius: 16,
                 border: 'none',
-                background: loading ?
-                  'rgba(255, 255, 255, 0.1)' :
-                  'var(--button-gradient)',
+                background: loading
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : 'var(--button-gradient)',
                 color: 'white',
                 fontSize: 16,
                 fontWeight: 700,
@@ -380,7 +433,7 @@ export default function SwapConfirmation({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8
+                gap: 8,
               }}
             >
               {loading ? (
@@ -388,7 +441,12 @@ export default function SwapConfirmation({
                   <Spinner className="w-5 h-5" />
                   {swapStep ? (
                     <>
-                      {swapStep.label}... ({swapStep.current}/{swapStep.total})
+                      {swapStep.label}
+                      ... (
+                      {swapStep.current}
+                      /
+                      {swapStep.total}
+                      )
                     </>
                   ) : (
                     'Swapping...'
@@ -410,7 +468,7 @@ export default function SwapConfirmation({
                 fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
               }}
             >
               Cancel

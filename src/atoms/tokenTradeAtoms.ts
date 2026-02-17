@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { Decimal } from '../libs/decimal';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Decimal } from '../libs/decimal';
 
 // Success transaction data interface
 export interface SuccessTxData {
@@ -35,11 +35,11 @@ export const nextPriceAtom = atom<Decimal>(Decimal.ZERO);
 
 // Slippage with localStorage persistence
 export const slippageAtom = atomWithStorage<number>('tokenTrade:slippage', (() => {
-  try { 
-    const v = localStorage.getItem('tokenTrade:slippage'); 
-    return v != null ? Math.max(0, Math.min(50, Number(v) || 1)) : 1; 
-  } catch { 
-    return 1; 
+  try {
+    const v = localStorage.getItem('tokenTrade:slippage');
+    return v != null ? Math.max(0, Math.min(50, Number(v) || 1)) : 1;
+  } catch {
+    return 1;
   }
 })());
 
@@ -54,16 +54,16 @@ export const averageTokenPriceAtom = atom<Decimal>((get) => {
   const tokenB = get(tokenBAtom);
   const isBuying = get(isBuyingAtom);
   const token = get(tokenTradeTokenAtom);
-  
+
   if (!tokenA || !tokenB || tokenA <= 0) {
     return isBuying
       ? Decimal.from(token?.price || 0)
       : Decimal.from(token?.sell_price || 0);
   }
-  
-  const _tokenA = Decimal.from(tokenA);
-  const _tokenB = Decimal.from(tokenB);
-  return isBuying ? _tokenA.div(_tokenB) : _tokenB.div(_tokenA);
+
+  const tokenADecimal = Decimal.from(tokenA);
+  const tokenBDecimal = Decimal.from(tokenB);
+  return isBuying ? tokenADecimal.div(tokenBDecimal) : tokenBDecimal.div(tokenADecimal);
 });
 
 export const priceImpactDiffAtom = atom<Decimal>((get) => {
@@ -72,11 +72,11 @@ export const priceImpactDiffAtom = atom<Decimal>((get) => {
   const isBuying = get(isBuyingAtom);
   const nextPrice = get(nextPriceAtom);
   const currentTokenUnitPrice = get(currentTokenUnitPriceAtom);
-  
+
   if (!tokenA || !tokenB || tokenA <= 0) {
     return Decimal.ZERO;
   }
-  
+
   const diff = nextPrice.sub(currentTokenUnitPrice);
   if (diff.lt(0) || !isBuying) {
     return currentTokenUnitPrice.sub(nextPrice);
@@ -88,11 +88,11 @@ export const priceImpactPercentAtom = atom<Decimal>((get) => {
   const nextPrice = get(nextPriceAtom);
   const currentTokenUnitPrice = get(currentTokenUnitPriceAtom);
   const priceImpactDiff = get(priceImpactDiffAtom);
-  
+
   if (nextPrice.isZero || currentTokenUnitPrice.isZero) {
     return Decimal.ZERO;
   }
-  
+
   return priceImpactDiff.div(currentTokenUnitPrice).mul(100);
 });
 

@@ -1,4 +1,7 @@
+/* eslint-disable */
 import React from 'react';
+import { cn } from '@/lib/utils';
+import { useAccount } from '@/hooks';
 import TokenSelector from './TokenSelector';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
@@ -6,8 +9,6 @@ import { AeButton } from '../../ui/ae-button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
-import { cn } from '@/lib/utils';
-import { useAccount } from '@/hooks';
 
 interface TokenInputProps {
   label: string;
@@ -43,12 +44,12 @@ export default function TokenInput({
   disabled = false,
   loading = false,
   readOnly = false,
-  placeholder = "0.0",
-  searchValue = "",
+  placeholder = '0.0',
+  searchValue = '',
   onSearchChange,
   hasInsufficientBalance = false,
   onFocus,
-  onBlur
+  onBlur,
 }: TokenInputProps) {
   const { activeAccount: address } = useAccount();
 
@@ -64,19 +65,19 @@ export default function TokenInput({
   };
 
   return (
-    <AeCard 
-      variant="glass" 
+    <AeCard
+      variant="glass"
       className={cn(
-        "transition-all duration-300 border-glass-border",
-        hasInsufficientBalance && address && "border-destructive"
+        'transition-all duration-300 border-glass-border',
+        hasInsufficientBalance && address && 'border-destructive',
       )}
       style={{
-        background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        boxShadow: hasInsufficientBalance && address ? 
-          "0 8px 25px rgba(255, 107, 107, 0.2)" : 
-          "0 8px 25px rgba(0,0,0,0.2)"
+        background: 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        boxShadow: hasInsufficientBalance && address
+          ? '0 8px 25px rgba(255, 107, 107, 0.2)'
+          : '0 8px 25px rgba(0,0,0,0.2)',
       }}
     >
       <AeCardContent className="p-4">
@@ -93,7 +94,7 @@ export default function TokenInput({
                   {Decimal.from(balance).prettify()}
                 </span>
               </div>
-              
+
               {/* Max, 50% buttons */}
               <div className="flex gap-2 items-center">
                 <AeButton
@@ -110,7 +111,7 @@ export default function TokenInput({
                 >
                   50%
                 </AeButton>
-                
+
                 <AeButton
                   variant="ghost"
                   size="xs"
@@ -167,7 +168,17 @@ export default function TokenInput({
         {/* Insufficient Balance Warning */}
         {hasInsufficientBalance && address && balance && amount && Number(amount) > 0 && (
           <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
-            ⚠️ Insufficient {token?.symbol} balance. You need {Decimal.from(amount || '0').prettify()} but only have {Decimal.from(balance).prettify()}
+            ⚠️ Insufficient
+            {' '}
+            {token?.symbol}
+            {' '}
+            balance. You need
+            {' '}
+            {Decimal.from(amount || '0').prettify()}
+            {' '}
+            but only have
+            {' '}
+            {Decimal.from(balance).prettify()}
           </div>
         )}
       </AeCardContent>

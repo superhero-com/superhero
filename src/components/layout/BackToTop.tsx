@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type BackToTopProps = {
-  threshold?: number;     // optional override; defaults to .right-rail-bleed height
-  bottomOffset?: number;  // px from viewport bottom when fixed
+  threshold?: number; // optional override; defaults to .right-rail-bleed height
+  bottomOffset?: number; // px from viewport bottom when fixed
 };
 
-export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopProps) {
+const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
+  const { t } = useTranslation('common');
   const [visible, setVisible] = useState(false);
   const [leftOffset, setLeftOffset] = useState<number>(16);
   const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
@@ -15,7 +17,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
   useEffect(() => {
     if (threshold != null) {
       setComputedThreshold(threshold);
-      return;
+      return () => {};
     }
     const compute = () => {
       const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
@@ -25,10 +27,10 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
     };
     compute();
     // Recompute after a tick and on resize to catch layout shifts
-    const t = window.setTimeout(compute, 0);
+    const timeoutId = window.setTimeout(compute, 0);
     window.addEventListener('resize', compute);
     return () => {
-      window.clearTimeout(t);
+      window.clearTimeout(timeoutId);
       window.removeEventListener('resize', compute);
     };
   }, [threshold]);
@@ -63,7 +65,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
 
   const scrollTop = () => {
     try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       window.scrollTo(0, 0);
     }
@@ -78,23 +80,23 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
     >
       <button
         type="button"
-        aria-label="Back to top"
+        aria-label={t('aria.backToTop')}
         onClick={scrollTop}
         className={[
-          "pointer-events-auto select-none transition-opacity duration-200",
-          "rounded-full px-4 py-2 text-xs font-semibold",
+          'pointer-events-auto select-none transition-opacity duration-200',
+          'rounded-full px-4 py-2 text-xs font-semibold',
           // Glass styling
-          "bg-[var(--glass-bg)] text-white border border-white/20",
-          "backdrop-blur-[12px] shadow-[var(--glass-shadow)]",
+          'bg-[var(--glass-bg)] text-white border border-white/20',
+          'backdrop-blur-[12px] shadow-[var(--glass-shadow)]',
           // Hover/active
-          "hover:bg-white/15 transition-colors",
-          visible ? 'opacity-100' : 'opacity-0'
-        ].join(" ")}
+          'hover:bg-white/15 transition-colors',
+          visible ? 'opacity-100' : 'opacity-0',
+        ].join(' ')}
       >
         ↑ Back to top
       </button>
     </div>
   );
-}
+};
 
-
+export default BackToTop;

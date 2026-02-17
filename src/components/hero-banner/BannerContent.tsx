@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface BannerContentProps {
   title: string;
@@ -12,7 +12,7 @@ interface BannerContentProps {
   secondaryButtonLink: string;
 }
 
-export default function BannerContent({
+const BannerContent = ({
   title,
   description,
   chips,
@@ -21,16 +21,17 @@ export default function BannerContent({
   primaryButtonOnClick,
   secondaryButtonText,
   secondaryButtonLink,
-}: BannerContentProps) {
+}: BannerContentProps) => {
   const renderTitle = () => {
     // Insert a mobile-only line break after the first period
-    const parts = title.split(". ");
+    const parts = title.split('. ');
     if (parts.length <= 1) return title;
     const first = parts.shift() as string;
-    const rest = parts.join(". ");
+    const rest = parts.join('. ');
     return (
       <>
-        {first}.
+        {first}
+        .
         <br className="mobile-break" />
         {rest}
       </>
@@ -42,8 +43,8 @@ export default function BannerContent({
       <p className="banner-lede">{description}</p>
 
       <ul className="banner-chips" aria-label="Key features">
-        {chips.map((chip, index) => (
-          <li key={index} className="banner-chip">
+        {chips.map((chip) => (
+          <li key={chip} className="banner-chip">
             {chip}
           </li>
         ))}
@@ -51,11 +52,15 @@ export default function BannerContent({
 
       <div className="banner-cta">
         {primaryButtonOnClick ? (
-          <button onClick={primaryButtonOnClick} className="banner-btn banner-btn--primary">
+          <button
+            type="button"
+            onClick={primaryButtonOnClick}
+            className="banner-btn banner-btn--primary"
+          >
             {primaryButtonText}
           </button>
         ) : (
-          <Link to={primaryButtonLink || "#"} className="banner-btn banner-btn--primary">
+          <Link to={primaryButtonLink || '#'} className="banner-btn banner-btn--primary">
             {primaryButtonText}
           </Link>
         )}
@@ -65,5 +70,6 @@ export default function BannerContent({
       </div>
     </div>
   );
-}
+};
 
+export default BannerContent;

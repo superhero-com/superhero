@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DataTablePagination } from './DataTablePagination';
 import Spinner from '@/components/Spinner';
+import { DataTablePagination } from './DataTablePagination';
 
 export interface DataTableParams {
   page?: number;
@@ -34,7 +34,7 @@ export interface DataTableProps<T> {
   itemsPerPage?: number;
 }
 
-export function DataTable<T>({
+export const DataTable = <T, >({
   queryFn,
   renderRow,
   initialParams = {},
@@ -44,7 +44,7 @@ export function DataTable<T>({
   errorComponent,
   showPagination = true,
   itemsPerPage = 10,
-}: DataTableProps<T>) {
+}: DataTableProps<T>) => {
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
     limit: itemsPerPage,
@@ -53,7 +53,9 @@ export function DataTable<T>({
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
   const queryKey = useMemo(() => ['DataTable', params, initialParams, queryFn], [params, initialParams, queryFn]);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data, isLoading, error, refetch,
+  } = useQuery({
     queryKey,
     queryFn: () => queryFn({
       ...params,
@@ -63,11 +65,7 @@ export function DataTable<T>({
   });
 
   const handlePageChange = (page: number) => {
-    setParams(prev => ({ ...prev, page }));
-  };
-
-  const handleParamsChange = (newParams: Partial<DataTableParams>) => {
-    setParams(prev => ({ ...prev, ...newParams, page: 1 }));
+    setParams((prev) => ({ ...prev, page }));
   };
 
   // Expose methods for parent components
@@ -100,6 +98,7 @@ export function DataTable<T>({
               {error instanceof Error ? error.message : 'An unknown error occurred'}
             </p>
             <button
+              type="button"
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
@@ -125,11 +124,17 @@ export function DataTable<T>({
     <div className={`space-y-2 ${className}`}>
       {/* Data Table Content */}
       <div className="space-y-2">
-        {data.items.map((item, index) => (
-          <div key={index}>
-            {renderRow({ item, index })}
-          </div>
-        ))}
+        {data.items.map((item, index) => {
+          const rowKey = (item as any).id
+            ?? (item as any).address
+            ?? (item as any).hash
+            ?? JSON.stringify(item);
+          return (
+            <div key={rowKey}>
+              {renderRow({ item, index })}
+            </div>
+          );
+        })}
       </div>
 
       {/* Pagination */}
@@ -142,12 +147,12 @@ export function DataTable<T>({
       )}
     </div>
   );
-}
+};
 
 // Hook for using DataTable with external state management
 export function useDataTable<T>(
   queryFn: (params: DataTableParams) => Promise<DataTableResponse<T>>,
-  initialParams: DataTableParams = {}
+  initialParams: DataTableParams = {},
 ) {
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
@@ -158,14 +163,16 @@ export function useDataTable<T>(
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
   const queryKey = useMemo(() => ['DataTable', params, queryFn], [params, queryFn]);
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data, isLoading, error, refetch,
+  } = useQuery({
     queryKey,
     queryFn: () => queryFn(params),
     placeholderData: (previousData) => previousData,
   });
 
   const updateParams = (newParams: Partial<DataTableParams>) => {
-    setParams(prev => ({ ...prev, ...newParams }));
+    setParams((prev) => ({ ...prev, ...newParams }));
   };
 
   const resetParams = () => {

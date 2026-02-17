@@ -9,7 +9,7 @@ export { useDex } from './useDex';
 export { useCurrencies } from './useCurrencies';
 export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
-export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';
+export { useTransactionStatus } from './useTransactionStatus';
 export { useChart } from './useChart';
 export { useOwnedTokens } from './useOwnedTokens';
 export { usePortfolioValue } from './usePortfolioValue';

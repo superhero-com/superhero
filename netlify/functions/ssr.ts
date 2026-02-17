@@ -1,28 +1,6 @@
 // Netlify Function: SSR shell with SEO head injection (no client TSX imports)
 import type { Handler } from '@netlify/functions';
 
-const ORIGIN = 'https://superhero.com';
-const API_BASE = 'https://api.superhero.com';
-
-export const handler: Handler = async (event) => {
-  try {
-    const url = new URL(event.rawUrl || `${ORIGIN}${event.path}`);
-    const meta = await buildMeta(url.pathname, url);
-    const head = buildHead(meta);
-    const html = buildHtml(head);
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-      },
-      body: html,
-    };
-  } catch (_e) {
-    const html = buildHtml(buildHead({ title: 'Superhero', canonical: `${ORIGIN}${event.path}` }));
-    return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: html };
-  }
-};
-
 type Meta = {
   title: string;
   description?: string;
@@ -31,11 +9,41 @@ type Meta = {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
-async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
+const ORIGIN = 'https://superhero.com';
+const API_BASE = 'https://api.superhero.com';
+
+function truncate(s: string, n: number): string {
+  const str = (s || '').trim();
+  if (str.length <= n) return str;
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+  } as Record<string, string>)[c]);
+}
+
+function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/'/g, '&#39;');
+}
+
+async function fetchPostBySegment(baseApi: string, seg: string): Promise<any | null> {
+  const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
+  const r = await fetch(url, { headers: { accept: 'application/json' } });
+  if (r.ok) return r.json();
+  return null;
+}
+
+async function buildMeta(pathname: string): Promise<Meta> {
   if (pathname === '/' || pathname === '') {
+    const rootDescription = [
+      'Discover crypto-native conversations, trending tokens, and on-chain activity.',
+      'Join the æternity-powered social network.',
+    ].join(' ');
     return {
       title: 'Superhero.com – The All‑in‑One Social + Crypto App',
-      description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
+      description: rootDescription,
       canonical: `${ORIGIN}/`,
       jsonLd: {
         '@context': 'https://schema.org',
@@ -48,9 +56,13 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
 
   // Trends page
   if (pathname === '/trends' || pathname === '/trends/tokens') {
+    const trendsDescription = [
+      'Discover and tokenize trending topics.',
+      'Trade tokens, build communities, and own the hype on Superhero.',
+    ].join(' ');
     return {
       title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
-      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      description: trendsDescription,
       canonical: `${ORIGIN}/trends/tokens`,
       jsonLd: {
         '@context': 'https://schema.org',
@@ -65,16 +77,10 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (postMatch) {
     const segment = postMatch[1];
     const baseApi = API_BASE.replace(/\/$/, '');
-    async function fetchPostBySegment(seg: string): Promise<any | null> {
-      const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
-      const r = await fetch(url, { headers: { accept: 'application/json' } });
-      if (r.ok) return r.json();
-      return null;
-    }
     try {
-      let data: any | null = await fetchPostBySegment(segment);
+      let data: any | null = await fetchPostBySegment(baseApi, segment);
       if (!data && /^\d+$/.test(segment)) {
-        data = await fetchPostBySegment(`${segment}_v3`);
+        data = await fetchPostBySegment(baseApi, `${segment}_v3`);
       }
       if (!data) {
         const searchUrl = `${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`;
@@ -83,7 +89,7 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
           const sdata: any = await sr.json();
           const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
           if (first?.id) {
-            data = await fetchPostBySegment(String(first.id));
+            data = await fetchPostBySegment(baseApi, String(first.id));
           }
         }
       }
@@ -104,12 +110,18 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
             author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
             image: media,
             interactionStatistic: [
-              { '@type': 'InteractionCounter', interactionType: 'CommentAction', userInteractionCount: data?.total_comments || 0 },
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'CommentAction',
+                userInteractionCount: data?.total_comments || 0,
+              },
             ],
           },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return { title: 'Post – Superhero', canonical: `${ORIGIN}/post/${segment}` };
   }
 
@@ -127,10 +139,18 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
           title: `${display} – Profile – Superhero`,
           description: truncate(bio || `View ${display} on Superhero, the crypto social network.`, 160),
           canonical: `${ORIGIN}/users/${address}`,
-          jsonLd: { '@context': 'https://schema.org', '@type': 'Person', name: display, identifier: address, description: bio || undefined },
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            name: display,
+            identifier: address,
+            description: bio || undefined,
+          },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return { title: `${address} – Profile – Superhero`, canonical: `${ORIGIN}/users/${address}` };
   }
 
@@ -149,10 +169,18 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
           title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 160),
           canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
-          jsonLd: { '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address },
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'CryptoCurrency',
+            name: data?.name || data?.symbol,
+            symbol: data?.symbol,
+            identifier: data?.address || data?.sale_address,
+          },
         };
       }
-    } catch {}
+    } catch {
+      // Fall through to shared fallback below
+    }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
   }
 
@@ -164,8 +192,8 @@ function buildHead(meta: Meta): string {
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
   if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property="og:site_name" content="Superhero">`);
-  parts.push(`<meta property="og:type" content="website">`);
+  parts.push('<meta property="og:site_name" content="Superhero">');
+  parts.push('<meta property="og:type" content="website">');
   parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
   if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
@@ -174,8 +202,15 @@ function buildHead(meta: Meta): string {
   parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
   parts.push(`<meta name="twitter:image" content="${escapeAttr(meta.ogImage || '/og-default.png')}">`);
-  const jsonLdArray = Array.isArray(meta.jsonLd) ? meta.jsonLd : meta.jsonLd ? [meta.jsonLd] : [];
-  for (const schema of jsonLdArray) parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+  let jsonLdArray: Record<string, unknown>[] = [];
+  if (Array.isArray(meta.jsonLd)) {
+    jsonLdArray = meta.jsonLd;
+  } else if (meta.jsonLd) {
+    jsonLdArray = [meta.jsonLd];
+  }
+  jsonLdArray.forEach((schema) => {
+    parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+  });
   return parts.join('\n');
 }
 
@@ -195,16 +230,21 @@ function buildHtml(head: string) {
 </html>`;
 }
 
-function truncate(s: string, n: number): string {
-  const str = (s || '').trim();
-  if (str.length <= n) return str;
-  return str.slice(0, Math.max(0, n - 1)) + '…';
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
-}
-
-function escapeAttr(s: string): string {
-  return escapeHtml(s).replace(/'/g, '&#39;');
-}
+export const handler: Handler = async (event) => {
+  try {
+    const url = new URL(event.rawUrl || `${ORIGIN}${event.path}`);
+    const meta = await buildMeta(url.pathname);
+    const head = buildHead(meta);
+    const html = buildHtml(head);
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+      body: html,
+    };
+  } catch {
+    const html = buildHtml(buildHead({ title: 'Superhero', canonical: `${ORIGIN}${event.path}` }));
+    return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' }, body: html };
+  }
+};

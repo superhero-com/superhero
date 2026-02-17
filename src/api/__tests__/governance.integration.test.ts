@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { GovernanceApi } from '../governance';
+import {
+  describe, it, expect, beforeAll, vi,
+} from 'vitest';
 import { Encoded } from '@aeternity/aepp-sdk';
+import { GovernanceApi } from '../governance';
 
 describe('GovernanceApi Integration Tests', () => {
   // Test addresses - these should be real addresses that exist on the network
@@ -14,7 +16,7 @@ describe('GovernanceApi Integration Tests', () => {
   describe('getVersion', () => {
     it('should fetch backend version', async () => {
       const result = await GovernanceApi.getVersion();
-      
+
       expect(result).toBeDefined();
       expect(typeof result.version).toBe('string');
       expect(result.version.length).toBeGreaterThan(0);
@@ -24,15 +26,15 @@ describe('GovernanceApi Integration Tests', () => {
   describe('getPollOrdering', () => {
     it('should fetch open polls', async () => {
       const result = await GovernanceApi.getPollOrdering(false);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('ordering');
       expect(Array.isArray(result.ordering)).toBe(true);
-      
+
       // Validate data property structure
       expect(result).toHaveProperty('data');
       expect(Array.isArray(result.data)).toBe(true);
-      
+
       expect(result.data.length).toBeGreaterThan(0);
       const firstPoll = result.data[0];
       expect(firstPoll).toHaveProperty('id');
@@ -42,7 +44,7 @@ describe('GovernanceApi Integration Tests', () => {
       expect(firstPoll).toHaveProperty('closeHeight');
       expect(firstPoll).toHaveProperty('delegationCount');
       expect(firstPoll).toHaveProperty('score');
-      
+
       // Validate data types
       expect(typeof firstPoll.id).toBe('number');
       expect(typeof firstPoll.poll).toBe('string');
@@ -56,15 +58,15 @@ describe('GovernanceApi Integration Tests', () => {
 
     it('should fetch closed polls', async () => {
       const result = await GovernanceApi.getPollOrdering(true);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('ordering');
       expect(Array.isArray(result.ordering)).toBe(true);
-      
+
       // Validate data property structure
       expect(result).toHaveProperty('data');
       expect(Array.isArray(result.data)).toBe(true);
-      
+
       expect(result.data.length).toBeGreaterThan(0);
       const firstPoll = result.data[0];
       expect(firstPoll).toHaveProperty('id');
@@ -74,7 +76,7 @@ describe('GovernanceApi Integration Tests', () => {
       expect(firstPoll).toHaveProperty('closeHeight');
       expect(firstPoll).toHaveProperty('delegationCount');
       expect(firstPoll).toHaveProperty('score');
-      
+
       // Validate data types
       expect(typeof firstPoll.id).toBe('number');
       expect(typeof firstPoll.poll).toBe('string');
@@ -91,19 +93,17 @@ describe('GovernanceApi Integration Tests', () => {
     it('should fetch poll overview for a valid poll ID', async () => {
       // First get a list of polls to find a valid poll ID
       const polls = await GovernanceApi.getPollOrdering(false);
-      
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+
+      const pollId: Encoded.ContractAddress = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
-      
+
       const result = await GovernanceApi.getPollOverview(pollId);
-      
+
       expect(result).toBeDefined();
-      
+
       // Validate pollState structure
       expect(result).toHaveProperty('pollState');
       expect(result.pollState).toHaveProperty('metadata');
@@ -112,35 +112,35 @@ describe('GovernanceApi Integration Tests', () => {
       expect(result.pollState).toHaveProperty('create_height');
       expect(result.pollState).toHaveProperty('votes');
       expect(result.pollState).toHaveProperty('author');
-      
+
       // Validate metadata structure
-      const metadata = result.pollState.metadata;
+      const { metadata } = result.pollState;
       expect(metadata).toHaveProperty('title');
       expect(metadata).toHaveProperty('description');
       expect(metadata).toHaveProperty('link');
       expect(typeof metadata.title).toBe('string');
       expect(typeof metadata.description).toBe('string');
       expect(typeof metadata.link).toBe('string');
-      
+
       // Validate vote_options structure
       const voteOptions = result.pollState.vote_options;
       expect(typeof voteOptions).toBe('object');
-      Object.values(voteOptions).forEach(value => {
+      Object.values(voteOptions).forEach((value) => {
         expect(typeof value).toBe('string');
       });
-      
+
       // Validate votes structure
-      const votes = result.pollState.votes;
+      const { votes } = result.pollState;
       expect(typeof votes).toBe('object');
       Object.entries(votes).forEach(([address, value]) => {
         expect(address.startsWith('ak_')).toBe(true);
         expect(typeof value).toBe('number');
       });
-      
+
       // Validate stakesAtHeight array
       expect(result).toHaveProperty('stakesAtHeight');
       expect(Array.isArray(result.stakesAtHeight)).toBe(true);
-      
+
       if (result.stakesAtHeight.length > 0) {
         const firstStake = result.stakesAtHeight[0];
         expect(firstStake).toHaveProperty('account');
@@ -150,7 +150,7 @@ describe('GovernanceApi Integration Tests', () => {
         expect(firstStake).toHaveProperty('delegated');
         expect(firstStake).toHaveProperty('delegators');
         expect(firstStake).toHaveProperty('delegationTree');
-        
+
         expect(firstStake.account.startsWith('ak_')).toBe(true);
         expect(typeof firstStake.option).toBe('number');
         expect(typeof firstStake.stake).toBe('string');
@@ -159,24 +159,24 @@ describe('GovernanceApi Integration Tests', () => {
         expect(Array.isArray(firstStake.delegators)).toBe(true);
         expect(typeof firstStake.delegationTree).toBe('object');
       }
-      
+
       // Validate stakesForOption array
       expect(result).toHaveProperty('stakesForOption');
       expect(Array.isArray(result.stakesForOption)).toBe(true);
-      
+
       if (result.stakesForOption.length > 0) {
         const firstOption = result.stakesForOption[0];
         expect(firstOption).toHaveProperty('option');
         expect(firstOption).toHaveProperty('optionStake');
         expect(firstOption).toHaveProperty('percentageOfTotal');
         expect(firstOption).toHaveProperty('votes');
-        
+
         expect(typeof firstOption.option).toBe('string');
         expect(typeof firstOption.optionStake).toBe('string');
         expect(typeof firstOption.percentageOfTotal).toBe('string');
         expect(Array.isArray(firstOption.votes)).toBe(true);
       }
-      
+
       // Validate summary properties
       expect(result).toHaveProperty('totalStake');
       expect(result).toHaveProperty('percentOfTotalSupply');
@@ -188,7 +188,7 @@ describe('GovernanceApi Integration Tests', () => {
 
     it('should handle invalid poll ID gracefully', async () => {
       const invalidPollId = 'invalid_poll_id';
-      
+
       try {
         await GovernanceApi.getPollOverview(invalidPollId);
         throw new Error('Invalid poll ID should throw an error');
@@ -204,19 +204,17 @@ describe('GovernanceApi Integration Tests', () => {
     it('should fetch votes state for a valid poll ID', async () => {
       // First get a list of polls to find a valid poll ID
       const polls = await GovernanceApi.getPollOrdering(false);
-      
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
-      
+
       const result = await GovernanceApi.getVotesState(pollId);
-      
+
       expect(result).toBeDefined();
-      
+
       // Validate pollState structure
       expect(result).toHaveProperty('pollState');
       expect(result.pollState).toHaveProperty('metadata');
@@ -225,35 +223,35 @@ describe('GovernanceApi Integration Tests', () => {
       expect(result.pollState).toHaveProperty('create_height');
       expect(result.pollState).toHaveProperty('votes');
       expect(result.pollState).toHaveProperty('author');
-      
+
       // Validate metadata structure
-      const metadata = result.pollState.metadata;
+      const { metadata } = result.pollState;
       expect(metadata).toHaveProperty('title');
       expect(metadata).toHaveProperty('description');
       expect(metadata).toHaveProperty('link');
       expect(typeof metadata.title).toBe('string');
       expect(typeof metadata.description).toBe('string');
       expect(typeof metadata.link).toBe('string');
-      
+
       // Validate vote_options structure
       const voteOptions = result.pollState.vote_options;
       expect(typeof voteOptions).toBe('object');
-      Object.values(voteOptions).forEach(option => {
+      Object.values(voteOptions).forEach((option) => {
         expect(typeof option).toBe('string');
       });
-      
+
       // Validate votes structure
-      const votes = result.pollState.votes;
+      const { votes } = result.pollState;
       expect(typeof votes).toBe('object');
       Object.entries(votes).forEach(([address, vote]) => {
         expect(address.startsWith('ak_')).toBe(true);
         expect(typeof vote).toBe('number');
       });
-      
+
       // Validate stakesAtHeight array
       expect(result).toHaveProperty('stakesAtHeight');
       expect(Array.isArray(result.stakesAtHeight)).toBe(true);
-      
+
       if (result.stakesAtHeight.length > 0) {
         const firstStake = result.stakesAtHeight[0];
         expect(firstStake).toHaveProperty('account');
@@ -263,7 +261,7 @@ describe('GovernanceApi Integration Tests', () => {
         expect(firstStake).toHaveProperty('delegated');
         expect(firstStake).toHaveProperty('delegators');
         expect(firstStake).toHaveProperty('delegationTree');
-        
+
         expect(firstStake.account.startsWith('ak_')).toBe(true);
         expect(typeof firstStake.option).toBe('number');
         expect(typeof firstStake.stake).toBe('string');
@@ -272,24 +270,24 @@ describe('GovernanceApi Integration Tests', () => {
         expect(Array.isArray(firstStake.delegators)).toBe(true);
         expect(typeof firstStake.delegationTree).toBe('object');
       }
-      
+
       // Validate stakesForOption array
       expect(result).toHaveProperty('stakesForOption');
       expect(Array.isArray(result.stakesForOption)).toBe(true);
-      
+
       if (result.stakesForOption.length > 0) {
         const firstOption = result.stakesForOption[0];
         expect(firstOption).toHaveProperty('option');
         expect(firstOption).toHaveProperty('optionStake');
         expect(firstOption).toHaveProperty('percentageOfTotal');
         expect(firstOption).toHaveProperty('votes');
-        
+
         expect(typeof firstOption.option).toBe('string');
         expect(typeof firstOption.optionStake).toBe('string');
         expect(typeof firstOption.percentageOfTotal).toBe('string');
         expect(Array.isArray(firstOption.votes)).toBe(true);
       }
-      
+
       // Validate summary properties
       expect(result).toHaveProperty('totalStake');
       expect(result).toHaveProperty('percentOfTotalSupply');
@@ -303,12 +301,12 @@ describe('GovernanceApi Integration Tests', () => {
   describe('getDelegatedPower', () => {
     it('should fetch delegated power for a test address', async () => {
       const result = await GovernanceApi.getDelegatedPower(testAddress);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('delegatedPower');
       expect(result).toHaveProperty('delegationTree');
       expect(result).toHaveProperty('flattenedDelegationTree');
-      
+
       expect(typeof result.delegatedPower).toBe('string');
       expect(typeof result.delegationTree).toBe('object');
       expect(Array.isArray(result.flattenedDelegationTree)).toBe(true);
@@ -316,22 +314,20 @@ describe('GovernanceApi Integration Tests', () => {
 
     it('should fetch delegated power for a specific poll', async () => {
       const polls = await GovernanceApi.getPollOrdering(false);
-      
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
-      
+
       const result = await GovernanceApi.getDelegatedPower(testAddress, pollId);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('delegatedPower');
       expect(result).toHaveProperty('delegationTree');
       expect(result).toHaveProperty('flattenedDelegationTree');
-      
+
       expect(typeof result.delegatedPower).toBe('string');
       expect(typeof result.delegationTree).toBe('object');
       expect(Array.isArray(result.flattenedDelegationTree)).toBe(true);
@@ -341,12 +337,12 @@ describe('GovernanceApi Integration Tests', () => {
   describe('getAccountPollVoterAuthor', () => {
     it('should fetch account poll voter author info for a test address', async () => {
       const result = await GovernanceApi.getAccountPollVoterAuthor(testAddress);
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('votedInPolls');
       expect(result).toHaveProperty('authorOfPolls');
       expect(result).toHaveProperty('delegateeVotes');
-      
+
       expect(Array.isArray(result.votedInPolls)).toBe(true);
       expect(Array.isArray(result.authorOfPolls)).toBe(true);
       expect(Array.isArray(result.delegateeVotes)).toBe(true);
@@ -356,7 +352,7 @@ describe('GovernanceApi Integration Tests', () => {
   describe('submitContractEvent', () => {
     it('should submit a contract event', async () => {
       const topic = 'RevokeDelegation';
-      
+
       const result = await GovernanceApi.submitContractEvent(topic);
       expect(result).toBe(undefined);
     });
@@ -364,15 +360,13 @@ describe('GovernanceApi Integration Tests', () => {
     it('should submit a contract event with poll parameter', async () => {
       const topic = 'RevokeVote';
       const polls = await GovernanceApi.getPollOrdering(false);
-      
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
-      
+
       const result = await GovernanceApi.submitContractEvent(topic, pollId);
       expect(result).toBe(undefined);
     });

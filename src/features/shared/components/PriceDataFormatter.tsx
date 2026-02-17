@@ -1,11 +1,11 @@
-import { useCurrencies } from "@/hooks/useCurrencies";
-import { toAe } from "@aeternity/aepp-sdk";
-import { useMemo } from "react";
-import { PriceDto } from "../../../api/generated";
-import { Decimal } from "../../../libs/decimal";
-import PriceFormatter from "./PriceFormatter";
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { toAe } from '@aeternity/aepp-sdk';
+import { useMemo } from 'react';
+import { PriceDto } from '../../../api/generated';
+import { Decimal } from '../../../libs/decimal';
+import PriceFormatter, { PriceFormatterProps } from './PriceFormatter';
 
-interface PriceDataFormatterProps {
+interface PriceDataFormatterProps extends Partial<PriceFormatterProps> {
   priceData: PriceDto;
   bignumber?: boolean;
   rowOnSm?: boolean;
@@ -25,13 +25,13 @@ interface PriceDataFormatterProps {
  * using the existing PriceFormatter component. It handles currency conversion
  * and proper decimal formatting.
  */
-export default function PriceDataFormatter({
+const PriceDataFormatter = ({
   priceData,
   bignumber = false,
   rowOnSm = false,
   watchKey,
   ...props
-}: PriceDataFormatterProps) {
+}: PriceDataFormatterProps) => {
   const { currentCurrencyCode, getFiat } = useCurrencies();
 
   const aePrice = useMemo(() => {
@@ -52,11 +52,11 @@ export default function PriceDataFormatter({
     }
 
     if (!priceData[currentCurrencyCode]) {
-      if (priceData["ae"]) {
+      if (priceData.ae) {
         return getFiat(
           bignumber
-            ? Decimal.from(toAe(priceData["ae"]))
-            : Decimal.from(priceData["ae"])
+            ? Decimal.from(toAe(priceData.ae))
+            : Decimal.from(priceData.ae),
         );
       }
 
@@ -76,4 +76,6 @@ export default function PriceDataFormatter({
       {...props}
     />
   );
-}
+};
+
+export default PriceDataFormatter;

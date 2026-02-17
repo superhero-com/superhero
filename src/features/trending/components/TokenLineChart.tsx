@@ -1,13 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import moment from 'moment';
-import { IChartApi, ISeriesApi, AreaSeriesPartialOptions, UTCTimestamp, AreaSeries } from 'lightweight-charts';
+import {
+  IChartApi, ISeriesApi, AreaSeriesPartialOptions, UTCTimestamp, AreaSeries,
+} from 'lightweight-charts';
 
+import { useAtomValue } from 'jotai';
+import { formatNumber } from '@/utils/number';
 import { useChart } from '../../../hooks/useChart';
 import { TransactionHistoricalService } from '../../../api/generated';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
-import { useAtomValue } from 'jotai';
-import { formatNumber } from '@/utils/number';
 
 interface TokenLineChartProps {
   saleAddress: string;
@@ -22,7 +26,6 @@ interface TokenLineChartProps {
   className?: string;
 }
 
-
 interface ChartDataItem {
   end_time: string;
   last_price: number;
@@ -33,7 +36,7 @@ interface ChartResponse {
   timeframe?: string;
 }
 
-export function TokenLineChart({
+export const TokenLineChart = ({
   saleAddress,
   height = 200,
   hideTimeframe = false,
@@ -44,7 +47,7 @@ export function TokenLineChart({
   allowParentClick = false,
   className,
   timeframe,
-}: TokenLineChartProps) {
+}: TokenLineChartProps) => {
   const [loading, setLoading] = useState(false);
   const areaSeries = useRef<ISeriesApi<'Area'> | undefined>();
   const chartApiRef = useRef<IChartApi | null>(null);
@@ -58,11 +61,10 @@ export function TokenLineChart({
   const chartTimeframe = timeframe || performanceChartTimeframe;
 
   const { data } = useQuery({
-    queryFn: () =>
-      TransactionHistoricalService.getForPreview({
-        address: saleAddress,
-        interval: chartTimeframe as PriceMovementTimeframe,
-      }),
+    queryFn: () => TransactionHistoricalService.getForPreview({
+      address: saleAddress,
+      interval: chartTimeframe as PriceMovementTimeframe,
+    }),
     enabled: !!saleAddress && !allTime,
     queryKey: [
       'TransactionHistoricalService.getForPreview',
@@ -74,14 +76,12 @@ export function TokenLineChart({
 
   const historyQuery = useInfiniteQuery({
     queryKey: ['TransactionHistoricalService.getPaginatedHistory', saleAddress],
-    queryFn: ({ pageParam = 1 }) => {
-      return TransactionHistoricalService.getPaginatedHistory({
-        address: saleAddress,
-        interval: 24 * 60 * 60, // daily buckets for all-time preview
-        page: pageParam,
-        limit: 200,
-      });
-    },
+    queryFn: ({ pageParam = 1 }) => TransactionHistoricalService.getPaginatedHistory({
+      address: saleAddress,
+      interval: 24 * 60 * 60, // daily buckets for all-time preview
+      page: pageParam,
+      limit: 200,
+    }),
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage || !Array.isArray(lastPage) || lastPage.length === 0) {
         return undefined;
@@ -93,81 +93,87 @@ export function TokenLineChart({
     staleTime: 1000 * 60 * 5,
   });
 
+  const { hasNextPage, isFetching, fetchNextPage } = historyQuery;
   useEffect(() => {
-    if (!allTime) return;
-    if (historyQuery.hasNextPage && !historyQuery.isFetching) {
-      historyQuery.fetchNextPage();
+    if (!allTime) return () => {};
+    if (hasNextPage && !isFetching) {
+      fetchNextPage();
     }
-  }, [allTime, historyQuery.hasNextPage, historyQuery.isFetching, historyQuery.fetchNextPage]);
+    return () => {};
+  }, [allTime, hasNextPage, isFetching, fetchNextPage]);
+
+  const chartOptions = useMemo(() => ({
+    grid: {
+      horzLines: {
+        visible: false,
+      },
+      vertLines: {
+        visible: false,
+      },
+    },
+    timeScale: {
+      visible: showTimeScale,
+      borderVisible: false,
+      ticksVisible: showTimeScale,
+      timeVisible: true,
+      secondsVisible: false,
+      tickMarkFormatter: showTimeScale
+        ? (time: any) => {
+          if (typeof time === 'number') {
+            return moment.unix(time).format('D');
+          }
+          if (time?.year && time?.month && time?.day) {
+            return moment({ year: time.year, month: time.month - 1, day: time.day }).format('D');
+          }
+          return '';
+        }
+        : undefined,
+    },
+    crosshair: {
+      vertLine: {
+        visible: showCrosshair,
+        color: 'rgba(52, 211, 153, 1)',
+        width: 2,
+      },
+      horzLine: {
+        visible: false,
+      },
+    },
+    handleScale: false,
+  }), [showTimeScale, showCrosshair]);
+
+  const onChartReady = useCallback((chartInstance: IChartApi) => {
+    chartApiRef.current = chartInstance;
+    const seriesOptions: AreaSeriesPartialOptions = {
+      priceLineVisible: false,
+      lineColor: 'rgb(245, 158, 11)',
+      topColor: 'rgba(245, 158, 11, 0.2)',
+      bottomColor: 'rgba(245, 158, 11, 0.01)',
+      lineWidth: 2,
+      crosshairMarkerVisible: false,
+      baseLineVisible: true,
+    };
+
+    areaSeries.current = chartInstance.addSeries(AreaSeries, seriesOptions);
+    areaSeries.current!.priceScale().applyOptions({
+      visible: false,
+      ticksVisible: false,
+    });
+
+    chartInstance.timeScale().fitContent();
+    setLoading(false);
+    setChartReady(true);
+  }, []);
 
   const { chartContainer, chart } = useChart({
     height: chartHeight,
-    chartOptions: {
-      grid: {
-        horzLines: {
-          visible: false,
-        },
-        vertLines: {
-          visible: false,
-        },
-      },
-      timeScale: {
-        visible: showTimeScale,
-        borderVisible: false,
-        ticksVisible: showTimeScale,
-        timeVisible: true,
-        secondsVisible: false,
-        tickMarkFormatter: showTimeScale
-          ? (time: any) => {
-              if (typeof time === 'number') {
-                return moment.unix(time).format('D');
-              }
-              if (time?.year && time?.month && time?.day) {
-                return moment({ year: time.year, month: time.month - 1, day: time.day }).format('D');
-              }
-              return '';
-            }
-          : undefined,
-      },
-      crosshair: {
-        vertLine: {
-          visible: showCrosshair,
-          color: 'rgba(52, 211, 153, 1)',
-          width: 2,
-        },
-        horzLine: {
-          visible: false,
-        },
-      },
-      handleScale: false,
-    },
-    onChartReady: (chartInstance) => {
-      chartApiRef.current = chartInstance;
-      const seriesOptions: AreaSeriesPartialOptions = {
-        priceLineVisible: false,
-        lineColor: 'rgb(245, 158, 11)',
-        topColor: 'rgba(245, 158, 11, 0.2)',
-        bottomColor: 'rgba(245, 158, 11, 0.01)',
-        lineWidth: 2,
-        crosshairMarkerVisible: false,
-        baseLineVisible: true,
-      };
-
-      areaSeries.current = chartInstance.addSeries(AreaSeries, seriesOptions);
-      areaSeries.current.priceScale().applyOptions({
-        visible: false, // disables auto scaling based on visible content
-        ticksVisible: false,
-      });
-
-      chartInstance.timeScale().fitContent();
-      setLoading(false);
-      setChartReady(true);
-    },
+    chartOptions,
+    onChartReady,
   });
 
   useEffect(() => {
     if (!showCrosshair || !chartReady || !chartApiRef.current || !areaSeries.current) {
-      return;
+      return () => {};
     }
 
     const chartInstance = chartApiRef.current;
@@ -183,7 +189,7 @@ export function TokenLineChart({
         : null;
       setHoverPrice(nextPrice);
 
-      const time = param.time;
+      const { time } = param;
       const label = typeof time === 'number'
         ? moment.unix(time).format('MMM D')
         : moment({ year: time.year, month: time.month - 1, day: time.day }).format('MMM D');
@@ -202,11 +208,11 @@ export function TokenLineChart({
     return () => {
       chartInstance.unsubscribeCrosshairMove(handleMove);
     };
-  }, [showCrosshair, chartReady, saleAddress, chartTimeframe, allTime]);
+  }, [showCrosshair, chartReady, saleAddress, chartTimeframe, allTime, chartContainer]);
 
   useEffect(() => {
     if (!showCrosshair || !chartReady || !chartApiRef.current || !chartContainer.current) {
-      return;
+      return () => {};
     }
 
     const chartInstance = chartApiRef.current;
@@ -280,41 +286,20 @@ export function TokenLineChart({
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [showCrosshair, chartReady, allTime, allowParentClick]);
+  }, [showCrosshair, chartReady, allTime, allowParentClick, chartContainer]);
 
-  // Watch for data changes (preview)
-  useEffect(() => {
-    if (allTime || !data?.result?.length || !areaSeries.current) {
-      return;
-    }
-    // Clear existing data first
-    areaSeries.current.setData([]);
-    // Update with new data
-    updateSeriesData(data as ChartResponse);
-  }, [data, allTime]);
-
-  // Watch for all-time data changes
-  useEffect(() => {
-    if (!allTime || !areaSeries.current || !historyQuery.data?.pages?.length) {
-      return;
-    }
-    areaSeries.current.setData([]);
-    updateSeriesDataFromHistory(historyQuery.data.pages);
-  }, [allTime, historyQuery.data?.pages]);
-
-  function updateSeriesData(chartData: ChartResponse) {
+  const updateSeriesData = useCallback((chartData: ChartResponse) => {
     const formattedData = chartData.result
-      .map((item) => {
-        return {
-          time: moment(item.end_time).unix() as UTCTimestamp,
-          value: Number(item.last_price),
-        };
-      })
+      .map((item) => ({
+        time: moment(item.end_time).unix() as UTCTimestamp,
+        value: Number(item.last_price),
+      }))
       .sort((a, b) => a.time - b.time);
 
     // if formattedData less than 10 generate more data with same value but with time - 1 hour
     if (formattedData.length < 10) {
-      for (let i = 0; i < 10 - formattedData.length; i++) {
+      const missingCount = 10 - formattedData.length;
+      for (let i = 0; i < missingCount; i += 1) {
         const lastItem = formattedData[0];
         formattedData.unshift({
           time: (lastItem.time - 3600) as UTCTimestamp,
@@ -322,15 +307,15 @@ export function TokenLineChart({
         });
       }
     }
-    
+
     if (formattedData.length) {
       setLegendRange([formattedData[0].time, formattedData[formattedData.length - 1].time]);
     }
     areaSeries.current?.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [chart]);
 
-  function updateSeriesDataFromHistory(pages: any[]) {
+  const updateSeriesDataFromHistory = useCallback((pages: any[]) => {
     const merged = pages.reduce((acc, page) => [...acc, ...page], [] as any[]);
     if (!merged.length) return;
 
@@ -352,39 +337,64 @@ export function TokenLineChart({
     }
     areaSeries.current?.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [chart]);
+
+  // Watch for data changes (preview)
+  useEffect(() => {
+    if (allTime || !data?.result?.length || !areaSeries.current) {
+      return () => {};
+    }
+    // Clear existing data first
+    areaSeries.current.setData([]);
+    // Update with new data
+    updateSeriesData(data as ChartResponse);
+    return () => {};
+  }, [data, allTime, updateSeriesData]);
+
+  // Watch for all-time data changes
+  useEffect(() => {
+    if (!allTime || !areaSeries.current || !historyQuery.data?.pages?.length) {
+      return () => {};
+    }
+    areaSeries.current.setData([]);
+    updateSeriesDataFromHistory(historyQuery.data.pages);
+    return () => {};
+  }, [allTime, historyQuery.data?.pages, updateSeriesDataFromHistory]);
 
   if (loading) {
     return (
       <div className="d-flex justify-space-around">
-        <div className="bg-gradient-to-r from-black/6 to-black/2 rounded-md animate-pulse" 
-             style={{ width: 140, height: 80 }} />
+        <div
+          className="bg-gradient-to-r from-black/6 to-black/2 rounded-md animate-pulse"
+          style={{ width: 140, height: 80 }}
+        />
       </div>
     );
   }
 
   return (
-    <div className={`chart-container flex flex-col h-full ${className ?? ""}`}>
+    <div className={`chart-container flex flex-col h-full ${className ?? ''}`}>
       <div className="relative w-full" style={{ height: chartHeight }}>
         <div ref={chartContainer} className="lw-chart h-full w-full" />
-      {showCrosshair && hoverPrice !== null && (
+        {showCrosshair && hoverPrice !== null && (
         <div className="absolute right-2 -top-8 text-[10px] text-white/80 bg-black/50 px-2 py-0.5 rounded-full pointer-events-none">
-          ${formatNumber(hoverPrice, hoverPrice < 1 ? 6 : 2)}
+          $
+          {formatNumber(hoverPrice, hoverPrice < 1 ? 6 : 2)}
         </div>
-      )}
-      {showCrosshair && hoverDate && (
+        )}
+        {showCrosshair && hoverDate && (
         <div
           className="absolute -top-6 text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded-full pointer-events-none"
           style={{ left: hoverDate.x, transform: 'translateX(-50%)' }}
         >
           {hoverDate.label}
         </div>
-      )}
-      {!hideTimeframe && (data as ChartResponse)?.timeframe && (
+        )}
+        {!hideTimeframe && (data as ChartResponse)?.timeframe && (
         <div className="timeframe-indicator absolute bottom-0 right-0 text-xs lowercase">
           {(data as ChartResponse).timeframe}
         </div>
-      )}
+        )}
       </div>
       {showDateLegend && legendRange && (
         <div className="mt-0.5 h-[12px] flex items-center justify-between text-[10px] text-white/60 pointer-events-none">
@@ -394,7 +404,6 @@ export function TokenLineChart({
       )}
     </div>
   );
-}
-
+};
 
 export default TokenLineChart;

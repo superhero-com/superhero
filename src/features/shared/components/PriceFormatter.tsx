@@ -3,7 +3,7 @@ import { Decimal } from '../../../libs/decimal';
 import SymbolPriceFormatter from './SymbolPriceFormatter';
 import FiatPriceFormatter from './FiatPriceFormatter';
 
-interface PriceFormatterProps {
+export interface PriceFormatterProps {
   aePrice: Decimal;
   fiatPrice: Decimal;
   symbol?: string;
@@ -14,11 +14,14 @@ interface PriceFormatterProps {
   hideSymbol?: boolean;
   rowOnSm?: boolean;
   className?: string;
+
+  symbolTextClassName?: string;
+  fiatPriceTextClassName?: string;
 }
 
 const PRICE_CHANGE_DISPLAY_TIME = 1000;
 
-export default function PriceFormatter({
+const PriceFormatter = ({
   aePrice,
   fiatPrice,
   symbol,
@@ -29,11 +32,19 @@ export default function PriceFormatter({
   hideSymbol = false,
   rowOnSm = false,
   className = '',
-}: PriceFormatterProps) {
+  symbolTextClassName = '',
+  fiatPriceTextClassName = '',
+}: PriceFormatterProps) => {
   const [priceJustIncreased, setPriceJustIncreased] = useState(false);
   const [priceJustDecreased, setPriceJustDecreased] = useState(false);
   const [prevPrice, setPrevPrice] = useState<Decimal | null>(null);
   const [prevWatchKey, setPrevWatchKey] = useState<string | undefined>(undefined);
+  let priceChangeClass = '';
+  if (priceJustDecreased) {
+    priceChangeClass = 'text-red-400';
+  } else if (priceJustIncreased) {
+    priceChangeClass = 'text-green-400';
+  }
 
   useEffect(() => {
     if (!aePrice || !prevPrice || !watchPrice || watchKey !== prevWatchKey) {
@@ -64,10 +75,7 @@ export default function PriceFormatter({
 
   return (
     <div
-      className={`price-formatter flex font-medium ${priceJustDecreased ? 'text-red-400' :
-        priceJustIncreased ? 'text-green-400' :
-          null
-        } ${rowOnSm ? 'flex-row items-center gap-1' : 'flex-col'} ${className}`}
+      className={`price-formatter flex font-medium ${priceChangeClass} ${rowOnSm ? 'flex-row items-center gap-1' : 'flex-col'} ${className}`}
     >
       <SymbolPriceFormatter
         aePrice={aePrice}
@@ -77,14 +85,17 @@ export default function PriceFormatter({
         priceJustIncreased={priceJustIncreased}
         priceJustDecreased={priceJustDecreased}
         className="price"
+        textClassName={symbolTextClassName}
       />
       {!hideFiatPrice && (
         <FiatPriceFormatter
           fiatPrice={fiatPrice}
-          className={`fiat flex items-center gap-1 font-normal ${rowOnSm ? 'justify-end' : ''
-            }`}
+          className={`fiat flex items-center gap-1 font-normal ${rowOnSm ? 'justify-end' : ''}`}
+          textClassName={fiatPriceTextClassName}
         />
       )}
     </div>
   );
-}
+};
+
+export default PriceFormatter;

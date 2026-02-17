@@ -1,21 +1,23 @@
 import { TokenChip } from '@/components/TokenChip';
 import { useEffect, useState } from 'react';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import { useTokenList } from '../../../components/dex/hooks/useTokenList';
+import { useTranslation } from 'react-i18next';
+import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
+import Spinner from '@/components/Spinner';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
+
 import { useAccount, useDex } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
 import { fromAettos } from '../../../libs/dex';
 import { usePool } from '../context/PoolProvider';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
-import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
-import Spinner from '@/components/Spinner';
 
-export default function RemoveLiquidityForm() {
+const RemoveLiquidityForm = () => {
+  const { t } = useTranslation('common');
   const { selectedPosition, clearSelection, onPositionUpdated } = usePool();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { executeRemoveLiquidity } = useAddLiquidity();
-  
+
   const [percentage, setPercentage] = useState<number>(25);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,6 @@ export default function RemoveLiquidityForm() {
     setCustomAmount('');
     setUseCustomAmount(false);
   }, [selectedPosition]);
-
 
   if (!selectedPosition) {
     return (
@@ -54,28 +55,43 @@ export default function RemoveLiquidityForm() {
       </div>
     );
   }
+  // selectedPosition.balance is already in correct LP token format (string of bigint aettos)
+  // LP tokens have 18 decimals, so we need to convert from aettos to decimal representation
+  const lpAmount = selectedPosition.balance ? Decimal.from(fromAettos(selectedPosition.balance, 18)) : Decimal.from('0');
+
+  let removeAmount: Decimal;
+  if (useCustomAmount) {
+    removeAmount = Decimal.from(customAmount || '0');
+  } else if (percentage === 100) {
+    removeAmount = lpAmount; // Use exact balance for 100% to avoid precision loss
+  } else {
+    removeAmount = lpAmount.mul(percentage).div(100);
+  }
+
+  // For 100% removal, bypass conversion completely by using the raw balance
+  let removeAmountForTransaction: string;
+  if (useCustomAmount) {
+    removeAmountForTransaction = customAmount;
+  } else if (percentage === 100) {
+    // Convert raw balance directly to avoid any precision loss
+    removeAmountForTransaction = fromAettos(selectedPosition.balance, 18);
+  } else {
+    removeAmountForTransaction = removeAmount.toString();
+  }
 
   const handleRemove = async () => {
     if (!address || !selectedPosition) return;
-    
+
     setLoading(true);
     try {
       const liquidityToRemove = removeAmountForTransaction;
-      
-      // Debug logging to understand the balance conversion
-      console.log('=== REMOVE LIQUIDITY DEBUG ===');
-      console.log('selectedPosition.balance (raw):', selectedPosition.balance);
-      console.log('lpAmount (converted):', lpAmount.toString());
-      console.log('lpAmount (max precision):', lpAmount.toStringWithoutPrecision());
-      console.log('percentage:', percentage);
-      console.log('useCustomAmount:', useCustomAmount);
-      console.log('removeAmount:', removeAmount.toString());
-      console.log('removeAmountForTransaction:', removeAmountForTransaction);
-      console.log('=====================================');
-      
+
       // Determine if this is an AE pair
-      const isAePair = selectedPosition.token0 === BridgeConstants.aeternity.default_ae || selectedPosition.token1 === BridgeConstants.aeternity.default_ae;
-      
+      const isAePair = (
+        selectedPosition.token0 === BridgeConstants.aeternity.default_ae
+        || selectedPosition.token1 === BridgeConstants.aeternity.default_ae
+      );
+
       // Execute remove liquidity
       const txHash = await executeRemoveLiquidity({
         tokenA: selectedPosition.token0,
@@ -85,44 +101,26 @@ export default function RemoveLiquidityForm() {
         deadlineMins,
         isAePair,
         isFullRemoval: percentage === 100 && !useCustomAmount,
-        rawBalance: percentage === 100 && !useCustomAmount ? selectedPosition.balance : undefined
+        rawBalance: percentage === 100 && !useCustomAmount ? selectedPosition.balance : undefined,
       });
-      
+
       if (txHash) {
         setLoading(false);
         setShowConfirm(false);
         clearSelection();
-        
+
         // Refresh positions after successful transaction
         await onPositionUpdated();
       }
-    } catch (error) {
-      console.error('Remove liquidity failed:', error);
+    } catch {
       setLoading(false);
     }
   };
 
-  // selectedPosition.balance is already in correct LP token format (string of bigint aettos)
-  // LP tokens have 18 decimals, so we need to convert from aettos to decimal representation
-  const lpAmount = selectedPosition.balance ? Decimal.from(fromAettos(selectedPosition.balance, 18)) : Decimal.from('0');
-  const removeAmount = useCustomAmount 
-    ? Decimal.from(customAmount || '0')
-    : percentage === 100 
-      ? lpAmount  // Use exact balance for 100% to avoid precision loss
-      : lpAmount.mul(percentage).div(100);
-  
-  // For 100% removal, bypass conversion completely by using the raw balance
-  const removeAmountForTransaction = useCustomAmount 
-    ? customAmount 
-    : percentage === 100 
-      ? fromAettos(selectedPosition.balance, 18)  // Convert raw balance directly to avoid any precision loss
-      // ? selectedPosition.balance
-      : removeAmount.toString();
-  
-  const estimatedValueUsd = selectedPosition.valueUsd 
-    ? Decimal.from(selectedPosition.valueUsd).mul(useCustomAmount 
-        ? (Number(customAmount) / Number(lpAmount.toString())) * 100 
-        : percentage).div(100)
+  const estimatedValueUsd = selectedPosition.valueUsd
+    ? Decimal.from(selectedPosition.valueUsd).mul(useCustomAmount
+      ? (Number(customAmount) / Number(lpAmount.toString())) * 100
+      : percentage).div(100)
     : null;
 
   const percentageButtons = [25, 50, 75, 100];
@@ -146,6 +144,7 @@ export default function RemoveLiquidityForm() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setShowConfirm(false)}
             className="w-8 h-8 rounded-full border border-white/10 bg-white/[0.02] text-white/60 cursor-pointer flex items-center justify-center text-sm transition-all duration-200 hover:bg-[#4ecdc4] hover:text-white"
           >
@@ -162,7 +161,7 @@ export default function RemoveLiquidityForm() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-            <TokenChip address={selectedPosition.token0} />
+              <TokenChip address={selectedPosition.token0} />
               {/* <AddressChip address={selectedPosition.token0} hideAvatar /> */}
               <span className="text-white/60 text-xs">+</span>
               <TokenChip address={selectedPosition.token1} />
@@ -176,8 +175,8 @@ export default function RemoveLiquidityForm() {
                 LP Tokens to Remove
               </div>
               <div className="text-base font-semibold text-white">
-                {percentage === 100 && !useCustomAmount 
-                  ? lpAmount.prettifyWithMaxPrecision() 
+                {percentage === 100 && !useCustomAmount
+                  ? lpAmount.prettifyWithMaxPrecision()
                   : removeAmount.prettify()}
               </div>
             </div>
@@ -186,10 +185,9 @@ export default function RemoveLiquidityForm() {
                 Percentage
               </div>
               <div className="text-base font-semibold text-[#4ecdc4]">
-                {useCustomAmount 
+                {useCustomAmount
                   ? `${((Number(customAmount) / Number(lpAmount.toString())) * 100).toFixed(1)}%`
-                  : `${percentage}%`
-                }
+                  : `${percentage}%`}
               </div>
             </div>
           </div>
@@ -200,7 +198,8 @@ export default function RemoveLiquidityForm() {
                 Estimated Value
               </div>
               <div className="text-lg font-bold text-green-400">
-                ${estimatedValueUsd.prettify()}
+                $
+                {estimatedValueUsd.prettify()}
               </div>
             </div>
           )}
@@ -209,17 +208,19 @@ export default function RemoveLiquidityForm() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={() => setShowConfirm(false)}
             className="flex-1 px-6 py-4 rounded-2xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleRemove}
             disabled={loading}
             className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              loading 
-                ? 'bg-white/10 cursor-not-allowed opacity-60' 
+              loading
+                ? 'bg-white/10 cursor-not-allowed opacity-60'
                 : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
@@ -253,6 +254,7 @@ export default function RemoveLiquidityForm() {
           </div>
         </div>
         <button
+          type="button"
           onClick={clearSelection}
           className="w-8 h-8 rounded-full border border-white/10 bg-white/[0.02] text-white/60 cursor-pointer flex items-center justify-center text-sm transition-all duration-200 hover:bg-[#4ecdc4] hover:text-white"
         >
@@ -272,7 +274,7 @@ export default function RemoveLiquidityForm() {
             <TokenChip address={selectedPosition.token1} />
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div>
             <div className="text-white/60 mb-0.5">
@@ -288,7 +290,8 @@ export default function RemoveLiquidityForm() {
                 Total Value
               </div>
               <div className="text-green-400 font-semibold">
-                ${Decimal.from(selectedPosition.valueUsd).prettify()}
+                $
+                {Decimal.from(selectedPosition.valueUsd).prettify()}
               </div>
             </div>
           )}
@@ -303,20 +306,22 @@ export default function RemoveLiquidityForm() {
           </label>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setUseCustomAmount(false)}
               className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
-                useCustomAmount 
-                  ? 'border-white/10 bg-white/[0.02] text-white/60' 
+                useCustomAmount
+                  ? 'border-white/10 bg-white/[0.02] text-white/60'
                   : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
               }`}
             >
               %
             </button>
             <button
+              type="button"
               onClick={() => setUseCustomAmount(true)}
               className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
-                !useCustomAmount 
-                  ? 'border-white/10 bg-white/[0.02] text-white/60' 
+                !useCustomAmount
+                  ? 'border-white/10 bg-white/[0.02] text-white/60'
                   : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
               }`}
             >
@@ -331,15 +336,17 @@ export default function RemoveLiquidityForm() {
             <div className="grid grid-cols-4 gap-2 mb-4">
               {percentageButtons.map((pct) => (
                 <button
+                  type="button"
                   key={pct}
                   onClick={() => setPercentage(pct)}
                   className={`py-3 px-2 rounded-xl border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${
-                    percentage === pct 
-                      ? 'border-[#4ecdc4] bg-[#4ecdc4] text-white' 
+                    percentage === pct
+                      ? 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
                       : 'border-white/10 bg-white/[0.02] text-white hover:bg-white/10'
                   }`}
                 >
-                  {pct}%
+                  {pct}
+                  %
                 </button>
               ))}
             </div>
@@ -351,7 +358,8 @@ export default function RemoveLiquidityForm() {
                   Slide to adjust
                 </span>
                 <span className="text-base font-bold text-[#4ecdc4]">
-                  {percentage}%
+                  {percentage}
+                  %
                 </span>
               </div>
               <input
@@ -362,7 +370,7 @@ export default function RemoveLiquidityForm() {
                 onChange={(e) => setPercentage(Number(e.target.value))}
                 className="w-full h-1.5 rounded-sm outline-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #4ecdc4 0%, #4ecdc4 ${percentage}%, rgba(255,255,255,0.1) ${percentage}%, rgba(255,255,255,0.1) 100%)`
+                  background: `linear-gradient(to right, #4ecdc4 0%, #4ecdc4 ${percentage}%, rgba(255,255,255,0.1) ${percentage}%, rgba(255,255,255,0.1) 100%)`,
                 }}
               />
             </div>
@@ -379,15 +387,18 @@ export default function RemoveLiquidityForm() {
               type="number"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value)}
-              placeholder="0.0"
+              placeholder={t('placeholders.amount')}
               max={lpAmount.toString()}
               className="w-full py-3 border-none bg-transparent text-white text-lg font-semibold outline-none"
             />
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-white/60">
-                Max: {lpAmount.prettify()}
+                Max:
+                {' '}
+                {lpAmount.prettify()}
               </span>
               <button
+                type="button"
                 onClick={() => setCustomAmount(lpAmount.toString())}
                 className="px-2 py-1 rounded-md border border-[#4ecdc4] bg-transparent text-[#4ecdc4] cursor-pointer text-xs font-medium hover:bg-[#4ecdc4] hover:text-white transition-all duration-200"
               >
@@ -406,8 +417,8 @@ export default function RemoveLiquidityForm() {
               LP Tokens to Remove
             </div>
             <div className="text-base font-semibold text-white">
-              {percentage === 100 && !useCustomAmount 
-                ? lpAmount.prettifyWithMaxPrecision() 
+              {percentage === 100 && !useCustomAmount
+                ? lpAmount.prettifyWithMaxPrecision()
                 : removeAmount.prettify(12)}
             </div>
           </div>
@@ -416,10 +427,9 @@ export default function RemoveLiquidityForm() {
               Percentage
             </div>
             <div className="text-base font-semibold text-[#4ecdc4]">
-              {useCustomAmount 
+              {useCustomAmount
                 ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
-                : `${percentage}%`
-              }
+                : `${percentage}%`}
             </div>
           </div>
         </div>
@@ -430,7 +440,8 @@ export default function RemoveLiquidityForm() {
               Estimated Value
             </div>
             <div className="text-xl font-bold text-green-400">
-              ${estimatedValueUsd.prettify()}
+              $
+              {estimatedValueUsd.prettify()}
             </div>
           </div>
         )}
@@ -438,19 +449,27 @@ export default function RemoveLiquidityForm() {
 
       {/* Remove Button */}
       <button
+        type="button"
         onClick={() => setShowConfirm(true)}
-        disabled={removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))}
+        disabled={
+          removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
+        }
         className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
             ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
             : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
-        💧 Remove {useCustomAmount 
+        💧 Remove
+        {' '}
+        {useCustomAmount
           ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
-          : `${percentage}%`
-        } Liquidity
+          : `${percentage}%`}
+        {' '}
+        Liquidity
       </button>
     </div>
   );
-}
+};
+
+export default RemoveLiquidityForm;

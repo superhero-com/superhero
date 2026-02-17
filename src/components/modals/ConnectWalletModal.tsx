@@ -22,7 +22,9 @@ function getInstallItems() {
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isMobile = isAndroid || isIOS || /Mobi/i.test(ua);
   const isFirefox = /Firefox\//i.test(ua);
-  const isChromeFamily = (/Chrome\//i.test(ua) || /Chromium\//i.test(ua)) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua);
+  const isChromeFamily = (
+    /Chrome\//i.test(ua) || /Chromium\//i.test(ua)
+  ) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua);
 
   const LINKS = {
     chrome: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne',
@@ -55,7 +57,7 @@ function getInstallItems() {
   };
 }
 
-export default function ConnectWalletModal({ onClose }: Props) {
+const ConnectWalletModal = ({ onClose }: Props) => {
   const { connectWallet, connectingWallet } = useWalletConnect();
 
   const install = useMemo(() => getInstallItems(), []);
@@ -69,14 +71,17 @@ export default function ConnectWalletModal({ onClose }: Props) {
     <div className="text-foreground p-2 sm:p-0 text-center sm:text-left">
       {/* Desktop/tablet: top-wide notice */}
       <div className="hidden sm:block w-full text-center text-[12px] text-white/60 leading-relaxed mb-3">
-        By connecting your wallet you agree to the{' '}
+        By connecting your wallet you agree to the
+        {' '}
         <Link
           to="/terms"
           className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
         >
           Terms of Use
         </Link>
-        {' '}and{' '}
+        {' '}
+        and
+        {' '}
         <Link
           to="/privacy"
           className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
@@ -93,14 +98,17 @@ export default function ConnectWalletModal({ onClose }: Props) {
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-3 sm:gap-2">
           {/* Mobile-only notice above button with larger gap */}
           <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed px-2">
-            By connecting your wallet you agree to the{' '}
+            By connecting your wallet you agree to the
+            {' '}
             <Link
               to="/terms"
               className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
             >
               Terms of Use
             </Link>
-            {' '}and{' '}
+            {' '}
+            and
+            {' '}
             <Link
               to="/privacy"
               className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
@@ -132,8 +140,8 @@ export default function ConnectWalletModal({ onClose }: Props) {
                   <span className="text-base sm:text-lg text-foreground font-semibold truncate">{label}</span>
                 </div>
                 <svg className="hidden sm:block w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M7 17L17 7"/>
-                  <path d="M7 7h10v10"/>
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
                 </svg>
               </div>
             </a>
@@ -141,9 +149,8 @@ export default function ConnectWalletModal({ onClose }: Props) {
         </div>
       </div>
 
-      
     </div>
   );
-}
+};
 
-
+export default ConnectWalletModal;

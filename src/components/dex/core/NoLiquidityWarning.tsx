@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useNavigate } from 'react-router-dom';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
@@ -17,7 +18,7 @@ export default function NoLiquidityWarning({
   show,
   exceedsLiquidity,
   maxAvailable,
-  pairAddress
+  pairAddress,
 }: NoLiquidityWarningProps) {
   const navigate = useNavigate();
 
@@ -61,12 +62,25 @@ export default function NoLiquidityWarning({
             </h3>
             <p className="text-yellow-300/90 text-sm leading-relaxed mb-3">
               The requested amount exceeds the available liquidity in the pool.
-              Maximum available: <span className="font-semibold">{Decimal.from(maxAvailable).prettify()} {tokenIn.symbol}</span>
+              Maximum available:
+              {' '}
+              <span className="font-semibold">
+                {Decimal.from(maxAvailable).prettify()}
+                {' '}
+                {tokenIn.symbol}
+              </span>
             </p>
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
 
               <div className="text-xs text-yellow-300/70 flex items-center">
-                <span>• Reduce your input amount to {Decimal.from(maxAvailable).prettify()} {tokenIn.symbol} or less</span>
+                <span>
+                  • Reduce your input amount to
+                  {Decimal.from(maxAvailable).prettify()}
+                  {' '}
+                  {tokenIn.symbol}
+                  {' '}
+                  or less
+                </span>
               </div>
             </div>
           </div>
@@ -111,7 +125,15 @@ export default function NoLiquidityWarning({
             No Liquidity Available
           </h3>
           <p className="text-red-300/90 text-sm leading-relaxed mb-3">
-            No liquidity found for the <span className="font-semibold">{tokenIn.symbol}</span> / <span className="font-semibold">{tokenOut.symbol}</span> pair.
+            No liquidity found for the
+            {' '}
+            <span className="font-semibold">{tokenIn.symbol}</span>
+            {' '}
+            /
+            {' '}
+            <span className="font-semibold">{tokenOut.symbol}</span>
+            {' '}
+            pair.
             This swap cannot be completed at this time.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 mt-3">

@@ -1,5 +1,7 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import AeButton from '../AeButton';
 
@@ -26,7 +28,7 @@ const MessageSkeleton = () => (
 );
 
 // Individual message component
-const MessageItem = ({ message, index }: { message: QualiMessage; index: number }) => {
+const MessageItem = ({ message }: { message: QualiMessage }) => {
   const formatTimestamp = (ts?: number) => {
     if (!ts) return '';
     try {
@@ -36,14 +38,15 @@ const MessageItem = ({ message, index }: { message: QualiMessage; index: number 
     }
   };
 
-  function parseAddress(address: string) {
-    if (address.startsWith('@')) {
-      address = address.slice(1);
+  function parseAddress(rawAddress: string) {
+    let parsedAddress = rawAddress;
+    if (parsedAddress.startsWith('@')) {
+      parsedAddress = parsedAddress.slice(1);
     }
-    if (address.includes(':')) {
-      address = address.split(':')[0];
+    if (parsedAddress.includes(':')) {
+      [parsedAddress] = parsedAddress.split(':');
     }
-    return address;
+    return parsedAddress;
   }
 
   return (
@@ -87,6 +90,8 @@ const EmptyState = () => (
   </div>
 );
 
+const loadingSkeletonKeys = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
+
 // Add chat CTAs component (reimagined layout)
 const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
   const roomName = (token.name || '').replace(/-/g, '');
@@ -107,10 +112,15 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         </div>
         <div className="flex-1">
           <h4 className="text-white font-semibold text-[16px] mb-0.5 tracking-wide">
-            Chat for #{token.name || 'this token'} holders
+            Chat for #
+            {token.name || 'this token'}
+            {' '}
+            holders
           </h4>
           <p className="text-white/70 text-xs leading-relaxed">
-            Buy this token to join the exclusive chat rooms. Your wallet proves ownership; access is token‑gated.
+            Buy this token to join the exclusive chat rooms.
+            {' '}
+            Your wallet proves ownership; access is token‑gated.
           </p>
         </div>
       </div>
@@ -160,7 +170,8 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         </a>
       </div>
       <div className="mt-3 text-xs opacity-70 text-white/70 text-center">
-        Service provided by{' '}
+        Service provided by
+        {' '}
         <a
           href="https://quali.chat"
           target="_blank"
@@ -174,7 +185,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
   );
 };
 
-export default function TokenChat({ token, mode = 'full' }: Props) {
+const TokenChat = ({ token, mode = 'full' }: Props) => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     from: undefined,
@@ -225,7 +236,7 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
     }
 
     retryTimeoutRef.current = setTimeout(() => {
-      setState(prevState => {
+      setState((prevState) => {
         if (prevState.retryCount >= maxRetries) {
           return {
             ...prevState,
@@ -249,7 +260,7 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
 
   const loadMessages = useCallback(async (isInitial = false) => {
     // Check if we should proceed with loading
-    setState(prevState => {
+    setState((prevState) => {
       if (prevState.loading || prevState.endReached) return prevState;
       return { ...prevState, loading: true, error: null };
     });
@@ -259,13 +270,13 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
       const response = await QualiChatService.getTokenMessages(
         currentToken.name,
         currentToken.address,
-        { from: fromRef.current, limit: 20 }
+        { from: fromRef.current, limit: 20 },
       );
 
       const textMessages = (response?.data || [])
         .filter((m) => m?.content?.msgtype === 'm.text');
 
-      setState(currentState => ({
+      setState((currentState) => ({
         ...currentState,
         messages: isInitial ? textMessages : [...currentState.messages, ...textMessages],
         from: response?.end || undefined,
@@ -278,14 +289,14 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
       fromRef.current = response?.end || undefined;
     } catch (error: any) {
       if (error?.status === 404) {
-        setState(currentState => ({
+        setState((currentState) => ({
           ...currentState,
           loading: false,
           endReached: true,
           retryCount: 0,
         }));
       } else {
-        setState(currentState => {
+        setState((currentState) => {
           const shouldRetry = currentState.retryCount < maxRetries;
 
           if (shouldRetry) {
@@ -296,14 +307,13 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
               loading: false,
               error: `Failed to load messages. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
             };
-          } else {
-            // Max retries reached
-            return {
-              ...currentState,
-              loading: false,
-              error: 'Unable to load messages after multiple attempts. Please try again later.',
-            };
           }
+          // Max retries reached
+          return {
+            ...currentState,
+            loading: false,
+            error: 'Unable to load messages after multiple attempts. Please try again later.',
+          };
         });
       }
     }
@@ -328,12 +338,10 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
   }, [token?.address, token?.name, showMessages, loadMessages]);
 
   // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
+  useEffect(() => () => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
   }, []);
 
   const hasMessages = state.messages.length > 0;
@@ -351,18 +359,17 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
 
       {showMessages && !state.error && (
         <div className="grid gap-2">
-          {state.messages.map((message, index) => (
+          {state.messages.map((message) => (
             <MessageItem
-              key={`${message.sender}-${message.timestamp}-${index}`}
+              key={`${message.sender}-${message.timestamp}-${message.content?.body || ''}`}
               message={message}
-              index={index}
             />
           ))}
 
           {state.loading && (
             <>
-              {Array.from({ length: 3 }, (_, i) => (
-                <MessageSkeleton key={`skeleton-${i}`} />
+              {loadingSkeletonKeys.map((key) => (
+                <MessageSkeleton key={key} />
               ))}
             </>
           )}
@@ -389,6 +396,6 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
       )}
     </div>
   );
-}
+};
 
-
+export default TokenChat;

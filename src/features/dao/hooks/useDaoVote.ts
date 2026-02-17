@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  useState, useEffect, useCallback, useMemo,
+} from 'react';
 import { Encoded } from '@aeternity/aepp-sdk';
-import { initDAOVote, toTokenDecimals, Vote, VOTE_STATE_LABEL, VoteState } from 'bctsl-sdk';
-import { useAeSdk } from '@/hooks';
-import { useAccount } from '@/hooks';
+import {
+  initDAOVote, toTokenDecimals, Vote, VOTE_STATE_LABEL, VoteState,
+} from 'bctsl-sdk';
+import { useAeSdk, useAccount } from '@/hooks';
 import { useDao } from './useDao';
 
 export interface UseDaoVoteProps {
@@ -17,76 +20,70 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
   const [voteStateLabel, setVoteStateLabel] = useState<VOTE_STATE_LABEL>();
   const [actionLoading, setActionLoading] = useState<boolean>(false);
 
-  const { sdk, currentBlockHeight } = useAeSdk();
+  const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
 
   const dao = useDao({
     tokenSaleAddress,
   });
 
-
   const canVote = useMemo(
-    () =>
-      activeAccount &&
-      voteState &&
-      voteStateLabel &&
-      sdk &&
-      vote?.canVote(voteStateLabel, voteState, activeAccount as any),
-    [activeAccount, voteState, voteStateLabel, sdk, vote]
+    () => activeAccount
+      && voteState
+      && voteStateLabel
+      && sdk
+      && vote?.canVote(voteStateLabel, voteState, activeAccount as any),
+    [activeAccount, voteState, voteStateLabel, sdk, vote],
   );
 
   const canRevokeVote = useMemo(
-    () =>
-      voteState &&
-      voteStateLabel &&
-      activeAccount &&
-      sdk &&
-      vote?.canRevokeVote(voteStateLabel, voteState, activeAccount as any),
-    [voteState, voteStateLabel, activeAccount, sdk, vote]
+    () => voteState
+      && voteStateLabel
+      && activeAccount
+      && sdk
+      && vote?.canRevokeVote(voteStateLabel, voteState, activeAccount as any),
+    [voteState, voteStateLabel, activeAccount, sdk, vote],
   );
 
   const canWithdraw = useMemo(
-    () =>
-      voteState &&
-      voteStateLabel &&
-      sdk &&
-      vote?.canWithdraw(voteStateLabel, voteState, activeAccount as any),
-    [voteState, voteStateLabel, sdk, vote, activeAccount]
+    () => voteState
+      && voteStateLabel
+      && sdk
+      && vote?.canWithdraw(voteStateLabel, voteState, activeAccount as any),
+    [voteState, voteStateLabel, sdk, vote, activeAccount],
   );
 
   const canApply = useMemo(
     () => voteStateLabel && vote?.canApply(voteStateLabel),
-    [voteStateLabel, vote]
+    [voteStateLabel, vote],
   );
 
   const voteYesPercentage = useMemo(
     () => voteState && vote?.voteYesPercentage(voteState),
-    [voteState, vote]
+    [voteState, vote],
   );
 
   const voteStakeYesPercentage = useMemo(
-    () =>
-      voteState && dao.tokenSupply
-        ? vote?.voteStakeYesPercentage(voteState, dao.tokenSupply)
-        : 1,
-    [voteState, dao.tokenSupply, vote]
+    () => (voteState && dao.tokenSupply
+      ? vote?.voteStakeYesPercentage(voteState, dao.tokenSupply)
+      : 1),
+    [voteState, dao.tokenSupply, vote],
   );
 
   const userVoteOrLockedInfo = useMemo(() => {
     if (
-      voteState &&
-      dao.tokenMetaInfo &&
-      sdk &&
-      vote?.accountVoted(voteState, activeAccount as any)
+      voteState
+      && dao.tokenMetaInfo
+      && sdk
+      && vote?.accountVoted(voteState, activeAccount as any)
     ) {
       const accountVotedBalance = vote?.accountVotedBalance(
         voteState,
         activeAccount as any,
       );
 
-      const accountVotedBalanceTokenDecimals =
-        accountVotedBalance !== undefined &&
-        toTokenDecimals(accountVotedBalance, dao.tokenMetaInfo.decimals, 0n);
+      const accountVotedBalanceTokenDecimals = accountVotedBalance !== undefined
+        && toTokenDecimals(accountVotedBalance, dao.tokenMetaInfo.decimals, 0n);
 
       const accountHasLockedBalance = vote?.accountHasLockedBalance(
         voteState,
@@ -103,20 +100,20 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
       } ${accountVotedBalanceTokenDecimals} ${
         dao.tokenMetaInfo.symbol
       } in ${accountVotedAgreement ? 'Agreement' : 'Disagreement'}`;
-    } else return '';
+    } return '';
   }, [voteState, dao.tokenMetaInfo, sdk, vote, activeAccount]);
 
   const refreshVoteState = useCallback(async () => {
     if (!vote) return;
-    
+
     const newVoteState = await vote.state();
     setVoteState(newVoteState);
-    
+
     if (newVoteState && dao.state && dao.tokenSupply !== undefined) {
       const newVoteStateLabel = await vote.voteStateLabel(
-        newVoteState, 
-        dao.state, 
-        dao.tokenSupply
+        newVoteState,
+        dao.state,
+        dao.tokenSupply,
       );
       setVoteStateLabel(newVoteStateLabel);
     }
@@ -124,18 +121,18 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   const init = useCallback(async () => {
     if (!sdk) return;
-    
+
     const newVote = await initDAOVote(sdk, voteAddress, voteId);
     setVote(newVote);
-    
+
     const newVoteState = await newVote.state();
     setVoteState(newVoteState);
-    
+
     if (dao.state && dao.tokenSupply !== undefined) {
       const newVoteStateLabel = await newVote.voteStateLabel(
-        newVoteState, 
-        dao.state, 
-        dao.tokenSupply
+        newVoteState,
+        dao.state,
+        dao.tokenSupply,
       );
       setVoteStateLabel(newVoteStateLabel);
     }
@@ -147,21 +144,23 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     }
 
     if (dao.tokenSupply) {
+      // TODO: check if this is used
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const vsl = await vote.voteStateLabel(
         voteState,
         dao.state!,
         dao.tokenSupply,
       );
-      console.log('vsl', vsl);
     }
 
     if (voteStateLabel && voteState) {
+      // TODO: check if this is used
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const canV = vote.canVote(
         voteStateLabel,
         voteState,
         activeAccount as any,
       );
-      console.log('can vote', canV);
     }
   }, [voteState, vote, dao.tokenSupply, dao.state, voteStateLabel, activeAccount]);
 
@@ -169,12 +168,11 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     setActionLoading(true);
     try {
       await action();
-    } catch (e) {
-      console.error(e);
+    } finally {
+      await refreshVoteState();
+      await dao.init();
+      setActionLoading(false);
     }
-    await refreshVoteState();
-    await dao.init();
-    setActionLoading(false);
   }, [refreshVoteState, dao]);
 
   const revokeVote = useCallback(() => {
@@ -189,14 +187,10 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   const voteOption = useCallback(async (option: boolean) => {
     if (!vote || !dao.userTokenBalance || !dao.tokenInstanceRef) {
-
-        console.log('voteOption', vote, dao.userTokenBalance, dao.tokenInstanceRef);
-        return
+      return;
     }
-    
-    applyAction(async () =>
-      vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!),
-    );
+
+    applyAction(async () => vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!));
   }, [vote, dao.userTokenBalance, dao.tokenInstanceRef, applyAction]);
 
   // Initialize when tokenSaleAddress changes

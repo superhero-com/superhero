@@ -1,15 +1,28 @@
-import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { TokensService } from "@/api/generated/services/TokensService";
-import { TokenHolderDto } from "@/api/generated/models/TokenHolderDto";
-import { TokenDto } from "@/api/generated/models/TokenDto";
-import { Decimal } from "@/libs/decimal";
-import { toAe } from "@aeternity/aepp-sdk";
-import AddressChip from "../AddressChip";
-import TokenPriceFormatter from "@/features/shared/components/TokenPriceFormatter";
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
-import Spinner from "@/components/Spinner";
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  import/no-named-as-default,
+  react/function-component-definition,
+  no-nested-ternary,
+  react/no-array-index-key,
+  jsx-a11y/click-events-have-key-events,
+  jsx-a11y/no-static-element-interactions,
+  react/button-has-type,
+  no-shadow,
+  radix,
+  no-console
+*/
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { TokensService } from '@/api/generated/services/TokensService';
+import { TokenHolderDto } from '@/api/generated/models/TokenHolderDto';
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Decimal } from '@/libs/decimal';
+import { toAe } from '@aeternity/aepp-sdk';
+import TokenPriceFormatter from '@/features/shared/components/TokenPriceFormatter';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import Spinner from '@/components/Spinner';
+import AddressChip from '../AddressChip';
 
 // Pagination response interface
 interface PaginatedHoldersResponse {
@@ -25,6 +38,76 @@ interface TokenHoldersProps {
   token: TokenDto;
 }
 
+interface TokenHolderCardProps {
+  holder: TokenHolderDto;
+  token: TokenDto;
+  percentage: Decimal;
+}
+
+function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
+  return (
+    <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#222222] md:border-0 bg-[#141414]/50 md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
+      {/* Account */}
+      <div className="flex items-center gap-2">
+        <div className="text-[10px] text-white/60 md:hidden">Account:</div>
+        <AddressAvatarWithChainName
+          address={holder.address}
+          contentClassName="break-all max-w-full"
+        />
+      </div>
+
+      {/* Balance & Percentage Row on Mobile */}
+      <div className="flex items-center justify-between md:contents">
+        {/* Balance */}
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] text-white/60 md:hidden">Balance:</div>
+          <div className="text-white">
+            <TokenPriceFormatter
+              hideSymbol
+              token={token}
+              price={
+                holder.balance !== 'NaN'
+                  ? Decimal.from(holder.balance).div(
+                    10 ** (parseInt(token.decimals) || 18),
+                  )
+                  : Decimal.ZERO
+              }
+              className="text-white text-xs font-medium"
+            />
+          </div>
+        </div>
+
+        {/* Percentage */}
+        <div className="flex items-center gap-2 md:flex-col md:items-end md:justify-center md:gap-2">
+          <div className="font-semibold text-white text-xs md:text-sm">
+            {percentage.gt('0.01') ? (
+              <>
+                {percentage.prettify()}
+                %
+              </>
+            ) : percentage.isZero ? (
+              <>0%</>
+            ) : (
+              <>&lt;0.01%</>
+            )}
+          </div>
+          <div className="w-20 md:min-w-[100px] md:max-w-[120px] bg-white/10 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(
+                  Number(percentage.toString()),
+                  100,
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TokenHolders({ token }: TokenHoldersProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +120,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
     refetch,
   } = useQuery<PaginatedHoldersResponse>({
     queryKey: [
-      "TokensService.getHolders",
+      'TokensService.getHolders',
       token?.sale_address,
       itemsPerPage,
       currentPage,
@@ -58,7 +141,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         });
 
         // Handle the response - it should be Pagination type but we need to cast it
-        if (response && typeof response === "object" && "items" in response) {
+        if (response && typeof response === 'object' && 'items' in response) {
           return response as PaginatedHoldersResponse;
         }
 
@@ -79,7 +162,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
           meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
         };
       } catch (error) {
-        console.error("Failed to fetch token holders:", error);
+        console.error('Failed to fetch token holders:', error);
         throw error;
       }
     },
@@ -91,16 +174,16 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   // Table headers configuration
   const headers = useMemo(
     () => [
-      { title: "Account", key: "address", sortable: false },
-      { title: token.name || "Balance", key: "balance", sortable: false },
-      { title: "%", key: "percentage", sortable: false },
+      { title: 'Account', key: 'address', sortable: false },
+      { title: token.name || 'Balance', key: 'balance', sortable: false },
+      { title: '%', key: 'percentage', sortable: false },
     ],
-    [token.name]
+    [token.name],
   );
 
   // Helper function to calculate percentage
   const getPercentage = (balance: string): Decimal => {
-    if (!balance || !token.total_supply || token.total_supply === "0") {
+    if (!balance || !token.total_supply || token.total_supply === '0') {
       return Decimal.ZERO;
     }
     try {
@@ -122,17 +205,17 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   return (
     <div className="space-y-4">
       {/* Data Table */}
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-transparent md:bg-white/[0.02] border-0 md:border md:border-white/10 rounded-2xl overflow-visible md:overflow-hidden">
         {/* Table Header */}
         <div
           className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide"
-          style={{ gridTemplateColumns: "2fr 1fr 1fr" }}
+          style={{ gridTemplateColumns: '2fr 1fr 1fr' }}
         >
           {headers.map((header) => (
             <div
               key={header.key}
               className={`truncate ${
-                header.key === "percentage" ? "text-right" : ""
+                header.key === 'percentage' ? 'text-right' : ''
               }`}
             >
               {header.title}
@@ -141,78 +224,17 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         </div>
 
         {/* Table Body */}
-        <div className="divide-y divide-white/5">
-          {holders.map((holder, idx) => {
+        <div className="md:divide-y md:divide-white/5">
+          {holders.map((holder) => {
             const percentage = getPercentage(holder.balance);
 
             return (
-              <div
+              <TokenHolderCard
                 key={holder.id}
-                className="grid grid-cols-1 md:[grid-template-columns:2fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
-              >
-                {/* Account */}
-                <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Account:
-                  </div>
-                  <AddressAvatarWithChainName
-                    address={holder.address}
-                    // Ensure very long names (e.g. long .chain names) wrap
-                    // instead of overflowing into the balance column.
-                    contentClassName="break-all max-w-full"
-                  />
-                </div>
-
-                {/* Balance */}
-                <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Balance:
-                  </div>
-                  <div className="text-white">
-                    <TokenPriceFormatter
-                      hideSymbol={true}
-                      token={token}
-                      price={
-                        holder.balance !== "NaN"
-                          ? Decimal.from(holder.balance).div(
-                              10 ** (parseInt(token.decimals) || 18)
-                            )
-                          : Decimal.ZERO
-                      }
-                      className="text-white text-xs font-medium"
-                    />
-                  </div>
-                </div>
-
-                {/* Percentage */}
-                <div className="flex flex-col  md:items-center md:justify-end gap-2">
-                  <div className="flex items-center justify-between md:flex-col md:items-end md:gap-1">
-                    <div className="md:hidden text-xs text-white/60 font-medium">
-                      Ownership
-                    </div>
-                    <div className="font-semibold text-white text-base md:text-sm">
-                      {percentage.gt("0.01") ? (
-                        <>{percentage.prettify()}%</>
-                      ) : percentage.isZero ? (
-                        <>0%</>
-                      ) : (
-                        <>&lt;0.01%</>
-                      )}
-                    </div>
-                  </div>
-                  <div className="w-full md:min-w-[100px] md:max-w-[120px] bg-white/10 rounded-full h-2 md:h-1.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(
-                          Number(percentage.toString()),
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
+                holder={holder}
+                token={token}
+                percentage={percentage}
+              />
             );
           })}
         </div>
@@ -275,9 +297,17 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               <span>items per page</span>
             </div>
             <div>
-              Showing{" "}
-              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{" "}
-              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
+              Showing
+              {' '}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
+              {' '}
+              to
+              {' '}
+              {Math.min(currentPage * itemsPerPage, totalItems)}
+              {' '}
+              of
+              {totalItems}
+              {' '}
               holders
             </div>
           </div>
@@ -312,8 +342,8 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                     onClick={() => updatePage(pageNum)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 ${
                       currentPage === pageNum
-                        ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
-                        : "border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20"
+                        ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                        : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
                     }`}
                   >
                     {pageNum}

@@ -27,11 +27,11 @@ export const BRIDGE_ABI = [
     ],
     outputs: [],
   },
-  { 
-    type: 'function', 
-    name: 'native_eth_placeholder', 
-    stateMutability: 'view', 
-    inputs: [], 
-    outputs: [{ name: '', type: 'address' }] 
+  {
+    type: 'function',
+    name: 'native_eth_placeholder',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
   },
 ] as const;

@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext, useCallback, useContext, useMemo, useState, ReactNode,
+} from 'react';
+import { useSetAtom } from 'jotai';
 import { LiquidityPosition } from '../types/pool';
 import { useAccount } from '../../../hooks';
-import { useSetAtom } from 'jotai';
 import { invalidatePositionsAtom } from '../atoms/positionsAtoms';
 
 export type PoolAction = 'add' | 'remove' | null;
@@ -10,25 +12,25 @@ interface PoolContextType {
   // Current action state
   currentAction: PoolAction;
   setCurrentAction: (action: PoolAction) => void;
-  
+
   // Selected position for operations
   selectedPosition: LiquidityPosition | null;
   setSelectedPosition: (position: LiquidityPosition | null) => void;
-  
+
   // Token selection for new liquidity
   selectedTokenA: string;
   selectedTokenB: string;
   setSelectedTokens: (tokenA: string, tokenB: string) => void;
-  
+
   // Position refresh functionality
   refreshPositions: (() => Promise<void>) | null;
   setRefreshPositions: (refreshFn: (() => Promise<void>) | null) => void;
-  
+
   // Helper functions
   selectPositionForAdd: (position: LiquidityPosition) => void;
   selectPositionForRemove: (position: LiquidityPosition) => void;
   clearSelection: () => void;
-  
+
   // Auto-refresh after operations
   onPositionUpdated: () => Promise<void>;
 }
@@ -39,7 +41,7 @@ interface PoolProviderProps {
   children: ReactNode;
 }
 
-export function PoolProvider({ children }: PoolProviderProps) {
+export const PoolProvider = ({ children }: PoolProviderProps) => {
   const { activeAccount } = useAccount();
   const invalidatePositions = useSetAtom(invalidatePositionsAtom);
   const [currentAction, setCurrentAction] = useState<PoolAction>(null);
@@ -48,30 +50,30 @@ export function PoolProvider({ children }: PoolProviderProps) {
   const [selectedTokenB, setSelectedTokenB] = useState<string>('');
   const [refreshPositions, setRefreshPositions] = useState<(() => Promise<void>) | null>(null);
 
-  const setSelectedTokens = (tokenA: string, tokenB: string) => {
+  const setSelectedTokens = useCallback((tokenA: string, tokenB: string) => {
     setSelectedTokenA(tokenA);
     setSelectedTokenB(tokenB);
-  };
+  }, []);
 
-  const selectPositionForAdd = (position: LiquidityPosition) => {
+  const selectPositionForAdd = useCallback((position: LiquidityPosition) => {
     setSelectedPosition(position);
     setSelectedTokens(position.token0, position.token1);
     setCurrentAction('add');
-  };
+  }, [setSelectedTokens]);
 
-  const selectPositionForRemove = (position: LiquidityPosition) => {
+  const selectPositionForRemove = useCallback((position: LiquidityPosition) => {
     setSelectedPosition(position);
     setSelectedTokens(position.token0, position.token1);
     setCurrentAction('remove');
-  };
+  }, [setSelectedTokens]);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setCurrentAction(null);
     setSelectedPosition(null);
     setSelectedTokens('', '');
-  };
+  }, [setSelectedTokens]);
 
-  const onPositionUpdated = async () => {
+  const onPositionUpdated = useCallback(async () => {
     // Invalidate cached positions; the positions hook effect will reload
     if (activeAccount) {
       invalidatePositions(activeAccount);
@@ -80,9 +82,9 @@ export function PoolProvider({ children }: PoolProviderProps) {
     if (refreshPositions) {
       await refreshPositions();
     }
-  };
+  }, [activeAccount, invalidatePositions, refreshPositions]);
 
-  const value: PoolContextType = {
+  const value = useMemo<PoolContextType>(() => ({
     currentAction,
     setCurrentAction,
     selectedPosition,
@@ -96,14 +98,25 @@ export function PoolProvider({ children }: PoolProviderProps) {
     selectPositionForRemove,
     clearSelection,
     onPositionUpdated,
-  };
+  }), [
+    currentAction,
+    selectedPosition,
+    selectedTokenA,
+    selectedTokenB,
+    setSelectedTokens,
+    refreshPositions,
+    selectPositionForAdd,
+    selectPositionForRemove,
+    clearSelection,
+    onPositionUpdated,
+  ]);
 
   return (
     <PoolContext.Provider value={value}>
       {children}
     </PoolContext.Provider>
   );
-}
+};
 
 export function usePool() {
   const context = useContext(PoolContext);

@@ -1,65 +1,44 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  useState, useEffect, useMemo,
+} from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { AeButton } from '@/components/ui/ae-button';
+import { SuperheroApi } from '@/api/backend';
+import { formatNumber } from '@/utils/number';
 import SearchInput from '../../SearchInput';
-import { HeaderLogo, IconSearch } from '../../../icons';
-// import HeaderWalletButton from './HeaderWalletButton';
+import { HeaderLogo } from '../../../icons';
+
 import { getNavigationItems } from './navigationItems';
 import AddressAvatar from '../../AddressAvatar';
 import { useAeSdk } from '../../../hooks/useAeSdk';
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
-import { AeButton } from '@/components/ui/ae-button';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useModal } from '../../../hooks';
 import FooterSection from '../FooterSection';
 import { TokensService } from '../../../api/generated/services/TokensService';
-import { SuperheroApi } from '@/api/backend';
-import TokenLineChart from '@/features/trending/components/TokenLineChart';
-import { formatNumber } from '@/utils/number';
 
-
-
-export default function MobileAppHeader() {
-  const { t: tNav } = useTranslation('navigation');
+const MobileAppHeader = () => {
   const { t } = useTranslation('common');
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = getNavigationItems();
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return themeValue;
-  });
 
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const isOnFeed = pathname === '/';
   const { activeAccount } = useAeSdk();
-  const { disconnectWallet, walletInfo } = useWalletConnect();
+  const { disconnectWallet } = useWalletConnect();
   const { openModal } = useModal();
 
   const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = () => {
     disconnectWallet();
-    try { window.location.reload(); } catch {}
+    window.location.reload();
   };
   const handleProfileClick = () => {
     if (activeAccount) {
       navigate(`/users/${activeAccount}`);
-      setShowOverlay(false);
-    }
-  };
-
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('theme', next); } catch { }
-    setTheme(next);
-  }, [theme]);
-
-  const handleSearchToggle = () => {
-    setShowSearch(!showSearch);
-    if (showOverlay) {
       setShowOverlay(false);
     }
   };
@@ -93,8 +72,11 @@ export default function MobileAppHeader() {
 
     if (showOverlay || showSearch) {
       document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
     }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [showOverlay, showSearch]);
 
   const tokenPathMatch = useMemo(() => pathname.match(/^\/trends\/tokens\/([^/?#]+)/i), [pathname]);
@@ -110,7 +92,7 @@ export default function MobileAppHeader() {
   const isTokenDetail = Boolean(tokenNameParam);
 
   const { data: tokenData } = useQuery({
-    queryKey: ["TokensService.findByAddress", tokenNameParam],
+    queryKey: ['TokensService.findByAddress', tokenNameParam],
     queryFn: async () => {
       if (!tokenNameParam) return null;
       return TokensService.findByAddress({ address: tokenNameParam.toUpperCase() });
@@ -121,7 +103,7 @@ export default function MobileAppHeader() {
 
   const tokenAddress = (tokenData as any)?.sale_address || (tokenData as any)?.address;
   const { data: tokenPerformance } = useQuery({
-    queryKey: ["mobile-header-token-performance", tokenAddress],
+    queryKey: ['mobile-header-token-performance', tokenAddress],
     queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
     enabled: Boolean(tokenAddress),
     staleTime: 60 * 1000,
@@ -141,17 +123,21 @@ export default function MobileAppHeader() {
   };
 
   return (
-    <div className="z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
-      backgroundColor: 'rgba(12, 12, 20, 0.5)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderBottomColor: 'rgba(255, 255, 255, 0.14)',
-      boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
-    }}>
+    <div
+      className="z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b"
+      style={{
+        backgroundColor: 'rgba(12, 12, 20, 0.5)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+        boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
+      }}
+    >
       {/* Search Mode */}
       {showSearch ? (
         <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
           <button
+            type="button"
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={() => setShowSearch(false)}
             aria-label={t('labels.back')}
@@ -168,6 +154,7 @@ export default function MobileAppHeader() {
           {isTokenDetail ? (
             <>
               <button
+                type="button"
                 className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
                 onClick={() => navigate(-1)}
                 aria-label={t('labels.back')}
@@ -176,30 +163,40 @@ export default function MobileAppHeader() {
               </button>
               <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2">
                 <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
-                  #{String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
+                  #
+                  {String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
                 </div>
                 <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
                   <span className="text-white/90">{priceText}</span>
-                  {typeof changePercent === "number" ? (
-                    <span className={`font-semibold tabular-nums ${changePercent >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {changePercent >= 0 ? "▲" : "▼"} {Math.abs(changePercent).toFixed(2)}%
+                  {typeof changePercent === 'number' ? (
+                    <span className={`font-semibold tabular-nums ${changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {changePercent >= 0 ? '▲' : '▼'}
+                      {' '}
+                      {Math.abs(changePercent).toFixed(2)}
+                      %
                     </span>
                   ) : (
                     <span className="text-white/50">—</span>
                   )}
                 </div>
-                <button
-                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
-                  onClick={() => {
-                    const params = new URLSearchParams(search);
-                    params.set("showTrade", "1");
-                    params.set("openTrade", "1");
-                    navigate({ pathname, search: params.toString() });
-                  }}
-                  aria-label="Open trade"
-                >
-                  Trade
-                </button>
+                {
+                  tokenData?.sale_address && (
+                    <button
+                      type="button"
+                      className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                      onClick={() => {
+                        const params = new URLSearchParams(search);
+                        params.set('showTrade', '1');
+                        params.set('openTrade', '1');
+                        navigate({ pathname, search: params.toString() });
+                      }}
+                      aria-label="Open trade"
+                    >
+                      Trade
+                    </button>
+                  )
+                }
+
               </div>
             </>
           ) : (
@@ -211,23 +208,6 @@ export default function MobileAppHeader() {
             </>
           )}
 
-          {/* <button
-            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? '☀︎' : '☽'}
-          </button>
-
-          {isOnFeed && (
-            <button
-              className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-              onClick={handleSearchToggle}
-              aria-label="Search"
-            >
-              <IconSearch />
-            </button>
-          )} */}
           {/* Wallet button hidden in the top mobile header */}
           {/* <HeaderWalletButton className="flex-1" /> */}
           {!isTokenDetail && (
@@ -235,9 +215,15 @@ export default function MobileAppHeader() {
               <div className="flex-grow md:hidden" />
 
               <button
+                type="button"
                 className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
-                onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-                onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+                onClick={(e) => {
+                  handleMenuToggle();
+                  (e.currentTarget as HTMLButtonElement).blur();
+                }}
+                onTouchEnd={(e) => {
+                  (e.currentTarget as HTMLButtonElement).blur();
+                }}
                 aria-label={t('labels.openMenu')}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
                 tabIndex={-1}
@@ -266,8 +252,14 @@ export default function MobileAppHeader() {
 
       {/* Navigation Overlay */}
       {showOverlay && (
-        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
-          <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setShowOverlay(false)}
+            aria-label={t('labels.closeMenu')}
+          />
+          <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between h-[70px] px-3 border-b border-white/10 sm:px-3 flex-shrink-0">
               <h2
                 className="m-0 px-4 text-md font-semibold uppercase tracking-[0.02em] !text-white/80 !bg-transparent"
@@ -282,8 +274,12 @@ export default function MobileAppHeader() {
                 {t('labels.menu')}
               </h2>
               <button
+                type="button"
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center leading-none cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none focus:shadow-none active:shadow-none"
-                onClick={(e) => { setShowOverlay(false); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+                onClick={(e) => {
+                  setShowOverlay(false);
+                  (e.currentTarget as HTMLButtonElement).blur();
+                }}
                 aria-label={t('labels.closeMenu')}
                 tabIndex={-1}
               >
@@ -303,6 +299,7 @@ export default function MobileAppHeader() {
               {activeAccount ? (
                 <div>
                   <button
+                    type="button"
                     onClick={handleProfileClick}
                     className="w-full flex items-center gap-3 hover:opacity-80 transition-opacity"
                   >
@@ -310,11 +307,10 @@ export default function MobileAppHeader() {
                       isHoverEnabled={false}
                       address={activeAccount}
                       size={40}
-                      overlaySize={18}
-                      showBalance={true}
+                      showBalance
                       showAddressAndChainName={false}
-                      showPrimaryOnly={true}
-                      hideFallbackName={true}
+                      showPrimaryOnly
+                      hideFallbackName
                       contentClassName="px-2 pb-0"
                     />
                   </button>
@@ -336,9 +332,9 @@ export default function MobileAppHeader() {
             </div>
 
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
-              {navigationItems.filter(item => !!item.id).map((item, index) => {
-                const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
-                const baseBg = "bg-white/5 hover:bg-white/10";
+              {navigationItems.filter((item) => !!item.id).map((item) => {
+                const commonClasses = 'w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5';
+                const baseBg = 'bg-white/5 hover:bg-white/10';
                 const node = item.isExternal ? (
                   <div key={item.id} className={`${baseBg} rounded-xl`}>
                     <a
@@ -396,4 +392,6 @@ export default function MobileAppHeader() {
       )}
     </div>
   );
-}
+};
+
+export default MobileAppHeader;

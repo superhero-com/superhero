@@ -1,361 +1,398 @@
-import { AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node } from "@aeternity/aepp-sdk";
-import { useAtom } from "jotai";
-import { createContext, useEffect, useRef, useState } from "react";
-import { activeAccountAtom } from "../atoms/accountAtoms";
-import { transactionsQueueAtom } from "../atoms/txQueueAtoms";
-import { walletInfoAtom } from "../atoms/walletAtoms";
-import { useModal } from "../hooks/useModal";
-import configs from "../configs";
-import { NETWORK_MAINNET } from "../utils/constants";
-import { INetwork } from "../utils/types";
-import { createDeepLinkUrl } from "../utils/url";
-import WebSocketClient from "@/libs/WebSocketClient";
+import {
+  AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node,
+} from '@aeternity/aepp-sdk';
+import { useAtom } from 'jotai';
+import {
+  createContext, useEffect, useMemo, useRef, useState, useCallback,
+} from 'react';
+import WebSocketClient from '@/libs/WebSocketClient';
+import { activeAccountAtom } from '../atoms/accountAtoms';
+import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
+import { walletInfoAtom } from '../atoms/walletAtoms';
+import { useModal } from '../hooks/useModal';
+import { configs } from '../configs';
+import { NETWORK_MAINNET } from '../utils/constants';
+import { INetwork } from '../utils/types';
+import { createDeepLinkUrl } from '../utils/url';
+
+type TxQueueEntry = {
+  status: string;
+  tx: Encoded.Transaction;
+  signUrl: string;
+};
 
 export const AeSdkContext = createContext<{
-    aeSdk: AeSdkAepp,
-    staticAeSdk: AeSdk,
-    sdkInitialized: boolean,
-    activeAccount: string,
-    currentBlockHeight: number,
-    activeNetwork: INetwork,
-    accounts: string[],
-    setActiveAccount: (account: string) => void,
-    setAccounts: (accounts: string[]) => void,
-    getCurrentGeneration: () => void,
-    addStaticAccount: (account: string) => void,
-    setActiveNetwork: (network: INetwork) => void,
-    setTransactionsQueue: (queue: Record<string, { status: string; tx: Encoded.Transaction; signUrl: string }>) => void,
-    initSdk: () => void,
-    scanForAccounts: () => void,
-    nodes: { instance: Node; name: string }[],
-}>(null);
+  aeSdk: AeSdkAepp,
+  staticAeSdk: AeSdk,
+  sdkInitialized: boolean,
+  activeAccount: string,
+  currentBlockHeight: number,
+  activeNetwork: INetwork,
+  accounts: string[],
+  setActiveAccount:(account: string) => void,
+  setAccounts: (accounts: string[]) => void,
+  getCurrentGeneration: () => void,
+  addStaticAccount: (account: string) => void,
+  setActiveNetwork: (network: INetwork) => void,
+  setTransactionsQueue: (queue: Record<string, TxQueueEntry>) => void,
+  initSdk: () => void,
+  scanForAccounts: () => void,
+  nodes: { instance: Node; name: string }[],
+    }>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
-    configs.networks,
+  configs.networks,
 ).map(({ name, url }) => ({
-    name,
-    instance: new Node(url),
+  name,
+  instance: new Node(url),
 }));
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
-    const aeSdkRef = useRef<AeSdkAepp>();
-    const staticAeSdkRef = useRef<AeSdk | null>(null);
-    const [sdkInitialized, setSdkInitialized] = useState(false);
-    const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
-    const [accounts, setAccounts] = useState<string[]>([]);
-    const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
-    const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
-    const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
-    const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
-    const transactionsQueueRef = useRef(transactionsQueue);
-    const activeAccountRef = useRef<string | undefined>(activeAccount);
-    const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const { openModal } = useModal();
+  const aeSdkRef = useRef<AeSdkAepp>();
+  const staticAeSdkRef = useRef<AeSdk | null>(null);
+  const [sdkInitialized, setSdkInitialized] = useState(false);
+  const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
+  const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
+  const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+  const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
+  const transactionsQueueRef = useRef(transactionsQueue);
+  const activeAccountRef = useRef<string | undefined>(activeAccount);
+  const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { openModal } = useModal();
 
-    // Keep the refs in sync with the atom values
-    useEffect(() => {
-        transactionsQueueRef.current = transactionsQueue;
-    }, [transactionsQueue]);
+  // Keep the refs in sync with the atom values
+  useEffect(() => {
+    transactionsQueueRef.current = transactionsQueue;
+  }, [transactionsQueue]);
 
-    useEffect(() => {
-        activeAccountRef.current = activeAccount;
-    }, [activeAccount]);
+  useEffect(() => {
+    activeAccountRef.current = activeAccount;
+  }, [activeAccount]);
 
-    // Cleanup generation polling interval on unmount
-    useEffect(() => {
-        return () => {
-            if (generationPollIntervalRef.current) {
-                clearInterval(generationPollIntervalRef.current);
-            }
-        };
-    }, []);
+  // Cleanup generation polling interval on unmount
+  useEffect(() => () => {
+    if (generationPollIntervalRef.current) {
+      clearInterval(generationPollIntervalRef.current);
+    }
+  }, []);
 
-    // Poll for account changes when wallet is connected
-    useEffect(() => {
-        if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
-            return;
-        }
-
-        const checkAccountChange = async () => {
-            try {
-                // Check the SDK's current account state
-                const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
-                const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
-                
-                // Update if there's an actual change
-                if (currentAddress && currentAddress !== activeAccountRef.current) {
-                    setActiveAccount(currentAddress);
-                    setAccounts([currentAddress]);
-                }
-            } catch (error) {
-                // Silently handle errors (wallet might be disconnected)
-            }
-        };
-
-        // Check immediately
-        checkAccountChange();
-
-        // Poll every 1 second for faster account change detection
-        const interval = setInterval(checkAccountChange, 1000);
-
-        return () => {
-            clearInterval(interval);
-        };
-    }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
-
-    async function initSdk() {
-        const _aeSdk = new AeSdkAepp({
-            name: "Superhero",
-            nodes,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            ttl: 10000,
-            onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
-            onAddressChange: (a: any) => {
-                const newAddress = Object.keys(a.current || {})[0] as any;
-                
-                if (newAddress && newAddress !== activeAccountRef.current) {
-                    setActiveAccount(newAddress);
-                    setAccounts([newAddress]);
-                }
-            },
-            onDisconnect: () => {
-                // walletInfoAtom is persisted; clear it so polling can't "resurrect" connection state after disconnect
-                setWalletInfo(undefined);
-                setActiveAccount(undefined);
-                setAccounts([]);
-            },
-        });
-
-        const _staticAeSdk = new AeSdk({
-            nodes,
-            onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
-        });
-
-        aeSdkRef.current = _aeSdk;
-        staticAeSdkRef.current = _staticAeSdk;
-
-        if (activeAccount) {
-            addStaticAccount(activeAccount);
-        }
-
-        // Clear any existing interval before creating a new one
-        if (generationPollIntervalRef.current) {
-            clearInterval(generationPollIntervalRef.current);
-        }
-
-        // Poll for current generation every 30 seconds
-        generationPollIntervalRef.current = setInterval(async () => {
-            getCurrentGeneration(_aeSdk);
-        }, 30000);
-        getCurrentGeneration(_aeSdk);
-        setSdkInitialized(true);
-
-        WebSocketClient.disconnect();
-        WebSocketClient.connect(activeNetwork.websocketUrl);
+  // Poll for account changes when wallet is connected
+  useEffect(() => {
+    if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
+      return;
     }
 
-    function getCurrentGeneration(sdk?: AeSdkAepp) {
-        (sdk || aeSdkRef.current).getCurrentGeneration().then((result) => {
-            setCurrentBlockHeight(result.keyBlock.height);
-        });
-    }
+    const checkAccountChange = async () => {
+      try {
+        // Check the SDK's current account state
+        // eslint-disable-next-line no-underscore-dangle
+        const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+        const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
 
-    async function addStaticAccount(address: any) {
-        // should wait till staticAeSdk is initialized
-        await new Promise(resolve => {
-            const interval = setInterval(() => {
-                if (staticAeSdkRef.current) {
-                    clearInterval(interval);
-                    resolve(true);
-                }
-            }, 100);
-        });
+        // Update if there's an actual change
+        if (currentAddress && currentAddress !== activeAccountRef.current) {
+          setActiveAccount(currentAddress);
+          setAccounts([currentAddress]);
+        }
+      } catch {
+        // Silently handle errors (wallet might be disconnected)
+      }
+    };
 
-        setActiveAccount(address);
-        staticAeSdkRef.current.addAccount(
-            {
-                address,
-                signTransaction: function (
-                    tx: Encoded.Transaction,
-                ): Promise<Encoded.Transaction> {
-                    const uniqueId = Math.random().toString(36).substring(7);
-                    const currentUrl = new URL(window.location.href);
-                    // reset url
-                    currentUrl.searchParams.delete("transaction");
-                    currentUrl.searchParams.delete("status");
+    // Check immediately
+    checkAccountChange();
 
-                    const currentDomain = currentUrl.origin;
+    // Poll every 1 second for faster account change detection
+    const interval = setInterval(checkAccountChange, 1000);
 
-                    // append transaction parameter for success case
-                    // const successUrl = new URL(currentUrl.href);
-                    const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
-                    successUrl.searchParams.set("transaction", "{transaction}");
-                    successUrl.searchParams.set("status", "completed");
+    // eslint-disable-next-line consistent-return
+    return () => {
+      clearInterval(interval);
+    };
+  }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
 
-                    // append transaction parameter for failed case
-                    const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
-                    cancelUrl.searchParams.set("status", "cancelled");
+  const getCurrentGeneration = useCallback((sdk?: AeSdkAepp) => {
+    const targetSdk = sdk || aeSdkRef.current;
+    if (!targetSdk) return;
+    targetSdk.getCurrentGeneration().then((result) => {
+      setCurrentBlockHeight(result.keyBlock.height);
+    });
+  }, [aeSdkRef]);
 
-                    const signUrl: any = createDeepLinkUrl({
-                        type: "sign-transaction",
-                        transaction: tx,
-                        networkId: activeNetwork.networkId,
-                        "replace-caller": "true",
-                        // decode these urls because they will be encoded again
-                        "x-success": decodeURI(successUrl.href),
-                        "x-cancel": decodeURI(cancelUrl.href),
-                    });
+  const addStaticAccount = useCallback(async (address: string) => {
+    // should wait till staticAeSdk is initialized
+    await new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (staticAeSdkRef.current) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, 100);
+    });
 
-                    setTransactionsQueue(prev => ({
-                        ...prev,
-                        [uniqueId]: {
-                            status: "pending",
-                            tx,
-                            signUrl,
-                        }
-                    }));
+    setActiveAccount(address);
+    staticAeSdkRef.current.addAccount(
+      {
+        address,
+        signTransaction(
+          tx: Encoded.Transaction,
+        ): Promise<Encoded.Transaction> {
+          const uniqueId = Math.random().toString(36).substring(7);
+          const currentUrl = new URL(window.location.href);
+          // reset url
+          currentUrl.searchParams.delete('transaction');
+          currentUrl.searchParams.delete('status');
 
-                    return new Promise((resolve, reject) => {
-                        let newWindow: Window | null = null;
-                        const windowFeatures =
-                            "name=Superhero Wallet,width=362,height=594,toolbar=false,location=false,menubar=false,popup";
+          const currentDomain = currentUrl.origin;
 
-                        let interval: NodeJS.Timeout | null = null;
-                        let timeout: NodeJS.Timeout | null = null;
-                        let isCleanedUp = false;
-                        let unloadHandler: (() => void) | null = null;
+          // append transaction parameter for success case
+          // const successUrl = new URL(currentUrl.href);
+          const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+          successUrl.searchParams.set('transaction', '{transaction}');
+          successUrl.searchParams.set('status', 'completed');
 
-                        // Cleanup function to prevent memory leaks
-                        const cleanup = () => {
-                            if (isCleanedUp) return;
-                            isCleanedUp = true;
-                            
-                            if (interval) {
-                                clearInterval(interval);
-                                interval = null;
-                            }
-                            if (timeout) {
-                                clearTimeout(timeout);
-                                timeout = null;
-                            }
-                            if (unloadHandler && typeof window !== 'undefined') {
-                                window.removeEventListener('beforeunload', unloadHandler);
-                                unloadHandler = null;
-                            }
-                            if (newWindow) {
-                                newWindow.close();
-                                newWindow = null;
-                            }
-                        };
+          // append transaction parameter for failed case
+          const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+          cancelUrl.searchParams.set('status', 'cancelled');
 
-                        openModal({
-                            name: 'transaction-confirm',
-                            props: {
-                                transaction: tx,
-                                onConfirm: () => {
-                                    /**
-                                     * By setting a name and width/height,
-                                     * the extension is forced to open in a new window
-                                     */
-                                    newWindow = window.open(signUrl, "_blank", windowFeatures);
-                                },
-                                onCancel: () => {
-                                    cleanup();
-                                    // Remove transaction from queue
-                                    const currentQueue = transactionsQueueRef.current;
-                                    if (Object.keys(currentQueue).includes(uniqueId)) {
-                                        const newQueue = { ...currentQueue };
-                                        delete newQueue[uniqueId];
-                                        setTransactionsQueue(newQueue);
-                                    }
-                                    reject(new Error("Transaction cancelled"));
-                                }
-                            }
-                        });
+          const signUrl: any = createDeepLinkUrl({
+            type: 'sign-transaction',
+            transaction: tx,
+            networkId: activeNetwork.networkId,
+            'replace-caller': 'true',
+            // decode these urls because they will be encoded again
+            'x-success': decodeURI(successUrl.href),
+            'x-cancel': decodeURI(cancelUrl.href),
+          });
 
-                        // Set a timeout to prevent infinite polling (5 minutes max)
-                        const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
-                        timeout = setTimeout(() => {
-                            cleanup();
-                            reject(new Error("Transaction polling timeout"));
-                        }, MAX_POLL_TIME);
+          setTransactionsQueue((prev) => ({
+            ...prev,
+            [uniqueId]: {
+              status: 'pending',
+              tx,
+              signUrl,
+            },
+          }));
 
-                        // Handle page unload to cleanup interval
-                        if (typeof window !== 'undefined') {
-                            unloadHandler = () => {
-                                cleanup();
-                            };
-                            window.addEventListener('beforeunload', unloadHandler);
-                        }
+          return new Promise((resolve, reject) => {
+            let newWindow: Window | null = null;
+            const windowFeatures = [
+              'name=Superhero Wallet',
+              'width=362',
+              'height=594',
+              'toolbar=false',
+              'location=false',
+              'menubar=false',
+              'popup',
+            ].join(',');
 
-                        interval = setInterval(() => {
-                            const currentQueue = transactionsQueueRef.current;
-                            if (Object.keys(currentQueue).includes(uniqueId)) {
-                                if (currentQueue[uniqueId]?.status === "cancelled") {
-                                    cleanup();
-                                    reject(new Error("Transaction cancelled"));
-                                    // delete transaction from queue
-                                    const newQueue = { ...currentQueue };
-                                    delete newQueue[uniqueId];
-                                    setTransactionsQueue(newQueue);
-                                    return;
-                                }
+            let interval: NodeJS.Timeout | null = null;
+            let timeout: NodeJS.Timeout | null = null;
+            let isCleanedUp = false;
+            let unloadHandler: (() => void) | null = null;
 
-                                if (
-                                    currentQueue[uniqueId]?.status === "completed" &&
-                                    currentQueue[uniqueId]?.transaction
-                                ) {
-                                    cleanup();
-                                    resolve(currentQueue[uniqueId].transaction);
-                                    // delete transaction from queue
-                                    const newQueue = { ...currentQueue };
-                                    delete newQueue[uniqueId];
-                                    setTransactionsQueue(newQueue);
-                                    return;
-                                }
-                            }
-                        }, 500);
-                    });
+            // Cleanup function to prevent memory leaks
+            const cleanup = () => {
+              if (isCleanedUp) return;
+              isCleanedUp = true;
+
+              if (interval) {
+                clearInterval(interval);
+                interval = null;
+              }
+              if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+              }
+              if (unloadHandler && typeof window !== 'undefined') {
+                window.removeEventListener('beforeunload', unloadHandler);
+                unloadHandler = null;
+              }
+              if (newWindow) {
+                newWindow.close();
+                newWindow = null;
+              }
+            };
+
+            openModal({
+              name: 'transaction-confirm',
+              props: {
+                transaction: tx,
+                onConfirm: () => {
+                  /**
+                   * By setting a name and width/height,
+                   * the extension is forced to open in a new window
+                   */
+                  newWindow = window.open(signUrl, '_blank', windowFeatures);
                 },
-            } as any,
-            { select: true },
-        );
-    }
+                onCancel: () => {
+                  cleanup();
+                  // Remove transaction from queue
+                  const currentQueue = transactionsQueueRef.current;
+                  if (Object.keys(currentQueue).includes(uniqueId)) {
+                    const newQueue = { ...currentQueue };
+                    delete newQueue[uniqueId];
+                    setTransactionsQueue(newQueue);
+                  }
+                  reject(new Error('Transaction cancelled'));
+                },
+              },
+            });
 
-    async function scanForAccounts() {
-        const accountsCurrent = aeSdkRef.current._accounts?.current || {};
-        const currentAddress = Object.keys(accountsCurrent)[0] as any;
+            // Set a timeout to prevent infinite polling (5 minutes max)
+            const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
+            timeout = setTimeout(() => {
+              cleanup();
+              reject(new Error('Transaction polling timeout'));
+            }, MAX_POLL_TIME);
 
-        setAccounts([currentAddress]);
-        setActiveAccount(currentAddress);
-    }
+            // Handle page unload to cleanup interval
+            if (typeof window !== 'undefined') {
+              unloadHandler = () => {
+                cleanup();
+              };
+              window.addEventListener('beforeunload', unloadHandler);
+            }
 
-    // useEffect(() => {
-    //     initSdk();
-    // }, []);
+            interval = setInterval(() => {
+              const currentQueue = transactionsQueueRef.current;
+              if (Object.keys(currentQueue).includes(uniqueId)) {
+                if (currentQueue[uniqueId]?.status === 'cancelled') {
+                  cleanup();
+                  reject(new Error('Transaction cancelled'));
+                  // delete transaction from queue
+                  const newQueue = { ...currentQueue };
+                  delete newQueue[uniqueId];
+                  setTransactionsQueue(newQueue);
+                  return;
+                }
 
-
-    return (
-        <AeSdkContext.Provider value={{
-            aeSdk: aeSdkRef.current,
-            staticAeSdk: staticAeSdkRef.current,
-            sdkInitialized,
-            activeAccount,
-            currentBlockHeight,
-            activeNetwork,
-            accounts,
-            setActiveAccount,
-            setAccounts,
-            getCurrentGeneration,
-            addStaticAccount,
-            setActiveNetwork,
-            setTransactionsQueue,
-            initSdk,
-            scanForAccounts,
-            nodes,
-        }}>
-            {children}
-        </AeSdkContext.Provider>
+                if (
+                  currentQueue[uniqueId]?.status === 'completed'
+                  && currentQueue[uniqueId]?.transaction
+                ) {
+                  cleanup();
+                  resolve(currentQueue[uniqueId].transaction);
+                  // delete transaction from queue
+                  const newQueue = { ...currentQueue };
+                  delete newQueue[uniqueId];
+                  setTransactionsQueue(newQueue);
+                }
+              }
+            }, 500);
+          });
+        },
+      } as any,
+      { select: true },
     );
+  }, [setActiveAccount, activeNetwork.networkId, setTransactionsQueue, openModal]);
+
+  const initSdk = useCallback(async () => {
+    const aeSdkInstance = new AeSdkAepp({
+      name: 'Superhero',
+      nodes,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      ttl: 10000,
+      onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
+      onAddressChange: (a: any) => {
+        const newAddress = Object.keys(a.current || {})[0] as any;
+
+        if (newAddress && newAddress !== activeAccountRef.current) {
+          setActiveAccount(newAddress);
+          setAccounts([newAddress]);
+        }
+      },
+      onDisconnect: () => {
+        // walletInfoAtom is persisted; clear it so polling can't "resurrect" connection state after disconnect
+        setWalletInfo(undefined);
+        setActiveAccount(undefined);
+        setAccounts([]);
+      },
+    });
+
+    const staticAeSdkInstance = new AeSdk({
+      nodes,
+      onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
+    });
+
+    aeSdkRef.current = aeSdkInstance;
+    staticAeSdkRef.current = staticAeSdkInstance;
+
+    if (activeAccount) {
+      addStaticAccount(activeAccount);
+    }
+
+    // Clear any existing interval before creating a new one
+    if (generationPollIntervalRef.current) {
+      clearInterval(generationPollIntervalRef.current);
+    }
+
+    // Poll for current generation every 30 seconds
+    generationPollIntervalRef.current = setInterval(async () => {
+      getCurrentGeneration(aeSdkInstance);
+    }, 30000);
+    getCurrentGeneration(aeSdkInstance);
+    setSdkInitialized(true);
+
+    WebSocketClient.disconnect();
+    WebSocketClient.connect(activeNetwork.websocketUrl);
+  }, [
+    activeAccount,
+    getCurrentGeneration,
+    activeNetwork.websocketUrl,
+    setActiveAccount,
+    setWalletInfo,
+    addStaticAccount,
+  ]);
+
+  const scanForAccounts = useCallback(async () => {
+    // eslint-disable-next-line no-underscore-dangle
+    const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+    const currentAddress = Object.keys(accountsCurrent)[0] as any;
+
+    setAccounts([currentAddress]);
+    setActiveAccount(currentAddress);
+  }, [setAccounts, setActiveAccount]);
+
+  const contextValue = useMemo(() => ({
+    aeSdk: aeSdkRef.current,
+    staticAeSdk: staticAeSdkRef.current,
+    sdkInitialized,
+    activeAccount,
+    currentBlockHeight,
+    activeNetwork,
+    accounts,
+    setActiveAccount,
+    setAccounts,
+    getCurrentGeneration,
+    addStaticAccount,
+    setActiveNetwork,
+    setTransactionsQueue,
+    initSdk,
+    scanForAccounts,
+    nodes,
+  }), [
+    sdkInitialized,
+    activeAccount,
+    currentBlockHeight,
+    activeNetwork,
+    accounts,
+    getCurrentGeneration,
+    initSdk,
+    scanForAccounts,
+    setActiveAccount,
+    setAccounts,
+    addStaticAccount,
+    setActiveNetwork,
+    setTransactionsQueue,
+  ]);
+
+  return (
+    <AeSdkContext.Provider value={contextValue}>
+      {children}
+    </AeSdkContext.Provider>
+  );
 };

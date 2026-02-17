@@ -8,5 +8,3 @@ export function makeTipKey(toAddress: string, postId: string): string {
   const normalized = String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
   return `${toAddress}|${normalized}`;
 }
-
-

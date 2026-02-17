@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import PostForm from './PostForm';
 import { useIsMobile } from '@/hooks';
+import PostForm from './PostForm';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -16,7 +16,9 @@ export interface CreatePostRef {
 }
 
 const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
-  ({ onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated }, ref) => {
+  ({
+    onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated,
+  }, ref) => {
     const postFormRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const isMobileViewport = useIsMobile();
@@ -25,7 +27,11 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
       focus: () => {
         const el = containerRef.current;
         if (!el) {
-          try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
+          try {
+            postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' });
+          } catch {
+            // Ignore focus errors
+          }
           return;
         }
         // Compute a target Y so composer lands just below top bar; avoid over-scrolling
@@ -33,14 +39,22 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
         const currentY = window.scrollY || window.pageYOffset || 0;
         const headerOffset = isMobileViewport ? 74 : 80; // tuned: mobile less scroll, desktop a bit further
         const targetY = Math.max(0, currentY + rect.top - headerOffset);
-        try { window.scrollTo({ top: targetY, behavior: 'smooth' }); } catch {}
+        try {
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
+        } catch {
+          // Ignore scroll errors
+        }
 
         if (!isMobileViewport) {
           // Desktop: don't let focus scroll again; keep position stable
           setTimeout(() => postFormRef.current?.focus({ immediate: true, preventScroll: true, scroll: 'none' }), 100);
         } else {
           // Mobile: focus immediately so the keyboard opens, after initial scroll request
-          try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
+          try {
+            postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' });
+          } catch {
+            // Ignore focus errors
+          }
         }
       },
     }));
@@ -49,22 +63,22 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
       <div ref={containerRef}>
         <PostForm
           ref={postFormRef}
-          isPost={true}
+          isPost
           onClose={onClose}
           onSuccess={onSuccess}
           className={className}
           onTextChange={onTextChange}
           onPostCreated={onPostCreated}
-          showMediaFeatures={true}
-          showEmojiPicker={true}
-          showGifInput={true}
+          showMediaFeatures
+          showEmojiPicker
+          showGifInput
           characterLimit={280}
           minHeight="60px"
           autoFocus={autoFocus}
         />
       </div>
     );
-  }
+  },
 );
 
 CreatePost.displayName = 'CreatePost';

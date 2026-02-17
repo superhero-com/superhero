@@ -1,9 +1,11 @@
-import { BrowserWindowMessageConnection, Encoded, Tag } from "@aeternity/aepp-sdk";
-import {
+import { BrowserWindowMessageConnection, Encoded, Tag } from '@aeternity/aepp-sdk';
+import type {
   TX_FUNCTIONS,
   WEB_SOCKET_CHANNELS,
-} from "@/utils/constants";
-import { CancelablePromise } from "@/api/generated/core/CancelablePromise";
+} from '@/utils/constants';
+import { CancelablePromise } from '@/api/generated/core/CancelablePromise';
+
+export type NetworkId = 'ae_mainnet' | 'ae_uat';
 
 export interface INetwork {
   url: string;
@@ -18,8 +20,6 @@ export interface INetwork {
   index?: number;
   disabled?: boolean;
 }
-
-export type NetworkId = "ae_mainnet" | "ae_uat";
 
 export interface IAppConfigs {
   app: {
@@ -57,15 +57,15 @@ export interface Wallets {
 }
 
 export type CurrencyCode =
-  | "usd"
-  | "eur"
-  | "cny"
-  | "aud"
-  | "brl"
-  | "cad"
-  | "chf"
-  | "gbp"
-  | "xau";
+  | 'usd'
+  | 'eur'
+  | 'cny'
+  | 'aud'
+  | 'brl'
+  | 'cad'
+  | 'chf'
+  | 'gbp'
+  | 'xau';
 
 export interface ICurrency {
   name: string;
@@ -114,20 +114,10 @@ export interface ITopHeader {
   txsHash: string;
   version: number;
 }
-export interface ITransaction {
-  blockHeight: number;
-  claim: any; // TODO find type
-  hash: Encoded.TxHash;
-  incomplete?: boolean;
-  microIndex: number;
-  microTime: number;
-  pending: boolean; // There are cases that not only the IPendingTransaction can be pending
-  rawTx?: any; // TODO find type
-  tipUrl?: string;
-  transactionOwner?: Encoded.AccountAddress;
-  tx: ITx;
-  url?: string;
-}
+/**
+ * Convert `key: val` objects into union of values.
+ */
+export type ObjectValues<T> = T[keyof T];
 
 export type WebSocketChannelName = ObjectValues<typeof WEB_SOCKET_CHANNELS>;
 
@@ -136,13 +126,9 @@ export interface IWebSocketSubscriptionMessage {
   target?: string;
 }
 export interface ITxArguments {
-  type: "tuple" | "list" | "int";
+  type: 'tuple' | 'list' | 'int';
   value: any; // TODO find type, this was not correct: (string | number | any[])
 }
-/**
- * Convert `key: val` objects into union of values.
- */
-export type ObjectValues<T> = T[keyof T];
 /**
  * TxFunction names coming directly from the API or ready to be sent.
  */
@@ -192,6 +178,21 @@ export interface ITx {
     tx: ITx;
   };
   VSN: string;
+}
+
+export interface ITransaction {
+  blockHeight: number;
+  claim: any; // TODO find type
+  hash: Encoded.TxHash;
+  incomplete?: boolean;
+  microIndex: number;
+  microTime: number;
+  pending: boolean; // There are cases that not only the IPendingTransaction can be pending
+  rawTx?: any; // TODO find type
+  tipUrl?: string;
+  transactionOwner?: Encoded.AccountAddress;
+  tx: ITx;
+  url?: string;
 }
 
 /**

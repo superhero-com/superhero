@@ -23,5 +23,3 @@ export function usePostTipSummary(postId?: string) {
     refetchOnWindowFocus: true,
   });
 }
-
-

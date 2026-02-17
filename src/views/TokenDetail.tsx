@@ -1,15 +1,22 @@
-import { DexPairService, DexService } from "@/api/generated";
-import { PriceDataFormatter } from "@/features/shared/components";
-import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import AeButton from "../components/AeButton";
-import { TokenPricePerformance } from "../features/dex/components";
-import { useAeSdk } from "../hooks";
-import { Decimal } from "../libs/decimal";
-import Spinner from "../components/Spinner";
-import { getPairsByTokenUsd, getTokenWithUsd } from "../libs/dexBackend";
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  react/function-component-definition,
+  react-hooks/exhaustive-deps,
+  no-unsafe-optional-chaining,
+  no-nested-ternary
+*/
+import { DexPairService, DexService } from '@/api/generated';
+import { PriceDataFormatter } from '@/features/shared/components';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import AeButton from '../components/AeButton';
+import { TokenPricePerformance } from '../features/dex/components';
+import { useAeSdk } from '../hooks';
+import { Decimal } from '../libs/decimal';
+import Spinner from '../components/Spinner';
+import { getPairsByTokenUsd, getTokenWithUsd } from '../libs/dexBackend';
 
 interface TokenData {
   address: string;
@@ -36,7 +43,6 @@ interface TokenData {
   priceChangeYear: string;
 }
 
-
 export default function TokenDetail() {
   const { activeNetwork } = useAeSdk();
   const { tokenAddress } = useParams();
@@ -45,21 +51,21 @@ export default function TokenDetail() {
   const [tokenMetaData, setTokenMetaData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<"24h" | "7d" | "30d">(
-    "24h"
+  const [selectedPeriod, setSelectedPeriod] = useState<'24h' | '7d' | '30d'>(
+    '24h',
   );
 
   const { data: tokenDetails } = useQuery({
-    queryKey: ["DexService.getDexTokenSummary", tokenAddress],
+    queryKey: ['DexService.getDexTokenSummary', tokenAddress],
     queryFn: () => DexService.getDexTokenByAddress({ address: tokenAddress }),
     enabled: !!tokenAddress,
   });
 
   const { data: aex9Data } = useQuery({
-    queryKey: ["Mdw.aex9", tokenAddress],
+    queryKey: ['Mdw.aex9', tokenAddress],
     queryFn: async () => {
       const result = await fetch(
-        `${activeNetwork.middlewareUrl}/v3/aex9/${tokenAddress}`
+        `${activeNetwork.middlewareUrl}/v3/aex9/${tokenAddress}`,
       );
       const data = await result.json();
       return data;
@@ -67,16 +73,12 @@ export default function TokenDetail() {
     enabled: !!tokenAddress,
   });
 
-  const isPositive = useMemo(() => {
-    return Number(tokenDetails?.summary?.change?.[selectedPeriod]
-      ?.percentage
-    ) >= 0
-  }, [selectedPeriod, tokenDetails?.summary?.change])
-
+  const isPositive = useMemo(() => Number(tokenDetails?.summary?.change?.[selectedPeriod]
+    ?.percentage) >= 0, [selectedPeriod, tokenDetails?.summary?.change]);
 
   async function getTokenMetaData(_tokenAddress: string) {
     const result = await fetch(
-      `${activeNetwork.middlewareUrl}/v3/aex9/${_tokenAddress}`
+      `${activeNetwork.middlewareUrl}/v3/aex9/${_tokenAddress}`,
     );
     const data = await result.json();
     return data;
@@ -99,7 +101,7 @@ export default function TokenDetail() {
         setToken(t);
         setTokenMetaData(metaData);
       } catch (e: any) {
-        setError(e.message || "Failed to load token data");
+        setError(e.message || 'Failed to load token data');
       } finally {
         setLoading(false);
       }
@@ -109,7 +111,7 @@ export default function TokenDetail() {
   const totalSupply = useMemo(() => {
     if (!tokenMetaData) return Decimal.ZERO;
     return Decimal.from(tokenMetaData?.event_supply).div(
-      10 ** tokenMetaData?.decimals
+      10 ** tokenMetaData?.decimals,
     );
   }, [tokenMetaData]);
 
@@ -150,10 +152,14 @@ export default function TokenDetail() {
                   </div>
                 ) : (
                   <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
-                    {tokenDetails?.symbol} 
+                    {tokenDetails?.symbol}
                     {
                       tokenDetails?.name && tokenDetails?.name !== tokenDetails?.symbol && (
-                        <span className="text-white/60"> / {tokenDetails?.name}</span>
+                        <span className="text-white/60">
+                          {' '}
+                          /
+                          {tokenDetails?.name}
+                        </span>
                       )
                     }
                   </h1>
@@ -167,9 +173,7 @@ export default function TokenDetail() {
             {/* Action Buttons */}
             <div className="flex gap-2 mb-6 flex-wrap">
               <AeButton
-                onClick={() =>
-                  navigate(`/defi/swap?from=AE&to=${tokenAddress}`)
-                }
+                onClick={() => navigate(`/defi/swap?from=AE&to=${tokenAddress}`)}
                 variant="secondary-dark"
                 size="medium"
                 className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -177,9 +181,7 @@ export default function TokenDetail() {
                 Swap
               </AeButton>
               <AeButton
-                onClick={() =>
-                  navigate(`/defi/pool?from=AE&to=${tokenAddress}`)
-                }
+                onClick={() => navigate(`/defi/pool?from=AE&to=${tokenAddress}`)}
                 variant="secondary-dark"
                 size="medium"
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -187,19 +189,17 @@ export default function TokenDetail() {
                 Add Liquidity
               </AeButton>
               <AeButton
-                onClick={() =>
-                  navigate(`/defi/explore/pools?tokenAddress=${tokenAddress}`)
-                }
+                onClick={() => navigate(`/defi/explore/pools?tokenAddress=${tokenAddress}`)}
                 variant="secondary-dark"
                 size="medium"
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Pools ({tokenDetails?.pairs_count || 0})
+                Pools (
+                {tokenDetails?.pairs_count || 0}
+                )
               </AeButton>
               <AeButton
-                onClick={() =>
-                  navigate(`/defi/explore/transactions?tokenAddress=${tokenAddress}`)
-                }
+                onClick={() => navigate(`/defi/explore/transactions?tokenAddress=${tokenAddress}`)}
                 variant="secondary-dark"
                 size="medium"
                 className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -224,25 +224,27 @@ export default function TokenDetail() {
                   ?.percentage && (
                     <div
                       className={`text-xs font-semibold flex items-center gap-1 ${isPositive
-                        ? "text-green-400"
-                        : "text-red-400"
-                        }`}
+                        ? 'text-green-400'
+                        : 'text-red-400'
+                      }`}
                     >
                       {isPositive
-                        ? "📈"
-                        : "📉"}
+                        ? '📈'
+                        : '📉'}
                       {isPositive
-                        ? "+"
-                        : ""}
+                        ? '+'
+                        : ''}
                       {
                         Decimal.from(
                           tokenDetails?.summary?.change?.[selectedPeriod]
-                            ?.percentage
+                            ?.percentage,
                         ).prettify(2)
                       }
-                      % ({selectedPeriod})
+                      % (
+                      {selectedPeriod}
+                      )
                     </div>
-                  )}
+                )}
               </div>
 
               {/* TVL Card */}
@@ -251,23 +253,23 @@ export default function TokenDetail() {
                   padding: 20,
                   borderRadius: 16,
                   background:
-                    "linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
-                  border: "1px solid rgba(0, 255, 127, 0.2)",
-                  backdropFilter: "blur(10px)",
-                  position: "relative",
-                  overflow: "hidden",
+                    'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  border: '1px solid rgba(0, 255, 127, 0.2)',
+                  backdropFilter: 'blur(10px)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
                 <div
                   style={{
                     fontSize: 11,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     marginBottom: 8,
                     fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    display: "flex",
-                    alignItems: "center",
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: 6,
                   }}
                 >
@@ -277,9 +279,9 @@ export default function TokenDetail() {
                   style={{
                     fontSize: 24,
                     fontWeight: 800,
-                    color: "var(--success-color)",
+                    color: 'var(--success-color)',
                     marginBottom: 4,
-                    fontFamily: "monospace",
+                    fontFamily: 'monospace',
                   }}
                 >
                   {/* ${Decimal.from(token?.tvlUsd || 0).prettify(2)} */}
@@ -290,11 +292,16 @@ export default function TokenDetail() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     fontWeight: 500,
                   }}
                 >
-                  Across {tokenDetails?.pairs_count || 0} pool{tokenDetails?.pairs_count !== 1 ? "s" : ""}
+                  Across
+                  {' '}
+                  {tokenDetails?.pairs_count || 0}
+                  {' '}
+                  pool
+                  {tokenDetails?.pairs_count !== 1 ? 's' : ''}
                 </div>
               </div>
 
@@ -304,20 +311,18 @@ export default function TokenDetail() {
                   padding: 20,
                   borderRadius: 16,
                   background:
-                    "linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
-                  border: "1px solid rgba(138, 43, 226, 0.2)",
-                  backdropFilter: "blur(10px)",
-                  position: "relative",
-                  overflow: "hidden",
+                    'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  border: '1px solid rgba(138, 43, 226, 0.2)',
+                  backdropFilter: 'blur(10px)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
                   📊 Volume
                   <AppSelect
                     value={selectedPeriod}
-                    onValueChange={(v) =>
-                      setSelectedPeriod(v as "24h" | "7d" | "30d")
-                    }
+                    onValueChange={(v) => setSelectedPeriod(v as '24h' | '7d' | '30d')}
                     triggerClassName="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
                     contentClassName="bg-[#1a1a1a] border-white/20"
                   >
@@ -330,9 +335,9 @@ export default function TokenDetail() {
                   style={{
                     fontSize: 24,
                     fontWeight: 800,
-                    color: "var(--accent-color)",
+                    color: 'var(--accent-color)',
                     marginBottom: 4,
-                    fontFamily: "monospace",
+                    fontFamily: 'monospace',
                   }}
                 >
                   <PriceDataFormatter
@@ -344,15 +349,15 @@ export default function TokenDetail() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     fontWeight: 500,
                   }}
                 >
-                  {selectedPeriod === "24h"
-                    ? "Last 24 hours"
-                    : selectedPeriod === "7d"
-                      ? "Last 7 days"
-                      : "Last 30 days"}
+                  {selectedPeriod === '24h'
+                    ? 'Last 24 hours'
+                    : selectedPeriod === '7d'
+                      ? 'Last 7 days'
+                      : 'Last 30 days'}
                 </div>
               </div>
             </div>
@@ -364,21 +369,21 @@ export default function TokenDetail() {
                 style={{
                   padding: 18,
                   borderRadius: 14,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid var(--glass-border)",
-                  backdropFilter: "blur(10px)",
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
                 <div
                   style={{
                     fontSize: 10,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     marginBottom: 8,
                     fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    display: "flex",
-                    alignItems: "center",
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.8px',
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: 4,
                   }}
                 >
@@ -388,7 +393,7 @@ export default function TokenDetail() {
                   style={{
                     fontSize: 18,
                     fontWeight: 700,
-                    color: "var(--standard-font-color)",
+                    color: 'var(--standard-font-color)',
                     marginBottom: 2,
                   }}
                 >
@@ -397,11 +402,13 @@ export default function TokenDetail() {
                 <div
                   style={{
                     fontSize: 11,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     fontWeight: 500,
                   }}
                 >
-                  {tokenDetails?.symbol} tokens
+                  {tokenDetails?.symbol}
+                  {' '}
+                  tokens
                 </div>
               </div>
 
@@ -410,21 +417,21 @@ export default function TokenDetail() {
                 style={{
                   padding: 18,
                   borderRadius: 14,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid var(--glass-border)",
-                  backdropFilter: "blur(10px)",
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
                 <div
                   style={{
                     fontSize: 10,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     marginBottom: 8,
                     fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    display: "flex",
-                    alignItems: "center",
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.8px',
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: 4,
                   }}
                 >
@@ -434,7 +441,7 @@ export default function TokenDetail() {
                   style={{
                     fontSize: 18,
                     fontWeight: 700,
-                    color: "var(--standard-font-color)",
+                    color: 'var(--standard-font-color)',
                     marginBottom: 2,
                   }}
                 >
@@ -445,11 +452,13 @@ export default function TokenDetail() {
                 <div
                   style={{
                     fontSize: 11,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     fontWeight: 500,
                   }}
                 >
-                  {tokenDetails?.symbol} tokens
+                  {tokenDetails?.symbol}
+                  {' '}
+                  tokens
                 </div>
               </div>
 
@@ -458,21 +467,21 @@ export default function TokenDetail() {
                 style={{
                   padding: 18,
                   borderRadius: 14,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid var(--glass-border)",
-                  backdropFilter: "blur(10px)",
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
                 <div
                   style={{
                     fontSize: 10,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     marginBottom: 8,
                     fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    display: "flex",
-                    alignItems: "center",
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.8px',
+                    display: 'flex',
+                    alignItems: 'center',
                     gap: 4,
                   }}
                 >
@@ -482,7 +491,7 @@ export default function TokenDetail() {
                   style={{
                     fontSize: 18,
                     fontWeight: 700,
-                    color: "var(--standard-font-color)",
+                    color: 'var(--standard-font-color)',
                     marginBottom: 2,
                   }}
                 >
@@ -492,12 +501,14 @@ export default function TokenDetail() {
                       .div(10 ** aex9Data?.decimals)
                       .mul(Decimal.from(tokenDetails?.price?.ae || 0))
                       .shorten()
-                  } AE
+                  }
+                  {' '}
+                  AE
                 </div>
                 <div
                   style={{
                     fontSize: 11,
-                    color: "var(--light-font-color)",
+                    color: 'var(--light-font-color)',
                     fontWeight: 500,
                   }}
                 >
@@ -511,21 +522,21 @@ export default function TokenDetail() {
           <div
             className="genz-card"
             style={{
-              background: "var(--glass-bg)",
-              border: "1px solid var(--glass-border)",
-              backdropFilter: "blur(20px)",
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--glass-border)',
+              backdropFilter: 'blur(20px)',
               borderRadius: 24,
               padding: 24,
-              boxShadow: "var(--glass-shadow)",
-              position: "relative",
-              overflow: "hidden",
+              boxShadow: 'var(--glass-shadow)',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 marginBottom: 16,
               }}
             >
@@ -533,7 +544,7 @@ export default function TokenDetail() {
                 style={{
                   fontSize: 18,
                   fontWeight: 600,
-                  color: "var(--standard-font-color)",
+                  color: 'var(--standard-font-color)',
                   margin: 0,
                 }}
               >
@@ -544,12 +555,12 @@ export default function TokenDetail() {
             <div style={{ marginTop: 8 }}>
               <TokenPricePerformance
                 availableGraphTypes={[
-                  { type: "Price", text: "Price" },
-                  { type: "Volume", text: "Volume" },
-                  { type: "TVL", text: "Total Value Locked" },
-                  { type: "Fees", text: "Fees" },
+                  { type: 'Price', text: 'Price' },
+                  { type: 'Volume', text: 'Volume' },
+                  { type: 'TVL', text: 'Total Value Locked' },
+                  { type: 'Fees', text: 'Fees' },
                 ]}
-                initialChart={{ type: "Price", text: "Price" }}
+                initialChart={{ type: 'Price', text: 'Price' }}
                 initialTimeFrame="1Y"
                 tokenId={tokenAddress}
                 className="token-detail-chart"

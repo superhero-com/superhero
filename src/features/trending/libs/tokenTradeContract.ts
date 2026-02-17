@@ -1,7 +1,8 @@
-import { AeSdkBase, Contract, ContractMethodsBase, Encoded } from '@aeternity/aepp-sdk';
+import {
+  AeSdkBase, Contract, ContractMethodsBase, Encoded,
+} from '@aeternity/aepp-sdk';
 import { BondingCurveTokenSale, initAffiliationTokenGatingTokenSale, toTokenDecimals } from 'bctsl-sdk';
 import { TokenDto } from '@/api/generated/models/TokenDto';
-import { CONFIG } from '../../../config';
 import { fetchJson } from '../../../utils/common';
 
 // Contract instances cache
@@ -12,8 +13,8 @@ let bondingCurveInstance: Contract<ContractMethodsBase> | undefined;
  * Setup contract instance for token trading
  */
 export async function setupContractInstance(
-  sdk: AeSdkBase, 
-  token: TokenDto
+  sdk: AeSdkBase,
+  token: TokenDto,
 ): Promise<{
   tokenSaleInstance: BondingCurveTokenSale;
   bondingCurveInstance: Contract<ContractMethodsBase>;
@@ -41,18 +42,18 @@ export async function setupContractInstance(
  * Fetch user token balance
  */
 export async function fetchUserTokenBalance(
-  tokenSaleInstance: BondingCurveTokenSale,
+  saleInstance: BondingCurveTokenSale,
   token: TokenDto,
-  activeAccount: string
+  activeAccount: string,
 ): Promise<string> {
-  if (!tokenSaleInstance) {
+  if (!saleInstance) {
     throw new Error('Contract not initialized');
   }
 
   let balance = '0';
 
   try {
-    const tokenContract = await tokenSaleInstance.tokenContractInstance();
+    const tokenContract = await saleInstance.tokenContractInstance();
     if (activeAccount) {
       const result: { decodedResult?: bigint } = await tokenContract.balance(activeAccount);
 
@@ -76,7 +77,7 @@ export async function fetchUserTokenBalance(
  */
 export async function getTokenSymbolName(
   tokenAddress: Encoded.ContractAddress,
-  middlewareUrl: string
+  middlewareUrl: string,
 ): Promise<string> {
   try {
     const data = await fetchJson(`${middlewareUrl}/v3/aex9/${tokenAddress}`);

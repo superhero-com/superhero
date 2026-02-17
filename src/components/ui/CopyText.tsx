@@ -8,7 +8,7 @@ interface CopyTextProps {
   bordered?: boolean;
 }
 
-export default function CopyText({ value, className = '', bordered = false }: CopyTextProps) {
+const CopyText = ({ value, className = '', bordered = false }: CopyTextProps) => {
   const { t } = useTranslation('common');
   const [copied, setCopied] = useState(false);
 
@@ -17,18 +17,19 @@ export default function CopyText({ value, className = '', bordered = false }: Co
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch {
+      // Ignore clipboard failures
     }
   };
 
   return (
     <div className={cn(
-      "flex items-center gap-2 p-3 rounded-lg bg-white/[0.05] transition-all duration-200",
-      bordered && "border border-white/10",
-      "hover:bg-white/[0.08]",
-      className
-    )}>
+      'flex items-center gap-2 p-3 rounded-lg bg-white/[0.05] transition-all duration-200',
+      bordered && 'border border-white/10',
+      'hover:bg-white/[0.08]',
+      className,
+    )}
+    >
       <div className="flex-1 min-w-0">
         <input
           type="text"
@@ -38,24 +39,31 @@ export default function CopyText({ value, className = '', bordered = false }: Co
         />
       </div>
       <button
+        type="button"
         onClick={handleCopy}
         className={cn(
-          "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+          'px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
           copied
-            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-            : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+            : 'bg-white/10 text-white hover:bg-white/20 border border-white/20',
         )}
       >
         {copied ? (
           <span className="flex items-center gap-1">
-            ✓ {t('buttons.copied')}
+            ✓
+            {' '}
+            {t('buttons.copied')}
           </span>
         ) : (
           <span className="flex items-center gap-1">
-            📋 {t('buttons.copy')}
+            📋
+            {' '}
+            {t('buttons.copy')}
           </span>
         )}
       </button>
     </div>
   );
-}
+};
+
+export default CopyText;

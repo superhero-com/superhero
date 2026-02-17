@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import ConnectWalletButton from '../../components/ConnectWalletButton';
+import { ConnectWalletButton } from '../../components/ConnectWalletButton';
 import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
 import { useAccount } from '../../hooks';
@@ -14,11 +14,10 @@ import Spinner from '../../components/Spinner';
 
 interface WrapUnwrapWidgetProps {
   className?: string;
-  style?: React.CSSProperties;
 }
 
-export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
-  const { t } = useTranslation('common');
+export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
+  const { t } = useTranslation(['common', 'dex']);
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
   const { executeSwap, loading } = useSwapExecution();
@@ -47,11 +46,11 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         if (amount.gt(balance)) {
           setError(`Insufficient ${mode === 'wrap' ? 'AE' : 'WAE'} balance. You need ${amount.prettify()} but only have ${balance.prettify()}`);
         }
-      } catch (e) {
+      } catch {
         // Invalid amount format, ignore
       }
     }
-  }, [currentAmount, currentBalance]);
+  }, [currentAmount, currentBalance, mode]);
 
   const handleAmountChange = (value: string) => {
     const raw = value.replace(/,/g, '.');
@@ -90,7 +89,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         decimals: 18,
         pairs_count: 0,
         created_at: new Date().toISOString(),
-        is_ae: true
+        is_ae: true,
       };
 
       const waeToken = {
@@ -100,7 +99,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         decimals: 18,
         pairs_count: 0,
         created_at: new Date().toISOString(),
-        is_ae: false
+        is_ae: false,
       };
 
       // Determine tokenIn and tokenOut based on mode
@@ -109,19 +108,19 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
 
       // Execute the swap (which will use wrap/unwrap internally)
       await executeSwap({
-        tokenIn,
-        tokenOut,
+        tokenIn: tokenIn as any, // TODO: define types
+        tokenOut: tokenOut as any,
         amountIn: currentAmount,
         amountOut: currentAmount, // 1:1 ratio
         path: [], // Will be handled by executeSwap
         slippagePct: 0.5, // Minimal slippage for wrap/unwrap
         deadlineMins: 20,
-        isExactIn: true
+        isExactIn: true,
       });
 
       // Clear the input and reload account data on success
       setCurrentAmount('');
-      void loadAccountData();
+      loadAccountData({ force: true });
     } catch (e: any) {
       setError(e.message || `Failed to ${mode} tokens`);
     }
@@ -132,8 +131,8 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   return (
     <div
       className={cn(
-        "max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
-        className
+        'max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
+        className,
       )}
     >
       {/* Header */}
@@ -150,10 +149,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             variant={mode === 'wrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
               mode === 'wrap'
-                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
+                : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
             Wrap
@@ -164,10 +163,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             variant={mode === 'unwrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
               mode === 'unwrap'
-                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
+                : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
             Unwrap
@@ -212,9 +211,11 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         <CardContent className="p-4">
           {/* Label and Balance Row */}
           <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
-            <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Amount to {mode}
-            </label>
+            <div className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+              Amount to
+              {' '}
+              {mode}
+            </div>
 
             {currentBalance && (
               <div className="flex items-center gap-2 text-xs text-white/60">
@@ -232,7 +233,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     50%
                   </Button>
@@ -242,7 +243,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     MAX
                   </Button>
@@ -260,7 +261,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             <Input
               type="text"
               inputMode="decimal"
-              placeholder="0.0"
+              placeholder={t('placeholders.amount')}
               value={currentAmount}
               onChange={(e) => handleAmountChange(e.target.value)}
               disabled={isLoading}
@@ -288,19 +289,20 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           onClick={handleExecute}
           disabled={isExecuteDisabled}
           className={cn(
-            "w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            'w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
             isExecuteDisabled
-              ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0',
           )}
         >
+          {/* eslint-disable-next-line no-nested-ternary */}
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="w-4 h-4" />
-              {mode === 'wrap' ? 'Wrapping…' : 'Unwrapping…'}
+              {mode === 'wrap' ? t('dex:wrapping') : t('dex:unwrapping')}
             </div>
           ) : (
-            `${mode === 'wrap' ? 'Wrap AE → WAE' : 'Unwrap WAE → AE'}`
+            mode === 'wrap' ? t('dex:wrapAeToWae') : t('dex:unwrapWaeToAe')
           )}
         </Button>
       ) : (
@@ -313,4 +315,4 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       )}
     </div>
   );
-}
+};

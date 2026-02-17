@@ -1,10 +1,12 @@
-import AeButton from "../AeButton";
-import { AddressChip } from "../AddressChip";
-import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
-import { useAccount, useAeSdk, useGovernance } from "@/hooks";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import Spinner from "@/components/Spinner";
+/* eslint-disable */
+import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
+import { useAccount, useAeSdk, useGovernance } from '@/hooks';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
+import Spinner from '@/components/Spinner';
+import { AddressChip } from '../AddressChip';
+import AeButton from '../AeButton';
 
 interface GovernanceVoteProps {
   pollId: string;
@@ -14,6 +16,7 @@ export default function GovernanceVote({
   pollId,
   setActiveTab,
 }: GovernanceVoteProps) {
+  const { t } = useTranslation('governance');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const {
@@ -62,18 +65,18 @@ export default function GovernanceVote({
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
           <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full"></div>
+                  <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full" />
                   <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                    {poll?.pollState.metadata.title || "Governance Poll"}
+                    {poll?.pollState.metadata.title || t('vote.defaultPollTitle')}
                   </h1>
                 </div>
                 <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
-                  {poll?.pollState.metadata.description || "Cast your vote and make your voice heard in the community governance"}
+                  {poll?.pollState.metadata.description || t('vote.defaultPollDescription')}
                 </p>
                 {poll?.pollState.metadata.link && (
                   <a
@@ -87,20 +90,20 @@ export default function GovernanceVote({
                 )}
                 {poll?.pollState.author && (
                   <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
-                    <span>By:</span>
+                    <span>{t('vote.byLabel')}</span>
                     <AddressChip address={poll.pollState.author} linkToProfile />
                   </div>
                 )}
               </div>
               <AeButton
-                onClick={() => setActiveTab("polls")}
+                onClick={() => setActiveTab('polls')}
                 className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Back to Polls
+                  {t('vote.backToPolls')}
                 </span>
               </AeButton>
             </div>
@@ -110,7 +113,7 @@ export default function GovernanceVote({
         {/* Enhanced Voting Section */}
         <div className="mb-8">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-xl" />
             <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -119,7 +122,7 @@ export default function GovernanceVote({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">Cast Your Vote</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.castYourVote')}</h2>
                 </div>
               </div>
 
@@ -136,20 +139,21 @@ export default function GovernanceVote({
                         onClick={() => handleVote(idx)}
                         disabled={votingFor != null}
                         className={cn(
-                          "group relative p-6 text-left bg-[var(--glass-bg)] backdrop-blur-2xl border-2 border-[var(--glass-border)] rounded-2xl transition-all cursor-pointer touch-manipulation vote-button",
-                          "hover:bg-white/5 hover:border-white/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20",
-                          "focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50",
-                          isSelected && "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-1 animate-vote-pulse",
-                          isVotingThis && "bg-gradient-to-r from-cyan-400 to-blue-400 text-white border-transparent animate-pulse",
-                          votingFor && !isVotingThis && "opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none"
+                          'group relative p-6 text-left bg-[var(--glass-bg)] backdrop-blur-2xl border-2 border-[var(--glass-border)] rounded-2xl transition-all cursor-pointer touch-manipulation vote-button',
+                          'hover:bg-white/5 hover:border-white/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20',
+                          'focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50',
+                          isSelected && 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-1 animate-vote-pulse',
+                          isVotingThis && 'bg-gradient-to-r from-cyan-400 to-blue-400 text-white border-transparent animate-pulse',
+                          votingFor && !isVotingThis && 'opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none',
                         )}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
-                              isSelected ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
-                            )}>
+                              'w-12 h-12 rounded-xl flex items-center justify-center transition-all',
+                              isSelected ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10',
+                            )}
+                            >
                               {isVotingThis ? (
                                 <Spinner className="w-6 h-6" />
                               ) : isSelected ? (
@@ -176,7 +180,7 @@ export default function GovernanceVote({
                         </div>
                       </button>
                     );
-                  }
+                  },
                 )}
               </div>
               {results?.myVote != null && (
@@ -202,7 +206,7 @@ export default function GovernanceVote({
         {results && (
           <div className="mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-xl" />
               <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
@@ -233,15 +237,15 @@ export default function GovernanceVote({
                     const total = results.totalVotes || 1;
                     const percentage = getVotePercentage(votes, total);
                     const isWinning = percentage != 0 && percentage === Math.max(
-                      ...(results.options || []).map((o: any) => getVotePercentage(o.votes || 0, total))
+                      ...(results.options || []).map((o: any) => getVotePercentage(o.votes || 0, total)),
                     );
 
                     return (
                       <div
                         key={idx}
                         className={cn(
-                          "group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1",
-                          isWinning && "bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse"
+                          'group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
+                          isWinning && 'bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse',
                         )}
                       >
                         {isWinning && (
@@ -251,40 +255,48 @@ export default function GovernanceVote({
                             </svg>
                           </div>
                         )}
-                        
+
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all",
-                              isWinning ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-slate-300 group-hover:bg-white/20"
-                            )}>
+                              'w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all',
+                              isWinning ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-slate-300 group-hover:bg-white/20',
+                            )}
+                            >
                               {String.fromCharCode(65 + idx)}
                             </div>
                             <div>
                               <h3 className="text-lg font-semibold text-white mb-1">{lbl}</h3>
                               <p className="text-sm text-slate-400">
-                                {isWinning ? "Leading option" : "Vote option"}
+                                {isWinning ? 'Leading option' : 'Vote option'}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-white">{percentage}%</p>
-                            <p className="text-sm text-slate-400">{votes} votes</p>
+                            <p className="text-2xl font-bold text-white">
+                              {percentage}
+                              %
+                            </p>
+                            <p className="text-sm text-slate-400">
+                              {votes}
+                              {' '}
+                              votes
+                            </p>
                           </div>
                         </div>
-                        
+
                         <div className="relative">
                           <div className="h-4 bg-white/10 rounded-full overflow-hidden">
                             <div
                               className={cn(
-                                "h-full rounded-full transition-all duration-1000 ease-out relative",
-                                isWinning 
-                                  ? "bg-gradient-to-r from-yellow-400 to-amber-400" 
-                                  : "bg-gradient-to-r from-pink-500 to-purple-500"
+                                'h-full rounded-full transition-all duration-1000 ease-out relative',
+                                isWinning
+                                  ? 'bg-gradient-to-r from-yellow-400 to-amber-400'
+                                  : 'bg-gradient-to-r from-pink-500 to-purple-500',
                               )}
                               style={{ width: `${percentage}%` }}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
                             </div>
                           </div>
                           {percentage > 0 && (
@@ -292,7 +304,7 @@ export default function GovernanceVote({
                               <div
                                 className="h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
                                 style={{ width: `${percentage}%` }}
-                              ></div>
+                              />
                             </div>
                           )}
                         </div>
@@ -309,7 +321,7 @@ export default function GovernanceVote({
         {activeAccount && (
           <div className="mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl" />
               <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
@@ -331,7 +343,11 @@ export default function GovernanceVote({
                         </div>
                         <div>
                           <p className="text-sm text-slate-400 font-medium mb-1">Account Balance</p>
-                          <p className="text-2xl font-bold text-white">{decimalBalance.prettify()} AE</p>
+                          <p className="text-2xl font-bold text-white">
+                            {decimalBalance.prettify()}
+                            {' '}
+                            AE
+                          </p>
                           <p className="text-xs text-slate-500">Available for voting</p>
                         </div>
                       </div>
@@ -363,7 +379,7 @@ export default function GovernanceVote({
                     </svg>
                     Delegation Status
                   </h3>
-                  
+
                   {delegation ? (
                     <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl">
                       <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center shrink-0">

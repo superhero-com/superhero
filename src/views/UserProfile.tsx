@@ -1,38 +1,51 @@
-import { useEffect, useMemo, useState } from "react";
+/* eslint-disable
+  import/no-named-as-default,
+  import/order,
+  react/function-component-definition,
+  @typescript-eslint/no-unused-vars,
+  react-hooks/exhaustive-deps,
+  no-restricted-syntax,
+  no-shadow,
+  no-nested-ternary,
+  react/button-has-type,
+  max-len,
+  no-console
+*/
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Head from "../seo/Head";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import AeButton from "../components/AeButton";
-import RightRail from "../components/layout/RightRail";
-import Shell from "../components/layout/Shell";
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import AccountCreatedToken from '@/components/Account/AccountCreatedToken';
+import AccountFeed from '@/components/Account/AccountFeed';
+import Spinner from '@/components/Spinner';
+import AccountOwnedTokens from '@/components/Account/AccountOwnedTokens';
+import AccountTrades from '@/components/Account/AccountTrades';
+import Head from '../seo/Head';
+import AeButton from '../components/AeButton';
+import RightRail from '../components/layout/RightRail';
+import Shell from '../components/layout/Shell';
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { PostsService } from "../api/generated";
-import type { PostDto } from "../api/generated";
-import { AccountsService } from "../api/generated/services/AccountsService";
-import { AccountTokensService } from "../api/generated/services/AccountTokensService";
-import { TokensService } from "../api/generated/services/TokensService";
-import { TransactionsService } from "../api/generated/services/TransactionsService";
-import { PostApiResponse } from "../features/social/types";
-import "../features/social/views/FeedList.scss";
-import { useAccountBalances } from "../hooks/useAccountBalances";
-import { useAddressByChainName, useChainName } from "../hooks/useChainName";
-import { SuperheroApi } from "../api/backend";
+import { PostsService } from '../api/generated';
+import type { PostDto } from '../api/generated';
+import { AccountsService } from '../api/generated/services/AccountsService';
+import { AccountTokensService } from '../api/generated/services/AccountTokensService';
+import { TokensService } from '../api/generated/services/TokensService';
+import { TransactionsService } from '../api/generated/services/TransactionsService';
+import { PostApiResponse } from '../features/social/types';
+import '../features/social/views/FeedList.scss';
+import { useAccountBalances } from '../hooks/useAccountBalances';
+import { useAddressByChainName, useChainName } from '../hooks/useChainName';
+import { SuperheroApi } from '../api/backend';
 
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import AccountCreatedToken from "@/components/Account/AccountCreatedToken";
-import AccountFeed from "@/components/Account/AccountFeed";
-import Spinner from "@/components/Spinner";
-import AccountOwnedTokens from "@/components/Account/AccountOwnedTokens";
-import AccountTrades from "@/components/Account/AccountTrades";
-import AccountPortfolio from "@/components/Account/AccountPortfolio";
-import ProfileEditModal from "../components/modals/ProfileEditModal";
-import { CONFIG } from "../config";
-import { useModal } from "../hooks";
-import { useProfile } from "../hooks/useProfile";
-import { IconDiamond, IconLink } from "../icons";
+import AccountPortfolio from '@/components/Account/AccountPortfolio';
+import ProfileEditModal from '../components/modals/ProfileEditModal';
+import { CONFIG } from '../config';
+import { useModal } from '../hooks';
+import { useProfile } from '../hooks/useProfile';
+import { IconDiamond, IconLink } from '../icons';
 
-type TabType = "feed" | "owned" | "created" | "transactions";
+type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
   standalone = true,
 }: { standalone?: boolean } = {}) {
@@ -40,42 +53,38 @@ export default function UserProfile({
   const navigate = useNavigate();
   const { address } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Support AENS chain name route: /users/<name.chain>
-  const isChainName = address?.endsWith(".chain");
+  const isChainName = address?.endsWith('.chain');
   const { address: resolvedAddress } = useAddressByChainName(
-    isChainName ? address : undefined
+    isChainName ? address : undefined,
   );
-  const effectiveAddress =
-    isChainName && resolvedAddress ? resolvedAddress : (address as string);
-  const { decimalBalance, aex9Balances, loadAccountData } =
-    useAccountBalances(effectiveAddress);
+  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
+  const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
   const { data, refetch: refetchPosts } = useQuery({
-    queryKey: ["PostsService.listAll", address],
-    queryFn: () =>
-      PostsService.listAll({
-        limit: 100,
-        page: 1,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        search: "",
-        accountAddress: effectiveAddress,
-      }) as unknown as Promise<PostApiResponse>,
+    queryKey: ['PostsService.listAll', address],
+    queryFn: () => PostsService.listAll({
+      limit: 100,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+      search: '',
+      accountAddress: effectiveAddress,
+    }) as unknown as Promise<PostApiResponse>,
     enabled: !!effectiveAddress,
   });
 
   // Account info (bio, chain name, totals) from backend
   const { data: accountInfo, refetch: refetchAccount } = useQuery({
-    queryKey: ["AccountsService.getAccount", effectiveAddress],
-    queryFn: () =>
-      AccountsService.getAccount({
-        address: effectiveAddress,
-      }) as unknown as Promise<any>,
+    queryKey: ['AccountsService.getAccount', effectiveAddress],
+    queryFn: () => AccountsService.getAccount({
+      address: effectiveAddress,
+    }) as unknown as Promise<any>,
     enabled: !!effectiveAddress,
     staleTime: 10_000,
   });
@@ -86,27 +95,27 @@ export default function UserProfile({
   const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
   // Loading indicator state for bio updates
   const [isBioLoading, setIsBioLoading] = useState(false);
-  
+
   // Get tab from URL search params, default to "feed"
-  const tabFromUrl = searchParams.get("tab") as TabType;
+  const tabFromUrl = searchParams.get('tab') as TabType;
   const [tab, setTab] = useState<TabType>(
-    tabFromUrl && ["feed", "owned", "created", "transactions"].includes(tabFromUrl) 
-      ? tabFromUrl 
-      : "feed"
+    tabFromUrl && ['feed', 'owned', 'created', 'transactions'].includes(tabFromUrl)
+      ? tabFromUrl
+      : 'feed',
   );
 
   // Function to handle tab changes and update URL
   const handleTabChange = (newTab: TabType) => {
     setTab(newTab);
     const newSearchParams = new URLSearchParams(searchParams);
-    if (newTab === "feed") {
+    if (newTab === 'feed') {
       // Remove tab param for default tab to keep URL clean
-      newSearchParams.delete("tab");
+      newSearchParams.delete('tab');
     } else {
-      newSearchParams.set("tab", newTab);
+      newSearchParams.set('tab', newTab);
     }
     setSearchParams(newSearchParams, { replace: true });
-    
+
     // Scroll to tabs section after a brief delay to allow DOM update
     setTimeout(() => {
       const tabsSection = document.getElementById('profile-tabs-section');
@@ -114,14 +123,14 @@ export default function UserProfile({
         // Get navbar height dynamically (header is sticky)
         const header = document.querySelector('header') || document.querySelector('[class*="mobile-navigation"]');
         const headerHeight = header ? header.getBoundingClientRect().height : 64; // Default to 64px (h-16)
-        
+
         // Calculate scroll position accounting for navbar
         const elementPosition = tabsSection.getBoundingClientRect().top + window.pageYOffset;
         const offsetPosition = elementPosition - headerHeight - 8; // 8px extra spacing
-        
+
         window.scrollTo({
           top: offsetPosition,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       }
     }, 100);
@@ -129,27 +138,25 @@ export default function UserProfile({
 
   // Sync tab state when URL changes (e.g., browser back/forward)
   useEffect(() => {
-    const urlTab = searchParams.get("tab") as TabType;
-    if (urlTab && ["feed", "owned", "created", "transactions"].includes(urlTab)) {
+    const urlTab = searchParams.get('tab') as TabType;
+    if (urlTab && ['feed', 'owned', 'created', 'transactions'].includes(urlTab)) {
       setTab(urlTab);
     } else if (!urlTab) {
-      setTab("feed");
+      setTab('feed');
     }
   }, [searchParams]);
 
-
   const { data: ownedTokensResp } = useQuery({
     queryKey: [
-      "AccountTokensService.listTokenHolders-counter",
+      'AccountTokensService.listTokenHolders-counter',
       effectiveAddress,
     ],
-    queryFn: () =>
-      AccountTokensService.listTokenHolders({
-        address: effectiveAddress,
-        orderBy: "balance",
-        limit: 1,
-        page: 1,
-      }) as unknown as Promise<{ items: any[]; meta?: any }>,
+    queryFn: () => AccountTokensService.listTokenHolders({
+      address: effectiveAddress,
+      orderBy: 'balance',
+      limit: 1,
+      page: 1,
+    }) as unknown as Promise<{ items: any[]; meta?: any }>,
     enabled: !!effectiveAddress,
     staleTime: 60_000,
   });
@@ -157,18 +164,17 @@ export default function UserProfile({
   // Fetch created tokens count for stats display
   const { data: createdTokensResp } = useQuery({
     queryKey: [
-      "TokensService.listAll",
-      "created-count",
+      'TokensService.listAll',
+      'created-count',
       effectiveAddress,
     ],
-    queryFn: () =>
-      TokensService.listAll({
-        creatorAddress: effectiveAddress,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        limit: 1,
-        page: 1,
-      }) as unknown as Promise<{ items: any[]; meta?: any }>,
+    queryFn: () => TokensService.listAll({
+      creatorAddress: effectiveAddress,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+      limit: 1,
+      page: 1,
+    }) as unknown as Promise<{ items: any[]; meta?: any }>,
     enabled: !!effectiveAddress,
     staleTime: 60_000,
   });
@@ -183,7 +189,7 @@ export default function UserProfile({
       const media = (Array.isArray((p as any).media) ? (p as any).media : []).map((m: string) => String(m).toLowerCase());
 
       // Heuristic 1: topics/media contains the tag
-      const hasTagInTopicsOrMedia = topics.includes("bio-update") || media.includes("bio-update");
+      const hasTagInTopicsOrMedia = topics.includes('bio-update') || media.includes('bio-update');
 
       // Heuristic 2: inspect tx_args for a list of tags including "bio-update"
       const args: any[] = Array.isArray((p as any).tx_args) ? (p as any).tx_args : [];
@@ -198,10 +204,9 @@ export default function UserProfile({
     }
     return undefined;
   }, [posts]);
-  const bioText =
-    (optimisticBio || accountInfo?.bio || "").trim() ||
-    latestBioPost?.content?.trim() ||
-    profile?.biography;
+  const bioText = (optimisticBio || accountInfo?.bio || '').trim()
+    || latestBioPost?.content?.trim()
+    || profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
@@ -221,24 +226,23 @@ export default function UserProfile({
   // Prefetch all tab data in the background so switching tabs is instant
   useEffect(() => {
     if (!effectiveAddress) return;
-    
+
     // Prefetch feed tab data (posts and activities)
     queryClient.prefetchInfiniteQuery({
-      queryKey: ["profile-posts", effectiveAddress],
-      queryFn: ({ pageParam = 1 }) =>
-        PostsService.listAll({
-          accountAddress: effectiveAddress,
-          orderBy: "created_at",
-          orderDirection: "DESC",
-          limit: 10,
-          page: pageParam,
-        }) as any,
+      queryKey: ['profile-posts', effectiveAddress],
+      queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+        accountAddress: effectiveAddress,
+        orderBy: 'created_at',
+        orderDirection: 'DESC',
+        limit: 10,
+        page: pageParam,
+      }) as any,
       initialPageParam: 1,
       getNextPageParam: (lastPage: any) => {
         if (
-          lastPage?.meta?.currentPage &&
-          lastPage?.meta?.totalPages &&
-          lastPage.meta.currentPage < lastPage.meta.totalPages
+          lastPage?.meta?.currentPage
+          && lastPage?.meta?.totalPages
+          && lastPage.meta.currentPage < lastPage.meta.totalPages
         ) {
           return lastPage.meta.currentPage + 1;
         }
@@ -247,35 +251,35 @@ export default function UserProfile({
     });
 
     queryClient.prefetchInfiniteQuery({
-      queryKey: ["profile-activities", effectiveAddress],
+      queryKey: ['profile-activities', effectiveAddress],
       queryFn: async ({ pageParam = 1 }) => {
         const resp = await SuperheroApi.listTokens({
           creatorAddress: effectiveAddress,
-          orderBy: "created_at",
-          orderDirection: "DESC",
+          orderBy: 'created_at',
+          orderDirection: 'DESC',
           limit: 50,
           page: pageParam as number,
         }).catch(() => ({ items: [] }));
         // Map token items to PostDto format to match AccountFeed.tsx query
         const items = (resp?.items || []).map((payload: any): PostDto => {
-          const saleAddress: string = payload?.sale_address || payload?.address || "";
-          const name: string = payload?.token_name || payload?.name || "Unknown";
+          const saleAddress: string = payload?.sale_address || payload?.address || '';
+          const name: string = payload?.token_name || payload?.name || 'Unknown';
           const createdAt: string = payload?.created_at || new Date().toISOString();
           const encodedName = encodeURIComponent(name);
           const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
           return {
             id,
-            tx_hash: payload?.tx_hash || "",
+            tx_hash: payload?.tx_hash || '',
             tx_args: [
               { token_name: name },
               { sale_address: saleAddress },
-              { kind: "token-created" },
+              { kind: 'token-created' },
             ],
-            sender_address: payload?.creator_address || effectiveAddress || "",
-            contract_address: saleAddress || "",
-            type: "TOKEN_CREATED",
-            content: "",
-            topics: ["token:created", `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
+            sender_address: payload?.creator_address || effectiveAddress || '',
+            contract_address: saleAddress || '',
+            type: 'TOKEN_CREATED',
+            content: '',
+            topics: ['token:created', `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
             media: [],
             total_comments: 0,
             created_at: createdAt,
@@ -284,56 +288,52 @@ export default function UserProfile({
         return items;
       },
       initialPageParam: 1,
-      getNextPageParam: (lastPage: any[], pages: any[][]) => 
-        (lastPage && lastPage.length === 50 ? pages.length + 1 : undefined),
+      getNextPageParam: (lastPage: any[], pages: any[][]) => (lastPage && lastPage.length === 50 ? pages.length + 1 : undefined),
     });
 
     // Prefetch owned tokens tab data
     queryClient.prefetchQuery({
-      queryKey: ['DataTable', { page: 1, limit: 10 }, { address: effectiveAddress, orderBy: "balance", orderDirection: "DESC" }],
-      queryFn: () =>
-        AccountTokensService.listTokenHolders({
-          address: effectiveAddress,
-          orderBy: "balance",
-          orderDirection: "DESC",
-          limit: 10,
-          page: 1,
-        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { address: effectiveAddress, orderBy: 'balance', orderDirection: 'DESC' }],
+      queryFn: () => AccountTokensService.listTokenHolders({
+        address: effectiveAddress,
+        orderBy: 'balance',
+        orderDirection: 'DESC',
+        limit: 10,
+        page: 1,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
       staleTime: 60_000,
     });
 
     // Prefetch created tokens tab data
     queryClient.prefetchQuery({
       queryKey: [
-        "TokensService.listAll",
-        "created",
+        'TokensService.listAll',
+        'created',
         effectiveAddress,
-        "market_cap",
-        "DESC",
+        'market_cap',
+        'DESC',
         1,
         20,
       ],
-      queryFn: () =>
-        TokensService.listAll({
-          creatorAddress: effectiveAddress,
-          orderBy: "market_cap",
-          orderDirection: "DESC",
-          limit: 20,
-          page: 1,
-        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      queryFn: () => TokensService.listAll({
+        creatorAddress: effectiveAddress,
+        orderBy: 'market_cap',
+        orderDirection: 'DESC',
+        limit: 20,
+        page: 1,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
       staleTime: 60_000,
     });
 
     // Prefetch transactions tab data
     queryClient.prefetchQuery({
-      queryKey: ['DataTable', { page: 1, limit: 10 }, { accountAddress: effectiveAddress, includes: "token" }],
-      queryFn: () =>
-        TransactionsService.listTransactions({
-          accountAddress: effectiveAddress,
-          includes: "token",
-          limit: 10,
-          page: 1,
-        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { accountAddress: effectiveAddress, includes: 'token' }],
+      queryFn: () => TransactionsService.listTransactions({
+        accountAddress: effectiveAddress,
+        includes: 'token',
+        limit: 10,
+        page: 1,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
       staleTime: 30_000,
     });
   }, [effectiveAddress, queryClient]);
@@ -344,30 +344,27 @@ export default function UserProfile({
       try {
         const detail = (e as CustomEvent).detail as { address?: string; bio?: string; txHash?: string };
         if (!detail?.address) {
-          console.warn("[UserProfile] Bio post event missing address");
+          console.warn('[UserProfile] Bio post event missing address');
           return;
         }
         // Normalize addresses for comparison (trim and lowercase)
-        const eventAddress = (detail.address || "").trim().toLowerCase();
-        const currentAddress = (effectiveAddress || "").trim().toLowerCase();
+        const eventAddress = (detail.address || '').trim().toLowerCase();
+        const currentAddress = (effectiveAddress || '').trim().toLowerCase();
         if (eventAddress !== currentAddress) {
-          console.log("[UserProfile] Bio post event for different address:", eventAddress, "current:", currentAddress);
           return;
         }
-        const submittedBio = (detail.bio || "").trim();
+        const submittedBio = (detail.bio || '').trim();
         if (!submittedBio) {
-          console.warn("[UserProfile] Bio post event missing bio text");
+          console.warn('[UserProfile] Bio post event missing bio text');
           return;
         }
-        
-        console.log("[UserProfile] Received bio post event, updating optimistically:", submittedBio);
-        
+
         // Update optimistic bio state immediately - this will make bio appear right away
         setOptimisticBio(submittedBio);
         setIsBioLoading(true);
-        
+
         // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
-        const queryKey = ["AccountsService.getAccount", effectiveAddress];
+        const queryKey = ['AccountsService.getAccount', effectiveAddress];
         queryClient.setQueryData(queryKey, (oldData: any) => {
           if (oldData) {
             return {
@@ -381,22 +378,22 @@ export default function UserProfile({
             bio: submittedBio,
           };
         });
-        
+
         // Also update the profile state if it exists
         if (profile) {
           setProfile({ ...profile, biography: submittedBio });
         }
-        
+
         // Refetch posts to ensure the new bio post appears in the feed
         refetchPosts();
-        
+
         // Poll account endpoint to ensure backend has processed the transaction
         const start = Date.now();
         const interval = window.setInterval(async () => {
           await refetchAccount();
           // Get fresh account info from React Query cache after refetch
           const freshAccountInfo = queryClient.getQueryData<any>(queryKey);
-          const latestBio = (freshAccountInfo?.bio || "").trim();
+          const latestBio = (freshAccountInfo?.bio || '').trim();
           // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
           if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
             // Clear optimistic bio once backend confirms - backend data will take over
@@ -411,14 +408,14 @@ export default function UserProfile({
           }
         }, 1500);
       } catch (error) {
-        console.error("[UserProfile] Error handling bio post:", error);
+        console.error('[UserProfile] Error handling bio post:', error);
         // Clear optimistic bio and loading state on error
         setOptimisticBio(null);
         setIsBioLoading(false);
       }
     }
-    window.addEventListener("profile-bio-posted", handleBioPosted as any);
-    return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
+    window.addEventListener('profile-bio-posted', handleBioPosted as any);
+    return () => window.removeEventListener('profile-bio-posted', handleBioPosted as any);
   }, [effectiveAddress, refetchAccount, refetchPosts, queryClient, profile]);
 
   const content = (
@@ -440,9 +437,9 @@ export default function UserProfile({
         <AeButton
           onClick={() => {
             const state = (window.history?.state as any) || {};
-            const canGoBack = typeof state.idx === "number" ? state.idx > 0 : window.history.length > 1;
+            const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : window.history.length > 1;
             if (canGoBack) navigate(-1);
-            else navigate("/", { replace: true });
+            else navigate('/', { replace: true });
           }}
           variant="ghost"
           size="sm"
@@ -463,15 +460,14 @@ export default function UserProfile({
               <AddressAvatarWithChainName
                 address={effectiveAddress}
                 size={64}
-                overlaySize={22}
                 showAddressAndChainName={false}
-                isHoverEnabled={true}
+                isHoverEnabled
                 className="relative"
               />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-teal-400 to-cyan-300 bg-clip-text text-transparent tracking-tight">
-                {chainName || "Legend"}
+                {chainName || 'Legend'}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
@@ -503,7 +499,7 @@ export default function UserProfile({
             ) : null}
             {!canEdit ? (
               <AeButton
-                onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
+                onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
                 variant="ghost"
                 size="sm"
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
@@ -518,9 +514,9 @@ export default function UserProfile({
               size="sm"
               className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all [&_svg]:!size-[0.9em]"
               onClick={() => {
-                const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
+                const base = (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '');
                 const url = `${base}/accounts/${effectiveAddress}`;
-                window.open(url, "_blank", "noopener,noreferrer");
+                window.open(url, '_blank', 'noopener,noreferrer');
               }}
               title={t('titles.openOnAescan')}
             >
@@ -546,11 +542,11 @@ export default function UserProfile({
             <div className="text-base md:text-lg font-bold text-white">
               {decimalBalance ? (() => {
                 try {
-                  const value = typeof decimalBalance.toNumber === 'function' 
+                  const value = typeof decimalBalance.toNumber === 'function'
                     ? decimalBalance.toNumber()
                     : typeof decimalBalance === 'number'
-                    ? decimalBalance
-                    : Number(decimalBalance);
+                      ? decimalBalance
+                      : Number(decimalBalance);
                   // If value is above 1 AE, show 2 decimals
                   if (value >= 1) {
                     return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
@@ -561,37 +557,37 @@ export default function UserProfile({
                   // Fallback to prettify if conversion fails
                   return `${decimalBalance.prettify()} AE`;
                 }
-              })() : "Loading..."}
+              })() : 'Loading...'}
             </div>
           </div>
           <button
-            onClick={() => handleTabChange("owned")}
+            onClick={() => handleTabChange('owned')}
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Owned Trends
+              {t('explore:ownedTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
             </div>
           </button>
           <button
-            onClick={() => handleTabChange("created")}
+            onClick={() => handleTabChange('created')}
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Created Trends
+              {t('explore:createdTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {((createdTokensResp as any)?.meta?.totalItems ?? accountInfo?.total_created_tokens ?? 0).toLocaleString()}
             </div>
           </button>
           <button
-            onClick={() => handleTabChange("feed")}
+            onClick={() => handleTabChange('feed')}
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Posts
+              {t('explore:posts')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {posts.length.toLocaleString()}
@@ -606,21 +602,21 @@ export default function UserProfile({
         <div>
           <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
             {([
-              { key: "feed", label: "Feed" },
-              { key: "owned", label: "Owned Trends" },
-              { key: "created", label: "Created Trends" },
-              { key: "transactions", label: "Transactions" },
+              { key: 'feed', label: t('explore:feed') },
+              { key: 'owned', label: t('explore:ownedTrends') },
+              { key: 'created', label: t('explore:createdTrends') },
+              { key: 'transactions', label: t('explore:transactions') },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => handleTabChange(key as TabType)}
                 className={[
-                  "relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm",
-                  "hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none",
+                  'relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm',
+                  'hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none',
                   tab === key
                     ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
-                    : "text-white/70",
-                ].join(" ")}
+                    : 'text-white/70',
+                ].join(' ')}
               >
                 {label}
               </button>
@@ -631,13 +627,13 @@ export default function UserProfile({
         {/* No desktop pill group; using the same layout across breakpoints */}
       </div>
 
-      {tab === "feed" && (<AccountFeed address={effectiveAddress} tab="feed" />)}
+      {tab === 'feed' && (<AccountFeed address={effectiveAddress} tab="feed" />)}
 
-      {tab === "owned" && (<AccountOwnedTokens address={effectiveAddress} tab="owned" />)}
+      {tab === 'owned' && (<AccountOwnedTokens address={effectiveAddress} tab="owned" />)}
 
-      {tab === "created" && (<AccountCreatedToken address={effectiveAddress} tab="created" />)}
+      {tab === 'created' && (<AccountCreatedToken address={effectiveAddress} tab="created" />)}
 
-      {tab === "transactions" && (<AccountTrades address={effectiveAddress} tab="transactions" />)}
+      {tab === 'transactions' && (<AccountTrades address={effectiveAddress} tab="transactions" />)}
 
       {/* User comments list removed in unified posts model */}
     </div>

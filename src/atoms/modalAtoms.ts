@@ -17,14 +17,17 @@ export const modalActionsAtom = atom(
   null,
   (get, set, action: { type: 'open'; modal: Omit<ModalItem, 'key'> } | { type: 'close'; key: number }) => {
     const currentModals = get(openedModalsAtom);
-    
+
     switch (action.type) {
       case 'open':
-        set(openedModalsAtom, [...currentModals, { ...action.modal, key: modalCounter++ }]);
+        set(openedModalsAtom, [...currentModals, { ...action.modal, key: modalCounter }]);
+        modalCounter += 1;
         break;
       case 'close':
         set(openedModalsAtom, currentModals.filter((m) => m.key !== action.key));
         break;
+      default:
+        break;
     }
-  }
+  },
 );

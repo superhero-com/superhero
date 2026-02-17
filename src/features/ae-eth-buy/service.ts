@@ -7,21 +7,21 @@ import {
   BridgeStatus,
   BridgeProgressCallback,
   BridgeError,
-  BridgeErrorType
+  BridgeErrorType,
 } from './types';
 import {
   initDexContracts,
   toAettos,
   subSlippage,
   ensureAllowanceForRouter,
-  DEX_ADDRESSES
+  DEX_ADDRESSES,
 } from '../../libs/dex';
 
 /**
  * Bridge service for ETH to AE operations
  */
 export class BridgeService {
-  private static instance: BridgeService | null = null;
+  private static instance: any = null;
 
   public static getInstance(): BridgeService {
     if (!BridgeService.instance) {
@@ -33,10 +33,10 @@ export class BridgeService {
   /**
    * Bridge ETH to AE with optional automatic swap
    */
-  async bridgeEthToAe(
+  public static async bridgeEthToAe(
     sdk: AeSdk,
     options: BridgeOptions,
-    onProgress?: BridgeProgressCallback
+    onProgress?: BridgeProgressCallback,
   ): Promise<BridgeResult> {
     const {
       amountEth,
@@ -57,10 +57,9 @@ export class BridgeService {
 
     try {
       // Validate inputs
-      this.validateBridgeOptions(options);
+      BridgeService.validateBridgeOptions(options);
 
       updateStatus('connecting', 'Connecting to Ethereum wallet...');
-
 
       const prevAeEthBalance = await getAeEthBalance(sdk, aeAccount);
       const expectedIncrease = BigInt(toAettos(amountEth, 18));
@@ -79,13 +78,13 @@ export class BridgeService {
         prevAeEthBalance,
         expectedIncrease,
         depositTimeout,
-        pollInterval
+        pollInterval,
       );
 
       if (!depositReceived) {
         throw new BridgeError(
           BridgeErrorType.DEPOSIT_TIMEOUT,
-          'Timeout waiting for æETH deposit. Please check the transaction status.'
+          'Timeout waiting for æETH deposit. Please check the transaction status.',
         );
       }
 
@@ -95,17 +94,17 @@ export class BridgeService {
         updateStatus('swapping', 'Swapping æETH to AE...');
 
         try {
-          swapTxHash = await this.swapAeEthToAe(
+          swapTxHash = await BridgeService.swapAeEthToAe(
             sdk,
             aeAccount,
             expectedIncrease,
             slippagePercent,
-            deadlineMinutes
+            deadlineMinutes,
           );
         } catch (error) {
           throw new BridgeError(
             BridgeErrorType.SWAP_FAILED,
-            `Failed to swap æETH to AE: ${error instanceof Error ? error.message : error}`
+            `Failed to swap æETH to AE: ${error instanceof Error ? error.message : error}`,
           );
         }
       }
@@ -118,14 +117,13 @@ export class BridgeService {
         aeTxHash: swapTxHash,
         status: 'completed',
       };
-
     } catch (error) {
       const bridgeError = error instanceof BridgeError
         ? error
         : new BridgeError(
           BridgeErrorType.UNKNOWN_ERROR,
           error instanceof Error ? error.message : 'Unknown error occurred',
-          error
+          error,
         );
 
       updateStatus('failed', bridgeError.message);
@@ -141,12 +139,12 @@ export class BridgeService {
   /**
    * Swap æETH to AE on æternity DEX
    */
-  private async swapAeEthToAe(
+  private static async swapAeEthToAe(
     sdk: AeSdk,
     aeAccount: string,
     amountAeEth: bigint,
     slippagePercent: number,
-    deadlineMinutes: number
+    deadlineMinutes: number,
   ): Promise<string> {
     const { router } = await initDexContracts(sdk);
 
@@ -169,7 +167,7 @@ export class BridgeService {
       path,
       aeAccount,
       deadline,
-      null
+      null,
     );
 
     return result?.hash || result?.tx?.hash || result?.transactionHash || '';
@@ -178,22 +176,21 @@ export class BridgeService {
   /**
    * Validate bridge options
    */
-  private validateBridgeOptions(options: BridgeOptions): void {
+  private static validateBridgeOptions(options: BridgeOptions): void {
     const { amountEth, aeAccount } = options;
 
     if (!amountEth || Number(amountEth) <= 0) {
       throw new BridgeError(
         BridgeErrorType.UNKNOWN_ERROR,
-        'Amount must be greater than 0'
+        'Amount must be greater than 0',
       );
     }
 
     if (!aeAccount || !aeAccount.startsWith('ak_')) {
       throw new BridgeError(
         BridgeErrorType.UNKNOWN_ERROR,
-        'Invalid æternity account format. Must start with "ak_"'
+        'Invalid æternity account format. Must start with "ak_"',
       );
     }
   }
-
 }

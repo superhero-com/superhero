@@ -12,12 +12,20 @@ export interface AeWebSocketMessage {
 
 export class AeWebSocketService {
   private ws: WebSocket | null = null;
+
   private listeners: Map<string, Set<(message: AeWebSocketMessage) => void>> = new Map();
+
   private reconnectAttempts = 0;
+
   private maxReconnectAttempts = 5;
+
   private reconnectDelay = 1000; // Start with 1 second
 
-  constructor(private wsUrl: string) {}
+  private wsUrl: string;
+
+  constructor(wsUrl: string) {
+    this.wsUrl = wsUrl;
+  }
 
   /**
    * Connect to the WebSocket
@@ -26,9 +34,8 @@ export class AeWebSocketService {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.wsUrl);
-        
+
         this.ws.onopen = () => {
-          console.log('[Bridge WebSocket] Connected');
           this.reconnectAttempts = 0;
           this.reconnectDelay = 1000;
           resolve();
@@ -38,18 +45,16 @@ export class AeWebSocketService {
           try {
             const message: AeWebSocketMessage = JSON.parse(event.data);
             this.handleMessage(message);
-          } catch (error) {
-            console.warn('[Bridge WebSocket] Failed to parse message:', error);
+          } catch {
+            // Ignore malformed messages
           }
         };
 
         this.ws.onclose = () => {
-          console.log('[Bridge WebSocket] Disconnected');
           this.attemptReconnect();
         };
 
-        this.ws.onerror = (error) => {
-          console.error('[Bridge WebSocket] Error:', error);
+        this.ws.onerror = () => {
           if (this.reconnectAttempts === 0) {
             reject(new Error('Failed to connect to WebSocket'));
           }
@@ -76,12 +81,12 @@ export class AeWebSocketService {
    */
   subscribe(
     messageType: string,
-    callback: (message: AeWebSocketMessage) => void
+    callback: (message: AeWebSocketMessage) => void,
   ): () => void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, new Set());
     }
-    
+
     const callbacks = this.listeners.get(messageType)!;
     callbacks.add(callback);
 
@@ -100,53 +105,52 @@ export class AeWebSocketService {
   waitForAeEthDeposit(
     aeAccount: string,
     expectedAmount: bigint,
-    timeoutMs: number = 300_000
+    timeoutMs: number = 300_000,
   ): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
+    return new Promise((resolve) => {
+      let unsubscribe = () => {};
+      let unsubscribeTx = () => {};
+
+      const cleanup = () => {
         unsubscribe();
+        unsubscribeTx();
+      };
+
+      const timeout = setTimeout(() => {
+        cleanup();
         resolve(false);
       }, timeoutMs);
 
-      const unsubscribe = this.subscribe('bridge_deposit', (message) => {
+      unsubscribe = this.subscribe('bridge_deposit', (message) => {
         if (
-          message.account === aeAccount &&
-          message.amount &&
-          BigInt(message.amount) >= expectedAmount
+          message.account === aeAccount
+          && message.amount
+          && BigInt(message.amount) >= expectedAmount
         ) {
           clearTimeout(timeout);
-          unsubscribe();
+          cleanup();
           resolve(true);
         }
       });
 
       // Also listen for general transaction events
-      const unsubscribeTx = this.subscribe('transaction', (message) => {
+      unsubscribeTx = this.subscribe('transaction', (message) => {
         // Check if this is a bridge-related transaction for our account
         if (message.data?.recipient === aeAccount) {
           // Additional validation logic can be added here
         }
       });
-
-      // Clean up both subscriptions on timeout
-      const originalTimeout = timeout;
-      clearTimeout(originalTimeout);
-      setTimeout(() => {
-        unsubscribe();
-        unsubscribeTx();
-        resolve(false);
-      }, timeoutMs);
     });
   }
 
   private handleMessage(message: AeWebSocketMessage): void {
     const callbacks = this.listeners.get(message.type);
     if (callbacks) {
-      callbacks.forEach(callback => {
+      callbacks.forEach((callback) => {
         try {
           callback(message);
-        } catch (error) {
-          console.error('[Bridge WebSocket] Callback error:', error);
+        } catch {
+          // Ignore callback errors
         }
       });
     }
@@ -154,18 +158,15 @@ export class AeWebSocketService {
 
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[Bridge WebSocket] Max reconnection attempts reached');
       return;
     }
 
-    this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    this.reconnectAttempts += 1;
+    const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
 
-    console.log(`[Bridge WebSocket] Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
     setTimeout(() => {
-      this.connect().catch(error => {
-        console.error('[Bridge WebSocket] Reconnection failed:', error);
+      this.connect().catch(() => {
+        // Ignore reconnect errors
       });
     }, delay);
   }
@@ -180,10 +181,10 @@ export function getWebSocketService(wsUrl?: string): AeWebSocketService {
   if (!globalWsService && wsUrl) {
     globalWsService = new AeWebSocketService(wsUrl);
   }
-  
+
   if (!globalWsService) {
     throw new Error('WebSocket service not initialized. Provide wsUrl on first call.');
   }
-  
+
   return globalWsService;
 }

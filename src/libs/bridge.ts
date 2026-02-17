@@ -21,19 +21,27 @@ export const BRIDGE_ABI = [
     ],
     outputs: [],
   },
-  { type: 'function', name: 'native_eth_placeholder', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
+  {
+    type: 'function', name: 'native_eth_placeholder', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }],
+  },
 ];
 
 export async function ensureEthProvider() {
   const anyWindow = window as any;
   if (!anyWindow.ethereum) throw new Error('No Ethereum provider found');
   const provider = new BrowserProvider(anyWindow.ethereum);
-  const network = await provider.getNetwork();
+  await provider.getNetwork();
   // Optional: prompt to switch to Ethereum mainnet if different
   return provider;
 }
 
-export async function bridgeEthToAe({ amountEth, aeAccount }: { amountEth: string; aeAccount: string }) {
+export async function bridgeEthToAe({
+  amountEth,
+  aeAccount,
+}: {
+  amountEth: string;
+  aeAccount: string;
+}) {
   const provider = await ensureEthProvider();
   const signer = await provider.getSigner();
   const bridge = new Contract(BRIDGE_CONSTANTS.ethBridgeAddress, BRIDGE_ABI as any, signer);
@@ -43,5 +51,3 @@ export async function bridgeEthToAe({ amountEth, aeAccount }: { amountEth: strin
   const tx = await bridge.bridge_out(asset, aeAccount, value, 1, { value });
   return tx.wait?.() ?? tx;
 }
-
-

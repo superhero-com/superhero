@@ -1,25 +1,31 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect, useMemo, useRef, useState, useCallback,
+} from 'react';
 import {
   useLatestTransactions,
-} from "@/hooks/useLatestTransactions";
-import { TX_FUNCTIONS } from "@/utils/constants";
-import { Decimal } from "@/libs/decimal";
-import AddressAvatar from "../AddressAvatar";
+} from '@/hooks/useLatestTransactions';
+import { TX_FUNCTIONS } from '@/utils/constants';
+import { Decimal } from '@/libs/decimal';
+import AddressAvatar from '../AddressAvatar';
 import './LatestTransactionsCarousel.scss';
 
-export default function LatestTransactionsCarousel() {
+const LatestTransactionsCarousel = () => {
   const { latestTransactions } = useLatestTransactions();
-  const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
+  // Number of items visible at once for loading state
+  const [itemsToShow, setItemsToShow] = useState(4);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
-
+  const skeletonKeys = useMemo(
+    () => Array.from({ length: itemsToShow }, () => crypto?.randomUUID?.()),
+    [itemsToShow],
+  );
 
   // Responsive breakpoints for loading state and screen width tracking
   const updateResponsiveValues = useCallback(() => {
     const width = window.innerWidth;
-    
+
     if (width >= 1680) setItemsToShow(7);
     else if (width >= 1280) setItemsToShow(5);
     else if (width >= 900) setItemsToShow(4);
@@ -32,13 +38,13 @@ export default function LatestTransactionsCarousel() {
   // Smooth scrolling animation
   const startScrolling = useCallback(() => {
     if (!latestTransactions.length || isHovered) return;
-    
+
     const scroll = () => {
-      setScrollPosition(prev => {
+      setScrollPosition((prev) => {
         const cardWidth = 208; // 200px card + 8px gap
         const totalWidth = latestTransactions.length * cardWidth;
         const newPosition = prev + 1.5; // Adjust speed here (pixels per frame)
-        
+
         const stopAt = totalWidth - (cardWidth * 7);
         // Stop scrolling when we reach the end
         if (newPosition >= stopAt) {
@@ -46,17 +52,17 @@ export default function LatestTransactionsCarousel() {
         }
         return newPosition;
       });
-      
+
       // Continue animation only if we haven't reached the end and not hovered
       const cardWidth = 208;
       const totalWidth = latestTransactions.length * cardWidth;
       const currentPosition = scrollPosition;
-      
+
       if (!isHovered && currentPosition < totalWidth) {
         animationRef.current = requestAnimationFrame(scroll);
       }
     };
-    
+
     animationRef.current = requestAnimationFrame(scroll);
   }, [latestTransactions.length, isHovered, scrollPosition]);
 
@@ -71,8 +77,8 @@ export default function LatestTransactionsCarousel() {
   useEffect(() => {
     updateResponsiveValues();
     const handleResize = () => updateResponsiveValues();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [updateResponsiveValues]);
 
   // Handle scrolling animation
@@ -92,13 +98,13 @@ export default function LatestTransactionsCarousel() {
       <div className="latest-transactions-carousel">
         <div className="transactions-carousel-container">
           <div className="transactions-loading">
-            {[...Array(itemsToShow)].map((_, i) => (
-              <div key={i} className="transaction-skeleton">
+            {skeletonKeys.map((key) => (
+              <div key={key} className="transaction-skeleton">
                 <div className="skeleton-content">
                   {/* Address Avatar & Address - First Row */}
                   <div className="skeleton-address-row">
                     <div className="skeleton-address-content">
-                      <div className="skeleton-avatar"></div>
+                      <div className="skeleton-avatar" />
                       <div className="skeleton-address">
                         ak_••••••••••••••••
                       </div>
@@ -109,7 +115,7 @@ export default function LatestTransactionsCarousel() {
                   <div className="skeleton-token-name">
                     Loading token name...
                   </div>
-                  
+
                   {/* Transaction Type and Volume - Third Row */}
                   <div className="skeleton-details-row">
                     <div className="skeleton-volume">
@@ -165,35 +171,35 @@ export default function LatestTransactionsCarousel() {
     switch (colorType) {
       case 'error':
         return {
-          color: "#ef4444", // error/red
-          bg: "rgba(239,68,68,0.15)",
-          border: "rgba(239,68,68,0.35)",
-          cardBg: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.12))",
-          textGradient: "bg-gradient-to-r from-red-400 via-red-500 to-red-600",
+          color: '#ef4444', // error/red
+          bg: 'rgba(239,68,68,0.15)',
+          border: 'rgba(239,68,68,0.35)',
+          cardBg: 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.12))',
+          textGradient: 'bg-gradient-to-r from-red-400 via-red-500 to-red-600',
         };
       case 'success':
         return {
-          color: "#22c55e", // success/green
-          bg: "rgba(34,197,94,0.15)",
-          border: "rgba(34,197,94,0.35)",
-          cardBg: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))",
-          textGradient: "bg-gradient-to-r from-green-400 via-green-500 to-emerald-600",
+          color: '#22c55e', // success/green
+          bg: 'rgba(34,197,94,0.15)',
+          border: 'rgba(34,197,94,0.35)',
+          cardBg: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))',
+          textGradient: 'bg-gradient-to-r from-green-400 via-green-500 to-emerald-600',
         };
       case 'warning':
         return {
-          color: "#f59e0b", // warning/orange
-          bg: "rgba(245,158,11,0.15)",
-          border: "rgba(245,158,11,0.35)",
-          cardBg: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.12))",
-          textGradient: "bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-600",
+          color: '#f59e0b', // warning/orange
+          bg: 'rgba(245,158,11,0.15)',
+          border: 'rgba(245,158,11,0.35)',
+          cardBg: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.12))',
+          textGradient: 'bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-600',
         };
       default:
         return {
-          color: "#6b7280",
-          bg: "rgba(107,114,128,0.15)",
-          border: "rgba(107,114,128,0.35)",
-          cardBg: "linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12))",
-          textGradient: "bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600",
+          color: '#6b7280',
+          bg: 'rgba(107,114,128,0.15)',
+          border: 'rgba(107,114,128,0.35)',
+          cardBg: 'linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12))',
+          textGradient: 'bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600',
         };
     }
   }
@@ -207,13 +213,13 @@ export default function LatestTransactionsCarousel() {
     textGradient: string;
   } {
     const txType = String(
-      tx?.type ||
-      tx?.tx_type ||
-      tx?.txType ||
-      tx?.action ||
-      tx?.function ||
-      tx?.fn ||
-      ""
+      tx?.type
+      || tx?.tx_type
+      || tx?.txType
+      || tx?.action
+      || tx?.function
+      || tx?.fn
+      || '',
     ).toLowerCase();
 
     const label = getTransactionType(txType);
@@ -226,24 +232,26 @@ export default function LatestTransactionsCarousel() {
     };
   }
 
-  const renderItem = (item: any, index: number) => {
+  const renderItem = (item: any) => {
     const type = normalizeType(item);
-    const tokenName =
-      item.token?.name ||
-      item.token_name ||
-      item.name ||
-      item.symbol ||
-      "Unknown";
-    const saleAddress =
-      item.token?.sale_address ||
-      item.sale_address ||
-      item.token_address ||
-      item.address;
-    const volume = item.volume || item.amount?.ae || "0";
+    const tokenName = item.token?.name
+      || item.token_name
+      || item.name
+      || item.symbol
+      || 'Unknown';
+    const saleAddress = item.token?.sale_address
+      || item.sale_address
+      || item.token_address
+      || item.address;
+    const volume = item.volume || item.amount?.ae || '0';
+
+    const itemKey = item.tx_hash
+      || item.id
+      || `${saleAddress || 'item'}-${item.address || 'addr'}-${item.created_at || ''}`;
 
     return (
       <div
-        key={`${saleAddress || "item"}-${index}`}
+        key={itemKey}
         className="transaction-card"
         style={{
           background: type.cardBg,
@@ -251,10 +259,17 @@ export default function LatestTransactionsCarousel() {
         onClick={() => {
           if (saleAddress) {
             window.location.href = `/trends/tokens/${encodeURIComponent(
-              tokenName
+              tokenName,
             )}`;
           }
         }}
+        onKeyDown={(event) => {
+          if ((event.key === 'Enter' || event.key === ' ') && saleAddress) {
+            window.location.href = `/trends/tokens/${encodeURIComponent(tokenName)}`;
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="transaction-card-content">
           {/* Address Avatar & Address - First Row */}
@@ -316,4 +331,6 @@ export default function LatestTransactionsCarousel() {
       </div>
     </div>
   );
-}
+};
+
+export default LatestTransactionsCarousel;

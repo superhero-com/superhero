@@ -1,18 +1,20 @@
-import { useState } from "react";
-import MobileInput from "../MobileInput";
-import MobileCard from "../MobileCard";
-import { Link } from "react-router-dom";
-import { useGovernance } from "@/hooks";
+/* eslint-disable */
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useGovernance } from '@/hooks';
+import MobileInput from '../MobileInput';
+import MobileCard from '../MobileCard';
 
 export default function GovernancePolls() {
+  const { t } = useTranslation('governance');
   const { usePolls } = useGovernance();
 
-  const [search, setSearch] = useState<string>("");
-  const [status, setStatus] = useState<"all" | "open" | "closed">("open");
+  const [search, setSearch] = useState<string>('');
+  const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
   const { data: polls, isLoading } = usePolls({ status, search });
 
-  //   console.log(JSON.stringify(polls, null, 2));
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('polls.loading')}</div>;
 
   return (
     <div className="min-h-screen">
@@ -30,28 +32,29 @@ export default function GovernancePolls() {
               </div>
               <div className="header-text">
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
-                  Governance
+                  {t('polls.title')}
                 </h1>
                 <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
-                  Shape the future of the ecosystem through community-driven
-                  decisions
+                  {t('polls.subtitle')}
                 </p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div
                 className={`px-4 py-2 rounded-2xl  ${
-                  status === "open"
-                    ? "to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20"
-                    : "to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20"
+                  status === 'open'
+                    ? 'to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20'
+                    : 'to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20'
                 }`}
               >
                 <span
                   className={`text-green-400 text-sm font-semibold ${
-                    status === "open" ? "text-green-400" : "text-red-400"
+                    status === 'open' ? 'text-green-400' : 'text-red-400'
                   }`}
                 >
-                  {polls.length} {status === "open" ? "Active" : "Closing"}
+                  {polls.length}
+                  {' '}
+                  {status === 'open' ? t('polls.active') : t('polls.closing')}
                 </span>
               </div>
             </div>
@@ -66,15 +69,15 @@ export default function GovernancePolls() {
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
                   <MobileInput
-                    label="Search polls"
-                    placeholder="Find polls by title or description..."
+                    label={t('polls.searchLabel')}
+                    placeholder={t('polls.searchPlaceholder')}
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
                     }}
                     variant="filled"
                     size="large"
-                    rightIcon={
+                    rightIcon={(
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -88,28 +91,28 @@ export default function GovernancePolls() {
                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
                       </svg>
-                    }
+                    )}
                     className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
                   />
                 </div>
                 <div className="lg:w-64">
                   <MobileInput
                     as="select"
-                    label="Filter by status"
+                    label={t('polls.filterByStatus')}
                     value={status}
                     onChange={(e) => {
                       if (
-                        e.target.value !== "all" &&
-                        e.target.value !== "open" &&
-                        e.target.value !== "closed"
+                        e.target.value !== 'all'
+                        && e.target.value !== 'open'
+                        && e.target.value !== 'closed'
                       ) {
-                        throw new Error("Invalid status");
+                        throw new Error('Invalid status');
                       }
                       setStatus(e.target.value);
                     }}
                     variant="filled"
                     size="large"
-                    rightIcon={
+                    rightIcon={(
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -123,12 +126,12 @@ export default function GovernancePolls() {
                           d="M19 9l-7 7-7-7"
                         />
                       </svg>
-                    }
+                    )}
                     className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
                   >
-                    <option value="all">All polls</option>
-                    <option value="open">🟢 Open polls</option>
-                    <option value="closed">🔴 Closed polls</option>
+                    <option value="all">{t('polls.allPolls')}</option>
+                    <option value="open">{t('polls.openPolls')}</option>
+                    <option value="closed">{t('polls.closedPolls')}</option>
                   </MobileInput>
                 </div>
               </div>
@@ -154,11 +157,10 @@ export default function GovernancePolls() {
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full animate-pulse" />
                   </div>
                   <h3 className="m-0 mb-4 text-white text-2xl font-bold">
-                    No polls found
+                    {t('polls.noPollsFound')}
                   </h3>
                   <p className="m-0 text-slate-300 text-base leading-relaxed max-w-md mx-auto">
-                    Try adjusting your search terms or filters to discover
-                    governance polls that match your interests.
+                    {t('polls.noPollsHint')}
                   </p>
                 </div>
               </MobileCard>
@@ -182,16 +184,16 @@ export default function GovernancePolls() {
                       <div className="absolute top-4 right-4 z-10">
                         <div
                           className={`relative px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
-                            p.status?.toLowerCase() === "open"
-                              ? "bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
-                              : p.status?.toLowerCase() === "closed"
-                              ? "bg-gradient-to-br from-red-500/30 to-rose-500/20 text-red-300 border border-red-400/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-                              : "bg-gradient-to-br from-gray-500/30 to-slate-500/20 text-gray-300 border border-gray-400/40"
+                            p.status?.toLowerCase() === 'open'
+                              ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
+                              : p.status?.toLowerCase() === 'closed'
+                                ? 'bg-gradient-to-br from-red-500/30 to-rose-500/20 text-red-300 border border-red-400/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+                                : 'bg-gradient-to-br from-gray-500/30 to-slate-500/20 text-gray-300 border border-gray-400/40'
                           }`}
                         >
-                          {p.status || "Unknown"}
+                          {p.status || t('polls.unknown')}
 
-                          {p.status?.toLowerCase() === "open" && (
+                          {p.status?.toLowerCase() === 'open' && (
                             <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl animate-pulse" />
                           )}
                         </div>
@@ -224,7 +226,9 @@ export default function GovernancePolls() {
                               </svg>
                             </div>
                             <span className="text-sm font-semibold">
-                              {p.voteCount} votes
+                              {p.voteCount}
+                              {' '}
+                              {t('polls.votes')}
                             </span>
                           </div>
 

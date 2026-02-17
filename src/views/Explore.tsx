@@ -1,15 +1,25 @@
+/* eslint-disable
+  react/function-component-definition,
+  react/button-has-type,
+  jsx-a11y/label-has-associated-control,
+  no-return-assign,
+  no-nested-ternary,
+  max-len
+*/
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import DexTabs from '../components/dex/DexTabs';
 import TokenTable from '../components/explore/components/TokenListTable';
 import { useTokenList } from '../components/explore/hooks/useTokenList';
 import { usePairList } from '../components/explore/hooks/usePairList';
 import { useTransactionList } from '../components/explore/hooks/useTransactionList';
 import { CONFIG } from '../config';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 export default function ExploreRefactored() {
+  const { t } = useTranslation('explore');
   const [active, setActive] = useState<'Tokens' | 'Pairs' | 'Transactions'>('Tokens');
-  
+
   // Hooks for different data types
   const tokenList = useTokenList();
   const pairList = usePairList();
@@ -18,14 +28,14 @@ export default function ExploreRefactored() {
   return (
     <div className="max-w-[1400px] mx-auto p-5">
       <DexTabs />
-      
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-[32px] font-bold text-white m-0 mb-2">
-          Explore
+          {t('exploreTitle')}
         </h1>
         <p className="text-base text-white/80 m-0 leading-relaxed">
-          Discover tokens, pools, and track transactions across the æternity ecosystem
+          {t('exploreDescription')}
         </p>
       </div>
 
@@ -34,32 +44,32 @@ export default function ExploreRefactored() {
         <button
           onClick={() => setActive('Tokens')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Tokens' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Tokens'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
-          Tokens
+          {t('tokens')}
         </button>
         <button
           onClick={() => setActive('Pairs')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Pairs' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Pairs'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
-          Pools
+          {t('pools')}
         </button>
         <button
           onClick={() => setActive('Transactions')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
-            active === 'Transactions' 
-              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+            active === 'Transactions'
+              ? 'bg-gray-800 text-white border-b-2 border-green-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
-          Transactions
+          {t('transactions')}
         </button>
       </div>
 
@@ -68,13 +78,13 @@ export default function ExploreRefactored() {
         <div>
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white m-0 mb-2">
-              All Tokens
+              {t('allTokens')}
             </h2>
             <p className="text-sm text-white/70 m-0">
-              Browse and interact with all available tokens on æternity
+              {t('allTokensDescription')}
             </p>
           </div>
-          
+
           <TokenTable
             tokens={tokenList.tokens}
             sort={tokenList.sort}
@@ -90,36 +100,36 @@ export default function ExploreRefactored() {
         <div>
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white m-0 mb-2">
-              Liquidity Pools
+              {t('liquidityPools')}
             </h2>
             <p className="text-sm text-white/70 m-0">
-              Explore trading pairs and their performance metrics
+              {t('liquidityPoolsDescription')}
             </p>
           </div>
-          
+
           <div className="overflow-x-auto">
             {/* Controls */}
             <div className="flex gap-2 items-center mb-4">
-              <label className="text-xs opacity-85 text-white/80">Sort by</label>
+              <label className="text-xs opacity-85 text-white/80">{t('sortBy')}</label>
               <AppSelect
                 value={pairList.sort.key as string}
                 onValueChange={(v) => pairList.toggleSort(v as any)}
                 triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-green-500"
                 contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <AppSelectItem value="transactions">Tx count</AppSelectItem>
-                <AppSelectItem value="pair">Pair</AppSelectItem>
-                <AppSelectItem value="address">Address</AppSelectItem>
+                <AppSelectItem value="transactions">{t('txCount')}</AppSelectItem>
+                <AppSelectItem value="pair">{t('pair')}</AppSelectItem>
+                <AppSelectItem value="address">{t('address')}</AppSelectItem>
               </AppSelect>
-              <button 
+              <button
                 onClick={() => pairList.toggleSort(pairList.sort.key)}
                 className="px-2 py-1.5 rounded-md border border-gray-600 bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors"
               >
                 {pairList.sort.asc ? '↑' : '↓'}
               </button>
-              <input 
-                placeholder="Filter pools" 
-                value={pairList.search} 
+              <input
+                placeholder={t('filterPools')}
+                value={pairList.search}
                 onChange={(e) => pairList.setSearch(e.target.value)}
                 className="ml-auto px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 min-w-[200px] text-sm placeholder-white/50 focus:outline-none focus:border-green-500"
               />
@@ -129,12 +139,12 @@ export default function ExploreRefactored() {
             <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
               <thead>
                 <tr className="border-b border-gray-600 bg-white/10">
-                  <th className="text-left p-3 text-xs opacity-80 text-white/80">Pair</th>
-                  <th className="text-left p-3 text-xs opacity-80 text-white/80">Address</th>
-                  <th className="text-center p-3 text-xs opacity-80 text-white/80">Tx</th>
-                  <th className="text-right p-3 text-xs opacity-80 text-white/80">TVL (USD)</th>
-                  <th className="text-right p-3 text-xs opacity-80 text-white/80">24h Vol</th>
-                  <th className="text-center p-3 text-xs opacity-80 text-white/80">Actions</th>
+                  <th className="text-left p-3 text-xs opacity-80 text-white/80">{t('pair')}</th>
+                  <th className="text-left p-3 text-xs opacity-80 text-white/80">{t('address')}</th>
+                  <th className="text-center p-3 text-xs opacity-80 text-white/80">{t('txShort')}</th>
+                  <th className="text-right p-3 text-xs opacity-80 text-white/80">{t('tvlUsd')}</th>
+                  <th className="text-right p-3 text-xs opacity-80 text-white/80">{t('vol24h')}</th>
+                  <th className="text-center p-3 text-xs opacity-80 text-white/80">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,14 +153,14 @@ export default function ExploreRefactored() {
                     <td style={{ padding: '12px 8px' }}>
                       <button
                         onClick={() => window.location.href = `/explore/tokens/${pair.token0 || pair.token0Address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
                           fontSize: 14,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       >
                         {pair.token0Symbol}
@@ -158,14 +168,14 @@ export default function ExploreRefactored() {
                       {' / '}
                       <button
                         onClick={() => window.location.href = `/explore/tokens/${pair.token1 || pair.token1Address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
                           fontSize: 14,
-                          fontWeight: 500
+                          fontWeight: 500,
                         }}
                       >
                         {pair.token1Symbol}
@@ -174,25 +184,25 @@ export default function ExploreRefactored() {
                     <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontSize: 12 }}>
                       <button
                         onClick={() => window.location.href = `/explore/pools/${pair.address}`}
-                        style={{ 
-                          color: 'white', 
+                        style={{
+                          color: 'white',
                           textDecoration: 'underline',
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          marginRight: 8
+                          marginRight: 8,
                         }}
                       >
                         {pair.address}
                       </button>
                       {CONFIG.EXPLORER_URL && (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${pair.address}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
+                        <a
+                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${pair.address}`}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{ color: '#8bc9ff', textDecoration: 'underline' }}
                         >
-                          View
+                          {t('view')}
                         </a>
                       )}
                     </td>
@@ -207,33 +217,33 @@ export default function ExploreRefactored() {
                     </td>
                     <td style={{ textAlign: 'center', padding: '12px 8px' }}>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                        <button 
+                        <button
                           onClick={() => window.location.href = `/defi/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
-                          style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: 6, 
-                            border: '1px solid #3a3a4a', 
-                            background: '#2a2a39', 
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: '1px solid #3a3a4a',
+                            background: '#2a2a39',
                             color: 'white',
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
-                          Swap
+                          {t('swap')}
                         </button>
-                        <button 
+                        <button
                           onClick={() => window.location.href = `/pool/add?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
-                          style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: 6, 
-                            border: '1px solid #3a3a4a', 
-                            background: '#2a2a39', 
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: '1px solid #3a3a4a',
+                            background: '#2a2a39',
                             color: 'white',
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
                           }}
                         >
-                          Add
+                          {t('add')}
                         </button>
                       </div>
                     </td>
@@ -244,7 +254,7 @@ export default function ExploreRefactored() {
 
             {pairList.pairs.length === 0 && !pairList.loading && (
               <div style={{ textAlign: 'center', padding: 40, opacity: 0.7 }}>
-                No pools found
+                {t('noPoolsFound')}
               </div>
             )}
           </div>
@@ -254,52 +264,55 @@ export default function ExploreRefactored() {
       {active === 'Transactions' && (
         <div>
           <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
-              Recent Transactions
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: 'white',
+              margin: '0 0 8px 0',
+            }}
+            >
+              {t('recentTransactions')}
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
-              Track recent swaps, liquidity additions, and removals
+            <p style={{
+              fontSize: 14,
+              opacity: 0.7,
+              margin: 0,
+            }}
+            >
+              {t('trackRecentDescription')}
             </p>
           </div>
-          
+
           <div style={{ overflowX: 'auto' }}>
             {/* Controls */}
-            <div style={{ 
-              display: 'flex', 
-              gap: 8, 
-              alignItems: 'center', 
-              marginBottom: 16 
-            }}>
-              <label style={{ fontSize: 12, opacity: 0.85 }}>Type</label>
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              marginBottom: 16,
+            }}
+            >
+              <label style={{ fontSize: 12, opacity: 0.85 }}>{t('type')}</label>
               <AppSelect
                 value={transactionList.type as string}
                 onValueChange={(v) => transactionList.setType(v as any)}
                 triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none"
                 contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <AppSelectItem value="all">All</AppSelectItem>
-                <AppSelectItem value="swap">Swaps</AppSelectItem>
-                <AppSelectItem value="add">Adds</AppSelectItem>
-                <AppSelectItem value="remove">Removes</AppSelectItem>
+                <AppSelectItem value="all">{t('all')}</AppSelectItem>
+                <AppSelectItem value="swap">{t('swaps')}</AppSelectItem>
+                <AppSelectItem value="add">{t('adds')}</AppSelectItem>
+                <AppSelectItem value="remove">{t('removes')}</AppSelectItem>
               </AppSelect>
-              <label style={{ fontSize: 12, opacity: 0.85, marginLeft: 8 }}>Window</label>
+              <label style={{ fontSize: 12, opacity: 0.85, marginLeft: 8 }}>{t('window')}</label>
               <AppSelect
                 value={transactionList.window as string}
                 onValueChange={(v) => transactionList.setWindow(v as any)}
                 triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none"
                 contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <AppSelectItem value="24h">24h</AppSelectItem>
-                <AppSelectItem value="7d">7d</AppSelectItem>
+                <AppSelectItem value="24h">{t('window24h')}</AppSelectItem>
+                <AppSelectItem value="7d">{t('window7d')}</AppSelectItem>
               </AppSelect>
             </div>
 
@@ -307,30 +320,62 @@ export default function ExploreRefactored() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #3a3a4a' }}>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Type</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Pair</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Amount In</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Amount Out</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Transaction</th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    {t('type')}
+                  </th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    {t('pair')}
+                  </th>
+                  <th style={{
+                    textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    {t('amountIn')}
+                  </th>
+                  <th style={{
+                    textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    {t('amountOut')}
+                  </th>
+                  <th style={{
+                    textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8,
+                  }}
+                  >
+                    {t('transaction')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {transactionList.transactions.map((tx, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #1a1a23' }}>
+                {transactionList.transactions.map((tx) => (
+                  <tr
+                    key={tx.txHash || `${tx.type}-${tx.tokenInSymbol}-${tx.tokenOutSymbol}-${tx.amountIn}-${tx.amountOut}`}
+                    style={{ borderBottom: '1px solid #1a1a23' }}
+                  >
                     <td style={{ padding: '12px 8px', fontSize: 14 }}>
-                      <span style={{ 
-                        padding: '2px 6px', 
-                        borderRadius: 4, 
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: 4,
                         fontSize: 12,
                         fontWeight: 600,
                         background: tx.type === 'swap' ? '#4caf50' : tx.type === 'add' ? '#2196f3' : '#ff9800',
-                        color: 'white'
-                      }}>
+                        color: 'white',
+                      }}
+                      >
                         {tx.type || tx.event || '-'}
                       </span>
                     </td>
                     <td style={{ padding: '12px 8px', fontSize: 14 }}>
-                      {tx.tokenInSymbol || tx.token0Symbol} / {tx.tokenOutSymbol || tx.token1Symbol}
+                      {tx.tokenInSymbol || tx.token0Symbol}
+                      {' '}
+                      /
+                      {tx.tokenOutSymbol || tx.token1Symbol}
                     </td>
                     <td style={{ textAlign: 'right', padding: '12px 8px', fontSize: 14 }}>
                       {tx.amountIn || '-'}
@@ -340,10 +385,10 @@ export default function ExploreRefactored() {
                     </td>
                     <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontSize: 12 }}>
                       {tx.txHash && CONFIG.EXPLORER_URL ? (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${tx.txHash}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
+                        <a
+                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${tx.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{ color: '#8bc9ff', textDecoration: 'underline' }}
                         >
                           {tx.txHash}
@@ -357,7 +402,7 @@ export default function ExploreRefactored() {
 
             {transactionList.transactions.length === 0 && !transactionList.loading && (
               <div style={{ textAlign: 'center', padding: 40, opacity: 0.7 }}>
-                No transactions found
+                {t('noTransactionsFound')}
               </div>
             )}
           </div>

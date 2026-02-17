@@ -1,7 +1,16 @@
 import React from 'react';
 import { Button } from '../../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { DataTableMeta } from './DataTable';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '../../../../components/ui/select';
+
+export interface DataTableMeta {
+  totalItems: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export interface DataTablePaginationProps {
   meta: DataTableMeta;
@@ -13,7 +22,7 @@ export interface DataTablePaginationProps {
   itemsPerPageOptions?: number[];
 }
 
-export function DataTablePagination({
+export const DataTablePagination = ({
   meta,
   onPageChange,
   onItemsPerPageChange,
@@ -21,10 +30,9 @@ export function DataTablePagination({
   className = '',
   showItemsPerPage = true,
   itemsPerPageOptions = [5, 10, 20, 50, 100],
-}: DataTablePaginationProps) {
+}: DataTablePaginationProps) => {
   const {
     totalItems,
-    itemCount,
     itemsPerPage,
     totalPages,
     currentPage,
@@ -43,7 +51,7 @@ export function DataTablePagination({
   };
 
   const handleItemsPerPageChange = (value: string) => {
-    const newItemsPerPage = parseInt(value);
+    const newItemsPerPage = parseInt(value, 10);
     if (onItemsPerPageChange) {
       onItemsPerPageChange(newItemsPerPage);
     }
@@ -85,11 +93,29 @@ export function DataTablePagination({
       {/* Page info */}
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
+          Page
+          {' '}
+          {currentPage}
+          {' '}
+          of
+          {' '}
+          {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <p className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {totalItems} results
+            Showing
+            {' '}
+            {startItem}
+            {' '}
+            to
+            {' '}
+            {endItem}
+            {' '}
+            of
+            {' '}
+            {totalItems}
+            {' '}
+            results
           </p>
         </div>
       </div>
@@ -187,4 +213,4 @@ export function DataTablePagination({
       </div>
     </div>
   );
-}
+};

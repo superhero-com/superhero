@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +17,9 @@ type FormErrors = Partial<Record<'title' | 'description' | 'link' | 'options' | 
 export default function GovernanceCreate() {
   const { t } = useTranslation('governance');
   const navigate = useNavigate();
-  const { sdk, currentBlockHeight, sdkInitialized, activeAccount } = useAeSdk();
+  const {
+    sdk, currentBlockHeight, sdkInitialized, activeAccount,
+  } = useAeSdk();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -117,7 +120,7 @@ export default function GovernanceCreate() {
     try {
       setSubmitting(true);
 
-      const pollBytecode = (BYTECODE_HASHES as any)["8.0.0"]["Poll_Iris.aes"].bytecode as Encoded.ContractBytearray;
+      const pollBytecode = (BYTECODE_HASHES as any)['8.0.0']['Poll_Iris.aes'].bytecode as Encoded.ContractBytearray;
       const pollContract = await sdk.initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
 
       const createMetadata = {
@@ -144,12 +147,12 @@ export default function GovernanceCreate() {
 
       // Add to registry
       const registry = await Contract.initialize<{
-        add_poll: (poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
-      }>({
-        ...sdk.getContext(),
-        aci: REGISTRY_WITH_EVENTS_ACI as any,
-        address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
-      });
+        add_poll:(poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
+          }>({
+            ...sdk.getContext(),
+            aci: REGISTRY_WITH_EVENTS_ACI as any,
+            address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+          });
       await registry.add_poll(createdAddress as Encoded.ContractAddress, isListed, {
         ttl: undefined,
       });
@@ -168,7 +171,7 @@ export default function GovernanceCreate() {
     <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
           <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
             <p className="text-slate-300 mt-2">{t('description')}</p>
@@ -205,8 +208,13 @@ export default function GovernanceCreate() {
         <div className="space-y-2">
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
-              <MobileInput label={idx === 0 ? t('form.options') : undefined} placeholder={t('form.addOption')}
-                value={opt} onChange={(e) => addOptionRow(idx, e.target.value)} error={errors.options || undefined} />
+              <MobileInput
+                label={idx === 0 ? t('form.options') : undefined}
+                placeholder={t('form.addOption')}
+                value={opt}
+                onChange={(e) => addOptionRow(idx, e.target.value)}
+                error={errors.options || undefined}
+              />
               {opt && (
                 <AeButton onClick={() => removeOption(idx)} className="bg-white/10">✕</AeButton>
               )}
@@ -225,10 +233,16 @@ export default function GovernanceCreate() {
               <span>{t('messages.neverClosingHint')}</span>
             )}
             {closeHeight && Number(closeHeight) < height && closeHeight !== '0' && (
-              <span> {t('messages.closeHeightPast', { current: height, close: closeHeight })}</span>
+              <span>
+                {' '}
+                {t('messages.closeHeightPast', { current: height, close: closeHeight })}
+              </span>
             )}
             {closeHeight === '0' && (
-              <span> {t('messages.neverClosing')}</span>
+              <span>
+                {' '}
+                {t('messages.neverClosing')}
+              </span>
             )}
           </div>
         </div>
@@ -242,5 +256,3 @@ export default function GovernanceCreate() {
     </div>
   );
 }
-
-

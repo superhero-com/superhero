@@ -14,15 +14,15 @@ export const useRecentActivities = () => {
       timestamp: activity.timestamp || Date.now(),
     };
 
-    setRecentActivities(prev => {
+    setRecentActivities((prev) => {
       const accountActivities = prev[newActivity.account] || [];
-      
+
       // Add new activity at the beginning (most recent first)
       const updatedActivities = [newActivity, ...accountActivities];
-      
+
       // Keep only the most recent activities (limit per account)
       const trimmedActivities = updatedActivities.slice(0, MAX_ACTIVITIES_PER_ACCOUNT);
-      
+
       return {
         ...prev,
         [newActivity.account]: trimmedActivities,
@@ -30,12 +30,10 @@ export const useRecentActivities = () => {
     });
   }, [setRecentActivities]);
 
-  const getActivitiesForAccount = useCallback((account: string): RecentActivity[] => {
-    return recentActivities[account] || [];
-  }, [recentActivities]);
+  const getActivitiesForAccount = useCallback((account: string): RecentActivity[] => recentActivities[account] || [], [recentActivities]);
 
   const clearActivitiesForAccount = useCallback((account: string) => {
-    setRecentActivities(prev => {
+    setRecentActivities((prev) => {
       const updated = { ...prev };
       delete updated[account];
       return updated;
@@ -43,18 +41,16 @@ export const useRecentActivities = () => {
   }, [setRecentActivities]);
 
   const updateActivityStatus = useCallback((
-    account: string, 
-    txHash: string, 
-    status: RecentActivity['status']
+    account: string,
+    txHash: string,
+    status: RecentActivity['status'],
   ) => {
-    setRecentActivities(prev => {
+    setRecentActivities((prev) => {
       const accountActivities = prev[account] || [];
-      const updatedActivities = accountActivities.map(activity => 
-        activity.hash === txHash 
-          ? { ...activity, status }
-          : activity
-      );
-      
+      const updatedActivities = accountActivities.map((activity) => (activity.hash === txHash
+        ? { ...activity, status }
+        : activity));
+
       return {
         ...prev,
         [account]: updatedActivities,

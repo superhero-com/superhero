@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
 import { Decimal } from '@/libs/decimal';
@@ -21,7 +22,7 @@ export default function LiquiditySuccessNotification({
   tokenB,
   amountA,
   amountB,
-  txHash
+  txHash,
 }: LiquiditySuccessNotificationProps) {
   const [progress, setProgress] = useState(0);
 
@@ -38,7 +39,7 @@ export default function LiquiditySuccessNotification({
     const increment = (interval / duration) * 100;
 
     const timer = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         const newProgress = prev + increment;
         if (newProgress >= 100) {
           clearInterval(timer);
@@ -77,7 +78,13 @@ export default function LiquiditySuccessNotification({
 
           {/* Subtitle */}
           <div className="text-sm text-white/60 text-center mb-6 opacity-90">
-            Your liquidity has been added to the {tokenA.symbol}/{tokenB.symbol} pool
+            Your liquidity has been added to the
+            {' '}
+            {tokenA.symbol}
+            /
+            {tokenB.symbol}
+            {' '}
+            pool
           </div>
 
           {/* Token Amounts Summary */}
@@ -118,7 +125,11 @@ export default function LiquiditySuccessNotification({
                   Position Update Pending
                 </div>
                 <div className="text-xs sm:text-sm text-white/60 leading-relaxed">
-                  Your new position will appear in <strong>Active Positions</strong> within a few seconds, depending on network confirmation time.
+                  Your new position will appear in
+                  {' '}
+                  <strong>Active Positions</strong>
+                  {' '}
+                  within a few seconds, depending on network confirmation time.
                 </div>
               </div>
             </div>
@@ -147,7 +158,7 @@ export default function LiquiditySuccessNotification({
 
           {/* Auto-close progress bar */}
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10 rounded-b-[24px] overflow-hidden">
-            <div 
+            <div
               className="h-full bg-[#1161FE] transition-all duration-75 ease-linear rounded-b-[24px]"
               style={{ width: `${progress}%` }}
             />

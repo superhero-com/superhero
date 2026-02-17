@@ -1,12 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import {
+  Search, Filter, X, RefreshCw, Hash, User,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { DexService } from '../../../api/generated';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '../../../components/ui/select';
 import { DataTable, DataTableResponse } from '../../shared/components/DataTable';
 import { TransactionCard } from '../components/TransactionCard';
-import { Search, Filter, X, RefreshCw, Hash, User } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
 
 // Transaction types mapping with meaningful names
 const TX_TYPES = [
@@ -37,9 +41,9 @@ const fetchTransactions = async (params: any): Promise<DataTableResponse<any>> =
 };
 
 // Advanced example showing how to use DataTable with filters and custom parameters
-export default function DexExploreTransactions() {
+const DexExploreTransactions = () => {
   const [searchParams] = useSearchParams();
-  const tokenAddress = searchParams.get("tokenAddress");
+  const tokenAddress = searchParams.get('tokenAddress');
 
   const [filters, setFilters] = useState({
     txType: 'all',
@@ -48,7 +52,7 @@ export default function DexExploreTransactions() {
   });
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleClearFilters = () => {
@@ -102,12 +106,12 @@ export default function DexExploreTransactions() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Transaction Type Filter */}
             <div className="space-y-3">
-              <label className="flex  items-center gap-2 text-sm font-medium text-foreground">
+              <div className="flex  items-center gap-2 text-sm font-medium text-foreground">
                 <div className="p-1 bg-blue-500/10 rounded">
                   <RefreshCw className="h-3 w-3 text-blue-500" />
                 </div>
                 Transaction Type
-              </label>
+              </div>
               <Select
                 value={filters.txType}
                 onValueChange={(value) => handleFilterChange('txType', value)}
@@ -134,12 +138,12 @@ export default function DexExploreTransactions() {
 
             {/* Pair Address Filter */}
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <div className="p-1 bg-green-500/10 rounded">
                   <Hash className="h-3 w-3 text-green-500" />
                 </div>
                 Pair Address
-              </label>
+              </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -163,12 +167,12 @@ export default function DexExploreTransactions() {
 
             {/* Account Address Filter */}
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <div className="p-1 bg-purple-500/10 rounded">
                   <User className="h-3 w-3 text-purple-500" />
                 </div>
                 Account Address
-              </label>
+              </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -192,7 +196,6 @@ export default function DexExploreTransactions() {
           </div>
         </div>
 
-
         {/* DataTable Implementation */}
         <DataTable
           queryFn={fetchTransactions}
@@ -208,7 +211,7 @@ export default function DexExploreTransactions() {
             txType: filters.txType,
             pairAddress: filters.pairAddress,
             accountAddress: filters.accountAddress,
-            tokenAddress: tokenAddress,
+            tokenAddress,
           }}
           itemsPerPage={10}
           emptyMessage="No transactions found matching your criteria."
@@ -217,4 +220,6 @@ export default function DexExploreTransactions() {
       </div>
     </div>
   );
-}
+};
+
+export default DexExploreTransactions;

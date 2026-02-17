@@ -1,17 +1,17 @@
-import { PairDto } from "@/api/generated";
-import { TokenChip } from "@/components/TokenChip";
-import { Decimal } from "@/libs/decimal";
+import { PairDto } from '@/api/generated';
+import { TokenChip } from '@/components/TokenChip';
+import { Decimal } from '@/libs/decimal';
 
 interface PoolCompositionProps {
   pairData?: PairDto;
 }
 
-export function PoolComposition({ pairData }: PoolCompositionProps) {
+export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
   // Calculate ratios from reserves
   const ratio1 = pairData?.reserve1 && pairData?.reserve0 && Decimal.from(pairData.reserve0).gt(0)
     ? Decimal.from(pairData.reserve1).div(pairData.reserve0)
     : Decimal.ZERO;
-  
+
   const ratio0 = pairData?.reserve0 && pairData?.reserve1 && Decimal.from(pairData.reserve1).gt(0)
     ? Decimal.from(pairData.reserve0).div(pairData.reserve1)
     : Decimal.ZERO;
@@ -24,16 +24,16 @@ export function PoolComposition({ pairData }: PoolCompositionProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
         {/* Token 0 Info */}
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: 'center' }}>
           <div
             style={{
               fontSize: 14,
               fontWeight: 600,
-              color: "var(--standard-font-color)",
+              color: 'var(--standard-font-color)',
               marginBottom: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               gap: 8,
             }}
           >
@@ -43,15 +43,15 @@ export function PoolComposition({ pairData }: PoolCompositionProps) {
             style={{
               fontSize: 20,
               fontWeight: 700,
-              color: "var(--standard-font-color)",
+              color: 'var(--standard-font-color)',
               marginBottom: 4,
-              fontFamily: "monospace",
+              fontFamily: 'monospace',
             }}
           >
-            {Decimal.fromBigNumberString(pairData?.reserve0?.toString() || "0").prettify()}
+            {Decimal.fromBigNumberString(pairData?.reserve0?.toString() || '0').prettify()}
             <span className="text-xs text-white/60">
-              {" "}
-              {pairData?.token0?.symbol || "Token"}
+              {' '}
+              {pairData?.token0?.symbol || 'Token'}
             </span>
           </div>
         </div>
@@ -59,16 +59,16 @@ export function PoolComposition({ pairData }: PoolCompositionProps) {
         {/* Ratio Display */}
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             gap: 8,
           }}
         >
           <div
             style={{
               fontSize: 24,
-              color: "var(--accent-color)",
+              color: 'var(--accent-color)',
               fontWeight: 700,
             }}
           >
@@ -78,32 +78,44 @@ export function PoolComposition({ pairData }: PoolCompositionProps) {
             <div
               style={{
                 fontSize: 12,
-                color: "var(--light-font-color)",
-                textAlign: "center",
+                color: 'var(--light-font-color)',
+                textAlign: 'center',
                 lineHeight: 1.3,
               }}
             >
-              1 {pairData?.token0?.symbol || "Token"} ={" "}
-              {ratio1.prettify()}{" "}
-              {pairData?.token1?.symbol || "Token"}
-              <br />1 {pairData?.token1?.symbol || "Token"} ={" "}
-              {ratio0.prettify()}{" "}
-              {pairData?.token0?.symbol || "Token"}
+              1
+              {' '}
+              {pairData?.token0?.symbol || 'Token'}
+              {' '}
+              =
+              {' '}
+              {ratio1.prettify()}
+              {' '}
+              {pairData?.token1?.symbol || 'Token'}
+              <br />
+              1
+              {pairData?.token1?.symbol || 'Token'}
+              {' '}
+              =
+              {' '}
+              {ratio0.prettify()}
+              {' '}
+              {pairData?.token0?.symbol || 'Token'}
             </div>
           )}
         </div>
 
         {/* Token 1 Info */}
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: 'center' }}>
           <div
             style={{
               fontSize: 14,
               fontWeight: 600,
-              color: "var(--standard-font-color)",
+              color: 'var(--standard-font-color)',
               marginBottom: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               gap: 8,
             }}
           >
@@ -113,19 +125,19 @@ export function PoolComposition({ pairData }: PoolCompositionProps) {
             style={{
               fontSize: 20,
               fontWeight: 700,
-              color: "var(--standard-font-color)",
+              color: 'var(--standard-font-color)',
               marginBottom: 4,
-              fontFamily: "monospace",
+              fontFamily: 'monospace',
             }}
           >
-            {Decimal.fromBigNumberString(pairData?.reserve1?.toString() || "0").prettify()}
+            {Decimal.fromBigNumberString(pairData?.reserve1?.toString() || '0').prettify()}
             <span className="text-xs text-white/60">
-              {" "}
-              {pairData?.token1?.symbol || "Token"}
+              {' '}
+              {pairData?.token1?.symbol || 'Token'}
             </span>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};

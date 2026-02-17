@@ -1,9 +1,9 @@
-import tailwindcssAnimate from "tailwindcss-animate";
-import typography from "@tailwindcss/typography";
+import tailwindcssAnimate from 'tailwindcss-animate';
+import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ["class"],
+  darkMode: ['class'],
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -11,61 +11,61 @@ export default {
     './src/**/*.{ts,tsx}',
     './index.html',
   ],
-  prefix: "",
+  prefix: '',
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: '2rem',
       screens: {
-        "2xl": "1400px",
+        '2xl': '1400px',
       },
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: "var(--primary-color)",
-          foreground: "hsl(var(--primary-foreground))",
-          50: "rgba(0, 255, 157, 0.05)",
-          100: "rgba(0, 255, 157, 0.1)",
-          200: "rgba(0, 255, 157, 0.2)",
-          300: "rgba(0, 255, 157, 0.3)",
-          400: "rgba(0, 255, 157, 0.4)",
-          500: "var(--primary-color)",
-          600: "rgba(0, 255, 157, 0.8)",
-          700: "rgba(0, 255, 157, 0.9)",
-          800: "rgba(0, 200, 130, 1)",
-          900: "rgba(0, 160, 104, 1)",
+          DEFAULT: 'var(--primary-color)',
+          foreground: 'hsl(var(--primary-foreground))',
+          50: 'rgba(0, 255, 157, 0.05)',
+          100: 'rgba(0, 255, 157, 0.1)',
+          200: 'rgba(0, 255, 157, 0.2)',
+          300: 'rgba(0, 255, 157, 0.3)',
+          400: 'rgba(0, 255, 157, 0.4)',
+          500: 'var(--primary-color)',
+          600: 'rgba(0, 255, 157, 0.8)',
+          700: 'rgba(0, 255, 157, 0.9)',
+          800: 'rgba(0, 200, 130, 1)',
+          900: 'rgba(0, 160, 104, 1)',
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
-        
+
         // Custom colors from existing design system
         'neon-pink': 'var(--neon-pink)',
         'neon-teal': 'var(--neon-teal)',
@@ -73,7 +73,7 @@ export default {
         'neon-yellow': 'var(--neon-yellow)',
         'neon-purple': 'var(--neon-purple)',
         'neon-green': 'var(--neon-green)',
-        
+
         // Legacy color mappings for compatibility
         fg: 'var(--standard-font-color)',
         bg: 'var(--background-color)',
@@ -82,27 +82,27 @@ export default {
         error: 'var(--error-color)',
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
         },
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 5px rgba(255, 107, 107, 0.3)' },
           '50%': { boxShadow: '0 0 20px rgba(255, 107, 107, 0.6), 0 0 30px rgba(255, 107, 107, 0.4)' },
         },
-        'floating': {
+        floating: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
         },
@@ -135,10 +135,10 @@ export default {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
         'pulse-glow': 'pulse-glow calc(2s * var(--anim-speed, 1)) infinite',
-        'floating': 'floating calc(3s * var(--anim-speed, 1)) ease-in-out infinite',
+        floating: 'floating calc(3s * var(--anim-speed, 1)) ease-in-out infinite',
         shimmer: 'shimmer calc(3s * var(--anim-speed, 1)) infinite',
         'skeleton-loading': 'skeleton-loading calc(1.5s * var(--anim-speed, 1)) infinite',
         'truncate-scroll': 'truncate-scroll calc(var(--animation-duration, 3s) * var(--anim-speed, 1)) 1.5s infinite linear',
@@ -147,6 +147,4 @@ export default {
     },
   },
   plugins: [tailwindcssAnimate, typography],
-}
-
-
+};

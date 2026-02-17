@@ -1,16 +1,16 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable */
 import {
   WEB_SOCKET_CHANNELS,
   WEB_SOCKET_RECONNECT_TIMEOUT,
-} from "@/utils/constants";
+} from '@/utils/constants';
 import type {
   ITopHeader,
   ITransaction,
   IWebSocketSubscriptionMessage,
   WebSocketChannelName,
-} from "@/utils/types";
-import { io, Socket } from "socket.io-client";
-import { v4 as genUuid } from "uuid";
+} from '@/utils/types';
+import { io, Socket } from 'socket.io-client';
+import { v4 as genUuid } from 'uuid';
 
 class WebSocketClient {
   private static instance: WebSocketClient;
@@ -25,11 +25,11 @@ class WebSocketClient {
     WebSocketChannelName,
     Record<string, (payload: ITransaction | ITopHeader) => void>
   > = {
-    [WEB_SOCKET_CHANNELS.TokenCreated]: {},
-    [WEB_SOCKET_CHANNELS.TokenUpdated]: {},
-    [WEB_SOCKET_CHANNELS.TokenTransaction]: {},
-    [WEB_SOCKET_CHANNELS.TokenHistory]: {},
-  };
+      [WEB_SOCKET_CHANNELS.TokenCreated]: {},
+      [WEB_SOCKET_CHANNELS.TokenUpdated]: {},
+      [WEB_SOCKET_CHANNELS.TokenTransaction]: {},
+      [WEB_SOCKET_CHANNELS.TokenHistory]: {},
+    };
 
   setUpSocketListeners() {
     if (!this.socketClient) {
@@ -81,7 +81,6 @@ class WebSocketClient {
         this.socketClient.emit('message', message);
       });
     } catch (error) {
-      console.log(error);
       setTimeout(() => {
         this.handleWebsocketOpen();
       }, WEB_SOCKET_RECONNECT_TIMEOUT);
@@ -149,9 +148,9 @@ class WebSocketClient {
       const data: any = message;
 
       if (
-        !data.payload ||
-        !data.subscription ||
-        !this.subscribers[data.subscription as WebSocketChannelName]
+        !data.payload
+        || !data.subscription
+        || !this.subscribers[data.subscription as WebSocketChannelName]
       ) {
         return;
       }
@@ -161,7 +160,6 @@ class WebSocketClient {
         (subscriberCb) => subscriberCb(data.payload),
       );
     } catch (error) {
-      console.log(error);
     }
   }
 

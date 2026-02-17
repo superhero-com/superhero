@@ -1,17 +1,17 @@
-import { useNavigate } from "react-router-dom";
-import { Encoded } from "@aeternity/aepp-sdk";
-import { useDaoVote } from "@/features/dao/hooks/useDaoVote";
-import { useAeSdk } from "@/hooks";
+import { useNavigate } from 'react-router-dom';
+import { Encoded } from '@aeternity/aepp-sdk';
+import { useDaoVote } from '@/features/dao/hooks/useDaoVote';
+import { useAeSdk } from '@/hooks';
 
 // UI Components
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Custom Components
-import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
-import VoteSubject from "./VoteSubject";
-import Spinner from "@/components/Spinner";
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import Spinner from '@/components/Spinner';
+import VoteSubject from './VoteSubject';
 
 interface TokenVoteCardProps {
   address: Encoded.ContractAddress;
@@ -19,18 +19,18 @@ interface TokenVoteCardProps {
   saleAddress: Encoded.ContractAddress;
 }
 
-export default function TokenVoteCard({
+const TokenVoteCard = ({
   address,
   voteId,
   saleAddress,
-}: TokenVoteCardProps) {
+}: TokenVoteCardProps) => {
   const navigate = useNavigate();
   const { currentBlockHeight } = useAeSdk();
 
   const { voteState, voteYesPercentage } = useDaoVote({
     tokenSaleAddress: saleAddress,
     voteAddress: address,
-    voteId: voteId,
+    voteId,
   });
 
   // Loading state
@@ -57,24 +57,22 @@ export default function TokenVoteCard({
 
     if (daysRemaining > 0) {
       return `${daysRemaining}d ${hoursRemaining % 24}h remaining`;
-    } else if (hoursRemaining > 0) {
+    } if (hoursRemaining > 0) {
       return `${hoursRemaining}h ${minutesRemaining % 60}m remaining`;
-    } else {
-      return `${minutesRemaining}m remaining`;
     }
+    return `${minutesRemaining}m remaining`;
   };
 
   const getVoteStatusColor = () => {
-    if (!isOpen) return "bg-red-500/20 text-red-400 border-red-500/30";
-    if (voteYesPercentage && voteYesPercentage > 0.5)
-      return "bg-green-500/20 text-green-400 border-green-500/30";
-    return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+    if (!isOpen) return 'bg-red-500/20 text-red-400 border-red-500/30';
+    if (voteYesPercentage && voteYesPercentage > 0.5) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
   };
 
   const getVoteStatusText = () => {
-    if (!isOpen) return "Closed";
-    if (voteYesPercentage && voteYesPercentage > 0.5) return "Passing";
-    return "Open";
+    if (!isOpen) return 'Closed';
+    if (voteYesPercentage && voteYesPercentage > 0.5) return 'Passing';
+    return 'Open';
   };
 
   return (
@@ -90,8 +88,9 @@ export default function TokenVoteCard({
         <div className="flex items-center justify-between text-sm flex-wrap gap-4">
           <div className="flex items-center gap-4 text-white/60 flex-wrap">
             <div className="flex items-center gap-4">
-              <span className="text-white/80"> By: </span>{" "}
-              <AddressAvatarWithChainNameFeed address={voteState.author} />
+              <span className="text-white/80"> By: </span>
+              {' '}
+              <AddressAvatarWithChainName address={voteState.author} variant="feed" />
             </div>
             {isOpen && (
               <span className="text-yellow-400">
@@ -106,7 +105,7 @@ export default function TokenVoteCard({
             className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             onClick={() => {
               navigate(
-                `/trends/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`
+                `/trends/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`,
               );
             }}
           >
@@ -116,4 +115,6 @@ export default function TokenVoteCard({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TokenVoteCard;

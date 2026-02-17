@@ -17,23 +17,24 @@ interface LiquidityPreviewProps {
   onSuggestedAmountB?: (amount: string) => void;
 }
 
-export default function LiquidityPreview({
+const LiquidityPreview = ({
   preview,
   tokenA,
   tokenB,
   pairExists,
   hasError,
   onSuggestedAmountA,
-  onSuggestedAmountB
-}: LiquidityPreviewProps) {
+  onSuggestedAmountB,
+}: LiquidityPreviewProps) => {
   if (!tokenA || !tokenB) return null;
 
   return (
     <div className={`p-4 mb-5 backdrop-blur-sm rounded-2xl ${
-      hasError 
-        ? 'bg-red-500/10 border border-red-500/30' 
+      hasError
+        ? 'bg-red-500/10 border border-red-500/30'
         : 'bg-white/[0.05] border border-glass-border'
-    }`}>
+    }`}
+    >
       <div className="text-sm font-semibold text-standard-font-color mb-3 flex items-center gap-2">
         <span>{hasError ? '⚠️ Ratio Warning' : 'Pool Preview'}</span>
         {!pairExists && !hasError && (
@@ -48,7 +49,15 @@ export default function LiquidityPreview({
           <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Rate</span>
             <span className="font-semibold text-standard-font-color">
-              1 {tokenA.symbol} = {preview.ratioBinA} {tokenB.symbol}
+              1
+              {' '}
+              {tokenA.symbol}
+              {' '}
+              =
+              {' '}
+              {preview.ratioBinA}
+              {' '}
+              {tokenB.symbol}
             </span>
           </div>
         )}
@@ -57,7 +66,15 @@ export default function LiquidityPreview({
           <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Rate</span>
             <span className="font-semibold text-standard-font-color">
-              1 {tokenB.symbol} = {preview.ratioAinB} {tokenA.symbol}
+              1
+              {' '}
+              {tokenB.symbol}
+              {' '}
+              =
+              {' '}
+              {preview.ratioAinB}
+              {' '}
+              {tokenA.symbol}
             </span>
           </div>
         )}
@@ -66,7 +83,8 @@ export default function LiquidityPreview({
           <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Pool Share</span>
             <span className="font-semibold text-accent-color">
-              {Number(preview.sharePct).toFixed(6)}%
+              {Number(preview.sharePct).toFixed(6)}
+              %
             </span>
           </div>
         )}
@@ -87,23 +105,33 @@ export default function LiquidityPreview({
           <div className="text-xs font-semibold text-accent-color mb-2">
             💡 Suggested Optimal Amounts
           </div>
-          
+
           <div className="flex gap-2 flex-wrap">
             {preview.suggestedAmountB && onSuggestedAmountB && (
               <button
+                type="button"
                 onClick={() => onSuggestedAmountB(preview.suggestedAmountB!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
-                Use {Number(preview.suggestedAmountB).toFixed(6)} {tokenB.symbol}
+                Use
+                {' '}
+                {Number(preview.suggestedAmountB).toFixed(6)}
+                {' '}
+                {tokenB.symbol}
               </button>
             )}
-            
+
             {preview.suggestedAmountA && onSuggestedAmountA && (
               <button
+                type="button"
                 onClick={() => onSuggestedAmountA(preview.suggestedAmountA!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
-                Use {Number(preview.suggestedAmountA).toFixed(6)} {tokenA.symbol}
+                Use
+                {' '}
+                {Number(preview.suggestedAmountA).toFixed(6)}
+                {' '}
+                {tokenA.symbol}
               </button>
             )}
           </div>
@@ -111,4 +139,6 @@ export default function LiquidityPreview({
       )}
     </div>
   );
-}
+};
+
+export default LiquidityPreview;

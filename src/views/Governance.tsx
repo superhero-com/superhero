@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import AeButton from '../components/AeButton';
-import Shell from '../components/layout/Shell';
+import { useTranslation } from 'react-i18next';
 
 import GovernanceAccount from '@/components/governance/GovernanceAccount';
 import GovernancePolls from '@/components/governance/GovernancePolls';
 import GovernanceVote from '@/components/governance/GovernanceVote';
 import GovernanceCreate from '@/components/governance/GovernanceCreate';
+import Shell from '../components/layout/Shell';
+import AeButton from '../components/AeButton';
+
 type TabType = 'polls' | 'vote' | 'account' | 'create';
 
-export default function Governance() {
+const Governance = () => {
+  const { t } = useTranslation('governance');
   const { id: pollId } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('polls');
@@ -28,10 +31,10 @@ export default function Governance() {
   }, [pollId, location.pathname]);
 
   return (
-    <Shell> 
+    <Shell>
       {/* Enhanced Tab Navigation */}
       <div className="flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('polls')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'polls'
@@ -39,10 +42,10 @@ export default function Governance() {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          📊 Polls
+          {t('tabs.polls')}
         </AeButton>
         {pollId && (
-          <AeButton 
+          <AeButton
             onClick={() => setActiveTab('vote')}
             className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
               activeTab === 'vote'
@@ -50,10 +53,10 @@ export default function Governance() {
                 : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
             }`}
           >
-            🗳️ Vote
+            {t('tabs.vote')}
           </AeButton>
         )}
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('account')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'account'
@@ -61,9 +64,9 @@ export default function Governance() {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          👤 My Account
+          {t('tabs.myAccount')}
         </AeButton>
-        <AeButton 
+        <AeButton
           onClick={() => setActiveTab('create')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'create'
@@ -71,7 +74,7 @@ export default function Governance() {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          🆕 Create Poll
+          {t('tabs.createPoll')}
         </AeButton>
       </div>
 
@@ -82,6 +85,6 @@ export default function Governance() {
       {activeTab === 'create' && <GovernanceCreate />}
     </Shell>
   );
-}
+};
 
-
+export default Governance;

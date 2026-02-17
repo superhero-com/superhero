@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import {
   createChart,
   IChartApi,
@@ -21,15 +23,21 @@ export function useChart({
 }: UseChartProps = {}) {
   const chartContainer = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
+  const onChartReadyRef = useRef(onChartReady);
+  const [chartApi, setChartApi] = useState<IChartApi | null>(null);
   const [isDarkMode] = useState(true); // For now, assuming dark mode
 
-  const resizeHandler = () => {
+  useEffect(() => {
+    onChartReadyRef.current = onChartReady;
+  }, [onChartReady]);
+
+  const resizeHandler = useCallback(() => {
     if (!chart.current || !chartContainer.current) return;
     const dimensions = chartContainer.current.getBoundingClientRect();
     chart.current.resize(dimensions.width, height);
-  };
+  }, [height]);
 
-  const initChart = () => {
+  const initChart = useCallback(() => {
     if (!chartContainer.current || chart.current) return;
 
     const defaultChartOptions: DeepPartial<ChartOptions> = {
@@ -67,9 +75,10 @@ export function useChart({
 
     const chartInstance = createChart(chartContainer.current, defaultChartOptions);
     chart.current = chartInstance;
+    setChartApi(chartInstance);
 
-    onChartReady?.(chartInstance);
-  };
+    onChartReadyRef.current?.(chartInstance);
+  }, [height, isDarkMode]);
 
   useEffect(() => {
     initChart();
@@ -80,9 +89,15 @@ export function useChart({
         chart.current.remove();
         chart.current = null;
       }
+      setChartApi(null);
       window.removeEventListener('resize', resizeHandler);
     };
-  }, [height]);
+  }, [initChart, resizeHandler]);
+
+  useEffect(() => {
+    if (!chart.current) return;
+    chart.current.applyOptions(chartOptions);
+  }, [chartOptions]);
 
   // Update chart colors when dark mode changes
   useEffect(() => {
@@ -96,6 +111,6 @@ export function useChart({
 
   return {
     chartContainer,
-    chart: chart.current,
+    chart: chartApi,
   };
 }

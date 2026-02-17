@@ -1,9 +1,9 @@
-import { useMemo } from "react";
-import { useAeSdk } from "./useAeSdk";
-import { AccountsService } from "@/api/generated/services/AccountsService";
+import { useMemo } from 'react';
+import { AccountsService } from '@/api/generated/services/AccountsService';
 // @ts-ignore
-import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
-import { CONFIG } from "@/config";
+import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
+import { CONFIG } from '@/config';
+import { useAeSdk } from './useAeSdk';
 
 type Profile = {
   biography?: string;
@@ -16,9 +16,8 @@ export function useProfile(targetAddress?: string) {
   const { activeAccount, sdk } = useAeSdk();
 
   const canEdit = useMemo(
-    () =>
-      !!activeAccount && (!targetAddress || targetAddress === activeAccount),
-    [activeAccount, targetAddress]
+    () => !!activeAccount && (!targetAddress || targetAddress === activeAccount),
+    [activeAccount, targetAddress],
   );
 
   async function getProfile(address?: string): Promise<Profile | null> {
@@ -46,10 +45,12 @@ export function useProfile(targetAddress?: string) {
       aci: (TIPPING_V3_ACI as any),
       address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
     });
-    const res: any = await (contract as any).post_without_tip(data.biography, ["bio-update", "hidden"]);
+    const res: any = await (contract as any).post_without_tip(data.biography, ['bio-update', 'hidden']);
     // Best-effort: return tx hash if available
     return res?.hash || res?.transactionHash || res?.tx?.hash;
   }
 
-  return { canEdit, isConfigured: false, getProfile, setProfile };
+  return {
+    canEdit, isConfigured: false, getProfile, setProfile,
+  };
 }

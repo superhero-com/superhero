@@ -1,1 +1,1 @@
-export { default } from './TransactionConfirmDetailRow';
+export { default as TransactionConfirmDetailRow } from './TransactionConfirmDetailRow';

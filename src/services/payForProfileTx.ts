@@ -8,7 +8,6 @@ import {
   Tag,
   unpackTx,
 } from '@aeternity/aepp-sdk';
-import { CONFIG } from '@/config';
 
 const PROFILE_FUNCTIONS = new Set([
   'set_profile',
@@ -24,11 +23,17 @@ const PROFILE_CONTRACT_NAME = 'ProfileRegistry';
 
 let payerSdk: AeSdk | null = null;
 
+const getPayForTxNodeUrl = (): string => (
+  ((import.meta as any)?.env?.VITE_PAY_FOR_TX_NODE_URL
+    || (typeof process !== 'undefined' && (process as any).env?.VITE_PAY_FOR_TX_NODE_URL)
+    || 'https://mainnet.aeternity.io') as string
+).trim();
+
 const getPayerSecret = () => (
   ((import.meta as any)?.env?.VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY
     || (typeof process !== 'undefined' && (process as any).env?.VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY)
     || '') as string
-);
+).trim();
 
 const hexToBytes = (hex: string): Uint8Array => {
   const normalized = hex.startsWith('0x') ? hex.slice(2) : hex;
@@ -52,7 +57,8 @@ const normalizePayerSecret = (rawSecret: string): `sk_${string}` => {
       'VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY hex value must contain at least 32 bytes',
     );
   }
-  // Legacy secrets can contain the full keypair payload; sdk v14 expects sk_-encoded 32-byte secret.
+  // Legacy secrets can contain the full keypair payload.
+  // sdk v14 expects sk_-encoded 32-byte secret.
   return encode(secretBytes.subarray(0, 32), Encoding.AccountSecretKey) as `sk_${string}`;
 };
 
@@ -64,8 +70,7 @@ const getPayerSdk = (): AeSdk => {
   }
   const payerSecretKey = normalizePayerSecret(payerSecretRaw);
   const payerAccount = new MemoryAccount(payerSecretKey);
-
-  const node = new Node(CONFIG.NODE_URL);
+  const node = new Node(getPayForTxNodeUrl());
   const sdk = new AeSdk({
     nodes: [{ name: 'ae_mainnet', instance: node }],
     accounts: [payerAccount],

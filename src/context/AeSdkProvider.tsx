@@ -103,6 +103,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         address,
         signTransaction(
           tx: Encoded.Transaction,
+          options?: { innerTx?: boolean },
         ): Promise<Encoded.Transaction> {
           const uniqueId = Math.random().toString(36).substring(7);
           const currentUrl = new URL(window.location.href);
@@ -126,6 +127,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             type: 'sign-transaction',
             transaction: tx,
             networkId: activeNetwork.networkId,
+            innerTx: options?.innerTx === true ? 'true' : undefined,
             'replace-caller': 'true',
             // decode these urls because they will be encoded again
             'x-success': decodeURI(successUrl.href),

@@ -389,7 +389,12 @@ export function useProfile(targetAddress?: string) {
       + Number(shouldChangeChain)
       + Number(shouldUpdateDisplaySource);
 
-    if (shouldSetProfile && !shouldUpdateUsername && !shouldChangeChain && !shouldUpdateDisplaySource) {
+    if (
+      shouldSetProfile
+      && !shouldUpdateUsername
+      && !shouldChangeChain
+      && !shouldUpdateDisplaySource
+    ) {
       const setProfileResult: any = await executeProfileWriteTx(
         signerSdk,
         target,
@@ -494,7 +499,13 @@ export function useProfile(targetAddress?: string) {
       }
     }
     return txHash;
-  }, [executeProfileWriteTx, getProfileOnChain, initializeProfileContract, targetAddress, waitForWalletReconnect]);
+  }, [
+    executeProfileWriteTx,
+    getProfileOnChain,
+    initializeProfileContract,
+    targetAddress,
+    waitForWalletReconnect,
+  ]);
 
   const verifyXAndSave = useCallback(async (params: { address?: string; accessToken: string }) => {
     const expectedAddress = params.address || targetAddress;
@@ -541,7 +552,13 @@ export function useProfile(targetAddress?: string) {
       ],
     );
     return res?.hash || res?.transactionHash || res?.tx?.hash;
-  }, [addStaticAccount, executeProfileWriteTx, targetAddress, initializeProfileContract, waitForWalletReconnect]);
+  }, [
+    addStaticAccount,
+    executeProfileWriteTx,
+    targetAddress,
+    initializeProfileContract,
+    waitForWalletReconnect,
+  ]);
 
   /** Complete X verification using an attestation (e.g. from OAuth callback). */
   const completeXWithAttestation = useCallback(async (attestation: XAttestationResponse) => {

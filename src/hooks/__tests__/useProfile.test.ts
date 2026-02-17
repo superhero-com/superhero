@@ -17,6 +17,17 @@ const mockAddStaticAccount = vi.fn();
 
 let mockActiveAccount = 'ak_test_active';
 
+vi.mock('@aeternity/aepp-sdk', async () => {
+  const actual = await vi.importActual<any>('@aeternity/aepp-sdk');
+  return {
+    ...actual,
+    Contract: {
+      ...actual.Contract,
+      initialize: (...args: any[]) => mockInitializeContract(...args),
+    },
+  };
+});
+
 vi.mock('@/api/backend', () => ({
   SuperheroApi: {
     createXAttestation: (...args: any[]) => mockCreateXAttestation(...args),
@@ -33,7 +44,7 @@ vi.mock('@/config', () => ({
 vi.mock('@/hooks/useAeSdk', () => ({
   useAeSdk: () => ({
     activeAccount: mockActiveAccount,
-    sdk: { initializeContract: (...args: any[]) => mockInitializeContract(...args) },
+    sdk: { getContext: () => ({}) },
     staticAeSdk: null,
     addStaticAccount: (...args: any[]) => mockAddStaticAccount(...args),
   }),

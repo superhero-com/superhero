@@ -10,7 +10,7 @@ import {
   type XAttestationResponse,
   SuperheroApi,
 } from '@/api/backend';
-import { Encoded, Tag } from '@aeternity/aepp-sdk';
+import { Contract, Encoded, Tag } from '@aeternity/aepp-sdk';
 import { CONFIG } from '@/config';
 import PROFILE_REGISTRY_ACI from '@/api/ProfileRegistryACI.json';
 import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
@@ -32,6 +32,7 @@ const toOption = <T>(value: T | null | undefined): OptionVariant<T> => (
 );
 
 const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
+  // eslint-disable-next-line no-underscore-dangle
   const current = candidate?._accounts?.current;
   if (!current || typeof current !== 'object') return false;
   const addresses = Object.keys(current);
@@ -115,7 +116,7 @@ export function useProfile(targetAddress?: string) {
       )
     );
     const getReconnectAddress = (): string | null => {
-      const current = activeAccountRef.current;
+      const { current } = activeAccountRef;
       if (matchesExpectedAddress(current)) {
         return current as string;
       }
@@ -212,7 +213,7 @@ export function useProfile(targetAddress?: string) {
 
     const staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
     const sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
-    let signerSdk = shouldPreferStaticSigner
+    let signerSdk: any = shouldPreferStaticSigner
       ? staticAeSdk
       : undefined;
 
@@ -237,7 +238,8 @@ export function useProfile(targetAddress?: string) {
     if (!signerSdk) {
       throw new Error('SDK is not initialized');
     }
-    const contract = await signerSdk.initializeContract({
+    const contract = await Contract.initialize({
+      ...signerSdk.getContext(),
       aci: PROFILE_REGISTRY_ACI as any,
       address: profileContractAddress,
     });

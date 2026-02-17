@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { AeSdk, Node } from '@aeternity/aepp-sdk';
+import { AeSdk, Contract, Node } from '@aeternity/aepp-sdk';
 import { DEX_ADDRESSES } from '../../libs/dex';
 // Use the same ACIs as production code
 // @ts-ignore
@@ -31,7 +31,11 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
   it('initializes router and factory and fetches factory address', async () => {
     if (!aeSdk) return;
     try {
-      const router = await aeSdk.initializeContract({ aci: RouterAci, address: DEX_ADDRESSES.router });
+      const router = await Contract.initialize({
+        ...aeSdk.getContext(),
+        aci: RouterAci,
+        address: DEX_ADDRESSES.router,
+      });
       const { decodedResult } = await (router as any).factory();
       const factoryAddress = typeof decodedResult === 'string' ? decodedResult : decodedResult?.$options?.address;
       expect(typeof factoryAddress).toBe('string');
@@ -43,8 +47,16 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
 
   it('quotes get_amounts_out for a known path if pair exists', async () => {
     if (!aeSdk) return;
-    const router = await aeSdk.initializeContract({ aci: RouterAci, address: DEX_ADDRESSES.router });
-    const factory = await aeSdk.initializeContract({ aci: FactoryAci, address: DEX_ADDRESSES.factory });
+    const router = await Contract.initialize({
+      ...aeSdk.getContext(),
+      aci: RouterAci,
+      address: DEX_ADDRESSES.router,
+    });
+    const factory = await Contract.initialize({
+      ...aeSdk.getContext(),
+      aci: FactoryAci,
+      address: DEX_ADDRESSES.factory,
+    });
     // Try aeETH -> WAE first, then reverse
     const candidates: [string, string][] = [
       [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae],

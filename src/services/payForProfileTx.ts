@@ -3,9 +3,6 @@ import {
   Encoded,
   encode,
   Encoding,
-  decode,
-  generateKeyPairFromSecret,
-  getAddressFromPriv,
   MemoryAccount,
   Node,
   Tag,
@@ -33,15 +30,40 @@ const getPayerSecret = () => (
     || '') as string
 );
 
+const hexToBytes = (hex: string): Uint8Array => {
+  const normalized = hex.startsWith('0x') ? hex.slice(2) : hex;
+  if (!/^[0-9a-fA-F]+$/.test(normalized) || normalized.length % 2 !== 0) {
+    throw new Error('VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY has invalid hex format');
+  }
+  const bytes = new Uint8Array(normalized.length / 2);
+  for (let i = 0; i < normalized.length; i += 2) {
+    bytes[i / 2] = parseInt(normalized.slice(i, i + 2), 16);
+  }
+  return bytes;
+};
+
+const normalizePayerSecret = (rawSecret: string): `sk_${string}` => {
+  const secret = rawSecret.trim();
+  if (secret.startsWith('sk_')) return secret as `sk_${string}`;
+
+  const secretBytes = hexToBytes(secret);
+  if (secretBytes.length < 32) {
+    throw new Error(
+      'VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY hex value must contain at least 32 bytes',
+    );
+  }
+  // Legacy secrets can contain the full keypair payload; sdk v14 expects sk_-encoded 32-byte secret.
+  return encode(secretBytes.subarray(0, 32), Encoding.AccountSecretKey) as `sk_${string}`;
+};
+
 const getPayerSdk = (): AeSdk => {
-  console.log('payerSdk', payerSdk);
   if (payerSdk) return payerSdk;
-  const payerSecretHex = getPayerSecret();
-  console.log('payerSecretHex', getPayerSecret());
-  if (!payerSecretHex) {
+  const payerSecretRaw = getPayerSecret();
+  if (!payerSecretRaw) {
     throw new Error('VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY is not configured');
   }
-  const payerSecretKey = encode(hexToBytes(payerSecretHex), Encoding.AccountSecretKey);
+  const payerSecretKey = normalizePayerSecret(payerSecretRaw);
+  const payerAccount = new MemoryAccount(payerSecretKey);
 
   const node = new Node(CONFIG.NODE_URL);
   const sdk = new AeSdk({
@@ -89,13 +111,7 @@ export async function payForProfileTx(
     throw new Error('Only profile contract calls can be sponsored');
   }
 
-  console.log('tx', tx);
-
-  console.log('test0');
   const tempSdk = getPayerSdk();
-
-  console.log('tempSdk', tempSdk);
-  console.log('test1');
 
   try {
     return await tempSdk.payForTransaction(
@@ -118,5 +134,6 @@ export function encodeProfileCallData(
   if (!PROFILE_FUNCTIONS.has(functionName)) {
     throw new Error(`Unsupported profile function: ${functionName}`);
   }
+  // eslint-disable-next-line no-underscore-dangle
   return contract._calldata.encode(PROFILE_CONTRACT_NAME, functionName, args);
 }

@@ -11,6 +11,7 @@ import {
   Clock,
   Flame,
   Info,
+  Lock,
   Plus,
   TrendingUp,
   Users,
@@ -296,15 +297,18 @@ const TokenSaleDetails = () => {
     });
   }, [token, ownedTokens]);
 
-  // Render error state (token not found)
-  if (isError && !isTokenNewlyCreated) {
-    return (
-      <TokenNotFound
-        tokenName={tokenName || ''}
-        errorMessage={error instanceof Error ? error.message : undefined}
-      />
-    );
-  }
+  // Check if token doesn't exist (but don't block the UI)
+  const tokenDoesNotExist = isError && !isTokenNewlyCreated && !isLoading;
+
+  // Switch to an available tab if token doesn't exist and current tab requires token
+  useEffect(() => {
+    if (tokenDoesNotExist) {
+      const lockedTabs = [TAB_TRADE, TAB_TRANSACTIONS, TAB_HOLDERS];
+      if (lockedTabs.includes(activeTab)) {
+        setActiveTab(TAB_CHAT);
+      }
+    }
+  }, [tokenDoesNotExist, activeTab]);
 
   // Render pending state
   if (isTokenPending) {
@@ -334,17 +338,17 @@ const TokenSaleDetails = () => {
     );
   }
 
-  if (!isLoading && !token) {
-    return <TokenNotFound tokenName={tokenName || ''} />;
-  }
-
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
-        title={`Buy #${token?.symbol || token?.name || tokenName} on Superhero.com`}
-        description={(token?.metaInfo?.description || `Explore ${token?.symbol || token?.name || tokenName} token, trades, holders and posts.`).slice(0, 160)}
+        title={tokenDoesNotExist
+          ? `Create #${tokenName} Token on Superhero.com`
+          : `Buy #${token?.symbol || token?.name || tokenName} on Superhero.com`}
+        description={tokenDoesNotExist
+          ? `Token #${tokenName} doesn't exist yet. Be the first to create it and start building a community!`
+          : (token?.metaInfo?.description || `Explore ${token?.symbol || token?.name || tokenName} token, trades, holders and posts.`).slice(0, 160)}
         canonicalPath={`/trends/tokens/${tokenName}`}
-        jsonLd={{
+        jsonLd={tokenDoesNotExist ? undefined : {
           '@context': 'https://schema.org',
           '@type': 'CryptoCurrency',
           name: token?.name || token?.symbol || tokenName,
@@ -359,29 +363,49 @@ const TokenSaleDetails = () => {
           <div className="pt-2 pb-2">
             <div className="overflow-x-auto px-3">
               <div className="flex items-center gap-4 min-w-max">
-                {([
-                  { id: TAB_CHAT, label: 'Feed', Icon: Flame },
-                  { id: TAB_TRADE, label: 'Trade', Icon: BarChart3 },
-                  { id: TAB_DETAILS, label: 'Info', Icon: Info },
-                  { id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp },
-                  { id: TAB_HOLDERS, label: 'Holders', Icon: Users },
-                ] as const).map((tab) => {
+                {[
+                  { id: TAB_CHAT, label: 'Feed', Icon: Flame, requiresToken: false },
+                  { id: TAB_TRADE, label: 'Trade', Icon: BarChart3, requiresToken: true },
+                  { id: TAB_DETAILS, label: 'Info', Icon: Info, requiresToken: false },
+                  { id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp, requiresToken: true },
+                  { id: TAB_HOLDERS, label: 'Holders', Icon: Users, requiresToken: true },
+                ].map((tab) => {
                   const isActive = activeTab === tab.id;
+                  const isDisabled = tokenDoesNotExist && tab.requiresToken;
                   return (
                     <button
                       key={tab.id}
                       type="button"
+                      disabled={isDisabled}
                       onClick={() => {
+                        if (isDisabled) return;
                         if (tab.id === TAB_TRADE) {
                           ensureTradePanelsVisible();
                         }
-                        setActiveTab(tab.id);
+                        setActiveTab(tab.id as TabType);
                       }}
-                      className={`pb-1 transition-colors ${isActive ? 'border-b-2 border-[#4ecdc4]' : 'border-b-2 border-transparent'}`}
+                      className={`pb-1 transition-colors ${
+                        isDisabled
+                          ? 'border-b-2 border-transparent cursor-not-allowed opacity-50'
+                          : isActive
+                            ? 'border-b-2 border-[#4ecdc4]'
+                            : 'border-b-2 border-transparent'
+                      }`}
+                      title={isDisabled ? 'Create the token to unlock this feature' : undefined}
                     >
                       <span className="flex items-center gap-1">
-                        <tab.Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-white/60'}`} />
-                        <span className={`text-xs ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
+                        {isDisabled ? (
+                          <Lock className="h-3.5 w-3.5 text-white/30" />
+                        ) : (
+                          <tab.Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                        )}
+                        <span className={`text-xs ${
+                          isDisabled
+                            ? 'text-white/30'
+                            : isActive
+                              ? 'font-semibold text-white'
+                              : 'text-white/60'
+                        }`}>
                           {tab.label}
                         </span>
                       </span>
@@ -431,70 +455,63 @@ const TokenSaleDetails = () => {
           {!isMobile && (
             <Card className="bg-white/[0.02] border-white/10">
               <div className="p-2">
-                {(isLoading && !token?.sale_address) ? (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
-                      <div className="flex items-center gap-2">
-                        {(isTokenPending ? ['pending'] : ['first', 'second']).map((type) => (
-                          <div
-                            key={`skeleton-badge-${type}`}
-                            className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-16 h-8" />
-                      <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-8 h-8" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+                      <span className="text-[.9em] mr-0.5 align-baseline">#</span>
+                      <span>{token?.symbol || token?.name || tokenName}</span>
+                    </h1>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {tokenDoesNotExist ? (
+                        <Badge
+                          variant="secondary"
+                          className="bg-gradient-to-r from-orange-600/80 to-red-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                        >
+                          NOT CREATED
+                        </Badge>
+                      ) : (
+                        <>
+                          {token?.rank && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                            >
+                              RANK #
+                              {token.rank}
+                            </Badge>
+                          )}
+                          {ownsThisToken && (
+                            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
+                              OWNED
+                            </Badge>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
-                        <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
-                        <span>{token.symbol || token.name}</span>
-                      </h1>
 
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {token.rank && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
-                          >
-                            RANK #
-                            {token.rank}
-                          </Badge>
-                        )}
-                        {ownsThisToken && (
-                          <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
-                            OWNED
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {!tokenDoesNotExist && token?.sale_address && (
                       <Token24hChange
                         tokenAddress={token.address || token.sale_address}
                         createdAt={token.created_at}
                         performance24h={tokenPerformance?.past_24h ?? null}
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowShareModal(true)}
-                        className="border-white/20 bg-white/5 text-white hover:bg-white/10 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
-                      >
-                        🔗
-                      </Button>
-                    </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowShareModal(true)}
+                      className="border-white/20 bg-white/5 text-white hover:bg-white/10 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
+                    >
+                      🔗
+                    </Button>
                   </div>
-                )}
+                </div>
 
                 {/* Description */}
-                {!isLoading && !isTokenPending && token.metaInfo?.description && (
+                {!isLoading && !isTokenPending && !tokenDoesNotExist && token?.metaInfo?.description && (
                   <div className="text-white/75 text-sm leading-relaxed mt-3 max-w-[720px]">
                     <span>
                       {descriptionExpanded
@@ -515,11 +532,16 @@ const TokenSaleDetails = () => {
                     )}
                   </div>
                 )}
+                {tokenDoesNotExist && (
+                  <div className="text-white/50 text-sm leading-relaxed mt-3 max-w-[720px] italic">
+                    This token hasn&apos;t been created yet. You can be the first to create it and share what it&apos;s all about!
+                  </div>
+                )}
               </div>
             </Card>
           )}
 
-          {!isMobile && !showTradePanels && tokenAddress && (
+          {!isMobile && !showTradePanels && tokenAddress && !tokenDoesNotExist && (
             <button
               type="button"
               onClick={handleTradeClick}
@@ -547,7 +569,7 @@ const TokenSaleDetails = () => {
           )}
 
           {/* Chart */}
-          {showTradePanels && !isMobile && (
+          {showTradePanels && !isMobile && !tokenDoesNotExist && (
             (isLoading && !token?.sale_address) ? (
               <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
             ) : (
@@ -566,29 +588,46 @@ const TokenSaleDetails = () => {
                   : 'text-white/60 hover:text-white'
                 }`}
               >
-                Posts
+                <span className="flex items-center justify-center gap-1.5">
+                  Posts
+                </span>
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
-                  ? 'text-white border-b-2 border-[#4ecdc4]'
-                  : 'text-white/60 hover:text-white'
+                disabled={tokenDoesNotExist}
+                onClick={() => !tokenDoesNotExist && setActiveTab(TAB_TRANSACTIONS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
+                  tokenDoesNotExist
+                    ? 'text-white/30 cursor-not-allowed opacity-50'
+                    : activeTab === TAB_TRANSACTIONS
+                      ? 'text-white border-b-2 border-[#4ecdc4]'
+                      : 'text-white/60 hover:text-white'
                 }`}
+                title={tokenDoesNotExist ? 'Create the token to unlock this feature' : undefined}
               >
-                Transactions
+                <span className="flex items-center justify-center gap-1.5">
+                  {tokenDoesNotExist && <Lock className="h-3 w-3" />}
+                  Transactions
+                </span>
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab(TAB_HOLDERS)}
-                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
-                  ? 'text-white border-b-2 border-[#4ecdc4]'
-                  : 'text-white/60 hover:text-white'
+                disabled={tokenDoesNotExist}
+                onClick={() => !tokenDoesNotExist && setActiveTab(TAB_HOLDERS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
+                  tokenDoesNotExist
+                    ? 'text-white/30 cursor-not-allowed opacity-50'
+                    : activeTab === TAB_HOLDERS
+                      ? 'text-white border-b-2 border-[#4ecdc4]'
+                      : 'text-white/60 hover:text-white'
                 }`}
+                title={tokenDoesNotExist ? 'Create the token to unlock this feature' : undefined}
               >
-                Holders (
-                {token.holders_count || 0}
-                )
+                <span className="flex items-center justify-center gap-1.5">
+                  {tokenDoesNotExist && <Lock className="h-3 w-3" />}
+                  Holders
+                  {!tokenDoesNotExist && ` (${token?.holders_count || 0})`}
+                </span>
               </button>
             </div>
           )}
@@ -596,18 +635,81 @@ const TokenSaleDetails = () => {
           {/* Tab Content */}
           <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
-              <TokenInfoTab token={token} />
+              tokenDoesNotExist ? (
+                <Card className="bg-white/[0.02] border-white/10 p-6">
+                  <div className="text-center">
+                    <div
+                      className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(78, 205, 196, 0.15) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      <svg
+                        className="w-10 h-10 text-white/40"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      Token Not Created Yet
+                    </h3>
+                    <p className="text-white/60 text-sm mb-4">
+                      This token doesn&apos;t exist yet. Be the first to create it and start building a community!
+                    </p>
+                    <Button
+                      size="lg"
+                      onClick={() => {
+                        const truncatedName = (tokenName || '').slice(0, 20);
+                        navigate(`/trends/create?tokenName=${encodeURIComponent(truncatedName)}`);
+                      }}
+                      className="w-full px-6 py-5 text-sm font-bold rounded-xl transition-all duration-300 hover:scale-105"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
+                        color: '#0a0a0f',
+                        border: 'none',
+                      }}
+                    >
+                      Create This Token
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <TokenInfoTab token={token} />
+              )
             )}
 
             {isMobile && activeTab === TAB_TRADE && (
-              <TokenTradeTab
-                token={token}
-                tokenPerformance={tokenPerformance}
-                isLoading={isLoading}
-                isTokenPending={isTokenPending}
-                onBuy={() => openTradeFor(true)}
-                onSell={() => openTradeFor(false)}
-              />
+              tokenDoesNotExist ? (
+                <Card className="bg-white/[0.02] border-white/10 p-6">
+                  <div className="text-center">
+                    <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      Trading Not Available
+                    </h3>
+                    <p className="text-white/60 text-sm mb-4">
+                      Create the token first to enable trading.
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                <TokenTradeTab
+                  token={token}
+                  tokenPerformance={tokenPerformance}
+                  isLoading={isLoading}
+                  isTokenPending={isTokenPending}
+                  onBuy={() => openTradeFor(true)}
+                  onSell={() => openTradeFor(false)}
+                />
+              )
             )}
 
             {activeTab === TAB_CHAT && (
@@ -625,11 +727,39 @@ const TokenSaleDetails = () => {
             )}
 
             {activeTab === TAB_TRANSACTIONS && (
-              <TokenTransactionsTab token={token} />
+              tokenDoesNotExist ? (
+                <Card className="bg-white/[0.02] border-white/10 p-6">
+                  <div className="text-center">
+                    <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      No Transactions Yet
+                    </h3>
+                    <p className="text-white/60 text-sm mb-4">
+                      Create the token first to see transactions.
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                <TokenTransactionsTab token={token} />
+              )
             )}
 
             {activeTab === TAB_HOLDERS && (
-              <TokenHoldersTab token={token} />
+              tokenDoesNotExist ? (
+                <Card className="bg-white/[0.02] border-white/10 p-6">
+                  <div className="text-center">
+                    <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      No Holders Yet
+                    </h3>
+                    <p className="text-white/60 text-sm mb-4">
+                      Create the token first to see holders.
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                <TokenHoldersTab token={token} />
+              )
             )}
           </div>
         </div>
@@ -637,7 +767,54 @@ const TokenSaleDetails = () => {
         {/* Desktop Sidebar (Right Column) */}
         {!isMobile && (
           <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6 lg:sticky lg:top-6 self-start">
-            {!token?.sale_address ? (
+            {tokenDoesNotExist ? (
+              <Card className="bg-white/[0.02] border-white/10 p-6">
+                <div className="text-center">
+                  <div
+                    className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(78, 205, 196, 0.15) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}
+                  >
+                    <svg
+                      className="w-10 h-10 text-white/40"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">
+                    Create Token
+                  </h3>
+                  <p className="text-white/60 text-sm mb-4">
+                    This token doesn&apos;t exist yet. Be the first to create it!
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      const truncatedName = (tokenName || '').slice(0, 20);
+                      navigate(`/trends/create?tokenName=${encodeURIComponent(truncatedName)}`);
+                    }}
+                    className="w-full px-6 py-5 text-sm font-bold rounded-xl transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
+                      color: '#0a0a0f',
+                      border: 'none',
+                    }}
+                  >
+                    Create This Token
+                  </Button>
+                </div>
+              </Card>
+            ) : !token?.sale_address ? (
               <TokenSaleSidebarSkeleton />
             ) : (
               <>
@@ -677,7 +854,7 @@ const TokenSaleDetails = () => {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         shareUrl={shareUrl}
-        title={`Share ${token.name || token.symbol || 'Token'}`}
+        title={`Share ${token?.name || token?.symbol || tokenName || 'Token'}`}
       />
 
       {isMobile && activeTab === TAB_CHAT && !showComposer && !tradeActionSheet && (

@@ -1,23 +1,25 @@
 import React from 'react';
 import type { FormattedFractionalPrice } from '@/utils/types';
+import { cn } from '@/lib/utils';
 
 interface FractionFormatterProps {
   fractionalPrice: FormattedFractionalPrice;
+  textClassName?: string;
 }
 
-const FractionFormatter = ({ fractionalPrice }: FractionFormatterProps) => (
-  <div className="fraction-formatter flex items-center">
+const FractionFormatter = ({ fractionalPrice, textClassName = '' }: FractionFormatterProps) => (
+  <div className={cn("fraction-formatter flex items-center", textClassName)}>
     <div>{fractionalPrice.number}</div>
     {fractionalPrice.zerosCount && (
     <div
-      className="text-xs"
+      className={cn("text-xs text-muted-foreground", textClassName)}
       style={{ marginTop: '5px', fontSize: '12px', padding: '0 2px' }}
     >
       {fractionalPrice.zerosCount}
     </div>
     )}
     {fractionalPrice.significantDigits && (
-    <div>{fractionalPrice.significantDigits}</div>
+    <div className={textClassName}>{fractionalPrice.significantDigits}</div>
     )}
   </div>
 );

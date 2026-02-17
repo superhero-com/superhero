@@ -30,6 +30,7 @@ interface TokenCandlestickChartProps {
   token: TokenDto;
   height?: number;
   className?: string;
+  noBackground?: boolean;
 }
 
 interface CandlePrice {
@@ -55,6 +56,7 @@ export default function TokenCandlestickChart({
   token,
   height = 400,
   className = '',
+  noBackground = false,
 }: TokenCandlestickChartProps) {
   const chartWrapper = useRef<HTMLDivElement>(null);
   const chartControls = useRef<HTMLDivElement>(null);
@@ -469,7 +471,8 @@ export default function TokenCandlestickChart({
     <div
       ref={chartWrapper}
       className={cn(
-        'max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden',
+        'max-w-[100%] mx-auto relative',
+        noBackground ? '' : 'bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
         className,
       )}
     >
@@ -477,16 +480,14 @@ export default function TokenCandlestickChart({
         <div ref={chartContainer} className="w-full h-full" />
 
         {/* Chart Info Overlay */}
-        <div className="hidden sm:block absolute top-0 left-0 4 z-20 p-4 bg-gradient-to-b from-background/10 via-background/2 to-transparent backdrop-blur-sm">
+        <div className="absolute -top-12 sm:top-0 sm:p-4 left-0 z-20 bg-gradient-to-b from-background/10 via-background/2 to-transparent sm:backdrop-blur-sm">
           <div className="flex flex-wrap items-end gap-1 mb-2">
             <div className="text-lg font-bold text-foreground flex items-center gap-2">
-              {token?.symbol}
-              <span className="font-sans text-xl mx-1">/</span>
-              {COIN_SYMBOL}
+              #{token?.symbol}
             </div>
             <div className="flex gap-1 pb-1 pl-2 text-xs text-muted-foreground">
               <div>on</div>
-              <div>æternity</div>
+              <div>æternity blockchain</div>
               <div>·</div>
               <div>{intervalBy.label}</div>
             </div>
@@ -495,7 +496,7 @@ export default function TokenCandlestickChart({
           {currentCandlePrice && (
             <div className="text-sm">
               <div className="flex gap-4 flex-wrap mb-2">
-                <div className="flex gap-2">
+                <div className="hidden md:block flex gap-2">
                   <span className="text-muted-foreground">
                     O
                     {' '}
@@ -511,7 +512,7 @@ export default function TokenCandlestickChart({
                     </span>
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="hidden md:block flex gap-2">
                   <span className="text-muted-foreground">
                     L
                     {' '}
@@ -563,7 +564,10 @@ export default function TokenCandlestickChart({
       {/* Chart Controls */}
       <div
         ref={chartControls}
-        className="flex flex-row flex-wrap items-center justify-between p-2 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]"
+        className={cn(
+          'flex flex-row flex-wrap items-center justify-between ',
+          noBackground ? '' : 'p-2 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]',
+        )}
       >
         <div className="flex flex-row flex-wrap items-center gap-0 sm:gap-2">
           {intervals.map((interval) => (

@@ -437,7 +437,7 @@ const CreateTokenView = () => {
       );
 
       // Navigate to token details
-      navigate(`/trends/tokens/${tokenName}`);
+      navigate(`/trends/tokens/${tokenName}?created=true`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';

@@ -179,19 +179,24 @@ const MobileAppHeader = () => {
                     <span className="text-white/50">—</span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
-                  onClick={() => {
-                    const params = new URLSearchParams(search);
-                    params.set('showTrade', '1');
-                    params.set('openTrade', '1');
-                    navigate({ pathname, search: params.toString() });
-                  }}
-                  aria-label="Open trade"
-                >
-                  Trade
-                </button>
+                {
+                  tokenData?.sale_address && (
+                    <button
+                      type="button"
+                      className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                      onClick={() => {
+                        const params = new URLSearchParams(search);
+                        params.set('showTrade', '1');
+                        params.set('openTrade', '1');
+                        navigate({ pathname, search: params.toString() });
+                      }}
+                      aria-label="Open trade"
+                    >
+                      Trade
+                    </button>
+                  )
+                }
+
               </div>
             </>
           ) : (

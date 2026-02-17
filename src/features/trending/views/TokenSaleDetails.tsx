@@ -714,7 +714,11 @@ const TokenSaleDetails = () => {
 
             {activeTab === TAB_CHAT && (
               <TokenFeedTab
-                token={token}
+                token={{
+                  ...(token || {}),
+                  symbol: tokenName,
+                  name: tokenName,
+                } as TokenDto}
                 isMobile={isMobile}
                 showComposer={showComposer}
                 holdersOnly={holdersOnly}

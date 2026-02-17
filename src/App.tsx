@@ -1,4 +1,6 @@
-import React, { Suspense, useEffect, useRef } from 'react';
+import React, {
+  Suspense, useEffect, useRef, useCallback,
+} from 'react';
 import { useRoutes } from 'react-router-dom';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
@@ -38,44 +40,45 @@ const App = () => {
   useSuperheroChainNames();
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
-  const { checkWalletConnection } = useWalletConnect();
-  // Use a ref to store the latest loadAccountData to avoid dependency issues
+  const { attemptReconnection } = useWalletConnect();
+  
+  // Track if we've already initialized to prevent multiple calls
+  const hasInitializedRef = useRef(false);
   const loadAccountDataRef = useRef(loadAccountData);
-  const checkWalletConnectionRef = useRef(checkWalletConnection);
 
-  useEffect(() => {
-    initSdk();
-  }, [initSdk]);
-
-  // Keep the ref updated with the latest checkWalletConnection function
-  useEffect(() => {
-    checkWalletConnectionRef.current = checkWalletConnection;
-  }, [checkWalletConnection]);
-
-  // Run wallet connection check only when SDK initialization flips to ready
-  useEffect(() => {
-    if (sdkInitialized) {
-      checkWalletConnectionRef.current();
-    }
-  }, [sdkInitialized]);
-
-  // Keep the ref updated with the latest loadAccountData function
+  // Keep refs updated with latest functions
   useEffect(() => {
     loadAccountDataRef.current = loadAccountData;
   }, [loadAccountData]);
 
-  // setup intervals for periodic data refresh
+  // Initialize SDK once on mount
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | undefined;
-    if (activeAccount) {
-      // Note: Initial load is handled by useAccountBalances hook when account changes
-      // This interval is just for periodic refreshes
-      interval = setInterval(() => {
-        loadAccountDataRef.current();
-      }, 10000);
-    }
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
+    const initialize = async () => {
+      await initSdk();
+      // attemptReconnection will check if there's persisted wallet state and try to reconnect
+      await attemptReconnection();
+    };
+
+    initialize();
+  }, []); // Empty deps - run only once on mount
+
+  // Setup interval for periodic data refresh when account is active
+  useEffect(() => {
+    if (!activeAccount) return undefined;
+
+    // Load data immediately
+    loadAccountDataRef.current();
+
+    // Then set up periodic refresh (wallet reconnection is handled in useWalletConnect)
+    const interval = setInterval(() => {
+      loadAccountDataRef.current();
+    }, 10000);
+
     return () => {
-      if (interval) clearInterval(interval);
+      clearInterval(interval);
     };
   }, [activeAccount]);
 

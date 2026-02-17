@@ -5,7 +5,7 @@ import {
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
-  useEffect, useRef, useState,
+  useEffect, useRef,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
@@ -14,21 +14,27 @@ import { useAeSdk } from './useAeSdk';
 import { createDeepLinkUrl } from '../utils/url';
 import { validateHash } from '../utils/address';
 import { configs } from '../configs';
-import type { Wallet, Wallets, NetworkId } from '../utils/types';
-import { walletInfoAtom } from '../atoms/walletAtoms';
+import type { Wallet, Wallets } from '../utils/types';
+import {
+  walletInfoAtom,
+  walletConnectedAtom,
+  connectingWalletAtom,
+  scanningForAccountsAtom,
+} from '../atoms/walletAtoms';
 import { useAccount } from './useAccount';
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
-  const scanStopRef = useRef<null |(() => void)>(null);
+  const scanStopRef = useRef<null | (() => void)>(null);
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
+  const reconnectionAttemptedRef = useRef(false);
+
   const { loadAccountData } = useAccount();
   const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
-  const [scanningForAccounts, setScanningForAccounts] = useState(false);
-  const [connectingWallet, setConnectingWallet] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [activeNetworkId, setActiveNetworkId] = useState<NetworkId | null>(null);
+  const [scanningForAccounts, setScanningForAccounts] = useAtom(scanningForAccountsAtom);
+  const [connectingWallet, setConnectingWallet] = useAtom(connectingWalletAtom);
+  const [walletConnected, setWalletConnected] = useAtom(walletConnectedAtom);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -94,10 +100,10 @@ export function useWalletConnect() {
       (async () => {
         try {
           await aeSdk.subscribeAddress(
-                        // Runtime expects the string values ('subscribe'/'unsubscribe');
-                        // using the SDK const-enum breaks with TS isolatedModules.
-                        'subscribe' as any,
-                        'connected',
+            // Runtime expects the string values ('subscribe'/'unsubscribe');
+            // using the SDK const-enum breaks with TS isolatedModules.
+            'subscribe' as any,
+            'connected',
           );
           await scanForAccounts();
 
@@ -116,7 +122,7 @@ export function useWalletConnect() {
     const addressDeepLink = createDeepLinkUrl({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
-      }?address={address}&networkId={networkId}`,
+        }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
     });
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -233,9 +239,9 @@ export function useWalletConnect() {
       const handleWallets = async ({
         newWallet,
       }: {
-                newWallet?: Wallet | undefined;
-                wallets: Wallets;
-            }) => {
+        newWallet?: Wallet | undefined;
+        wallets: Wallets;
+      }) => {
         clearTimeout($walletConnectTimeout);
         cleanup();
         resolve(newWallet);
@@ -250,36 +256,98 @@ export function useWalletConnect() {
     return scanPromise;
   }
 
-  async function checkWalletConnection() {
-    if (connectingWallet) {
+  /**
+   * Attempt to reconnect using persisted wallet state.
+   * This is called once on app initialization to restore previous wallet connection.
+   */
+  async function attemptReconnection() {
+    // Prevent multiple reconnection attempts
+    if (reconnectionAttemptedRef.current) {
+      return;
+    }
+    reconnectionAttemptedRef.current = true;
+
+    // Guard against concurrent operations
+    if (connectingWallet || walletConnected) {
       return;
     }
 
-    if (
-    // route.name !== "tx-queue" &&
-      activeAccount
-            && !walletConnected
-    ) {
-      if (walletInfo) {
-        await connectWallet();
-      } else {
-        await addStaticAccount(activeAccount);
+    // Check if we have persisted wallet info but no active connection
+    if (walletInfo && !walletConnected && aeSdk) {
+      try {
+        setConnectingWallet(true);
+
+        // Try to scan for the previously connected wallet
+        wallet.current = await scanForWallets();
+
+        if (wallet.current) {
+          // Attempt to reconnect using the found wallet
+          const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
+          setWalletInfo(newWalletInfo);
+          await subscribeAddress();
+          setWalletConnected(true);
+        } else {
+          // No wallet found, clear persisted state
+          setWalletInfo(undefined);
+          setWalletConnected(false);
+        }
+      } catch (error) {
+        // Reconnection failed, clear persisted state
+        setWalletInfo(undefined);
+        setWalletConnected(false);
+      } finally {
+        setConnectingWallet(false);
       }
-      loadAccountData();
+    } else if (activeAccount && !walletInfo) {
+      // We have a persisted account but no wallet info - it's a static (read-only) account
+      try {
+        await addStaticAccount(activeAccount);
+        await loadAccountData();
+      } catch {
+        // Failed to add static account
+      }
     }
   }
 
+  // Monitor wallet connection health - if walletInfo exists but connection is lost, clear state
+  useEffect(() => {
+    if (!aeSdk || !walletConnected || !walletInfo) return undefined;
+
+    // Set up a health check interval to detect stale connections
+    const healthCheckInterval = setInterval(async () => {
+      try {
+        // eslint-disable-next-line no-underscore-dangle
+        const accountsCurrent = aeSdk._accounts?.current || {};
+        const hasAccounts = Object.keys(accountsCurrent).length > 0;
+
+        // If we think we're connected but have no accounts, the connection is stale
+        if (!hasAccounts) {
+          console.warn('Wallet connection lost, cleaning up state');
+          setWalletConnected(false);
+          setWalletInfo(undefined);
+          wallet.current = undefined;
+        }
+      } catch {
+        // Connection check failed, mark as disconnected
+        setWalletConnected(false);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => {
+      clearInterval(healthCheckInterval);
+    };
+  }, [aeSdk, walletConnected, walletInfo, setWalletConnected, setWalletInfo]);
+
   return {
     walletInfo,
-    checkWalletConnection,
+    attemptReconnection,
     connectWallet,
     deepLinkWalletConnect,
     disconnectWallet,
     scanForWallets,
     connectingWallet,
     scanningForAccounts,
-    activeNetworkId,
-    setActiveNetworkId,
+    walletConnected,
     availableNetworks,
   };
 }

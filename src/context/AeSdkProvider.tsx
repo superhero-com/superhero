@@ -78,41 +78,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Poll for account changes when wallet is connected
-  useEffect(() => {
-    if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
-      return;
-    }
-
-    const checkAccountChange = async () => {
-      try {
-        // Check the SDK's current account state
-        // eslint-disable-next-line no-underscore-dangle
-        const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
-        const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
-
-        // Update if there's an actual change
-        if (currentAddress && currentAddress !== activeAccountRef.current) {
-          setActiveAccount(currentAddress);
-          setAccounts([currentAddress]);
-        }
-      } catch {
-        // Silently handle errors (wallet might be disconnected)
-      }
-    };
-
-    // Check immediately
-    checkAccountChange();
-
-    // Poll every 1 second for faster account change detection
-    const interval = setInterval(checkAccountChange, 1000);
-
-    // eslint-disable-next-line consistent-return
-    return () => {
-      clearInterval(interval);
-    };
-  }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
-
   const getCurrentGeneration = useCallback((sdk?: AeSdkAepp) => {
     const targetSdk = sdk || aeSdkRef.current;
     if (!targetSdk) return;
@@ -290,6 +255,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   }, [setActiveAccount, activeNetwork.networkId, setTransactionsQueue, openModal]);
 
   const initSdk = useCallback(async () => {
+    // Prevent re-initialization if already initialized
+    if (sdkInitialized && aeSdkRef.current && staticAeSdkRef.current) {
+      return;
+    }
+
     const aeSdkInstance = new AeSdkAepp({
       name: 'Superhero',
       nodes,
@@ -300,13 +270,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       onAddressChange: (a: any) => {
         const newAddress = Object.keys(a.current || {})[0] as any;
 
+        // Only update if there's an actual change
         if (newAddress && newAddress !== activeAccountRef.current) {
           setActiveAccount(newAddress);
           setAccounts([newAddress]);
         }
       },
       onDisconnect: () => {
-        // walletInfoAtom is persisted; clear it so polling can't "resurrect" connection state after disconnect
+        // Clear persisted wallet state to prevent auto-reconnect attempts with stale data
         setWalletInfo(undefined);
         setActiveAccount(undefined);
         setAccounts([]);
@@ -321,8 +292,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     aeSdkRef.current = aeSdkInstance;
     staticAeSdkRef.current = staticAeSdkInstance;
 
+    // If there's a persisted active account, add it as static (read-only) account
     if (activeAccount) {
-      addStaticAccount(activeAccount);
+      await addStaticAccount(activeAccount);
     }
 
     // Clear any existing interval before creating a new one
@@ -330,16 +302,21 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       clearInterval(generationPollIntervalRef.current);
     }
 
-    // Poll for current generation every 30 seconds
-    generationPollIntervalRef.current = setInterval(async () => {
+    // Poll for current block height every 30 seconds
+    generationPollIntervalRef.current = setInterval(() => {
       getCurrentGeneration(aeSdkInstance);
     }, 30000);
+    
+    // Get initial block height
     getCurrentGeneration(aeSdkInstance);
+    
     setSdkInitialized(true);
 
+    // Connect to WebSocket for real-time updates
     WebSocketClient.disconnect();
     WebSocketClient.connect(activeNetwork.websocketUrl);
   }, [
+    sdkInitialized,
     activeAccount,
     getCurrentGeneration,
     activeNetwork.websocketUrl,

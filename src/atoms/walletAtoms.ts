@@ -29,6 +29,11 @@ export const wordRegistryAtom = atom<any[]>([]);
 export const isHiddenContentAtom = atom<boolean>(true);
 export const isNewAccountAtom = atom<boolean>(false);
 
+// Wallet connection state (non-persisted, runtime only)
+export const walletConnectedAtom = atom<boolean>(false);
+export const connectingWalletAtom = atom<boolean>(false);
+export const scanningForAccountsAtom = atom<boolean>(false);
+
 // Derived atoms
 export const isConnectedAtom = atom((get) => get(addressAtom) !== null);
 export const hasBalanceAtom = atom((get) => {

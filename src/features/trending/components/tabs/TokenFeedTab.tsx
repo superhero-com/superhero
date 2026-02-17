@@ -93,7 +93,7 @@ export const TokenFeedTab = ({
             {String(token.name || token.symbol || '').toUpperCase()}
           </h3>
         )}
-        {!isMobile && (
+        {(!isMobile && token.sale_address) && (
           <div className="inline-flex items-center rounded-full bg-white/10 border border-white/25 p-1">
             <button
               type="button"

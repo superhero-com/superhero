@@ -15,6 +15,21 @@ const TxQueue = () => {
     if (id) {
       // Parse query parameters
       const query = Object.fromEntries(new URLSearchParams(location.search).entries());
+      const normalizeSignedTx = (value: unknown): string | undefined => {
+        if (typeof value !== 'string') return undefined;
+        const trimmed = value.trim();
+        if (!trimmed || trimmed === '{transaction}' || trimmed === 'undefined' || trimmed === 'null') {
+          return undefined;
+        }
+        return trimmed.startsWith('tx_') ? trimmed : undefined;
+      };
+      const signedTx = normalizeSignedTx(
+        (query as any).transaction
+        ?? (query as any).signedTransaction
+        ?? (query as any).signed_tx
+        ?? (query as any).tx,
+      );
+      const status = String((query as any).status || '').toLowerCase();
 
       // Update the transactions queue
       setTransactionsQueue((prevQueue) => ({
@@ -22,6 +37,8 @@ const TxQueue = () => {
         [id]: {
           ...prevQueue[id], // Keep existing data
           ...query, // Merge in new query data
+          ...(signedTx ? { transaction: signedTx } : {}),
+          ...(status === 'completed' && !signedTx ? { status: 'cancelled' } : {}),
         } as any, // Using any here because query can contain various properties
       }));
 

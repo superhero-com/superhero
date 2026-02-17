@@ -236,10 +236,19 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (
                   currentQueue[uniqueId]?.status === 'completed'
-                  && currentQueue[uniqueId]?.transaction
                 ) {
+                  const signedTx = currentQueue[uniqueId]?.transaction;
+                  if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
+                    cleanup();
+                    // delete transaction from queue
+                    const newQueue = { ...currentQueue };
+                    delete newQueue[uniqueId];
+                    setTransactionsQueue(newQueue);
+                    reject(new Error('Wallet did not return a signed transaction'));
+                    return;
+                  }
                   cleanup();
-                  resolve(currentQueue[uniqueId].transaction);
+                  resolve(signedTx);
                   // delete transaction from queue
                   const newQueue = { ...currentQueue };
                   delete newQueue[uniqueId];

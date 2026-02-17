@@ -136,7 +136,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 md:pb-0">
+      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-24 md:pt-0">
         {/* Top pill navigation for tablet/desktop */}
         <div className="hidden md:block sticky top-0 z-30 md:mb-2">
           <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
@@ -226,15 +226,15 @@ const DexLayout = ({ children }: DexLayoutProps) => {
         </div>
       </div>
 
-      {/* Mobile: Horizontal bottom navigation (kept for small screens) */}
+      {/* Mobile: Horizontal top navigation (positioned after header) */}
       <div
-        className="block md:hidden w-full fixed bottom-0 left-0 right-0 z-[900] p-2 pb-3 border-t"
+        className="block md:hidden w-full fixed top-16 left-0 right-0 z-[900] p-2 pt-3 border-b"
         style={{
           backgroundColor: 'rgba(12, 12, 20, 0.5)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          borderTopColor: 'rgba(255, 255, 255, 0.14)',
-          boxShadow: '0 -6px 28px rgba(0,0,0,0.35)',
+          borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+          boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
         }}
       >
         <div

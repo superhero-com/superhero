@@ -201,10 +201,10 @@ const TokenSaleDetails = () => {
       }
     },
     retry: (failureCount) => {
-      if (failureCount > 3) {
+      if (failureCount > 10) {
         setPendingLastsLong(true);
       }
-      return isTokenNewlyCreated ? true : failureCount <= 3;
+      return isTokenNewlyCreated ? true : failureCount <= 10;
     },
     retryDelay: 10000,
     staleTime: 60000,

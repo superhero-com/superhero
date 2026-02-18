@@ -59,6 +59,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
   const transactionsQueueRef = useRef(transactionsQueue);
   const activeAccountRef = useRef<string | undefined>(activeAccount);
+  const walletInfoRef = useRef<typeof walletInfo>(walletInfo);
   const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { openModal } = useModal();
 
@@ -70,6 +71,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     activeAccountRef.current = activeAccount;
   }, [activeAccount]);
+  useEffect(() => {
+    walletInfoRef.current = walletInfo;
+  }, [walletInfo]);
 
   // Cleanup generation polling interval on unmount
   useEffect(() => () => {

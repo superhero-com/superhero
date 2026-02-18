@@ -117,10 +117,14 @@ export function useProfile(targetAddress?: string) {
     );
     const getReconnectAddress = (): string | null => {
       const { current } = activeAccountRef;
-      if (matchesExpectedAddress(current)) {
+      if (knownAddress) {
+        if (hasKnownSignerReady()) {
+          return knownAddress as string;
+        }
+      } else if (matchesExpectedAddress(current)) {
         return current as string;
       }
-      if (hasKnownSignerReady()) {
+      if (!knownAddress && hasKnownSignerReady()) {
         return knownAddress as string;
       }
       return null;
@@ -136,7 +140,8 @@ export function useProfile(targetAddress?: string) {
           // aepp signer may still be available; continue.
         }
       }
-      return immediate as string;
+      const rechecked = getReconnectAddress();
+      if (rechecked) return rechecked;
     }
 
     if (knownAddress) {
@@ -203,36 +208,56 @@ export function useProfile(targetAddress?: string) {
 
     const shouldRestoreSigner = Boolean(options?.restoreSigner);
     const shouldPreferStaticSigner = Boolean(options?.preferStaticSigner);
-    if (shouldRestoreSigner && expectedAddress && !sdkHasAccount(staticAeSdk, expectedAddress)) {
+    if (shouldRestoreSigner && expectedAddress) {
       try {
         await addStaticAccount(expectedAddress);
+        // Restore/write flows use deep-link signer,
+        // independent from aeSdk reconnect state.
+        if (staticAeSdk) {
+          const contract = await Contract.initialize({
+            ...staticAeSdk.getContext(),
+            aci: PROFILE_REGISTRY_ACI as any,
+            address: profileContractAddress,
+          });
+          return {
+            contract,
+            signerSdk: staticAeSdk,
+            profileContractAddress,
+          };
+        }
       } catch {
         // Keep fallback logic below.
       }
     }
 
-    const staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
-    const sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
-    let signerSdk: any = shouldPreferStaticSigner
+    let staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
+    let sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
+    let signerSdk: any = shouldPreferStaticSigner && staticHasExpected
       ? staticAeSdk
       : undefined;
 
     if (!signerSdk) {
       if (sdkHasExpected) signerSdk = sdk;
       else if (staticHasExpected) signerSdk = staticAeSdk;
-      else if (expectedAddress) {
+      else if (expectedAddress && shouldRestoreSigner) {
         // Ensure we can always sign for the requested account via deep-link fallback.
         try {
           await addStaticAccount(expectedAddress);
         } catch {
           // Keep fallback below.
         }
-        signerSdk = sdkHasAccount(staticAeSdk, expectedAddress) ? staticAeSdk : undefined;
+        staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
+        sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
+        if (staticHasExpected) signerSdk = staticAeSdk;
+        else if (sdkHasExpected) signerSdk = sdk;
       }
     }
 
     // No expectedAddress (read-only flow): keep legacy behavior.
     if (!signerSdk) {
+      if (expectedAddress && shouldRestoreSigner) {
+        throw new Error('Wallet signer is not ready yet. Please try again.');
+      }
       signerSdk = sdk || staticAeSdk;
     }
     if (!signerSdk) {
@@ -292,6 +317,7 @@ export function useProfile(targetAddress?: string) {
     try {
       signedTxRaw = await signerSdk.signTransaction(callTx, {
         innerTx: true,
+        onAccount: callerAddress,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

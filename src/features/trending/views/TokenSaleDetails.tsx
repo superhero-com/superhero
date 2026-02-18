@@ -185,6 +185,7 @@ const TokenSaleDetails = () => {
     isLoading,
     data: _token,
     error,
+    refetch
   } = useQuery<TokenDto | null>({
     queryKey: ['TokensService.findByAddress', tokenName],
     queryFn: async () => {
@@ -201,10 +202,10 @@ const TokenSaleDetails = () => {
       }
     },
     retry: (failureCount) => {
-      if (failureCount > 10) {
+      if (failureCount > 3) {
         setPendingLastsLong(true);
       }
-      return isTokenNewlyCreated ? true : failureCount <= 10;
+      return isTokenNewlyCreated ? true : failureCount <= 3;
     },
     retryDelay: 10000,
     staleTime: 60000,
@@ -218,6 +219,19 @@ const TokenSaleDetails = () => {
     ...(tokenData || {}),
   }), [tokenData, _token]);
   const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
+
+  // Poll every 5 seconds when the token was just created until it is available
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('created') !== 'true') return;
+    if (token?.sale_address) return;
+
+    const intervalId = setInterval(() => {
+      refetch();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [location.search, token?.sale_address, refetch]);
 
   // Handle successful token load after creation
   useEffect(() => {

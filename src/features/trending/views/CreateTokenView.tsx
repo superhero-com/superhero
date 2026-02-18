@@ -422,7 +422,7 @@ const CreateTokenView = () => {
         initialBuyCount = Number(initialBuyVolume || 0);
       }
 
-      const data = await createCommunity(
+      await createCommunity(
         sdk,
         selectedCollection.id,
         {
@@ -435,9 +435,6 @@ const CreateTokenView = () => {
         undefined,
         factory.address,
       );
-      console.log('=========== COMMUNITY CREATED')
-      console.log('data', data);
-      
 
       // Navigate to token details
       navigate(`/trends/tokens/${tokenName}?created=true`);

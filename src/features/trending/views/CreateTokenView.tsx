@@ -67,7 +67,7 @@ const CreateTokenView = () => {
 
   // Parse URL query params
   const searchParams = new URLSearchParams(location.search);
-  const initialTokenName = searchParams.get('tokenName') || '';
+  const initialTokenName = String(searchParams.get('tokenName') || '').toUpperCase().replace(/ /g, '-').replace(/[^A-Z0-9-]/g, '');
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);
@@ -422,7 +422,7 @@ const CreateTokenView = () => {
         initialBuyCount = Number(initialBuyVolume || 0);
       }
 
-      await createCommunity(
+      const data = await createCommunity(
         sdk,
         selectedCollection.id,
         {
@@ -435,6 +435,9 @@ const CreateTokenView = () => {
         undefined,
         factory.address,
       );
+      console.log('=========== COMMUNITY CREATED')
+      console.log('data', data);
+      
 
       // Navigate to token details
       navigate(`/trends/tokens/${tokenName}?created=true`);

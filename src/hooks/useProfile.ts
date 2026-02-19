@@ -10,7 +10,12 @@ import {
   type XAttestationResponse,
   SuperheroApi,
 } from '@/api/backend';
-import { Contract, Encoded, Tag } from '@aeternity/aepp-sdk';
+import {
+  Contract,
+  Encoded,
+  Tag,
+  unpackTx,
+} from '@aeternity/aepp-sdk';
 import { CONFIG } from '@/config';
 import PROFILE_REGISTRY_ACI from '@/api/ProfileRegistryACI.json';
 import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
@@ -256,9 +261,12 @@ export function useProfile(targetAddress?: string) {
     // No expectedAddress (read-only flow): keep legacy behavior.
     if (!signerSdk) {
       if (expectedAddress && shouldRestoreSigner) {
-        throw new Error('Wallet signer is not ready yet. Please try again.');
+        // In write/restore flows, prefer deep-link signer even if account
+        // propagation is still catching up after refresh.
+        signerSdk = staticAeSdk || sdk;
+      } else {
+        signerSdk = sdk || staticAeSdk;
       }
-      signerSdk = sdk || staticAeSdk;
     }
     if (!signerSdk) {
       throw new Error('SDK is not initialized');
@@ -283,6 +291,7 @@ export function useProfile(targetAddress?: string) {
     functionName: string,
     args: unknown[],
   ) => {
+    const FEE_SIGNING_BUFFER = 2_100_000_000_000n;
     if (!callerAddress?.startsWith('ak_')) {
       throw new Error('Invalid caller account for sponsored profile transaction');
     }
@@ -299,7 +308,7 @@ export function useProfile(targetAddress?: string) {
     }
     let callTx: Encoded.Transaction;
     try {
-      callTx = await signerSdk.buildTx({
+      const txParams = {
         tag: Tag.ContractCallTx,
         callerId: callerAddress,
         contractId: profileContractAddress,
@@ -308,6 +317,17 @@ export function useProfile(targetAddress?: string) {
         gasPrice: 1_500_000_000,
         ttl: (await signerSdk.getHeight({ cached: true })) + 3,
         callData,
+      };
+      const estimatedTx = await signerSdk.buildTx(txParams);
+      const unpackedEstimated = unpackTx(
+        estimatedTx,
+        Tag.ContractCallTx,
+      ) as any;
+      const estimatedFee = BigInt(unpackedEstimated?.fee || 0);
+      callTx = await signerSdk.buildTx({
+        ...txParams,
+        // Wallet validation can require a small headroom over minimal fee.
+        fee: (estimatedFee + FEE_SIGNING_BUFFER).toString(),
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

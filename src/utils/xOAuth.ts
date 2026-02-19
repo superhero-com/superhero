@@ -7,7 +7,7 @@
  *   Important: use the same host for app + callback to preserve local wallet session storage.
  */
 
-const X_OAUTH_AUTHORIZE = 'https://twitter.com/i/oauth2/authorize';
+const X_OAUTH_AUTHORIZE = 'https://x.com/i/oauth2/authorize';
 /** Scopes required for X API v2 /2/users/me (users.read) and tweet read (tweet.read). */
 const X_OAUTH_SCOPE = 'users.read tweet.read';
 

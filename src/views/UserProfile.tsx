@@ -104,6 +104,7 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
 
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get('tab') as TabType;
@@ -217,6 +218,10 @@ export default function UserProfile({
     || (accountInfo?.bio || '').trim()
     || latestBioPost?.content?.trim()
     || profile?.profile?.bio;
+  const isXVerified = Boolean(
+    String(profileInfo?.profile?.x_username || '').trim()
+    || String(onChainProfile?.x_username || '').trim(),
+  );
 
   useEffect(() => {
     if (!effectiveAddress) return;
@@ -414,7 +419,10 @@ export default function UserProfile({
                 size="sm"
                 variant="ghost"
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
-                onClick={() => setEditOpen(true)}
+                onClick={() => {
+                  setEditInitialSection('profile');
+                  setEditOpen(true);
+                }}
               >
                 {t('buttons.editProfile')}
               </AeButton>
@@ -447,6 +455,19 @@ export default function UserProfile({
           </div>
         </div>
       </div>
+
+      {canEdit && !isXVerified && (
+        <button
+          type="button"
+          onClick={() => {
+            setEditInitialSection('x');
+            setEditOpen(true);
+          }}
+          className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
+        >
+          Claim 100 AE by verifying your X account.
+        </button>
+      )}
 
       {/* Portfolio Chart and Stats - Side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
@@ -568,6 +589,7 @@ export default function UserProfile({
         open={editOpen}
         onClose={(updatedProfile) => {
           setEditOpen(false);
+          setEditInitialSection('profile');
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
@@ -587,6 +609,7 @@ export default function UserProfile({
         }}
         address={effectiveAddress}
         initialBio={bioText}
+        initialSection={editInitialSection}
       />
     </Shell>
   ) : (
@@ -596,6 +619,7 @@ export default function UserProfile({
         open={editOpen}
         onClose={(updatedProfile) => {
           setEditOpen(false);
+          setEditInitialSection('profile');
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
@@ -615,6 +639,7 @@ export default function UserProfile({
         }}
         address={effectiveAddress}
         initialBio={bioText}
+        initialSection={editInitialSection}
       />
     </>
   );

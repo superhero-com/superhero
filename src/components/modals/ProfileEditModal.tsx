@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DisplaySource,
@@ -222,11 +227,13 @@ const ProfileEditModal = ({
   onClose,
   address,
   initialBio,
+  initialSection = 'profile',
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
   address?: string;
   initialBio?: string;
+  initialSection?: 'profile' | 'x';
 }) => {
   const { t } = useTranslation('common');
   const {
@@ -247,6 +254,8 @@ const ProfileEditModal = ({
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
+  const xSectionRef = useRef<HTMLDivElement | null>(null);
+  const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const trimmedForm = useMemo(() => ({
     fullname: form.fullname.trim(),
@@ -374,6 +383,14 @@ const ProfileEditModal = ({
       setFormError(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || initialSection !== 'x') return;
+    window.setTimeout(() => {
+      xSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      connectXButtonRef.current?.focus();
+    }, 120);
+  }, [open, initialSection, xSectionReady, hasXVerified]);
 
   const validateForm = (): string | null => {
     if (trimmedForm.fullname.length > 64) return t('messages.invalidFullname');
@@ -550,7 +567,7 @@ const ProfileEditModal = ({
             )}
           </div>
           {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
-            <div>
+            <div ref={xSectionRef}>
               {xSectionReady && (
                 <div className="flex items-center justify-between gap-2">
                   <Label className="text-white/80">
@@ -583,6 +600,7 @@ const ProfileEditModal = ({
                     {t('messages.connectXHint')}
                   </p>
                   <Button
+                    ref={connectXButtonRef}
                     type="button"
                     variant="outline"
                     className="w-full border-white/20 text-white hover:bg-white/10"

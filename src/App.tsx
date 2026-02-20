@@ -8,6 +8,7 @@ import ModalProvider from './components/ModalProvider';
 import {
   useAeSdk, useAccount, useIsMobile, useWalletConnect,
 } from './hooks';
+import { useProfileFeed } from './hooks/useProfileFeed';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
@@ -38,6 +39,7 @@ const TipModal = React.lazy(
 const App = () => {
   const isMobile = useIsMobile();
   useSuperheroChainNames();
+  useProfileFeed({ refetchIntervalMs: 20_000 });
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { attemptReconnection } = useWalletConnect();

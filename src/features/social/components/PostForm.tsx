@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { Contract } from '@aeternity/aepp-sdk';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -345,7 +346,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
     setIsSubmitting(true);
     try {
-      const contract = await sdk.initializeContract({
+      const contract = await Contract.initialize({
+        ...sdk.getContext(),
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
       });

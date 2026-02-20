@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
+import { Contract } from '@aeternity/aepp-sdk';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 import { CONFIG } from '../../../config';
 import {
@@ -52,7 +53,11 @@ export function useAddLiquidity() {
     if (addr === 'AE') {
       return { decimals: 18, symbol: 'AE' };
     }
-    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr as `ct_${string}` });
+    const t = await Contract.initialize({
+      ...sdk.getContext(),
+      aci: ACI.AEX9,
+      address: addr as `ct_${string}`,
+    });
     const { decodedResult } = await t.meta_info();
     return {
       decimals: Number(decodedResult.decimals ?? 18),

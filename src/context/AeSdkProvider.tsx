@@ -59,6 +59,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
   const transactionsQueueRef = useRef(transactionsQueue);
   const activeAccountRef = useRef<string | undefined>(activeAccount);
+  const walletInfoRef = useRef<typeof walletInfo>(walletInfo);
   const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { openModal } = useModal();
 
@@ -70,6 +71,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     activeAccountRef.current = activeAccount;
   }, [activeAccount]);
+  useEffect(() => {
+    walletInfoRef.current = walletInfo;
+  }, [walletInfo]);
 
   // Cleanup generation polling interval on unmount
   useEffect(() => () => {
@@ -103,6 +107,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         address,
         signTransaction(
           tx: Encoded.Transaction,
+          options?: { innerTx?: boolean },
         ): Promise<Encoded.Transaction> {
           const uniqueId = Math.random().toString(36).substring(7);
           const currentUrl = new URL(window.location.href);
@@ -126,6 +131,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             type: 'sign-transaction',
             transaction: tx,
             networkId: activeNetwork.networkId,
+            innerTx: options?.innerTx === true ? 'true' : undefined,
             'replace-caller': 'true',
             // decode these urls because they will be encoded again
             'x-success': decodeURI(successUrl.href),
@@ -236,10 +242,19 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (
                   currentQueue[uniqueId]?.status === 'completed'
-                  && currentQueue[uniqueId]?.transaction
                 ) {
+                  const signedTx = currentQueue[uniqueId]?.transaction;
+                  if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
+                    cleanup();
+                    // delete transaction from queue
+                    const newQueue = { ...currentQueue };
+                    delete newQueue[uniqueId];
+                    setTransactionsQueue(newQueue);
+                    reject(new Error('Wallet did not return a signed transaction'));
+                    return;
+                  }
                   cleanup();
-                  resolve(currentQueue[uniqueId].transaction);
+                  resolve(signedTx);
                   // delete transaction from queue
                   const newQueue = { ...currentQueue };
                   delete newQueue[uniqueId];

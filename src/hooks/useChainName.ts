@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
 import { chainNamesAtom } from '../atoms/walletAtoms';
-import { AccountsService } from '../api/generated/services/AccountsService';
+import { SuperheroApi } from '../api/backend';
 import { useAeSdk } from './useAeSdk';
 
 // Global request queue to prevent duplicate requests
@@ -23,15 +23,15 @@ async function fetchChainNameFromBackend(accountAddress: string): Promise<string
 
   const requestPromise = (async () => {
     try {
-      // Use backend API which handles all the complex logic
-      const account = await AccountsService.getAccount({ address: accountAddress });
-      return account?.chain_name || null;
+      // Profile API is the source of truth for profile display data.
+      const profile = await SuperheroApi.getProfile(accountAddress);
+      return profile?.profile?.chain_name || null;
     } catch (e: any) {
       // 404 is normal if account doesn't exist
       if (e?.status === 404) {
         return null;
       }
-      console.warn('Failed to fetch chain name from backend', e);
+      console.warn('Failed to fetch chain name from profile backend', e);
       return null;
     } finally {
       pendingRequests.delete(accountAddress);

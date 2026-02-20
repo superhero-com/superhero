@@ -57,6 +57,8 @@ Configuration is defined in code at `src/config.ts` via the exported `CONFIG` ob
 - `JITSI_DOMAIN` — conferencing domain for meeting links
 - `IMGUR_API_CLIENT_ID`, `GIPHY_API_KEY` — optional media integrations
 - `DEX_BACKEND_URL`, `MAINNET_DEX_BACKEND_URL`, `TESTNET_DEX_BACKEND_URL` — DEX services
+- `X_OAUTH_CLIENT_ID` — public X OAuth client id used by Connect X flow
+- `PROFILE_REGISTRY_CONTRACT_ADDRESS` — profile registry contract address
 
 You can override some values at build time using Vite env vars:
 
@@ -65,12 +67,16 @@ You can override some values at build time using Vite env vars:
 VITE_SUPERHERO_API_URL=https://api.example.com \
 VITE_SUPERHERO_WS_URL=wss://ws.example.com \
 VITE_GIPHY_API_KEY=your_key \
+VITE_X_OAUTH_CLIENT_ID=your_x_oauth_client_id \
+VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS=ct_your_profile_registry_contract \
 npm run dev
 
 # Or for a production build
 VITE_SUPERHERO_API_URL=https://api.example.com \
 VITE_SUPERHERO_WS_URL=wss://ws.example.com \
 VITE_GIPHY_API_KEY=your_key \
+VITE_X_OAUTH_CLIENT_ID=your_x_oauth_client_id \
+VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS=ct_your_profile_registry_contract \
 npm run build
 ```
 

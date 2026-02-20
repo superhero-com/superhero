@@ -121,7 +121,11 @@ export default function GovernanceCreate() {
       setSubmitting(true);
 
       const pollBytecode = (BYTECODE_HASHES as any)['8.0.0']['Poll_Iris.aes'].bytecode as Encoded.ContractBytearray;
-      const pollContract = await sdk.initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
+      const pollContract = await Contract.initialize({
+        ...sdk.getContext(),
+        aci: POLL_ACI as any,
+        bytecode: pollBytecode,
+      });
 
       const createMetadata = {
         title: title.trim(),

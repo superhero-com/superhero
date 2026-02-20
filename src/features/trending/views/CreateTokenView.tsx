@@ -3,7 +3,7 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from '@aeternity/aepp-sdk';
-import { createCommunity } from 'bctsl-sdk';
+import { createCommunity } from '../libs/createCommunity';
 import BigNumber from 'bignumber.js';
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
@@ -422,7 +422,7 @@ const CreateTokenView = () => {
         initialBuyCount = Number(initialBuyVolume || 0);
       }
 
-      await createCommunity(
+      const txHash = await createCommunity(
         sdk,
         selectedCollection.id,
         {
@@ -437,7 +437,7 @@ const CreateTokenView = () => {
       );
 
       // Navigate to token details
-      navigate(`/trends/tokens/${tokenName}?created=true`);
+      navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';

@@ -1,4 +1,4 @@
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -102,10 +102,10 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
         <div className="flex w-full max-w-[280px] items-start gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
           <div className="flex-shrink-0 pt-0.5">
             <div className="md:hidden">
-              <AddressAvatarWithChainName address={account} size={34} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatar address={account} size={34} />
             </div>
             <div className="hidden md:block">
-              <AddressAvatarWithChainName address={account} size={40} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatar address={account} size={40} />
             </div>
           </div>
           <div className="min-w-0">

@@ -346,8 +346,8 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     const query = qp.toString();
-    // TOOD: uncomment this when the backend is ready
-    return null
+    // TODO: uncomment this when the backend is ready
+    return Promise.resolve(null);
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}${query ? `?${query}` : ''}`) as Promise<ProfileAggregate>;
   },
   getProfilesByAddresses(addresses: string[], includeOnChain?: boolean) {
@@ -360,7 +360,9 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     qp.set('limit', String(limit));
     qp.set('offset', String(offset));
-    return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
+    return Promise.resolve({ items: [], data: [] } as ProfileFeedResponse);
+    // TODO: uncomment this when the backend is ready
+    // return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
   },
   createXAttestation(address: string, accessToken: string) {
     return this.fetchJson('/api/profile/x/attestation', {

@@ -66,10 +66,9 @@ const TokenList = () => {
   // Trending tags state
   const [trendingTags, setTrendingTags] = useState<TrendingTag[]>([]);
   const [trendingTagsLoading, setTrendingTagsLoading] = useState(true);
-  const [trendingSearch, setTrendingSearch] = useState('');
   const [trendingSearchThrottled, setTrendingSearchThrottled] = useState('');
 
-  // Throttle search input (2000ms delay like Vue)
+  // Throttle token search (2000ms delay like Vue)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchThrottled(search);
@@ -78,13 +77,13 @@ const TokenList = () => {
     return () => clearTimeout(timeoutId);
   }, [search]);
 
-  // Throttle trending search
+  // Throttle trending search from the same input (500ms)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setTrendingSearchThrottled(trendingSearch);
+      setTrendingSearchThrottled(search);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [trendingSearch]);
+  }, [search]);
 
   const fetchTrendingTags = useCallback(async () => {
     try {
@@ -302,26 +301,13 @@ const TokenList = () => {
               </div>
             )}
 
-            {/* Token search */}
+            {/* Unified search — filters both tokens and trending tags */}
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tokens"
+              placeholder="Search tokens & trends"
               className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
             />
-
-            {/* Trending tags search */}
-            <div className="relative w-full md:w-auto md:flex-1 min-w-[160px] flex-shrink-0">
-              <input
-                value={trendingSearch}
-                onChange={(e) => setTrendingSearch(e.target.value)}
-                placeholder="Search trends..."
-                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-purple-500 placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full pr-8"
-              />
-              <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
 
             {/* Performance Timeframe Selector */}
             <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">

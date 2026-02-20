@@ -32,8 +32,8 @@ const MobileAppHeader = () => {
   const { openModal } = useModal();
 
   const handleConnect = () => openModal({ name: 'connect-wallet' });
-  const handleLogout = () => {
-    disconnectWallet();
+  const handleLogout = async () => {
+    await disconnectWallet();
     window.location.reload();
   };
   const handleProfileClick = () => {

@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_WALLET_URL?: string;
   readonly VITE_BACKEND_URL?: string;
   readonly VITE_MIDDLEWARE_URL?: string;
+  readonly VITE_X_OAUTH_CLIENT_ID?: string;
+  readonly VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS?: string;
 }
 
 interface ImportMeta {

@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { Contract } from '@aeternity/aepp-sdk';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -345,7 +346,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
     setIsSubmitting(true);
     try {
-      const contract = await sdk.initializeContract({
+      const contract = await Contract.initialize({
+        ...sdk.getContext(),
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
       });
@@ -930,6 +932,16 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   placeholder={currentPlaceholder}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onFocus={() => {
+                    if (requiredHashtag && !text) {
+                      const tag = `${requiredHashtag.toUpperCase()} `;
+                      setText(tag);
+                      requestAnimationFrame(() => {
+                        const el = textareaRef.current;
+                        if (el) el.setSelectionRange(tag.length, tag.length);
+                      });
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (!requiredHashtag || !showAutoComplete) return;
                     if (e.key === 'Tab' || e.key === 'Enter') {

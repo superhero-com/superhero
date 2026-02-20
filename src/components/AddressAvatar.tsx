@@ -1,10 +1,11 @@
 import Avatars from '@dicebear/avatars';
 import sprites from '@dicebear/avatars-avataaars-sprites';
 import * as jdenticon from 'jdenticon';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 interface AddressAvatarProps {
   address: string;
+  imageUrl?: string | null;
   size?: number | string;
   className?: string;
   style?: React.CSSProperties;
@@ -35,6 +36,7 @@ export const JDENTICON_CONFIG = {
 
 const AddressAvatar = ({
   address,
+  imageUrl,
   size = 24,
   className = '',
   borderRadius = '50%',
@@ -91,6 +93,13 @@ const AddressAvatar = ({
     return { initials, backgroundColor, fontSize };
   }, [address, size]);
 
+  const [imageError, setImageError] = useState(false);
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  const showImage = Boolean(imageUrl?.trim()) && !imageError;
+
   const radiusClass = 'rounded-full';
 
   return (
@@ -103,7 +112,16 @@ const AddressAvatar = ({
         ...style,
       }}
     >
-      {avatarSvg ? (
+      {showImage ? (
+        <img
+          src={imageUrl!}
+          alt=""
+          className="w-full h-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setImageError(true)}
+        />
+      ) : avatarSvg ? (
         <span
           className="custom-address w-full h-full object-cover"
           // eslint-disable-next-line react/no-danger

@@ -1,48 +1,428 @@
-{
-  "contract": {
-    "kind": "contract_main",
-    "name": "ProfileRegistry",
-    "payable": false,
-    "typedefs": [
-      {
-        "name": "Profile",
-        "typedef": {
-          "record": [
-            { "name": "biography", "type": "string" },
-            { "name": "avatar_url", "type": "string" }
-          ]
+[
+  {
+    "namespace": {
+      "name": "ListInternal",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "List",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "String",
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "event": {
+        "variant": [
+          {
+            "ProfileUpdated": [
+              "address",
+              "string"
+            ]
+          },
+          {
+            "CustomNameUpdated": [
+              "address",
+              "string"
+            ]
+          },
+          {
+            "ChainNameUpdated": [
+              "address",
+              "string"
+            ]
+          },
+          {
+            "XNameUpdated": [
+              "address",
+              "string"
+            ]
+          },
+          {
+            "DisplaySourceUpdated": [
+              "address",
+              "string"
+            ]
+          },
+          {
+            "CustomNameAutoRenamed": [
+              "address",
+              "string"
+            ]
+          }
+        ]
+      },
+      "functions": [
+        {
+          "arguments": [
+            {
+              "name": "backend_signer",
+              "type": "address"
+            }
+          ],
+          "name": "init",
+          "payable": false,
+          "returns": "ProfileRegistry.state",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_state",
+          "payable": false,
+          "returns": "ProfileRegistry.state",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "get_profile",
+          "payable": false,
+          "returns": {
+            "option": [
+              "ProfileRegistry.profile"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "name": "resolve_public_name",
+          "payable": false,
+          "returns": {
+            "option": [
+              "address"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "fullname",
+              "type": "string"
+            },
+            {
+              "name": "bio",
+              "type": "string"
+            },
+            {
+              "name": "avatarurl",
+              "type": "string"
+            }
+          ],
+          "name": "set_profile",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "username",
+              "type": "string"
+            }
+          ],
+          "name": "set_custom_name",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "clear_custom_name",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "chain_name",
+              "type": "string"
+            },
+            {
+              "name": "expires_at",
+              "type": "int"
+            }
+          ],
+          "name": "set_chain_name",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "clear_chain_name",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "x_username",
+              "type": "string"
+            },
+            {
+              "name": "expiry",
+              "type": "int"
+            },
+            {
+              "name": "nonce",
+              "type": "string"
+            },
+            {
+              "name": "sig",
+              "type": "signature"
+            }
+          ],
+          "name": "set_x_name_with_attestation",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "clear_x_name",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "source",
+              "type": "ProfileRegistry.display_source"
+            }
+          ],
+          "name": "set_display_source",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "fullname",
+              "type": "string"
+            },
+            {
+              "name": "bio",
+              "type": "string"
+            },
+            {
+              "name": "avatarurl",
+              "type": "string"
+            },
+            {
+              "name": "username_opt",
+              "type": {
+                "option": [
+                  "string"
+                ]
+              }
+            },
+            {
+              "name": "chain_name_opt",
+              "type": {
+                "option": [
+                  "string"
+                ]
+              }
+            },
+            {
+              "name": "chain_expires_at_opt",
+              "type": {
+                "option": [
+                  "int"
+                ]
+              }
+            },
+            {
+              "name": "source",
+              "type": "ProfileRegistry.display_source"
+            }
+          ],
+          "name": "set_profile_full",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
         }
-      }
-    ],
-    "state": {
-      "record": [{ "name": "profiles", "type": "map(address, Profile)" }]
-    },
-    "functions": [
-      {
-        "name": "init",
-        "arguments": [],
-        "returns": "ProfileRegistry.state",
-        "payable": false,
-        "stateful": false
+      ],
+      "kind": "contract_main",
+      "name": "ProfileRegistry",
+      "payable": false,
+      "state": {
+        "record": [
+          {
+            "name": "profiles_by_address",
+            "type": {
+              "map": [
+                "address",
+                "ProfileRegistry.profile"
+              ]
+            }
+          },
+          {
+            "name": "custom_owner",
+            "type": {
+              "map": [
+                "ProfileRegistry.normalized_name",
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "chain_owner",
+            "type": {
+              "map": [
+                "ProfileRegistry.normalized_name",
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "x_owner",
+            "type": {
+              "map": [
+                "ProfileRegistry.normalized_name",
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "nonce_used",
+            "type": {
+              "map": [
+                "string",
+                "bool"
+              ]
+            }
+          },
+          {
+            "name": "backend_signer",
+            "type": "address"
+          },
+          {
+            "name": "version",
+            "type": "string"
+          }
+        ]
       },
-      {
-        "name": "get_profile",
-        "arguments": [{ "name": "account", "type": "address" }],
-        "returns": { "option": ["Profile"] },
-        "payable": false,
-        "stateful": false
-      },
-      {
-        "name": "set_profile",
-        "arguments": [
-          { "name": "biography", "type": "string" },
-          { "name": "avatar_url", "type": "string" }
-        ],
-        "returns": { "tuple": [] },
-        "payable": false,
-        "stateful": true
-      }
-    ]
+      "typedefs": [
+        {
+          "name": "normalized_name",
+          "typedef": "string",
+          "vars": []
+        },
+        {
+          "name": "display_source",
+          "typedef": {
+            "variant": [
+              {
+                "Custom": []
+              },
+              {
+                "Chain": []
+              },
+              {
+                "X": []
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "profile",
+          "typedef": {
+            "record": [
+              {
+                "name": "fullname",
+                "type": "string"
+              },
+              {
+                "name": "bio",
+                "type": "string"
+              },
+              {
+                "name": "avatarurl",
+                "type": "string"
+              },
+              {
+                "name": "username",
+                "type": {
+                  "option": [
+                    "string"
+                  ]
+                }
+              },
+              {
+                "name": "x_username",
+                "type": {
+                  "option": [
+                    "string"
+                  ]
+                }
+              },
+              {
+                "name": "chain_name",
+                "type": {
+                  "option": [
+                    "string"
+                  ]
+                }
+              },
+              {
+                "name": "display_source",
+                "type": "ProfileRegistry.display_source"
+              },
+              {
+                "name": "chain_expires_at",
+                "type": {
+                  "option": [
+                    "int"
+                  ]
+                }
+              }
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
   }
-}
-
+]

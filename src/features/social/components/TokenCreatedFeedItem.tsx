@@ -43,8 +43,8 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { t } = useTranslation(['common', 'social']);
-  const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const { chainNames, profileDisplayNames } = useWallet();
+  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 

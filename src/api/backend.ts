@@ -1,6 +1,73 @@
 /* eslint-disable max-len */
 import { CONFIG } from '../config';
 
+export type ProfileEditablePayload = {
+  fullname?: string;
+  bio?: string;
+  nostrkey?: string;
+  avatarurl?: string;
+  username?: string;
+  x_username?: string;
+  chain_name?: string;
+  sol_name?: string;
+};
+
+export type ProfileChallengeResponse = {
+  challenge: string;
+  payload_hash: string;
+  expires_at: string;
+  ttl_seconds: number;
+};
+
+export type ProfileUpdateResponse = {
+  address: string;
+  fullname: string | null;
+  bio: string | null;
+  nostrkey: string | null;
+  avatarurl: string | null;
+  username: string | null;
+  x_username: string | null;
+  chain_name: string | null;
+  sol_name: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DisplaySource = 'custom' | 'chain' | 'x';
+
+export type ProfilePayload = {
+  fullname: string;
+  bio: string;
+  avatarurl: string;
+  username: string | null;
+  x_username: string | null;
+  chain_name: string | null;
+  display_source: DisplaySource | null;
+  chain_expires_at: string | null;
+};
+
+export type ProfileAggregate = {
+  address: string;
+  profile: ProfilePayload;
+  public_name: string | null;
+};
+
+export type ProfileFeedResponse = {
+  items?: ProfileAggregate[];
+  data?: ProfileAggregate[];
+} | ProfileAggregate[];
+
+export type XAttestationResponse = {
+  signer: string;
+  address: string;
+  x_username: string;
+  nonce: string;
+  expiry: number;
+  message: string;
+  signature_hex: string;
+  signature_base64: string;
+};
+
 // Superhero API client
 export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
@@ -274,6 +341,79 @@ export const SuperheroApi = {
     if (params.topics) qp.set('topics', params.topics);
     const query = qp.toString();
     return this.fetchJson(`/api/posts${query ? `?${query}` : ''}`);
+  },
+  getProfile(address: string, includeOnChain?: boolean) {
+    const qp = new URLSearchParams();
+    if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
+    const query = qp.toString();
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}${query ? `?${query}` : ''}`) as Promise<ProfileAggregate>;
+  },
+  getProfilesByAddresses(addresses: string[], includeOnChain?: boolean) {
+    const qp = new URLSearchParams();
+    if (addresses.length) qp.set('addresses', addresses.join(','));
+    if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
+    return this.fetchJson(`/api/profile?${qp.toString()}`) as Promise<ProfileAggregate[]>;
+  },
+  getProfileFeed(limit = 500, offset = 0) {
+    const qp = new URLSearchParams();
+    qp.set('limit', String(limit));
+    qp.set('offset', String(offset));
+    return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
+  },
+  createXAttestation(address: string, accessToken: string) {
+    return this.fetchJson('/api/profile/x/attestation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+        accessToken,
+      }),
+    }) as Promise<XAttestationResponse>;
+  },
+  /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
+  createXAttestationFromCode(
+    address: string,
+    code: string,
+    codeVerifier: string,
+    redirectUri: string,
+  ) {
+    return this.fetchJson('/api/profile/x/attestation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+        code,
+        code_verifier: codeVerifier,
+        redirect_uri: redirectUri,
+      }),
+    }) as Promise<XAttestationResponse>;
+  },
+  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
+  issueProfileChallenge(address: string, payload: ProfileEditablePayload) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/challenge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<ProfileChallengeResponse>;
+  },
+  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
+  updateProfile(
+    address: string,
+    payload: ProfileEditablePayload & { challenge: string; signature: string },
+  ) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<ProfileUpdateResponse>;
   },
 };
 

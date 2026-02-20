@@ -1,6 +1,7 @@
 /* eslint-disable */
 import waeACI from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
 import React, { useRef, useState } from 'react';
+import { Contract } from '@aeternity/aepp-sdk';
 import { CONFIG } from '../../../config';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
@@ -35,7 +36,8 @@ export function useSwapExecution() {
   }
 
   async function wrapAeToWae(amountAe: string): Promise<string | null> {
-    const wae = await sdk.initializeContract({
+    const wae = await Contract.initialize({
+      ...sdk.getContext(),
       aci: waeACI,
       address: DEX_ADDRESSES.wae as `ct_${string}`,
     });
@@ -59,7 +61,8 @@ export function useSwapExecution() {
   }
 
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
-    const wae = await sdk.initializeContract({
+    const wae = await Contract.initialize({
+      ...sdk.getContext(),
       aci: waeACI,
       address: DEX_ADDRESSES.wae as `ct_${string}`,
     });

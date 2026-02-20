@@ -932,6 +932,16 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   placeholder={currentPlaceholder}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onFocus={() => {
+                    if (requiredHashtag && !text) {
+                      const tag = `${requiredHashtag.toUpperCase()} `;
+                      setText(tag);
+                      requestAnimationFrame(() => {
+                        const el = textareaRef.current;
+                        if (el) el.setSelectionRange(tag.length, tag.length);
+                      });
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (!requiredHashtag || !showAutoComplete) return;
                     if (e.key === 'Tab' || e.key === 'Enter') {

@@ -43,6 +43,7 @@ type CollectionOption = 'all' | string; // Can be 'all' or specific collection a
 const TokenList = () => {
   const { activeAccount } = useAccount();
 
+  const [activeTab, setActiveTab] = useState<'tokens' | 'trends'>('tokens');
   const [collection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -201,12 +202,12 @@ const TokenList = () => {
 
       <LatestTransactionsCarousel />
 
-      <TrendingPillsCarousel />
+      {/* <TrendingPillsCarousel /> */}
 
       {/* Main content */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-4">
+      <div className="gap-4">
         {/* Left: Token List */}
-        <div className="w-full">
+        <div className={activeTab === 'tokens' ? 'w-full' : 'w-full hidden xl:block'}>
           <div className="flex flex-col items-start mb-6 gap-3 w-full">
             <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
               Tokenized Trends
@@ -282,11 +283,13 @@ const TokenList = () => {
           />
         </div>
 
-        <RepositoriesList />
+        {/* <div className={activeTab === 'trends' ? 'block' : 'hidden xl:block'}>
+          <RepositoriesList />
+        </div> */}
       </div>
 
-      {/* Load More Button */}
-      {hasNextPage && (
+      {/* Load More Button — only for token list tab on mobile */}
+      {hasNextPage && activeTab === 'tokens' && (
         <div className="text-center pt-2 pb-4">
           <button
             ref={loadMoreBtn}

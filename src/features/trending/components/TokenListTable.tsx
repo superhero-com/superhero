@@ -4,7 +4,6 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { useIsMobile } from '@/hooks';
 import TokenListTableRow from './TokenListTableRow';
 import TokenRowSkeleton from './TokenRowSkeleton';
-import TrendingTagTableRow, { TrendingTag } from './TrendingTagTableRow';
 
 type OrderByOption = 'market_cap' | 'newest' | 'oldest' | 'holders_count' | 'trending_score' | 'name' | 'price';
 type OrderDirection = 'ASC' | 'DESC';
@@ -93,12 +92,10 @@ interface TokenListTableProps {
   hasNextPage?: boolean;
   isFetching?: boolean;
   onLoadMore?: () => void;
-  trendingTags?: TrendingTag[];
-  trendingTagsLoading?: boolean;
 }
 
 const TokenListTable = ({
-  pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore, trendingTags, trendingTagsLoading,
+  pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore,
 }: TokenListTableProps) => {
   const { t } = useTranslation('common');
 
@@ -110,28 +107,6 @@ const TokenListTable = ({
     () => Array.from({ length: 12 }, (_, idx) => `row-${idx + 1}`),
     [],
   );
-
-  type MergedRow =
-    | { type: 'token'; token: TokenDto; rank: number }
-    | { type: 'trending'; tag: TrendingTag; trendingRank: number };
-
-  const mergedRows = useMemo((): MergedRow[] => {
-    const tokenRows: MergedRow[] = allItems.map((token, index) => ({
-      type: 'token', token, rank: rankOffset + index + 1,
-    }));
-
-    if (!trendingTags?.length) return tokenRows;
-
-    const result: MergedRow[] = [...tokenRows];
-    const step = Math.max(2, Math.ceil((result.length + trendingTags.length) / (trendingTags.length + 1)));
-
-    trendingTags.forEach((tag, i) => {
-      const insertAt = Math.min(step * (i + 1) + i, result.length);
-      result.splice(insertAt, 0, { type: 'trending', tag, trendingRank: i + 1 });
-    });
-
-    return result;
-  }, [allItems, trendingTags, rankOffset]);
 
   // Detect mobile viewport to map the "Market cap" header to market_cap sorting
   const isMobile = useIsMobile();
@@ -217,21 +192,13 @@ const TokenListTable = ({
           </tbody>
         ) : (
           <tbody>
-            {mergedRows.map((row) => (
-              row.type === 'token' ? (
-                <TokenListTableRow
-                  key={row.token.address}
-                  token={row.token}
-                  showCollectionColumn={showCollectionColumn}
-                  rank={row.rank}
-                />
-              ) : (
-                <TrendingTagTableRow
-                  key={`trending-${row.tag.fullName || row.tag.tag}`}
-                  tag={row.tag}
-                  rank={row.trendingRank}
-                />
-              )
+            {allItems.map((token, index) => (
+              <TokenListTableRow
+                key={token.address}
+                token={token}
+                showCollectionColumn={showCollectionColumn}
+                rank={rankOffset + index + 1}
+              />
             ))}
           </tbody>
         )}

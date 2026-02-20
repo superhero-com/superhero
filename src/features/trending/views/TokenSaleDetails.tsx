@@ -41,6 +41,7 @@ import TokenTradeCard from '../components/TokenTradeCard';
 import { TokenSummary } from '../../bcl/components';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
+import { CONFIG } from '../../../config';
 import {
   TokenFeedTab,
   TokenHoldersTab,
@@ -80,6 +81,7 @@ const TokenSaleDetails = () => {
     const params = new URLSearchParams(location.search);
     return params.get('created') === 'true';
   });
+  const [txConfirmed, setTxConfirmed] = useState(false);
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
@@ -179,6 +181,11 @@ const TokenSaleDetails = () => {
     }
   }, [tokenName, location.search]);
 
+  const txHash = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('txHash');
+  }, [location.search]);
+
   // Token data query
   const {
     isError,
@@ -220,18 +227,42 @@ const TokenSaleDetails = () => {
   }), [tokenData, _token]);
   const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
 
-  // Poll every 5 seconds when the token was just created until it is available
+  // Poll AE node every 5 seconds until transaction is mined (block_height !== -1)
+  useEffect(() => {
+    if (!txHash || txConfirmed) return;
+
+    const pollTx = async () => {
+      try {
+        const res = await fetch(
+          `${CONFIG.NODE_URL}/v3/transactions/${txHash}?int-as-string=false`,
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.block_height !== undefined && data.block_height !== -1) {
+          setTxConfirmed(true);
+        }
+      } catch { /* ignore network errors, keep polling */ }
+    };
+
+    pollTx();
+    const interval = setInterval(pollTx, 5000);
+    return () => clearInterval(interval);
+  }, [txHash, txConfirmed]);
+
+  // Poll every 5 seconds when the token was just created until it is available.
+  // When txHash is present, wait for the transaction to be mined first.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('created') !== 'true') return;
     if (token?.sale_address) return;
+    if (txHash && !txConfirmed) return;
 
     const intervalId = setInterval(() => {
       refetch();
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [location.search, token?.sale_address, refetch]);
+  }, [location.search, token?.sale_address, refetch, txHash, txConfirmed]);
 
   // Handle successful token load after creation
   useEffect(() => {
@@ -241,6 +272,7 @@ const TokenSaleDetails = () => {
       const params = new URLSearchParams(location.search);
       if (params.get('created') === 'true') {
         params.delete('created');
+        params.delete('txHash');
         navigate(
           { pathname: location.pathname, search: params.toString() },
           { replace: true }
@@ -896,44 +928,111 @@ const TokenSaleDetails = () => {
 
       {/* Token Creation Banner */}
       {showCreatedOverlay && (
-        <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-24 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100%-2rem)] max-w-2xl mx-auto px-4">
-          <div className="bg-gradient-to-br from-[#4ecdc4]/20 to-[#44a08d]/20 border-2 border-[#4ecdc4]/50 rounded-2xl p-6 shadow-2xl backdrop-blur-xl animate-in slide-in-from-top duration-500">
-            <div className="flex items-start gap-4">
-              {/* Animated Icon */}
-              <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#44a08d] flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-white animate-pulse" />
+        <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-6 right-4 md:right-6 left-4 md:left-auto z-[9999] md:max-w-sm w-auto">
+          <div className="bg-[#0d1f1e] border border-[#4ecdc4]/40 rounded-2xl p-4 shadow-[0_8px_40px_rgba(78,205,196,0.18)] backdrop-blur-xl animate-in slide-in-from-top duration-400">
+
+            {/* Step progress – only shown when a txHash is present */}
+            {txHash && (
+              <div className="flex items-center mb-4">
+                {/* Step 1 – Broadcast */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-500 ${
+                    txConfirmed
+                      ? 'bg-[#4ecdc4] text-[#0a0a0f]'
+                      : 'bg-[#4ecdc4]/20 text-[#4ecdc4] ring-1 ring-[#4ecdc4]'
+                  }`}>
+                    {txConfirmed ? (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : '1'}
+                  </div>
+                  <span className="text-[9px] text-white/50 font-medium">Broadcast</span>
                 </div>
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#44a08d] animate-ping opacity-20" />
+
+                <div className={`flex-1 h-px mx-1.5 mb-3.5 transition-all duration-700 ${txConfirmed ? 'bg-[#4ecdc4]' : 'bg-white/15'}`} />
+
+                {/* Step 2 – Confirm */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-500 ${
+                    token?.sale_address
+                      ? 'bg-[#4ecdc4] text-[#0a0a0f]'
+                      : txConfirmed
+                        ? 'bg-[#4ecdc4]/20 text-[#4ecdc4] ring-1 ring-[#4ecdc4]'
+                        : 'bg-white/10 text-white/30'
+                  }`}>
+                    {token?.sale_address ? (
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : '2'}
+                  </div>
+                  <span className="text-[9px] text-white/50 font-medium">Confirm</span>
+                </div>
+
+                <div className={`flex-1 h-px mx-1.5 mb-3.5 transition-all duration-700 ${token?.sale_address ? 'bg-[#4ecdc4]' : 'bg-white/15'}`} />
+
+                {/* Step 3 – Live */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] bg-white/10 text-white/30">
+                    🚀
+                  </div>
+                  <span className="text-[9px] text-white/50 font-medium">Live!</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-start gap-3">
+              {/* Icon */}
+              <div className="relative flex-shrink-0 mt-0.5">
+                <div className={`w-9 h-9 rounded-full bg-gradient-to-br from-[#4ecdc4] to-[#44a08d] flex items-center justify-center transition-all duration-500 ${txHash && txConfirmed ? '' : ''}`}>
+                  {txHash && txConfirmed ? (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <Clock className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                {!(txHash && txConfirmed) && (
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#4ecdc4] to-[#44a08d] animate-ping opacity-25" />
+                )}
               </div>
 
-              {/* Message */}
-              <div className="flex-1 space-y-2">
-                <h3 className="text-lg font-bold text-white">
-                  Token Creation in Progress
-                </h3>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Your token
-                  {' '}
-                  <span className="font-semibold text-[#4ecdc4]">#{tokenName}</span>
-                  {' '}
-                  is being confirmed on the blockchain. This usually takes a few seconds.
+              {/* Text */}
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-sm font-bold text-white leading-snug">
+                  {txHash
+                    ? txConfirmed
+                      ? 'Transaction confirmed!'
+                      : 'Broadcasting transaction…'
+                    : 'Token creation in progress'}
                 </p>
-                
-                {/* Loading Bar */}
-                <div className="w-full bg-white/20 rounded-full h-1.5 mt-3">
-                  <div className="bg-gradient-to-r from-[#4ecdc4] to-white h-1.5 rounded-full animate-pulse w-3/4 transition-all duration-300" />
+                <p className="text-xs text-white/60 leading-relaxed">
+                  {txHash
+                    ? txConfirmed
+                      ? <>Loading <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> data from the chain…</>
+                      : <>Your <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> tx is waiting to be picked up by miners. Usually takes 10–60 s.</>
+                    : <>Your token <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> is being confirmed on the blockchain.</>
+                  }
+                </p>
+
+                {/* Progress bar */}
+                <div className="w-full bg-white/10 rounded-full h-1 mt-2 overflow-hidden">
+                  <div className={`h-1 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#7fffd4] transition-all duration-700 ${
+                    txHash && txConfirmed ? 'w-3/4' : 'w-1/3 animate-pulse'
+                  }`} />
                 </div>
               </div>
 
-              {/* Close button (optional - auto-closes anyway) */}
+              {/* Dismiss */}
               <button
                 type="button"
                 onClick={() => setShowCreatedOverlay(false)}
-                className="flex-shrink-0 text-white/60 hover:text-white transition-colors"
+                className="flex-shrink-0 text-white/30 hover:text-white/80 transition-colors mt-0.5"
                 aria-label="Dismiss notification"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useMemo, useRef, useState,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import AeButton from '@/components/AeButton';
@@ -10,6 +10,7 @@ import PerformanceTimeframeSelector from '../components/PerformanceTimeframeSele
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import TrendingPillsCarousel from '../../../components/Trendminer/TrendingPillsCarousel';
+import RepositoriesList from '../components/RepositoriesList';
 import { useAccount } from '../../../hooks';
 import {
   Select,
@@ -19,8 +20,6 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Head } from '../../../seo/Head';
-import { SuperheroApi } from '../../../api/backend';
-import { TrendingTag } from '../components/TrendingTagTableRow';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -41,20 +40,10 @@ const SORT = {
 type OrderByOption = typeof SORT[keyof typeof SORT];
 type CollectionOption = 'all' | string; // Can be 'all' or specific collection addresses
 
-function hasTrendingTagToken(repo: any): boolean {
-  return !!(
-    repo?.token_sale_address
-    || repo?.sale_address
-    || repo?.token_address
-    || repo?.tokenSaleAddress
-    || repo?.saleAddress
-    || repo?.token?.address
-  );
-}
-
 const TokenList = () => {
   const { activeAccount } = useAccount();
 
+  const [activeTab, setActiveTab] = useState<'tokens' | 'trends'>('tokens');
   const [collection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -63,12 +52,7 @@ const TokenList = () => {
   const [searchThrottled, setSearchThrottled] = useState('');
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
 
-  // Trending tags state
-  const [trendingTags, setTrendingTags] = useState<TrendingTag[]>([]);
-  const [trendingTagsLoading, setTrendingTagsLoading] = useState(true);
-  const [trendingSearchThrottled, setTrendingSearchThrottled] = useState('');
-
-  // Throttle token search (2000ms delay like Vue)
+  // Throttle search input (2000ms delay like Vue)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchThrottled(search);
@@ -76,46 +60,6 @@ const TokenList = () => {
 
     return () => clearTimeout(timeoutId);
   }, [search]);
-
-  // Throttle trending search from the same input (500ms)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setTrendingSearchThrottled(search);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [search]);
-
-  const fetchTrendingTags = useCallback(async () => {
-    try {
-      setTrendingTagsLoading(true);
-      const response = await SuperheroApi.listTrendingTags({
-        orderBy: 'score',
-        orderDirection: 'DESC',
-        limit: 20,
-        page: 1,
-        search: trendingSearchThrottled || undefined,
-      });
-      const items: any[] = response?.items ?? [];
-      setTrendingTags(
-        items
-          .filter((repo) => !hasTrendingTagToken(repo))
-          .map((repo) => ({
-            fullName: repo.fullName,
-            tag: repo.tag,
-            score: repo.score,
-            source: repo.source,
-          })),
-      );
-    } catch {
-      setTrendingTags([]);
-    } finally {
-      setTrendingTagsLoading(false);
-    }
-  }, [trendingSearchThrottled]);
-
-  useEffect(() => {
-    fetchTrendingTags();
-  }, [fetchTrendingTags]);
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
@@ -248,7 +192,7 @@ const TokenList = () => {
   }, [hasNextPage, isFetching, fetchNextPage]);
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
         title="Superhero.com – Tokenize Trends. Own the Hype. Build Communities."
         description="Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero."
@@ -258,89 +202,94 @@ const TokenList = () => {
 
       <LatestTransactionsCarousel />
 
-      <TrendingPillsCarousel />
+      {/* <TrendingPillsCarousel /> */}
 
-      {/* Main content — unified single-column table */}
-      <div className="w-full">
-        <div className="flex flex-col items-start mb-6 gap-3 w-full">
-          <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
-            Tokenized Trends
-          </div>
-
-          {/* FILTERS */}
-          <div className="flex w-full items-center gap-3 flex-wrap md:flex-nowrap">
-            {/* OrderBy Filter */}
-            <div className="w-full md:w-auto flex-shrink-0">
-              <Select value={orderBy} onValueChange={updateOrderBy}>
-                <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/10">
-                  {orderByOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                      {option.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Main content */}
+      <div className="gap-4">
+        {/* Left: Token List */}
+        <div className={activeTab === 'tokens' ? 'w-full' : 'w-full hidden xl:block'}>
+          <div className="flex flex-col items-start mb-6 gap-3 w-full">
+            <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
+              Tokenized Trends
             </div>
 
-            {/* Owned by me */}
-            {activeAccount && (
-              <div className={`w-full md:w-auto flex-shrink-0 ${ownedOnly ? '' : 'rounded-2xl border-2 border-pink-500/80'}`}>
-                <AeButton
-                  variant={ownedOnly ? 'primary' : 'ghost'}
-                  className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
-                    : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
-                  }`}
-                  onClick={() => setOwnedOnly(!ownedOnly)}
-                >
-                  <span className="text-xs">Owned Only</span>
-                </AeButton>
+            {/* FILTERS */}
+            <div className="flex w-full items-center gap-3 flex-wrap md:flex-nowrap">
+              {/* OrderBy Filter */}
+              <div className="w-full md:w-auto flex-shrink-0">
+                <Select value={orderBy} onValueChange={updateOrderBy}>
+                  <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-white/10">
+                    {orderByOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                        {option.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
 
-            {/* Unified search — filters both tokens and trending tags */}
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tokens & trends"
-              className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
-            />
+              {/* Owned by me */}
+              {activeAccount && (
+                <div className={`w-full md:w-auto flex-shrink-0 ${ownedOnly ? '' : 'rounded-2xl border-2 border-pink-500/80'}`}>
+                  <AeButton
+                    variant={ownedOnly ? 'primary' : 'ghost'}
+                    className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
+                      : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
+                    }`}
+                    onClick={() => setOwnedOnly(!ownedOnly)}
+                  >
+                    <span className="text-xs">Owned Only</span>
+                  </AeButton>
+                </div>
+              )}
 
-            {/* Performance Timeframe Selector */}
-            <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">
-              <PerformanceTimeframeSelector />
+              {/* Search */}
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tokens"
+                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
+              />
+
+              {/* Performance Timeframe Selector */}
+              <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">
+                <PerformanceTimeframeSelector />
+              </div>
             </div>
           </div>
+
+          {/* Message Box for no results */}
+          {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
+            <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
+              <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
+              <p>No tokens found matching your criteria.</p>
+            </div>
+          )}
+
+          {/* Token List Table */}
+          <TokenListTable
+            pages={data?.pages}
+            loading={isFetching}
+            orderBy={orderBy}
+            orderDirection={finalOrderDirection}
+            onSort={handleSort}
+            hasNextPage={hasNextPage}
+            isFetching={isFetching}
+            onLoadMore={() => fetchNextPage()}
+          />
         </div>
 
-        {/* Message Box for no results */}
-        {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
-          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
-            <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
-            <p>No tokens found matching your criteria.</p>
-          </div>
-        )}
-
-        {/* Unified Token + Trending Table */}
-        <TokenListTable
-          pages={data?.pages}
-          loading={isFetching}
-          orderBy={orderBy}
-          orderDirection={finalOrderDirection}
-          onSort={handleSort}
-          hasNextPage={hasNextPage}
-          isFetching={isFetching}
-          onLoadMore={() => fetchNextPage()}
-          trendingTags={trendingTags}
-          trendingTagsLoading={trendingTagsLoading}
-        />
+        {/* <div className={activeTab === 'trends' ? 'block' : 'hidden xl:block'}>
+          <RepositoriesList />
+        </div> */}
       </div>
 
-      {/* Load More Button */}
-      {hasNextPage && (
+      {/* Load More Button — only for token list tab on mobile */}
+      {hasNextPage && activeTab === 'tokens' && (
         <div className="text-center pt-2 pb-4">
           <button
             ref={loadMoreBtn}

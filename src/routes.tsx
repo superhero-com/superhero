@@ -58,7 +58,6 @@ const Explore = lazy(() => import('./views/Explore'));
 const TokenDetail = lazy(() => import('./views/TokenDetail'));
 const PoolDetail = lazy(() => import('./features/dex/views/PoolDetail'));
 const AddTokens = lazy(() => import('./views/AddTokens'));
-const ProfileXCallback = lazy(() => import('./views/ProfileXCallback'));
 
 // Redirect helpers for legacy /trending/* paths
 const NavigateTrendingToken = () => {
@@ -139,7 +138,6 @@ export const routes: RouteObject[] = [
     path: '/user/:address',
     element: <NavigateUserProfile />,
   },
-  { path: '/profile/x/callback', element: <ProfileXCallback /> },
   { path: '/landing', element: <Landing /> },
   { path: '/meet/:room?', element: <Conference /> },
   { path: '/voting', element: <Governance /> },

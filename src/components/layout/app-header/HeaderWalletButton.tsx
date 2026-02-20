@@ -20,8 +20,8 @@ const HeaderWalletButton = () => {
   const { decimalBalance } = useAccount();
   const navigate = useNavigate();
   const handleConnect = () => openModal({ name: 'connect-wallet' });
-  const handleLogout = async () => {
-    await disconnectWallet();
+  const handleLogout = () => {
+    disconnectWallet();
     window.location.reload();
   };
   const handleProfileClick = () => {

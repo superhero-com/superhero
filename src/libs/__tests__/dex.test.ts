@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Contract } from '@aeternity/aepp-sdk';
 import {
   ACI,
   DEX_ADDRESSES,
@@ -39,11 +38,12 @@ describe('libs/dex helpers', () => {
       create_allowance: vi.fn(async (forAcc: string, val: bigint) => { created.push([forAcc, val]); }),
       change_allowance: vi.fn(async (forAcc: string, delta: bigint) => { changed.push([forAcc, delta]); }),
     };
-    const sdk: any = { getContext: vi.fn(() => ({})) };
-    vi.spyOn(Contract, 'initialize').mockImplementation(async ({ aci }: any) => {
-      if (aci === ACI.AEX9) return tokenMock as any;
-      throw new Error('unexpected aci');
-    });
+    const sdk: any = {
+      initializeContract: vi.fn(async ({ aci, address }: any) => {
+        if (aci === ACI.AEX9) return tokenMock;
+        throw new Error('unexpected aci');
+      }),
+    };
 
     const owner = 'ak_owner';
     await ensureAllowanceForRouter(sdk, 'ct_token', owner, 100n);
@@ -71,12 +71,13 @@ describe('libs/dex helpers', () => {
       get_reserves: vi.fn(async () => ({ decodedResult: { reserve0: 5, reserve1: 7, block_timestamp_last: 0 } })),
     };
     const factory = { get_pair: vi.fn(async () => ({ decodedResult: 'ct_pair' })) };
-    const sdk: any = { getContext: vi.fn(() => ({})) };
-    vi.spyOn(Contract, 'initialize').mockImplementation(async ({ aci }: any) => {
-      if (aci === ACI.Pair) return pair as any;
-      if (aci === ACI.Factory) return factory as any;
-      throw new Error('unexpected');
-    });
+    const sdk: any = {
+      initializeContract: vi.fn(async ({ aci }: any) => {
+        if (aci === ACI.Pair) return pair;
+        if (aci === ACI.Factory) return factory;
+        throw new Error('unexpected');
+      }),
+    };
     const res = await fetchPairReserves(sdk, factory, 'ct_A', 'ct_B');
     expect(res).toEqual({ reserveA: 5n, reserveB: 7n, token0: 'ct_A' });
   });
@@ -84,12 +85,13 @@ describe('libs/dex helpers', () => {
   it('initDexContracts initializes router and factory', async () => {
     const router = { factory: vi.fn(async () => ({ decodedResult: 'ct_factory' })) };
     const factory = {};
-    const sdk: any = { getContext: vi.fn(() => ({})) };
-    vi.spyOn(Contract, 'initialize').mockImplementation(async ({ aci }: any) => {
-      if (aci === ACI.Router) return router as any;
-      if (aci === ACI.Factory) return factory as any; // allow fallback to known address in implementation
-      throw new Error('unexpected');
-    });
+    const sdk: any = {
+      initializeContract: vi.fn(async ({ aci, address }: any) => {
+        if (aci === ACI.Router) return router;
+        if (aci === ACI.Factory) return factory; // allow fallback to known address in implementation
+        throw new Error('unexpected');
+      }),
+    };
     const res = await initDexContracts(sdk);
     expect(res.router).toBe(router);
     expect(res.factory).toBe(factory);

@@ -13,7 +13,6 @@ import BigNumber from 'bignumber.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Contract } from '@aeternity/aepp-sdk';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import { useToast } from '../components/ToastProvider';
@@ -104,11 +103,7 @@ export default function AddTokens() {
         }
         for (const item of candidates.values()) {
           try {
-            const c = await Contract.initialize({
-              ...sdk.getContext(),
-              aci: ACI.AEX9,
-              address: item.address as `ct_${string}`,
-            });
+            const c = await sdk.initializeContract({ aci: ACI.AEX9, address: item.address as `ct_${string}` });
             const { decodedResult: bal } = await c.balance(activeAccount);
             const bn = BigInt(bal ?? 0);
             if (bn > 0n) {

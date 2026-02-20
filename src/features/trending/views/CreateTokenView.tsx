@@ -3,7 +3,7 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from '@aeternity/aepp-sdk';
-import { createCommunity } from '../libs/createCommunity';
+import { createCommunity } from 'bctsl-sdk';
 import BigNumber from 'bignumber.js';
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
@@ -54,6 +54,10 @@ const CreateTokenView = () => {
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const leftHeroRef = useRef<HTMLDivElement>(null);
+  const rightCardRef = useRef<HTMLDivElement>(null);
+  const [rightMinHeight, setRightMinHeight] = useState<number | undefined>(undefined);
+  const [rightMinWidth, setRightMinWidth] = useState<number | undefined>(undefined);
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -63,7 +67,7 @@ const CreateTokenView = () => {
 
   // Parse URL query params
   const searchParams = new URLSearchParams(location.search);
-  const initialTokenName = String(searchParams.get('tokenName') || '').toUpperCase().replace(/ /g, '-').replace(/[^A-Z0-9-]/g, '');
+  const initialTokenName = searchParams.get('tokenName') || '';
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);
@@ -368,6 +372,26 @@ const CreateTokenView = () => {
     }
   }, []);
 
+  // After load, lock the right card minimum height to the left hero height
+  useEffect(() => {
+    const recalc = () => {
+      const leftH = leftHeroRef.current?.offsetHeight || 0;
+      const currentRightH = rightCardRef.current?.offsetHeight || 0;
+      const minH = Math.max(leftH, currentRightH);
+      setRightMinHeight(minH || undefined);
+      // Lock width after initial layout on medium+ screens to avoid jumpy width
+      const w = rightCardRef.current?.getBoundingClientRect().width || 0;
+      if (w && (window.innerWidth || 0) >= 768) {
+        setRightMinWidth(w);
+      } else {
+        setRightMinWidth(undefined);
+      }
+    };
+    // Initial and on resize
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, []);
 
   // Token creation
   const deploy = async () => {
@@ -398,7 +422,7 @@ const CreateTokenView = () => {
         initialBuyCount = Number(initialBuyVolume || 0);
       }
 
-      const txHash = await createCommunity(
+      await createCommunity(
         sdk,
         selectedCollection.id,
         {
@@ -413,7 +437,7 @@ const CreateTokenView = () => {
       );
 
       // Navigate to token details
-      navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
+      navigate(`/trends/tokens/${tokenName}?created=true`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';
@@ -450,7 +474,7 @@ const CreateTokenView = () => {
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-1/3 mb-4" />
             <div className="h-4 bg-gray-700 rounded w-2/3 mb-8" />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey) => (
                   <div key={rowKey} className="h-16 bg-gray-700 rounded" />
@@ -507,7 +531,7 @@ const CreateTokenView = () => {
         size="lg"
         type="submit"
         disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid'}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3"
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-13 py-3"
       >
         Create Token
       </AeButton>
@@ -518,29 +542,91 @@ const CreateTokenView = () => {
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
         <div className="max-w-[1400px] mx-auto p-0 md:p-6">
-          {/* Hero heading — visible on mobile/tablet above the form; hidden on xl (shown in left column instead) */}
-          <div className="xl:hidden px-2 pt-4 pb-2 text-center">
-            <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3">
-              Create Your Token.
-              <br />
-              Build Your Community.
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                Own the Trend.
-              </span>
-            </h3>
-            <p className="hidden md:block text-white/75 text-base leading-relaxed">
-              Tokenized trends are community tokens launched on a bonding curve.
-              Price moves with buys/sells, no order books. Each token mints a DAO treasury
-              that can fund initiatives via on-chain votes.
-            </p>
-          </div>
+          <div className="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
+            {/* Left Side - Banner Content */}
+            <div className="min-w-0 flex-1 md:pt-2 lg:pt-[170px]" ref={leftHeroRef}>
+              <div className="text-center lg:text-left">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-white mb-4">
+                  Create Your Token.
+                  <br />
+                  Build Your Community.
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                    Own the Trend.
+                  </span>
+                </div>
+                <p className="text-white/75 max-w-3xl lg:max-w-none text-lg leading-relaxed mb-0 md:mb-6">
+                  Tokenized trends are community tokens launched on a bonding curve.
+                  Price moves with buys/sells, no order books. Each token mints a DAO treasury
+                  that can fund initiatives via on-chain votes.
+                </p>
 
-          <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
-            {/* Form — rendered first in DOM so it appears at top on mobile/tablet.
-                On xl screens xl:order-2 moves it visually to the right column. */}
-            <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2">
-              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+                {/* Explainer Section */}
+                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
+                  <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                    How Bonding Curves Work
+                  </h3>
+                  <div className="space-y-4 text-white/80 text-sm leading-relaxed">
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Price Discovery Mechanism</h4>
+                      <p>
+                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices.
+                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery
+                        based on supply and demand.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">The Math Behind It</h4>
+                      <p className="mb-2">
+                        The bonding curve follows a quadratic formula:
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
+                      </p>
+                      <p className="mb-2">
+                        Where
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
+                        {' '}
+                        is a constant and
+                        {' '}
+                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
+                        {' '}
+                        is the total number of tokens in circulation.
+                      </p>
+                      <p>
+                        This means:
+                      </p>
+                      <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
+                        <li>Early buyers get tokens at lower prices</li>
+                        <li>Each purchase increases the price for the next buyer</li>
+                        <li>Selling tokens reduces the supply and lowers the price</li>
+                        <li>The curve ensures liquidity - you can always buy or sell</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">DAO Treasury</h4>
+                      <p>
+                        A portion of every transaction goes into a DAO treasury controlled by token holders.
+                        This treasury can fund community initiatives through on-chain governance votes,
+                        allowing the community to collectively decide how to grow and develop the token.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Fees & Affiliations</h4>
+                      <p>
+                        When creating a token, you can set an initial buy amount. A small protocol fee (5%)
+                        is applied to support the platform and protocol token rewards. The rest goes into
+                        the bonding curve, ensuring fair price discovery from the start.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Create Token Form */}
+            <div className="max-w-[620px] flex-shrink-0" ref={rightCardRef}>
+              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))', minHeight: rightMinHeight ? `${rightMinHeight}px` : undefined, minWidth: rightMinWidth ? `${Math.round(rightMinWidth)}px` : undefined }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -694,7 +780,7 @@ const CreateTokenView = () => {
                             >
                               ⓘ
                             </button>
-                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[min(320px,80vw)] rounded-lg border border-white/10 bg-gray-900/95 text-white text-xs p-3 shadow-xl z-50">
+                            <div className="fixed left-1/2 -translate-x-1/2 top-24 sm:absolute sm:left-0 sm:translate-x-0 sm:top-full mt-1 hidden group-hover:block group-focus-within:block w-[320px] max-w-[min(92vw,360px)] rounded-lg border border-white/10 bg-black/80 text-white text-xs p-3 shadow-xl z-50">
                               {inputMode === 'AE'
                                 ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
                                 : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
@@ -732,7 +818,7 @@ const CreateTokenView = () => {
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
                             <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
                             <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
@@ -759,7 +845,7 @@ const CreateTokenView = () => {
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">TOKENS</div>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-2">
                             <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
                             <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
                             <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
@@ -800,91 +886,6 @@ const CreateTokenView = () => {
                     </div>
                   </form>
                 )}
-              </div>
-            </div>
-
-            {/* Banner / explainer — rendered second in DOM (below form on mobile/tablet).
-                On xl screens xl:order-1 moves it visually to the left column. */}
-            <div className="min-w-0 flex-1 md:pt-2 xl:pt-[170px] xl:order-1">
-              <div className="xl:text-left">
-                {/* Desktop-only heading — the mobile version is rendered above the flex container */}
-                <div className="hidden xl:block mb-6">
-                  <div className="text-5xl font-bold leading-tight text-white mb-4">
-                    Create Your Token.
-                    <br />
-                    Build Your Community.
-                    <br />
-                    <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                      Own the Trend.
-                    </span>
-                  </div>
-                  <p className="text-white/75 text-lg leading-relaxed">
-                    Tokenized trends are community tokens launched on a bonding curve.
-                    Price moves with buys/sells, no order books. Each token mints a DAO treasury
-                    that can fund initiatives via on-chain votes.
-                  </p>
-                </div>
-
-                {/* Explainer Section */}
-                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
-                  <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                    How Bonding Curves Work
-                  </h3>
-                  <div className="space-y-4 text-white/80 text-sm leading-relaxed">
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">Price Discovery Mechanism</h4>
-                      <p>
-                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices.
-                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery
-                        based on supply and demand.
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">The Math Behind It</h4>
-                      <p className="mb-2">
-                        The bonding curve follows a quadratic formula:
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
-                      </p>
-                      <p className="mb-2">
-                        Where
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
-                        {' '}
-                        is a constant and
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
-                        {' '}
-                        is the total number of tokens in circulation.
-                      </p>
-                      <p>
-                        This means:
-                      </p>
-                      <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                        <li>Early buyers get tokens at lower prices</li>
-                        <li>Each purchase increases the price for the next buyer</li>
-                        <li>Selling tokens reduces the supply and lowers the price</li>
-                        <li>The curve ensures liquidity - you can always buy or sell</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">DAO Treasury</h4>
-                      <p>
-                        A portion of every transaction goes into a DAO treasury controlled by token holders.
-                        This treasury can fund community initiatives through on-chain governance votes,
-                        allowing the community to collectively decide how to grow and develop the token.
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">Fees & Affiliations</h4>
-                      <p>
-                        When creating a token, you can set an initial buy amount. A small protocol fee (5%)
-                        is applied to support the platform and protocol token rewards. The rest goes into
-                        the bonding curve, ensuring fair price discovery from the start.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

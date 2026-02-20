@@ -33,9 +33,9 @@ interface TradeActivityItemProps {
 const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   const { t } = useTranslation('social');
   const navigate = useNavigate();
-  const { chainNames, profileDisplayNames } = useWallet();
+  const { chainNames } = useWallet();
   const account = item.account || item.address || '';
-  const displayName = profileDisplayNames?.[account] ?? chainNames?.[account] ?? t('common:defaultDisplayName');
+  const displayName = chainNames?.[account] || 'Legend';
   const tokenName = item?.token?.name || item?.token?.symbol || '';
   const tokenLabel = item?.token?.symbol || item?.token?.name || 'Token';
   const tokenTag = tokenName || tokenLabel;

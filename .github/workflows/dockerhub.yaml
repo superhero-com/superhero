@@ -47,8 +47,6 @@ jobs:
             "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
           build-args: |
             VITE_WALLET_CONNECT_PROJECT_ID=${{ secrets.VITE_WALLET_CONNECT_PROJECT_ID }}
-            VITE_X_OAUTH_CLIENT_ID=${{ secrets.VITE_X_OAUTH_CLIENT_ID }}
-            VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS=${{ secrets.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS }}
   deploy_develop:
     if: github.ref_name == 'develop'
     name: Develop Deploy

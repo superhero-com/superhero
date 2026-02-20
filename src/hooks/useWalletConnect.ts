@@ -49,7 +49,6 @@ export function useWalletConnect() {
   useEffect(() => {
     async function checkAddressWalletConnection() {
       const query = Object.fromEntries(new URLSearchParams(location.search).entries());
-      const hasAddressQuery = Boolean(query.address);
 
       if (query.address && !activeAccount) {
         const address = query.address as string;
@@ -61,10 +60,8 @@ export function useWalletConnect() {
         }
 
         await addStaticAccount(address);
+        navigate({ search: '' });
       }
-      // Always consume this query param so future disconnects don't
-      // auto-restore a static account from stale URL state.
-      if (hasAddressQuery) navigate({ search: '' });
     }
     checkAddressWalletConnection();
   }, [activeAccount, addStaticAccount, location.search, navigate]);
@@ -169,13 +166,6 @@ export function useWalletConnect() {
   }
 
   async function disconnectWallet() {
-    // Hard-clear persisted wallet session first to avoid instant reconnect on refresh.
-    try {
-      localStorage.removeItem('account:activeAccount');
-      localStorage.removeItem('wallet:walletInfo');
-    } catch {
-      // ignore storage errors
-    }
     // Stop any in-flight wallet detection and close message connection to prevent auto-reconnect.
     try {
       scanStopRef.current?.();
@@ -282,13 +272,39 @@ export function useWalletConnect() {
       return;
     }
 
-    if (
-    // route.name !== "tx-queue" &&
-      activeAccount
-            && !walletConnected
-    ) {
-      if (walletInfo) {
-        await connectWallet();
+    // Check if we have persisted wallet info but no active connection
+    if (walletInfo && !walletConnected && aeSdk) {
+      try {
+        setConnectingWallet(true);
+
+        // Try to scan for the previously connected wallet
+        wallet.current = await scanForWallets();
+
+        if (wallet.current) {
+          // Attempt to reconnect using the found wallet
+          const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
+          setWalletInfo(newWalletInfo);
+          await subscribeAddress();
+          setWalletConnected(true);
+        } else {
+          // No wallet found, clear persisted state
+          setWalletInfo(undefined);
+          setWalletConnected(false);
+        }
+      } catch (error) {
+        // Reconnection failed, clear persisted state
+        setWalletInfo(undefined);
+        setWalletConnected(false);
+      } finally {
+        setConnectingWallet(false);
+      }
+    } else if (activeAccount && !walletInfo) {
+      // We have a persisted account but no wallet info - it's a static (read-only) account
+      try {
+        await addStaticAccount(activeAccount);
+        await loadAccountData();
+      } catch {
+        // Failed to add static account
       }
     }
   }

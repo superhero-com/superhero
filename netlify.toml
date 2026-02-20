@@ -4,9 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  # Public client-side identifiers used at build/runtime.
+  # WalletConnect / Reown project ID is a public client-side identifier.
   # Tell Netlify's secret scanner to ignore this env var so builds don't fail.
-  SECRETS_SCAN_OMIT_KEYS = "VITE_WALLET_CONNECT_PROJECT_ID,VITE_X_OAUTH_CLIENT_ID,VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_WALLET_CONNECT_PROJECT_ID"
 
 [[redirects]]
   from = "/*"

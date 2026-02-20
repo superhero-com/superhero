@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MemoryAccount, toAe } from '@aeternity/aepp-sdk';
+import { generateKeyPair, toAe } from '@aeternity/aepp-sdk';
 import type { Encoded } from '@aeternity/aepp-sdk';
 import moment from 'moment';
 import camelCaseKeysDeep from 'camelcase-keys-deep';
@@ -212,24 +212,22 @@ export function useInvitations() {
     }
 
     const treasury = await getAffiliationTreasury(sdk as any);
-    const keyPairs = new Array(+invitesNumber)
-      .fill(null)
-      .map(() => MemoryAccount.generate());
+    const keyPairs = new Array(+invitesNumber).fill(null).map(() => generateKeyPair());
     const redemptionFeeCover = 10n ** 15n;
     const inviteAmount = BigInt(Decimal.from(amount).bigNumber);
 
     // Register invitation codes on the blockchain
     await treasury.registerInvitationCode(
-      keyPairs.map(({ address }) => address),
+      keyPairs.map(({ publicKey }) => publicKey),
       redemptionFeeCover,
       inviteAmount,
     );
 
     // Add to state and localStorage
     const now = Date.now();
-    const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, address }) => ({
+    const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, publicKey }) => ({
       inviter: activeAccount as Encoded.AccountAddress,
-      invitee: address as Encoded.AccountAddress,
+      invitee: publicKey as Encoded.AccountAddress,
       secretKey,
       amount,
       date: now,

@@ -39,8 +39,8 @@ const MiniWalletInfo = ({ block, style, ...rest }: Props) => {
       </div>
       <div className="ml-auto">
         <AeButton
-          onClick={async () => {
-            await disconnectWallet();
+          onClick={() => {
+            disconnectWallet();
             window.location.reload();
           }}
           variant="ghost"

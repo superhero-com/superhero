@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AccountCreatedToken from '@/components/Account/AccountCreatedToken';
 import AccountFeed from '@/components/Account/AccountFeed';
+import Spinner from '@/components/Spinner';
 import AccountOwnedTokens from '@/components/Account/AccountOwnedTokens';
 import AccountTrades from '@/components/Account/AccountTrades';
 import Head from '../seo/Head';
@@ -61,7 +62,7 @@ export default function UserProfile({
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
-  const { getProfile, getProfileOnChain, canEdit } = useProfile(effectiveAddress);
+  const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
@@ -87,24 +88,13 @@ export default function UserProfile({
     enabled: !!effectiveAddress,
     staleTime: 10_000,
   });
-  const { data: profileInfo, refetch: refetchProfile } = useQuery({
-    queryKey: ['SuperheroApi.getProfile', effectiveAddress],
-    queryFn: () => SuperheroApi.getProfile(effectiveAddress),
-    enabled: !!effectiveAddress,
-    staleTime: 10_000,
-    refetchInterval: 10_000,
-  });
-
-  const { data: onChainProfile, refetch: refetchOnChainProfile } = useQuery({
-    queryKey: ['ProfileRegistry.getProfileOnChain', effectiveAddress],
-    queryFn: () => getProfileOnChain(effectiveAddress),
-    enabled: !!effectiveAddress && !!getProfileOnChain,
-    staleTime: 30_000,
-  });
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
+  // Optimistic bio state - updated immediately when bio is posted
+  const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
+  // Loading indicator state for bio updates
+  const [isBioLoading, setIsBioLoading] = useState(false);
 
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get('tab') as TabType;
@@ -214,17 +204,15 @@ export default function UserProfile({
     }
     return undefined;
   }, [posts]);
-  const bioText = (profileInfo?.profile?.bio || '').trim()
-    || (accountInfo?.bio || '').trim()
+  const bioText = (optimisticBio || accountInfo?.bio || '').trim()
     || latestBioPost?.content?.trim()
-    || profile?.profile?.bio;
-  const isXVerified = Boolean(
-    String(profileInfo?.profile?.x_username || '').trim()
-    || String(onChainProfile?.x_username || '').trim(),
-  );
+    || profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
+    // Clear optimistic bio and loading state when address changes
+    setOptimisticBio(null);
+    setIsBioLoading(false);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
     // Note: loadAccountData() is automatically called by useAccountBalances hook
@@ -350,6 +338,86 @@ export default function UserProfile({
     });
   }, [effectiveAddress, queryClient]);
 
+  // Listen for bio post submissions to optimistically update and then poll until backend confirms
+  useEffect(() => {
+    function handleBioPosted(e: Event) {
+      try {
+        const detail = (e as CustomEvent).detail as { address?: string; bio?: string; txHash?: string };
+        if (!detail?.address) {
+          console.warn('[UserProfile] Bio post event missing address');
+          return;
+        }
+        // Normalize addresses for comparison (trim and lowercase)
+        const eventAddress = (detail.address || '').trim().toLowerCase();
+        const currentAddress = (effectiveAddress || '').trim().toLowerCase();
+        if (eventAddress !== currentAddress) {
+          return;
+        }
+        const submittedBio = (detail.bio || '').trim();
+        if (!submittedBio) {
+          console.warn('[UserProfile] Bio post event missing bio text');
+          return;
+        }
+
+        // Update optimistic bio state immediately - this will make bio appear right away
+        setOptimisticBio(submittedBio);
+        setIsBioLoading(true);
+
+        // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
+        const queryKey = ['AccountsService.getAccount', effectiveAddress];
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              bio: submittedBio,
+            };
+          }
+          // If no account info exists yet, create a minimal entry
+          return {
+            address: effectiveAddress,
+            bio: submittedBio,
+          };
+        });
+
+        // Also update the profile state if it exists
+        if (profile) {
+          setProfile({ ...profile, biography: submittedBio });
+        }
+
+        // Refetch posts to ensure the new bio post appears in the feed
+        refetchPosts();
+
+        // Poll account endpoint to ensure backend has processed the transaction
+        const start = Date.now();
+        const interval = window.setInterval(async () => {
+          await refetchAccount();
+          // Get fresh account info from React Query cache after refetch
+          const freshAccountInfo = queryClient.getQueryData<any>(queryKey);
+          const latestBio = (freshAccountInfo?.bio || '').trim();
+          // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
+          if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
+            // Clear optimistic bio once backend confirms - backend data will take over
+            setOptimisticBio(null);
+            setIsBioLoading(false);
+            window.clearInterval(interval);
+          }
+          if (Date.now() - start > 15_000) {
+            // timeout after 15s - keep optimistic bio but stop loading indicator
+            setIsBioLoading(false);
+            window.clearInterval(interval);
+          }
+        }, 1500);
+      } catch (error) {
+        console.error('[UserProfile] Error handling bio post:', error);
+        // Clear optimistic bio and loading state on error
+        setOptimisticBio(null);
+        setIsBioLoading(false);
+      }
+    }
+    window.addEventListener('profile-bio-posted', handleBioPosted as any);
+    return () => window.removeEventListener('profile-bio-posted', handleBioPosted as any);
+  }, [effectiveAddress, refetchAccount, refetchPosts, queryClient, profile]);
+
   const content = (
     <div className="w-full">
       <Head
@@ -388,7 +456,7 @@ export default function UserProfile({
           {/* Avatar and Identity */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="relative shrink-0">
-              <div className="absolute inset-0 rounded-xl bg-[var(--neon-teal)]/20 blur-lg opacity-50" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/30 to-teal-500/30 blur-lg opacity-50" />
               <AddressAvatarWithChainName
                 address={effectiveAddress}
                 size={64}
@@ -398,8 +466,8 @@ export default function UserProfile({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight">
-                {profileInfo?.public_name || chainName || 'Legend'}
+              <h1 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-teal-400 to-cyan-300 bg-clip-text text-transparent tracking-tight">
+                {chainName || 'Legend'}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
@@ -407,6 +475,11 @@ export default function UserProfile({
               {bioText && (
                 <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
+                  {isBioLoading && (
+                    <span className="ml-2 inline-block">
+                      <Spinner className="w-3 h-3" />
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -419,12 +492,9 @@ export default function UserProfile({
                 size="sm"
                 variant="ghost"
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
-                onClick={() => {
-                  setEditInitialSection('profile');
-                  setEditOpen(true);
-                }}
+                onClick={() => setEditOpen(true)}
               >
-                {t('buttons.editProfile')}
+                {bioText ? t('buttons.editBio') : t('buttons.addBio')}
               </AeButton>
             ) : null}
             {!canEdit ? (
@@ -455,19 +525,6 @@ export default function UserProfile({
           </div>
         </div>
       </div>
-
-      {canEdit && !isXVerified && (
-        <button
-          type="button"
-          onClick={() => {
-            setEditInitialSection('x');
-            setEditOpen(true);
-          }}
-          className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
-        >
-          Claim 100 AE by verifying your X account.
-        </button>
-      )}
 
       {/* Portfolio Chart and Stats - Side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
@@ -587,29 +644,17 @@ export default function UserProfile({
       {content}
       <ProfileEditModal
         open={editOpen}
-        onClose={(updatedProfile) => {
+        onClose={() => {
           setEditOpen(false);
-          setEditInitialSection('profile');
-          if (updatedProfile) {
-            queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
-              ...oldData,
-              bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-              fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-              avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-              username: updatedProfile?.profile?.username ?? oldData?.username,
-              chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-              x_username: updatedProfile?.profile?.x_username ?? oldData?.x_username,
-            }));
-            setProfile(updatedProfile);
-            refetchAccount();
-            refetchProfile();
-            refetchOnChainProfile();
-          }
+          refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
+          (async () => {
+            const p = await getProfile();
+            setProfile(p);
+          })();
         }}
         address={effectiveAddress}
         initialBio={bioText}
-        initialSection={editInitialSection}
       />
     </Shell>
   ) : (
@@ -617,29 +662,17 @@ export default function UserProfile({
       {content}
       <ProfileEditModal
         open={editOpen}
-        onClose={(updatedProfile) => {
+        onClose={() => {
           setEditOpen(false);
-          setEditInitialSection('profile');
-          if (updatedProfile) {
-            queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
-              ...oldData,
-              bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-              fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-              avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-              username: updatedProfile?.profile?.username ?? oldData?.username,
-              chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-              x_username: updatedProfile?.profile?.x_username ?? oldData?.x_username,
-            }));
-            setProfile(updatedProfile);
-            refetchAccount();
-            refetchProfile();
-            refetchOnChainProfile();
-          }
+          refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
+          (async () => {
+            const p = await getProfile();
+            setProfile(p);
+          })();
         }}
         address={effectiveAddress}
         initialBio={bioText}
-        initialSection={editInitialSection}
       />
     </>
   );

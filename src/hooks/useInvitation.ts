@@ -2,7 +2,7 @@ import {
   useState, useEffect, useCallback, useMemo,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MemoryAccount } from '@aeternity/aepp-sdk';
+import { generateKeyPair } from '@aeternity/aepp-sdk';
 import type { Encoded } from '@aeternity/aepp-sdk';
 
 import { Decimal } from '../libs/decimal';
@@ -88,23 +88,21 @@ export function useInvitation() {
 
     const affiliationTreasury = await getAffiliationTreasury();
     const amountValue = BigInt(Decimal.from(amount).bigNumber);
-    const keyPairs = new Array(+invitesNumber)
-      .fill(null)
-      .map(() => MemoryAccount.generate());
+    const keyPairs = new Array(+invitesNumber).fill(null).map(() => generateKeyPair());
 
     const redemptionFeeCover = 10n ** 15n;
 
     await affiliationTreasury.registerInvitationCode(
-      keyPairs.map(({ address }) => address),
+      keyPairs.map(({ publicKey }) => publicKey),
       redemptionFeeCover,
       amountValue,
     );
 
     // Add to localStorage and update state
     const now = Date.now();
-    const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, address }) => ({
+    const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, publicKey }) => ({
       inviter: activeAccount as Encoded.AccountAddress,
-      invitee: address as Encoded.AccountAddress,
+      invitee: publicKey as Encoded.AccountAddress,
       secretKey,
       amount,
       date: now,

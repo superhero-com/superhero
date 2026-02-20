@@ -15,7 +15,7 @@ import {
   storeXOAuthPKCE,
 } from '@/utils/xOAuth';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import {
@@ -486,32 +486,22 @@ const ProfileEditModal = ({
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-white/80">{t('labels.fullname')}</Label>
-            <Input
-              value={form.fullname}
-              onChange={(e) => setForm((prev) => ({ ...prev, fullname: e.target.value }))}
-              placeholder={t('placeholders.fullname')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={64}
-            />
-          </div>
-          <div>
-            <Label className="text-white/80">{t('labels.bio')}</Label>
-            <Textarea
-              value={form.bio}
-              onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-              placeholder={t('placeholders.bio')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={280}
-            />
-            <div className="mt-1 text-white/50 text-xs text-right">
-              {form.bio.length}
-              /
-              280
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-white/80">{t('labels.username')}</Label>
+              <button
+                type="button"
+                aria-label={t('labels.displaySourceCustom')}
+                aria-pressed={form.display_source === 'custom'}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={loading || !canEdit}
+                onClick={() => setForm((prev) => ({ ...prev, display_source: 'custom' }))}
+              >
+                <Star
+                  className="h-4 w-4"
+                  fill={form.display_source === 'custom' ? 'currentColor' : 'none'}
+                />
+              </button>
             </div>
-          </div>
-          <div>
-            <Label className="text-white/80">{t('labels.username')}</Label>
             <Input
               value={form.username}
               onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
@@ -521,7 +511,22 @@ const ProfileEditModal = ({
             />
           </div>
           <div>
-            <Label className="text-white/80">{t('labels.chainName')}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-white/80">{t('labels.chainName')}</Label>
+              <button
+                type="button"
+                aria-label={t('labels.displaySourceChain')}
+                aria-pressed={form.display_source === 'chain'}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={loading || !canEdit}
+                onClick={() => setForm((prev) => ({ ...prev, display_source: 'chain' }))}
+              >
+                <Star
+                  className="h-4 w-4"
+                  fill={form.display_source === 'chain' ? 'currentColor' : 'none'}
+                />
+              </button>
+            </div>
             <AppSelect
               value={form.chain_name || NONE_CHAIN_NAME_VALUE}
               onValueChange={(value) => setForm((prev) => ({
@@ -544,29 +549,27 @@ const ProfileEditModal = ({
               <p className="mt-1 text-[11px] text-white/50">{t('messages.noChainNamesFound')}</p>
             )}
           </div>
-          <div>
-            <Label className="text-white/80">{t('labels.displaySource')}</Label>
-            <AppSelect
-              value={form.display_source}
-              onValueChange={(value) => setForm((prev) => ({
-                ...prev,
-                display_source: value as DisplaySource,
-              }))}
-              triggerClassName="mt-1 w-full h-10 px-3 bg-white/7 border border-white/14 text-white rounded-xl focus:ring-0 focus:border-[var(--neon-teal)]"
-              contentClassName="z-[100] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
-              itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
-            >
-              <AppSelectItem value="custom">{t('labels.displaySourceCustom')}</AppSelectItem>
-              <AppSelectItem value="chain">{t('labels.displaySourceChain')}</AppSelectItem>
-              <AppSelectItem value="x">{t('labels.displaySourceX')}</AppSelectItem>
-            </AppSelect>
-          </div>
           {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
             <div>
               {xSectionReady && (
-                <Label className="text-white/80">
-                  {hasXVerified ? t('labels.xAccount') : t('labels.connectX')}
-                </Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-white/80">
+                    {hasXVerified ? t('labels.xAccount') : t('labels.connectX')}
+                  </Label>
+                  <button
+                    type="button"
+                    aria-label={t('labels.displaySourceX')}
+                    aria-pressed={form.display_source === 'x'}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={loading || !canEdit || !xUsername}
+                    onClick={() => setForm((prev) => ({ ...prev, display_source: 'x' }))}
+                  >
+                    <Star
+                      className="h-4 w-4"
+                      fill={form.display_source === 'x' ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                </div>
               )}
               {!xSectionReady && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/14 px-3 py-6">
@@ -626,6 +629,31 @@ const ProfileEditModal = ({
               )}
             </div>
           ) : null}
+          <div>
+            <Label className="text-white/80">{t('labels.fullname')}</Label>
+            <Input
+              value={form.fullname}
+              onChange={(e) => setForm((prev) => ({ ...prev, fullname: e.target.value }))}
+              placeholder={t('placeholders.fullname')}
+              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
+              maxLength={64}
+            />
+          </div>
+          <div>
+            <Label className="text-white/80">{t('labels.bio')}</Label>
+            <Textarea
+              value={form.bio}
+              onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+              placeholder={t('placeholders.bio')}
+              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
+              maxLength={280}
+            />
+            <div className="mt-1 text-white/50 text-xs text-right">
+              {form.bio.length}
+              /
+              280
+            </div>
+          </div>
           <div>
             <Label className="text-white/80">{t('labels.avatarurl')}</Label>
             <Input

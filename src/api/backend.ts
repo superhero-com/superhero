@@ -346,6 +346,8 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     const query = qp.toString();
+    // TOOD: uncomment this when the backend is ready
+    return null
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}${query ? `?${query}` : ''}`) as Promise<ProfileAggregate>;
   },
   getProfilesByAddresses(addresses: string[], includeOnChain?: boolean) {

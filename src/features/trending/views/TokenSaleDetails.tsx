@@ -41,6 +41,7 @@ import TokenTradeCard from '../components/TokenTradeCard';
 import { TokenSummary } from '../../bcl/components';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
+import { CONFIG } from '../../../config';
 import {
   TokenFeedTab,
   TokenHoldersTab,
@@ -233,7 +234,7 @@ const TokenSaleDetails = () => {
     const pollTx = async () => {
       try {
         const res = await fetch(
-          `https://mainnet.aeternity.io/v3/transactions/${txHash}?int-as-string=false`,
+          `${CONFIG.NODE_URL}/v3/transactions/${txHash}?int-as-string=false`,
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -271,6 +272,7 @@ const TokenSaleDetails = () => {
       const params = new URLSearchParams(location.search);
       if (params.get('created') === 'true') {
         params.delete('created');
+        params.delete('txHash');
         navigate(
           { pathname: location.pathname, search: params.toString() },
           { replace: true }

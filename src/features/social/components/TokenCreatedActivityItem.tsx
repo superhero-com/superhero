@@ -1,11 +1,16 @@
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
 import { compactTime } from '../../../utils/time';
+import {
+  getPostSenderAddress,
+  getPostSenderAvatarUrl,
+  getPostSenderDisplayName,
+} from '../utils/postSender';
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
@@ -54,9 +59,11 @@ const TokenCreatedActivityItem = memo(({
 }: TokenCreatedActivityItemProps) => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { chainNames, profileDisplayNames } = useWallet();
-  const creator = item.sender_address;
-  const displayName = profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? t('defaultDisplayName');
+  const { chainNames } = useWallet();
+  const creator = getPostSenderAddress(item);
+  const senderDisplayName = getPostSenderDisplayName(item);
+  const senderAvatarUrl = getPostSenderAvatarUrl(item);
+  const displayName = senderDisplayName || chainNames?.[creator] || t('defaultDisplayName');
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -76,7 +83,7 @@ const TokenCreatedActivityItem = memo(({
     >
       <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
-          <AddressAvatarWithChainName address={creator} size={20} showAddressAndChainName={false} variant="feed" />
+          <AddressAvatar address={creator} imageUrl={senderAvatarUrl} size={20} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <a
               href={`/users/${creator}`}

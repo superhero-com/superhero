@@ -26,6 +26,10 @@ import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
 import { useLatestTransactions } from '../../../hooks/useLatestTransactions';
 import type { TokenDto } from '../../../api/generated/models/TokenDto';
+import {
+  getPostSenderAddress,
+  getPostSenderDisplayName,
+} from '../utils/postSender';
 
 // Custom hook
 function useUrlQuery() {
@@ -770,14 +774,16 @@ const FeedList = ({
             const combined = `${tokenName} ${tokenSymbol} ${account} ${chainName}`.toLowerCase();
             return combined.includes(searchTerm);
           }
+          const senderAddress = getPostSenderAddress(item as PostDto);
+          const senderDisplayName = getPostSenderDisplayName(item as PostDto);
           return (
             (item.content && item.content.toLowerCase().includes(searchTerm))
             || (item.topics
               && item.topics.some((topic) => topic.toLowerCase().includes(searchTerm)))
-            || (item.sender_address
-              && item.sender_address.toLowerCase().includes(searchTerm))
-            || (chainNames?.[item.sender_address]
-              && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+            || (senderAddress && senderAddress.toLowerCase().includes(searchTerm))
+            || (senderDisplayName && senderDisplayName.toLowerCase().includes(searchTerm))
+            || (chainNames?.[senderAddress]
+              && chainNames[senderAddress].toLowerCase().includes(searchTerm))
           );
         },
       );

@@ -456,7 +456,7 @@ export default function UserProfile({
         </div>
       </div>
 
-      {canEdit && !isXVerified && (
+      {(canEdit && !isXVerified && false) && (
         <button
           type="button"
           onClick={() => {

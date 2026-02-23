@@ -1,5 +1,7 @@
 import { configs } from '@/configs';
-import { Home, Search, ArrowLeftRight, Gift, LucideIcon } from 'lucide-react';
+import {
+  Home, Search, ArrowLeftRight, Gift, LucideIcon,
+} from 'lucide-react';
 
 export interface NavigationItem {
   id: string;

@@ -3,13 +3,13 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from '@aeternity/aepp-sdk';
-import { createCommunity } from '../libs/createCommunity';
 import BigNumber from 'bignumber.js';
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
@@ -367,7 +367,6 @@ const CreateTokenView = () => {
       nameInputRef.current.select();
     }
   }, []);
-
 
   // Token creation
   const deploy = async () => {

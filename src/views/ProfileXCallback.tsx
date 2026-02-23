@@ -6,7 +6,57 @@ import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
 
-export default function ProfileXCallback() {
+const ConfirmWalletStep = ({
+  address,
+  attestation,
+  onDone,
+  onError,
+}: {
+  address: string;
+  attestation: any;
+  onDone: () => void;
+  onError: (msg: string) => void;
+}) => {
+  const { t } = useTranslation('common');
+  const navigate = useNavigate();
+  const { completeXWithAttestation } = useProfile(address);
+  const [submitting, setSubmitting] = useState(false);
+  const hasCalledRef = useRef(false);
+
+  useEffect(() => {
+    if (!attestation || !completeXWithAttestation || hasCalledRef.current) return;
+    hasCalledRef.current = true;
+    setSubmitting(true);
+    completeXWithAttestation(attestation)
+      .then(() => onDone())
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[x-callback] wallet confirm step failed', err);
+        onError(err?.message || t('messages.failedToUpdateProfile'));
+      })
+      .finally(() => setSubmitting(false));
+  }, [attestation, completeXWithAttestation, onDone, onError, t]);
+
+  return (
+    <div className="space-y-3">
+      <p className="text-white/80">
+        {submitting ? t('messages.xCallbackConfirmInWallet') : t('messages.xCallbackSuccess')}
+      </p>
+      {submitting && (
+        <p className="text-white/60 text-sm">{t('messages.savingProfile')}</p>
+      )}
+      <button
+        type="button"
+        className="text-[var(--neon-teal)] underline"
+        onClick={() => navigate(`/users/${address}`)}
+      >
+        {t('messages.xCallbackGoToProfile')}
+      </button>
+    </div>
+  );
+};
+
+const ProfileXCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation('common');
@@ -106,54 +156,6 @@ export default function ProfileXCallback() {
       )}
     </div>
   );
-}
+};
 
-function ConfirmWalletStep({
-  address,
-  attestation,
-  onDone,
-  onError,
-}: {
-  address: string;
-  attestation: any;
-  onDone: () => void;
-  onError: (msg: string) => void;
-}) {
-  const { t } = useTranslation('common');
-  const navigate = useNavigate();
-  const { completeXWithAttestation } = useProfile(address);
-  const [submitting, setSubmitting] = useState(false);
-  const hasCalledRef = useRef(false);
-
-  useEffect(() => {
-    if (!attestation || !completeXWithAttestation || hasCalledRef.current) return;
-    hasCalledRef.current = true;
-    setSubmitting(true);
-    completeXWithAttestation(attestation)
-      .then(() => onDone())
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('[x-callback] wallet confirm step failed', err);
-        onError(err?.message || t('messages.failedToUpdateProfile'));
-      })
-      .finally(() => setSubmitting(false));
-  }, [attestation, completeXWithAttestation, onDone, onError, t]);
-
-  return (
-    <div className="space-y-3">
-      <p className="text-white/80">
-        {submitting ? t('messages.xCallbackConfirmInWallet') : t('messages.xCallbackSuccess')}
-      </p>
-      {submitting && (
-        <p className="text-white/60 text-sm">{t('messages.savingProfile')}</p>
-      )}
-      <button
-        type="button"
-        className="text-[var(--neon-teal)] underline"
-        onClick={() => navigate(`/users/${address}`)}
-      >
-        {t('messages.xCallbackGoToProfile')}
-      </button>
-    </div>
-  );
-}
+export default ProfileXCallback;

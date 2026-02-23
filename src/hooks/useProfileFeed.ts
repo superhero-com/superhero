@@ -70,4 +70,3 @@ export function useProfileFeed(options?: {
 
   return query;
 }
-

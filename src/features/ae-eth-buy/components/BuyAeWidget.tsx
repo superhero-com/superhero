@@ -59,7 +59,12 @@ const BuyAeWidgetContent = ({
   const [liquidityExceeded, setLiquidityExceeded] = useState(false);
   const [maxAvailable, setMaxAvailable] = useState<string | undefined>(undefined);
 
-  const { debouncedQuote, routeInfo } = useSwapQuote();
+  const {
+    debouncedQuote,
+    routeInfo,
+    error: quoteError,
+    clearError: clearQuoteError,
+  } = useSwapQuote();
   const quoteRequestSeqRef = useRef(0);
 
   // Fetch ETH balance
@@ -184,6 +189,7 @@ const BuyAeWidgetContent = ({
     }
 
     setEthBridgeError(null);
+    clearQuoteError();
     setEthBridgeQuoting(true);
     quoteRequestSeqRef.current += 1;
     const requestSeq = quoteRequestSeqRef.current;
@@ -207,7 +213,13 @@ const BuyAeWidgetContent = ({
     return () => {
       quoteRequestSeqRef.current += 1;
     };
-  }, [ethBridgeIn, aeEthToken, aeToken, debouncedQuote]);
+  }, [ethBridgeIn, aeEthToken, aeToken, debouncedQuote, clearQuoteError]);
+
+  useEffect(() => {
+    if (!quoteError) return;
+    setEthBridgeError(quoteError);
+    setEthBridgeQuoting(false);
+  }, [quoteError]);
 
   // Monitor liquidity status from routeInfo
   useEffect(() => {

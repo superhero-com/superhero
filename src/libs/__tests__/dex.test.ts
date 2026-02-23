@@ -92,7 +92,7 @@ describe('libs/dex helpers', () => {
     });
     const res = await initDexContracts(sdk);
     expect(res.router).toBe(router);
-    expect(res.factory).toBefactory;
+    expect(res.factory).toBe(factory);
   });
 });
 

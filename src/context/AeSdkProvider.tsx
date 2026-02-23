@@ -340,10 +340,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     generationPollIntervalRef.current = setInterval(() => {
       getCurrentGeneration(aeSdkInstance);
     }, 30000);
-    
+
     // Get initial block height
     getCurrentGeneration(aeSdkInstance);
-    
+
     setSdkInitialized(true);
 
     // Connect to WebSocket for real-time updates

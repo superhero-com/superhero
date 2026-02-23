@@ -284,12 +284,8 @@ export function useSwapQuote() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo>({ path: [] });
-  const routeInfoRef = useRef<RouteInfo>({ path: [] });
   const quoteSeqRef = useRef(0);
   const quoteTimerRef = useRef<number | null>(null);
-  useEffect(() => {
-    routeInfoRef.current = routeInfo;
-  }, [routeInfo]);
   useEffect(() => () => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
   }, []);
@@ -449,6 +445,12 @@ export function useSwapQuote() {
       let amountIn: string | undefined;
       let maxOut: string | undefined;
       let liquidityStatus: LiquidityStatus | undefined;
+      let currentRouteForPriceImpact:
+      Array<{
+        token0: string;
+        token1: string;
+        liquidityInfo: { reserve0: string; reserve1: string };
+      }> | undefined;
 
       // Use ratio-based calculation if pairData is available from backend
       if (pairData) {
@@ -460,6 +462,16 @@ export function useSwapQuote() {
           amountIn = result.amountIn;
           maxOut = result.maxOut;
           liquidityStatus = result.liquidityStatus;
+          if (pair.reserve0 && pair.reserve1) {
+            currentRouteForPriceImpact = [{
+              token0: pair.token0.address,
+              token1: pair.token1.address,
+              liquidityInfo: {
+                reserve0: pair.reserve0,
+                reserve1: pair.reserve1,
+              },
+            }];
+          }
         }
         // Multi-hop route
         else if (path.length > 2 && pairData.paths?.length && pairData.paths[0]?.length) {
@@ -471,6 +483,16 @@ export function useSwapQuote() {
           const liquidityResult = checkMultiHopLiquidity(params, pathPairs, path, amountIn);
           maxOut = liquidityResult.maxOut;
           liquidityStatus = liquidityResult.liquidityStatus;
+          currentRouteForPriceImpact = pathPairs
+            .filter((pair) => pair.reserve0 && pair.reserve1)
+            .map((pair) => ({
+              token0: pair.token0.address,
+              token1: pair.token1.address,
+              liquidityInfo: {
+                reserve0: pair.reserve0!,
+                reserve1: pair.reserve1!,
+              },
+            }));
         }
       }
 
@@ -519,10 +541,9 @@ export function useSwapQuote() {
       // Compute price impact when backend provided reserves
       let priceImpact: number | undefined;
       try {
-        const route = routeInfoRef.current.reserves;
-        if (route && route.length >= 1) {
+        if (currentRouteForPriceImpact && currentRouteForPriceImpact.length >= 1) {
           const amountInAettosNum = toAettos(params.amountIn || amountIn || '0', params.tokenIn.decimals);
-          priceImpact = getPriceImpactForRoute(route as any, path[0], amountInAettosNum);
+          priceImpact = getPriceImpactForRoute(currentRouteForPriceImpact as any, path[0], amountInAettosNum);
         }
       } catch {
         priceImpact = undefined;
@@ -571,12 +592,16 @@ export function useSwapQuote() {
     }, delay);
   }, [refreshQuote]);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   return {
     quoteLoading,
     error,
     routeInfo,
     refreshQuote,
     debouncedQuote,
-    clearError: () => setError(null),
+    clearError,
   };
 }

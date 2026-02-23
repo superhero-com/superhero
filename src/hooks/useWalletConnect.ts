@@ -21,16 +21,14 @@ import {
   connectingWalletAtom,
   scanningForAccountsAtom,
 } from '../atoms/walletAtoms';
-import { useAccount } from './useAccount';
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
-  const scanStopRef = useRef<null | (() => void)>(null);
+  const scanStopRef = useRef<null |(() => void)>(null);
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
 
-  const { loadAccountData } = useAccount();
   const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
   const [scanningForAccounts, setScanningForAccounts] = useAtom(scanningForAccountsAtom);
   const [connectingWallet, setConnectingWallet] = useAtom(connectingWalletAtom);
@@ -125,7 +123,7 @@ export function useWalletConnect() {
     const addressDeepLink = createDeepLinkUrl({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
-        }?address={address}&networkId={networkId}`,
+      }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
     });
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

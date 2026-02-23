@@ -8,11 +8,11 @@ interface FractionFormatterProps {
 }
 
 const FractionFormatter = ({ fractionalPrice, textClassName = '' }: FractionFormatterProps) => (
-  <div className={cn("fraction-formatter flex items-center", textClassName)}>
+  <div className={cn('fraction-formatter flex items-center', textClassName)}>
     <div>{fractionalPrice.number}</div>
     {fractionalPrice.zerosCount && (
     <div
-      className={cn("text-xs text-muted-foreground", textClassName)}
+      className={cn('text-xs text-muted-foreground', textClassName)}
       style={{ marginTop: '5px', fontSize: '12px', padding: '0 2px' }}
     >
       {fractionalPrice.zerosCount}

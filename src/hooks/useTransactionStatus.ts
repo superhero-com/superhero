@@ -61,7 +61,7 @@ export const useTransactionStatus = (
     const blockHeight = normalizeBlockHeight(tx);
     const failed = normalizeTxFailure(tx);
     const confirmations = blockHeight && currentHeight
-      ? currentHeight - blockHeight + 1
+      ? Math.max(0, currentHeight - blockHeight + 1)
       : undefined;
 
     return {

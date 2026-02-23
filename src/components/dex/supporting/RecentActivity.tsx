@@ -134,13 +134,11 @@ const hasStatusChanged = (
 
 const RecentActivityItem = ({
   activity,
-  index,
   t,
   activeAccount,
   updateActivityStatus,
 }: {
   activity: RecentActivityType;
-  index: number;
   t: (key: string, opts?: { count?: number }) => string;
   activeAccount?: string;
   updateActivityStatus: (
@@ -165,7 +163,6 @@ const RecentActivityItem = ({
 
   return (
     <div
-      key={`${activity.hash || index}-${activity.timestamp}`}
       className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
     >
       <div className="flex items-center justify-between gap-3">
@@ -300,7 +297,6 @@ export default function RecentActivity({
           <RecentActivityItem
             key={`${activity.hash || i}-${activity.timestamp}`}
             activity={activity}
-            index={i}
             t={t}
             activeAccount={activeAccount}
             updateActivityStatus={updateActivityStatus}

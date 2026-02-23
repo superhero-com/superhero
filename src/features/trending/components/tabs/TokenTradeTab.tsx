@@ -22,7 +22,8 @@ const ChangePill = ({ tokenPerformance }: { tokenPerformance?: TokenPriceMovemen
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs font-semibold tabular-nums', isPositive ? 'text-green-400' : 'text-red-400')}>
       {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
-      {Math.abs(pct).toFixed(2)}%
+      {Math.abs(pct).toFixed(2)}
+      %
     </span>
   );
 };
@@ -200,4 +201,3 @@ export const TokenTradeTab = ({
     </div>
   );
 };
-

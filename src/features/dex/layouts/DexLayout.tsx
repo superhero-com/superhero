@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeftRight, 
-  Droplet, 
-  Package, 
-  Network, 
-  Gem, 
-  Coins, 
-  Waves, 
-  ClipboardList, 
+import {
+  ArrowLeftRight,
+  Droplet,
+  Package,
+  Network,
+  Gem,
+  Coins,
+  Waves,
+  ClipboardList,
   Search,
   X,
-  LucideIcon
+  LucideIcon,
 } from 'lucide-react';
 import './DexLayout.scss';
 
@@ -173,8 +173,8 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
                       transition-all duration-200
                       ${isActive
-                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
-                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
+                      ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
+                      : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
                       }
                     `}
                   >
@@ -204,8 +204,8 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                         border-[1.5px] text-xs font-semibold
                         transition-all duration-200
                         ${isActive
-                          ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
-                          : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
+                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
+                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
                         }
                       `}
                     >

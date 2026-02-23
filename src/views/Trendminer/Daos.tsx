@@ -163,21 +163,21 @@ export default function Daos() {
         treasury balance for that token, along with basic stats.
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-        {allItems.map((t) => (
+        {allItems.map((token) => (
           <div
             className={`border rounded-2xl p-4 bg-gradient-to-b from-gray-800/85 to-gray-900/70 text-white shadow-lg transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl ${
-              activeAccount === t.owner_address
+              activeAccount === token.owner_address
                 ? 'border-purple-500/50 shadow-purple-500/25 relative'
                 : 'border-black/20'
             }`}
-            key={t.address}
+            key={token.address}
           >
             <div className="flex justify-between items-start gap-2 mb-2">
               <div className="flex flex-col gap-1.5">
                 <div className="font-black text-white text-lg tracking-wide">
-                  {t.symbol}
+                  {token.symbol}
                 </div>
-                {activeAccount === t.owner_address && (
+                {activeAccount === token.owner_address && (
                 <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
                   Owned
                 </div>
@@ -186,7 +186,7 @@ export default function Daos() {
               <a
                 className="px-4 py-2.5 rounded-xl text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45"
                 href={`/trending/dao/${encodeURIComponent(
-                  t.sale_address || '',
+                  token.sale_address || '',
                 )}`}
               >
                 Open DAO
@@ -195,7 +195,7 @@ export default function Daos() {
 
             <div className="pb-2 border-b border-white/10">
               <TokenLineChart
-                saleAddress={t.sale_address || t.address}
+                saleAddress={token.sale_address || token.address}
                 height={48}
                 hideTimeframe
               />
@@ -207,10 +207,10 @@ export default function Daos() {
                   Treasury
                 </div>
                 <div className="font-bold text-white">
-                  {t.sale_address && t.dao_balance != null ? (
+                  {token.sale_address && token.dao_balance != null ? (
                     <LivePriceFormatter
-                      aePrice={Decimal.from(toAe(t.dao_balance))}
-                      watchKey={t.sale_address}
+                      aePrice={Decimal.from(toAe(token.dao_balance))}
+                      watchKey={token.sale_address}
                       className="text-xs sm:text-base"
                       hideFiatPrice
                     />
@@ -224,7 +224,7 @@ export default function Daos() {
                   Holders
                 </div>
                 <div className="font-bold text-white">
-                  {t.holders_count ?? 0}
+                  {token.holders_count ?? 0}
                 </div>
               </div>
               <div>
@@ -232,8 +232,8 @@ export default function Daos() {
                   Created
                 </div>
                 <div className="font-bold text-white">
-                  {t.created_at
-                    ? new Date(t.created_at).toLocaleDateString()
+                  {token.created_at
+                    ? new Date(token.created_at).toLocaleDateString()
                     : '—'}
                 </div>
               </div>
@@ -242,10 +242,10 @@ export default function Daos() {
                   Market Cap
                 </div>
                 <div className="font-bold text-white">
-                  {t.market_cap != null ? (
+                  {token.market_cap != null ? (
                     <LivePriceFormatter
-                      aePrice={Decimal.from(toAe(t.market_cap))}
-                      watchKey={t.sale_address}
+                      aePrice={Decimal.from(toAe(token.market_cap))}
+                      watchKey={token.sale_address}
                       className="text-xs sm:text-base"
                       hideFiatPrice
                     />
@@ -259,9 +259,9 @@ export default function Daos() {
                   Trending
                 </div>
                 <div className="font-bold text-white">
-                  {(t as any).trending_score != null
+                  {(token as any).trending_score != null
                     ? Math.round(
-                      Number((t as any).trending_score),
+                      Number((token as any).trending_score),
                     ).toLocaleString()
                     : '—'}
                 </div>
@@ -270,14 +270,14 @@ export default function Daos() {
 
             <div className="flex justify-between items-center gap-2 mt-2">
               <div className="text-xs opacity-80 text-white/80">Sale</div>
-              <AddressChip address={t.sale_address} />
+              <AddressChip address={token.sale_address} />
             </div>
 
             <div className="flex justify-between items-center gap-2 mt-2">
               <a
                 className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                 href={`/trending/tokens/${encodeURIComponent(
-                  t.sale_address || t.address,
+                  token.sale_address || token.address,
                 )}`}
               >
                 View token
@@ -285,7 +285,7 @@ export default function Daos() {
               <a
                 className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                 href={`https://aescan.io/contracts/${encodeURIComponent(
-                  t.sale_address || t.address,
+                  token.sale_address || token.address,
                 )}?type=call-transactions`}
                 target="_blank"
                 rel="noopener noreferrer"

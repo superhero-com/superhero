@@ -1,9 +1,10 @@
 import BigNumber from 'bignumber.js';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
-import { Contract } from '@aeternity/aepp-sdk';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 import { CONFIG } from '../../../config';
+import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import {
   ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
 } from '../../../libs/dex';
@@ -14,6 +15,10 @@ import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionPa
 import {
   providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities,
 } from '../../../hooks';
+
+type Aex9ContractApi = ContractMethodsBase & {
+  meta_info: () => Promise<{ decodedResult: { decimals?: number | string; symbol?: string; name?: string } }>;
+};
 
 export function useAddLiquidity() {
   useAtom(providedLiquidityAtom);
@@ -53,11 +58,10 @@ export function useAddLiquidity() {
     if (addr === 'AE') {
       return { decimals: 18, symbol: 'AE' };
     }
-    const t = await Contract.initialize({
-      ...sdk.getContext(),
-      aci: ACI.AEX9,
-      address: addr as `ct_${string}`,
-    });
+    const t = await initializeContractTyped<Aex9ContractApi>(
+      sdk,
+      { aci: ACI.AEX9, address: addr },
+    );
     const { decodedResult } = await t.meta_info();
     return {
       decimals: Number(decodedResult.decimals ?? 18),

@@ -154,14 +154,14 @@ export class BridgeService {
     await ensureAllowanceForRouter(sdk, DEX_ADDRESSES.aeeth, aeAccount, amountAeEth);
 
     // Get expected output amount
-    const { decodedResult } = await (router as any).get_amounts_out(amountAeEth, path);
+    const { decodedResult } = await router.get_amounts_out(amountAeEth, path);
     const expectedOut = BigInt(decodedResult[decodedResult.length - 1]);
     const minOut = subSlippage(expectedOut, slippagePercent);
 
     const deadline = BigInt(Date.now() + Math.max(1, Math.min(60, deadlineMinutes)) * 60_000);
 
     // Execute swap
-    const result = await (router as any).swap_exact_tokens_for_ae(
+    const result = await router.swap_exact_tokens_for_ae(
       amountAeEth,
       minOut,
       path,

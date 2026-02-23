@@ -482,7 +482,7 @@ export function useSwapQuote() {
       if (params.isExactIn && amountOut !== undefined) {
         try {
           const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await (router as any).get_amounts_out(amountInAettos, path);
+          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
           const outAettos = decodedResult[decodedResult.length - 1];
           routerAmountOut = fromAettos(outAettos, params.tokenOut.decimals);
         } catch (e) {
@@ -491,7 +491,7 @@ export function useSwapQuote() {
       } else if (!params.isExactIn && amountIn !== undefined) {
         try {
           const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, path);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
           const inAettos = decodedResult[0];
           routerAmountIn = fromAettos(inAettos, params.tokenIn.decimals);
         } catch (e) {
@@ -503,13 +503,13 @@ export function useSwapQuote() {
       if (amountOut === undefined && amountIn === undefined) {
         if (params.isExactIn) {
           const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await (router as any).get_amounts_out(amountInAettos, path);
+          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
           const outAettos = decodedResult[decodedResult.length - 1];
           amountOut = fromAettos(outAettos, params.tokenOut.decimals);
           routerAmountOut = amountOut;
         } else {
           const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, path);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
           const inAettos = decodedResult[0];
           amountIn = fromAettos(inAettos, params.tokenIn.decimals);
           routerAmountIn = amountIn;

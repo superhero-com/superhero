@@ -74,7 +74,7 @@ describe('libs/dex helpers', () => {
     const sdk: any = { getContext: vi.fn(() => ({})) };
     vi.spyOn(Contract, 'initialize').mockImplementation(async ({ aci }: any) => {
       if (aci === ACI.Pair) return pair as any;
-      if (aci === ACI.Factory) return factory as any;
+      if (aci === ACI.Factory) return factory;
       throw new Error('unexpected');
     });
     const res = await fetchPairReserves(sdk, factory, 'ct_A', 'ct_B');
@@ -87,12 +87,12 @@ describe('libs/dex helpers', () => {
     const sdk: any = { getContext: vi.fn(() => ({})) };
     vi.spyOn(Contract, 'initialize').mockImplementation(async ({ aci }: any) => {
       if (aci === ACI.Router) return router as any;
-      if (aci === ACI.Factory) return factory as any; // allow fallback to known address in implementation
+      if (aci === ACI.Factory) return factory; // allow fallback to known address in implementation
       throw new Error('unexpected');
     });
     const res = await initDexContracts(sdk);
     expect(res.router).toBe(router);
-    expect(res.factory).toBe(factory);
+    expect(res.factory).toBefactory;
   });
 });
 

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import waeACI from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
 import React, { useRef, useState } from 'react';
-import { Contract } from '@aeternity/aepp-sdk';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { CONFIG } from '../../../config';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
@@ -15,9 +15,27 @@ import {
   subSlippage,
   toAettos,
 } from '../../../libs/dex';
+import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
 import { SwapExecutionParams } from '../types/dex';
+
+type WaeContractApi = ContractMethodsBase & {
+  deposit: (options: { amount: any }) => Promise<{ hash?: string }>;
+  withdraw: (amount: any, referrer: null) => Promise<{ hash?: string }>;
+};
+
+function extractAeTxHash(txResult: any): string {
+  const candidates = [
+    txResult?.tx?.hash,
+    txResult?.transactionHash,
+    txResult?.hash,
+  ]
+    .map((value) => (typeof value === 'string' ? value : ''))
+    .filter(Boolean);
+
+  return candidates.find((value) => value.startsWith('th_')) || candidates[0] || '';
+}
 
 export function useSwapExecution() {
   const { sdk, activeAccount } = useAeSdk();
@@ -36,11 +54,10 @@ export function useSwapExecution() {
   }
 
   async function wrapAeToWae(amountAe: string): Promise<string | null> {
-    const wae = await Contract.initialize({
-      ...sdk.getContext(),
-      aci: waeACI,
-      address: DEX_ADDRESSES.wae as `ct_${string}`,
-    });
+    const wae = await initializeContractTyped<WaeContractApi>(
+      sdk,
+      { aci: waeACI, address: DEX_ADDRESSES.wae },
+    );
     const aettos = Decimal.from(amountAe).bigNumber;
     const result = await wae.deposit({ amount: aettos });
 
@@ -61,11 +78,10 @@ export function useSwapExecution() {
   }
 
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
-    const wae = await Contract.initialize({
-      ...sdk.getContext(),
-      aci: waeACI,
-      address: DEX_ADDRESSES.wae as `ct_${string}`,
-    });
+    const wae = await initializeContractTyped<WaeContractApi>(
+      sdk,
+      { aci: waeACI, address: DEX_ADDRESSES.wae },
+    );
     const aettos = Decimal.from(amountWae).bigNumber;
     const result = await wae.withdraw(aettos, null);
 
@@ -209,7 +225,7 @@ export function useSwapExecution() {
 
       if (!isInAe && !isOutAe) {
         if (params.isExactIn) {
-          const res = await (router as any).swap_exact_tokens_for_tokens(
+          const res = await router.swap_exact_tokens_for_tokens(
             amountInAettos,
             minOutAettos,
             p,
@@ -217,9 +233,9 @@ export function useSwapExecution() {
             deadline,
             null,
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         } else {
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, p);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, p);
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = (BigInt(addSlippage(inNeeded, params.slippagePct).toString()));
           await approveIfNeeded(maxIn, params.tokenIn);
@@ -229,7 +245,7 @@ export function useSwapExecution() {
           } else {
             setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
           }
-          const res = await (router as any).swap_tokens_for_exact_tokens(
+          const res = await router.swap_tokens_for_exact_tokens(
             amountOutAettos,
             maxIn,
             p,
@@ -237,11 +253,11 @@ export function useSwapExecution() {
             deadline,
             null,
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         }
       } else if (isInAe && !isOutAe) {
         if (params.isExactIn) {
-          const res = await (router as any).swap_exact_ae_for_tokens(
+          const res = await router.swap_exact_ae_for_tokens(
             minOutAettos,
             p,
             activeAccount,
@@ -249,12 +265,12 @@ export function useSwapExecution() {
             null,
             { amount: amountInAettos },
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         } else {
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, p);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, p);
           const inNeeded = decodedResult[0] as bigint;
           const maxAe = addSlippage(inNeeded, params.slippagePct).toString();
-          const res = await (router as any).swap_ae_for_exact_tokens(
+          const res = await router.swap_ae_for_exact_tokens(
             amountOutAettos,
             p,
             activeAccount,
@@ -262,11 +278,11 @@ export function useSwapExecution() {
             null,
             { amount: maxAe },
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         }
       } else if (!isInAe && isOutAe) {
         if (params.isExactIn) {
-          const res = await (router as any).swap_exact_tokens_for_ae(
+          const res = await router.swap_exact_tokens_for_ae(
             amountInAettos,
             minOutAettos,
             p,
@@ -274,9 +290,9 @@ export function useSwapExecution() {
             deadline,
             null,
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         } else {
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, p);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, p);
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = addSlippage(inNeeded, params.slippagePct);
           await approveIfNeeded(maxIn, params.tokenIn);
@@ -286,7 +302,7 @@ export function useSwapExecution() {
           } else {
             setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
           }
-          const res = await (router as any).swap_tokens_for_exact_ae(
+          const res = await router.swap_tokens_for_exact_ae(
             amountOutAettos,
             maxIn,
             p,
@@ -294,7 +310,7 @@ export function useSwapExecution() {
             deadline,
             null,
           );
-          txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+          txHash = extractAeTxHash(res);
         }
       } else {
         // AE -> AE routed via WAE is a no-op; prevent

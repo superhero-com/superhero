@@ -13,16 +13,22 @@ import BigNumber from 'bignumber.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Contract } from '@aeternity/aepp-sdk';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
+import { initializeContractTyped } from '../libs/initializeContractTyped';
 import {
   ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts,
 } from '../libs/dex';
 
 import { useAeSdk } from '../hooks';
+
+type Aex9ContractApi = ContractMethodsBase & {
+  balance: (owner: string) => Promise<{ decodedResult: bigint | string | null | undefined }>;
+  meta_info: () => Promise<{ decodedResult: { symbol?: string; name?: string; decimals?: number | string } }>;
+};
 
 export default function AddTokens() {
   const { t } = useTranslation('addTokens');
@@ -104,11 +110,10 @@ export default function AddTokens() {
         }
         for (const item of candidates.values()) {
           try {
-            const c = await Contract.initialize({
-              ...sdk.getContext(),
-              aci: ACI.AEX9,
-              address: item.address as `ct_${string}`,
-            });
+            const c = await initializeContractTyped<Aex9ContractApi>(
+              sdk,
+              { aci: ACI.AEX9, address: item.address },
+            );
             const { decodedResult: bal } = await c.balance(activeAccount);
             const bn = BigInt(bal ?? 0);
             if (bn > 0n) {

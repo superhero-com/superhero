@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Decimal } from '@/libs/decimal';
 import Spinner from '@/components/Spinner';
+import { ConfirmationPreviewCard } from '@/components/flow/ConfirmationPreviewCard';
 import { DexTokenDto } from '../../../api/generated';
 
 interface LiquidityConfirmationProps {
@@ -58,6 +59,18 @@ const LiquidityConfirmation = ({
           </div>
 
           {/* Token Amounts */}
+          <ConfirmationPreviewCard
+            preview={{
+              title: 'You are about to confirm',
+              network: 'Aeternity',
+              action: `Add liquidity to ${tokenA.symbol}/${tokenB.symbol}`,
+              asset: `${tokenA.symbol}/${tokenB.symbol}`,
+              amount: `${Decimal.from(amountA).prettify()} ${tokenA.symbol} + ${Decimal.from(amountB).prettify()} ${tokenB.symbol}`,
+              riskHint: 'Wallet can request token approvals before the final liquidity transaction.',
+            }}
+            waitingForWallet={loading}
+          />
+
           <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 mb-6">
             <div className="text-sm font-semibold text-white/60 mb-4 text-center">
               You will deposit

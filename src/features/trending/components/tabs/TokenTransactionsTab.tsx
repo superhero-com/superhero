@@ -5,4 +5,3 @@ import TokenTrades from '@/components/Trendminer/TokenTrades';
 export const TokenTransactionsTab = ({ token }: { token: TokenDto }) => (
   <TokenTrades token={token} />
 );
-

@@ -24,8 +24,10 @@ export function useChart({
   const chartContainer = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const onChartReadyRef = useRef(onChartReady);
+  const latestChartOptionsRef = useRef(chartOptions);
   const [chartApi, setChartApi] = useState<IChartApi | null>(null);
   const [isDarkMode] = useState(true); // For now, assuming dark mode
+  latestChartOptionsRef.current = chartOptions;
 
   useEffect(() => {
     onChartReadyRef.current = onChartReady;
@@ -70,7 +72,7 @@ export function useChart({
       },
       height,
       width: chartContainer.current.offsetWidth,
-      ...chartOptions,
+      ...latestChartOptionsRef.current,
     };
 
     const chartInstance = createChart(chartContainer.current, defaultChartOptions);

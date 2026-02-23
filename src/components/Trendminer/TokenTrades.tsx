@@ -497,8 +497,19 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
             {/* Right: Showing info */}
             <div className="text-center lg:text-right whitespace-nowrap">
-              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} transactions
+              Showing
+              {' '}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
+              {' '}
+              to
+              {' '}
+              {Math.min(currentPage * itemsPerPage, totalItems)}
+              {' '}
+              of
+              {' '}
+              {totalItems}
+              {' '}
+              transactions
             </div>
           </div>
 
@@ -533,7 +544,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                     className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentPage === pageNum
                       ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
                       : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
-                      }`}
+                    }`}
                   >
                     {pageNum}
                   </button>

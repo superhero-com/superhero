@@ -10,9 +10,30 @@ import { CONFIG } from '@/config';
 import REGISTRY_WITH_EVENTS_ACI from '@/api/GovernanceRegistryACI.json';
 import POLL_ACI from '@/api/GovernancePollACI.json';
 import BYTECODE_HASHES from '@/api/GovernanceBytecodeHashes.json';
-import { Contract, Encoded } from '@aeternity/aepp-sdk';
+import {
+  Encoded,
+  type ContractMethodsBase,
+} from '@aeternity/aepp-sdk';
+import { initializeContractTyped } from '@/libs/initializeContractTyped';
 
 type FormErrors = Partial<Record<'title' | 'description' | 'link' | 'options' | 'closeHeight', string>>;
+
+type PollContractApi = ContractMethodsBase & {
+  init: (
+    metadata: unknown,
+    options: unknown,
+    closeHeight?: unknown,
+    callOptions?: unknown,
+  ) => Promise<{ address: string }>;
+};
+
+type GovernanceRegistryContractApi = ContractMethodsBase & {
+  add_poll: (
+    poll: Encoded.ContractAddress,
+    is_listed: boolean,
+    callOptions?: unknown,
+  ) => Promise<{ decodedResult: number }>;
+};
 
 export default function GovernanceCreate() {
   const { t } = useTranslation('governance');
@@ -121,8 +142,7 @@ export default function GovernanceCreate() {
       setSubmitting(true);
 
       const pollBytecode = (BYTECODE_HASHES as any)['8.0.0']['Poll_Iris.aes'].bytecode as Encoded.ContractBytearray;
-      const pollContract = await Contract.initialize({
-        ...sdk.getContext(),
+      const pollContract = await initializeContractTyped<PollContractApi>(sdk, {
         aci: POLL_ACI as any,
         bytecode: pollBytecode,
       });
@@ -150,13 +170,13 @@ export default function GovernanceCreate() {
       const createdAddress = (init as any).address as string;
 
       // Add to registry
-      const registry = await Contract.initialize<{
-        add_poll:(poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
-          }>({
-            ...sdk.getContext(),
-            aci: REGISTRY_WITH_EVENTS_ACI as any,
-            address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
-          });
+      const registry = await initializeContractTyped<GovernanceRegistryContractApi>(
+        sdk,
+        {
+          aci: REGISTRY_WITH_EVENTS_ACI as any,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        },
+      );
       await registry.add_poll(createdAddress as Encoded.ContractAddress, isListed, {
         ttl: undefined,
       });

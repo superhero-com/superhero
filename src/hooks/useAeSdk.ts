@@ -13,12 +13,12 @@ export const useAeSdk = () => {
   if (!context) {
     throw new Error('useAeSdk must be used within an AeSdkProvider');
   }
-  
+
   /**
    * Return the appropriate SDK based on wallet connection state:
    * - If wallet is actively connected: use aeSdk (AeSdkAepp) for wallet operations
    * - Otherwise: use staticAeSdk (AeSdk) for read-only or static account operations
-   * 
+   *
    * Note: We check walletConnected (runtime state) not just walletInfo (persisted state)
    * to ensure we don't try to use wallet SDK when connection is actually lost.
    */
@@ -40,7 +40,7 @@ export const useAeSdk = () => {
       // eslint-disable-next-line no-underscore-dangle
       const currentAccounts = context.staticAeSdk._accounts?.current || {};
       const selectedAddress = Object.keys(currentAccounts)[0];
-      
+
       // Only add if the account is not currently selected
       if (selectedAddress !== activeAccount) {
         // Account not added or not selected, add/select it

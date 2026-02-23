@@ -154,7 +154,7 @@ const MobileNavigation = () => {
                   const activeClass = isActive ? 'bg-white/15' : 'bg-white/5';
 
                   const Icon = item.icon;
-                  
+
                   if (item.isExternal) {
                     return (
                       <a

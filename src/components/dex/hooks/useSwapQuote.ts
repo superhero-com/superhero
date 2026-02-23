@@ -1,5 +1,10 @@
 /* eslint-disable */
-import { useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
 import BigNumber from 'bignumber.js';
 import { useAeSdk } from '../../../hooks';
@@ -281,8 +286,11 @@ export function useSwapQuote() {
   const [routeInfo, setRouteInfo] = useState<RouteInfo>({ path: [] });
   const quoteSeqRef = useRef(0);
   const quoteTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+  }, []);
 
-  async function buildBestPath(
+  const buildBestPath = useCallback(async (
     tokenIn: DexTokenDto,
     tokenOut: DexTokenDto,
   ): Promise<{
@@ -291,7 +299,7 @@ export function useSwapQuote() {
       directPairs?: PairDto[];
       paths?: PairDto[][];
     };
-  }> {
+  }> => {
     if (isAeToWae(tokenIn, tokenOut)) {
       return { path: [DEX_ADDRESSES.wae] };
     }
@@ -373,12 +381,12 @@ export function useSwapQuote() {
     } catch (e) {
       return { path: null };
     }
-  }
+  }, [sdk]);
 
-  async function refreshQuote(
+  const refreshQuote = useCallback(async (
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
-  ): Promise<QuoteResult> {
+  ): Promise<QuoteResult> => {
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
@@ -437,6 +445,12 @@ export function useSwapQuote() {
       let amountIn: string | undefined;
       let maxOut: string | undefined;
       let liquidityStatus: LiquidityStatus | undefined;
+      let currentRouteForPriceImpact:
+      Array<{
+        token0: string;
+        token1: string;
+        liquidityInfo: { reserve0: string; reserve1: string };
+      }> | undefined;
 
       // Use ratio-based calculation if pairData is available from backend
       if (pairData) {
@@ -448,6 +462,16 @@ export function useSwapQuote() {
           amountIn = result.amountIn;
           maxOut = result.maxOut;
           liquidityStatus = result.liquidityStatus;
+          if (pair.reserve0 && pair.reserve1) {
+            currentRouteForPriceImpact = [{
+              token0: pair.token0.address,
+              token1: pair.token1.address,
+              liquidityInfo: {
+                reserve0: pair.reserve0,
+                reserve1: pair.reserve1,
+              },
+            }];
+          }
         }
         // Multi-hop route
         else if (path.length > 2 && pairData.paths?.length && pairData.paths[0]?.length) {
@@ -459,6 +483,16 @@ export function useSwapQuote() {
           const liquidityResult = checkMultiHopLiquidity(params, pathPairs, path, amountIn);
           maxOut = liquidityResult.maxOut;
           liquidityStatus = liquidityResult.liquidityStatus;
+          currentRouteForPriceImpact = pathPairs
+            .filter((pair) => pair.reserve0 && pair.reserve1)
+            .map((pair) => ({
+              token0: pair.token0.address,
+              token1: pair.token1.address,
+              liquidityInfo: {
+                reserve0: pair.reserve0!,
+                reserve1: pair.reserve1!,
+              },
+            }));
         }
       }
 
@@ -470,7 +504,7 @@ export function useSwapQuote() {
       if (params.isExactIn && amountOut !== undefined) {
         try {
           const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await (router as any).get_amounts_out(amountInAettos, path);
+          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
           const outAettos = decodedResult[decodedResult.length - 1];
           routerAmountOut = fromAettos(outAettos, params.tokenOut.decimals);
         } catch (e) {
@@ -479,7 +513,7 @@ export function useSwapQuote() {
       } else if (!params.isExactIn && amountIn !== undefined) {
         try {
           const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, path);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
           const inAettos = decodedResult[0];
           routerAmountIn = fromAettos(inAettos, params.tokenIn.decimals);
         } catch (e) {
@@ -491,13 +525,13 @@ export function useSwapQuote() {
       if (amountOut === undefined && amountIn === undefined) {
         if (params.isExactIn) {
           const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await (router as any).get_amounts_out(amountInAettos, path);
+          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
           const outAettos = decodedResult[decodedResult.length - 1];
           amountOut = fromAettos(outAettos, params.tokenOut.decimals);
           routerAmountOut = amountOut;
         } else {
           const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await (router as any).get_amounts_in(amountOutAettos, path);
+          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
           const inAettos = decodedResult[0];
           amountIn = fromAettos(inAettos, params.tokenIn.decimals);
           routerAmountIn = amountIn;
@@ -507,10 +541,9 @@ export function useSwapQuote() {
       // Compute price impact when backend provided reserves
       let priceImpact: number | undefined;
       try {
-        const route = routeInfo.reserves;
-        if (route && route.length >= 1) {
+        if (currentRouteForPriceImpact && currentRouteForPriceImpact.length >= 1) {
           const amountInAettosNum = toAettos(params.amountIn || amountIn || '0', params.tokenIn.decimals);
-          priceImpact = getPriceImpactForRoute(route as any, path[0], amountInAettosNum);
+          priceImpact = getPriceImpactForRoute(currentRouteForPriceImpact as any, path[0], amountInAettosNum);
         }
       } catch {
         priceImpact = undefined;
@@ -546,9 +579,9 @@ export function useSwapQuote() {
     } finally {
       if (seq === quoteSeqRef.current) setQuoteLoading(false);
     }
-  }
+  }, [buildBestPath, sdk]);
 
-  const debouncedQuote = (
+  const debouncedQuote = useCallback((
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
     delay = 300,
@@ -557,7 +590,18 @@ export function useSwapQuote() {
     quoteTimerRef.current = window.setTimeout(() => {
       void refreshQuote(params, onQuoteResult);
     }, delay);
-  };
+  }, [refreshQuote]);
+
+  const cancelDebouncedQuote = useCallback(() => {
+    if (quoteTimerRef.current) {
+      window.clearTimeout(quoteTimerRef.current);
+      quoteTimerRef.current = null;
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   return {
     quoteLoading,
@@ -565,6 +609,7 @@ export function useSwapQuote() {
     routeInfo,
     refreshQuote,
     debouncedQuote,
-    clearError: () => setError(null),
+    cancelDebouncedQuote,
+    clearError,
   };
 }

@@ -60,7 +60,7 @@ export function useInvitations() {
 
   // Transaction list state for invitation statuses
   const [transactionList, setTransactionList] = useState<ITransaction[]>([]);
-  
+
   // Track which invitees we've already checked for claimed status to prevent infinite loops
   const checkedInviteesRef = useRef<Set<string>>(new Set());
 
@@ -182,10 +182,10 @@ export function useInvitations() {
   // Manual refresh function for external use
   const refreshInvitationData = useCallback(async () => {
     if (!activeAccount) return;
-    
+
     // Reset checked invitees on manual refresh to re-check everything
     checkedInviteesRef.current.clear();
-    
+
     setLoading(true);
     try {
       const data = await loadAccountInvitations(activeAccount);
@@ -325,12 +325,12 @@ export function useInvitations() {
   // Use transactionList as dependency to avoid infinite loop caused by claimedInvitations updates
   useEffect(() => {
     if (transactionList.length === 0) return;
-    
+
     // Get list of invitees that need to be checked (haven't been checked yet)
     const inviteesToCheck = invitations
       .filter((inv) => !checkedInviteesRef.current.has(inv.invitee))
       .map((inv) => inv.invitee);
-    
+
     if (inviteesToCheck.length === 0) return;
 
     const loadClaimed = async () => {
@@ -338,10 +338,10 @@ export function useInvitations() {
         inviteesToCheck.map(async (invitee) => {
           // Mark as checked immediately to prevent duplicate requests
           checkedInviteesRef.current.add(invitee);
-          
+
           try {
             const inviteeTransactions = await loadAccountInvitations(invitee);
-            
+
             for (const tx of inviteeTransactions) {
               if (tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code) {
                 // The claimer's wallet address is passed
@@ -383,7 +383,7 @@ export function useInvitations() {
         ...newClaimedInvitations,
       }));
     };
-    
+
     loadClaimed();
   }, [transactionList, invitations, loadAccountInvitations, setClaimedInvitations]);
 

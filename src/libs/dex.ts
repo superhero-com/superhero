@@ -1,5 +1,9 @@
 import BigNumber from 'bignumber.js';
-import { Contract } from '@aeternity/aepp-sdk';
+import {
+  Contract,
+  Encoded,
+  type ContractMethodsBase,
+} from '@aeternity/aepp-sdk';
 
 // Use deployment ACIs from external dex-contracts to match sdk expectations
 // @ts-ignore
@@ -10,13 +14,14 @@ import FactoryAci from 'dex-contracts-v2/deployment/aci/AedexV2Factory.aci.json'
 import PairAci from 'dex-contracts-v2/deployment/aci/AedexV2Pair.aci.json';
 // @ts-ignore
 import Aex9Aci from 'dex-contracts-v2/deployment/aci/FungibleTokenFull.aci.json';
+import { initializeContractTyped } from './initializeContractTyped';
 
 // Mainnet addresses copied from Superhero DEX defaults
 export const DEX_ADDRESSES = {
-  factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW',
-  router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3',
-  wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa',
-  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh', //
+  factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW' as Encoded.ContractAddress,
+  router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3' as Encoded.ContractAddress,
+  wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa' as Encoded.ContractAddress,
+  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh' as Encoded.ContractAddress, //
 };
 
 // Match aepp-sdk's expected ACI format (raw contract object or array with contract entries)
@@ -30,9 +35,146 @@ export const ACI = {
 // Constants matching dex-ui
 export const MINIMUM_LIQUIDITY = 1000n;
 
+type InitializedContract = Awaited<ReturnType<typeof Contract.initialize>>;
+type ContractCallResult<T> = Promise<{ decodedResult: T }>;
+type ContractTxResult = Promise<{
+  hash?: string;
+  tx?: { hash?: string };
+  transactionHash?: string;
+}>;
+
+export interface RouterContractApi extends ContractMethodsBase {
+  factory: () => ContractCallResult<string | { $options?: { address?: string } }>;
+  get_amounts_out: (amountIn: bigint, path: string[]) => ContractCallResult<(bigint | string)[]>;
+  get_amounts_in: (amountOut: bigint, path: string[]) => ContractCallResult<(bigint | string)[]>;
+  swap_exact_tokens_for_tokens: (
+    amountIn: bigint,
+    amountOutMin: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+  ) => ContractTxResult;
+  swap_tokens_for_exact_tokens: (
+    amountOut: bigint,
+    amountInMax: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+  ) => ContractTxResult;
+  swap_exact_ae_for_tokens: (
+    amountOutMin: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+    options: { amount: bigint | string; [key: string]: unknown },
+  ) => ContractTxResult;
+  swap_ae_for_exact_tokens: (
+    amountOut: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+    options: { amount: bigint | string; [key: string]: unknown },
+  ) => ContractTxResult;
+  swap_exact_tokens_for_ae: (
+    amountIn: bigint,
+    amountOutMin: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+  ) => ContractTxResult;
+  swap_tokens_for_exact_ae: (
+    amountOut: bigint,
+    amountInMax: bigint,
+    path: string[],
+    to: string,
+    deadline: bigint,
+    referrer: string | null,
+  ) => ContractTxResult;
+  add_liquidity: (
+    tokenA: string,
+    tokenB: string,
+    amountADesired: bigint,
+    amountBDesired: bigint,
+    amountAMin: bigint,
+    amountBMin: bigint,
+    to: string,
+    minLiquidity: bigint,
+    deadline: bigint,
+    options?: unknown,
+  ) => ContractTxResult;
+  add_liquidity_ae: (
+    token: string,
+    amountTokenDesired: bigint,
+    amountTokenMin: bigint,
+    amountAeMin: bigint,
+    to: string,
+    minLiquidity: bigint,
+    deadline: bigint,
+    options: { amount: string; [key: string]: unknown },
+  ) => ContractTxResult;
+  remove_liquidity: (
+    tokenA: string,
+    tokenB: string,
+    liquidity: bigint,
+    amountAMin: bigint,
+    amountBMin: bigint,
+    to: string,
+    deadline: bigint,
+    options?: unknown,
+  ) => ContractTxResult;
+  remove_liquidity_ae: (
+    token: string,
+    liquidity: bigint,
+    amountTokenMin: bigint,
+    amountAeMin: bigint,
+    to: string,
+    deadline: bigint,
+    options?: unknown,
+  ) => ContractTxResult;
+}
+
+export interface FactoryContractApi extends ContractMethodsBase {
+  get_pair: (tokenA: string, tokenB: string) => ContractCallResult<string | null | undefined>;
+}
+
+export interface Aex9ContractApi extends ContractMethodsBase {
+  allowance: (
+    params: { from_account: string; for_account: string },
+  ) => ContractCallResult<bigint | null | undefined>;
+  create_allowance: (forAccount: string, value: bigint) => ContractTxResult;
+  change_allowance: (forAccount: string, value: bigint) => ContractTxResult;
+  balance: (owner: string) => ContractCallResult<bigint | string | null | undefined>;
+  meta_info: () => ContractCallResult<{
+    symbol?: string;
+    name?: string;
+    decimals?: number | string;
+  }>;
+}
+
+export interface PairContractApi extends ContractMethodsBase {
+  token0: () => ContractCallResult<string>;
+  get_reserves: () => ContractCallResult<{ reserve0: bigint | string; reserve1: bigint | string }>;
+  allowance: (
+    params: { from_account: string; for_account: string },
+  ) => ContractCallResult<bigint | null | undefined>;
+  create_allowance: (forAccount: string, value: bigint) => ContractTxResult;
+  change_allowance: (forAccount: string, value: bigint) => ContractTxResult;
+  total_supply: () => ContractCallResult<bigint | string>;
+  balance: (owner: string) => ContractCallResult<bigint | string | null | undefined>;
+}
+
+export type RouterContract = InitializedContract & RouterContractApi;
+export type FactoryContract = InitializedContract & FactoryContractApi;
+export type Aex9Contract = InitializedContract & Aex9ContractApi;
+export type PairContract = InitializedContract & PairContractApi;
 export type DexContracts = {
-  router: any;
-  factory: any;
+  router: RouterContract;
+  factory: FactoryContract;
 };
 
 // Cache initialized contract instances per sdk instance and router address
@@ -45,7 +187,10 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
   const cached = byAddr.get(addr);
   if (cached) return cached;
   const promise = (async () => {
-    const router = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Router, address: addr });
+    const router = await initializeContractTyped<RouterContractApi>(
+      sdk,
+      { aci: ACI.Router, address: addr },
+    );
     let factoryAddress: string | null = null;
     try {
       const { decodedResult } = await router.factory();
@@ -54,14 +199,20 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
       console.error(error);
     }
     if (!factoryAddress) factoryAddress = DEX_ADDRESSES.factory;
-    let factory = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Factory, address: factoryAddress });
+    let factory = await initializeContractTyped<FactoryContractApi>(
+      sdk,
+      { aci: ACI.Factory, address: factoryAddress },
+    );
     // In some environments (tests/mocks),
     // router.factory may return a placeholder address without methods.
     // Fallback to known factory address if the instance doesn't expose required entrypoints.
-    if (!factory || typeof (factory as any).get_pair !== 'function') {
-      factory = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Factory, address: DEX_ADDRESSES.factory });
+    if (!factory || typeof factory.get_pair !== 'function') {
+      factory = await initializeContractTyped<FactoryContractApi>(
+        sdk,
+        { aci: ACI.Factory, address: DEX_ADDRESSES.factory },
+      );
     }
-    return { router, factory } as DexContracts;
+    return { router, factory };
   })();
   byAddr.set(addr, promise);
   return promise;
@@ -95,7 +246,10 @@ export async function ensureAllowanceForRouter(
   needed: bigint,
   routerAddress?: string,
 ): Promise<void> {
-  const token = await Contract.initialize({ ...sdk.getContext(), aci: ACI.AEX9, address: tokenAddress });
+  const token = await initializeContractTyped<Aex9ContractApi>(
+    sdk,
+    { aci: ACI.AEX9, address: tokenAddress },
+  );
   const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
   const { decodedResult } = await token.allowance({ from_account: owner, for_account: forAccount });
   const current = decodedResult ?? 0n;
@@ -111,7 +265,10 @@ export async function fetchPairReserves(sdk: any, factory: any, tokenA: string, 
   const { decodedResult: pairOpt } = await factory.get_pair(tokenA, tokenB);
   if (!pairOpt) return null;
   const pairAddr: string = pairOpt;
-  const pair = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Pair, address: pairAddr });
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddr },
+  );
   const { decodedResult: token0 } = await pair.token0();
   const { decodedResult: reserves } = await pair.get_reserves();
   const reserve0 = BigInt(reserves.reserve0);
@@ -127,7 +284,10 @@ export async function getRouterTokenAllowance(
   owner: string,
   routerAddress?: string,
 ): Promise<bigint> {
-  const token = await Contract.initialize({ ...sdk.getContext(), aci: ACI.AEX9, address: tokenAddress });
+  const token = await initializeContractTyped<Aex9ContractApi>(
+    sdk,
+    { aci: ACI.AEX9, address: tokenAddress },
+  );
   const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
   const { decodedResult } = await token.allowance({ from_account: owner, for_account: forAccount });
   return (decodedResult ?? 0n) as bigint;
@@ -143,7 +303,10 @@ export async function getTokenBalance(
       const aettos = await sdk.getBalance(owner);
       return BigInt(aettos);
     }
-    const token = await Contract.initialize({ ...sdk.getContext(), aci: ACI.AEX9, address: tokenAddressOrAE });
+    const token = await initializeContractTyped<Aex9ContractApi>(
+      sdk,
+      { aci: ACI.AEX9, address: tokenAddressOrAE },
+    );
     const { decodedResult } = await token.balance(owner);
     return BigInt(decodedResult ?? 0);
   } catch (error: any) {
@@ -158,7 +321,10 @@ export async function getPairAllowanceToRouter(
   owner: string,
   routerAddress?: string,
 ): Promise<bigint> {
-  const pair = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Pair, address: pairAddress });
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
   const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
   const { decodedResult } = await pair.allowance({ from_account: owner, for_account: forAccount });
   return (decodedResult ?? 0n) as bigint;
@@ -171,7 +337,10 @@ export async function ensurePairAllowanceForRouter(
   needed: bigint,
   routerAddress?: string,
 ): Promise<void> {
-  const pair = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Pair, address: pairAddress });
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
   const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
   const { decodedResult } = await pair.allowance({ from_account: owner, for_account: forAccount });
   const current = decodedResult ?? 0n;
@@ -228,7 +397,10 @@ export async function getPairInfo(
 } | null> {
   const addr = await getPairAddress(sdk, factory, tokenA, tokenB);
   if (!addr) return null;
-  const pair = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Pair, address: addr });
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: addr },
+  );
   let totalSupply: bigint | null = null;
   try {
     const { decodedResult } = await pair.total_supply();
@@ -366,7 +538,10 @@ export async function getLpBalance(
   pairAddress: string,
   owner: string,
 ): Promise<bigint> {
-  const pair = await Contract.initialize({ ...sdk.getContext(), aci: ACI.Pair, address: pairAddress });
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
   const { decodedResult } = await pair.balance(owner);
   return BigInt(decodedResult ?? 0);
 }

@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Contract } from '@aeternity/aepp-sdk';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -14,7 +14,15 @@ import { PostsService } from '../../../api/generated';
 import { CONFIG } from '../../../config';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
+import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
+
+type TippingV3ContractApi = ContractMethodsBase & {
+  post_without_tip: (
+    content: string,
+    media: string[],
+  ) => Promise<{ decodedResult: string }>;
+};
 
 interface PostFormProps {
   // Common props
@@ -346,11 +354,10 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
     setIsSubmitting(true);
     try {
-      const contract = await Contract.initialize({
-        ...sdk.getContext(),
-        aci: TIPPING_V3_ACI as any,
-        address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
-      });
+      const contract = await initializeContractTyped<TippingV3ContractApi>(
+        sdk,
+        { aci: TIPPING_V3_ACI as any, address: CONFIG.CONTRACT_V3_ADDRESS },
+      );
 
       let postMedia: string[] = [];
 

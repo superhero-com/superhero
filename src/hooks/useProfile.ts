@@ -11,13 +11,14 @@ import {
   SuperheroApi,
 } from '@/api/backend';
 import {
-  Contract,
   Encoded,
   Tag,
+  type ContractMethodsBase,
   unpackTx,
 } from '@aeternity/aepp-sdk';
 import { CONFIG } from '@/config';
 import PROFILE_REGISTRY_ACI from '@/api/ProfileRegistryACI.json';
+import { initializeContractTyped } from '@/libs/initializeContractTyped';
 import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
 import { useAeSdk } from './useAeSdk';
 
@@ -82,6 +83,12 @@ type SetProfileInput = {
   chainName?: string;
   chainExpiresAt?: number | null;
   displaySource?: DisplaySource;
+};
+
+type ProfileRegistryContractApi = ContractMethodsBase & {
+  _calldata: {
+    encode: (contractName: string, functionName: string, args: unknown[]) => Encoded.ContractBytearray;
+  };
 };
 
 export function useProfile(targetAddress?: string) {
@@ -219,11 +226,10 @@ export function useProfile(targetAddress?: string) {
         // Restore/write flows use deep-link signer,
         // independent from aeSdk reconnect state.
         if (staticAeSdk) {
-          const contract = await Contract.initialize({
-            ...staticAeSdk.getContext(),
-            aci: PROFILE_REGISTRY_ACI as any,
-            address: profileContractAddress,
-          });
+          const contract = await initializeContractTyped<ProfileRegistryContractApi>(
+            staticAeSdk,
+            { aci: PROFILE_REGISTRY_ACI, address: profileContractAddress },
+          );
           return {
             contract,
             signerSdk: staticAeSdk,
@@ -271,11 +277,10 @@ export function useProfile(targetAddress?: string) {
     if (!signerSdk) {
       throw new Error('SDK is not initialized');
     }
-    const contract = await Contract.initialize({
-      ...signerSdk.getContext(),
-      aci: PROFILE_REGISTRY_ACI as any,
-      address: profileContractAddress,
-    });
+    const contract = await initializeContractTyped<ProfileRegistryContractApi>(
+      signerSdk,
+      { aci: PROFILE_REGISTRY_ACI as any, address: profileContractAddress },
+    );
     return {
       contract,
       signerSdk,

@@ -1,6 +1,11 @@
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Contract, Eip1193Provider, formatEther } from 'ethers';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import BigNumber from 'bignumber.js';
 import { Decimal } from '@/libs/decimal';
@@ -54,7 +59,15 @@ const BuyAeWidgetContent = ({
   const [liquidityExceeded, setLiquidityExceeded] = useState(false);
   const [maxAvailable, setMaxAvailable] = useState<string | undefined>(undefined);
 
-  const { refreshQuote, routeInfo } = useSwapQuote();
+  const {
+    debouncedQuote,
+    cancelDebouncedQuote,
+    routeInfo,
+    error: quoteError,
+    clearError: clearQuoteError,
+  } = useSwapQuote();
+  const quoteRequestSeqRef = useRef(0);
+  const lastHandledQuoteErrorRef = useRef<string | null>(null);
 
   // Fetch ETH balance
   const fetchEthBalance = useCallback(async () => {
@@ -166,38 +179,63 @@ const BuyAeWidgetContent = ({
     setEthBridgeError(null);
   }, []);
 
-  // Automated ETH Bridge quoting using refreshQuote
+  // Automated ETH Bridge quoting using debounced quote flow from the hook.
   useEffect(() => {
     if (!ethBridgeIn || Number(ethBridgeIn) <= 0 || !aeEthToken || !aeToken) {
+      quoteRequestSeqRef.current += 1;
+      cancelDebouncedQuote();
+      clearQuoteError();
+      setEthBridgeError(null);
       setEthBridgeOutAe('');
+      setEthBridgeQuoting(false);
       setLiquidityExceeded(false);
       setMaxAvailable(undefined);
       return () => {};
     }
 
-    const timer = setTimeout(async () => {
-      try {
-        setEthBridgeQuoting(true);
-        setEthBridgeError(null);
+    setEthBridgeError(null);
+    clearQuoteError();
+    setEthBridgeQuoting(true);
+    quoteRequestSeqRef.current += 1;
+    const requestSeq = quoteRequestSeqRef.current;
 
-        const result = await refreshQuote({
-          amountIn: ethBridgeIn,
-          amountOut: '',
-          tokenIn: aeEthToken,
-          tokenOut: aeToken,
-          isExactIn: true,
-        });
-
+    debouncedQuote(
+      {
+        amountIn: ethBridgeIn,
+        amountOut: '',
+        tokenIn: aeEthToken,
+        tokenOut: aeToken,
+        isExactIn: true,
+      },
+      (result) => {
+        if (requestSeq !== quoteRequestSeqRef.current) return;
         setEthBridgeOutAe(result.amountOut || '');
-      } catch (e: any) {
-        setEthBridgeError(errorToUserMessage(e, { action: 'quote' }));
-      } finally {
         setEthBridgeQuoting(false);
-      }
-    }, 300); // 300ms delay to avoid too many requests
+      },
+      300,
+    );
 
-    return () => clearTimeout(timer);
-  }, [ethBridgeIn, aeEthToken, aeToken, refreshQuote]);
+    return () => {
+      cancelDebouncedQuote();
+      quoteRequestSeqRef.current += 1;
+    };
+  }, [
+    ethBridgeIn,
+    aeEthToken,
+    aeToken,
+    debouncedQuote,
+    cancelDebouncedQuote,
+    clearQuoteError,
+  ]);
+
+  useEffect(() => {
+    if (quoteError === lastHandledQuoteErrorRef.current) return;
+    lastHandledQuoteErrorRef.current = quoteError;
+    if (!quoteError) return;
+    if (!ethBridgeIn || Number(ethBridgeIn) <= 0) return;
+    setEthBridgeError(quoteError);
+    setEthBridgeQuoting(false);
+  }, [quoteError, ethBridgeIn]);
 
   // Monitor liquidity status from routeInfo
   useEffect(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import tailwindcssAnimate from 'tailwindcss-animate';
 import typography from '@tailwindcss/typography';
 

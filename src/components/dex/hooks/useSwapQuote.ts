@@ -1,5 +1,10 @@
 /* eslint-disable */
-import { useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
 import BigNumber from 'bignumber.js';
 import { useAeSdk } from '../../../hooks';
@@ -279,10 +284,17 @@ export function useSwapQuote() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo>({ path: [] });
+  const routeInfoRef = useRef<RouteInfo>({ path: [] });
   const quoteSeqRef = useRef(0);
   const quoteTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    routeInfoRef.current = routeInfo;
+  }, [routeInfo]);
+  useEffect(() => () => {
+    if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+  }, []);
 
-  async function buildBestPath(
+  const buildBestPath = useCallback(async (
     tokenIn: DexTokenDto,
     tokenOut: DexTokenDto,
   ): Promise<{
@@ -291,7 +303,7 @@ export function useSwapQuote() {
       directPairs?: PairDto[];
       paths?: PairDto[][];
     };
-  }> {
+  }> => {
     if (isAeToWae(tokenIn, tokenOut)) {
       return { path: [DEX_ADDRESSES.wae] };
     }
@@ -373,12 +385,12 @@ export function useSwapQuote() {
     } catch (e) {
       return { path: null };
     }
-  }
+  }, [sdk]);
 
-  async function refreshQuote(
+  const refreshQuote = useCallback(async (
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
-  ): Promise<QuoteResult> {
+  ): Promise<QuoteResult> => {
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
@@ -507,7 +519,7 @@ export function useSwapQuote() {
       // Compute price impact when backend provided reserves
       let priceImpact: number | undefined;
       try {
-        const route = routeInfo.reserves;
+        const route = routeInfoRef.current.reserves;
         if (route && route.length >= 1) {
           const amountInAettosNum = toAettos(params.amountIn || amountIn || '0', params.tokenIn.decimals);
           priceImpact = getPriceImpactForRoute(route as any, path[0], amountInAettosNum);
@@ -546,9 +558,9 @@ export function useSwapQuote() {
     } finally {
       if (seq === quoteSeqRef.current) setQuoteLoading(false);
     }
-  }
+  }, [buildBestPath, sdk]);
 
-  const debouncedQuote = (
+  const debouncedQuote = useCallback((
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
     delay = 300,
@@ -557,7 +569,7 @@ export function useSwapQuote() {
     quoteTimerRef.current = window.setTimeout(() => {
       void refreshQuote(params, onQuoteResult);
     }, delay);
-  };
+  }, [refreshQuote]);
 
   return {
     quoteLoading,

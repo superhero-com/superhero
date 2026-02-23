@@ -119,6 +119,117 @@ const TransactionStatus = ({
   );
 };
 
+const hasStatusChanged = (
+  previous?: RecentActivityType['status'],
+  next?: RecentActivityType['status'],
+) => (
+  !previous
+  || !next
+  || previous.confirmed !== next.confirmed
+  || previous.pending !== next.pending
+  || previous.failed !== next.failed
+  || previous.blockNumber !== next.blockNumber
+  || previous.confirmations !== next.confirmations
+);
+
+const RecentActivityItem = ({
+  activity,
+  index,
+  t,
+  activeAccount,
+  updateActivityStatus,
+}: {
+  activity: RecentActivityType;
+  index: number;
+  t: (key: string, opts?: { count?: number }) => string;
+  activeAccount?: string;
+  updateActivityStatus: (
+    account: string,
+    txHash: string,
+    status: RecentActivityType['status'],
+  ) => void;
+}) => {
+  const { status: fetchedStatus } = useTransactionStatus(activity.hash, {
+    enabled: Boolean(activeAccount && activity.hash),
+  });
+  const txStatus = fetchedStatus ?? activity.status;
+  const lastProcessedStatusRef = useRef<RecentActivityType['status']>();
+
+  useEffect(() => {
+    if (!activeAccount || !activity.hash || !txStatus) return;
+    if (!hasStatusChanged(lastProcessedStatusRef.current, txStatus)) return;
+
+    updateActivityStatus(activeAccount, activity.hash, txStatus);
+    lastProcessedStatusRef.current = { ...txStatus };
+  }, [activeAccount, activity.hash, txStatus, updateActivityStatus]);
+
+  return (
+    <div
+      key={`${activity.hash || index}-${activity.timestamp}`}
+      className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <span className="text-base flex-shrink-0 w-6 text-center">
+            {activityTypeIcons[activity.type]}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold text-white mb-0.5">
+              {t(activityTypeLabelKeys[activity.type])}
+            </div>
+            <div className="flex flex-row flex-wrap items-center text-[11px] text-white/60  gap-1.5 mb-1">
+              {activity.tokenIn && activity.tokenOut && (
+                <span>
+                  <TokenChip address={activity.tokenIn} />
+                  →
+                  {' '}
+                  <TokenChip address={activity.tokenOut} />
+                </span>
+              )}
+
+              <div className="flex-1 flex justify-between items-center gap-2 ">
+                {activity.amountIn && (
+                  <span className="font-semibold text-[#4caf50]">
+                    {formatAmount(activity.amountIn)}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="text-[10px] text-white/60 font-medium whitespace-nowrap">
+                    {formatTimeAgo(activity.timestamp, t)}
+                  </div>
+                  {activity.hash && CONFIG.EXPLORER_URL && (
+                    <a
+                      href={`${CONFIG.EXPLORER_URL.replace(
+                        /\/$/,
+                        '',
+                      )}/transactions/${activity.hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center w-4 h-4 rounded-md bg-blue-400/10 border border-blue-400/20 no-underline transition-all duration-200 ease-out hover:bg-blue-400/20 hover:border-blue-400/40 hover:scale-110"
+                      title={t('activity.viewOnExplorer')}
+                    >
+                      <span className="text-[10px] text-[#8bc9ff]">
+                        🔗
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-0.5">
+              <TransactionStatus
+                hash={activity.hash}
+                status={txStatus}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function RecentActivity({
   recent: propRecent,
 }: RecentActivityProps) {
@@ -132,56 +243,6 @@ export default function RecentActivity({
 
   // Use prop activities if provided, otherwise get from hook for current account
   const activities = propRecent || (activeAccount ? getActivitiesForAccount(activeAccount) : []);
-
-  // Extract transaction hashes for status fetching
-  const txHashes = activities
-    .filter((activity) => activity.hash)
-    .map((activity) => activity.hash!)
-    .slice(0, 10); // Only fetch status for first 10 activities
-
-  const txStatusResults = txHashes.map((hash) => useTransactionStatus(hash));
-
-  // Map txHash -> status for effect and render (hook returns { status, loading, error, refetch })
-  const statusByHash: Record<string, RecentActivityType['status'] | null> = {};
-  txHashes.forEach((hash, i) => {
-    const result = txStatusResults[i];
-    statusByHash[hash] = result?.status ?? null;
-  });
-
-  // Keep track of last processed statuses to avoid unnecessary updates
-  const lastProcessedStatusesRef = useRef<Record<string, RecentActivityType['status']>>({});
-
-  // Update stored activity statuses when new status data is available
-  useEffect(() => {
-    if (!activeAccount || txHashes.length === 0) return;
-
-    const byHash: Record<string, RecentActivityType['status']> = {};
-    txHashes.forEach((hash, i) => {
-      const s = txStatusResults[i]?.status;
-      if (s != null) byHash[hash] = s;
-    });
-
-    const statusesChanged = Object.entries(byHash).some(
-      ([txHash, status]) => {
-        const lastStatus = lastProcessedStatusesRef.current[txHash];
-        return (
-          !lastStatus
-          || lastStatus.confirmed !== status.confirmed
-          || lastStatus.pending !== status.pending
-          || lastStatus.failed !== status.failed
-          || lastStatus.blockNumber !== status.blockNumber
-          || lastStatus.confirmations !== status.confirmations
-        );
-      },
-    );
-
-    if (!statusesChanged) return;
-
-    Object.entries(byHash).forEach(([txHash, status]) => {
-      updateActivityStatus(activeAccount, txHash, status);
-      lastProcessedStatusesRef.current[txHash] = { ...status };
-    });
-  }, [txStatusResults, txHashes, activeAccount, updateActivityStatus]);
 
   const handleClearClick = () => {
     if (!activeAccount) return;
@@ -235,78 +296,16 @@ export default function RecentActivity({
       </div>
 
       <div className="flex flex-col gap-2">
-        {activities.slice(0, 10).map((activity, i) => {
-          const txStatus = activity.hash
-            ? statusByHash[activity.hash] ?? undefined
-            : undefined;
-
-          return (
-            <div
-              key={`${activity.hash || i}-${activity.timestamp}`}
-              className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  <span className="text-base flex-shrink-0 w-6 text-center">
-                    {activityTypeIcons[activity.type]}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-white mb-0.5">
-                      {t(activityTypeLabelKeys[activity.type])}
-                    </div>
-                    <div className="flex flex-row flex-wrap items-center text-[11px] text-white/60  gap-1.5 mb-1">
-                      {activity.tokenIn && activity.tokenOut && (
-                        <span>
-                          <TokenChip address={activity.tokenIn} />
-                          →
-                          {' '}
-                          <TokenChip address={activity.tokenOut} />
-                        </span>
-                      )}
-
-                      <div className="flex-1 flex justify-between items-center gap-2 ">
-                        {activity.amountIn && (
-                          <span className="font-semibold text-[#4caf50]">
-                            {formatAmount(activity.amountIn)}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="text-[10px] text-white/60 font-medium whitespace-nowrap">
-                            {formatTimeAgo(activity.timestamp, t)}
-                          </div>
-                          {activity.hash && CONFIG.EXPLORER_URL && (
-                            <a
-                              href={`${CONFIG.EXPLORER_URL.replace(
-                                /\/$/,
-                                '',
-                              )}/transactions/${activity.hash}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center justify-center w-4 h-4 rounded-md bg-blue-400/10 border border-blue-400/20 no-underline transition-all duration-200 ease-out hover:bg-blue-400/20 hover:border-blue-400/40 hover:scale-110"
-                              title={t('activity.viewOnExplorer')}
-                            >
-                              <span className="text-[10px] text-[#8bc9ff]">
-                                🔗
-                              </span>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Transaction Status */}
-                    {/* <div className="mt-0.5">
-                      <TransactionStatus
-                        hash={activity.hash}
-                        status={txStatus}
-                      />
-                    </div> */}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {activities.slice(0, 10).map((activity, i) => (
+          <RecentActivityItem
+            key={`${activity.hash || i}-${activity.timestamp}`}
+            activity={activity}
+            index={i}
+            t={t}
+            activeAccount={activeAccount}
+            updateActivityStatus={updateActivityStatus}
+          />
+        ))}
 
         {activities.length > 10 && (
           <div className="text-center py-2 mt-1">

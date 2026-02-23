@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { AeSdk, Contract, Node } from '@aeternity/aepp-sdk';
+import {
+  AeSdk,
+  Node,
+  type ContractMethodsBase,
+} from '@aeternity/aepp-sdk';
 import { DEX_ADDRESSES } from '../../libs/dex';
+import { initializeContractTyped } from '../../libs/initializeContractTyped';
 // Use the same ACIs as production code
 // @ts-ignore
 import RouterAci from 'dex-contracts-v2/deployment/aci/AedexV2Router.aci.json';
@@ -11,6 +16,15 @@ import FactoryAci from 'dex-contracts-v2/deployment/aci/AedexV2Factory.aci.json'
 // Skips gracefully if the node is unreachable or pair not found
 
 let aeSdk: AeSdk | null = null;
+
+type RouterContractApi = ContractMethodsBase & {
+  factory: () => Promise<{ decodedResult: string | { $options?: { address?: string } } }>;
+  get_amounts_out: (amountIn: bigint, path: string[]) => Promise<{ decodedResult: (bigint | string)[] }>;
+};
+
+type FactoryContractApi = ContractMethodsBase & {
+  get_pair: (tokenA: string, tokenB: string) => Promise<{ decodedResult: string | null | undefined }>;
+};
 
 async function initSdk(): Promise<AeSdk | null> {
   try {
@@ -31,12 +45,11 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
   it('initializes router and factory and fetches factory address', async () => {
     if (!aeSdk) return;
     try {
-      const router = await Contract.initialize({
-        ...aeSdk.getContext(),
-        aci: RouterAci,
-        address: DEX_ADDRESSES.router,
-      });
-      const { decodedResult } = await (router as any).factory();
+      const router = await initializeContractTyped<RouterContractApi>(
+        aeSdk,
+        { aci: RouterAci, address: DEX_ADDRESSES.router },
+      );
+      const { decodedResult } = await router.factory();
       const factoryAddress = typeof decodedResult === 'string' ? decodedResult : decodedResult?.$options?.address;
       expect(typeof factoryAddress).toBe('string');
       expect((factoryAddress as string).startsWith('ct_')).toBe(true);
@@ -47,16 +60,14 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
 
   it('quotes get_amounts_out for a known path if pair exists', async () => {
     if (!aeSdk) return;
-    const router = await Contract.initialize({
-      ...aeSdk.getContext(),
-      aci: RouterAci,
-      address: DEX_ADDRESSES.router,
-    });
-    const factory = await Contract.initialize({
-      ...aeSdk.getContext(),
-      aci: FactoryAci,
-      address: DEX_ADDRESSES.factory,
-    });
+    const router = await initializeContractTyped<RouterContractApi>(
+      aeSdk,
+      { aci: RouterAci, address: DEX_ADDRESSES.router },
+    );
+    const factory = await initializeContractTyped<FactoryContractApi>(
+      aeSdk,
+      { aci: FactoryAci, address: DEX_ADDRESSES.factory },
+    );
     // Try aeETH -> WAE first, then reverse
     const candidates: [string, string][] = [
       [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae],
@@ -65,7 +76,7 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
     let path: string[] | null = null;
     for (const [a, b] of candidates) {
       try {
-        const { decodedResult: pairOpt } = await (factory as any).get_pair(a, b);
+        const { decodedResult: pairOpt } = await factory.get_pair(a, b);
         if (pairOpt) { path = [a, b]; break; }
       } catch { /* ignore */ }
     }
@@ -74,7 +85,7 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
       return;
     }
     const amountIn = 1_000_000_000_000_000_000n; // 1.0 with 18 decimals
-    const { decodedResult } = await (router as any).get_amounts_out(amountIn, path);
+    const { decodedResult } = await router.get_amounts_out(amountIn, path);
     expect(Array.isArray(decodedResult)).toBe(true);
     expect(decodedResult.length).toBe(2);
     const out = decodedResult[decodedResult.length - 1];

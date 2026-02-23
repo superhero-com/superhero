@@ -28,7 +28,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
         });
         const items = Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp) ? resp : []);
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));
-        if (!cancelled) setTags(mapped.filter((t) => t.tag));
+        if (!cancelled) setTags(mapped.filter((tag) => tag.tag));
       } catch (e: any) {
         if (!cancelled) setError(e?.message || t('failedToLoadTrendingTags'));
       } finally {
@@ -37,9 +37,9 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
-  const words = useMemo(() => tags.map((t) => ({ text: t.tag, value: t.score })), [tags]);
+  const words = useMemo(() => tags.map((tag) => ({ text: tag.tag, value: tag.score })), [tags]);
 
   const cloud = (
     <div className={`border border-dashed border-white/20 rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'} bg-black/10 backdrop-blur-sm`}>

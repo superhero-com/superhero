@@ -1,5 +1,5 @@
 import React, {
-  Suspense, useEffect, useRef, useCallback,
+  Suspense, useEffect, useRef,
 } from 'react';
 import { useRoutes } from 'react-router-dom';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
@@ -40,10 +40,10 @@ const App = () => {
   const isMobile = useIsMobile();
   useSuperheroChainNames();
   useProfileFeed({ refetchIntervalMs: 20_000 });
-  const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
+  const { initSdk, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { attemptReconnection } = useWalletConnect();
-  
+
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
   const loadAccountDataRef = useRef(loadAccountData);
@@ -65,7 +65,7 @@ const App = () => {
     };
 
     initialize();
-  }, []); // Empty deps - run only once on mount
+  }, [attemptReconnection, initSdk]); // Run once per stable hook references
 
   // Setup interval for periodic data refresh when account is active
   useEffect(() => {

@@ -56,7 +56,7 @@ export default function AccountDetails() {
     }
     load();
     return () => { cancel = true; };
-  }, [address]);
+  }, [address, t]);
 
   return (
     <div className="max-w-5xl mx-auto p-4">

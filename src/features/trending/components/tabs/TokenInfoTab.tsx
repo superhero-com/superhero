@@ -1,8 +1,8 @@
 import React from 'react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import TokenChat from '@/components/Trendminer/TokenChat';
-import TokenRanking from '../TokenRanking/TokenRanking';
 import { TokenSummary } from '@/features/bcl/components';
+import TokenRanking from '../TokenRanking/TokenRanking';
 
 export const TokenInfoTab = ({ token }: { token: TokenDto }) => (
   <div className="space-y-4 px-1">
@@ -19,4 +19,3 @@ export const TokenInfoTab = ({ token }: { token: TokenDto }) => (
     />
   </div>
 );
-

@@ -1,3 +1,4 @@
+// eslint-disable consistent-return
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +22,6 @@ import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { Head } from '../../../seo/Head';
 import { TokensService } from '../../../api/generated/services/TokensService';
 import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
-import TokenNotFound from '../../../components/TokenNotFound';
 
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import Token24hChange from '../../../components/Trendminer/Token24hChange';
@@ -76,7 +76,7 @@ const TokenSaleDetails = () => {
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
-  const [pendingLastsLong, setPendingLastsLong] = useState(false);
+
   const [showCreatedOverlay, setShowCreatedOverlay] = useState(() => {
     const params = new URLSearchParams(location.search);
     return params.get('created') === 'true';
@@ -166,11 +166,11 @@ const TokenSaleDetails = () => {
   const isTokenNewlyCreated = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const hasCreatedParam = params.get('created') === 'true';
-    
+
     if (hasCreatedParam) {
       return true;
     }
-    
+
     try {
       const recentTokens = JSON.parse(
         localStorage.getItem('recentlyCreatedTokens') || '[]',
@@ -191,8 +191,7 @@ const TokenSaleDetails = () => {
     isError,
     isLoading,
     data: _token,
-    error,
-    refetch
+    refetch,
   } = useQuery<TokenDto | null>({
     queryKey: ['TokensService.findByAddress', tokenName],
     queryFn: async () => {
@@ -208,12 +207,7 @@ const TokenSaleDetails = () => {
         throw new Error('Token not found');
       }
     },
-    retry: (failureCount) => {
-      if (failureCount > 3) {
-        setPendingLastsLong(true);
-      }
-      return isTokenNewlyCreated ? true : failureCount <= 3;
-    },
+    retry: (failureCount) => (isTokenNewlyCreated ? true : failureCount <= 3),
     retryDelay: 10000,
     staleTime: 60000,
     enabled: !!tokenName,
@@ -261,6 +255,7 @@ const TokenSaleDetails = () => {
       refetch();
     }, 5000);
 
+    // eslint-disable-next-line consistent-return
     return () => clearInterval(intervalId);
   }, [location.search, token?.sale_address, refetch, txHash, txConfirmed]);
 
@@ -275,7 +270,7 @@ const TokenSaleDetails = () => {
         params.delete('txHash');
         navigate(
           { pathname: location.pathname, search: params.toString() },
-          { replace: true }
+          { replace: true },
         );
       }
     }
@@ -383,7 +378,6 @@ const TokenSaleDetails = () => {
     }
   }, [tokenDoesNotExist, activeTab]);
 
-
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
@@ -410,11 +404,21 @@ const TokenSaleDetails = () => {
             <div className="overflow-x-auto px-3">
               <div className="flex items-center gap-4 min-w-max">
                 {[
-                  { id: TAB_CHAT, label: 'Feed', Icon: Flame, requiresToken: false },
-                  { id: TAB_TRADE, label: 'Trade', Icon: BarChart3, requiresToken: true },
-                  { id: TAB_DETAILS, label: 'Info', Icon: Info, requiresToken: false },
-                  { id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp, requiresToken: true },
-                  { id: TAB_HOLDERS, label: 'Holders', Icon: Users, requiresToken: true },
+                  {
+                    id: TAB_CHAT, label: 'Feed', Icon: Flame, requiresToken: false,
+                  },
+                  {
+                    id: TAB_TRADE, label: 'Trade', Icon: BarChart3, requiresToken: true,
+                  },
+                  {
+                    id: TAB_DETAILS, label: 'Info', Icon: Info, requiresToken: false,
+                  },
+                  {
+                    id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp, requiresToken: true,
+                  },
+                  {
+                    id: TAB_HOLDERS, label: 'Holders', Icon: Users, requiresToken: true,
+                  },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
                   const isDisabled = tokenDoesNotExist && tab.requiresToken;
@@ -451,7 +455,8 @@ const TokenSaleDetails = () => {
                             : isActive
                               ? 'font-semibold text-white'
                               : 'text-white/60'
-                        }`}>
+                        }`}
+                        >
                           {tab.label}
                         </span>
                       </span>
@@ -940,7 +945,8 @@ const TokenSaleDetails = () => {
                     txConfirmed
                       ? 'bg-[#4ecdc4] text-[#0a0a0f]'
                       : 'bg-[#4ecdc4]/20 text-[#4ecdc4] ring-1 ring-[#4ecdc4]'
-                  }`}>
+                  }`}
+                  >
                     {txConfirmed ? (
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -960,7 +966,8 @@ const TokenSaleDetails = () => {
                       : txConfirmed
                         ? 'bg-[#4ecdc4]/20 text-[#4ecdc4] ring-1 ring-[#4ecdc4]'
                         : 'bg-white/10 text-white/30'
-                  }`}>
+                  }`}
+                  >
                     {token?.sale_address ? (
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1011,17 +1018,47 @@ const TokenSaleDetails = () => {
                 <p className="text-xs text-white/60 leading-relaxed">
                   {txHash
                     ? txConfirmed
-                      ? <>Loading <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> data from the chain…</>
-                      : <>Your <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> tx is waiting to be picked up by miners. Usually takes 10–60 s.</>
-                    : <>Your token <span className="text-[#4ecdc4] font-semibold">#{tokenName}</span> is being confirmed on the blockchain.</>
-                  }
+                      ? (
+                        <>
+                          Loading
+                          <span className="text-[#4ecdc4] font-semibold">
+                            #
+                            {tokenName}
+                          </span>
+                          {' '}
+                          data from the chain…
+                        </>
+                      )
+                      : (
+                        <>
+                          Your
+                          <span className="text-[#4ecdc4] font-semibold">
+                            #
+                            {tokenName}
+                          </span>
+                          {' '}
+                          tx is waiting to be picked up by miners. Usually takes 10–60 s.
+                        </>
+                      )
+                    : (
+                      <>
+                        Your token
+                        <span className="text-[#4ecdc4] font-semibold">
+                          #
+                          {tokenName}
+                        </span>
+                        {' '}
+                        is being confirmed on the blockchain.
+                      </>
+                    )}
                 </p>
 
                 {/* Progress bar */}
                 <div className="w-full bg-white/10 rounded-full h-1 mt-2 overflow-hidden">
                   <div className={`h-1 rounded-full bg-gradient-to-r from-[#4ecdc4] to-[#7fffd4] transition-all duration-700 ${
                     txHash && txConfirmed ? 'w-3/4' : 'w-1/3 animate-pulse'
-                  }`} />
+                  }`}
+                  />
                 </div>
               </div>
 

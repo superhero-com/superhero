@@ -1,5 +1,5 @@
 import {
-  AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node,
+  AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
@@ -48,6 +48,19 @@ const nodes: { instance: Node; name: string }[] = Object.values(
 }));
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
+  type LegacyInitializableSdk = {
+    getContext: () => Record<string, unknown>;
+    initializeContract?: (options: Record<string, unknown>) => ReturnType<typeof Contract.initialize>;
+  };
+
+  const ensureLegacyInitializeContract = (sdkInstance: LegacyInitializableSdk) => {
+    if (typeof sdkInstance.initializeContract === 'function') return;
+    sdkInstance.initializeContract = (options: Record<string, unknown>) => Contract.initialize({
+      ...sdkInstance.getContext(),
+      ...options,
+    });
+  };
+
   const aeSdkRef = useRef<AeSdkAepp>();
   const staticAeSdkRef = useRef<AeSdk | null>(null);
   const [sdkInitialized, setSdkInitialized] = useState(false);
@@ -304,6 +317,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
     });
 
+    // TODO:Remove this once libraries are updated to use the new Contract.initialize method
+    // Compatibility shim for libraries still calling sdk.initializeContract
+    // (removed in aepp-sdk v14).
+    ensureLegacyInitializeContract(aeSdkInstance as unknown as LegacyInitializableSdk);
+    ensureLegacyInitializeContract(staticAeSdkInstance as unknown as LegacyInitializableSdk);
+
     aeSdkRef.current = aeSdkInstance;
     staticAeSdkRef.current = staticAeSdkInstance;
 
@@ -321,10 +340,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     generationPollIntervalRef.current = setInterval(() => {
       getCurrentGeneration(aeSdkInstance);
     }, 30000);
-    
+
     // Get initial block height
     getCurrentGeneration(aeSdkInstance);
-    
+
     setSdkInitialized(true);
 
     // Connect to WebSocket for real-time updates

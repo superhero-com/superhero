@@ -27,10 +27,7 @@ export const TokenFeedTab = ({
   showTradePanels,
   setShowTradePanels,
 }: TokenFeedTabProps) => {
-
-  const holdersOnly = useMemo(() => {
-    return (_holdersOnly && token.sale_address);
-  }, [_holdersOnly, token.sale_address]);
+  const holdersOnly = useMemo(() => (_holdersOnly && token.sale_address), [_holdersOnly, token.sale_address]);
 
   return (
     <div className="grid">
@@ -44,7 +41,7 @@ export const TokenFeedTab = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${holdersOnly
                   ? 'bg-[#4ecdc4] text-black'
                   : 'bg-white/5 text-white/60 hover:text-white'
-                  }`}
+                }`}
                 aria-pressed={holdersOnly}
               >
                 <Flame className="h-3.5 w-3.5" />
@@ -56,7 +53,7 @@ export const TokenFeedTab = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!holdersOnly
                   ? 'bg-[#4ecdc4] text-black'
                   : 'bg-white/5 text-white/60 hover:text-white'
-                  }`}
+                }`}
                 aria-pressed={!holdersOnly}
               >
                 <Clock className="h-3.5 w-3.5" />
@@ -74,7 +71,7 @@ export const TokenFeedTab = ({
                     className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${popularWindow === window
                       ? 'bg-white/15 text-white'
                       : 'bg-white/5 text-white/60 hover:text-white'
-                      }`}
+                    }`}
                     aria-pressed={popularWindow === window}
                   >
                     {window === '24h' ? '24h' : window === '7d' ? '7d' : 'All'}
@@ -102,7 +99,7 @@ export const TokenFeedTab = ({
               className={`px-3.5 py-1.5 rounded-full text-[18px] font-bold tracking-wide transition-colors ${showTradePanels
                 ? 'bg-white/10 text-white/80 hover:text-white'
                 : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md'
-                }`}
+              }`}
             >
               {showTradePanels ? 'Hide graphs' : 'Trade'}
             </button>
@@ -125,7 +122,7 @@ export const TokenFeedTab = ({
                   className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${holdersOnly
                     ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
                     : 'bg-transparent text-white/65 hover:text-white'
-                    }`}
+                  }`}
                 >
                   Holders only
                 </button>
@@ -137,7 +134,7 @@ export const TokenFeedTab = ({
               className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${!holdersOnly
                 ? 'bg-white text-black shadow-sm'
                 : 'bg-transparent text-white/65 hover:text-white'
-                }`}
+              }`}
             >
               All posts
             </button>
@@ -156,6 +153,5 @@ export const TokenFeedTab = ({
         onAutoDisableHoldersOnly={() => setHoldersOnly(false)}
       />
     </div>
-  )
+  );
 };
-

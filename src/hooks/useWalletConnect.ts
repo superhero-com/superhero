@@ -5,6 +5,7 @@ import {
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
+  useCallback,
   useEffect, useRef,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -21,16 +22,14 @@ import {
   connectingWalletAtom,
   scanningForAccountsAtom,
 } from '../atoms/walletAtoms';
-import { useAccount } from './useAccount';
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
-  const scanStopRef = useRef<null | (() => void)>(null);
+  const scanStopRef = useRef<null |(() => void)>(null);
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
 
-  const { loadAccountData } = useAccount();
   const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
   const [scanningForAccounts, setScanningForAccounts] = useAtom(scanningForAccountsAtom);
   const [connectingWallet, setConnectingWallet] = useAtom(connectingWalletAtom);
@@ -41,6 +40,11 @@ export function useWalletConnect() {
   const {
     aeSdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount,
   } = useAeSdk();
+  const activeAccountRef = useRef(activeAccount);
+  const walletInfoRef = useRef(walletInfo);
+  const walletConnectedRef = useRef(walletConnected);
+  const connectingWalletRef = useRef(connectingWallet);
+  const connectWalletRef = useRef<(() => Promise<void | null>) | null>(null);
 
   // Get available networks from config
   const availableNetworks = Object.values(configs.networks).filter((network) => !network.disabled);
@@ -125,7 +129,7 @@ export function useWalletConnect() {
     const addressDeepLink = createDeepLinkUrl({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
-        }?address={address}&networkId={networkId}`,
+      }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
     });
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -167,6 +171,23 @@ export function useWalletConnect() {
     }
     setConnectingWallet(false);
   }
+  connectWalletRef.current = connectWallet;
+
+  useEffect(() => {
+    activeAccountRef.current = activeAccount;
+  }, [activeAccount]);
+
+  useEffect(() => {
+    walletInfoRef.current = walletInfo;
+  }, [walletInfo]);
+
+  useEffect(() => {
+    walletConnectedRef.current = walletConnected;
+  }, [walletConnected]);
+
+  useEffect(() => {
+    connectingWalletRef.current = connectingWallet;
+  }, [connectingWallet]);
 
   async function disconnectWallet() {
     // Hard-clear persisted wallet session first to avoid instant reconnect on refresh.
@@ -270,7 +291,7 @@ export function useWalletConnect() {
    * Attempt to reconnect using persisted wallet state.
    * This is called once on app initialization to restore previous wallet connection.
    */
-  async function attemptReconnection() {
+  const attemptReconnection = useCallback(async () => {
     // Prevent multiple reconnection attempts
     if (reconnectionAttemptedRef.current) {
       return;
@@ -278,20 +299,20 @@ export function useWalletConnect() {
     reconnectionAttemptedRef.current = true;
 
     // Guard against concurrent operations
-    if (connectingWallet || walletConnected) {
+    if (connectingWalletRef.current || walletConnectedRef.current) {
       return;
     }
 
     if (
     // route.name !== "tx-queue" &&
-      activeAccount
-            && !walletConnected
+      activeAccountRef.current
+            && !walletConnectedRef.current
     ) {
-      if (walletInfo) {
-        await connectWallet();
+      if (walletInfoRef.current) {
+        await connectWalletRef.current?.();
       }
     }
-  }
+  }, []);
 
   // Monitor wallet connection health - if walletInfo exists but connection is lost, clear state
   useEffect(() => {

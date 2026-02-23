@@ -9,8 +9,6 @@ import TrendminerBanner from '../components/TrendminerBanner';
 import PerformanceTimeframeSelector from '../components/PerformanceTimeframeSelector';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import TrendingPillsCarousel from '../../../components/Trendminer/TrendingPillsCarousel';
-import RepositoriesList from '../components/RepositoriesList';
 import { useAccount } from '../../../hooks';
 import {
   Select,
@@ -43,7 +41,6 @@ type CollectionOption = 'all' | string; // Can be 'all' or specific collection a
 const TokenList = () => {
   const { activeAccount } = useAccount();
 
-  const [activeTab, setActiveTab] = useState<'tokens' | 'trends'>('tokens');
   const [collection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -207,7 +204,7 @@ const TokenList = () => {
       {/* Main content */}
       <div className="gap-4">
         {/* Left: Token List */}
-        <div className={activeTab === 'tokens' ? 'w-full' : 'w-full hidden xl:block'}>
+        <div className="w-full">
           <div className="flex flex-col items-start mb-6 gap-3 w-full">
             <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
               Tokenized Trends
@@ -289,7 +286,7 @@ const TokenList = () => {
       </div>
 
       {/* Load More Button — only for token list tab on mobile */}
-      {hasNextPage && activeTab === 'tokens' && (
+      {hasNextPage && (
         <div className="text-center pt-2 pb-4">
           <button
             ref={loadMoreBtn}

@@ -61,11 +61,13 @@ const BuyAeWidgetContent = ({
 
   const {
     debouncedQuote,
+    cancelDebouncedQuote,
     routeInfo,
     error: quoteError,
     clearError: clearQuoteError,
   } = useSwapQuote();
   const quoteRequestSeqRef = useRef(0);
+  const lastHandledQuoteErrorRef = useRef<string | null>(null);
 
   // Fetch ETH balance
   const fetchEthBalance = useCallback(async () => {
@@ -181,6 +183,9 @@ const BuyAeWidgetContent = ({
   useEffect(() => {
     if (!ethBridgeIn || Number(ethBridgeIn) <= 0 || !aeEthToken || !aeToken) {
       quoteRequestSeqRef.current += 1;
+      cancelDebouncedQuote();
+      clearQuoteError();
+      setEthBridgeError(null);
       setEthBridgeOutAe('');
       setEthBridgeQuoting(false);
       setLiquidityExceeded(false);
@@ -211,15 +216,26 @@ const BuyAeWidgetContent = ({
     );
 
     return () => {
+      cancelDebouncedQuote();
       quoteRequestSeqRef.current += 1;
     };
-  }, [ethBridgeIn, aeEthToken, aeToken, debouncedQuote, clearQuoteError]);
+  }, [
+    ethBridgeIn,
+    aeEthToken,
+    aeToken,
+    debouncedQuote,
+    cancelDebouncedQuote,
+    clearQuoteError,
+  ]);
 
   useEffect(() => {
+    if (quoteError === lastHandledQuoteErrorRef.current) return;
+    lastHandledQuoteErrorRef.current = quoteError;
     if (!quoteError) return;
+    if (!ethBridgeIn || Number(ethBridgeIn) <= 0) return;
     setEthBridgeError(quoteError);
     setEthBridgeQuoting(false);
-  }, [quoteError]);
+  }, [quoteError, ethBridgeIn]);
 
   // Monitor liquidity status from routeInfo
   useEffect(() => {

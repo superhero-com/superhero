@@ -592,6 +592,13 @@ export function useSwapQuote() {
     }, delay);
   }, [refreshQuote]);
 
+  const cancelDebouncedQuote = useCallback(() => {
+    if (quoteTimerRef.current) {
+      window.clearTimeout(quoteTimerRef.current);
+      quoteTimerRef.current = null;
+    }
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -602,6 +609,7 @@ export function useSwapQuote() {
     routeInfo,
     refreshQuote,
     debouncedQuote,
+    cancelDebouncedQuote,
     clearError,
   };
 }

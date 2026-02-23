@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^14.1.0",
+    "@base-org/account": "^2.4.0",
     "@dicebear/avatars": "^4.2.5",
     "@dicebear/avatars-avataaars-sprites": "^4.2.5",
     "@ethersproject/bignumber": "^5.8.0",

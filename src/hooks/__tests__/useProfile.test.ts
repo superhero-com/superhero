@@ -10,7 +10,6 @@ const mockGetProfile = vi.fn();
 const mockSetProfile = vi.fn();
 const mockSetProfileFull = vi.fn();
 const mockSetCustomName = vi.fn();
-const mockSetDisplaySource = vi.fn();
 const mockGetProfileOnChain = vi.fn();
 const mockInitializeContract = vi.fn();
 const mockAddStaticAccount = vi.fn();
@@ -60,7 +59,6 @@ describe('useProfile', () => {
       set_profile: (...args: any[]) => mockSetProfile(...args),
       set_profile_full: (...args: any[]) => mockSetProfileFull(...args),
       set_custom_name: (...args: any[]) => mockSetCustomName(...args),
-      set_display_source: (...args: any[]) => mockSetDisplaySource(...args),
       set_x_name_with_attestation: vi.fn(),
     });
 
@@ -79,7 +77,6 @@ describe('useProfile', () => {
     mockSetProfile.mockResolvedValue({ hash: 'th_set_profile' });
     mockSetProfileFull.mockResolvedValue({ hash: 'th_set_profile_full' });
     mockSetCustomName.mockResolvedValue({ hash: 'th_set_custom_name' });
-    mockSetDisplaySource.mockResolvedValue({ hash: 'th_set_display_source' });
   });
 
   afterEach(() => {
@@ -90,32 +87,29 @@ describe('useProfile', () => {
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await result.current.setProfile({
-      fullname: '',
+      fullname: 'new full',
       bio: '',
       avatarurl: '',
       username: '',
-      displaySource: 'chain',
     });
 
     expect(mockSetProfileFull).toHaveBeenCalledTimes(1);
     expect(mockSetCustomName).not.toHaveBeenCalled();
-    expect(mockSetDisplaySource).not.toHaveBeenCalled();
   });
 
-  it('uses dedicated entrypoint when only display_source changes', async () => {
+  it('uses dedicated entrypoint when only username changes', async () => {
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await result.current.setProfile({
       fullname: '',
       bio: '',
       avatarurl: '',
-      username: 'old_name',
-      displaySource: 'chain',
+      username: 'new_name',
     });
 
     expect(mockSetProfileFull).not.toHaveBeenCalled();
-    expect(mockSetDisplaySource).toHaveBeenCalledTimes(1);
-    expect(mockSetDisplaySource).toHaveBeenCalledWith({ Chain: [] });
+    expect(mockSetCustomName).toHaveBeenCalledTimes(1);
+    expect(mockSetCustomName).toHaveBeenCalledWith('new_name');
   });
 
   it('uses set_profile only when changing base profile fields', async () => {
@@ -138,13 +132,11 @@ describe('useProfile', () => {
       bio: 'new bio',
       avatarurl: 'new-avatar',
       username: 'old_name',
-      displaySource: 'custom',
     });
 
     expect(mockSetProfile).toHaveBeenCalledTimes(1);
     expect(mockSetProfileFull).not.toHaveBeenCalled();
     expect(mockSetCustomName).not.toHaveBeenCalled();
-    expect(mockSetDisplaySource).not.toHaveBeenCalled();
   });
 
   it('falls back to set_custom_name when set_profile_full is unavailable', async () => {
@@ -152,7 +144,6 @@ describe('useProfile', () => {
       get_profile: (...args: any[]) => mockGetProfileOnChain(...args),
       set_profile: (...args: any[]) => mockSetProfile(...args),
       set_custom_name: (...args: any[]) => mockSetCustomName(...args),
-      set_display_source: (...args: any[]) => mockSetDisplaySource(...args),
       set_x_name_with_attestation: vi.fn(),
     });
 
@@ -163,7 +154,6 @@ describe('useProfile', () => {
       bio: '',
       avatarurl: '',
       username: '',
-      displaySource: 'custom',
     });
 
     expect(mockSetCustomName).toHaveBeenCalledTimes(1);

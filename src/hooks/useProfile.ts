@@ -5,7 +5,6 @@ import {
   useRef,
 } from 'react';
 import {
-  DisplaySource,
   type ProfileAggregate,
   type XAttestationResponse,
   SuperheroApi,
@@ -24,13 +23,6 @@ import { useAeSdk } from './useAeSdk';
 
 const normalizeName = (value: string) => value.trim().toLowerCase();
 const normalizeAddress = (value?: string | null) => (value || '').trim().toLowerCase();
-type DisplaySourceVariant = { Custom: [] } | { Chain: [] } | { X: [] };
-
-const toContractDisplaySource = (source: DisplaySource): DisplaySourceVariant => {
-  if (source === 'chain') return { Chain: [] };
-  if (source === 'x') return { X: [] };
-  return { Custom: [] };
-};
 
 type OptionVariant<T> = { Some: [T] } | { None: [] };
 const toOption = <T>(value: T | null | undefined): OptionVariant<T> => (
@@ -46,14 +38,6 @@ const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
   if (!expectedAddress) return true;
   const target = normalizeAddress(expectedAddress);
   return addresses.some((addr) => normalizeAddress(addr) === target);
-};
-
-const fromContractDisplaySource = (source: unknown): DisplaySource | undefined => {
-  if (!source || typeof source !== 'object') return undefined;
-  if ('Chain' in (source as Record<string, unknown>)) return 'chain';
-  if ('X' in (source as Record<string, unknown>)) return 'x';
-  if ('Custom' in (source as Record<string, unknown>)) return 'custom';
-  return undefined;
 };
 
 const hexToUint8Array = (hex: string): Uint8Array => {
@@ -82,7 +66,6 @@ type SetProfileInput = {
   username?: string;
   chainName?: string;
   chainExpiresAt?: number | null;
-  displaySource?: DisplaySource;
 };
 
 type ProfileRegistryContractApi = ContractMethodsBase & {
@@ -430,21 +413,15 @@ export function useProfile(targetAddress?: string) {
     );
     const shouldClearChainName = !normalizedChainName && !!currentChainName;
 
-    const currentDisplaySource = fromContractDisplaySource(current?.display_source);
-    const targetDisplaySource = data.displaySource || currentDisplaySource || 'custom';
-    const shouldUpdateDisplaySource = currentDisplaySource !== targetDisplaySource;
-
     const shouldChangeChain = shouldSetChainName || shouldClearChainName;
     const changeCount = Number(shouldSetProfile)
       + Number(shouldUpdateUsername)
-      + Number(shouldChangeChain)
-      + Number(shouldUpdateDisplaySource);
+      + Number(shouldChangeChain);
 
     if (
       shouldSetProfile
       && !shouldUpdateUsername
       && !shouldChangeChain
-      && !shouldUpdateDisplaySource
     ) {
       const setProfileResult: any = await executeProfileWriteTx(
         signerSdk,
@@ -480,7 +457,8 @@ export function useProfile(targetAddress?: string) {
           toOption(normalizedUsername || null),
           toOption(normalizedChainName || null),
           toOption(hasValidChainExpiry ? nextChainExpiresAt : null),
-          toContractDisplaySource(targetDisplaySource),
+          // This display source is not used for now, but it is required by the contract.
+          { Custom: [] },
         ],
       );
       txHash = extractTxHash(fullResult) || txHash;
@@ -534,20 +512,6 @@ export function useProfile(targetAddress?: string) {
         [],
       );
       txHash = extractTxHash(tx) || txHash;
-    }
-
-    if (data.displaySource) {
-      if (currentDisplaySource !== data.displaySource) {
-        const tx: any = await executeProfileWriteTx(
-          signerSdk,
-          target,
-          profileContractAddress,
-          contract,
-          'set_display_source',
-          [toContractDisplaySource(data.displaySource)],
-        );
-        txHash = extractTxHash(tx) || txHash;
-      }
     }
     return txHash;
   }, [

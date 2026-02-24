@@ -15,7 +15,6 @@ const PROFILE_FUNCTIONS = new Set([
   'set_custom_name',
   'set_chain_name',
   'clear_chain_name',
-  'set_display_source',
   'set_x_name_with_attestation',
 ]);
 

@@ -16,11 +16,6 @@ export function extractParentId(post: PostDto | any): string | null {
     const found = post.media.map((m: unknown) => extract(m)).find(Boolean);
     if (found) return found;
   }
-  // topics
-  if (Array.isArray(post?.topics)) {
-    const found = post.topics.map((t: unknown) => extract(t)).find(Boolean);
-    if (found) return found;
-  }
   // tx_args recursive scan
   const scan = (node: any): string | null => {
     if (node == null) return null;

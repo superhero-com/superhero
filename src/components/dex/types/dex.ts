@@ -61,6 +61,7 @@ export interface TransactionStatus {
 
 export interface RecentActivity {
   type: 'swap' | 'wrap' | 'unwrap' | 'bridge' | 'add_liquidity' | 'remove_liquidity';
+  flowId?: string;
   hash?: string;
   timestamp: number;
   tokenIn?: string;

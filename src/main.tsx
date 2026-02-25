@@ -11,6 +11,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
+import { FlowWatcherProvider } from './features/flow-watcher';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
@@ -43,7 +44,9 @@ const queryClient = new QueryClient({
                 <BrowserRouter>
                   <ErrorBoundary>
                     <AeSdkProvider>
-                      <App />
+                      <FlowWatcherProvider>
+                        <App />
+                      </FlowWatcherProvider>
                     </AeSdkProvider>
                   </ErrorBoundary>
                 </BrowserRouter>

@@ -1,5 +1,7 @@
 import BigNumber from 'bignumber.js';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { useAtom } from 'jotai';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
@@ -13,7 +15,7 @@ import { useToast } from '../../../components/ToastProvider';
 import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
 
 import {
-  providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities,
+  providedLiquidityAtom, useAccount, useAeSdk, useDex, useFlowWatcher, useRecentActivities,
 } from '../../../hooks';
 
 type Aex9ContractApi = ContractMethodsBase & {
@@ -27,7 +29,16 @@ export function useAddLiquidity() {
   const { activeAccount: address } = useAccount();
   useDex();
   const { addActivity } = useRecentActivities();
+  const {
+    startFlow,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+  } = useFlowWatcher();
   const toast = useToast();
+  const currentFlowIdRef = useRef<string | null>(null);
+  const approvalStepFinalizedRef = useRef(false);
 
   const [state, setState] = useState<AddLiquidityState>({
     tokenA: '',
@@ -53,6 +64,18 @@ export function useAddLiquidity() {
   function clampToMinUnit(value: bigint): bigint {
     return value < 1n ? 1n : value;
   }
+
+  const beginApprovalStep = useCallback(() => {
+    if (!currentFlowIdRef.current || approvalStepFinalizedRef.current) return;
+    setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
+  }, [setCurrentStepStatus]);
+
+  const finalizeApprovalStep = useCallback((status: 'confirmed' | 'skipped') => {
+    if (!currentFlowIdRef.current || approvalStepFinalizedRef.current) return;
+    setCurrentStepStatus(currentFlowIdRef.current, status);
+    advanceFlowStep(currentFlowIdRef.current);
+    approvalStepFinalizedRef.current = true;
+  }, [advanceFlowStep, setCurrentStepStatus]);
 
   const fetchTokenMeta = useCallback(async (addr: string): Promise<{ decimals: number; symbol: string }> => {
     if (addr === 'AE') {
@@ -233,6 +256,45 @@ export function useAddLiquidity() {
     }
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    currentFlowIdRef.current = startFlow({
+      flowType: 'dex_add_liquidity',
+      context: {
+        tokenA: state.symbolA || params.tokenA,
+        tokenB: state.symbolB || params.tokenB,
+      },
+      steps: [
+        {
+          id: 'approve_if_needed',
+          label: 'Approve token(s) for router',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm token approval',
+            network: 'Aeternity',
+            action: 'Approve router allowances',
+            asset: `${state.symbolA || params.tokenA}/${state.symbolB || params.tokenB}`,
+            amount: `${params.amountA} / ${params.amountB}`,
+            spenderOrContract: DEX_ADDRESSES.router,
+            riskHint: 'One or two approvals can be requested depending on pair type and existing allowance.',
+          },
+        },
+        {
+          id: 'add_liquidity',
+          label: 'Confirm add liquidity transaction',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm add liquidity',
+            network: 'Aeternity',
+            action: 'Add liquidity to pool',
+            asset: `${state.symbolA || params.tokenA}/${state.symbolB || params.tokenB}`,
+            amount: `${params.amountA} / ${params.amountB}`,
+            spenderOrContract: DEX_ADDRESSES.router,
+          },
+        },
+      ],
+    });
+    approvalStepFinalizedRef.current = false;
 
     try {
       const { router } = await initDexContracts(sdk);
@@ -275,7 +337,15 @@ export function useAddLiquidity() {
         }
 
         // Ensure allowance for the non-AE token
+        beginApprovalStep();
         await ensureAllowanceForRouter(sdk, token, address, amountTokenDesired);
+        finalizeApprovalStep('confirmed');
+        if (!approvalStepFinalizedRef.current) {
+          finalizeApprovalStep('skipped');
+        }
+        if (currentFlowIdRef.current) {
+          setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
+        }
 
         const res = await router.add_liquidity_ae(
           token,
@@ -311,9 +381,16 @@ export function useAddLiquidity() {
         }
 
         // Ensure allowances for both tokens
+        beginApprovalStep();
         await ensureAllowanceForRouter(sdk, params.tokenA, address, amountAAettos);
         await ensureAllowanceForRouter(sdk, params.tokenB, address, amountBAettos);
-
+        finalizeApprovalStep('confirmed');
+        if (!approvalStepFinalizedRef.current) {
+          finalizeApprovalStep('skipped');
+        }
+        if (currentFlowIdRef.current) {
+          setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
+        }
         const res = await router.add_liquidity(
           params.tokenA,
           params.tokenB,
@@ -329,10 +406,16 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
+      if (currentFlowIdRef.current) {
+        setCurrentStepStatus(currentFlowIdRef.current, 'confirmed');
+        completeFlow(currentFlowIdRef.current);
+      }
+
       // Track the add liquidity activity
       if (address && txHash) {
         addActivity({
           type: 'add_liquidity',
+          flowId: currentFlowIdRef.current || undefined,
           hash: txHash,
           account: address,
           tokenIn: state.symbolA || params.tokenA,
@@ -387,7 +470,13 @@ export function useAddLiquidity() {
         React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
       ));
 
+      if (currentFlowIdRef.current) {
+        failFlow(currentFlowIdRef.current, errorMsg);
+      }
+
       throw new Error(errorMsg);
+    } finally {
+      currentFlowIdRef.current = null;
     }
   }
 
@@ -402,6 +491,44 @@ export function useAddLiquidity() {
     }
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    currentFlowIdRef.current = startFlow({
+      flowType: 'dex_remove_liquidity',
+      context: {
+        tokenA: state.symbolA || params.tokenA,
+        tokenB: state.symbolB || params.tokenB,
+      },
+      steps: [
+        {
+          id: 'approve_lp_if_needed',
+          label: 'Approve LP token allowance',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm LP token approval',
+            network: 'Aeternity',
+            action: 'Approve router for LP token',
+            asset: `${state.symbolA || params.tokenA}/${state.symbolB || params.tokenB} LP`,
+            amount: params.liquidity,
+            spenderOrContract: DEX_ADDRESSES.router,
+          },
+        },
+        {
+          id: 'remove_liquidity',
+          label: 'Confirm remove liquidity transaction',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm remove liquidity',
+            network: 'Aeternity',
+            action: 'Remove liquidity from pool',
+            asset: `${state.symbolA || params.tokenA}/${state.symbolB || params.tokenB}`,
+            amount: params.liquidity,
+            spenderOrContract: DEX_ADDRESSES.router,
+          },
+        },
+      ],
+    });
+    approvalStepFinalizedRef.current = false;
 
     try {
       // Initialize DEX contracts
@@ -463,7 +590,10 @@ export function useAddLiquidity() {
         }
 
         // Ensure LP token allowance for router
+        beginApprovalStep();
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
+        finalizeApprovalStep('confirmed');
+        if (currentFlowIdRef.current) setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
 
         const res = await router.remove_liquidity_ae(
           token,
@@ -508,7 +638,10 @@ export function useAddLiquidity() {
         }
 
         // Ensure LP token allowance for router
+        beginApprovalStep();
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
+        finalizeApprovalStep('confirmed');
+        if (currentFlowIdRef.current) setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
 
         const res = await router.remove_liquidity(
           params.tokenA,
@@ -525,12 +658,17 @@ export function useAddLiquidity() {
       }
 
       setState((prev) => ({ ...prev, loading: false }));
+      if (currentFlowIdRef.current) {
+        setCurrentStepStatus(currentFlowIdRef.current, 'confirmed');
+        completeFlow(currentFlowIdRef.current);
+      }
 
       if (txHash) {
         // Track the remove liquidity activity
         if (address) {
           addActivity({
             type: 'remove_liquidity',
+            flowId: currentFlowIdRef.current || undefined,
             hash: txHash,
             account: address,
             tokenIn: state.symbolA || params.tokenA,
@@ -560,7 +698,13 @@ export function useAddLiquidity() {
         React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
       ));
 
+      if (currentFlowIdRef.current) {
+        failFlow(currentFlowIdRef.current, errorMsg);
+      }
+
       throw new Error(errorMsg);
+    } finally {
+      currentFlowIdRef.current = null;
     }
   }
 

@@ -3,7 +3,7 @@ import waeACI from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
 import React, { useRef, useState } from 'react';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { CONFIG } from '../../../config';
-import { useAeSdk, useRecentActivities } from '../../../hooks';
+import { useAeSdk, useRecentActivities, useFlowWatcher } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
 import {
   addSlippage,
@@ -40,12 +40,21 @@ function extractAeTxHash(txResult: any): string {
 export function useSwapExecution() {
   const { sdk, activeAccount } = useAeSdk();
   const { addActivity } = useRecentActivities();
+  const {
+    startFlow,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+  } = useFlowWatcher();
 
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
   const [swapStep, setSwapStep] = useState<{ current: number; total: number; label: string } | null>(null);
   const needsApprovalInCurrentSwap = useRef(false);
+  const currentFlowIdRef = useRef<string | null>(null);
+  const approvalStepFinalizedRef = useRef(false);
 
   function isAeToWae(tokenIn: any, tokenOut: any): boolean {
     const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == DEX_ADDRESSES.wae;
@@ -65,6 +74,7 @@ export function useSwapExecution() {
     if (activeAccount && result?.hash) {
       addActivity({
         type: 'wrap',
+        flowId: currentFlowIdRef.current || undefined,
         hash: result.hash,
         account: activeAccount,
         tokenIn: 'AE',
@@ -89,6 +99,7 @@ export function useSwapExecution() {
     if (activeAccount && result?.hash) {
       addActivity({
         type: 'unwrap',
+        flowId: currentFlowIdRef.current || undefined,
         hash: result.hash,
         account: activeAccount,
         tokenIn: 'WAE',
@@ -111,9 +122,21 @@ export function useSwapExecution() {
     if (needsApproval) {
       needsApprovalInCurrentSwap.current = true;
       setSwapStep({ current: 1, total: 2, label: 'Approve token' });
+      if (currentFlowIdRef.current && !approvalStepFinalizedRef.current) {
+        setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
+      }
+    } else if (currentFlowIdRef.current && !approvalStepFinalizedRef.current) {
+      setCurrentStepStatus(currentFlowIdRef.current, 'skipped');
+      advanceFlowStep(currentFlowIdRef.current);
+      approvalStepFinalizedRef.current = true;
     }
 
     await ensureAllowanceForRouter(sdk, tokenIn.address, activeAccount, amountAettos);
+    if (needsApproval && currentFlowIdRef.current && !approvalStepFinalizedRef.current) {
+      setCurrentStepStatus(currentFlowIdRef.current, 'confirmed');
+      advanceFlowStep(currentFlowIdRef.current);
+      approvalStepFinalizedRef.current = true;
+    }
 
     try {
       const current = await getRouterTokenAllowance(sdk, tokenIn.address, activeAccount);
@@ -131,6 +154,8 @@ export function useSwapExecution() {
     setLoading(true);
     setSwapStep(null);
     needsApprovalInCurrentSwap.current = false;
+    approvalStepFinalizedRef.current = false;
+    currentFlowIdRef.current = null;
     //
     try {
       // Pre-execution validation
@@ -146,6 +171,45 @@ export function useSwapExecution() {
         throw new Error('Please select both input and output tokens.');
       }
 
+      currentFlowIdRef.current = startFlow({
+        flowType: 'dex_swap',
+        context: {
+          tokenIn: params.tokenIn.symbol,
+          tokenOut: params.tokenOut.symbol,
+        },
+        steps: [
+          {
+            id: 'approve_if_needed',
+            label: 'Approve token for router',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Approve token spend',
+              network: 'Aeternity',
+              action: 'Approve router allowance',
+              asset: params.tokenIn.symbol,
+              amount: params.amountIn,
+              spenderOrContract: DEX_ADDRESSES.router,
+              riskHint: 'Approval can be skipped if allowance is already enough.',
+            },
+          },
+          {
+            id: 'execute_swap',
+            label: 'Confirm swap transaction',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Confirm token swap',
+              network: 'Aeternity',
+              action: `Swap ${params.tokenIn.symbol} to ${params.tokenOut.symbol}`,
+              asset: `${params.tokenIn.symbol} -> ${params.tokenOut.symbol}`,
+              amount: params.amountIn,
+              spenderOrContract: DEX_ADDRESSES.router,
+            },
+          },
+        ],
+      });
+
       if (!params.amountIn || Number(params.amountIn) <= 0) {
         throw new Error('Please enter a valid amount to swap.');
       }
@@ -160,6 +224,11 @@ export function useSwapExecution() {
 
       // Handle AE to WAE or WAE to AE conversion directly
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
+        if (currentFlowIdRef.current) {
+          setCurrentStepStatus(currentFlowIdRef.current, 'skipped');
+          advanceFlowStep(currentFlowIdRef.current);
+          setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
+        }
         let txHash: string | null = null;
 
         if (params.tokenIn.address === 'AE' && params.tokenOut.address === DEX_ADDRESSES.wae) {
@@ -171,6 +240,10 @@ export function useSwapExecution() {
         }
 
         if (txHash) {
+          if (currentFlowIdRef.current) {
+            setCurrentStepStatus(currentFlowIdRef.current, 'confirmed');
+            completeFlow(currentFlowIdRef.current);
+          }
           try {
             const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
             const actionName = params.tokenIn.address === 'AE' ? 'Wrap' : 'Unwrap';
@@ -219,6 +292,14 @@ export function useSwapExecution() {
         setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
       } else {
         setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
+      }
+      if (currentFlowIdRef.current) {
+        if (!approvalStepFinalizedRef.current) {
+          setCurrentStepStatus(currentFlowIdRef.current, 'skipped');
+          advanceFlowStep(currentFlowIdRef.current);
+          approvalStepFinalizedRef.current = true;
+        }
+        setCurrentStepStatus(currentFlowIdRef.current, 'awaiting_user');
       }
 
       let txHash: string | undefined;
@@ -321,6 +402,7 @@ export function useSwapExecution() {
       if (activeAccount && txHash) {
         addActivity({
           type: 'swap',
+          flowId: currentFlowIdRef.current || undefined,
           hash: txHash,
           account: activeAccount,
           tokenIn: params.tokenIn?.symbol || params.tokenIn?.address,
@@ -347,6 +429,10 @@ export function useSwapExecution() {
         );
       } catch { }
 
+      if (currentFlowIdRef.current) {
+        setCurrentStepStatus(currentFlowIdRef.current, 'confirmed');
+        completeFlow(currentFlowIdRef.current);
+      }
       return txHash || null;
     } catch (e: any) {
       const errorMsg = errorToUserMessage(e, {
@@ -364,10 +450,14 @@ export function useSwapExecution() {
         ));
       } catch { }
 
+      if (currentFlowIdRef.current) {
+        failFlow(currentFlowIdRef.current, errorMsg);
+      }
       throw new Error(errorMsg);
     } finally {
       setLoading(false);
       setSwapStep(null);
+      currentFlowIdRef.current = null;
     }
   }
 

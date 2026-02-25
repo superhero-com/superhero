@@ -5,6 +5,7 @@ import {
   addSlippage, fromAettos, subSlippage, toAettos,
 } from '../../../libs/dex';
 import Spinner from '../../Spinner';
+import { ConfirmationPreviewCard } from '@/components/flow/ConfirmationPreviewCard';
 
 interface SwapConfirmationProps {
   show: boolean;
@@ -74,6 +75,20 @@ export default function SwapConfirmation({
           </div>
 
           {/* Swap Details */}
+          <ConfirmationPreviewCard
+            preview={{
+              title: 'You are about to confirm',
+              network: 'Aeternity',
+              action: `Swap ${tokenIn.symbol} to ${tokenOut.symbol}`,
+              asset: `${tokenIn.symbol} -> ${tokenOut.symbol}`,
+              amount: `${Number(amountIn).toFixed(6)} ${tokenIn.symbol}`,
+              riskHint: 'If allowance is missing, wallet may ask for approval first.',
+            }}
+            currentStep={swapStep ? swapStep.current : 1}
+            totalSteps={swapStep ? swapStep.total : 1}
+            waitingForWallet={loading}
+          />
+
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-5 mb-5">
             <div className="text-sm font-semibold text-white/60 mb-4 text-center">
               You will swap

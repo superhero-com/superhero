@@ -131,21 +131,21 @@ const InviteAndEarnCard = ({
           🎯
         </div>
         <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Generate Invites
+          Generate Affiliate Links
         </h3>
       </div>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Create invite links by funding a one-time AE reward per invite. Each
+            Create affiliate links by funding a one-time AE reward per invite. Each
             link contains a secret code; when someone opens the link and claims
             it, they receive the funded reward and the invitation is marked as
             used.
           </p>
           <p>
             You can generate multiple links at once and share them with friends
-            or your community. You can also revoke an invite before it’s claimed.
+            or your community. You can also revoke an affiliate invite before it’s claimed.
           </p>
           <p className="text-xs opacity-60">
             Important: save your links before closing the popup. The secret code
@@ -163,7 +163,7 @@ const InviteAndEarnCard = ({
                   htmlFor="amount"
                   className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
                 >
-                  Amount per invite (AE)
+                  Amount per affiliate invite (AE)
                 </Label>
                 <Input
                   id="amount"

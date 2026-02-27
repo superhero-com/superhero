@@ -15,6 +15,7 @@ import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import { useSuperheroChainNames } from './hooks/useChainName';
 import FeedbackButton from './components/FeedbackButton';
+import { parseXInviteCodeFromWindow, storeXInviteCode } from './utils/xInvite';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -83,6 +84,13 @@ const App = () => {
       clearInterval(interval);
     };
   }, [activeAccount]);
+
+  useEffect(() => {
+    const parsedCode = parseXInviteCodeFromWindow();
+    if (parsedCode) {
+      storeXInviteCode(parsedCode);
+    }
+  }, []);
 
   return (
     <div className="app-container">

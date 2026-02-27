@@ -18,6 +18,7 @@ import {
   getXCallbackRedirectUri,
   storeXOAuthPKCE,
 } from '@/utils/xOAuth';
+import { getStoredXInviteCode } from '@/utils/xInvite';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
@@ -251,6 +252,7 @@ const ProfileEditModal = ({
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
+  const xInviteCode = getStoredXInviteCode();
   const xSectionRef = useRef<HTMLDivElement | null>(null);
   const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -539,6 +541,11 @@ const ProfileEditModal = ({
               )}
               {xSectionReady && !hasXVerified && (
                 <>
+                  {xInviteCode && (
+                    <div className="mb-2 rounded-xl border border-blue-400/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-100">
+                      You were invited by a friend. Connect X to complete the invite mission.
+                    </div>
+                  )}
                   <p className="text-xs text-white/60 mt-0.5 mb-2">
                     {t('messages.connectXHint')}
                   </p>

@@ -23,8 +23,8 @@ export type AppConfig = {
 };
 
 const defaultConfig: AppConfig = {
-  BACKEND_URL: 'https://api.superhero.com',
-  SUPERHERO_API_URL: 'https://api.superhero.com',
+  BACKEND_URL: 'http://localhost:3000',
+  SUPERHERO_API_URL: 'http://localhost:3000',
   NODE_URL: 'https://mdw.wordcraft.fun',
   WALLET_URL: 'https://wallet.superhero.com',
   MIDDLEWARE_URL: 'https://mdw.wordcraft.fun/mdw',

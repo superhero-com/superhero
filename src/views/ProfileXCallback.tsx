@@ -4,7 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { SuperheroApi } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
+import { useXInviteFlow } from '@/hooks/useXInviteFlow';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
+import {
+  clearStoredXInviteCode,
+  getStoredXInviteCode,
+  parseXInviteCodeFromWindow,
+  storeXInviteCode,
+} from '@/utils/xInvite';
 
 const ConfirmWalletStep = ({
   address,
@@ -61,10 +68,14 @@ const ProfileXCallback = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { activeAccount, addStaticAccount } = useAeSdk();
+  const { bindInviteForUserB } = useXInviteFlow();
   const [status, setStatus] = useState<'loading' | 'confirm_wallet' | 'done' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [attestation, setAttestation] = useState<any>(null);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [bindStatus, setBindStatus] = useState<'idle' | 'binding' | 'bound' | 'failed'>('idle');
+  const [bindError, setBindError] = useState<string | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -91,9 +102,31 @@ const ProfileXCallback = () => {
 
     (async () => {
       try {
+        const parsedInviteCode = parseXInviteCodeFromWindow();
+        if (parsedInviteCode) {
+          storeXInviteCode(parsedInviteCode);
+        }
+        const activeInviteCode = parsedInviteCode || getStoredXInviteCode() || null;
+        setInviteCode(activeInviteCode);
+
         if (!activeAccount || activeAccount !== stored.address) {
           await addStaticAccount(stored.address);
         }
+
+        if (activeInviteCode) {
+          setBindStatus('binding');
+          setBindError(null);
+          try {
+            await bindInviteForUserB(activeInviteCode, stored.address);
+            setBindStatus('bound');
+            clearStoredXInviteCode();
+          } catch (bindErr: any) {
+            console.error('[x-callback] invite bind failed', bindErr);
+            setBindStatus('failed');
+            setBindError(bindErr?.message || t('messages.failedToUpdateProfile'));
+          }
+        }
+
         const att = await SuperheroApi.createXAttestationFromCode(
           stored.address,
           code,
@@ -112,10 +145,26 @@ const ProfileXCallback = () => {
     })();
   // Intentionally run only once per page load. Re-running after wallet state changes
   // would fail because PKCE state is consumed by getAndClearXOAuthPKCE().
-  }, [searchParams, t, activeAccount, addStaticAccount]);
+  }, [searchParams, t, activeAccount, addStaticAccount, bindInviteForUserB]);
 
   return (
     <div className="min-h-[40vh] flex flex-col items-center justify-center p-6 text-center">
+      {inviteCode && (
+        <div className="mb-4 max-w-xl rounded-xl border border-blue-400/30 bg-blue-500/10 px-4 py-3 text-left text-sm text-blue-100">
+          <div className="font-semibold">You were invited by a friend</div>
+          <div className="mt-1 text-blue-100/90">
+            {bindStatus === 'binding' && 'Binding your invite before X verification...'}
+            {bindStatus === 'bound' && 'Invite linked successfully. Continuing with X verification.'}
+            {bindStatus === 'failed' && (
+              <>
+                Could not bind invite automatically. You can still verify X.
+                {bindError ? ` (${bindError})` : ''}
+              </>
+            )}
+            {bindStatus === 'idle' && 'Preparing your verification flow...'}
+          </div>
+        </div>
+      )}
       {status === 'loading' && (
         <p className="text-white/80">{t('messages.xCallbackExchanging')}</p>
       )}

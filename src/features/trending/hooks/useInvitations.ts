@@ -16,6 +16,7 @@ import { fetchJson } from '../../../utils/common';
 import {
   invitationListAtom,
   invitationCodeAtom,
+  xInviteCodeAtom,
   claimedInvitationsAtom,
   recentlyRevokedInvitationsAtom,
   invitationLoadingAtom,
@@ -25,6 +26,7 @@ import {
   type InvitationStatus,
   type ClaimedInfo,
 } from '../../../atoms/invitationAtoms';
+import { parseXInviteCodeFromUrl, storeXInviteCode } from '../../../utils/xInvite';
 import {
   TX_FUNCTIONS,
   DATE_LONG,
@@ -43,6 +45,7 @@ export function useInvitations() {
   // Atoms
   const [invitationList, setInvitationList] = useAtom(invitationListAtom);
   const [invitationCode, setInvitationCode] = useAtom(invitationCodeAtom);
+  const [, setXInviteCode] = useAtom(xInviteCodeAtom);
   const [claimedInvitations, setClaimedInvitations] = useAtom(claimedInvitationsAtom);
   const [
     recentlyRevokedInvitations,
@@ -287,6 +290,12 @@ export function useInvitations() {
 
   // Handle URL hash changes for invitation codes
   useEffect(() => {
+    const parsedFromUrl = parseXInviteCodeFromUrl(new URL(window.location.href));
+    if (parsedFromUrl) {
+      setXInviteCode(parsedFromUrl);
+      storeXInviteCode(parsedFromUrl);
+    }
+
     const { hash } = location;
     if (hash) {
       const hashParsed = new URLSearchParams(hash.replace('#', ''));
@@ -296,7 +305,7 @@ export function useInvitations() {
         navigate('/', { replace: true });
       }
     }
-  }, [location, location.hash, navigate, setInvitationCode]);
+  }, [location, location.hash, navigate, setInvitationCode, setXInviteCode]);
 
   // Refresh data when active account changes or refresh is triggered
   useEffect(() => {

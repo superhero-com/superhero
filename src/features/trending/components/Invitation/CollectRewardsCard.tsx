@@ -259,7 +259,7 @@ const CollectRewardsCard = () => {
     }
     if (!thresholdReached) return 'Not eligible yet';
     if (accumulatedRewardsAe.lte(Decimal.ZERO)) return 'No rewards yet';
-    return 'Collect rewards';
+    return 'Collect affiliate rewards';
   }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
 
   return (
@@ -270,7 +270,7 @@ const CollectRewardsCard = () => {
           💰
         </div>
         <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Collect your rewards
+          Collect Affiliate Rewards
         </h3>
       </div>
 
@@ -279,7 +279,7 @@ const CollectRewardsCard = () => {
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once
+            Affiliate rewards accumulate as your direct invitees participate in trading. You can withdraw once
             {' '}
             <span className="font-semibold text-white/80">
               {MIN_INVITEES}
@@ -295,7 +295,7 @@ const CollectRewardsCard = () => {
               AE
             </span>
             {' '}
-            (cumulative).
+            (cumulative). Affiliate payout rate is 0.5%.
           </p>
           <p className="text-xs opacity-60">
             Note: eligibility and rewards depend on on-chain activity and are not guaranteed.

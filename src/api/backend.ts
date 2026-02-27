@@ -68,6 +68,50 @@ export type XAttestationResponse = {
   signature_base64: string;
 };
 
+export type XInviteChallengePurpose = 'create' | 'bind';
+
+export type XInviteChallengeRequest = {
+  address: string;
+  purpose: XInviteChallengePurpose;
+  code?: string;
+};
+
+export type XInviteChallengeResponse = {
+  nonce: string;
+  expires_at: number | string;
+  message: string;
+};
+
+export type XInviteCreateRequest = {
+  inviter_address: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  signature_hex: string;
+};
+
+export type XInviteCreateResponse = {
+  code: string;
+  invite_link: string;
+};
+
+export type XInviteBindRequest = {
+  invitee_address: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  signature_hex: string;
+};
+
+export type XInviteMilestoneRewardStatus = 'not_started' | 'pending' | 'paid' | 'failed';
+
+export type XInviteProgressResponse = {
+  inviter_address: string;
+  verified_friends_count: number;
+  goal: number;
+  remaining_to_goal: number;
+  milestone_reward_status: XInviteMilestoneRewardStatus;
+  milestone_reward_tx_hash?: string | null;
+};
+
 // Superhero API client
 export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
@@ -395,6 +439,36 @@ export const SuperheroApi = {
         redirect_uri: redirectUri,
       }),
     }) as Promise<XAttestationResponse>;
+  },
+  createXInviteChallenge(payload: XInviteChallengeRequest) {
+    return this.fetchJson('/api/profile/x-invites/challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XInviteChallengeResponse>;
+  },
+  createXInvite(payload: XInviteCreateRequest) {
+    return this.fetchJson('/api/profile/x-invites', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XInviteCreateResponse>;
+  },
+  bindXInvite(code: string, payload: XInviteBindRequest) {
+    return this.fetchJson(`/api/profile/x-invites/${encodeURIComponent(code)}/bind`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+  getXInviteProgress(address: string) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/x-invite-progress`) as Promise<XInviteProgressResponse>;
   },
   /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {

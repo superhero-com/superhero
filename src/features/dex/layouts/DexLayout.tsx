@@ -155,7 +155,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
     <>
       <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 md:pt-0">
         {/* Top pill navigation for tablet/desktop */}
-        <div className="hidden md:block sticky top-0 z-30 md:mb-2">
+        <div className="hidden md:block top-0 z-30 md:mb-2">
           <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
               {navigationItems.map((item) => {

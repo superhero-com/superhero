@@ -1,10 +1,9 @@
 import React, {
-  useCallback, useEffect, useId, useMemo, useRef, useState,
+  useEffect, useId, useMemo, useRef, useState,
 } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import moment from 'moment';
 import { useAtomValue } from 'jotai';
-import { formatNumber } from '@/utils/number';
 import { TransactionHistoricalService } from '../../../api/generated';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
 
@@ -83,11 +82,8 @@ function historyPagesToPoints(pages: any[]): ChartPoint[] {
 export const TokenLineChart = ({
   saleAddress,
   height = 200,
-  hideTimeframe = false,
-  showCrosshair = false,
   allTime = false,
   showDateLegend = false,
-  allowParentClick = false,
   className,
   timeframe,
 }: TokenLineChartProps) => {
@@ -95,8 +91,6 @@ export const TokenLineChart = ({
   const gradientId = `chart-grad-${uid.replace(/:/g, '')}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const [resolvedWidth, setResolvedWidth] = useState<number | undefined>();
-  const [crosshairX, setCrosshairX] = useState<number | null>(null);
-  const [hoverInfo, setHoverInfo] = useState<{ price: number; label: string; x: number } | null>(null);
   const [legendRange, setLegendRange] = useState<[Date, Date] | null>(null);
   const legendHeight = showDateLegend ? 12 : 0;
   const chartHeight = Math.max(0, height - legendHeight);
@@ -198,65 +192,12 @@ export const TokenLineChart = ({
     return buildSvgPaths(lineData, resolvedWidth, chartHeight);
   }, [lineData, resolvedWidth, chartHeight]);
 
-  // Map an x pixel position back to the closest data point
-  const getHoverInfoAtX = useCallback((clientX: number) => {
-    if (!containerRef.current || !lineData.length || !resolvedWidth) return null;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, resolvedWidth));
-    const drawW = resolvedWidth - 2 * PAD;
-    const dates = lineData.map((p) => p.date.getTime());
-    const minDate = Math.min(...dates);
-    const maxDate = Math.max(...dates);
-    const rangeDate = maxDate - minDate || 1;
-    const t = Math.max(0, Math.min(1, (x - PAD) / drawW));
-    const targetDate = minDate + t * rangeDate;
-
-    let closestIdx = 0;
-    let minDiff = Infinity;
-    for (let i = 0; i < lineData.length; i += 1) {
-      const diff = Math.abs(lineData[i].date.getTime() - targetDate);
-      if (diff < minDiff) { minDiff = diff; closestIdx = i; }
-    }
-    const point = lineData[closestIdx];
-    const pX = PAD + ((point.date.getTime() - minDate) / rangeDate) * drawW;
-    return { price: point.value, label: moment(point.date).format('MMM D'), x: pX };
-  }, [lineData, resolvedWidth]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!showCrosshair) return;
-    const info = getHoverInfoAtX(e.clientX);
-    if (info) { setCrosshairX(info.x); setHoverInfo(info); }
-  }, [showCrosshair, getHoverInfoAtX]);
-
-  const handleMouseLeave = useCallback(() => {
-    setCrosshairX(null);
-    setHoverInfo(null);
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!showCrosshair) return;
-    if (!allowParentClick) e.preventDefault();
-    const info = getHoverInfoAtX(e.touches[0].clientX);
-    if (info) { setCrosshairX(info.x); setHoverInfo(info); }
-  }, [showCrosshair, allowParentClick, getHoverInfoAtX]);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!allowParentClick) e.preventDefault();
-    setCrosshairX(null);
-    setHoverInfo(null);
-  }, [allowParentClick]);
-
   return (
     <div className={`chart-container flex flex-col h-full ${className ?? ''}`}>
       <div
         ref={containerRef}
-        className="relative w-full"
+        className="relative w-full pointer-events-none"
         style={{ height: chartHeight }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
       >
         {(paths && resolvedWidth && lineData.length > 0) && (
           <svg
@@ -279,31 +220,7 @@ export const TokenLineChart = ({
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-            {showCrosshair && crosshairX !== null && (
-              <line
-                x1={crosshairX}
-                y1={0}
-                x2={crosshairX}
-                y2={chartHeight}
-                stroke="rgba(52, 211, 153, 1)"
-                strokeWidth={2}
-              />
-            )}
           </svg>
-        )}
-        {showCrosshair && hoverInfo && (
-          <div className="absolute right-2 -top-8 text-[10px] text-white/80 bg-black/50 px-2 py-0.5 rounded-full pointer-events-none">
-            $
-            {formatNumber(hoverInfo.price, hoverInfo.price < 1 ? 6 : 2)}
-          </div>
-        )}
-        {showCrosshair && hoverInfo && (
-          <div
-            className="absolute -top-6 text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded-full pointer-events-none"
-            style={{ left: hoverInfo.x, transform: 'translateX(-50%)' }}
-          >
-            {hoverInfo.label}
-          </div>
         )}
       </div>
       {showDateLegend && legendRange && (

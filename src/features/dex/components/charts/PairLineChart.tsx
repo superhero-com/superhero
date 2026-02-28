@@ -128,7 +128,7 @@ export const PairLineChart = ({
   return (
     <div
       ref={containerRef}
-      className="chart-container relative mr-2"
+      className="chart-container relative mr-2 pointer-events-none"
       style={{ height }}
     >
       {(paths && resolvedWidth && lineData.length > 0) && (

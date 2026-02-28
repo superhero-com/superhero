@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { SuperheroApi } from '@/api/backend';
-import type { TokenDto } from '@/api/generated';
+import { TokensService, type TokenDto } from '@/api/generated';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { TrendingUp } from 'lucide-react';
@@ -23,20 +23,28 @@ const TrendingAssetsFeedItem = () => {
     items?: TokenDto[];
   }>({
     queryKey: ['feed-trending-assets', 'tokens'],
-    queryFn: () => SuperheroApi.listTokens({
-      orderBy: 'trending_score',
+    queryFn: () => TokensService.listAll({
+      orderBy: 'trending_score' as any,
       orderDirection: 'DESC',
-      limit: FETCH_LIMIT,
+      limit: 30,
     }),
     staleTime: 2 * 60 * 1000,
   });
 
   const tokens = useMemo<TokenDto[]>(() => {
     const items = tokensData?.items;
-    return Array.isArray(items) ? items : [];
+    return (Array.isArray(items) ? items : []).filter((item) => item.holders_count > 2);
   }, [tokensData]);
 
-  const topTokens = useMemo(() => tokens.slice(0, ITEM_LIMIT), [tokens]);
+  const topTokens = useMemo(() => {
+    // Shuffle array
+    const shuffled = [...tokens];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, ITEM_LIMIT);
+  }, [tokens]);
 
   const isLoading = tokensLoading;
   const hasItems = topTokens.length > 0;
@@ -136,13 +144,13 @@ const TrendingAssetsFeedItem = () => {
                   </div>
                   <div className="mt-3 h-10">
                     {tokenAddress && (
-                    <TokenLineChart
-                      saleAddress={tokenAddress}
-                      height={40}
-                      hideTimeframe
-                      timeframe="7d"
-                      className="h-10 w-full pointer-events-none"
-                    />
+                      <TokenLineChart
+                        saleAddress={tokenAddress}
+                        height={40}
+                        hideTimeframe
+                        timeframe="30d"
+                        className="h-10 w-full pointer-events-none"
+                      />
                     )}
                   </div>
                 </Link>

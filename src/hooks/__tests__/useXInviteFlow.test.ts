@@ -8,8 +8,8 @@ const mockCreateXInviteChallenge = vi.fn();
 const mockCreateXInvite = vi.fn();
 const mockBindXInvite = vi.fn();
 const mockGetXInviteProgress = vi.fn();
-const mockSignMessage = vi.fn();
 const mockVerifyMessage = vi.fn(() => true);
+const mockSignMessageWithFallback = vi.fn();
 
 vi.mock('@aeternity/aepp-sdk', () => ({
   verifyMessage: (...args: any[]) => mockVerifyMessage(...args),
@@ -27,9 +27,12 @@ vi.mock('@/api/backend', () => ({
 vi.mock('@/hooks/useAeSdk', () => ({
   useAeSdk: () => ({
     activeAccount: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
-    aeSdk: {
-      signMessage: (...args: any[]) => mockSignMessage(...args),
-    },
+  }),
+}));
+
+vi.mock('@/hooks/useWalletOperations', () => ({
+  useWalletOperations: () => ({
+    signMessageWithFallback: (...args: any[]) => mockSignMessageWithFallback(...args),
   }),
 }));
 
@@ -55,7 +58,10 @@ describe('useXInviteFlow', () => {
       milestone_reward_status: 'pending',
       milestone_reward_tx_hash: null,
     });
-    mockSignMessage.mockResolvedValue('0xdeadbeef');
+    mockSignMessageWithFallback.mockResolvedValue({
+      signatureHex: '0xdeadbeef',
+      method: 'sdk',
+    });
   });
 
   it('generates invite link with challenge + signature flow', async () => {
@@ -67,7 +73,7 @@ describe('useXInviteFlow', () => {
       address: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
       purpose: 'create',
     });
-    expect(mockSignMessage).toHaveBeenCalledWith('please sign this message', { onAccount: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g' });
+    expect(mockSignMessageWithFallback).toHaveBeenCalledWith('please sign this message', 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g');
     expect(mockCreateXInvite).toHaveBeenCalledWith({
       inviter_address: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
       challenge_nonce: 'nonce_1',

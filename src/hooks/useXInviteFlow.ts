@@ -6,6 +6,7 @@ import {
   type XInviteProgressResponse,
 } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useWalletOperations } from '@/hooks/useWalletOperations';
 import { buildFrontendXInviteLink } from '@/utils/xInvite';
 
 function isHexLike(value: string): boolean {
@@ -59,45 +60,33 @@ function debugInviteSignature(
   console.error(`[x-invite:${stage}] signature debug`, details);
 }
 
+type SignOutcome = {
+  signatureHex: string;
+  method: 'sdk' | 'reconnect' | 'deeplink';
+};
+
 export function useXInviteFlow() {
-  const { aeSdk, activeAccount } = useAeSdk();
+  const { activeAccount } = useAeSdk();
+  const { signMessageWithFallback } = useWalletOperations();
 
-  const signMessageHex = useCallback(async (message: string, address?: string): Promise<string> => {
-    const signer: any = aeSdk as any;
-    if (!signer) {
-      throw new Error('Wallet is not connected');
+  const signMessageHex = useCallback(async (message: string, address?: string): Promise<SignOutcome> => {
+    const targetAddress = address || activeAccount;
+    const result = await signMessageWithFallback(message, targetAddress);
+    const signatureHex = normalizeSignatureHex(result.signatureHex);
+    if (!signatureHex) {
+      throw new Error('Wallet did not return a valid message signature');
     }
-
-    const signersToTry: Array<() => Promise<unknown>> = [];
-    signersToTry.push(() => signer.signMessage(message, { onAccount: address }));
-    signersToTry.push(() => signer.signMessage(message));
-
-    let lastError: unknown;
-    for (const signerAttempt of signersToTry) {
-      try {
-        const result = await signerAttempt();
-        const signatureHex = normalizeSignatureHex(result);
-        if (!signatureHex) continue;
-        if (address) {
-          const isValid = verifyMessage(message, hexToBytes(signatureHex), address);
-          if (!isValid) {
-            throw new Error('Signed message does not match inviter wallet address');
-          }
-        }
-        return signatureHex;
-      } catch (error) {
-        lastError = error;
+    if (targetAddress) {
+      const isValid = verifyMessage(message, hexToBytes(signatureHex), targetAddress);
+      if (!isValid) {
+        throw new Error('Signed message does not match inviter wallet address');
       }
     }
-
-    if (lastError instanceof Error) {
-      if (lastError.message.includes('signMessage is not a function')) {
-        throw new Error('Connected signer does not support message signing. Reconnect wallet and try again.');
-      }
-      throw lastError;
-    }
-    throw new Error('Wallet did not return a valid message signature');
-  }, [aeSdk]);
+    return {
+      signatureHex,
+      method: result.method,
+    };
+  }, [activeAccount, signMessageWithFallback]);
 
   const requestChallenge = useCallback(async (
     address: string,
@@ -117,7 +106,8 @@ export function useXInviteFlow() {
       throw new Error('Missing wallet address');
     }
     const challenge = await requestChallenge(signerAddress, 'create');
-    const signatureHex = await signMessageHex(challenge.message, signerAddress);
+    const signOutcome = await signMessageHex(challenge.message, signerAddress);
+    const { signatureHex } = signOutcome;
     const payload = {
       inviter_address: signerAddress,
       challenge_nonce: challenge.nonce,
@@ -141,6 +131,7 @@ export function useXInviteFlow() {
         signature_hex_prefix: signatureHex.slice(0, 16),
         signature_hex_length: signatureHex.length,
         local_verify_result: verifyMessage(challenge.message, hexToBytes(signatureHex), signerAddress),
+        sign_method: signOutcome.method,
         error_message: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -164,7 +155,8 @@ export function useXInviteFlow() {
       throw new Error('Missing invite code');
     }
     const challenge = await requestChallenge(inviteeAddress, 'bind', inviteCode);
-    const signatureHex = await signMessageHex(challenge.message, inviteeAddress);
+    const signOutcome = await signMessageHex(challenge.message, inviteeAddress);
+    const { signatureHex } = signOutcome;
     const payload = {
       invitee_address: inviteeAddress,
       challenge_nonce: challenge.nonce,
@@ -184,6 +176,7 @@ export function useXInviteFlow() {
         signature_hex_prefix: signatureHex.slice(0, 16),
         signature_hex_length: signatureHex.length,
         local_verify_result: verifyMessage(challenge.message, hexToBytes(signatureHex), inviteeAddress),
+        sign_method: signOutcome.method,
         error_message: error instanceof Error ? error.message : String(error),
       });
       throw error;

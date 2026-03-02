@@ -10,6 +10,7 @@ import {
 } from '@/api/backend';
 import { CONFIG } from '@/config';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useWalletConnect } from '@/hooks/useWalletConnect';
 import { useProfile } from '@/hooks/useProfile';
 import {
   buildXAuthorizeUrl,
@@ -243,6 +244,7 @@ const ProfileEditModal = ({
   const [connectingX, setConnectingX] = useState(false);
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
+  const { walletConnected, reconnectWalletSession } = useWalletConnect();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<ProfileFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<ProfileFormState>(EMPTY_FORM);
@@ -541,6 +543,13 @@ const ProfileEditModal = ({
               )}
               {xSectionReady && !hasXVerified && (
                 <>
+                  {!walletConnected && (
+                    <div className="mb-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+                      Wallet connection is required for invite bind.
+                      {' '}
+                      We will try to reconnect before opening X.
+                    </div>
+                  )}
                   {xInviteCode && (
                     <div className="mb-2 rounded-xl border border-blue-400/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-100">
                       You were invited by a friend. Connect X to complete the invite mission.
@@ -560,6 +569,10 @@ const ProfileEditModal = ({
                       if (!targetAddr) return;
                       setConnectingX(true);
                       try {
+                        const ready = await reconnectWalletSession(targetAddr);
+                        if (!ready) {
+                          throw new Error('Wallet session is not ready. Please connect wallet and try again.');
+                        }
                         const redirectUri = getXCallbackRedirectUri();
                         const state = generateOAuthState();
                         const codeVerifier = generateCodeVerifier();

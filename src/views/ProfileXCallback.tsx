@@ -123,7 +123,18 @@ const ProfileXCallback = () => {
           } catch (bindErr: any) {
             console.error('[x-callback] invite bind failed', bindErr);
             setBindStatus('failed');
-            setBindError(bindErr?.message || t('messages.failedToUpdateProfile'));
+            const rawMessage = bindErr?.message || '';
+            if (rawMessage.toLowerCase().includes('not connected')) {
+              setBindError('Wallet session was stale during invite bind. Please retry bind later from invite link.');
+            } else if (rawMessage.toLowerCase().includes('access to account')) {
+              setBindError(
+                'Wallet account differs from the invite address during bind. Switch to the invited account and retry.',
+              );
+            } else if (rawMessage.toLowerCase().includes('cancel')) {
+              setBindError('Invite bind was cancelled in wallet. You can retry later from invite link.');
+            } else {
+              setBindError(rawMessage || t('messages.failedToUpdateProfile'));
+            }
           }
         }
 

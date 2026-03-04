@@ -279,7 +279,8 @@ const CollectRewardsCard = () => {
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Affiliate rewards accumulate as your direct invitees participate in trading. You can withdraw once
+            Affiliate rewards accumulate as your direct invitees participate in trading.
+            You can withdraw once
             {' '}
             <span className="font-semibold text-white/80">
               {MIN_INVITEES}
@@ -290,6 +291,7 @@ const CollectRewardsCard = () => {
             have each
             spent at least
             <span className="font-semibold text-white/80">
+              {' '}
               {MIN_SPENT_AE}
               {' '}
               AE

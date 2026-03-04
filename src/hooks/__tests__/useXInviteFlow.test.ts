@@ -7,7 +7,7 @@ import { useXInviteFlow } from '@/hooks/useXInviteFlow';
 const mockCreateXInviteChallenge = vi.fn();
 const mockCreateXInvite = vi.fn();
 const mockBindXInvite = vi.fn();
-const mockGetXInviteProgress = vi.fn();
+const mockGetRewardsProgress = vi.fn();
 const mockVerifyMessage = vi.fn(() => true);
 const mockSignMessageWithFallback = vi.fn();
 
@@ -20,7 +20,7 @@ vi.mock('@/api/backend', () => ({
     createXInviteChallenge: (...args: any[]) => mockCreateXInviteChallenge(...args),
     createXInvite: (...args: any[]) => mockCreateXInvite(...args),
     bindXInvite: (...args: any[]) => mockBindXInvite(...args),
-    getXInviteProgress: (...args: any[]) => mockGetXInviteProgress(...args),
+    getRewardsProgress: (...args: any[]) => mockGetRewardsProgress(...args),
   },
 }));
 
@@ -50,13 +50,49 @@ describe('useXInviteFlow', () => {
       invite_link: 'https://api.superhero.com/invite/abc123',
     });
     mockBindXInvite.mockResolvedValue(undefined);
-    mockGetXInviteProgress.mockResolvedValue({
-      inviter_address: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
-      verified_friends_count: 2,
-      goal: 10,
-      remaining_to_goal: 8,
-      milestone_reward_status: 'pending',
-      milestone_reward_tx_hash: null,
+    mockGetRewardsProgress.mockResolvedValue({
+      address: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
+      x_verification_reward: {
+        status: 'not_started',
+        x_username: null,
+        tx_hash: null,
+        retry_count: 0,
+        next_retry_at: null,
+        error: null,
+      },
+      x_posting_reward: {
+        status: 'pending',
+        x_username: null,
+        x_user_id: null,
+        qualified_posts_count: 0,
+        threshold: 10,
+        remaining_to_goal: 10,
+        tx_hash: null,
+        retry_count: 0,
+        next_retry_at: null,
+        error: null,
+      },
+      x_invite_reward: {
+        inviter_address: 'ak_2aM8y71tVfYhMFnN2tFxzpcCGx8Y48Yxj6P8d7Vn2MUP6oQm1g',
+        verified_friends_count: 2,
+        goal: 10,
+        remaining_to_goal: 8,
+        milestone_reward_status: 'pending',
+        milestone_reward_tx_hash: null,
+      },
+      affiliation: {
+        as_inviter: {
+          total_invitations: 0,
+          claimed_invitations: 0,
+          revoked_invitations: 0,
+          pending_invitations: 0,
+          total_amount_ae: 0,
+        },
+        as_invitee: {
+          total_received_invitations: 0,
+          claimed_received_invitations: 0,
+        },
+      },
     });
     mockSignMessageWithFallback.mockResolvedValue({
       signatureHex: '0xdeadbeef',

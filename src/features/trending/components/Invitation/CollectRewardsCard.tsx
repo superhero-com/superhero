@@ -263,19 +263,19 @@ const CollectRewardsCard = () => {
   }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
 
   return (
-    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-4 md:p-5 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6 flex-wrap">
-        <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="text-2xl md:text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
           💰
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+        <h3 className="m-0 text-xl md:text-2xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
           Collect Affiliate Rewards
         </h3>
       </div>
 
       {/* Content */}
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
@@ -398,7 +398,7 @@ const CollectRewardsCard = () => {
               type="button"
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
-              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${isEligibleForRewards
+              className={`w-full p-3 md:p-3.5 text-xs md:text-sm font-semibold uppercase tracking-wide break-words whitespace-normal min-h-10 rounded-xl transition-all duration-300 ${isEligibleForRewards
                 ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40'
                 : 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
               }`}

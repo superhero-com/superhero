@@ -3,7 +3,7 @@ import { verifyMessage } from '@aeternity/aepp-sdk';
 import {
   SuperheroApi,
   type XInviteChallengePurpose,
-  type XInviteProgressResponse,
+  type RewardsProgressResponse,
 } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWalletOperations } from '@/hooks/useWalletOperations';
@@ -138,12 +138,12 @@ export function useXInviteFlow() {
     }
   }, [activeAccount, requestChallenge, signMessageHex]);
 
-  const loadInviteProgress = useCallback(async (address?: string): Promise<XInviteProgressResponse> => {
+  const loadRewardsProgress = useCallback(async (address?: string): Promise<RewardsProgressResponse> => {
     const targetAddress = address || activeAccount;
     if (!targetAddress) {
       throw new Error('Missing wallet address');
     }
-    return SuperheroApi.getXInviteProgress(targetAddress);
+    return SuperheroApi.getRewardsProgress(targetAddress);
   }, [activeAccount]);
 
   const bindInviteForUserB = useCallback(async (inviteCode: string, address?: string): Promise<void> => {
@@ -185,7 +185,7 @@ export function useXInviteFlow() {
 
   return {
     generateInviteLink,
-    loadInviteProgress,
+    loadRewardsProgress,
     bindInviteForUserB,
   };
 }

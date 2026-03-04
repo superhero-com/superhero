@@ -125,16 +125,16 @@ const InviteAndEarnCard = ({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
-      <div className="flex items-center gap-4 mb-6">
-        <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
+    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-4 md:p-5 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="text-2xl md:text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
           🎯
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+        <h3 className="m-0 text-xl md:text-2xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
           Generate Affiliate Links
         </h3>
       </div>
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
@@ -155,7 +155,7 @@ const InviteAndEarnCard = ({
 
         {/* Form - Right Side */}
         <div className="flex-1">
-          <form onSubmit={generateInviteLink} className="space-y-6">
+          <form onSubmit={generateInviteLink} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Amount Input */}
               <div className="space-y-2">
@@ -226,7 +226,7 @@ const InviteAndEarnCard = ({
               <button
                 type="submit"
                 disabled={generatingInviteLink || !activeAccount}
-                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
+                className={`w-full p-3 md:p-3.5 text-xs md:text-sm font-semibold flex items-center justify-center gap-2.5 uppercase tracking-wide relative overflow-hidden break-words whitespace-normal min-h-10 rounded-xl transition-all duration-300 ${
                   !activeAccount
                     ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
                     : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
@@ -242,7 +242,7 @@ const InviteAndEarnCard = ({
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label={t('buttons.connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
+              <WalletConnectBtn label={t('buttons.connectWalletToGenerate', { ns: 'common' })} className="text-xs md:text-sm py-2.5" />
             )}
           </form>
         </div>

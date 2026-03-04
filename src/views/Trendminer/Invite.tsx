@@ -190,19 +190,21 @@ const Invite = () => {
             </p>
           </section>
 
-          <section className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h2 className="text-2xl font-bold text-white m-0">Share</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/20 border border-purple-400/40 text-purple-100">
-                150 AE
-              </span>
-            </div>
-            <p className="text-slate-300 mt-3 mb-4">
-              Post 10/10 tweets mentioning the Superhero link or account.
-              This mission is layout-only for now.
-            </p>
-            <CircleMazeProgress total={SHARE_GOAL} done={0} />
-          </section>
+          {process.env.VITE_UNFINISHED_FEATURES === 'true' && (
+            <section className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-2xl font-bold text-white m-0">Share</h2>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/20 border border-purple-400/40 text-purple-100">
+                  150 AE
+                </span>
+              </div>
+              <p className="text-slate-300 mt-3 mb-4">
+                Post 10/10 tweets mentioning the Superhero link or account.
+                This mission is layout-only for now.
+              </p>
+              <CircleMazeProgress total={SHARE_GOAL} done={0} />
+            </section>
+          )}
 
           <section className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between gap-3 flex-wrap">

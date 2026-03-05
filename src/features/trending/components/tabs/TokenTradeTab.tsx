@@ -5,6 +5,7 @@ import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toOptionalFiniteNumber } from '@/utils/number';
 import TokenCandlestickChartSkeleton from '../Skeletons/TokenCandlestickChartSkeleton';
 
 type TokenTradeTabProps = {
@@ -17,11 +18,19 @@ type TokenTradeTabProps = {
 };
 
 const ChangePill = ({ tokenPerformance }: { tokenPerformance?: TokenPriceMovementDto | null }) => {
-  const pct = tokenPerformance?.past_24h?.current_change_percent ?? 0;
-  const isPositive = pct >= 0;
+  const pct = toOptionalFiniteNumber(tokenPerformance?.past_24h?.current_change_percent) ?? 0;
+  const isPositive = pct > 0;
+  const isNegative = pct < 0;
   return (
-    <span className={cn('inline-flex items-center gap-1 text-xs font-semibold tabular-nums', isPositive ? 'text-green-400' : 'text-red-400')}>
-      {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+    <span className={cn(
+      'inline-flex items-center gap-1 text-xs font-semibold tabular-nums',
+      isPositive ? 'text-green-400' : '',
+      isNegative ? 'text-red-400' : '',
+      !isPositive && !isNegative ? 'text-white/60' : '',
+    )}
+    >
+      {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : null}
+      {isNegative ? <ArrowDown className="h-3.5 w-3.5" /> : null}
       {Math.abs(pct).toFixed(2)}
       %
     </span>
@@ -44,10 +53,11 @@ export const TokenTradeTab = ({
   ].map((range) => {
     const p = tokenPerformance?.[range.id];
     const direction = String(p?.current_change_direction || '');
-    const isUp = direction === 'up' || direction === 'positive';
-    const isDown = direction === 'down' || direction === 'negative';
-    const changePercent = typeof p?.current_change_percent === 'number'
-      ? `${p.current_change_percent.toFixed(2)}%`
+    const pct = toOptionalFiniteNumber(p?.current_change_percent);
+    const isUp = pct !== null ? pct > 0 : (direction === 'up' || direction === 'positive');
+    const isDown = pct !== null ? pct < 0 : (direction === 'down' || direction === 'negative');
+    const changePercent = pct !== null
+      ? `${pct.toFixed(2)}%`
       : '--';
     return {
       ...range,

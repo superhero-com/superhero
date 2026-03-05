@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { SuperheroApi } from '@/api/backend';
 import { cn } from '@/lib/utils';
+import { toOptionalFiniteNumber } from '@/utils/number';
 
 type TokenLike = {
   name?: string;
@@ -11,16 +12,20 @@ type TokenLike = {
 };
 
 type TrendPerformanceWindow = {
-  current_change_percent?: number;
+  current_change_percent?: number | string;
 };
 
 export type TrendMention = {
   name?: string;
+  symbol?: string;
   sale_address?: string;
   address?: string;
   performance?: {
+    current_change_percent?: number | string;
     past_24h?: TrendPerformanceWindow;
     past_7d?: TrendPerformanceWindow;
+    past_30d?: TrendPerformanceWindow;
+    all_time?: TrendPerformanceWindow;
   };
 };
 
@@ -47,6 +52,20 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
   return match || items[0] || null;
 }
 
+function resolveChangePercent(performanceData: any): number | null {
+  if (!performanceData) return null;
+  const candidates: unknown[] = [
+    performanceData?.current_change_percent,
+    performanceData?.past_24h?.current_change_percent,
+    performanceData?.past_7d?.current_change_percent,
+    performanceData?.past_30d?.current_change_percent,
+    performanceData?.all_time?.current_change_percent,
+  ];
+  return candidates
+    .map((candidate) => toOptionalFiniteNumber(candidate))
+    .find((parsed): parsed is number => parsed !== null) ?? null;
+}
+
 const PostHashtagLink = ({
   tag,
   label,
@@ -59,7 +78,8 @@ const PostHashtagLink = ({
   const matchedMention = Array.isArray(trendMentions)
     ? trendMentions.find((mention) => {
       const name = normalizeTag(mention?.name || '');
-      return name === normalized;
+      const symbol = normalizeTag(mention?.symbol || '');
+      return name === normalized || symbol === normalized;
     })
     : undefined;
   const hasMentionAddress = Boolean(matchedMention?.sale_address || matchedMention?.address);
@@ -84,11 +104,10 @@ const PostHashtagLink = ({
 
   // TODO: We should use 24h performance, but it is not present for most of the tokens.
   const performanceData = matchedMention?.performance || (performance as any);
-  const changeRaw = (performanceData as any)?.past_7d?.current_change_percent;
-  const hasChange = (typeof changeRaw === 'number' && changeRaw !== 0);
-  const changePercent = hasChange ? changeRaw : 0;
-  const isPositive = changePercent >= 0;
-  const changeText = hasChange ? `${Math.abs(changePercent).toFixed(2)}%` : null;
+  const changePercent = resolveChangePercent(performanceData);
+  const hasChange = changePercent !== null && changePercent !== 0;
+  const isPositive = (changePercent ?? 0) > 0;
+  const changeText = hasChange ? `${Math.abs(changePercent ?? 0).toFixed(2)}%` : null;
 
   return (
     <Link

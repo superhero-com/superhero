@@ -17,14 +17,28 @@ interface HeroBannerCarouselProps {
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const [hidden, setHidden] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const isIOSWebKit = React.useMemo(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.classList.contains('ios-webkit');
+  }, []);
 
   const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 8000, stopOnInteraction: false }),
+    isIOSWebKit ? null : Autoplay({ delay: 8000, stopOnInteraction: false }),
   );
 
+  const emblaPlugins = React.useMemo(() => (
+    autoplayPlugin.current ? [autoplayPlugin.current] : []
+  ), []);
+  const emblaOptions = React.useMemo(() => ({
+    loop: !isIOSWebKit,
+    duration: isIOSWebKit ? 16 : 20,
+    align: 'start' as const,
+    containScroll: 'trimSnaps' as const,
+  }), [isIOSWebKit]);
+
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, duration: 20 },
-    [autoplayPlugin.current],
+    emblaOptions,
+    emblaPlugins,
   );
 
   // Check if banner was dismissed
@@ -106,24 +120,27 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       onMouseLeave={handleMouseLeave}
     >
       <section
-        className="hero-banner"
+        className={`hero-banner ${isIOSWebKit ? 'hero-banner--ios-safe' : ''}`}
         style={{
           background:
             'radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)',
         }}
         aria-label="Superhero banner"
       >
-        <SpaceEffects supernovaColor="rgba(255,94,188,.55)" />
+        <SpaceEffects
+          supernovaColor="rgba(255,94,188,.55)"
+          reduced={isIOSWebKit}
+        />
 
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex">
-            <div className="flex-[0_0_100%] min-w-0">
+        <div className="hero-banner__viewport" ref={emblaRef}>
+          <div className="hero-banner__container">
+            <div className="hero-banner__slide">
               <BannerA onStartPosting={onStartPosting} />
             </div>
-            <div className="flex-[0_0_100%] min-w-0">
+            <div className="hero-banner__slide">
               <BannerB />
             </div>
-            <div className="flex-[0_0_100%] min-w-0">
+            <div className="hero-banner__slide">
               <BannerC />
             </div>
             {/* 3 slides only */}

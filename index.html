@@ -11,6 +11,61 @@
     <script>
       (function () {
         try {
+          var ua = navigator.userAgent || '';
+          var isSafari = /safari/i.test(ua) && !/chrome|chromium|android|crios|fxios|edgios/i.test(ua);
+          var zoomResetTimer = null;
+          var getViewportScale = function () {
+            var vv = window.visualViewport;
+            if (!vv) return 1;
+            var scale = Number(vv.scale || 1);
+            return Number.isFinite(scale) ? scale : 1;
+          };
+          var isActivelyZoomed = function () {
+            return Math.abs(getViewportScale() - 1) > 0.01;
+          };
+          var setZooming = function (isZooming) {
+            if (isZooming && zoomResetTimer) {
+              clearTimeout(zoomResetTimer);
+              zoomResetTimer = null;
+            }
+            document.documentElement.classList.toggle('zooming', !!isZooming);
+            if (isSafari) {
+              document.documentElement.classList.toggle('safari-zooming', !!isZooming);
+            }
+          };
+          var scheduleZoomEnd = function () {
+            if (zoomResetTimer) clearTimeout(zoomResetTimer);
+            zoomResetTimer = setTimeout(function () {
+              zoomResetTimer = null;
+              setZooming(false);
+            }, 220);
+          };
+          var onViewportChange = function () {
+            // Enter lightweight mode only when scale actually differs from 100%.
+            if (isActivelyZoomed()) {
+              setZooming(true);
+              scheduleZoomEnd();
+            } else {
+              if (zoomResetTimer) {
+                clearTimeout(zoomResetTimer);
+                zoomResetTimer = null;
+              }
+              setZooming(false);
+            }
+          };
+
+          if (window.visualViewport && window.visualViewport.addEventListener) {
+            window.visualViewport.addEventListener('resize', onViewportChange, { passive: true });
+          }
+
+          if (isSafari) {
+            document.documentElement.classList.add('safari');
+
+            // Fallback hooks for iOS Safari gesture events.
+            window.addEventListener('gesturestart', function () { setZooming(true); }, { passive: true });
+            window.addEventListener('gesturechange', function () { setZooming(true); scheduleZoomEnd(); }, { passive: true });
+            window.addEventListener('gestureend', function () { scheduleZoomEnd(); }, { passive: true });
+          }
           var saved = localStorage.getItem('theme');
           var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           var theme = saved || (prefersDark ? 'dark' : 'light');

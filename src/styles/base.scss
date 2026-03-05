@@ -170,6 +170,23 @@ body::before {
   transform: translateZ(0); /* helps Safari keep it fixed */
 }
 
+/* iOS WebKit stability mode:
+   avoid known black-screen compositor bugs from fixed gradient layers + blur. */
+html.ios-webkit body {
+  background-attachment: scroll;
+  background-color: #05060a;
+}
+
+html.ios-webkit body::before {
+  display: none;
+}
+
+html.ios-webkit [class*='backdrop-blur'],
+html.ios-webkit [style*='backdrop-filter'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Safari stability fallback: avoid fixed GPU layers only while zooming */
 html.safari.safari-zooming body {
   background-attachment: scroll;

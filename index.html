@@ -13,6 +13,10 @@
         try {
           var ua = navigator.userAgent || '';
           var isSafari = /safari/i.test(ua) && !/chrome|chromium|android|crios|fxios|edgios/i.test(ua);
+          var isIOSWebKit = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+          if (isIOSWebKit) {
+            document.documentElement.classList.add('ios-webkit');
+          }
           var zoomResetTimer = null;
           var getViewportScale = function () {
             var vv = window.visualViewport;

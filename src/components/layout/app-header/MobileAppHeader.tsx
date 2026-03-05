@@ -124,7 +124,7 @@ const MobileAppHeader = () => {
 
   return (
     <div
-      className="z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b"
+      className="mobile-app-header z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b"
       style={{
         backgroundColor: 'rgba(12, 12, 20, 0.5)',
         backdropFilter: 'blur(12px)',

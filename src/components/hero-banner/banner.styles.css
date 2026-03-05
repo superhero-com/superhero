@@ -29,6 +29,53 @@
   animation: bgShift 26s ease-in-out infinite;
 }
 
+.hero-banner__viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.hero-banner__container {
+  display: flex;
+  width: 100%;
+}
+
+.hero-banner__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* iOS Safari crash-safe variant for the feed hero banner */
+html.ios-webkit .hero-banner--ios-safe {
+  animation: none !important;
+  background-size: auto !important;
+}
+
+html.ios-webkit .hero-banner--ios-safe .banner-stars {
+  filter: none !important;
+  opacity: 0.7;
+}
+
+html.ios-webkit .hero-banner--ios-safe .banner-stars.near,
+html.ios-webkit .hero-banner--ios-safe .banner-stars.far,
+html.ios-webkit .hero-banner--ios-safe .banner-twinkle > circle,
+html.ios-webkit .hero-banner--ios-safe .banner-planet {
+  animation: none !important;
+}
+
+html.ios-webkit .hero-banner--ios-safe .banner-planet {
+  filter: none !important;
+  box-shadow: 0 0 16px rgba(122, 92, 255, 0.2) !important;
+}
+
+html.ios-webkit .hero-banner--ios-safe .banner-chip,
+html.ios-webkit .hero-banner--ios-safe .banner-btn--ghost,
+html.ios-webkit .hero-banner--ios-safe .carousel-arrow,
+html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .hero-banner__inner {
   max-width: 900px;
   margin: 0 auto;

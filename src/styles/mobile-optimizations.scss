@@ -32,6 +32,21 @@
   }
 }
 
+/* iOS WebKit uses sticky mobile header (in-flow), so fixed-header offsets are too large. */
+@include mobile {
+  html.ios-webkit .app-routes-container {
+    padding-top: 8px;
+  }
+
+  html.ios-webkit .has-invite-card .app-routes-container {
+    padding-top: 8px;
+  }
+
+  html.ios-webkit .has-invite-card .app-content {
+    padding-top: 0;
+  }
+}
+
 .container {
   width: 100%;
   max-width: 1536px;

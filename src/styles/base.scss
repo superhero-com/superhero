@@ -60,7 +60,7 @@
   
   /* Governance Vote Animations */
   --vote-pulse: 0 0 0 0 rgba(255, 107, 107, 0.7);
-  --vote-pulse-active: 0 0 0 10px rgba(255, 107, 107, 0);
+  --vote-pulse-active: 0 0 0 6px rgba(255, 107, 107, 0);
 }
 
 :root[data-theme='light'] {
@@ -170,6 +170,80 @@ body::before {
   transform: translateZ(0); /* helps Safari keep it fixed */
 }
 
+/* iOS WebKit stability mode:
+   avoid known black-screen compositor bugs from fixed gradient layers + blur. */
+html.ios-webkit body {
+  background-attachment: scroll;
+  background-color: #05060a;
+  background-image: linear-gradient(160deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  -webkit-overflow-scrolling: auto;
+}
+
+html.ios-webkit body::before {
+  display: none;
+}
+
+html.ios-webkit [class*='backdrop-blur'],
+html.ios-webkit [style*='backdrop-filter'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.ios-webkit .mobile-app-header {
+  position: sticky !important;
+  top: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(12, 12, 20, 0.92) !important;
+}
+
+html.ios-webkit .animate-glow,
+html.ios-webkit .animate-float,
+html.ios-webkit .animate-shimmer,
+html.ios-webkit .animate-vote-pulse,
+html.ios-webkit .animate-success-glow,
+html.ios-webkit .animate-winning-pulse {
+  animation: none !important;
+}
+
+/* Safari stability fallback: avoid fixed GPU layers only while zooming */
+html.safari.safari-zooming body {
+  background-attachment: scroll;
+}
+
+html.safari.safari-zooming body::before {
+  display: none;
+}
+
+/* Temporary zoom performance mode: target expensive effects, not layout transforms */
+html.zooming .animate-glow,
+html.zooming .animate-float,
+html.zooming .animate-shimmer,
+html.zooming .animate-vote-pulse,
+html.zooming .animate-success-glow,
+html.zooming .animate-winning-pulse,
+html.safari.safari-zooming .animate-glow,
+html.safari.safari-zooming .animate-float,
+html.safari.safari-zooming .animate-shimmer,
+html.safari.safari-zooming .animate-vote-pulse,
+html.safari.safari-zooming .animate-success-glow,
+html.safari.safari-zooming .animate-winning-pulse {
+  animation: none !important;
+}
+
+html.zooming .transition-all,
+html.safari.safari-zooming .transition-all {
+  transition-property: opacity, background-color, color, border-color, box-shadow, filter !important;
+}
+
+html.zooming [class*='backdrop-blur'],
+html.zooming [style*='backdrop-filter'],
+html.safari.safari-zooming [class*='backdrop-blur'],
+html.safari.safari-zooming [style*='backdrop-filter'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 a { 
   color: $custom_links_color; 
   text-decoration: none;
@@ -177,7 +251,7 @@ a {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
@@ -260,6 +334,11 @@ img, video { max-width: 100%; height: auto; display: block; }
   min-width: 0;
 }
 
+/* iOS WebKit guardrail: avoid expensive transition-all properties on Safari/iOS */
+html.ios-webkit .transition-all {
+  transition-property: transform, opacity, background-color, color, border-color, box-shadow, filter !important;
+}
+
 /* Ensure card-like surfaces fully contain their contents */
 .genz-card,
 .mobile-card,
@@ -311,7 +390,7 @@ button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   /* Gen Z transitions */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 12px;
   border: none;
   font-weight: 600;
@@ -336,7 +415,7 @@ input, textarea, select {
   /* Better touch interaction */
   touch-action: manipulation;
   /* Sexy transitions */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Gen Z Ultra Modern Form Elements */
@@ -360,7 +439,7 @@ textarea {
 
   /* Gen Z shadow */
   box-shadow: var(--glass-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 select {
@@ -505,10 +584,10 @@ textarea:disabled {
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+    box-shadow: 0 0 14px rgba(0, 255, 157, 0.25);
   }
   50% {
-    box-shadow: 0 0 30px rgba(0, 255, 157, 0.6), 0 0 40px rgba(0, 255, 157, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.45);
   }
 }
 
@@ -581,10 +660,10 @@ textarea:disabled {
 
 @keyframes successGlow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.45);
   }
   50% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.65);
   }
 }
 
@@ -594,8 +673,8 @@ textarea:disabled {
     box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
   }
   50% {
-    transform: scale(1.02);
-    box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+    transform: scale(1.01);
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
   }
 }
 
@@ -617,7 +696,7 @@ textarea:disabled {
 
 /* Enhanced hover effects for governance components */
 .governance-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .governance-card:hover {
@@ -626,7 +705,7 @@ textarea:disabled {
 }
 
 .vote-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }

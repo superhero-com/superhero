@@ -34,6 +34,7 @@ const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
 const Privacy = lazy(() => import('./views/Privacy'));
 const FAQ = lazy(() => import('./views/FAQ'));
+const Whitepaper = lazy(() => import('./views/Whitepaper'));
 const TxQueue = lazy(() => import('./views/TxQueue'));
 
 // DEX Components
@@ -252,6 +253,7 @@ export const routes: RouteObject[] = [
   { path: '/terms', element: <Terms /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
+  { path: '/whitepaper', element: <Whitepaper /> },
   {
     path: '*',
     element: <NotFound />,

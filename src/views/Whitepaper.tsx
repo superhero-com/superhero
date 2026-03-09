@@ -9,9 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
 import FooterSection from '../components/layout/FooterSection';
 
-const WHITEPAPER_CONTENT = `# Superhero Whitepaper
+const WHITEPAPER_CONTENT = `# Superhero Technical Whitepaper
 
-**Version 1.0 — February 2026**
+**Version 0.7 — February 2026**
 
 ## Abstract
 

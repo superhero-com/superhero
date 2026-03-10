@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
+import { normalizeTransaction } from '@/utils/transactionNormalization';
 import type { CustomPagination } from '../utils/types';
 
 import type { TransactionDto } from '../api/generated/models/TransactionDto';
@@ -28,6 +29,11 @@ export function useLatestTransactions() {
       //   Use the token transaction channel like the carousel component
       unsubscribeLatestTransactions = WebSocketClient.subscribeForTransactions(
         (payload: any) => {
+          const normalizedTransaction = normalizeTransaction({
+            token: payload.token,
+            ...payload.data,
+          });
+
           // Update React Query cache for different page sizes
           const pages = [10, 20, 50, 100];
           pages.forEach((page) => {
@@ -38,7 +44,7 @@ export function useLatestTransactions() {
                   ...(oldData?.meta || {}),
                   totalItems: (oldData?.meta.totalItems || 0) + 1,
                 },
-                items: [payload.data, ...(oldData?.items || []).slice(0, page - 1)],
+                items: [normalizedTransaction, ...(oldData?.items || []).slice(0, page - 1)],
               }),
             );
           });
@@ -46,11 +52,7 @@ export function useLatestTransactions() {
           // if (latestTransactions.length > 50) {
           //   setLatestTransactions(latestTransactions.slice(0, 50));
           // }
-          setLatestTransactions((prev) => ([...prev, {
-            token: payload.token,
-            address: payload.token?.sale_address || payload.data?.account || '',
-            ...payload.data,
-          }]));
+          setLatestTransactions((prev) => ([...prev, normalizedTransaction]));
         },
       );
 
@@ -58,7 +60,9 @@ export function useLatestTransactions() {
         limit: 50,
         page: 1,
         includes: 'token',
-      } as any).then((res) => setLatestTransactions(res.items as TransactionDtoWithToken[]));
+      } as any).then((res) => setLatestTransactions(
+        (res.items as any[]).map(normalizeTransaction),
+      ));
     }
 
     return () => {

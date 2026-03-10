@@ -16,6 +16,7 @@ import { TransactionDto } from '@/api/generated/models/TransactionDto';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import { formatLongDate } from '@/utils/common';
 import { TX_FUNCTIONS } from '@/utils/constants';
+import { normalizeTransaction } from '@/utils/transactionNormalization';
 import { TxFunction } from '@/utils/types';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
@@ -53,8 +54,15 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
   const isBuy = transaction.tx_type === 'buy';
   const isSell = transaction.tx_type === 'sell';
 
-  const typeColor = isBuy ? 'text-emerald-400' : isSell ? 'text-red-400' : 'text-blue-400';
-  const typeGlow = isBuy ? 'bg-emerald-400/10' : isSell ? 'bg-red-400/10' : 'bg-blue-400/10';
+  let typeColor = 'text-blue-400';
+  let typeGlow = 'bg-blue-400/10';
+  if (isBuy) {
+    typeColor = 'text-emerald-400';
+    typeGlow = 'bg-emerald-400/10';
+  } else if (isSell) {
+    typeColor = 'text-red-400';
+    typeGlow = 'bg-red-400/10';
+  }
 
   const timeAgo = React.useMemo(() => {
     try {
@@ -182,6 +190,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
         // Handle the response - it should be Pagination type but we need to cast it
         if (response && typeof response === 'object' && 'items' in response) {
+          const items = (response.items as Array<any>).map(normalizeTransaction);
           const createdCommunityIndex = (response.items as Array<any>)
             .findIndex((item) => item.tx_type === 'create_community');
 
@@ -193,18 +202,21 @@ export default function TokenTrades({ token }: TokenTradesProps) {
           ) {
             try {
               const transaction = await TransactionsService.getTransactionByHash({ txHash: token.create_tx_hash });
-              response.items[createdCommunityIndex] = transaction;
+              items[createdCommunityIndex] = normalizeTransaction(transaction);
             } catch (error) {
               console.error('Failed to fetch transaction:', error);
             }
           }
-          return response as PaginatedTransactionsResponse;
+          return {
+            ...(response as PaginatedTransactionsResponse),
+            items,
+          };
         }
 
         // Fallback for different response formats
         if (Array.isArray(response)) {
           return {
-            items: response,
+            items: response.map(normalizeTransaction),
             meta: {
               totalItems: response.length,
               totalPages: 1,

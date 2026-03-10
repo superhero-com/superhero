@@ -442,7 +442,7 @@ export default function UserProfile({
           }}
           className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
         >
-          Claim 100 AE by verifying your X account.
+          Claim 50 AE by verifying your X account.
         </button>
       )}
 

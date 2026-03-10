@@ -221,20 +221,6 @@
         {
           "arguments": [
             {
-              "name": "source",
-              "type": "ProfileRegistry.display_source"
-            }
-          ],
-          "name": "set_display_source",
-          "payable": false,
-          "returns": {
-            "tuple": []
-          },
-          "stateful": true
-        },
-        {
-          "arguments": [
-            {
               "name": "fullname",
               "type": "string"
             },
@@ -269,10 +255,6 @@
                   "int"
                 ]
               }
-            },
-            {
-              "name": "source",
-              "type": "ProfileRegistry.display_source"
             }
           ],
           "name": "set_profile_full",
@@ -350,23 +332,6 @@
           "vars": []
         },
         {
-          "name": "display_source",
-          "typedef": {
-            "variant": [
-              {
-                "Custom": []
-              },
-              {
-                "Chain": []
-              },
-              {
-                "X": []
-              }
-            ]
-          },
-          "vars": []
-        },
-        {
           "name": "profile",
           "typedef": {
             "record": [
@@ -405,10 +370,6 @@
                     "string"
                   ]
                 }
-              },
-              {
-                "name": "display_source",
-                "type": "ProfileRegistry.display_source"
               },
               {
                 "name": "chain_expires_at",

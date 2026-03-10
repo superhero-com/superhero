@@ -5,12 +5,12 @@ import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarW
 import { encode, Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAccountDisplayName } from '@/hooks/useAccountDisplayName';
 import { useAccount, useAeSdk } from '../../hooks';
 import { toAettos, fromAettos } from '../../libs/dex';
 import { Decimal } from '../../libs/decimal';
 import AeButton from '../AeButton';
 import { IconDiamond } from '../../icons';
-import { useChainName } from '../../hooks/useChainName';
 import { tipStatusAtom, makeTipKey } from '../../atoms/tipAtoms';
 
 const TipModal = ({
@@ -24,7 +24,8 @@ const TipModal = ({
 }) => {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
-  const { chainName } = useChainName(toAddress);
+  const { displayName } = useAccountDisplayName(toAddress);
+  const hasDistinctDisplayName = !!displayName && displayName !== toAddress;
   const [, setTipStatus] = useAtom(tipStatusAtom);
   const queryClient = useQueryClient();
 
@@ -289,8 +290,8 @@ const TipModal = ({
                 isHoverEnabled={false}
               />
               <div className="min-w-0">
-                {chainName && (
-                  <div className="text-white/90 text-xs font-semibold truncate">{chainName}</div>
+                {hasDistinctDisplayName && (
+                  <div className="text-white/90 text-xs font-semibold truncate">{displayName}</div>
                 )}
                 <div className="text-white/60 text-[11px] break-all truncate">{toAddress}</div>
               </div>

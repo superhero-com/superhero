@@ -197,38 +197,40 @@ const WalletOverviewCard = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <AddressAvatarWithChainName
-            isHoverEnabled={false}
-            address={activeAccount}
-            size={36}
-            showBalance={false}
-            showAddressAndChainName={false}
-            showPrimaryOnly
-            hideFallbackName
-            contentClassName="px-2 pb-0"
-            secondary={(
-              <div className="text-[11px] text-[var(--light-font-color)]">
-                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                {' '}
-                AE
-                {aeFiat != null && (
-                <>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <AddressAvatarWithChainName
+              isHoverEnabled={false}
+              address={activeAccount}
+              size={36}
+              className="w-full min-w-0"
+              showBalance={false}
+              showAddressAndChainName={false}
+              showPrimaryOnly
+              contentClassName="w-full min-w-0 px-2 pb-0"
+              secondary={(
+                <div className="text-[11px] text-[var(--light-font-color)] truncate">
+                  {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                   {' '}
-                  <span className="opacity-70">·</span>
-                  {' '}
-                  <span>
-                    ≈
+                  AE
+                  {aeFiat != null && (
+                  <>
                     {' '}
-                    {formatPrice(aeFiat, selectedCurrency)}
-                  </span>
-                </>
-                )}
-              </div>
-            )}
-          />
+                    <span className="opacity-70">·</span>
+                    {' '}
+                    <span>
+                      ≈
+                      {' '}
+                      {formatPrice(aeFiat, selectedCurrency)}
+                    </span>
+                  </>
+                  )}
+                </div>
+              )}
+            />
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <span
               className={`text-[12px] font-semibold ${
                 isOnline

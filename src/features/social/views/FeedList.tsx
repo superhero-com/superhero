@@ -4,6 +4,7 @@ import React, {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useAccountDisplayNames } from '@/hooks/useAccountDisplayNames';
 import { PostsService } from '../../../api/generated';
 import type { PostDto } from '../../../api/generated';
 import { SuperheroApi } from '../../../api/backend';
@@ -25,6 +26,7 @@ import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
 import { useLatestTransactions } from '../../../hooks/useLatestTransactions';
 import type { TokenDto } from '../../../api/generated/models/TokenDto';
+import { getPostSenderAddress } from '../utils/postSender';
 
 // Custom hook
 function useUrlQuery() {
@@ -236,7 +238,8 @@ const FeedList = ({
     return (latestTransactions || [])
       .filter((tx) => String(tx?.tx_type || '').toLowerCase() === 'buy')
       .map((tx) => {
-        const fallbackId = `${tx?.created_at || ''}:${tx?.account || tx?.address || ''}:${tx?.volume || ''}`;
+        const accountAddress = String((tx as any)?.account || tx?.address || '').trim();
+        const fallbackId = `${tx?.created_at || ''}:${accountAddress}:${tx?.volume || ''}`;
         const id = `trade:${tx?.tx_hash || tx?.id || fallbackId}`;
         return {
           kind: 'trade' as const,
@@ -244,7 +247,7 @@ const FeedList = ({
           created_at: tx?.created_at || new Date().toISOString(),
           tx_hash: tx?.tx_hash || '',
           tx_type: tx?.tx_type || 'buy',
-          account: tx?.account || tx?.address || '',
+          account: accountAddress,
           volume: tx?.volume || '0',
           priceUsd: (tx as any)?.buy_price?.usd ?? (tx as any)?.price_data?.usd ?? (tx as any)?.price ?? '',
           token: (tx as any)?.token || null,
@@ -768,6 +771,32 @@ const FeedList = ({
     return filtered;
   }, [combinedList, filterBy, isTradeItem]);
 
+  const tradeAddresses = useMemo(
+    () => filteredAndSortedList
+      .filter((item) => isTradeItem(item))
+      .map((item) => String(
+        (item as TradeActivityItemData).account
+        || (item as TradeActivityItemData).address
+        || '',
+      ).trim())
+      .filter(Boolean),
+    [filteredAndSortedList, isTradeItem],
+  );
+
+  const { getDisplayName: getTradeDisplayName } = useAccountDisplayNames(tradeAddresses);
+
+  const tokenCreatedAddresses = useMemo(
+    () => filteredAndSortedList
+      .filter((item) => !isTradeItem(item) && String((item as PostDto).id).startsWith('token-created:'))
+      .map((item) => getPostSenderAddress(item as PostDto))
+      .filter(Boolean),
+    [filteredAndSortedList, isTradeItem],
+  );
+
+  const { getHeaderLabel: getTokenCreatedHeaderLabel } = useAccountDisplayNames(
+    tokenCreatedAddresses,
+  );
+
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
     (newSortBy: string) => {
@@ -947,8 +976,16 @@ const FeedList = ({
       const item = filteredAndSortedList[i];
       if (isTradeItem(item)) {
         maybeInsertTrending();
+        const account = String(item.account || item.address || '').trim();
         nodes.push(
-          <TradeActivityItem key={item.id} item={item} />,
+          <TradeActivityItem
+            key={item.id}
+            item={item}
+            displayName={getTradeDisplayName(account, {
+              fallbackToAddress: false,
+              fallbackLabel: t('common:defaultDisplayName'),
+            })}
+          />,
         );
         i += 1;
         renderedCount += 1;
@@ -1018,6 +1055,10 @@ const FeedList = ({
           <TokenCreatedActivityItem
             key={gi.id}
             item={gi}
+            displayName={getTokenCreatedHeaderLabel(getPostSenderAddress(gi), {
+              fallbackToAddress: true,
+              fallbackLabel: t('common:defaultDisplayName'),
+            })}
             hideMobileDivider={hideDivider}
             mobileTight={mobileTight}
             mobileNoTopPadding={mobileNoTopPadding}
@@ -1050,7 +1091,16 @@ const FeedList = ({
       }
     }
     return nodes;
-  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup]);
+  }, [
+    filteredAndSortedList,
+    isTradeItem,
+    expandedGroups,
+    renderPostItem,
+    toggleGroup,
+    getTradeDisplayName,
+    getTokenCreatedHeaderLabel,
+    t,
+  ]);
 
   const renderHotFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];
@@ -1071,12 +1121,32 @@ const FeedList = ({
     // eslint-disable-next-line no-restricted-syntax
     for (const item of filteredAndSortedList) {
       maybeInsertTrending();
-      nodes.push(renderPostItem(item as PostDto));
+      if (isTradeItem(item)) {
+        const account = String(item.account || item.address || '').trim();
+        nodes.push(
+          <TradeActivityItem
+            key={item.id}
+            item={item}
+            displayName={getTradeDisplayName(account, {
+              fallbackToAddress: false,
+              fallbackLabel: t('common:defaultDisplayName'),
+            })}
+          />,
+        );
+      } else {
+        nodes.push(renderPostItem(item as PostDto));
+      }
       renderedCount += 1;
     }
 
     return nodes;
-  }, [filteredAndSortedList, renderPostItem]);
+  }, [
+    filteredAndSortedList,
+    renderPostItem,
+    isTradeItem,
+    getTradeDisplayName,
+    t,
+  ]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {

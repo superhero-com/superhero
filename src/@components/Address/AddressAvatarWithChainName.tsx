@@ -12,6 +12,7 @@ import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
+import { resolveDisplayName } from '@/utils/displayName';
 
 interface AddressAvatarWithChainNameProps {
     address: string;
@@ -131,7 +132,10 @@ export const AddressAvatarWithChainName = memo(({
     return null;
   }
 
-  const preferredName = (cachedProfile?.public_name || cachedProfile?.profile?.chain_name || chainName || '').trim();
+  const preferredName = resolveDisplayName({
+    publicName: cachedProfile?.public_name,
+    chainName: cachedProfile?.profile?.chain_name || chainName,
+  });
   const avatarUrl = (cachedProfile?.profile?.avatarurl || '').trim() || null;
 
   const renderContent = () => (
@@ -173,19 +177,24 @@ export const AddressAvatarWithChainName = memo(({
           <div className={cn(contentBaseClass, contentClassName)}>
             {showPrimaryOnly ? (
               (() => {
-                const displayName = preferredName || (!hideFallbackName ? 'Legend' : '');
-                return displayName ? (
-                  <span
-                    className={[
-                      'chain-name text-[14px] md:text-[15px] font-bold',
-                      'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-                      'bg-clip-text text-transparent block truncate w-full',
-                    ].join(' ')}
-                    title={displayName}
-                  >
-                    {displayName}
-                  </span>
-                ) : (
+                if (preferredName) {
+                  return (
+                    <span
+                      className={[
+                        'chain-name text-[14px] md:text-[15px] font-bold',
+                        'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
+                        'bg-clip-text text-transparent block truncate w-full',
+                      ].join(' ')}
+                      title={preferredName}
+                    >
+                      {preferredName}
+                    </span>
+                  );
+                }
+
+                if (hideFallbackName) return null;
+
+                return (
                   <span
                     className={cn(
                       'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
@@ -200,8 +209,11 @@ export const AddressAvatarWithChainName = memo(({
             ) : (
               showAddressAndChainName && (
               <>
-                <span className={chainNameClass}>
-                  {preferredName || (hideFallbackName ? '' : 'Legend')}
+                <span
+                  className={cn(chainNameClass, 'block truncate w-full')}
+                  title={preferredName || address}
+                >
+                  {preferredName || (hideFallbackName ? '' : address)}
                 </span>
                 <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
                   <AddressFormatted
@@ -231,10 +243,13 @@ export const AddressAvatarWithChainName = memo(({
   );
 
   return (
-    <span className="relative inline-flex items-center" style={{ zIndex: 'auto' }}>
+    <span className="relative flex min-w-0 max-w-full items-center" style={{ zIndex: 'auto' }}>
       <div
         ref={ref}
-        className={cn('flex items-center cursor-pointer transition-colors hover:text-foreground', className)}
+        className={cn(
+          'flex min-w-0 max-w-full items-center cursor-pointer transition-colors hover:text-foreground',
+          className,
+        )}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onClick={handleClick}

@@ -52,11 +52,6 @@ export type ProfileAggregate = {
   public_name: string | null;
 };
 
-export type ProfileFeedResponse = {
-  items?: ProfileAggregate[];
-  data?: ProfileAggregate[];
-} | ProfileAggregate[];
-
 export type XAttestationResponse = {
   signer: string;
   address: string;
@@ -353,12 +348,6 @@ export const SuperheroApi = {
     if (addresses.length) qp.set('addresses', addresses.join(','));
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     return this.fetchJson(`/api/profile?${qp.toString()}`) as Promise<ProfileAggregate[]>;
-  },
-  getProfileFeed(limit = 500, offset = 0) {
-    const qp = new URLSearchParams();
-    qp.set('limit', String(limit));
-    qp.set('offset', String(offset));
-    return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
   },
   createXAttestation(address: string, accessToken: string) {
     return this.fetchJson('/api/profile/x/attestation', {

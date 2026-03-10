@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { MessageCircle } from 'lucide-react';
 import { AspectMedia } from '@/components/AspectMedia';
+import { resolveDisplayName } from '@/utils/displayName';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
@@ -85,7 +86,10 @@ const ReplyToFeedItem = memo(({
   const { chainNames } = useWallet();
   const senderDisplayName = getPostSenderDisplayName(item);
   const senderAvatarUrl = getPostSenderAvatarUrl(item);
-  const fallbackDisplayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const fallbackDisplayName = resolveDisplayName({
+    chainName: chainNames?.[authorAddress],
+    address: authorAddress,
+  }) || t('common:defaultDisplayName');
   const displayName = senderDisplayName || fallbackDisplayName;
   const headerLabel = getPostSenderHeaderLabel(item, fallbackDisplayName);
 
@@ -290,7 +294,10 @@ const ReplyToFeedItem = memo(({
                     {parent ? (
                       getPostSenderHeaderLabel(
                         parent,
-                        chainNames?.[getPostSenderAddress(parent)] || t('common:defaultDisplayName'),
+                        resolveDisplayName({
+                          chainName: chainNames?.[getPostSenderAddress(parent)],
+                          address: getPostSenderAddress(parent),
+                        }) || t('common:defaultDisplayName'),
                       )
                     ) : t('parent')}
                   </div>

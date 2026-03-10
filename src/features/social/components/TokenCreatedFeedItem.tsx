@@ -4,6 +4,7 @@ import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { linkify } from '../../../utils/linkify';
+import { resolveDisplayName } from '@/utils/displayName';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import SharePopover from './SharePopover';
 import { useWallet } from '../../../hooks';
@@ -41,7 +42,10 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const { t } = useTranslation(['common', 'social']);
   const { chainNames } = useWallet();
   const senderAvatarUrl = getPostSenderAvatarUrl(item);
-  const fallbackDisplayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const fallbackDisplayName = resolveDisplayName({
+    chainName: chainNames?.[authorAddress],
+    address: authorAddress,
+  }) || t('common:defaultDisplayName');
   const displayName = getPostSenderHeaderLabel(item, fallbackDisplayName) || fallbackDisplayName;
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;

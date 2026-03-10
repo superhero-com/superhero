@@ -9,6 +9,8 @@ import {
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { SuperheroApi } from '@/api/backend';
 import type { PostDto } from '@/api/generated';
+import { useAccountDisplayNames } from '@/hooks/useAccountDisplayNames';
+import { getPostSenderAddress } from '@/features/social/utils/postSender';
 
 interface AccountFeedProps {
   address: string;
@@ -125,6 +127,18 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
       return bt - at;
     });
   }, [createdActivities, list]);
+
+  const tokenCreatedAddresses = useMemo(
+    () => combinedList
+      .filter((item) => String(item.id).startsWith('token-created:'))
+      .map((item) => getPostSenderAddress(item))
+      .filter(Boolean),
+    [combinedList],
+  );
+
+  const { getHeaderLabel: getTokenCreatedHeaderLabel } = useAccountDisplayNames(
+    tokenCreatedAddresses,
+  );
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
@@ -245,6 +259,10 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
             <TokenCreatedActivityItem
               key={gi.id}
               item={gi}
+              displayName={getTokenCreatedHeaderLabel(getPostSenderAddress(gi), {
+                fallbackToAddress: true,
+                fallbackLabel: 'Legend',
+              })}
               hideMobileDivider={hideDivider}
               mobileTight={mobileTight}
               mobileNoTopPadding={mobileNoTopPadding}
@@ -281,7 +299,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
       }
     }
     return nodes;
-  }, [combinedList, expandedGroups, navigate, toggleGroup]);
+  }, [combinedList, expandedGroups, navigate, toggleGroup, getTokenCreatedHeaderLabel]);
 
   return (
     <div className="w-full">

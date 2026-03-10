@@ -43,6 +43,7 @@ import { CONFIG } from '../config';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { IconDiamond, IconLink } from '../icons';
+import { resolveDisplayName } from '@/utils/displayName';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
@@ -195,6 +196,11 @@ export default function UserProfile({
   const bioText = (profileInfo?.profile?.bio || '').trim()
     || (accountInfo?.bio || '').trim()
     || profile?.profile?.bio;
+  const displayName = resolveDisplayName({
+    publicName: profileInfo?.public_name,
+    chainName,
+    address: effectiveAddress,
+  });
   const isXVerified = Boolean(
     String(profileInfo?.profile?.x_username || '').trim()
     || String(onChainProfile?.x_username || '').trim(),
@@ -330,13 +336,13 @@ export default function UserProfile({
   const content = (
     <div className="w-full">
       <Head
-        title={`${chainName || effectiveAddress} – Profile – Superhero`}
-        description={(bioText || `View ${chainName || effectiveAddress} on Superhero, the crypto social network.`).slice(0, 160)}
+        title={`${displayName} – Profile – Superhero`}
+        description={(bioText || `View ${displayName} on Superhero, the crypto social network.`).slice(0, 160)}
         canonicalPath={`/users/${address}`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Person',
-          name: chainName || effectiveAddress,
+          name: displayName,
           identifier: effectiveAddress,
           description: bioText || undefined,
         }}
@@ -376,7 +382,7 @@ export default function UserProfile({
             </div>
             <div className="min-w-0 flex-1 md:pr-3">
               <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight leading-tight break-all">
-                {profileInfo?.public_name || chainName || 'Legend'}
+                {displayName}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
@@ -462,8 +468,9 @@ export default function UserProfile({
             <div className="text-base md:text-lg font-bold text-white">
               {decimalBalance ? (() => {
                 try {
-                  const value = typeof decimalBalance.toNumber === 'function'
-                    ? decimalBalance.toNumber()
+                  const decimalBalanceValue = decimalBalance as any;
+                  const value = typeof decimalBalanceValue?.toNumber === 'function'
+                    ? decimalBalanceValue.toNumber()
                     : typeof decimalBalance === 'number'
                       ? decimalBalance
                       : Number(decimalBalance);

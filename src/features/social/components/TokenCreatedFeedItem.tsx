@@ -12,7 +12,7 @@ import { compactTime, fullTimestamp } from '../../../utils/time';
 import {
   getPostSenderAddress,
   getPostSenderAvatarUrl,
-  getPostSenderDisplayName,
+  getPostSenderHeaderLabel,
 } from '../utils/postSender';
 
 interface TokenCreatedFeedItemProps {
@@ -40,9 +40,9 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const authorAddress = getPostSenderAddress(item);
   const { t } = useTranslation(['common', 'social']);
   const { chainNames } = useWallet();
-  const senderDisplayName = getPostSenderDisplayName(item);
   const senderAvatarUrl = getPostSenderAvatarUrl(item);
-  const displayName = senderDisplayName || chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const fallbackDisplayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const displayName = getPostSenderHeaderLabel(item, fallbackDisplayName) || fallbackDisplayName;
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -99,7 +99,6 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
             </div>
           </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
           {/* Tokenized trend header */}
           <div

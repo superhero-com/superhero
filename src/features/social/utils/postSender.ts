@@ -24,6 +24,15 @@ export function getPostSenderDisplayName(post: PostDto | null | undefined): stri
   return String(getPostSender(post)?.public_name || '').trim();
 }
 
+export function getPostSenderHeaderLabel(
+  post: PostDto | null | undefined,
+  fallbackLabel?: string | null,
+): string {
+  const publicName = getPostSenderDisplayName(post);
+  if (publicName) return `@${publicName}`;
+  return String(fallbackLabel || '').trim();
+}
+
 export function getPostSenderAvatarUrl(post: PostDto | null | undefined): string | null {
   const avatarUrl = String(getPostSender(post)?.avatarurl || '').trim();
   return avatarUrl || null;

@@ -9,7 +9,7 @@ import { compactTime } from '../../../utils/time';
 import {
   getPostSenderAddress,
   getPostSenderAvatarUrl,
-  getPostSenderDisplayName,
+  getPostSenderHeaderLabel,
 } from '../utils/postSender';
 // SharePopover removed from activity row per design
 
@@ -52,9 +52,9 @@ const TokenCreatedActivityItem = memo(({
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = getPostSenderAddress(item);
-  const senderDisplayName = getPostSenderDisplayName(item);
   const senderAvatarUrl = getPostSenderAvatarUrl(item);
-  const displayName = senderDisplayName || chainNames?.[creator] || t('defaultDisplayName');
+  const fallbackDisplayName = chainNames?.[creator] || t('defaultDisplayName');
+  const displayName = getPostSenderHeaderLabel(item, fallbackDisplayName) || fallbackDisplayName;
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 

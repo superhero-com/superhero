@@ -9,7 +9,6 @@ import { MessageCircle } from 'lucide-react';
 import { AspectMedia } from '@/components/AspectMedia';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
-import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
@@ -19,6 +18,7 @@ import {
   getPostSenderAddress,
   getPostSenderAvatarUrl,
   getPostSenderDisplayName,
+  getPostSenderHeaderLabel,
 } from '../utils/postSender';
 
 interface ReplyToFeedItemProps {
@@ -85,7 +85,9 @@ const ReplyToFeedItem = memo(({
   const { chainNames } = useWallet();
   const senderDisplayName = getPostSenderDisplayName(item);
   const senderAvatarUrl = getPostSenderAvatarUrl(item);
-  const displayName = senderDisplayName || chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const fallbackDisplayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
+  const displayName = senderDisplayName || fallbackDisplayName;
+  const headerLabel = getPostSenderHeaderLabel(item, fallbackDisplayName);
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -230,11 +232,7 @@ const ReplyToFeedItem = memo(({
         <div className="flex-1 min-w-0">
           {/* Header: name · handle (wide desktop) · time */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">
-              @
-              {authorAddress}
-            </span>
+            <div className="text-[15px] font-semibold text-white truncate">{headerLabel || displayName}</div>
             <span className="text-white/50 shrink-0">·</span>
             {item.tx_hash ? (
               <BlockchainInfoPopover
@@ -252,10 +250,6 @@ const ReplyToFeedItem = memo(({
             ) : (
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
             )}
-          </div>
-
-          <div className="mt-1 text-[12px] text-white/60 font-mono leading-[1.2] truncate 2xl:hidden">
-            {formatAddress(authorAddress, 4, true)}
           </div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
@@ -294,9 +288,10 @@ const ReplyToFeedItem = memo(({
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
                     {parent ? (
-                      getPostSenderDisplayName(parent)
-                      || chainNames?.[getPostSenderAddress(parent)]
-                      || t('common:defaultDisplayName')
+                      getPostSenderHeaderLabel(
+                        parent,
+                        chainNames?.[getPostSenderAddress(parent)] || t('common:defaultDisplayName'),
+                      )
                     ) : t('parent')}
                   </div>
                 </div>

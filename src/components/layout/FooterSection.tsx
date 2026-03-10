@@ -131,6 +131,22 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
           >
             {t('layout.contributeOnGitHub')}
           </a>
+
+          <Link
+            to="/whitepaper"
+            className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
+            style={{ color: 'var(--light-font-color)' }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
+            }}
+          >
+            {t('layout.whitepaper')}
+          </Link>
         </nav>
         <div className={`${compact ? 'hidden' : 'text-sm'} md:order-2 md:text-[13px]`} style={{ color: 'var(--light-font-color)' }}>{t('layout.openSource')}</div>
       </div>

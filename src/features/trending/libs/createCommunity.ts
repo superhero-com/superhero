@@ -6,6 +6,7 @@ import {
   CreateCommunityOptions, Denomination, denominationTokenDecimals, estimateInitialBuyPriceAetto, toTokenDecimals,
 } from 'bctsl-sdk';
 import BigNumber from 'bignumber.js';
+import { initializeContractTyped } from '@/libs/initializeContractTyped';
 
 async function feePercentage(contract: Contract<ContractMethodsBase>): Promise<number> {
   if (typeof contract.fee_percentage !== 'function') return undefined;
@@ -26,7 +27,7 @@ export async function createCommunity(
   denomination?: Denomination,
   communityFactoryAddress?: Encoded.ContractAddress,
 ): Promise<Encoded.TxHash> {
-  const contract = await aeSdk.initializeContract({
+  const contract = await initializeContractTyped<ContractMethodsBase>(aeSdk, {
     address: communityFactoryAddress,
     aci: COMMUNITY_FACTORY_CONTRACT_ACI,
   });

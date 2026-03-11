@@ -69,7 +69,8 @@ const CollectInvitationLinkCard = ({
     setLoadingInvitation(true);
 
     try {
-      const account = new MemoryAccount(invitationCode as `sk_${string}`);
+      const normalizedInvitationKey = normalizeSecretKey(invitationCode);
+      const account = new MemoryAccount(normalizedInvitationKey);
 
       const tempSdk = new AeSdk({
         onCompiler: new CompilerHttp('https://v7.compiler.aepps.com'),

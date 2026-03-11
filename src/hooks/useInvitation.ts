@@ -6,6 +6,7 @@ import { MemoryAccount } from '@aeternity/aepp-sdk';
 import type { Encoded } from '@aeternity/aepp-sdk';
 
 import { Decimal } from '../libs/decimal';
+import { normalizeSecretKey } from '../utils/secretKey';
 import { useAccount } from './useAccount';
 import { useCommunityFactory } from './useCommunityFactory';
 
@@ -44,7 +45,7 @@ function getActiveAccountInviteList(inviter: Encoded.AccountAddress): Invitation
 
 function prepareInviteLink(secretKey: string): string {
   // eslint-disable-next-line no-restricted-globals
-  return `${location.protocol}//${location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`;
+  return `${location.protocol}//${location.host}#${INVITE_CODE_QUERY_KEY}=${normalizeSecretKey(secretKey)}`;
 }
 
 let initialized = false;

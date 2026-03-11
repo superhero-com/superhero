@@ -12,6 +12,7 @@ import { Decimal } from '../../../libs/decimal';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { getAffiliationTreasury } from '../../../libs/affiliation';
+import { normalizeSecretKey } from '../../../utils/secretKey';
 import { fetchJson } from '../../../utils/common';
 import {
   invitationListAtom,
@@ -65,7 +66,10 @@ export function useInvitations() {
   const checkedInviteesRef = useRef<Set<string>>(new Set());
 
   // Helper functions
-  const prepareInviteLink = useCallback((secretKey: string): string => `${window.location.protocol}//${window.location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`, []);
+  const prepareInviteLink = useCallback(
+    (secretKey: string): string => `${window.location.protocol}//${window.location.host}#${INVITE_CODE_QUERY_KEY}=${normalizeSecretKey(secretKey)}`,
+    [],
+  );
 
   const getInvitationRevokeStatus = useCallback((invitee: string): ITransaction | boolean => {
     const revokeTx = transactionList.find((tx) => {

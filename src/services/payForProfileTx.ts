@@ -1,13 +1,12 @@
 import {
   AeSdk,
   Encoded,
-  encode,
-  Encoding,
   MemoryAccount,
   Node,
   Tag,
   unpackTx,
 } from '@aeternity/aepp-sdk';
+import { normalizeSecretKey } from '@/utils/secretKey';
 
 const PROFILE_FUNCTIONS = new Set([
   'set_profile',
@@ -34,31 +33,16 @@ const getPayerSecret = () => (
     || '') as string
 ).trim();
 
-const hexToBytes = (hex: string): Uint8Array => {
-  const normalized = hex.startsWith('0x') ? hex.slice(2) : hex;
-  if (!/^[0-9a-fA-F]+$/.test(normalized) || normalized.length % 2 !== 0) {
-    throw new Error('VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY has invalid hex format');
-  }
-  const bytes = new Uint8Array(normalized.length / 2);
-  for (let i = 0; i < normalized.length; i += 2) {
-    bytes[i / 2] = parseInt(normalized.slice(i, i + 2), 16);
-  }
-  return bytes;
-};
-
 const normalizePayerSecret = (rawSecret: string): `sk_${string}` => {
-  const secret = rawSecret.trim();
-  if (secret.startsWith('sk_')) return secret as `sk_${string}`;
-
-  const secretBytes = hexToBytes(secret);
-  if (secretBytes.length < 32) {
+  try {
+    return normalizeSecretKey(rawSecret);
+  } catch (error: any) {
     throw new Error(
-      'VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY hex value must contain at least 32 bytes',
+      `VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY is invalid: ${
+        error?.message || 'unknown format'
+      }`,
     );
   }
-  // Legacy secrets can contain the full keypair payload.
-  // sdk v14 expects sk_-encoded 32-byte secret.
-  return encode(secretBytes.subarray(0, 32), Encoding.AccountSecretKey) as `sk_${string}`;
 };
 
 const getPayerSdk = (): AeSdk => {

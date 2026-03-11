@@ -25,16 +25,7 @@ function useTokenName(item: PostDto): string | null {
       if (!encoded) return null;
       try { return decodeURIComponent(encoded); } catch { return encoded; }
     };
-    const fromTopics = () => {
-      const topics = (item as any)?.topics as string[] | undefined;
-      if (!Array.isArray(topics)) return null;
-      const hash = topics.find((t) => typeof t === 'string' && t.startsWith('#'));
-      if (hash) return hash.replace(/^#/, '');
-      const tn = topics.find((t) => typeof t === 'string' && t.startsWith('token_name:'));
-      if (tn) return tn.split(':')[1];
-      return null;
-    };
-    return fromId() || fromTopics();
+    return fromId();
   }, [item]);
 }
 

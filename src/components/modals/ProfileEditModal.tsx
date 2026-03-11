@@ -6,7 +6,6 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  DisplaySource,
   ProfileAggregate,
 } from '@/api/backend';
 import { CONFIG } from '@/config';
@@ -20,7 +19,7 @@ import {
   storeXOAuthPKCE,
 } from '@/utils/xOAuth';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Star } from 'lucide-react';
+import { Check } from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import {
@@ -38,7 +37,6 @@ type ProfileFormState = {
   avatarurl: string;
   username: string;
   chain_name: string;
-  display_source: DisplaySource;
 };
 
 type OwnedChainNameOption = {
@@ -52,7 +50,6 @@ const EMPTY_FORM: ProfileFormState = {
   avatarurl: '',
   username: '',
   chain_name: '',
-  display_source: 'custom',
 };
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{2,32}$/;
@@ -284,7 +281,6 @@ const ProfileEditModal = ({
       let username = '';
       let chainName = '';
       let chainNameExpiresAt: number | null = null;
-      let displaySource: DisplaySource = 'custom';
       let onChain: {
         x_username?: string | null;
         chain_name?: string | null;
@@ -306,14 +302,11 @@ const ProfileEditModal = ({
         // ignore
       }
 
-      // Use API only for display_source and to fill any missing fields
+      // Use API only to fill any missing fields and X verification state
       let xVerified = !!(onChain?.x_username ?? '').trim();
       let xName: string | null = (onChain?.x_username ?? '').trim() || null;
       try {
         const acct = await getProfile(targetAddress);
-        if (acct?.profile?.display_source) {
-          displaySource = (acct.profile.display_source as DisplaySource) || 'custom';
-        }
         if (fullname === '' && (acct?.profile?.fullname ?? '') !== '') fullname = String(acct.profile.fullname);
         if (bio === '' && (acct?.profile?.bio ?? '') !== '') bio = String(acct.profile.bio ?? initialBio ?? '');
         if (avatarurl === '' && (acct?.profile?.avatarurl ?? '') !== '') avatarurl = String(acct.profile.avatarurl);
@@ -362,7 +355,6 @@ const ProfileEditModal = ({
         avatarurl,
         username,
         chain_name: chainName,
-        display_source: displaySource,
       });
       setInitialForm({
         fullname,
@@ -370,7 +362,6 @@ const ProfileEditModal = ({
         avatarurl,
         username,
         chain_name: chainName,
-        display_source: displaySource,
       });
       if ((CONFIG as any).X_OAUTH_CLIENT_ID) setXSectionReady(true);
     }
@@ -405,7 +396,6 @@ const ProfileEditModal = ({
       }
     }
     if (trimmedForm.username && !USERNAME_REGEX.test(trimmedForm.username)) return t('messages.invalidUsername');
-    if (form.display_source === 'chain' && !trimmedForm.chain_name) return t('messages.selectChainNameForDisplaySource');
     return null;
   };
 
@@ -446,7 +436,6 @@ const ProfileEditModal = ({
         || trimmedForm.avatarurl !== initialForm.avatarurl.trim()
         || trimmedForm.username !== initialForm.username.trim()
         || trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
-        || form.display_source !== initialForm.display_source
       );
       if (!hasChanges) {
         const msg = t('messages.profileNothingToUpdate');
@@ -463,7 +452,6 @@ const ProfileEditModal = ({
         username: trimmedForm.username,
         chainName: trimmedForm.chain_name,
         chainExpiresAt: selectedChainOption?.expiresAt ?? null,
-        displaySource: form.display_source,
       });
       const updated = await getProfile(targetAddress);
       if (!updated) {
@@ -503,22 +491,7 @@ const ProfileEditModal = ({
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <div className="flex items-center justify-between gap-2">
-              <Label className="text-white/80">{t('labels.username')}</Label>
-              <button
-                type="button"
-                aria-label={t('labels.displaySourceCustom')}
-                aria-pressed={form.display_source === 'custom'}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={loading || !canEdit}
-                onClick={() => setForm((prev) => ({ ...prev, display_source: 'custom' }))}
-              >
-                <Star
-                  className="h-4 w-4"
-                  fill={form.display_source === 'custom' ? 'currentColor' : 'none'}
-                />
-              </button>
-            </div>
+            <Label className="text-white/80">{t('labels.username')}</Label>
             <Input
               value={form.username}
               onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
@@ -528,22 +501,7 @@ const ProfileEditModal = ({
             />
           </div>
           <div>
-            <div className="flex items-center justify-between gap-2">
-              <Label className="text-white/80">{t('labels.chainName')}</Label>
-              <button
-                type="button"
-                aria-label={t('labels.displaySourceChain')}
-                aria-pressed={form.display_source === 'chain'}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={loading || !canEdit}
-                onClick={() => setForm((prev) => ({ ...prev, display_source: 'chain' }))}
-              >
-                <Star
-                  className="h-4 w-4"
-                  fill={form.display_source === 'chain' ? 'currentColor' : 'none'}
-                />
-              </button>
-            </div>
+            <Label className="text-white/80">{t('labels.chainName')}</Label>
             <AppSelect
               value={form.chain_name || NONE_CHAIN_NAME_VALUE}
               onValueChange={(value) => setForm((prev) => ({
@@ -569,24 +527,9 @@ const ProfileEditModal = ({
           {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
             <div ref={xSectionRef}>
               {xSectionReady && (
-                <div className="flex items-center justify-between gap-2">
-                  <Label className="text-white/80">
-                    {hasXVerified ? t('labels.xAccount') : t('labels.connectX')}
-                  </Label>
-                  <button
-                    type="button"
-                    aria-label={t('labels.displaySourceX')}
-                    aria-pressed={form.display_source === 'x'}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-white/60 transition hover:text-[var(--neon-teal)] disabled:cursor-not-allowed disabled:opacity-40"
-                    disabled={loading || !canEdit || !xUsername}
-                    onClick={() => setForm((prev) => ({ ...prev, display_source: 'x' }))}
-                  >
-                    <Star
-                      className="h-4 w-4"
-                      fill={form.display_source === 'x' ? 'currentColor' : 'none'}
-                    />
-                  </button>
-                </div>
+                <Label className="text-white/80">
+                  {hasXVerified ? t('labels.xAccount') : t('labels.connectX')}
+                </Label>
               )}
               {!xSectionReady && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/14 px-3 py-6">

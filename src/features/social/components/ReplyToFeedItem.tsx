@@ -47,10 +47,6 @@ function useParentId(item: PostDto): string | null {
       const found = (item as any).media.map((m: unknown) => extract(m)).find(Boolean);
       if (found) return found;
     }
-    if (Array.isArray((item as any)?.topics)) {
-      const found = (item as any).topics.map((t: unknown) => extract(t)).find(Boolean);
-      if (found) return found;
-    }
     const scan = (node: any): string | null => {
       if (node == null) return null;
       if (typeof node === 'string') return extract(node);

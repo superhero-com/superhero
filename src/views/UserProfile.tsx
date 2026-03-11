@@ -192,31 +192,8 @@ export default function UserProfile({
   // Get posts from the query data
   const posts = data?.items || [];
 
-  // Latest bio from tipping v3 posts tagged with "bio-update"
-  const latestBioPost = useMemo(() => {
-    for (const p of posts) {
-      const topics = (Array.isArray((p as any).topics) ? (p as any).topics : []).map((t: string) => String(t).toLowerCase());
-      const media = (Array.isArray((p as any).media) ? (p as any).media : []).map((m: string) => String(m).toLowerCase());
-
-      // Heuristic 1: topics/media contains the tag
-      const hasTagInTopicsOrMedia = topics.includes('bio-update') || media.includes('bio-update');
-
-      // Heuristic 2: inspect tx_args for a list of tags including "bio-update"
-      const args: any[] = Array.isArray((p as any).tx_args) ? (p as any).tx_args : [];
-      const hasTagInTxArgs = args.some((arg: any) => {
-        if (!arg || typeof arg !== 'object') return false;
-        if (String(arg.type).toLowerCase() !== 'list') return false;
-        const listVal: any[] = Array.isArray(arg.value) ? arg.value : [];
-        return listVal.some((item: any) => String(item?.value || '').toLowerCase() === 'bio-update');
-      });
-
-      if (hasTagInTopicsOrMedia || hasTagInTxArgs) return p;
-    }
-    return undefined;
-  }, [posts]);
   const bioText = (profileInfo?.profile?.bio || '').trim()
     || (accountInfo?.bio || '').trim()
-    || latestBioPost?.content?.trim()
     || profile?.profile?.bio;
   const isXVerified = Boolean(
     String(profileInfo?.profile?.x_username || '').trim()

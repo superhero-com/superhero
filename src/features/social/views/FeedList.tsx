@@ -12,7 +12,6 @@ import AeButton from '../../../components/AeButton';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
-import { useWallet } from '../../../hooks';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
 import SortControls from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
@@ -47,7 +46,6 @@ const FeedList = ({
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
-  const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
@@ -109,7 +107,6 @@ const FeedList = ({
   const urlSortBy = urlQuery.get('sortBy');
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
   const sortBy = !popularFeedEnabled ? 'latest' : (urlSortBy || 'hot');
-  const search = urlQuery.get('search') || '';
   const filterBy = urlQuery.get('filterBy') || 'all';
   const initialWindow = (urlQuery.get('window') as '24h'|'7d'|'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
@@ -119,7 +116,6 @@ const FeedList = ({
     sortByRef.current = sortBy;
   }, [sortBy]);
 
-  const [localSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
@@ -296,14 +292,13 @@ const FeedList = ({
   } = useInfiniteQuery({
     enabled: sortBy !== 'hot',
     queryKey: ['posts', {
-      limit: 10, sortBy, search: localSearch, filterBy,
+      limit: 10, sortBy, filterBy,
     }],
     queryFn: ({ pageParam = 1 }) => PostsService.listAll({
       limit: 10,
       page: pageParam,
       orderBy: 'created_at',
       orderDirection: 'DESC',
-      search: localSearch,
     }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
       if (
@@ -366,14 +361,13 @@ const FeedList = ({
       // Prefetch posts in the background for faster loading (only first page, no search/filter)
       queryClient.prefetchInfiniteQuery({
         queryKey: ['posts', {
-          limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+          limit: 10, sortBy: 'latest', filterBy: 'all',
         }],
         queryFn: ({ pageParam = 1 }) => PostsService.listAll({
           limit: 10,
           page: pageParam,
           orderBy: 'created_at',
           orderDirection: 'DESC',
-          search: '',
         }) as unknown as Promise<PostApiResponse>,
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
@@ -662,10 +656,10 @@ const FeedList = ({
 
     // Also check React Query cache directly for cached data (even if queries are disabled)
     const cachedPosts = queryClient.getQueryData(['posts', {
-      limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+      limit: 10, sortBy: 'latest', filterBy: 'all',
     }])
                        || queryClient.getQueryData(['posts', {
-                         limit: 10, sortBy, search: localSearch, filterBy,
+                         limit: 10, sortBy, filterBy,
                        }]);
     const cachedActivities = queryClient.getQueryData(['home-activities']);
 
@@ -680,7 +674,7 @@ const FeedList = ({
     }
 
     return false;
-  }, [sortBy, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [sortBy, latestData, activitiesPages, queryClient, filterBy]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo<FeedItem[]>(() => {
@@ -699,10 +693,10 @@ const FeedList = ({
     // If queries don't have data yet, try to get cached data
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
       const cachedPosts = queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+        limit: 10, sortBy: 'latest', filterBy: 'all',
       }])
         || queryClient.getQueryData<any>(['posts', {
-          limit: 10, sortBy, search: localSearch, filterBy,
+          limit: 10, sortBy, filterBy,
         }]);
 
       if (cachedPosts?.pages) {
@@ -751,37 +745,12 @@ const FeedList = ({
     latestListForHot,
     bothQueriesReady,
     latestData,
-    activitiesPages, queryClient, localSearch, filterBy,
+    activitiesPages, queryClient, filterBy,
   ]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
     let filtered = [...combinedList];
-
-    if (localSearch.trim()) {
-      const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(
-        (item) => {
-          if (isTradeItem(item)) {
-            const tokenName = item.token?.name || '';
-            const tokenSymbol = item.token?.symbol || '';
-            const account = item.account || '';
-            const chainName = chainNames?.[account] || '';
-            const combined = `${tokenName} ${tokenSymbol} ${account} ${chainName}`.toLowerCase();
-            return combined.includes(searchTerm);
-          }
-          return (
-            (item.content && item.content.toLowerCase().includes(searchTerm))
-            || (item.topics
-              && item.topics.some((topic) => topic.toLowerCase().includes(searchTerm)))
-            || (item.sender_address
-              && item.sender_address.toLowerCase().includes(searchTerm))
-            || (chainNames?.[item.sender_address]
-              && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
-          );
-        },
-      );
-    }
 
     if (filterBy === 'withMedia') {
       filtered = filtered.filter(
@@ -797,7 +766,7 @@ const FeedList = ({
     }
 
     return filtered;
-  }, [combinedList, localSearch, filterBy, isTradeItem, chainNames]);
+  }, [combinedList, filterBy, isTradeItem]);
 
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
@@ -896,10 +865,10 @@ const FeedList = ({
       && activitiesPages.pages.length > 0
     );
     const cachedPosts = queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+      limit: 10, sortBy: 'latest', filterBy: 'all',
     }])
       || queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy, search: localSearch, filterBy,
+        limit: 10, sortBy, filterBy,
       }]);
     const cachedActivities = queryClient.getQueryData<any>(['home-activities']);
     const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
@@ -1134,10 +1103,10 @@ const FeedList = ({
   // For latest feed: show cached data immediately if available (from queries or cache)
   const hasQueryDataForLatest = sortBy !== 'hot' && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
   const cachedPostsForLatest = queryClient.getQueryData<any>(['posts', {
-    limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+    limit: 10, sortBy: 'latest', filterBy: 'all',
   }])
     || queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy, search: localSearch, filterBy,
+      limit: 10, sortBy, filterBy,
     }]);
   const cachedActivitiesForLatest = queryClient.getQueryData<any>(['home-activities']);
   const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;

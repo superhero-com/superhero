@@ -1,6 +1,7 @@
 import { AppService } from '@/api/generated';
 import type { AeSdk } from '@aeternity/aepp-sdk';
 import { initCommunityFactory } from 'bctsl-sdk';
+import { ensureSdkInitializeContract } from './initializeContractTyped';
 
 /**
  * Returns the active Community Factory address from the Trendminer backend schema.
@@ -18,7 +19,10 @@ export async function getFactoryAddress(): Promise<string> {
  */
 export async function getAffiliationTreasury(sdk: AeSdk) {
   const factoryAddress = await getFactoryAddress();
-  const factory = await initCommunityFactory(sdk as any, factoryAddress);
+  const factory = await initCommunityFactory(
+    ensureSdkInitializeContract(sdk as any),
+    factoryAddress,
+  );
   return factory.affiliationTreasury();
 }
 

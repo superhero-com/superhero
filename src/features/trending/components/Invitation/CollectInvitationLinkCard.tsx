@@ -16,7 +16,9 @@ import { useCommunityFactory } from '@/hooks/useCommunityFactory';
 import { useInvitation } from '@/hooks/useInvitation';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
+import { ensureSdkInitializeContract } from '@/libs/initializeContractTyped';
 import { SETTINGS } from '@/utils/constants';
+import { normalizeSecretKey } from '@/utils/secretKey';
 
 interface CollectInvitationLinkCardProps {
   className?: string;
@@ -57,8 +59,8 @@ const CollectInvitationLinkCard = ({
 
   /**
    * Retrieves the invitation reward amount for a given invitation code.
-   * This function sets the loading state, initializes the AeSdk, retrieves the affiliation contract,
-   * and updates the invitation details if the invitation code exists.
+   * This function sets the loading state, initializes the AeSdk,
+   * retrieves the affiliation contract, and updates invitation details.
    */
   const getInvitationRewardAmount = useCallback(async () => {
     if (!invitationCode) return;
@@ -67,7 +69,7 @@ const CollectInvitationLinkCard = ({
     setLoadingInvitation(true);
 
     try {
-      const account = new MemoryAccount(invitationCode);
+      const account = new MemoryAccount(invitationCode as `sk_${string}`);
 
       const tempSdk = new AeSdk({
         onCompiler: new CompilerHttp('https://v7.compiler.aepps.com'),
@@ -118,7 +120,8 @@ const CollectInvitationLinkCard = ({
     setSuccessMessage(undefined);
 
     try {
-      const account = new MemoryAccount(invitationCode);
+      const normalizedInvitationKey = normalizeSecretKey(invitationCode);
+      const account = new MemoryAccount(normalizedInvitationKey);
 
       if (isRevoking) {
         // Revoke invitation
@@ -129,11 +132,17 @@ const CollectInvitationLinkCard = ({
         setSuccessMessage('Invitation reward has been revoked successfully.');
       } else {
         // Claim invitation
-        staticAeSdk.addAccount(account, { select: true });
-        const affiliationTreasury = await getAffiliationTreasury(staticAeSdk);
-        await affiliationTreasury.redeemInvitationCode(
-          invitationCode,
+        if (!staticAeSdk) throw new Error('SDK not available');
+
+        const claimSdk = ensureSdkInitializeContract(staticAeSdk as any) as typeof staticAeSdk;
+        await claimSdk.addAccount(account, { select: true });
+
+        const affiliationTreasury = await getAffiliationTreasury(claimSdk);
+        await affiliationTreasury.contract.redeem_invitation_code(
           activeAccount,
+          {
+            onAccount: account,
+          },
         );
         setSuccessMessage('Invitation reward has been claimed successfully!');
       }
@@ -146,6 +155,8 @@ const CollectInvitationLinkCard = ({
         setErrorMessage(
           'This account has already claimed an invitation reward.',
         );
+      } else if (error?.message?.includes('Secret key')) {
+        setErrorMessage('This invite link uses an unsupported or corrupted secret key format.');
       } else if (error?.message?.includes('ALREADY_REDEEMED')) {
         setErrorMessage('This invitation has already been claimed.');
       } else {

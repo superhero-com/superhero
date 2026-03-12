@@ -93,14 +93,19 @@ async function buildMeta(pathname, origin){
   const um = pathname.match(/^\/users\/([^/]+)/);
   if (um) {
     const address = um[1];
+    let display = address;
     let bio = '';
     try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); }
+      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/profile/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
+      if (r.ok) {
+        const data = await r.json();
+        display = String(data?.public_name || data?.profile?.chain_name || address).trim() || address;
+        bio = String(data?.profile?.bio || '').trim();
+      }
     } catch {}
     return {
-      title: `${address} – Profile – Superhero`,
-      description: bio ? truncate(bio,200) : 'View profile on Superhero, the crypto social network.',
+      title: `${display} – Profile – Superhero`,
+      description: bio ? truncate(bio,200) : `View ${display} on Superhero, the crypto social network.`,
       canonical: `${origin}/users/${address}`,
       ogImage: `${origin}/og-default.png`,
       ogType: 'profile',

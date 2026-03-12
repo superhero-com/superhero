@@ -457,8 +457,6 @@ export function useProfile(targetAddress?: string) {
           toOption(normalizedUsername || null),
           toOption(normalizedChainName || null),
           toOption(hasValidChainExpiry ? nextChainExpiresAt : null),
-          // This display source is not used for now, but it is required by the contract.
-          { Custom: [] },
         ],
       );
       txHash = extractTxHash(fullResult) || txHash;

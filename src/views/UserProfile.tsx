@@ -43,6 +43,7 @@ import { CONFIG } from '../config';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { IconDiamond, IconLink } from '../icons';
+import { resolveDisplayName } from '@/utils/displayName';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
@@ -195,6 +196,11 @@ export default function UserProfile({
   const bioText = (profileInfo?.profile?.bio || '').trim()
     || (accountInfo?.bio || '').trim()
     || profile?.profile?.bio;
+  const displayName = resolveDisplayName({
+    publicName: profileInfo?.public_name,
+    chainName,
+    address: effectiveAddress,
+  });
   const isXVerified = Boolean(
     String(profileInfo?.profile?.x_username || '').trim()
     || String(onChainProfile?.x_username || '').trim(),
@@ -330,13 +336,13 @@ export default function UserProfile({
   const content = (
     <div className="w-full">
       <Head
-        title={`${chainName || effectiveAddress} – Profile – Superhero`}
-        description={(bioText || `View ${chainName || effectiveAddress} on Superhero, the crypto social network.`).slice(0, 160)}
+        title={`${displayName} – Profile – Superhero`}
+        description={(bioText || `View ${displayName} on Superhero, the crypto social network.`).slice(0, 160)}
         canonicalPath={`/users/${address}`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Person',
-          name: chainName || effectiveAddress,
+          name: displayName,
           identifier: effectiveAddress,
           description: bioText || undefined,
         }}
@@ -361,7 +367,7 @@ export default function UserProfile({
 
       {/* Compact Profile Header */}
       <div className="mb-4 md:mb-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
           {/* Avatar and Identity */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="relative shrink-0">
@@ -374,9 +380,9 @@ export default function UserProfile({
                 className="relative"
               />
             </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight">
-                {profileInfo?.public_name || chainName || 'Legend'}
+            <div className="min-w-0 flex-1 md:pr-3">
+              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight leading-tight break-all">
+                {displayName}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
@@ -390,8 +396,8 @@ export default function UserProfile({
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-row gap-2 shrink-0">
-            {(canEdit && false) ? (
+          <div className="flex flex-row flex-wrap gap-2 shrink-0 md:max-w-[40%] md:justify-end">
+            {canEdit ? (
               <AeButton
                 size="sm"
                 variant="ghost"
@@ -433,7 +439,7 @@ export default function UserProfile({
         </div>
       </div>
 
-      {(canEdit && !isXVerified && false) && (
+      {canEdit && !isXVerified && (
         <button
           type="button"
           onClick={() => {
@@ -442,7 +448,7 @@ export default function UserProfile({
           }}
           className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
         >
-          Claim 100 AE by verifying your X account.
+          Claim 50 AE by verifying your X account.
         </button>
       )}
 
@@ -462,8 +468,9 @@ export default function UserProfile({
             <div className="text-base md:text-lg font-bold text-white">
               {decimalBalance ? (() => {
                 try {
-                  const value = typeof decimalBalance.toNumber === 'function'
-                    ? decimalBalance.toNumber()
+                  const decimalBalanceValue = decimalBalance as any;
+                  const value = typeof decimalBalanceValue?.toNumber === 'function'
+                    ? decimalBalanceValue.toNumber()
                     : typeof decimalBalance === 'number'
                       ? decimalBalance
                       : Number(decimalBalance);

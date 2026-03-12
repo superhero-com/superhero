@@ -1,15 +1,22 @@
 import { memo, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { useNavigate } from 'react-router-dom';
+import AddressAvatar from '@/components/AddressAvatar';
+import { resolveDisplayName } from '@/utils/displayName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
 import { compactTime } from '../../../utils/time';
+import {
+  getPostSenderAddress,
+  getPostSenderAvatarUrl,
+  getPostSenderHeaderLabel,
+} from '../utils/postSender';
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
   item: PostDto;
+  displayName?: string;
   hideMobileDivider?: boolean;
   mobileTight?: boolean; // reduce vertical padding on mobile for middle items in a group
   // optional mobile-only footer area (e.g., Show more) rendered just above divider
@@ -36,6 +43,7 @@ function useTokenName(item: PostDto): string | null {
 
 const TokenCreatedActivityItem = memo(({
   item,
+  displayName,
   hideMobileDivider = false,
   mobileTight = false, footer,
   mobileNoTopPadding = false,
@@ -45,9 +53,16 @@ const TokenCreatedActivityItem = memo(({
 }: TokenCreatedActivityItemProps) => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { chainNames, profileDisplayNames } = useWallet();
-  const creator = item.sender_address;
-  const displayName = profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? t('defaultDisplayName');
+  const { chainNames } = useWallet();
+  const creator = getPostSenderAddress(item);
+  const senderAvatarUrl = getPostSenderAvatarUrl(item);
+  const fallbackDisplayName = resolveDisplayName({
+    chainName: chainNames?.[creator],
+    address: creator,
+  }) || t('defaultDisplayName');
+  const resolvedDisplayName = displayName
+    || getPostSenderHeaderLabel(item, fallbackDisplayName)
+    || fallbackDisplayName;
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -67,15 +82,15 @@ const TokenCreatedActivityItem = memo(({
     >
       <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
-          <AddressAvatarWithChainName address={creator} size={20} showAddressAndChainName={false} variant="feed" />
+          <AddressAvatar address={creator} imageUrl={senderAvatarUrl} size={20} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <a
               href={`/users/${creator}`}
               onClick={(e) => e.stopPropagation()}
               className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch] no-gradient-text"
-              title={displayName}
+              title={resolvedDisplayName}
             >
-              {displayName}
+              {resolvedDisplayName}
             </a>
             <span className="text-white/70 shrink-0">created</span>
             {tokenName && (

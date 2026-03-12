@@ -52,11 +52,6 @@ export type ProfileAggregate = {
   public_name: string | null;
 };
 
-export type ProfileFeedResponse = {
-  items?: ProfileAggregate[];
-  data?: ProfileAggregate[];
-} | ProfileAggregate[];
-
 export type XAttestationResponse = {
   signer: string;
   address: string;
@@ -346,8 +341,6 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     const query = qp.toString();
-    // TODO: uncomment this when the backend is ready
-    return Promise.resolve(null);
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}${query ? `?${query}` : ''}`) as Promise<ProfileAggregate>;
   },
   getProfilesByAddresses(addresses: string[], includeOnChain?: boolean) {
@@ -355,14 +348,6 @@ export const SuperheroApi = {
     if (addresses.length) qp.set('addresses', addresses.join(','));
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     return this.fetchJson(`/api/profile?${qp.toString()}`) as Promise<ProfileAggregate[]>;
-  },
-  getProfileFeed(limit = 500, offset = 0) {
-    const qp = new URLSearchParams();
-    qp.set('limit', String(limit));
-    qp.set('offset', String(offset));
-    return Promise.resolve({ items: [], data: [] } as ProfileFeedResponse);
-    // TODO: uncomment this when the backend is ready
-    // return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
   },
   createXAttestation(address: string, accessToken: string) {
     return this.fetchJson('/api/profile/x/attestation', {

@@ -190,13 +190,13 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   const userMatch = pathname.match(/^\/users\/([^/]+)/);
   if (userMatch) {
     const address = userMatch[1];
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/profile/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
         const data: any = await r.json();
-        const display = (data?.chain_name || address) as string;
-        const bio = (data?.bio || '').toString();
+        const display = (data?.public_name || data?.profile?.chain_name || address) as string;
+        const bio = (data?.profile?.bio || '').toString();
         return {
           title: `${display} – Profile – Superhero`,
           description: bio ? truncate(bio, 200) : 'View profile on Superhero, the crypto social network.',

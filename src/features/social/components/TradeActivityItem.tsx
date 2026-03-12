@@ -1,4 +1,4 @@
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import PostHashtagLink from '@/components/social/PostHashtagLink';
 import { Badge } from '@/components/ui/badge';
 import { Plus, RefreshCw } from 'lucide-react';
-import { useWallet } from '../../../hooks';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { formatCompactNumber } from '../../../utils/number';
 import { Decimal } from '../../../libs/decimal';
@@ -28,14 +27,14 @@ export type TradeActivityItemData = {
 
 interface TradeActivityItemProps {
   item: TradeActivityItemData;
+  displayName?: string;
 }
 
-const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
+const TradeActivityItem = memo(({ item, displayName }: TradeActivityItemProps) => {
   const { t } = useTranslation('social');
   const navigate = useNavigate();
-  const { chainNames, profileDisplayNames } = useWallet();
   const account = item.account || item.address || '';
-  const displayName = profileDisplayNames?.[account] ?? chainNames?.[account] ?? t('common:defaultDisplayName');
+  const resolvedDisplayName = displayName || t('common:defaultDisplayName');
   const tokenName = item?.token?.name || item?.token?.symbol || '';
   const tokenLabel = item?.token?.symbol || item?.token?.name || 'Token';
   const tokenTag = tokenName || tokenLabel;
@@ -102,21 +101,23 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
         <div className="flex w-full max-w-[280px] items-start gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
           <div className="flex-shrink-0 pt-0.5">
             <div className="md:hidden">
-              <AddressAvatarWithChainName address={account} size={34} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatar address={account} size={34} />
             </div>
             <div className="hidden md:block">
-              <AddressAvatarWithChainName address={account} size={40} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatar address={account} size={40} />
             </div>
           </div>
           <div className="min-w-0">
             <div className="flex items-baseline gap-2 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+              <div className="text-[15px] font-semibold text-white truncate">{resolvedDisplayName}</div>
               <span className="text-white/50 shrink-0">·</span>
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
                 {compactTime(item.created_at)}
               </div>
             </div>
-            <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
+            {account && (
+              <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
+            )}
           </div>
         </div>
         <div className="flex-1 min-w-0">

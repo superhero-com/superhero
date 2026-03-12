@@ -1,4 +1,4 @@
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { cn } from '@/lib/utils';
 import {
   memo, useCallback, useEffect, useMemo, useState,
@@ -7,14 +7,20 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { MessageCircle } from 'lucide-react';
 import { AspectMedia } from '@/components/AspectMedia';
+import { resolveDisplayName } from '@/utils/displayName';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
-import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
 import { compactTime, fullTimestamp } from '../../../utils/time';
+import {
+  getPostSenderAddress,
+  getPostSenderAvatarUrl,
+  getPostSenderDisplayName,
+  getPostSenderHeaderLabel,
+} from '../utils/postSender';
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -76,9 +82,16 @@ const ReplyToFeedItem = memo(({
 }: ReplyToFeedItemProps) => {
   const { t } = useTranslation(['common', 'social']);
   const postId = item.id;
-  const authorAddress = item.sender_address;
-  const { chainNames, profileDisplayNames } = useWallet();
-  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
+  const authorAddress = getPostSenderAddress(item);
+  const { chainNames } = useWallet();
+  const senderDisplayName = getPostSenderDisplayName(item);
+  const senderAvatarUrl = getPostSenderAvatarUrl(item);
+  const fallbackDisplayName = resolveDisplayName({
+    chainName: chainNames?.[authorAddress],
+    address: authorAddress,
+  }) || t('common:defaultDisplayName');
+  const displayName = senderDisplayName || fallbackDisplayName;
+  const headerLabel = getPostSenderHeaderLabel(item, fallbackDisplayName);
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -201,7 +214,7 @@ const ReplyToFeedItem = memo(({
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}
-            sender={item.sender_address}
+            sender={authorAddress}
             contract={(item as any).contract_address}
             postId={String(item.id)}
             className="px-2"
@@ -213,27 +226,23 @@ const ReplyToFeedItem = memo(({
       <div className="flex gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainName address={authorAddress} size={36} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatar address={authorAddress} imageUrl={senderAvatarUrl} size={36} />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatar address={authorAddress} imageUrl={senderAvatarUrl} size={40} />
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Header: name · handle (wide desktop) · time */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">
-              @
-              {authorAddress}
-            </span>
+            <div className="text-[15px] font-semibold text-white truncate">{headerLabel || displayName}</div>
             <span className="text-white/50 shrink-0">·</span>
             {item.tx_hash ? (
               <BlockchainInfoPopover
                 txHash={(item as any).tx_hash}
                 createdAt={item.created_at as unknown as string}
-                sender={(item as any).sender_address}
+                sender={authorAddress}
                 contract={(item as any).contract_address}
                 postId={String(item.id)}
                 triggerContent={(
@@ -245,10 +254,6 @@ const ReplyToFeedItem = memo(({
             ) : (
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
             )}
-          </div>
-
-          <div className="mt-1 text-[12px] text-white/60 font-mono leading-[1.2] truncate 2xl:hidden">
-            {formatAddress(authorAddress, 4, true)}
           </div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
@@ -279,15 +284,22 @@ const ReplyToFeedItem = memo(({
                 <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('replyingTo')}</span>
                 <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
                   <div className="translate-y-[2px]">
-                    <AddressAvatarWithChainName
-                      address={parent?.sender_address || authorAddress}
+                    <AddressAvatar
+                      address={getPostSenderAddress(parent) || authorAddress}
+                      imageUrl={getPostSenderAvatarUrl(parent)}
                       size={16}
-                      showAddressAndChainName={false}
-                      variant="feed"
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? (profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? t('common:defaultDisplayName')) : t('parent')}
+                    {parent ? (
+                      getPostSenderHeaderLabel(
+                        parent,
+                        resolveDisplayName({
+                          chainName: chainNames?.[getPostSenderAddress(parent)],
+                          address: getPostSenderAddress(parent),
+                        }) || t('common:defaultDisplayName'),
+                      )
+                    ) : t('parent')}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>

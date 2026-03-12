@@ -4,8 +4,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
-import { useWallet } from '@/hooks';
-import { formatAddress } from '@/utils/address';
+import { useAccountDisplayNames } from '@/hooks/useAccountDisplayNames';
 import { Head } from '../../../seo/Head';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
@@ -21,9 +20,20 @@ import { resolvePostByKey } from '../utils/resolvePost';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
 
+const PostTipSenderLink = ({ address, label }: { address: string; label: string }) => {
+  return (
+    <Link
+      to={`/users/${address}`}
+      className="text-sm text-white truncate hover:underline"
+      title={label || address}
+    >
+      {label || address}
+    </Link>
+  );
+};
+
 const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
   const { t } = useTranslation('social');
-  const { chainNames } = useWallet();
   const postId = String(post?.id || '');
   const receiver = String(post?.sender_address || post?.senderAddress || '');
 
@@ -33,6 +43,8 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
 
   const { data: tips = [], isLoading } = usePostTips(postId, receiver);
   const top = tips.slice(0, 10);
+  const tipSenderAddresses = top.map((tip) => String(tip.sender || '').trim()).filter(Boolean);
+  const { getDisplayName: getTipSenderDisplayName } = useAccountDisplayNames(tipSenderAddresses);
   const explorerBase = (explorerUrl || '').replace(/\/$/, '');
 
   return (
@@ -55,28 +67,25 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
 
       {!isLoading && tips.length > 0 && (
         <div className="grid gap-2">
-          {top.map((t) => (
-            <div key={t.hash} className="flex items-center justify-between gap-3">
+          {top.map((tip) => (
+            <div key={tip.hash} className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <Link
-                  to={`/users/${t.sender}`}
-                  className="text-sm text-white truncate hover:underline"
-                  title={t.sender}
-                >
-                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
-                </Link>
-                <div className="text-xs text-white/50 truncate">{t.date}</div>
+                <PostTipSenderLink
+                  address={tip.sender}
+                  label={getTipSenderDisplayName(tip.sender, { fallbackToAddress: true })}
+                />
+                <div className="text-xs text-white/50 truncate">{tip.date}</div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="text-sm text-white font-semibold">
-                  {Decimal.from(t.amountAe).prettify()}
+                  {Decimal.from(tip.amountAe).prettify()}
                   {' '}
                   AE
                 </div>
                 {explorerBase && (
                   <a
                     className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
-                    href={`${explorerBase}/transactions/${t.hash}`}
+                    href={`${explorerBase}/transactions/${tip.hash}`}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -265,7 +274,14 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
       ))}
       {postData && (
         <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
+          <ReplyToFeedItem
+            hideParentContext
+            allowInlineRepliesToggle={false}
+            item={postData as any}
+            commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number}
+            onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)}
+            isActive
+          />
         </div>
       )}
     </div>
@@ -278,7 +294,9 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || t('social:viewPostDefaultDescription')}
           canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/, '')}`}
-          ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
+          ogImage={
+            (Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined
+          }
           jsonLd={{
             '@context': 'https://schema.org',
             '@type': 'SocialMediaPosting',

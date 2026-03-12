@@ -1,14 +1,20 @@
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { cn } from '@/lib/utils';
 import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { linkify } from '../../../utils/linkify';
+import { resolveDisplayName } from '@/utils/displayName';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import SharePopover from './SharePopover';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
 import { compactTime, fullTimestamp } from '../../../utils/time';
+import {
+  getPostSenderAddress,
+  getPostSenderAvatarUrl,
+  getPostSenderHeaderLabel,
+} from '../utils/postSender';
 
 interface TokenCreatedFeedItemProps {
   item: PostDto;
@@ -32,10 +38,15 @@ function useTokenName(item: PostDto): string | null {
 // Token-created feed item rendered similar to a reply with a header box
 const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemProps) => {
   const postId = item.id;
-  const authorAddress = item.sender_address;
+  const authorAddress = getPostSenderAddress(item);
   const { t } = useTranslation(['common', 'social']);
-  const { chainNames, profileDisplayNames } = useWallet();
-  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
+  const { chainNames } = useWallet();
+  const senderAvatarUrl = getPostSenderAvatarUrl(item);
+  const fallbackDisplayName = resolveDisplayName({
+    chainName: chainNames?.[authorAddress],
+    address: authorAddress,
+  }) || t('common:defaultDisplayName');
+  const displayName = getPostSenderHeaderLabel(item, fallbackDisplayName) || fallbackDisplayName;
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -64,7 +75,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}
-            sender={item.sender_address}
+            sender={authorAddress}
             contract={(item as any).contract_address}
             postId={String(item.id)}
             className="px-2"
@@ -76,10 +87,10 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
       <div className="flex gap-2 md:gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainName address={authorAddress} size={34} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatar address={authorAddress} imageUrl={senderAvatarUrl} size={34} />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatar address={authorAddress} imageUrl={senderAvatarUrl} size={40} />
           </div>
         </div>
 
@@ -92,7 +103,6 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
             </div>
           </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
           {/* Tokenized trend header */}
           <div

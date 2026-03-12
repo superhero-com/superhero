@@ -41,32 +41,32 @@ export function useProfileFeed(options?: {
     [query.data],
   );
 
-  useEffect(() => {
-    if (!profiles.length) return;
+  // useEffect(() => {
+  //   if (!profiles.length) return;
 
-    const nextChainNames: Record<string, string> = {};
-    const nextDisplayNames: Record<string, string> = {};
-    profiles.forEach((profile) => {
-      if (!profile?.address) return;
-      queryClient.setQueryData(['SuperheroApi.getProfile', profile.address], profile);
+  //   const nextChainNames: Record<string, string> = {};
+  //   const nextDisplayNames: Record<string, string> = {};
+  //   profiles.forEach((profile) => {
+  //     if (!profile?.address) return;
+  //     queryClient.setQueryData(['SuperheroApi.getProfile', profile.address], profile);
 
-      const chainName = (profile.profile?.chain_name || '').trim();
-      if (chainName) {
-        nextChainNames[profile.address] = chainName;
-      }
-      const displayName = (profile.public_name || '').trim();
-      if (displayName) {
-        nextDisplayNames[profile.address] = displayName;
-      }
-    });
+  //     const chainName = (profile.profile?.chain_name || '').trim();
+  //     if (chainName) {
+  //       nextChainNames[profile.address] = chainName;
+  //     }
+  //     const displayName = (profile.public_name || '').trim();
+  //     if (displayName) {
+  //       nextDisplayNames[profile.address] = displayName;
+  //     }
+  //   });
 
-    if (Object.keys(nextChainNames).length) {
-      setChainNames((prev) => ({ ...prev, ...nextChainNames }));
-    }
-    if (Object.keys(nextDisplayNames).length) {
-      setProfileDisplayNames((prev) => ({ ...prev, ...nextDisplayNames }));
-    }
-  }, [profiles, queryClient, setChainNames, setProfileDisplayNames]);
+  //   if (Object.keys(nextChainNames).length) {
+  //     setChainNames((prev) => ({ ...prev, ...nextChainNames }));
+  //   }
+  //   if (Object.keys(nextDisplayNames).length) {
+  //     setProfileDisplayNames((prev) => ({ ...prev, ...nextDisplayNames }));
+  //   }
+  // }, [profiles, queryClient, setChainNames, setProfileDisplayNames]);
 
   return query;
 }

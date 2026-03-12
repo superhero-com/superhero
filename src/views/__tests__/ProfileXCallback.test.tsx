@@ -85,4 +85,40 @@ describe('ProfileXCallback', () => {
       expect(mockCreateXAttestationFromCode).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('does not exchange the code when PKCE storage is missing', async () => {
+    mockGetAndClearXOAuthPKCE.mockReturnValue(null);
+
+    render(
+      <MemoryRouter initialEntries={['/profile/x/callback?code=abc&state=superhero_x_state_1']}>
+        <Routes>
+          <Route path="/profile/x/callback" element={<ProfileXCallback />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockGetAndClearXOAuthPKCE).toHaveBeenCalledTimes(1);
+    });
+    expect(mockCreateXAttestationFromCode).not.toHaveBeenCalled();
+    expect(mockAddStaticAccount).not.toHaveBeenCalled();
+    expect(mockCompleteXWithAttestation).not.toHaveBeenCalled();
+  });
+
+  it('does not re-add the wallet when the active account already matches', async () => {
+    mockActiveAccount = 'ak_test_1';
+
+    render(
+      <MemoryRouter initialEntries={['/profile/x/callback?code=abc&state=superhero_x_state_1']}>
+        <Routes>
+          <Route path="/profile/x/callback" element={<ProfileXCallback />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockCreateXAttestationFromCode).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAddStaticAccount).not.toHaveBeenCalled();
+  });
 });

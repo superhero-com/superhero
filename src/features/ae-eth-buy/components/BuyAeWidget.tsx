@@ -8,6 +8,10 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import BigNumber from 'bignumber.js';
+import { ConfirmationPreviewCard } from '@/components/flow/ConfirmationPreviewCard';
+import {
+  useAeSdk, useDex, useFlowWatcher, useRecentActivities,
+} from '@/hooks';
 import { Decimal } from '@/libs/decimal';
 import { FromTo } from '@/features/shared/components';
 import Spinner from '@/components/Spinner';
@@ -21,8 +25,6 @@ import { BridgeService } from '../service';
 import { BridgeOptions, BridgeStatus } from '../types';
 import { AppKitProvider } from '../providers/AppKitProvider';
 import { ConnectEthereumWallet } from './ConnectEthereumWallet';
-
-import { useAeSdk, useDex, useRecentActivities } from '../../../hooks';
 import { useSwapQuote } from '../../../components/dex/hooks/useSwapQuote';
 import { DexService } from '../../../api/generated';
 import { DEX_ADDRESSES } from '../../../libs/dex';
@@ -66,6 +68,16 @@ const BuyAeWidgetContent = ({
     error: quoteError,
     clearError: clearQuoteError,
   } = useSwapQuote();
+  const {
+    startFlow,
+    getFlowById,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+    updateFlow,
+  } = useFlowWatcher();
+  const [flowId, setFlowId] = useState<string | null>(null);
   const quoteRequestSeqRef = useRef(0);
   const lastHandledQuoteErrorRef = useRef<string | null>(null);
 
@@ -254,6 +266,63 @@ const BuyAeWidgetContent = ({
       setEthBridgeProcessing(true);
       setEthBridgeError(null);
 
+      const startedFlowId = startFlow({
+        flowType: 'buy_ae',
+        context: {
+          from: 'ETH',
+          to: 'AE',
+        },
+        steps: [
+          {
+            id: 'confirm_eth_bridge',
+            label: 'Confirm ETH bridge transaction',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Confirm bridge on Ethereum',
+              network: 'Ethereum',
+              action: 'Bridge ETH to aeETH',
+              asset: 'ETH',
+              amount: ethBridgeIn,
+              spenderOrContract: BRIDGE_CONSTANTS.ETH_BRIDGE_ADDRESS,
+              estimatedFeeNote: 'Network fee is paid in ETH.',
+              riskHint: 'This is the first signature. A second signature is required later for swap.',
+            },
+          },
+          {
+            id: 'wait_aeeth_deposit',
+            label: 'Wait for aeETH deposit',
+            kind: 'balance_condition',
+            status: 'pending',
+            preview: {
+              title: 'Cross-chain transfer in progress',
+              network: 'Aeternity',
+              action: 'Wait for aeETH credit',
+              asset: 'aeETH',
+              amount: ethBridgeIn,
+              riskHint: 'No wallet action needed in this step.',
+            },
+          },
+          {
+            id: 'confirm_ae_swap',
+            label: 'Confirm aeETH -> AE swap',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Confirm swap on Aeternity',
+              network: 'Aeternity',
+              action: 'Swap aeETH to AE',
+              asset: 'aeETH -> AE',
+              amount: ethBridgeOutAe,
+              spenderOrContract: DEX_ADDRESSES.router,
+              estimatedFeeNote: 'Network fee is paid in AE.',
+              riskHint: 'Depending on allowance, wallet can request an additional approval first.',
+            },
+          },
+        ],
+      });
+      setFlowId(startedFlowId);
+
       const bridgeOptions: BridgeOptions = {
         amountEth: ethBridgeIn,
         aeAccount: activeAccount,
@@ -270,10 +339,32 @@ const BuyAeWidgetContent = ({
         bridgeOptions,
         (status: BridgeStatus) => {
           setEthBridgeStep(status);
+          if (!startedFlowId) return;
+          if (status === 'connecting') {
+            setCurrentStepStatus(startedFlowId, 'awaiting_user');
+          } else if (status === 'bridging') {
+            setCurrentStepStatus(startedFlowId, 'submitted');
+          } else if (status === 'waiting') {
+            setCurrentStepStatus(startedFlowId, 'confirmed');
+            advanceFlowStep(startedFlowId);
+            setCurrentStepStatus(startedFlowId, 'monitoring');
+          } else if (status === 'swapping') {
+            setCurrentStepStatus(startedFlowId, 'confirmed');
+            advanceFlowStep(startedFlowId);
+            setCurrentStepStatus(startedFlowId, 'awaiting_user');
+          } else if (status === 'completed') {
+            setCurrentStepStatus(startedFlowId, 'confirmed');
+            completeFlow(startedFlowId);
+          } else if (status === 'failed') {
+            failFlow(startedFlowId, 'Buy AE flow failed');
+          }
         },
       );
 
       if (result.success) {
+        updateFlow(startedFlowId, {
+          txHashes: [result.ethTxHash, result.aeTxHash].filter(Boolean) as string[],
+        });
         // Show success notification
         try {
           const explorerUrl = CONFIG.EXPLORER_URL?.replace(/\/$/, '');
@@ -288,6 +379,7 @@ const BuyAeWidgetContent = ({
           if (activeAccount && result.aeTxHash) {
             addActivity({
               type: 'bridge',
+              flowId: startedFlowId,
               hash: result.aeTxHash,
               account: activeAccount,
               tokenIn: 'ETH',
@@ -349,6 +441,9 @@ const BuyAeWidgetContent = ({
         throw new Error(result.error || 'Bridge operation failed');
       }
     } catch (e: any) {
+      if (flowId) {
+        failFlow(flowId, e?.message || 'Buy AE flow failed');
+      }
       setEthBridgeError(
         errorToUserMessage(e, { action: 'generic', slippagePct, deadlineMins }),
       );
@@ -357,6 +452,9 @@ const BuyAeWidgetContent = ({
       setEthBridgeProcessing(false);
     }
   };
+
+  const activeFlow = flowId ? getFlowById(flowId) : null;
+  const currentFlowStep = activeFlow?.steps?.[activeFlow.currentStepIndex];
 
   const handleMaxClick = async () => {
     if (!ethBalance && !fetchingBalance) {
@@ -475,6 +573,16 @@ const BuyAeWidgetContent = ({
           {' '}
           ETH
         </div>
+      )}
+
+      {currentFlowStep?.preview && (
+        <ConfirmationPreviewCard
+          preview={currentFlowStep.preview}
+          currentStep={activeFlow ? activeFlow.currentStepIndex + 1 : undefined}
+          totalSteps={activeFlow?.steps.length}
+          nextStepLabel={activeFlow?.steps[activeFlow.currentStepIndex + 1]?.label}
+          waitingForWallet={currentFlowStep.status === 'awaiting_user' || currentFlowStep.status === 'submitted'}
+        />
       )}
 
       {/* Bridge Process Info */}

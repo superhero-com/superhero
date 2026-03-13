@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/select';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useRecentActivities } from '@/hooks/useRecentActivities';
+import { useFlowWatcher } from '@/hooks';
+import { ConfirmationPreviewCard } from '@/components/flow/ConfirmationPreviewCard';
 
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import Spinner from '@/components/Spinner';
@@ -149,6 +151,14 @@ export const AeEthBridge = () => {
   const { sdk, activeAccount } = useAeSdk();
   const { walletProvider } = useAppKitProvider<Eip1193Provider>('eip155');
   const { addActivity } = useRecentActivities();
+  const {
+    startFlow,
+    getFlowById,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+  } = useFlowWatcher();
 
   const [buttonBusy, setButtonBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -160,6 +170,7 @@ export const AeEthBridge = () => {
   const [ethereumAccounts, setEthereumAccounts] = useState<string[]>([]);
   const [selectedEthAccount, setSelectedEthAccount] = useState<string>('');
   const [maxBusy, setMaxBusy] = useState(false);
+  const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
 
   // TODO: Implement these checks properly
   const isBridgeContractEnabled = true;
@@ -301,6 +312,7 @@ export const AeEthBridge = () => {
   }, [direction, walletProvider, fetchEthereumAccounts]);
 
   const bridgeToAeternity = useCallback(async () => {
+    let startedFlowId: string | null = null;
     try {
       if (!walletProvider) {
         showSnackMessage(t('bridge.connectEthereumWalletFirst'));
@@ -358,6 +370,43 @@ export const AeEthBridge = () => {
       });
 
       setButtonBusy(true);
+      startedFlowId = startFlow({
+        flowType: 'ae_eth_bridge',
+        context: { direction: 'eth_to_ae' },
+        steps: [
+          {
+            id: 'confirm_allowance',
+            label: 'Confirm token allowance',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Confirm token approval',
+              network: 'Ethereum',
+              action: 'Approve bridge contract',
+              asset: asset.symbol,
+              amount: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+              spenderOrContract: BridgeConstants.ethereum.bridge_address,
+              riskHint: 'This approval lets the bridge contract transfer the selected token amount.',
+            },
+          },
+          {
+            id: 'confirm_bridge',
+            label: 'Confirm bridge transaction',
+            kind: 'wallet_confirmation',
+            status: 'pending',
+            preview: {
+              title: 'Confirm bridge transfer',
+              network: 'Ethereum',
+              action: 'Bridge to Aeternity',
+              asset: asset.symbol,
+              amount: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+              spenderOrContract: BridgeConstants.ethereum.bridge_address,
+              riskHint: 'A bridge transaction finalizes the transfer to the destination network.',
+            },
+          },
+        ],
+      });
+      setActiveFlowId(startedFlowId);
 
       // Check if user has enough balance first
       const hasUserBalance = checkUserHasEnoughBalance(
@@ -386,6 +435,9 @@ export const AeEthBridge = () => {
         try {
           setConfirming(true);
           setConfirmPhase('allowance');
+          if (startedFlowId) {
+            setCurrentStepStatus(startedFlowId, 'awaiting_user');
+          }
           setConfirmingMsg(t('bridge.checkingTokenAllowance'));
           Logger.log('Checking allowance for asset:', asset.ethAddress);
           Logger.log('Signer address:', signerAddress);
@@ -450,6 +502,7 @@ export const AeEthBridge = () => {
 
           if (allowanceBigInt < requiredAmount) {
             setConfirmingMsg(t('bridge.confirmTokenApproval'));
+            if (startedFlowId) setCurrentStepStatus(startedFlowId, 'awaiting_user');
             Logger.log('Approving allowance:', normalizedAmount.toString());
 
             const approveResult = await assetContract.approve(
@@ -461,9 +514,14 @@ export const AeEthBridge = () => {
             showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), approveResult.hash);
 
             setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
+            if (startedFlowId) setCurrentStepStatus(startedFlowId, 'submitted');
             Logger.log('Waiting for approval confirmation...');
             await approveResult.wait(1);
             setConfirmingMsg(t('bridge.approvalConfirmed'));
+            if (startedFlowId) {
+              setCurrentStepStatus(startedFlowId, 'confirmed');
+              advanceFlowStep(startedFlowId);
+            }
             Logger.log('Approval confirmed');
           }
         } catch (e: any) {
@@ -486,9 +544,14 @@ export const AeEthBridge = () => {
               showTransactionSubmittedMessage(t('bridge.approvalTransactionSubmitted'), approveResult.hash);
 
               setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
+              if (startedFlowId) setCurrentStepStatus(startedFlowId, 'submitted');
               Logger.log('Waiting for approval confirmation...');
               await approveResult.wait(1);
               setConfirmingMsg(t('bridge.approvalConfirmed'));
+              if (startedFlowId) {
+                setCurrentStepStatus(startedFlowId, 'confirmed');
+                advanceFlowStep(startedFlowId);
+              }
               Logger.log('Approval confirmed');
             } catch (approvalError: any) {
               Logger.error('Approval also failed:', approvalError);
@@ -502,6 +565,7 @@ export const AeEthBridge = () => {
                 errorMsg = t('bridge.transactionFailedTokenRestrictions');
               }
               showSnackMessage(errorMsg);
+              if (startedFlowId) failFlow(startedFlowId, errorMsg);
               setButtonBusy(false);
               setConfirmPhase(null);
               setConfirming(false);
@@ -521,6 +585,7 @@ export const AeEthBridge = () => {
             }
 
             showSnackMessage(errorMsg);
+            if (startedFlowId) failFlow(startedFlowId, errorMsg);
             setButtonBusy(false);
             setConfirming(false);
             setConfirmingMsg('');
@@ -537,6 +602,16 @@ export const AeEthBridge = () => {
         setConfirmPhase('bridge');
         setConfirming(true);
         setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
+        if (startedFlowId) {
+          // If no allowance was needed, first step is still pending.
+          const flow = getFlowById(startedFlowId);
+          const currentStep = flow?.steps?.[flow.currentStepIndex];
+          if (currentStep?.id === 'confirm_allowance') {
+            setCurrentStepStatus(startedFlowId, 'skipped');
+            advanceFlowStep(startedFlowId);
+          }
+          setCurrentStepStatus(startedFlowId, 'awaiting_user');
+        }
 
         Logger.log('Calling bridge_out with:', {
           assetAddress: asset.ethAddress,
@@ -568,6 +643,7 @@ export const AeEthBridge = () => {
         });
 
         setConfirmingMsg(t('bridge.waitingForBridgeConfirmation'));
+        if (startedFlowId) setCurrentStepStatus(startedFlowId, 'submitted');
         timeout = setTimeout(() => {
           setConfirmingMsg(t('bridge.waitingLongerThanExpected'));
         }, 30000);
@@ -575,10 +651,15 @@ export const AeEthBridge = () => {
         await bridgeOutResult.wait(1);
         clearTimeout(timeout);
         setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
+        if (startedFlowId) {
+          setCurrentStepStatus(startedFlowId, 'confirmed');
+          completeFlow(startedFlowId);
+        }
         Logger.log('Bridge transaction confirmed');
         // Add bridge activity to recent activities
         addActivity({
           type: 'bridge',
+          flowId: startedFlowId || undefined,
           hash: bridgeOutResult.hash,
           account: activeAccount ?? destination,
           tokenIn: asset.symbol,
@@ -604,6 +685,7 @@ export const AeEthBridge = () => {
         }
 
         showSnackMessage(errorMsg);
+        if (startedFlowId) failFlow(startedFlowId, errorMsg);
       } finally {
         setConfirmPhase(null);
         setConfirming(false);
@@ -614,6 +696,7 @@ export const AeEthBridge = () => {
     } catch (e: any) {
       Logger.error(e);
       showSnackMessage(e.message);
+      if (startedFlowId) failFlow(startedFlowId, e?.message || 'Bridge failed');
       setButtonBusy(false);
     }
   }, [
@@ -636,9 +719,16 @@ export const AeEthBridge = () => {
     setConfirming,
     setConfirmingMsg,
     setBridgeActionSummary,
+    startFlow,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+    getFlowById,
   ]);
 
   const bridgeToEvm = useCallback(async (): Promise<void> => {
+    let startedFlowId: string | null = null;
     if (!isValidDestination || !destination?.startsWith('0x')) {
       showSnackMessage(t('bridge.invalidDestination'));
       return;
@@ -653,6 +743,42 @@ export const AeEthBridge = () => {
     }
 
     setButtonBusy(true);
+    startedFlowId = startFlow({
+      flowType: 'ae_eth_bridge',
+      context: { direction: 'ae_to_eth' },
+      steps: [
+        {
+          id: 'confirm_allowance',
+          label: 'Confirm token allowance',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm token allowance',
+            network: 'Aeternity',
+            action: 'Approve bridge contract',
+            asset: asset.symbol,
+            amount: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+            spenderOrContract: BridgeConstants.aeternity.bridge_address,
+            riskHint: 'Allowance may be required before bridging tokens.',
+          },
+        },
+        {
+          id: 'confirm_bridge',
+          label: 'Confirm bridge transaction',
+          kind: 'wallet_confirmation',
+          status: 'pending',
+          preview: {
+            title: 'Confirm bridge transaction',
+            network: 'Aeternity',
+            action: 'Bridge to Ethereum',
+            asset: asset.symbol,
+            amount: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+            spenderOrContract: BridgeConstants.aeternity.bridge_address,
+          },
+        },
+      ],
+    });
+    setActiveFlowId(startedFlowId);
 
     // Check if user has enough balance
     const hasUserBalance = checkUserHasEnoughBalance(
@@ -712,6 +838,7 @@ export const AeEthBridge = () => {
         // Check and handle allowance
         setConfirming(true);
         setConfirmPhase('allowance');
+        if (startedFlowId) setCurrentStepStatus(startedFlowId, 'awaiting_user');
         setConfirmingMsg(t('bridge.checkingTokenAllowance'));
         let allowance;
         try {
@@ -728,6 +855,7 @@ export const AeEthBridge = () => {
 
         if (allowance === undefined) {
           setConfirmingMsg(t('bridge.confirmTokenAllowance'));
+          if (startedFlowId) setCurrentStepStatus(startedFlowId, 'submitted');
           const allowanceCall = await assetContract.create_allowance(
             BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
             normalizedAmount.toString(),
@@ -736,12 +864,17 @@ export const AeEthBridge = () => {
           showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
         } else if (normalizedAmount.isGreaterThan(allowance)) {
           setConfirmingMsg(t('bridge.confirmTokenAllowanceUpdate'));
+          if (startedFlowId) setCurrentStepStatus(startedFlowId, 'submitted');
           const allowanceCall = await assetContract.change_allowance(
             BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
             normalizedAmount.toString(),
           );
           allowanceTxHash = allowanceCall.hash;
           showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
+        }
+        if (startedFlowId) {
+          setCurrentStepStatus(startedFlowId, 'confirmed');
+          advanceFlowStep(startedFlowId);
         }
         setConfirmPhase(null);
         setConfirming(false);
@@ -757,11 +890,24 @@ export const AeEthBridge = () => {
       setConfirmPhase('bridge');
       setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
       setConfirming(true);
+      if (startedFlowId) {
+        const flow = getFlowById(startedFlowId);
+        const currentStep = flow?.steps?.[flow.currentStepIndex];
+        if (currentStep?.id === 'confirm_allowance') {
+          setCurrentStepStatus(startedFlowId, 'skipped');
+          advanceFlowStep(startedFlowId);
+        }
+        setCurrentStepStatus(startedFlowId, 'awaiting_user');
+      }
       const bridgeOutCall = await bridgeContract.bridge_out(
         [asset.ethAddress, destination, normalizedAmount.toString(), actionType],
         { amount: aeAmount },
       );
       setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
+      if (startedFlowId) {
+        setCurrentStepStatus(startedFlowId, 'confirmed');
+        completeFlow(startedFlowId);
+      }
       setBridgeActionSummary({
         direction,
         asset,
@@ -774,6 +920,7 @@ export const AeEthBridge = () => {
       // Add bridge activity to recent activities
       addActivity({
         type: 'bridge',
+        flowId: startedFlowId || undefined,
         hash: bridgeOutCall.hash,
         account: aeternityAddress ?? destination,
         tokenIn: `æ${asset.symbol}`,
@@ -788,6 +935,7 @@ export const AeEthBridge = () => {
     } catch (e: any) {
       Logger.error(e);
       showSnackMessage(e.message);
+      if (startedFlowId) failFlow(startedFlowId, e?.message || 'Bridge failed');
     } finally {
       setConfirmPhase(null);
       setConfirming(false);
@@ -814,6 +962,12 @@ export const AeEthBridge = () => {
     setConfirming,
     setConfirmingMsg,
     setBridgeActionSummary,
+    startFlow,
+    setCurrentStepStatus,
+    advanceFlowStep,
+    completeFlow,
+    failFlow,
+    getFlowById,
   ]);
 
   const isBridgeActionFromAeternity = (
@@ -917,6 +1071,9 @@ export const AeEthBridge = () => {
     tokenBalance,
     setAmount,
   ]);
+
+  const activeFlow = activeFlowId ? getFlowById(activeFlowId) : null;
+  const activeFlowStep = activeFlow?.steps?.[activeFlow.currentStepIndex];
 
   return (
     <AppKitProvider>
@@ -1148,6 +1305,15 @@ export const AeEthBridge = () => {
             </div>
 
             {/* Bridge Process Status */}
+            {activeFlowStep?.preview && (
+            <ConfirmationPreviewCard
+              preview={activeFlowStep.preview}
+              currentStep={activeFlow ? activeFlow.currentStepIndex + 1 : undefined}
+              totalSteps={activeFlow?.steps.length}
+              nextStepLabel={activeFlow?.steps[activeFlow.currentStepIndex + 1]?.label}
+              waitingForWallet={activeFlowStep.status === 'awaiting_user' || activeFlowStep.status === 'submitted'}
+            />
+            )}
             {(confirming || buttonBusy) && (
             <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
               <div className="flex justify-between items-center mb-2">

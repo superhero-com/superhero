@@ -222,33 +222,33 @@ const ReplyToFeedItem = memo(({
 
         <div className="flex-1 min-w-0">
           {/* Header: name · handle (wide desktop) · time */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">
-              @
-              {authorAddress}
-            </span>
-            <span className="text-white/50 shrink-0">·</span>
-            {item.tx_hash ? (
-              <BlockchainInfoPopover
-                txHash={(item as any).tx_hash}
-                createdAt={item.created_at as unknown as string}
-                sender={(item as any).sender_address}
-                contract={(item as any).contract_address}
-                postId={String(item.id)}
-                triggerContent={(
-                  <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                    {compactTime(item.created_at as unknown as string)}
-                  </span>
-                )}
-              />
-            ) : (
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-            )}
-          </div>
+          <div className="items-centermin-w-0">
+            <div className="flex items-center gap-2">
+              <div className="text-[15px] font-semibold text-white truncate">
+                {displayName}
+              </div>
+              <span className="text-white/50 shrink-0">·</span>
+              {item.tx_hash ? (
+                <BlockchainInfoPopover
+                  txHash={(item as any).tx_hash}
+                  createdAt={item.created_at as unknown as string}
+                  sender={(item as any).sender_address}
+                  contract={(item as any).contract_address}
+                  postId={String(item.id)}
+                  triggerContent={(
+                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                      {compactTime(item.created_at as unknown as string)}
+                    </span>
+                  )}
+                />
+              ) : (
+                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+              )}
+            </div>
+            <div className="text-[10px] text-white/60 font-mono truncate">
+              {formatAddress(authorAddress, 10, false)}
+            </div>
 
-          <div className="mt-1 text-[12px] text-white/60 font-mono leading-[1.2] truncate 2xl:hidden">
-            {formatAddress(authorAddress, 4, true)}
           </div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}

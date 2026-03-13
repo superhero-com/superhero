@@ -222,7 +222,7 @@ const ReplyToFeedItem = memo(({
 
         <div className="flex-1 min-w-0">
           {/* Header: name · handle (wide desktop) · time */}
-          <div className="items-centermin-w-0">
+          <div className="items-center min-w-0">
             <div className="flex items-center gap-2">
               <div className="text-[15px] font-semibold text-white truncate">
                 {displayName}

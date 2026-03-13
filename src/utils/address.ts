@@ -58,7 +58,7 @@ export function validateHash(fullHash?: string): ValidatedHash {
 /**
  * Formats an address for display by truncating the middle
  */
-export function formatAddress(address: string, length = 10, truncate = true): string {
+export function formatAddress(address: string, length = 6, truncate = false): string {
   if (!address) return '';
 
   if (address.endsWith(AE_AENS_DOMAIN) || !truncate) {

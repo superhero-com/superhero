@@ -51,7 +51,7 @@ export default function SwapConfirmation({
   const maxSoldText = (() => {
     if (isExactIn || !amountIn) return null;
     const max = fromAettos(addSlippage(toAettos(amountIn, tokenIn.decimals), slippagePct), tokenIn.decimals);
-    return `${max} ${tokenIn.symbol}`;
+    return `${Decimal.from(max).prettify()} ${tokenIn.symbol}`;
   })();
 
   const rate = Number(amountOut || 0) / Math.max(Number(amountIn || 0) || 1, 1);

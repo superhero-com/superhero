@@ -291,8 +291,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const aeSdkInstance = new AeSdkAepp({
       name: 'Superhero',
       nodes,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       ttl: 10000,
       onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
       onAddressChange: (a: any) => {
@@ -313,6 +311,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     const staticAeSdkInstance = new AeSdk({
+      ttl: 10000,
       nodes,
       onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
     });

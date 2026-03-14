@@ -31,29 +31,28 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
   const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
   const totalAe = Number.isFinite(total) ? total : 0;
 
-  const { data: tips = [], isLoading } = usePostTips(postId, receiver);
+  const { data: tips = [] } = usePostTips(postId, receiver);
   const top = tips.slice(0, 10);
   const explorerBase = (explorerUrl || '').replace(/\/$/, '');
 
+  if (!tips?.length) {
+    return null;
+  }
   return (
-    <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-sm text-white/70">
-          {t('totalTipped')}
-          {' '}
-          <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
-          {' '}
-          AE
+    <section className="mt-2">
+      <h3 className="text-white/90 font-semibold mb-2">{t('social:tips')}</h3>
+      <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm text-white/70">
+            {t('totalTipped')}
+            {' '}
+            <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
+            {' '}
+            AE
+          </div>
+          <div className="text-xs text-white/50">{tips.length ? t('tipsCount', { count: tips.length }) : ''}</div>
         </div>
-        <div className="text-xs text-white/50">{tips.length ? t('tipsCount', { count: tips.length }) : ''}</div>
-      </div>
 
-      {isLoading && <div className="text-sm text-white/60">{t('loadingTips')}</div>}
-      {!isLoading && tips.length === 0 && (
-        <div className="text-sm text-white/60">{t('noTipsYet')}</div>
-      )}
-
-      {!isLoading && tips.length > 0 && (
         <div className="grid gap-2">
           {top.map((t) => (
             <div key={t.hash} className="flex items-center justify-between gap-3">
@@ -95,8 +94,8 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
             </div>
           )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 };
 
@@ -164,7 +163,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
   // Center the current post in the viewport once it's rendered
   const currentPostRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (!postData) return () => {};
+    if (!postData) return () => { };
     // Defer to the end of the frame to ensure layout is ready
     const id = window.requestAnimationFrame(() => {
       currentPostRef.current?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
@@ -316,10 +315,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
         <article className="grid gap-4">
           {renderStack()}
 
-          <section className="mt-2">
-            <h3 className="text-white/90 font-semibold mb-2">{t('social:tips')}</h3>
-            <PostTipOverview post={postData as any} explorerUrl={activeNetwork?.explorerUrl} />
-          </section>
+          <PostTipOverview post={postData as any} explorerUrl={activeNetwork?.explorerUrl} />
 
           <section className="mt-2">
             <h3 className="text-white/90 font-semibold mb-2">{t('social:replies')}</h3>

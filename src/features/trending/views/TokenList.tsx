@@ -292,7 +292,7 @@ const TokenList = () => {
             ref={loadMoreBtn}
             type="button"
             onClick={() => fetchNextPage()}
-            disabled={isFetching}
+            disabled={isFetching || !hasNextPage}
             className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'

@@ -22,6 +22,7 @@ import SwapInfoDisplay from './SwapInfoDisplay';
 import NoLiquidityWarning from './NoLiquidityWarning';
 import TokenInput from './TokenInput';
 import { Decimal } from '../../../libs/decimal';
+import { ArrowDown } from 'lucide-react';
 
 import { useAccount, useDex } from '../../../hooks';
 import Spinner from '../../Spinner';
@@ -401,7 +402,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           disabled={swapLoading || !tokenIn || !tokenOut}
           className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
-          ⬇️
+          <ArrowDown className="w-5 h-5" />
         </button>
       </div>
 

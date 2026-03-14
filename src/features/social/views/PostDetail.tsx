@@ -31,7 +31,7 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
   const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
   const totalAe = Number.isFinite(total) ? total : 0;
 
-  const { data: tips = [], isLoading } = usePostTips(postId, receiver);
+  const { data: tips = [] } = usePostTips(postId, receiver);
   const top = tips.slice(0, 10);
   const explorerBase = (explorerUrl || '').replace(/\/$/, '');
 
@@ -53,54 +53,47 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
           <div className="text-xs text-white/50">{tips.length ? t('tipsCount', { count: tips.length }) : ''}</div>
         </div>
 
-        {isLoading && <div className="text-sm text-white/60">{t('loadingTips')}</div>}
-        {!isLoading && tips.length === 0 && (
-          <div className="text-sm text-white/60">{t('noTipsYet')}</div>
-        )}
-
-        {!isLoading && tips.length > 0 && (
-          <div className="grid gap-2">
-            {top.map((t) => (
-              <div key={t.hash} className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <Link
-                    to={`/users/${t.sender}`}
-                    className="text-sm text-white truncate hover:underline"
-                    title={t.sender}
+        <div className="grid gap-2">
+          {top.map((t) => (
+            <div key={t.hash} className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  to={`/users/${t.sender}`}
+                  className="text-sm text-white truncate hover:underline"
+                  title={t.sender}
+                >
+                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
+                </Link>
+                <div className="text-xs text-white/50 truncate">{t.date}</div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-sm text-white font-semibold">
+                  {Decimal.from(t.amountAe).prettify()}
+                  {' '}
+                  AE
+                </div>
+                {explorerBase && (
+                  <a
+                    className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
+                    href={`${explorerBase}/transactions/${t.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
                   >
-                    {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
-                  </Link>
-                  <div className="text-xs text-white/50 truncate">{t.date}</div>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="text-sm text-white font-semibold">
-                    {Decimal.from(t.amountAe).prettify()}
-                    {' '}
-                    AE
-                  </div>
-                  {explorerBase && (
-                    <a
-                      className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
-                      href={`${explorerBase}/transactions/${t.hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View
-                    </a>
-                  )}
-                </div>
+                    View
+                  </a>
+                )}
               </div>
-            ))}
-            {tips.length > top.length && (
-              <div className="text-xs text-white/50 pt-1">
-                Showing latest
-                {top.length}
-                {' '}
-                tips.
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          ))}
+          {tips.length > top.length && (
+            <div className="text-xs text-white/50 pt-1">
+              Showing latest
+              {top.length}
+              {' '}
+              tips.
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

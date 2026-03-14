@@ -6,14 +6,14 @@ import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
-import { useModal } from '../../../hooks';
+import { useWalletConnect } from '../../../hooks/useWalletConnect';
 
 const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const navigationItems = getNavigationItems();
   const { activeAccount } = useAeSdk();
-  const { openModal } = useModal();
+  const { connectWallet } = useWalletConnect();
 
   useEffect(() => {
     // force theme to be dark
@@ -31,8 +31,6 @@ const WebAppHeader = () => {
     });
     return items;
   }, [navigationItems, activeAccount]);
-
-  const handleConnect = useCallback(() => openModal({ name: 'connect-wallet' }), [openModal]);
 
   const activeNavPath = React.useMemo(() => {
     const matches = sidebarItems
@@ -91,7 +89,7 @@ const WebAppHeader = () => {
                   type="button"
                   className={`${commonClass} no-gradient-text text-left`}
                   style={idleStyles}
-                  onClick={handleConnect}
+                  onClick={() => connectWallet()}
                 >
                   <span className="w-6 flex items-center justify-center">
                     <Icon className="w-[18px] h-[18px]" />

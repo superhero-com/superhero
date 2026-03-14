@@ -6,7 +6,7 @@ import {
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAccount, useModal } from '../../../hooks';
+import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import Favicon from '../../../svg/favicon.svg?react';
@@ -15,11 +15,9 @@ import { IconThreeDots } from '../../../icons';
 const HeaderWalletButton = () => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
-  const { disconnectWallet } = useWalletConnect();
-  const { openModal } = useModal();
+  const { disconnectWallet, connectWallet } = useWalletConnect();
   const { decimalBalance } = useAccount();
   const navigate = useNavigate();
-  const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = async () => {
     await disconnectWallet();
     window.location.reload();
@@ -34,7 +32,7 @@ const HeaderWalletButton = () => {
   if (!activeAccount) {
     return (
       <AeButton
-        onClick={handleConnect}
+        onClick={() => connectWallet()}
         disabled={false}
         loading={false}
         variant="default"

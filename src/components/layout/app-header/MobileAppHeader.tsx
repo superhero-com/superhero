@@ -15,7 +15,6 @@ import { getNavigationItems } from './navigationItems';
 import AddressAvatar from '../../AddressAvatar';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import { useModal } from '../../../hooks';
 import FooterSection from '../FooterSection';
 import { TokensService } from '../../../api/generated/services/TokensService';
 
@@ -28,10 +27,8 @@ const MobileAppHeader = () => {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
-  const { disconnectWallet } = useWalletConnect();
-  const { openModal } = useModal();
+  const { disconnectWallet, connectWallet } = useWalletConnect();
 
-  const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = async () => {
     await disconnectWallet();
     window.location.reload();
@@ -325,7 +322,7 @@ const MobileAppHeader = () => {
                   </div>
                 </div>
               ) : (
-                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
+                <AeButton onClick={() => connectWallet()} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
                   {t('buttons.connectWalletDex')}
                 </AeButton>
               )}

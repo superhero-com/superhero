@@ -14,9 +14,10 @@ export const DATE_LONG = 'YYYY-MM-DD HH:mm';
 
 export const IS_FRAMED_AEPP = window.parent !== window;
 export const IS_MOBILE = window.navigator.userAgent.includes('Mobi');
-export const IS_SAFARI = /Mozilla\/5.0 \((Macintosh|iPad|iPhone|iPod); [\s\S]+?\) AppleWebKit\/\S+ \(KHTML, like Gecko\)( (Version|Safari|Mobile)\/\S+)+/.test(
-  navigator.userAgent,
-);
+export const IS_SAFARI =
+  /Mozilla\/5.0 \((Macintosh|iPad|iPhone|iPod); [\s\S]+?\) AppleWebKit\/\S+ \(KHTML, like Gecko\)( (Version|Safari|Mobile)\/\S+)+/.test(
+    navigator.userAgent,
+  );
 
 export const COIN_SYMBOL = 'AE';
 

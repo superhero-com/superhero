@@ -25,7 +25,7 @@ import {
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
-  const scanStopRef = useRef<null |(() => void)>(null);
+  const scanStopRef = useRef<null | (() => void)>(null);
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
@@ -129,7 +129,7 @@ export function useWalletConnect() {
     const addressDeepLink = createDeepLinkUrl({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
-      }?address={address}&networkId={networkId}`,
+        }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
     });
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -232,39 +232,12 @@ export function useWalletConnect() {
      * Scan for wallets
      */
   async function scanForWallets(): Promise<Wallet | undefined> {
-    // Concurrency safety: if a scan is already running, reuse it instead of starting a new one.
-    if (scanPromiseRef.current) return scanPromiseRef.current;
-
-    const scanPromise = new Promise<Wallet | undefined>((resolve) => {
-      let isDone = false;
-      const scannerConnection = new BrowserWindowMessageConnection({ debug: false });
-      const cleanup = () => {
-        if (isDone) return;
-        isDone = true;
-
-        try {
-          stopScan();
-        } catch {
-          // ignore
-        }
-        try {
-          scannerConnection.disconnect?.();
-        } catch {
-          // ignore
-        }
-
-        // Clear shared refs only if they still point to this scan's resources.
-        if (scanConnectionRef.current === scannerConnection) scanConnectionRef.current = null;
-        if (scanStopRef.current === stopScan) scanStopRef.current = null;
-        if (scanPromiseRef.current === scanPromise) scanPromiseRef.current = null;
-      };
-
+    const foundWallet: Wallet | undefined = await new Promise((resolve) => {
       const $walletConnectTimeout = setTimeout(
         () => {
-          cleanup();
           resolve(undefined);
         },
-        (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 7000 : 15000,
+        (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 15000,
       );
 
       const handleWallets = async ({
@@ -274,17 +247,17 @@ export function useWalletConnect() {
         wallets: Wallets;
       }) => {
         clearTimeout($walletConnectTimeout);
-        cleanup();
+        stopScan();
         resolve(newWallet);
       };
 
+      const scannerConnection = new BrowserWindowMessageConnection({
+        debug: true,
+      });
       const stopScan = walletDetector(scannerConnection, handleWallets);
-      scanConnectionRef.current = scannerConnection;
-      scanStopRef.current = stopScan;
     });
 
-    scanPromiseRef.current = scanPromise;
-    return scanPromise;
+    return foundWallet;
   }
 
   /**
@@ -304,9 +277,9 @@ export function useWalletConnect() {
     }
 
     if (
-    // route.name !== "tx-queue" &&
+      // route.name !== "tx-queue" &&
       activeAccountRef.current
-            && !walletConnectedRef.current
+      && !walletConnectedRef.current
     ) {
       if (walletInfoRef.current) {
         await connectWalletRef.current?.();

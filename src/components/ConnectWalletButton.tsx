@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { useAeSdk, useWalletConnect, useModal } from '../hooks';
+import { useAeSdk, useWalletConnect } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
 
@@ -19,8 +19,7 @@ export const ConnectWalletButton = ({
 }: Props) => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
-  const { connectingWallet } = useWalletConnect();
-  const { openModal } = useModal();
+  const { connectingWallet, connectWallet } = useWalletConnect();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
@@ -58,7 +57,7 @@ export const ConnectWalletButton = ({
 
   return (
     <AeButton
-      onClick={() => openModal({ name: 'connect-wallet' })}
+      onClick={() => connectWallet()}
       disabled={connectingWallet}
       loading={connectingWallet}
       variant="ghost"

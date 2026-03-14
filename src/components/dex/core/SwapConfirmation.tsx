@@ -5,6 +5,7 @@ import {
   addSlippage, fromAettos, subSlippage, toAettos,
 } from '../../../libs/dex';
 import Spinner from '../../Spinner';
+import { Decimal } from '@/libs/decimal';
 
 interface SwapConfirmationProps {
   show: boolean;
@@ -44,7 +45,7 @@ export default function SwapConfirmation({
   const minReceivedText = (() => {
     if (!isExactIn || !amountOut) return null;
     const min = fromAettos(subSlippage(toAettos(amountOut, tokenOut.decimals), slippagePct), tokenOut.decimals);
-    return `${min} ${tokenOut.symbol}`;
+    return `${Decimal.from(min).prettify()} ${tokenOut.symbol}`;
   })();
 
   const maxSoldText = (() => {
@@ -80,269 +81,126 @@ export default function SwapConfirmation({
             </div>
 
             {/* Token In */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 16px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              borderRadius: 12,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              marginBottom: 12,
-            }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-              }}
-              >
-                <div style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  background: 'var(--button-gradient)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: 'white',
-                }}
-                >
+            <div className="flex justify-between items-center py-3 px-4 bg-white/[0.03] rounded-xl border border-white/10 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#1161FE] flex items-center justify-center text-sm font-bold text-white">
                   {tokenIn.symbol.charAt(0)}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 16 }}>
+                  <div className="font-semibold text-base">
                     {tokenIn.symbol}
                   </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: 'var(--light-font-color)',
-                  }}
-                  >
+                  <div className="text-xs text-white/60">
                     From
                   </div>
                 </div>
               </div>
-              <div style={{
-                fontWeight: 700,
-                fontSize: 18,
-                color: 'var(--standard-font-color)',
-              }}
-              >
-                {Number(amountIn).toFixed(6)}
+              <div className="font-bold text-lg text-white">
+                {Decimal.from(amountIn).prettify()}
               </div>
             </div>
 
             {/* Swap Arrow */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: 12,
-            }}
-            >
-              <div style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'var(--accent-color)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 16,
-              }}
-              >
+            <div className="flex justify-center mb-3">
+              <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 flex items-center justify-center text-base">
                 ↓
               </div>
             </div>
 
             {/* Token Out */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '12px 16px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              borderRadius: 12,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-              }}
-              >
-                <div style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  background: 'var(--button-gradient)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: 'white',
-                }}
-                >
+            <div className="flex justify-between items-center py-3 px-4 bg-white/[0.03] rounded-xl border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#1161FE] flex items-center justify-center text-sm font-bold text-white">
                   {tokenOut.symbol.charAt(0)}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 16 }}>
+                  <div className="font-semibold text-base">
                     {tokenOut.symbol}
                   </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: 'var(--light-font-color)',
-                  }}
-                  >
+                  <div className="text-xs text-white/60">
                     To
                   </div>
                 </div>
               </div>
-              <div style={{
-                fontWeight: 700,
-                fontSize: 18,
-                color: 'var(--success-color)',
-              }}
-              >
-                {Number(amountOut).toFixed(6)}
+              <div className="font-bold text-lg text-green-400">
+                {Decimal.from(amountOut).prettify()}
               </div>
             </div>
           </div>
 
           {/* Swap Details */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 16,
-            padding: 16,
-            marginBottom: 20,
-          }}
-          >
-            <div style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: 'var(--light-font-color)',
-              marginBottom: 12,
-            }}
-            >
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5">
+            <div className="text-sm font-semibold text-white/60 mb-3">
               Swap Details
             </div>
 
-            <div style={{ display: 'grid', gap: 8 }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 13,
-                color: 'var(--light-font-color)',
-              }}
-              >
+            <div className="grid gap-2">
+              <div className="flex justify-between text-[13px] text-white/60">
                 <span>Exchange Rate</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>
+                <span className="text-white">
                   1
                   {' '}
                   {tokenIn.symbol}
                   {' '}
                   =
                   {' '}
-                  {rate.toFixed(6)}
+                  {Decimal.from(rate).prettify()}
                   {' '}
                   {tokenOut.symbol}
                 </span>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 13,
-                color: 'var(--light-font-color)',
-              }}
-              >
+              <div className="flex justify-between text-[13px] text-white/60">
                 <span>Inverse Rate</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>
+                <span className="text-white">
                   1
                   {' '}
                   {tokenOut.symbol}
                   {' '}
                   =
                   {' '}
-                  {inverseRate.toFixed(6)}
+                  {Decimal.from(inverseRate).prettify()}
                   {' '}
                   {tokenIn.symbol}
                 </span>
               </div>
 
               {priceImpactPct != null && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 13,
-                  color: 'var(--light-font-color)',
-                }}
-                >
+                <div className="flex justify-between text-[13px] text-white/60">
                   <span>Price Impact</span>
-                  <span style={{
-                    color: priceImpactPct > 10 ? 'var(--error-color)'
-                      : priceImpactPct > 5 ? '#ffb86b' : 'var(--success-color)',
-                    fontWeight: 600,
-                  }}
+                  <span className={`font-semibold ${
+                    priceImpactPct > 10 ? 'text-red-400'
+                      : priceImpactPct > 5 ? 'text-[#ffb86b]' : 'text-green-400'
+                  }`}
                   >
-                    {priceImpactPct.toFixed(2)}
+                    {Decimal.from(priceImpactPct).prettify()}
                     %
                   </span>
                 </div>
               )}
 
               {isExactIn && minReceivedText && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 13,
-                  color: 'var(--light-font-color)',
-                }}
-                >
+                <div className="flex justify-between text-[13px] text-white/60">
                   <span>Minimum Received</span>
-                  <span style={{ color: 'var(--standard-font-color)' }}>
+                  <span className="text-white">
                     {minReceivedText}
                   </span>
                 </div>
               )}
 
               {!isExactIn && maxSoldText && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 13,
-                  color: 'var(--light-font-color)',
-                }}
-                >
+                <div className="flex justify-between text-[13px] text-white/60">
                   <span>Maximum Sold</span>
-                  <span style={{ color: 'var(--standard-font-color)' }}>
+                  <span className="text-white">
                     {maxSoldText}
                   </span>
                 </div>
               )}
 
               {path.length > 0 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: 13,
-                  color: 'var(--light-font-color)',
-                  alignItems: 'flex-start',
-                }}
-                >
+                <div className="flex justify-between text-[13px] text-white/60 items-start">
                   <span>Route</span>
-                  <span style={{
-                    color: 'var(--standard-font-color)',
-                    textAlign: 'right',
-                    maxWidth: '60%',
-                    wordBreak: 'break-all',
-                  }}
-                  >
+                  <span className="text-white text-right max-w-[60%] break-all">
                     {path.map((p, i) => (i > 0 ? ' → ' : '') + p).join('')}
                   </span>
                 </div>
@@ -352,23 +210,11 @@ export default function SwapConfirmation({
 
           {/* High Price Impact Warning */}
           {priceImpactPct != null && priceImpactPct > 10 && (
-            <div style={{
-              color: 'var(--error-color)',
-              background: 'rgba(255, 107, 107, 0.1)',
-              border: '1px solid var(--error-color)',
-              borderRadius: 12,
-              padding: 16,
-              fontSize: 13,
-              marginBottom: 20,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-            >
-              <div style={{ fontSize: 18 }}>⚠️</div>
+            <div className="text-red-400 text-[13px] bg-red-400/10 border border-red-400/20 rounded-xl p-4 mb-5 flex items-center gap-3">
+              <div className="text-lg">⚠️</div>
               <div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>High Price Impact</div>
-                <div style={{ opacity: 0.9 }}>
+                <div className="font-semibold mb-1">High Price Impact</div>
+                <div className="opacity-90">
                   This swap has a high price impact. Consider reducing the amount or choosing a different route.
                 </div>
               </div>
@@ -376,34 +222,18 @@ export default function SwapConfirmation({
           )}
 
           {/* Settings */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 24,
-          }}
-          >
-            <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                color: 'var(--light-font-color)',
-              }}
-              >
+          <div className="bg-white/[0.03] rounded-xl p-4 mb-6">
+            <div className="grid gap-2 text-[13px]">
+              <div className="flex justify-between text-white/60">
                 <span>Slippage Tolerance</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>
+                <span className="text-white">
                   {slippagePct}
                   %
                 </span>
               </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                color: 'var(--light-font-color)',
-              }}
-              >
+              <div className="flex justify-between text-white/60">
                 <span>Transaction Deadline</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>
+                <span className="text-white">
                   {deadlineMins}
                   {' '}
                   minutes
@@ -413,28 +243,15 @@ export default function SwapConfirmation({
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div className="grid gap-2.5">
             <button
               onClick={onConfirm}
               disabled={loading}
-              style={{
-                width: '100%',
-                padding: '16px 24px',
-                borderRadius: 16,
-                border: 'none',
-                background: loading
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'var(--button-gradient)',
-                color: 'white',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
+              className={`w-full px-6 py-4 rounded-2xl border-none text-white text-base font-bold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 ${
+                loading
+                  ? 'bg-white/10 cursor-not-allowed'
+                  : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0'
+              }`}
             >
               {loading ? (
                 <>
@@ -457,19 +274,9 @@ export default function SwapConfirmation({
             <button
               onClick={onClose}
               disabled={loading}
-              style={{
-                width: '100%',
-                padding: '16px 24px',
-                borderRadius: 16,
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--standard-font-color)',
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1,
-                transition: 'all 0.3s ease',
-              }}
+              className={`w-full px-6 py-4 rounded-2xl border border-white/10 bg-white/[0.05] text-white text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-white/[0.08]'
+              }`}
             >
               Cancel
             </button>

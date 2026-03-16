@@ -11,7 +11,7 @@ import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
 import { useModal } from '../hooks/useModal';
 import { configs } from '../configs';
-import { NETWORK_MAINNET } from '../utils/constants';
+import { IS_SAFARI, NETWORK_MAINNET } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl } from '../utils/url';
 
@@ -29,7 +29,7 @@ export const AeSdkContext = createContext<{
   currentBlockHeight: number,
   activeNetwork: INetwork,
   accounts: string[],
-  setActiveAccount:(account: string) => void,
+  setActiveAccount: (account: string) => void,
   setAccounts: (accounts: string[]) => void,
   getCurrentGeneration: () => void,
   addStaticAccount: (account: string) => void,
@@ -38,7 +38,7 @@ export const AeSdkContext = createContext<{
   initSdk: () => void,
   scanForAccounts: () => void,
   nodes: { instance: Node; name: string }[],
-    }>(null);
+}>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
   configs.networks,
@@ -199,31 +199,35 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 newWindow = null;
               }
             };
+            if (IS_SAFARI) {
+              newWindow = window.open(signUrl, '_blank', windowFeatures);
+            } else {
+              openModal({
+                name: 'transaction-confirm',
+                props: {
+                  transaction: tx,
+                  onConfirm: () => {
+                    /**
+                     * By setting a name and width/height,
+                     * the extension is forced to open in a new window
+                     */
+                    newWindow = window.open(signUrl, '_blank', windowFeatures);
+                  },
+                  onCancel: () => {
+                    cleanup();
+                    // Remove transaction from queue
+                    const currentQueue = transactionsQueueRef.current;
+                    if (Object.keys(currentQueue).includes(uniqueId)) {
+                      const newQueue = { ...currentQueue };
+                      delete newQueue[uniqueId];
+                      setTransactionsQueue(newQueue);
+                    }
+                    reject(new Error('Transaction cancelled'));
+                  },
+                },
+              });
+            }
 
-            openModal({
-              name: 'transaction-confirm',
-              props: {
-                transaction: tx,
-                onConfirm: () => {
-                  /**
-                   * By setting a name and width/height,
-                   * the extension is forced to open in a new window
-                   */
-                  newWindow = window.open(signUrl, '_blank', windowFeatures);
-                },
-                onCancel: () => {
-                  cleanup();
-                  // Remove transaction from queue
-                  const currentQueue = transactionsQueueRef.current;
-                  if (Object.keys(currentQueue).includes(uniqueId)) {
-                    const newQueue = { ...currentQueue };
-                    delete newQueue[uniqueId];
-                    setTransactionsQueue(newQueue);
-                  }
-                  reject(new Error('Transaction cancelled'));
-                },
-              },
-            });
 
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes

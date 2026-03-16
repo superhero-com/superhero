@@ -199,8 +199,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 newWindow = null;
               }
             };
-            if (IS_SAFARI) {
-              newWindow = window.open(signUrl, '_blank', windowFeatures);
+            console.log("signUrl", signUrl);
+            if (IS_SAFARI && signUrl.includes('superhero://')) {
+              console.log("on safari should manually open the modal")
+              newWindow = window.open(signUrl, '_self', windowFeatures);
+              console.log("open new window called", newWindow);
             } else {
               openModal({
                 name: 'transaction-confirm',

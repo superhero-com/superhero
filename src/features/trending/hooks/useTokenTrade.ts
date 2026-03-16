@@ -41,6 +41,10 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
   const tokenRef = useRef<TokenDto>(token);
   const errorMessage = useRef<string | undefined>();
+  // storeRef lets effects/callbacks always access the latest store without
+  // listing `store` (a new object every render) as a reactive dependency.
+  const storeRef = useRef(store);
+  storeRef.current = store;
 
   const getConnectedWalletAddress = useCallback(() => {
     // eslint-disable-next-line no-underscore-dangle
@@ -59,12 +63,14 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           ),
         ),
       );
-      store.updateNextPrice(price);
+      storeRef.current.updateNextPrice(price);
     } catch (error) {
       console.error('Error calculating bonding curve price:', error);
-      store.updateNextPrice(Decimal.ZERO);
+      storeRef.current.updateNextPrice(Decimal.ZERO);
     }
-  }, [store]);
+  // storeRef is a stable ref — intentionally omitted from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -163,54 +169,57 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   // Update user balance when fetched
   useEffect(() => {
     if (fetchedUserBalance !== undefined) {
-      store.updateUserBalance(fetchedUserBalance);
+      storeRef.current.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance, store]);
+  }, [fetchedUserBalance]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
+    const s = storeRef.current;
     if (
-      // store.tokenA === undefined ||
-      // store.tokenA <= 0 ||
-      !store.tokenAFocused
+      !s.tokenAFocused
       || !tokenRef.current.sale_address
       || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-    if (store.tokenA === undefined || store.tokenA <= 0) {
-      store.updateTokenB(undefined);
+    if (s.tokenA === undefined || s.tokenA <= 0) {
+      s.updateTokenB(undefined);
       return;
     }
     const calculatedTokenB = calculateTokenCost(
-      store.tokenA,
-      store.isBuying,
-      !store.isBuying,
+      s.tokenA,
+      s.isBuying,
+      !s.isBuying,
     );
-    store.updateTokenB(calculatedTokenB);
-  }, [store, store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+    s.updateTokenB(calculatedTokenB);
+  // storeRef is stable — use the individual reactive values as deps instead
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   // Watch tokenB changes and calculate tokenA automatically
   useEffect(() => {
+    const s = storeRef.current;
     if (
-      store.tokenAFocused
+      s.tokenAFocused
       || !tokenRef.current.sale_address
       || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-    if (store.tokenB === undefined || store.tokenB <= 0) {
-      store.updateTokenA(undefined);
+    if (s.tokenB === undefined || s.tokenB <= 0) {
+      s.updateTokenA(undefined);
       return;
     }
     const calculatedTokenA = calculateTokenCost(
-      store.tokenB,
-      store.isBuying,
-      store.isBuying,
+      s.tokenB,
+      s.isBuying,
+      s.isBuying,
     );
-
-    store.updateTokenA(calculatedTokenA);
-  }, [store, store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+    s.updateTokenA(calculatedTokenA);
+  // storeRef is stable — use the individual reactive values as deps instead
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {
     store.resetFormData(true);

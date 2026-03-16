@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import { formatFractionalPrice } from '@/utils/common';
 import { COIN_SYMBOL } from '@/utils/constants';
 import { Decimal } from '@/libs/decimal';
-import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
+import { transactionTypeAtom, createTokenDetailsAtom } from '@/atoms/transactionConfirmAtom';
 import {
   tokenAAtom,
   tokenBAtom,
@@ -239,11 +239,120 @@ function DefaultTransactionConfirm({
   );
 }
 
+function CreateTokenTransactionConfirm({
+  onConfirm,
+  onCancel,
+  onClose,
+}: TransactionConfirmModalProps) {
+  const details = useAtomValue(createTokenDetailsAtom);
+
+  const handleConfirm = () => { onConfirm(); onClose(); };
+  const handleCancel = () => { onCancel(); onClose(); };
+
+  const hasInitialBuy = details?.inputMode === 'AE'
+    ? Number(details.aeAmount || 0) > 0
+    : Number(details?.tokenAmount || 0) > 0;
+
+  return (
+    <div className="w-full max-w-md mx-auto space-y-4">
+      <h2 className="text-lg font-semibold text-white">Confirm Token Creation</h2>
+
+      {/* Token identity box */}
+      <div className="flex items-center gap-3 px-4 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center text-white font-bold text-sm shrink-0">
+          {details?.tokenName?.[0] ?? '?'}
+        </div>
+        <div>
+          <div className="text-white font-semibold text-base leading-tight">
+            {details?.tokenName ?? '—'}
+          </div>
+          <div className="text-white/50 text-xs mt-0.5">New token</div>
+        </div>
+      </div>
+
+      {/* Initial buy section */}
+      {hasInitialBuy && (
+        <div className="space-y-0 divide-y divide-white/5 border border-white/10 rounded-md px-4">
+          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider pt-3 pb-2">
+            Initial Buy
+          </h3>
+
+          {details?.inputMode === 'AE' ? (
+            <>
+              <TransactionConfirmDetailRow label="You spend">
+                <span className="flex items-center gap-1">
+                  <FractionFormatter
+                    fractionalPrice={formatFractionalPrice(Decimal.from(details.aeAmount ?? 0))}
+                  />
+                  &nbsp;{COIN_SYMBOL}
+                </span>
+              </TransactionConfirmDetailRow>
+              {details.estimatedTokens && !details.estimatedTokens.isZero && (
+                <TransactionConfirmDetailRow label="You receive ~">
+                  <span className="flex items-center gap-1">
+                    <FractionFormatter
+                      fractionalPrice={formatFractionalPrice(details.estimatedTokens)}
+                    />
+                    &nbsp;{details.tokenName}
+                  </span>
+                </TransactionConfirmDetailRow>
+              )}
+            </>
+          ) : (
+            <>
+              <TransactionConfirmDetailRow label="You receive">
+                <span className="flex items-center gap-1">
+                  <FractionFormatter
+                    fractionalPrice={formatFractionalPrice(Decimal.from(details?.tokenAmount ?? 0))}
+                  />
+                  &nbsp;{details?.tokenName}
+                </span>
+              </TransactionConfirmDetailRow>
+              {details?.estimatedCost && !details.estimatedCost.isZero && (
+                <TransactionConfirmDetailRow label="Estimated cost ~">
+                  <LivePriceFormatter
+                    aePrice={details.estimatedCost}
+                    watchPrice={false}
+                  />
+                </TransactionConfirmDetailRow>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex flex-col gap-2 pt-2">
+        <AeButton
+          variant="primary"
+          onClick={handleConfirm}
+          size="md"
+          fullWidth
+          style={{ background: '#1161FE' }}
+        >
+          Confirm in Wallet
+        </AeButton>
+        <AeButton
+          variant="secondary"
+          onClick={handleCancel}
+          size="md"
+          fullWidth
+        >
+          Cancel
+        </AeButton>
+      </div>
+    </div>
+  );
+}
+
 const TransactionConfirmModal = (props: TransactionConfirmModalProps) => {
   const transactionType = useAtomValue(transactionTypeAtom);
 
   if (transactionType === 'trade') {
     return <TradeTransactionConfirm {...props} />;
+  }
+  if (transactionType === 'create-token') {
+    return <CreateTokenTransactionConfirm {...props} />;
   }
   return <DefaultTransactionConfirm {...props} />;
 };

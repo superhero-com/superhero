@@ -4,9 +4,11 @@ import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
+import { useAtom } from 'jotai';
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
+import { transactionTypeAtom, createTokenDetailsAtom } from '@/atoms/transactionConfirmAtom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { createCommunity } from '../libs/createCommunity';
@@ -53,6 +55,8 @@ const CreateTokenView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
+  const [, setTransactionType] = useAtom(transactionTypeAtom);
+  const [, setCreateTokenDetails] = useAtom(createTokenDetailsAtom);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const {
     activeFactorySchema,
@@ -370,6 +374,16 @@ const CreateTokenView = () => {
 
   // Token creation
   const deploy = async () => {
+    setTransactionType('create-token');
+    setCreateTokenDetails({
+      tokenName,
+      inputMode,
+      aeAmount: inputMode === 'AE' ? aeAmount : undefined,
+      tokenAmount: inputMode === 'TOKEN' ? initialBuyVolume : undefined,
+      estimatedCost: inputMode === 'TOKEN' ? price : undefined,
+      estimatedTokens: inputMode === 'AE' ? estimatedTokens : undefined,
+    });
+
     try {
       setErrorMessage(undefined);
       setAlreadyRegisteredAs(undefined);
@@ -434,6 +448,8 @@ const CreateTokenView = () => {
       setErrorMessage(`Oops, something went wrong. \n${message}`);
     } finally {
       setIsCreating(false);
+      setTransactionType(null);
+      setCreateTokenDetails(null);
     }
   };
 

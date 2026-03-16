@@ -1,6 +1,29 @@
 import React from 'react';
+import { useAtomValue } from 'jotai';
+import { formatFractionalPrice } from '@/utils/common';
+import { COIN_SYMBOL } from '@/utils/constants';
+import { Decimal } from '@/libs/decimal';
+import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
+import {
+  tokenAAtom,
+  tokenBAtom,
+  tokenTradeTokenAtom,
+  isBuyingAtom,
+  isAllowSellingAtom,
+  desiredSlippageAtom,
+  averageTokenPriceAtom,
+  priceImpactDiffAtom,
+  estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
+} from '@/atoms/tokenTradeAtoms';
+import FractionFormatter from '@/features/shared/components/FractionFormatter';
+import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
+import { ImpactBadge } from '@/features/trending/components/ImpactBadge';
+import { TransactionConfirmDetailRow } from '@/features/trending/components/TransactionConfirmDetailRow';
 import AeButton from '../AeButton';
 import { IconWallet } from '../../icons';
+
+const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
+const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;
 
 interface TransactionConfirmModalProps {
   onConfirm: () => void;
@@ -8,11 +31,161 @@ interface TransactionConfirmModalProps {
   onClose: () => void;
 }
 
-const TransactionConfirmModal = ({
+function TradeTransactionConfirm({
   onConfirm,
   onCancel,
   onClose,
-}: TransactionConfirmModalProps) => {
+}: TransactionConfirmModalProps) {
+  const tokenA = useAtomValue(tokenAAtom);
+  const tokenB = useAtomValue(tokenBAtom);
+  const token = useAtomValue(tokenTradeTokenAtom);
+  const isBuying = useAtomValue(isBuyingAtom);
+  const isAllowSelling = useAtomValue(isAllowSellingAtom);
+  const desiredSlippage = useAtomValue(desiredSlippageAtom);
+  const averageTokenPrice = useAtomValue(averageTokenPriceAtom);
+  const priceImpactDiff = useAtomValue(priceImpactDiffAtom);
+  const priceImpactPercent = useAtomValue(
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
+  );
+
+  const protocolTokenReward = (() => {
+    const aeValue = isBuying ? tokenA || 0 : tokenB || 0;
+    return Math.round(
+      (1 - PROTOCOL_DAO_AFFILIATION_FEE) * PROTOCOL_DAO_TOKEN_AE_RATIO * aeValue * 100,
+    ) / 100;
+  })();
+
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
+  };
+
+  const handleCancel = () => {
+    onCancel();
+    onClose();
+  };
+
+  const tokenAFormatted = formatFractionalPrice(Decimal.from(tokenA ?? 0));
+  const tokenBFormatted = formatFractionalPrice(Decimal.from(tokenB ?? 0));
+
+  return (
+    <div className="w-full max-w-md mx-auto space-y-4">
+      {/* Title */}
+      <h2 className="text-lg font-semibold text-white">
+        {`Confirm ${isBuying ? 'Buy' : 'Sell'}`}
+      </h2>
+
+      {/* Token swap boxes */}
+      <div className="relative flex flex-col gap-1">
+        <div className="flex items-center justify-between px-3 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+          <span className="text-xl text-white">
+            <FractionFormatter fractionalPrice={tokenAFormatted} />
+          </span>
+          <span className="text-sm font-bold uppercase text-white/80 truncate max-w-[120px]">
+            {isBuying ? COIN_SYMBOL : token?.symbol}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between px-3 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+          <span className="text-xl text-white">
+            <FractionFormatter fractionalPrice={tokenBFormatted} />
+          </span>
+          <span className="text-sm font-bold uppercase text-white/80 truncate max-w-[120px]">
+            {isBuying ? token?.symbol : COIN_SYMBOL}
+          </span>
+        </div>
+
+        {/* Arrow indicator */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center border border-white/10 rounded bg-gray-900 text-white/60 text-xs">
+          ↓
+        </div>
+      </div>
+
+      {/* Estimated output */}
+      <p className="text-sm text-white/80">
+        {`Estimated output: ${tokenBFormatted.number} ${isBuying ? token?.symbol : COIN_SYMBOL}`}
+      </p>
+
+      {/* Order details */}
+      <div>
+        <h3 className="text-sm font-semibold text-white mb-1">Order Details</h3>
+        <div className="space-y-0 divide-y divide-white/5">
+          {!averageTokenPrice.isZero && !averageTokenPrice.infinite && (
+            <TransactionConfirmDetailRow label="Avg. Token Price">
+              <LivePriceFormatter aePrice={averageTokenPrice} watchPrice={false} />
+            </TransactionConfirmDetailRow>
+          )}
+
+          <TransactionConfirmDetailRow label="Allowed Slippage">
+            {`${Number(desiredSlippage ?? 0).toFixed(2)}%`}
+          </TransactionConfirmDetailRow>
+
+          <TransactionConfirmDetailRow label="Price Impact">
+            <div className={`flex items-center gap-1 ${isBuying ? 'text-green-500' : 'text-red-500'}`}>
+              <span className="flex items-center">
+                {!priceImpactDiff.isZero && (isBuying ? '+' : '-')}
+                <FractionFormatter fractionalPrice={formatFractionalPrice(priceImpactDiff)} />
+                &nbsp;
+                {COIN_SYMBOL}
+              </span>
+              <ImpactBadge
+                isPositive={isBuying}
+                isZero={priceImpactDiff.isZero}
+                percentage={priceImpactPercent}
+              />
+            </div>
+          </TransactionConfirmDetailRow>
+
+          {isBuying && (
+            <TransactionConfirmDetailRow label="Protocol Token Reward">
+              {`~${Decimal.from(protocolTokenReward).prettify()}`}
+            </TransactionConfirmDetailRow>
+          )}
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-col gap-2 pt-2">
+        {!isBuying && (
+          <AeButton
+            variant="primary"
+            onClick={handleConfirm}
+            size="md"
+            fullWidth
+            disabled={!isAllowSelling}
+            style={{ background: '#1161FE' }}
+          >
+            {`Allow Use of Token${!isAllowSelling ? ' ✓' : ''}`}
+          </AeButton>
+        )}
+        <AeButton
+          variant="primary"
+          onClick={handleConfirm}
+          size="md"
+          fullWidth
+          disabled={!isBuying && isAllowSelling}
+          style={{ background: '#1161FE' }}
+        >
+          Place Order
+        </AeButton>
+        <AeButton
+          variant="secondary"
+          onClick={handleCancel}
+          size="md"
+          fullWidth
+        >
+          Cancel
+        </AeButton>
+      </div>
+    </div>
+  );
+}
+
+function DefaultTransactionConfirm({
+  onConfirm,
+  onCancel,
+  onClose,
+}: TransactionConfirmModalProps) {
   const handleConfirm = () => {
     onConfirm();
     onClose();
@@ -64,6 +237,15 @@ const TransactionConfirmModal = ({
       </div>
     </div>
   );
+}
+
+const TransactionConfirmModal = (props: TransactionConfirmModalProps) => {
+  const transactionType = useAtomValue(transactionTypeAtom);
+
+  if (transactionType === 'trade') {
+    return <TradeTransactionConfirm {...props} />;
+  }
+  return <DefaultTransactionConfirm {...props} />;
 };
 
 export default TransactionConfirmModal;

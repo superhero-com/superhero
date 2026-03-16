@@ -2,6 +2,8 @@ import BigNumber from 'bignumber.js';
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { useAtom } from 'jotai';
+import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -34,8 +36,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     sdk, aeSdk, activeAccount, staticAeSdk,
   } = useAeSdk();
   const queryClient = useQueryClient();
-
-  // Use the new token trade store
+  const [, setTransactionType] = useAtom(transactionTypeAtom);
   const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
@@ -367,6 +368,8 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   }, [getTokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
+    setTransactionType('trade');
+    store.setDesiredSlippage(store.slippage);
     store.updateLoadingTransaction(true);
     errorMessage.current = undefined;
 
@@ -403,7 +406,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       errorMessage.current = error.message;
       store.updateLoadingTransaction(false);
     } finally {
-      // Reset form data
+      setTransactionType(null);
       store.resetFormData();
     }
   }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell]);

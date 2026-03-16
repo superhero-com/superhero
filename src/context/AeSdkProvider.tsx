@@ -199,37 +199,31 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 newWindow = null;
               }
             };
-            console.log("signUrl", signUrl);
-            if (IS_SAFARI && signUrl.includes('superhero://')) {
-              console.log("on safari should manually open the modal")
-              newWindow = window.open(signUrl, '_self', windowFeatures);
-              console.log("open new window called", newWindow);
-            } else {
-              openModal({
-                name: 'transaction-confirm',
-                props: {
-                  transaction: tx,
-                  onConfirm: () => {
-                    /**
-                     * By setting a name and width/height,
-                     * the extension is forced to open in a new window
-                     */
-                    newWindow = window.open(signUrl, '_blank', windowFeatures);
-                  },
-                  onCancel: () => {
-                    cleanup();
-                    // Remove transaction from queue
-                    const currentQueue = transactionsQueueRef.current;
-                    if (Object.keys(currentQueue).includes(uniqueId)) {
-                      const newQueue = { ...currentQueue };
-                      delete newQueue[uniqueId];
-                      setTransactionsQueue(newQueue);
-                    }
-                    reject(new Error('Transaction cancelled'));
-                  },
+
+            openModal({
+              name: 'transaction-confirm',
+              props: {
+                transaction: tx,
+                onConfirm: () => {
+                  /**
+                   * By setting a name and width/height,
+                   * the extension is forced to open in a new window
+                   */
+                  newWindow = window.open(signUrl, '_blank', windowFeatures);
                 },
-              });
-            }
+                onCancel: () => {
+                  cleanup();
+                  // Remove transaction from queue
+                  const currentQueue = transactionsQueueRef.current;
+                  if (Object.keys(currentQueue).includes(uniqueId)) {
+                    const newQueue = { ...currentQueue };
+                    delete newQueue[uniqueId];
+                    setTransactionsQueue(newQueue);
+                  }
+                  reject(new Error('Transaction cancelled'));
+                },
+              },
+            });
 
 
             // Set a timeout to prevent infinite polling (5 minutes max)

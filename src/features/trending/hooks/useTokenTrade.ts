@@ -389,27 +389,37 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         throw new Error('Wallet not connected');
       }
 
-      // Update token reference and store
       tokenRef.current = tokenToTrade;
       store.updateToken(tokenToTrade);
 
-      // Rebind contract calls to the signer SDK selected above.
-      // This prevents undefined signer state right after page refresh.
-      await setupContractInstance(signingSdk, tokenToTrade);
+      // Only re-initialise when the token changed (mirrors Wordcraft's guard).
+      // The instance is already warmed up by the background useQuery on mount,
+      // so skipping this is what makes the modal appear immediately on click.
+      const { tokenSaleInstance: cachedInstance } = getContractInstances();
+      if (cachedInstance?.address !== tokenToTrade.sale_address) {
+        await setupContractInstance(signingSdk, tokenToTrade);
+      }
 
+      // Fire-and-forget like Wordcraft — don't await so the modal can open
+      // as soon as signTransaction is triggered by the contract call.
       if (store.isBuying) {
-        await buy();
+        buy().finally(() => {
+          setTransactionType(null);
+          store.resetFormData();
+        });
       } else {
-        await sell();
+        sell().finally(() => {
+          setTransactionType(null);
+          store.resetFormData();
+        });
       }
     } catch (error: any) {
       errorMessage.current = error.message;
       store.updateLoadingTransaction(false);
-    } finally {
       setTransactionType(null);
       store.resetFormData();
     }
-  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell]);
+  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell, setTransactionType]);
 
   return {
     // State

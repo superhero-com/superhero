@@ -27,7 +27,7 @@ export const openDeepLink = ({
   successUrl?: string;
   cancelUrl?: string;
   [key: string]: string;
-}) => {
+}): Window | null => {
   // Build the deep link URL (superhero://)
   const deepLink = new URL(`superhero://${type}`);
   // Build the fallback web URL
@@ -42,8 +42,7 @@ export const openDeepLink = ({
   
   
   if (!IS_MOBILE) {
-    window.open(webUrl.toString(), target, windowFeatures);
-    return;
+    return window.open(webUrl.toString(), target, windowFeatures);
   }
 
   const fallbackTimeout = setTimeout(() => {
@@ -56,5 +55,5 @@ export const openDeepLink = ({
 
   // Try to open the deep link
   // deep link should always open in the same window.
-  window.open(deepLink.toString(), '_self', windowFeatures);
+  return window.open(deepLink.toString(), '_self', windowFeatures);
 };

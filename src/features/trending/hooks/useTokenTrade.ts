@@ -398,13 +398,9 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       tokenRef.current = tokenToTrade;
       store.updateToken(tokenToTrade);
 
-      // Only re-initialise when the token changed (mirrors Wordcraft's guard).
-      // The instance is already warmed up by the background useQuery on mount,
-      // so skipping this is what makes the modal appear immediately on click.
-      const { tokenSaleInstance: cachedInstance } = getContractInstances();
-      if (cachedInstance?.address !== tokenToTrade.sale_address) {
-        await setupContractInstance(signingSdk, tokenToTrade);
-      }
+      // Rebind contract calls to the signer SDK selected above.
+      // This prevents undefined signer state right after page refresh.
+      await setupContractInstance(signingSdk, tokenToTrade);
 
       // Fire-and-forget like Wordcraft — don't await so the modal can open
       // as soon as signTransaction is triggered by the contract call.

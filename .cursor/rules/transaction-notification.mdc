@@ -1,0 +1,165 @@
+---
+description: Every blockchain interaction must show a transaction notification banner using the transaction-notification feature
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Transaction Notification — Required for All Blockchain Interactions
+
+Every function that triggers a blockchain transaction (contract call, token transfer, approval, token creation, or any on-chain write) **must** use the `useTransactionNotification` hook to show the notification banner throughout the transaction lifecycle.
+
+## Architecture Overview
+
+The feature lives at `src/features/transaction-notification/` and exposes:
+
+- **`useTransactionNotification()`** — hook returning notification actions and state
+- **`TxPayloadType`** — discriminated union key (`BuyToken`, `SellToken`, `ApproveAllowance`, `CreateToken`)
+- **`TxPayload`** — typed payload for each transaction type
+- **`TransactionNotificationBanner`** — fixed banner rendered at the app root (already mounted)
+
+## State Machine
+
+Every transaction follows this lifecycle:
+
+```
+idle → submitted → pending → confirmed → idle (auto-dismiss 6s)
+         ↓            ↓
+       error ──────────────────────────→ idle (auto-dismiss 5s)
+```
+
+| State       | Meaning                                  | Triggered by            |
+|-------------|------------------------------------------|-------------------------|
+| `submitted` | Waiting for user to sign in their wallet | `notifySubmitted()`     |
+| `pending`   | Tx broadcast, waiting for block confirmation | `notifyPendingTx()` |
+| `confirmed` | Tx mined and confirmed                   | `notifyConfirmed()` or auto via polling |
+| `error`     | Transaction failed at any stage          | `notifyError()`         |
+
+## Implementation Guide
+
+### 1. Import the hook and types
+
+```typescript
+import {
+  useTransactionNotification,
+  TxPayloadType,
+  type TxPayload,
+} from '@/features/transaction-notification';
+```
+
+### 2. Destructure what you need
+
+```typescript
+const {
+  notifySubmitted,
+  notifyPendingTx,
+  notifyConfirmed,
+  notifyError,
+  notificationState,    // read state if you need to react to confirmation
+} = useTransactionNotification();
+```
+
+### 3. Build a TxPayload
+
+Build a payload matching one of the existing types, or extend `TxPayloadType` / `TxPayload` if adding a new transaction kind.
+
+```typescript
+const payload: TxPayload = {
+  type: TxPayloadType.BuyToken,
+  tokenName: token.name,
+  tokenSymbol: token.symbol,
+  coinAmount: String(aeAmount),
+  estimatedTokens: String(tokenAmount),
+  saleAddress: token.sale_address,
+};
+```
+
+### 4. Follow the notification lifecycle in your async flow
+
+```typescript
+async function executeTransaction() {
+  // STEP 1 — User must sign in wallet
+  notifySubmitted(payload);
+
+  try {
+    const txHash = await sdkCall(/* ... */);
+
+    // STEP 2 — Tx broadcast, context polls until mined
+    notifyPendingTx(payload, txHash);
+    // The provider will auto-transition to 'confirmed' once the tx is mined.
+
+  } catch (error: any) {
+    notifyError(error?.message || 'Transaction failed');
+  }
+}
+```
+
+For **synchronous confirmation** (when the SDK already waits for mining), skip `notifyPendingTx` and call `notifyConfirmed` directly:
+
+```typescript
+try {
+  notifySubmitted(payload);
+  const result = await sdkCallThatWaitsForMining(/* ... */);
+  notifyConfirmed(payload);
+} catch (error: any) {
+  notifyError(error?.message || 'Transaction failed');
+}
+```
+
+### 5. React to confirmation (optional)
+
+If you need to update UI/state when the tx is confirmed (e.g. refetch balances), watch `notificationState`:
+
+```typescript
+useEffect(() => {
+  if (notificationState.status !== 'confirmed') return;
+  const p = notificationState.payload;
+  if (p.type !== TxPayloadType.BuyToken || p.saleAddress !== token.sale_address) return;
+
+  refetchBalances();
+}, [notificationState]);
+```
+
+## Multi-Step Transactions
+
+For flows with multiple on-chain calls (e.g. approve + sell), use `ApproveAllowance` for intermediate steps:
+
+```typescript
+// Step 1: Allowance
+notifySubmitted({
+  type: TxPayloadType.ApproveAllowance,
+  tokenName: token.name,
+  tokenSymbol: token.symbol,
+  amount: String(tokenAmount),
+  stepNumber: 1,
+  totalSteps: 2,
+});
+await approveAllowance(/* ... */);
+
+// Step 2: Main transaction
+const sellPayload: TxPayload = { type: TxPayloadType.SellToken, /* ... */ };
+notifySubmitted(sellPayload);
+const result = await sell(/* ... */);
+notifyConfirmed(sellPayload);
+```
+
+## Adding a New Transaction Type
+
+When introducing a new blockchain interaction category:
+
+1. Add a new key to `TxPayloadType` in `transaction-notification.context.tsx`
+2. Add the corresponding variant to the `TxPayload` union type
+3. Update `getSubmittedMeta()`, `getPendingMeta()`, and `getConfirmedMeta()` in `TransactionNotificationBanner.tsx` to handle the new type
+4. Follow the lifecycle pattern above in your hook/component
+
+## Reference Implementation
+
+See `src/features/trending/hooks/useTokenTrade.ts` — the `buy()` and `sell()` callbacks demonstrate the complete pattern including multi-step flows, polling-based confirmation, and `useEffect` state syncing.
+
+## Checklist
+
+- [ ] Hook destructured: `useTransactionNotification()`
+- [ ] `notifySubmitted()` called before wallet signing prompt
+- [ ] `notifyPendingTx()` called after tx broadcast (or `notifyConfirmed()` if SDK waits for mining)
+- [ ] `notifyError()` called in every `catch` block
+- [ ] Payload type matches or extends `TxPayloadType`
+- [ ] Multi-step flows use `ApproveAllowance` for intermediate steps

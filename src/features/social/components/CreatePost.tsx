@@ -4,11 +4,12 @@ import PostForm from './PostForm';
 
 interface CreatePostProps {
   onClose?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (postId?: string) => void;
   className?: string;
   onTextChange?: (text: string) => void;
   autoFocus?: boolean;
-  onPostCreated?: () => void; // Callback when a new post is created (for tab switching, etc.)
+  // Callback when a new post is created (for tab switching, etc.)
+  onPostCreated?: (postId?: string) => void;
 }
 
 export interface CreatePostRef {

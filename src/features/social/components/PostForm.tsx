@@ -1,11 +1,13 @@
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
+import { useQueryClient } from '@tanstack/react-query';
 import React, {
   forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
-import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
+import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import { IconClose, IconGif, IconSmile } from '../../../icons';
@@ -26,13 +28,14 @@ type TippingV3ContractApi = ContractMethodsBase & {
 
 interface PostFormProps {
   // Common props
-  onSuccess?: () => void;
+  onSuccess?: (postId?: string) => void;
   className?: string;
   onTextChange?: (text: string) => void;
 
   // Post-specific props
   isPost?: boolean;
-  onPostCreated?: () => void; // Callback when a new post is created (for tab switching, etc.)
+  // Callback when a new post is created (for tab switching, etc.)
+  onPostCreated?: (postId?: string) => void;
 
   // Comment-specific props
   postId?: string;
@@ -87,7 +90,7 @@ const PROMPTS: string[] = [
   'Teach us something in 1 line. 🧠',
 ];
 
-const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
+const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const { t } = useTranslation();
   const tf = (key: string, options?: Record<string, unknown>) => t(`forms.${key}`, options);
   const ts = (key: string, options?: Record<string, unknown>) => t(`social.${key}`, options);
@@ -111,6 +114,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
   const queryClient = useQueryClient();
+  const { notifySubmitted, notifyConfirmed, notifyError } = useTransactionNotification();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
@@ -251,7 +255,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   // Use useEffect to listen for window resize events instead of calling matchMedia on every render
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return () => {};
+      return () => { };
     }
 
     const mediaQuery = window.matchMedia('(min-width: 768px)');
@@ -353,6 +357,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     if (!activeAccount) return;
 
     setIsSubmitting(true);
+
+    const txPayload = isPost
+      ? { type: TxPayloadType.CreatePost, content: trimmed } as const
+      : { type: TxPayloadType.CreateComment, postId: postId! } as const;
+
+    notifySubmitted(txPayload);
+
     try {
       const contract = await initializeContractTyped<TippingV3ContractApi>(
         sdk,
@@ -372,6 +383,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         trimmed,
         postMedia,
       );
+
+      notifyConfirmed(txPayload);
 
       if (isPost) {
         const newPostId = `${decodedResult}_v3`;
@@ -861,10 +874,10 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
-        onPostCreated?.();
+        onPostCreated?.(postId);
       }
 
-      onSuccess?.();
+      onSuccess?.(postId);
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
@@ -873,6 +886,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       } catch {
         // Ignore GIF preload errors
       }
+    } catch (error: any) {
+      notifyError(error?.message || (isPost ? 'Failed to publish post' : 'Failed to publish reply'));
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -917,7 +933,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   return (
     <div
       className={`${isPost ? 'w-full max-w-none' : 'mx-auto'
-      } mb-2 md:mb-4 ${className}`}
+        } mb-2 md:mb-4 ${className}`}
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
@@ -1189,29 +1205,29 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
             <div className="flex flex-col items-center justify-center w-full">
               {requiredHashtag && requiredMissing && (
-              <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
-                <span>{ts('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
-                <button
-                  type="button"
-                  className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
-                  onClick={() => {
-                    const tag = (requiredHashtag || '').toUpperCase();
-                    const needsSpace = text.length > 0 && !/\s$/.test(text);
-                    const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
-                    setText(next);
-                    requestAnimationFrame(() => {
-                      if (textareaRef.current) {
-                        const pos = next.length;
-                        textareaRef.current.focus();
-                        textareaRef.current.setSelectionRange(pos, pos);
-                      }
-                    });
-                  }}
-                  title={ts('addRequiredHashtag')}
-                >
-                  {ts('add')}
-                </button>
-              </div>
+                <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
+                  <span>{ts('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
+                  <button
+                    type="button"
+                    className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+                    onClick={() => {
+                      const tag = (requiredHashtag || '').toUpperCase();
+                      const needsSpace = text.length > 0 && !/\s$/.test(text);
+                      const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                      setText(next);
+                      requestAnimationFrame(() => {
+                        if (textareaRef.current) {
+                          const pos = next.length;
+                          textareaRef.current.focus();
+                          textareaRef.current.setSelectionRange(pos, pos);
+                        }
+                      });
+                    }}
+                    title={ts('addRequiredHashtag')}
+                  >
+                    {ts('add')}
+                  </button>
+                </div>
               )}
               {activeAccount ? (
                 <AeButton

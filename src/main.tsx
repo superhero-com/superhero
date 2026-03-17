@@ -9,6 +9,7 @@ import { CONFIG } from './config';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
+import { TransactionNotificationProvider, TransactionNotificationBanner } from './features/transaction-notification';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
 import './i18n';
@@ -40,13 +41,16 @@ const queryClient = new QueryClient({
           <Provider>
             <AePricePollingProvider>
               <ToastProvider>
-                <BrowserRouter>
-                  <ErrorBoundary>
-                    <AeSdkProvider>
-                      <App />
-                    </AeSdkProvider>
-                  </ErrorBoundary>
-                </BrowserRouter>
+                <TransactionNotificationProvider>
+                  <TransactionNotificationBanner />
+                  <BrowserRouter>
+                    <ErrorBoundary>
+                      <AeSdkProvider>
+                        <App />
+                      </AeSdkProvider>
+                    </ErrorBoundary>
+                  </BrowserRouter>
+                </TransactionNotificationProvider>
               </ToastProvider>
             </AePricePollingProvider>
           </Provider>

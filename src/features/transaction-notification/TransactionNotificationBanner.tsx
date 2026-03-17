@@ -1,0 +1,248 @@
+import { useEffect, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { activeAccountAtom } from '@/atoms/accountAtoms';
+import { Decimal } from '@/libs/decimal';
+import Spinner from '@/components/Spinner';
+import { TxPayloadType } from './transaction-notification.context';
+import type { TxPayload } from './transaction-notification.context';
+import { useTransactionNotification } from './transaction-notification.context';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function fmt(amount: string): string {
+  return Decimal.from(amount).prettify();
+}
+
+// User must sign in their wallet — the app is waiting for that action.
+function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string } {
+  switch (payload.type) {
+    case TxPayloadType.BuyToken:
+    case TxPayloadType.SellToken:
+      return { title: 'Confirm in your wallet', subtitle: 'Sign the transaction to continue' };
+    case TxPayloadType.ApproveAllowance:
+      return { title: 'Confirm in your wallet', subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — sign to continue` };
+    case TxPayloadType.CreateToken:
+      return { title: `Creating #${payload.tokenName}`, subtitle: 'Sign in your wallet to continue' };
+  }
+}
+
+// Tx is broadcast; we're waiting for the blockchain to confirm.
+function getPendingMeta(payload: TxPayload): { title: string; subtitle: string } {
+  switch (payload.type) {
+    case TxPayloadType.BuyToken:
+    case TxPayloadType.SellToken:
+      return { title: 'Confirming on blockchain', subtitle: 'Usually takes a few seconds' };
+    case TxPayloadType.ApproveAllowance:
+      return { title: 'Confirming on blockchain', subtitle: 'Allowance is being processed' };
+    case TxPayloadType.CreateToken:
+      return { title: `Creating #${payload.tokenName}`, subtitle: 'Confirming on blockchain…' };
+  }
+}
+
+function getConfirmedMeta(payload: TxPayload): {
+  title: string;
+  line: { leftLabel: string; leftColor: string; rightLabel?: string; rightColor?: string } | null;
+} {
+  switch (payload.type) {
+    case TxPayloadType.BuyToken:
+      return {
+        title: 'Transaction confirmed',
+        line: {
+          leftLabel: `-${fmt(payload.coinAmount)} AE`,
+          leftColor: '#f87171',
+          rightLabel: `+${fmt(payload.estimatedTokens)} ${payload.tokenSymbol}`,
+          rightColor: '#4ade80',
+        },
+      };
+    case TxPayloadType.SellToken:
+      return {
+        title: 'Transaction confirmed',
+        line: {
+          leftLabel: `-${fmt(payload.tokenAmount)} ${payload.tokenSymbol}`,
+          leftColor: '#f87171',
+          rightLabel: `+${fmt(payload.estimatedCoin)} AE`,
+          rightColor: '#4ade80',
+        },
+      };
+    case TxPayloadType.ApproveAllowance:
+      return { title: 'Allowance approved', line: null };
+    case TxPayloadType.CreateToken:
+      return {
+        title: 'Token created',
+        line: { leftLabel: `#${payload.tokenName}`, leftColor: '#4ade80' },
+      };
+  }
+}
+
+// ─── Notification content by type ────────────────────────────────────────────
+
+const cardBase =
+  'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
+
+function NotificationError({ message }: { message: string }) {
+  return (
+    <div className={`${cardBase} bg-red-950/90`}>
+      <NotificationIcon variant="error" />
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-red-400 font-bold text-sm leading-[18px] m-0">Transaction failed</p>
+        <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
+      </div>
+      <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
+        <span className="text-red-400 text-sm font-bold">✕</span>
+      </div>
+    </div>
+  );
+}
+
+function NotificationWaiting({
+  payload,
+  kind,
+}: {
+  payload: TxPayload;
+  kind: 'submitted' | 'pending';
+}) {
+  const { title, subtitle } =
+    kind === 'submitted' ? getSubmittedMeta(payload) : getPendingMeta(payload);
+  return (
+    <div className={`${cardBase} bg-[#1a1a1a]/95`}>
+      <NotificationIcon variant="loading" />
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-white font-bold text-sm leading-[18px] m-0">{title}</p>
+        <p className="text-gray-400 text-[13px] leading-[17px] m-0">{subtitle}</p>
+      </div>
+      <div className="w-7" />
+    </div>
+  );
+}
+
+function NotificationConfirmed({
+  payload,
+  activeAccount,
+}: {
+  payload: TxPayload;
+  activeAccount: string | undefined;
+}) {
+  const meta = getConfirmedMeta(payload);
+  const portfolioHref = activeAccount
+    ? `/users/${encodeURIComponent(activeAccount)}`
+    : undefined;
+
+  return (
+    <div className={`${cardBase} bg-[#1a1a1a]/95`}>
+      <NotificationIcon variant="success" />
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-white font-bold text-sm leading-[18px] m-0">{meta.title}</p>
+        {meta.line && (
+          <p className="text-[13px] leading-[17px] m-0">
+            <span style={{ color: meta.line.leftColor }}>{meta.line.leftLabel}</span>
+            {meta.line.rightLabel && (
+              <>
+                <span className="text-gray-600">{' '}</span>
+                <span style={{ color: meta.line.rightColor }}>{meta.line.rightLabel}</span>
+              </>
+            )}
+          </p>
+        )}
+      </div>
+      {portfolioHref ? (
+        <button
+          type="button"
+          className="bg-green-400 rounded-full px-4 py-2 flex-shrink-0 cursor-pointer border-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = portfolioHref;
+          }}
+        >
+          <span className="text-[#0a0a0a] font-bold text-[13px]">View Portfolio</span>
+        </button>
+      ) : (
+        <div className="bg-green-400 rounded-full px-4 py-2 flex-shrink-0">
+          <span className="text-[#0a0a0a] font-bold text-[13px]">Done</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NotificationIcon({ variant }: { variant: 'error' | 'loading' | 'success' }) {
+  const isError = variant === 'error';
+  const isSuccess = variant === 'success';
+  const badgeBg = isError ? 'bg-red-400' : isSuccess ? 'bg-green-400' : 'bg-[#2a2a2a]';
+  const borderColor = isError ? 'border-red-950' : 'border-[#1a1a1a]';
+
+  return (
+    <div className="relative w-11 h-11 flex-shrink-0">
+      <div className="w-[38px] h-[38px] rounded-full bg-gradient-to-br from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center text-white font-bold text-sm">
+        S
+      </div>
+      <div
+        className={`absolute -bottom-0.5 -right-0.5 w-[22px] h-[22px] rounded-full ${badgeBg} flex items-center justify-center border-2 ${borderColor}`}
+      >
+        {isError ? (
+          <span className="text-[11px] text-white font-bold leading-none">✕</span>
+        ) : isSuccess ? (
+          <span className="text-[11px] text-[#0a0a0a] font-bold leading-none">✓</span>
+        ) : (
+          <Spinner className="w-2.5 h-2.5 text-gray-400" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main banner ─────────────────────────────────────────────────────────────
+
+export function TransactionNotificationBanner() {
+  const { notificationState, dismissNotification } = useTransactionNotification();
+  const activeAccount = useAtomValue(activeAccountAtom);
+  const [visible, setVisible] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  const isActive = notificationState.status !== 'idle';
+
+  useEffect(() => {
+    if (isActive) {
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+    }
+  }, [isActive]);
+
+  if (!isActive && !visible) return null;
+
+  const content = (() => {
+    switch (notificationState.status) {
+      case 'error':
+        return <NotificationError message={notificationState.message} />;
+      case 'submitted':
+        return <NotificationWaiting payload={notificationState.payload} kind="submitted" />;
+      case 'pending':
+        return <NotificationWaiting payload={notificationState.payload} kind="pending" />;
+      case 'confirmed':
+        return (
+          <NotificationConfirmed
+            payload={notificationState.payload}
+            activeAccount={activeAccount}
+          />
+        );
+      default:
+        return null;
+    }
+  })();
+
+  return (
+    <div
+      ref={bannerRef}
+      role="status"
+      onClick={dismissNotification}
+      className={`
+        fixed top-3 left-3 right-3 z-[9999] cursor-pointer
+        transition-all duration-300 ease-out
+        ${visible && isActive ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
+      `}
+      style={{ maxWidth: 480, margin: '0 auto' }}
+    >
+      {content}
+    </div>
+  );
+}

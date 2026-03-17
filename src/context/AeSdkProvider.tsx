@@ -14,7 +14,7 @@ import { configs } from '../configs';
 import { IS_SAFARI, NETWORK_MAINNET } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl } from '../utils/url';
-import { openDeepLink } from '../utils/wallet';
+import { openDeepLink } from '../utils/url';
 
 type TxQueueEntry = {
   status: string;

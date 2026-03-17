@@ -49,5 +49,5 @@ export const openDeepLink = ({
 
   // Try to open the deep link
   // window.location.href = deepLink.toString();
-  window.open(deepLink.toString(), target, windowFeatures);
+  window.open(deepLink.toString(), '_self', windowFeatures);
 };

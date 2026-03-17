@@ -2,7 +2,8 @@ import { activeAccountAtom } from '@/atoms/accountAtoms';
 import Spinner from '@/components/Spinner';
 import { Decimal } from '@/libs/decimal';
 import { useAtomValue } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import SuperheroIcon from '@/svg/favicon.svg?react';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
@@ -26,6 +27,8 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
       return { title: 'Publishing post', subtitle: 'Sign in your wallet to continue' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Sign in your wallet to continue' };
+    default:
+      throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
   }
 }
 
@@ -43,6 +46,8 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
       return { title: 'Publishing post', subtitle: 'Confirming on blockchain…' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Confirming on blockchain…' };
+    default:
+      throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
   }
 }
 
@@ -82,38 +87,71 @@ function getConfirmedMeta(payload: TxPayload): {
       return { title: 'Post published', line: null };
     case TxPayloadType.CreateComment:
       return { title: 'Reply published', line: null };
+    default:
+      throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }
 }
 
 // ─── Notification content by type ────────────────────────────────────────────
 
-const cardBase =
-  'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
+// eslint-disable-next-line max-len
+const cardBase = 'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
 
-function NotificationError({ message }: { message: string }) {
+// Declared first — referenced by the components below.
+const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success' }) => {
+  const isError = variant === 'error';
+  const isSuccess = variant === 'success';
+
+  let badgeBg: string;
+  if (isError) {
+    badgeBg = 'bg-red-400';
+  } else if (isSuccess) {
+    badgeBg = 'bg-green-400';
+  } else {
+    badgeBg = 'bg-[#2a2a2a]';
+  }
+
+  const borderColor = isError ? 'border-red-950' : 'border-[#1a1a1a]';
+
   return (
-    <div className={`${cardBase} bg-red-950/90`}>
-      <NotificationIcon variant="error" />
-      <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-red-400 font-bold text-sm leading-[18px] m-0">Transaction failed</p>
-        <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
+    <div className="relative w-11 h-11 flex-shrink-0">
+      <div>
+        <SuperheroIcon className="w-[38px] h-[38px]" />
       </div>
-      <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
-        <span className="text-red-400 text-sm font-bold">✕</span>
+      <div
+        className={`absolute -bottom-0.5 -right-0.5 w-[22px] h-[22px] rounded-full ${badgeBg} flex items-center justify-center border-2 ${borderColor}`}
+      >
+        {isError && <span className="text-[11px] text-white font-bold leading-none">✕</span>}
+        {isSuccess && <span className="text-[11px] text-[#0a0a0a] font-bold leading-none">✓</span>}
+        {!isError && !isSuccess && <Spinner className="w-2.5 h-2.5 text-gray-400" />}
       </div>
     </div>
   );
-}
+};
 
-function NotificationWaiting({
+const NotificationError = ({ message }: { message: string }) => (
+  <div className={`${cardBase} bg-red-950/90`}>
+    <NotificationIcon variant="error" />
+    <div className="flex-1 min-w-0 space-y-0.5">
+      <p className="text-red-400 font-bold text-sm leading-[18px] m-0">Transaction failed</p>
+      <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
+    </div>
+    <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
+      <span className="text-red-400 text-sm font-bold">✕</span>
+    </div>
+  </div>
+);
+
+const NotificationWaiting = ({
   payload,
   kind,
 }: {
   payload: TxPayload;
   kind: 'submitted' | 'pending';
-}) {
-  const { title, subtitle } =
-    kind === 'submitted' ? getSubmittedMeta(payload) : getPendingMeta(payload);
+}) => {
+  const { title, subtitle } = kind === 'submitted'
+    ? getSubmittedMeta(payload)
+    : getPendingMeta(payload);
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
       <NotificationIcon variant="loading" />
@@ -124,15 +162,15 @@ function NotificationWaiting({
       <div className="w-7" />
     </div>
   );
-}
+};
 
-function NotificationConfirmed({
+const NotificationConfirmed = ({
   payload,
   activeAccount,
 }: {
   payload: TxPayload;
   activeAccount: string | undefined;
-}) {
+}) => {
   const meta = getConfirmedMeta(payload);
   const portfolioHref = activeAccount
     ? `/users/${encodeURIComponent(activeAccount)}`
@@ -173,37 +211,11 @@ function NotificationConfirmed({
       )}
     </div>
   );
-}
-
-function NotificationIcon({ variant }: { variant: 'error' | 'loading' | 'success' }) {
-  const isError = variant === 'error';
-  const isSuccess = variant === 'success';
-  const badgeBg = isError ? 'bg-red-400' : isSuccess ? 'bg-green-400' : 'bg-[#2a2a2a]';
-  const borderColor = isError ? 'border-red-950' : 'border-[#1a1a1a]';
-
-  return (
-    <div className="relative w-11 h-11 flex-shrink-0">
-      <div className="w-[38px] h-[38px] rounded-full bg-gradient-to-br from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center text-white font-bold text-sm">
-        S
-      </div>
-      <div
-        className={`absolute -bottom-0.5 -right-0.5 w-[22px] h-[22px] rounded-full ${badgeBg} flex items-center justify-center border-2 ${borderColor}`}
-      >
-        {isError ? (
-          <span className="text-[11px] text-white font-bold leading-none">✕</span>
-        ) : isSuccess ? (
-          <span className="text-[11px] text-[#0a0a0a] font-bold leading-none">✓</span>
-        ) : (
-          <Spinner className="w-2.5 h-2.5 text-gray-400" />
-        )}
-      </div>
-    </div>
-  );
-}
+};
 
 // ─── Main banner ─────────────────────────────────────────────────────────────
 
-export function TransactionNotificationBanner() {
+export const TransactionNotificationBanner = () => {
   const { notificationState, dismissNotification } = useTransactionNotification();
   const activeAccount = useAtomValue(activeAccountAtom);
   const [visible, setVisible] = useState(false);
@@ -241,11 +253,18 @@ export function TransactionNotificationBanner() {
     }
   })();
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') dismissNotification();
+  };
+
   return (
     <div
       ref={bannerRef}
-      role="status"
+      role="button"
+      tabIndex={0}
+      aria-label="Dismiss notification"
       onClick={dismissNotification}
+      onKeyDown={handleKeyDown}
       className={`
         fixed top-3 left-3 right-3 z-[9999] cursor-pointer
         transition-all duration-300 ease-out
@@ -256,4 +275,4 @@ export function TransactionNotificationBanner() {
       {content}
     </div>
   );
-}
+};

@@ -1,5 +1,5 @@
 import { configs } from '../configs';
-import { SETTINGS } from './constants';
+import { IS_MOBILE, SETTINGS } from './constants';
 
 export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<string, string>) {
   const isIosMobileBrowser = /iPad|iPhone|iPod/.test(window.navigator.userAgent)
@@ -19,7 +19,7 @@ export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<strin
 
 export const openDeepLink = ({
   type,
-  target = '_blank',
+  target = '_self',
   windowFeatures,
   ...params
 }: {
@@ -30,24 +30,30 @@ export const openDeepLink = ({
 }) => {
   // Build the deep link URL (superhero://)
   const deepLink = new URL(`superhero://${type}`);
-  Object.entries(params)
-    .filter(([, value]: any) => ![undefined, null].includes(value))
-    .forEach(([name, value]: any) => deepLink.searchParams.set(name, String(value)));
-
   // Build the fallback web URL
   const webUrl = new URL(`${SETTINGS.wallet.url}/${type}`);
-  // ... same params
+  Object.entries(params)
+    .filter(([, value]: any) => ![undefined, null].includes(value))
+    .forEach(([name, value]: any) => {
+      deepLink.searchParams.set(name, String(value));
+      webUrl.searchParams.set(name, String(value));
+    });
+
+  
+  
+  if (!IS_MOBILE) {
+    window.open(webUrl.toString(), target, windowFeatures);
+    return;
+  }
 
   const fallbackTimeout = setTimeout(() => {
     // App didn't open — redirect to web wallet
-    // window.location.href = webUrl.toString();
-    window.open(webUrl.toString(), '_blank');
+    window.open(webUrl.toString(), target);
   }, 1500);
 
   // If the app opens, the page loses focus — cancel the fallback
   window.addEventListener('blur', () => clearTimeout(fallbackTimeout), { once: true });
 
   // Try to open the deep link
-  // window.location.href = deepLink.toString();
   window.open(deepLink.toString(), '_self', windowFeatures);
 };

@@ -55,13 +55,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     initializeContract?: (options: Record<string, unknown>) => ReturnType<typeof Contract.initialize>;
   };
 
-  const ensureLegacyInitializeContract = (sdkInstance: LegacyInitializableSdk) => {
+  const ensureLegacyInitializeContract = useCallback((sdkInstance: LegacyInitializableSdk) => {
     if (typeof sdkInstance.initializeContract === 'function') return;
+    // eslint-disable-next-line no-param-reassign -- intentional patch for legacy SDK
     sdkInstance.initializeContract = (options: Record<string, unknown>) => Contract.initialize({
       ...sdkInstance.getContext(),
       ...options,
     });
-  };
+  }, []);
 
   const aeSdkRef = useRef<AeSdkAepp>();
   const staticAeSdkRef = useRef<AeSdk | null>(null);
@@ -369,6 +370,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     setActiveAccount,
     setWalletInfo,
     addStaticAccount,
+    ensureLegacyInitializeContract,
   ]);
 
   const scanForAccounts = useCallback(async () => {

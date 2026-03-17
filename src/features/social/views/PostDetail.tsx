@@ -54,28 +54,28 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
         </div>
 
         <div className="grid gap-2">
-          {top.map((t) => (
-            <div key={t.hash} className="flex items-center justify-between gap-3">
+          {top.map((tip) => (
+            <div key={tip.hash} className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <Link
-                  to={`/users/${t.sender}`}
+                  to={`/users/${tip.sender}`}
                   className="text-sm text-white truncate hover:underline"
-                  title={t.sender}
+                  title={tip.sender}
                 >
-                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
+                  {chainNames?.[tip.sender] || formatAddress(tip.sender, 3, true)}
                 </Link>
-                <div className="text-xs text-white/50 truncate">{t.date}</div>
+                <div className="text-xs text-white/50 truncate">{tip.date}</div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="text-sm text-white font-semibold">
-                  {Decimal.from(t.amountAe).prettify()}
+                  {Decimal.from(tip.amountAe).prettify()}
                   {' '}
                   AE
                 </div>
                 {explorerBase && (
                   <a
                     className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
-                    href={`${explorerBase}/transactions/${t.hash}`}
+                    href={`${explorerBase}/transactions/${tip.hash}`}
                     target="_blank"
                     rel="noreferrer"
                   >

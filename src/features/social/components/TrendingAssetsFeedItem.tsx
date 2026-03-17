@@ -1,14 +1,12 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { SuperheroApi } from '@/api/backend';
 import { TokensService, type TokenDto } from '@/api/generated';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { TrendingUp } from 'lucide-react';
 
 const ITEM_LIMIT = 4;
-const FETCH_LIMIT = 12;
 
 function getTokenAddress(token: TokenDto) {
   return token.sale_address || token.address || '';
@@ -39,7 +37,7 @@ const TrendingAssetsFeedItem = () => {
   const topTokens = useMemo(() => {
     // Shuffle array
     const shuffled = [...tokens];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
@@ -147,7 +145,6 @@ const TrendingAssetsFeedItem = () => {
                       <TokenLineChart
                         saleAddress={tokenAddress}
                         height={40}
-                        hideTimeframe
                         timeframe="30d"
                         className="h-10 w-full pointer-events-none"
                       />

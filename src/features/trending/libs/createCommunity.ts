@@ -1,9 +1,14 @@
 import {
   AeSdkBase, Contract, ContractMethodsBase, Encoded,
 } from '@aeternity/aepp-sdk';
+// eslint-disable-next-line import/no-extraneous-dependencies -- bctsl workspace package
 import COMMUNITY_FACTORY_CONTRACT_ACI from 'bctsl-contracts/generated/CommunityFactory.aci.json';
 import {
-  CreateCommunityOptions, Denomination, denominationTokenDecimals, estimateInitialBuyPriceAetto, toTokenDecimals,
+  CreateCommunityOptions,
+  Denomination,
+  denominationTokenDecimals,
+  estimateInitialBuyPriceAetto,
+  toTokenDecimals,
 } from 'bctsl-sdk';
 import BigNumber from 'bignumber.js';
 import { initializeContractTyped } from '@/libs/initializeContractTyped';

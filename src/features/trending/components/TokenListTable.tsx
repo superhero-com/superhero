@@ -89,9 +89,6 @@ interface TokenListTableProps {
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
   rankOffset?: number;
-  hasNextPage?: boolean;
-  isFetching?: boolean;
-  onLoadMore?: () => void;
 }
 
 const TokenListTable = ({

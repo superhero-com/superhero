@@ -184,7 +184,6 @@ const Daos = () => {
               <TokenLineChart
                 saleAddress={t.sale_address || t.address}
                 height={48}
-                hideTimeframe
               />
             </div>
 

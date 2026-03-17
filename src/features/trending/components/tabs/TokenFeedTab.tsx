@@ -74,7 +74,11 @@ export const TokenFeedTab = ({
                     }`}
                     aria-pressed={popularWindow === window}
                   >
-                    {window === '24h' ? '24h' : window === '7d' ? '7d' : 'All'}
+                    {(() => {
+                      if (window === '24h') return '24h';
+                      if (window === '7d') return '7d';
+                      return 'All';
+                    })()}
                   </button>
                 ))}
               </div>

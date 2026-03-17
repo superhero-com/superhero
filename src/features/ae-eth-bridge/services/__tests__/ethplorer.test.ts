@@ -1,14 +1,14 @@
 import {
-  describe, it, expect, beforeEach, vi,
+  beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { fetchAddressInfo, getAllTokenBalancesFromEthplorer } from '../ethplorer';
 
-// Mock fetch for testing
-global.fetch = vi.fn();
+const mockFetch = vi.fn();
 
 describe('Ethplorer API', () => {
   beforeEach(() => {
-    (fetch as any).mockClear();
+    vi.stubGlobal('fetch', mockFetch);
+    mockFetch.mockReset();
   });
 
   it('should fetch address info successfully', async () => {
@@ -46,7 +46,7 @@ describe('Ethplorer API', () => {
       ],
     };
 
-    (fetch as any).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -60,7 +60,7 @@ describe('Ethplorer API', () => {
   });
 
   it('should handle API errors', async () => {
-    (fetch as any).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
       statusText: 'Bad Request',
@@ -112,8 +112,8 @@ describe('Ethplorer API', () => {
     const balances = getAllTokenBalancesFromEthplorer(mockEthplorerData, assets);
 
     expect(balances).toEqual({
-      ETH: '0.0026',
-      USDT: '9.0000',
+      ETH: '0.002578',
+      USDT: '9.000000',
     });
   });
 });

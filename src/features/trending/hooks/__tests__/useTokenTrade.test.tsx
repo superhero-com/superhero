@@ -1,7 +1,9 @@
 import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  beforeEach, describe, expect, it, vi,
+} from 'vitest';
 
 import { Decimal } from '@/libs/decimal';
 import { useTokenTrade } from '../useTokenTrade';

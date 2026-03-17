@@ -2,7 +2,7 @@ import { DexPairService } from '@/api/generated';
 import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
 import {
-  useEffect, useId, useMemo, useRef, useState
+  useEffect, useId, useMemo, useRef, useState,
 } from 'react';
 
 const COLOR_UP = '#2EB88A';

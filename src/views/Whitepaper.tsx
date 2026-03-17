@@ -455,16 +455,15 @@ const Whitepaper = () => {
               </ol>
             ),
             li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-            code: ({ inline, children }: { inline?: boolean; children?: React.ReactNode }) =>
-              inline ? (
-                <code className="bg-white/10 text-white/90 px-1.5 py-0.5 rounded text-sm font-mono">
-                  {children}
-                </code>
-              ) : (
-                <code className="bg-white/5 border border-white/10 rounded-lg px-0.5 text-white/80 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
-                  {children}
-                </code>
-              ),
+            code: ({ inline, children }: { inline?: boolean; children?: React.ReactNode }) => (inline ? (
+              <code className="bg-white/10 text-white/90 px-1.5 py-0.5 rounded text-sm font-mono">
+                {children}
+              </code>
+            ) : (
+              <code className="bg-white/5 border border-white/10 rounded-lg px-0.5 text-white/80 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
+                {children}
+              </code>
+            )),
             pre: ({ children }) => (
               <pre className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4 overflow-x-auto">
                 {children}

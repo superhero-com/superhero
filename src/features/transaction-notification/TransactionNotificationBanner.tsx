@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAtomValue } from 'jotai';
 import { activeAccountAtom } from '@/atoms/accountAtoms';
-import { Decimal } from '@/libs/decimal';
 import Spinner from '@/components/Spinner';
-import { TxPayloadType } from './transaction-notification.context';
+import { Decimal } from '@/libs/decimal';
+import { useAtomValue } from 'jotai';
+import { useEffect, useRef, useState } from 'react';
 import type { TxPayload } from './transaction-notification.context';
-import { useTransactionNotification } from './transaction-notification.context';
+import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -23,6 +22,10 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
       return { title: 'Confirm in your wallet', subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — sign to continue` };
     case TxPayloadType.CreateToken:
       return { title: `Creating #${payload.tokenName}`, subtitle: 'Sign in your wallet to continue' };
+    case TxPayloadType.CreatePost:
+      return { title: 'Publishing post', subtitle: 'Sign in your wallet to continue' };
+    case TxPayloadType.CreateComment:
+      return { title: 'Publishing reply', subtitle: 'Sign in your wallet to continue' };
   }
 }
 
@@ -36,6 +39,10 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
       return { title: 'Confirming on blockchain', subtitle: 'Allowance is being processed' };
     case TxPayloadType.CreateToken:
       return { title: `Creating #${payload.tokenName}`, subtitle: 'Confirming on blockchain…' };
+    case TxPayloadType.CreatePost:
+      return { title: 'Publishing post', subtitle: 'Confirming on blockchain…' };
+    case TxPayloadType.CreateComment:
+      return { title: 'Publishing reply', subtitle: 'Confirming on blockchain…' };
   }
 }
 
@@ -71,6 +78,10 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Token created',
         line: { leftLabel: `#${payload.tokenName}`, leftColor: '#4ade80' },
       };
+    case TxPayloadType.CreatePost:
+      return { title: 'Post published', line: null };
+    case TxPayloadType.CreateComment:
+      return { title: 'Reply published', line: null };
   }
 }
 

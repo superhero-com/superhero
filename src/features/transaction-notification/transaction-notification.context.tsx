@@ -1,4 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+} from 'react';
 import { CONFIG } from '@/config';
 
 // ─── Payload types (web equivalent of mobile's SignPayload) ─────────────────
@@ -8,13 +10,17 @@ export const TxPayloadType = {
   SellToken: 'sell_token',
   ApproveAllowance: 'approve_allowance',
   CreateToken: 'create_token',
+  CreatePost: 'create_post',
+  CreateComment: 'create_comment',
 } as const;
 
 export type TxPayload =
   | { type: typeof TxPayloadType.BuyToken; tokenName: string; tokenSymbol: string; coinAmount: string; estimatedTokens: string; saleAddress?: string }
   | { type: typeof TxPayloadType.SellToken; tokenName: string; tokenSymbol: string; tokenAmount: string; estimatedCoin: string; saleAddress?: string }
   | { type: typeof TxPayloadType.ApproveAllowance; tokenName: string; tokenSymbol: string; amount: string; stepNumber: number; totalSteps: number }
-  | { type: typeof TxPayloadType.CreateToken; tokenName: string };
+  | { type: typeof TxPayloadType.CreateToken; tokenName: string }
+  | { type: typeof TxPayloadType.CreatePost; content: string }
+  | { type: typeof TxPayloadType.CreateComment; postId: string };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 
@@ -34,14 +40,17 @@ type TransactionNotificationContextValue = {
   dismissNotification: () => void;
 };
 
-const TransactionNotificationContext =
-  createContext<TransactionNotificationContextValue | null>(null);
+const TransactionNotificationContext = createContext<
+  TransactionNotificationContextValue | null>(null);
 
 const AUTO_DISMISS_MS = 6_000;
 const ERROR_DISMISS_MS = 5_000;
 const POLL_INTERVAL_MS = 5_000;
 
-/** Poll the node until the transaction is mined (block_height !== -1). Same logic as TokenSaleDetails. */
+/**
+ * Poll the node until the transaction is mined (block_height !== -1).
+ * Same logic as TokenSaleDetails.
+ * */
 async function checkTxMined(txHash: string): Promise<boolean> {
   try {
     const res = await fetch(
@@ -55,7 +64,9 @@ async function checkTxMined(txHash: string): Promise<boolean> {
   }
 }
 
-export function TransactionNotificationProvider({ children }: { children: React.ReactNode }) {
+export const TransactionNotificationProvider: React.FC<{
+  children: React.ReactNode
+}> = ({ children }) => {
   const [notificationState, setNotificationState] = useState<NotificationState>({ status: 'idle' });
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -135,14 +146,28 @@ export function TransactionNotificationProvider({ children }: { children: React.
     }, ERROR_DISMISS_MS);
   }, []);
 
+  const contextValue = useMemo(() => ({
+    notificationState,
+    notifySubmitted,
+    notifyPendingTx,
+    notifyConfirmed,
+    notifyError,
+    dismissNotification,
+  }), [
+    notificationState,
+    notifySubmitted,
+    notifyPendingTx,
+    notifyConfirmed,
+    notifyError,
+    dismissNotification,
+  ]);
+
   return (
-    <TransactionNotificationContext.Provider
-      value={{ notificationState, notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError, dismissNotification }}
-    >
+    <TransactionNotificationContext.Provider value={contextValue}>
       {children}
     </TransactionNotificationContext.Provider>
   );
-}
+};
 
 export function useTransactionNotification() {
   const ctx = useContext(TransactionNotificationContext);

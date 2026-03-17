@@ -1,4 +1,4 @@
-import { PairDto } from '@/api/generated';
+import type { PairDto } from '@/api/generated';
 
 export interface LiquidityPosition {
   pair: PairDto;

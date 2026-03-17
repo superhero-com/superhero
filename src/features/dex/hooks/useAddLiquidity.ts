@@ -10,11 +10,16 @@ import {
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
-import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
-
-import {
-  providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities,
-} from '../../../hooks';
+import type {
+  AddLiquidityState,
+  LiquidityExecutionParams,
+  RemoveLiquidityExecutionParams,
+} from '../types/pool';
+import { providedLiquidityAtom } from '../../../atoms/dexAtoms';
+import { useAccount } from '../../../hooks/useAccount';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useDex } from '../../../hooks/useDex';
+import { useRecentActivities } from '../../../hooks/useRecentActivities';
 
 type Aex9ContractApi = ContractMethodsBase & {
   meta_info: () => Promise<{ decodedResult: { decimals?: number | string; symbol?: string; name?: string } }>;

@@ -55,5 +55,6 @@ export const openDeepLink = ({
   window.addEventListener('blur', () => clearTimeout(fallbackTimeout), { once: true });
 
   // Try to open the deep link
+  // deep link should always open in the same window.
   window.open(deepLink.toString(), '_self', windowFeatures);
 };

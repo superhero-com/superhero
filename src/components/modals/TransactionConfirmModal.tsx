@@ -1,29 +1,26 @@
-import React from 'react';
-import { useAtomValue } from 'jotai';
-import { formatFractionalPrice } from '@/utils/common';
-import { COIN_SYMBOL } from '@/utils/constants';
-import { Decimal } from '@/libs/decimal';
-import { transactionTypeAtom, createTokenDetailsAtom } from '@/atoms/transactionConfirmAtom';
 import {
+  averageTokenPriceAtom,
+  desiredSlippageAtom,
+  estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
+  isAllowSellingAtom,
+  isBuyingAtom,
+  priceImpactDiffAtom,
   tokenAAtom,
   tokenBAtom,
   tokenTradeTokenAtom,
-  isBuyingAtom,
-  isAllowSellingAtom,
-  desiredSlippageAtom,
-  averageTokenPriceAtom,
-  priceImpactDiffAtom,
-  estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
 } from '@/atoms/tokenTradeAtoms';
+import { createTokenDetailsAtom, transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
 import FractionFormatter from '@/features/shared/components/FractionFormatter';
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { ImpactBadge } from '@/features/trending/components/ImpactBadge';
 import { TransactionConfirmDetailRow } from '@/features/trending/components/TransactionConfirmDetailRow';
-import AeButton from '../AeButton';
+import { Decimal } from '@/libs/decimal';
+import { formatFractionalPrice } from '@/utils/common';
+import { COIN_SYMBOL } from '@/utils/constants';
+import { useAtomValue } from 'jotai';
 import { IconWallet } from '../../icons';
-
-const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
-const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;
+import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../utils/constants';
+import AeButton from '../AeButton';
 
 interface TransactionConfirmModalProps {
   onConfirm: () => void;

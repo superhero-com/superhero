@@ -1,20 +1,21 @@
+import WebSocketClient from '@/libs/WebSocketClient';
 import {
   AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
-  createContext, useEffect, useMemo, useRef, useState, useCallback,
+  createContext,
+  useCallback,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
-import WebSocketClient from '@/libs/WebSocketClient';
 import { activeAccountAtom } from '../atoms/accountAtoms';
 import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
-import { useModal } from '../hooks/useModal';
 import { configs } from '../configs';
-import { IS_SAFARI, NETWORK_MAINNET } from '../utils/constants';
+import { useModal } from '../hooks/useModal';
+import { NETWORK_MAINNET } from '../utils/constants';
 import { INetwork } from '../utils/types';
-import { createDeepLinkUrl } from '../utils/url';
-import { openDeepLink } from '../utils/url';
+import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
 type TxQueueEntry = {
   status: string;
@@ -221,7 +222,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                     target: '_blank',
                     windowFeatures
                   });
-                  // newWindow = window.open(signUrl, '_blank', windowFeatures);
                 },
                 onCancel: () => {
                   cleanup();

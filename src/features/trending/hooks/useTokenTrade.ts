@@ -1,9 +1,10 @@
-import BigNumber from 'bignumber.js';
-import { useCallback, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TokenDto } from '@/api/generated/models/TokenDto';
-import { useAtom } from 'jotai';
 import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import BigNumber from 'bignumber.js';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect, useRef } from 'react';
+import { CONFIG } from '../../../config';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -14,18 +15,14 @@ import {
   toAe,
   toDecimals,
 } from '../../../utils/bondingCurve';
+import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../../utils/constants';
 import {
-  setupContractInstance,
   fetchUserTokenBalance,
-  getTokenSymbolName,
   getContractInstances,
+  getTokenSymbolName,
+  setupContractInstance,
 } from '../libs/tokenTradeContract';
-import { CONFIG } from '../../../config';
 import { useTokenTradeStore } from './useTokenTradeStore';
-
-// Constants from Vue implementation
-const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
-const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;
 
 interface UseTokenTradeProps {
   token: TokenDto;
@@ -68,8 +65,8 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       console.error('Error calculating bonding curve price:', error);
       storeRef.current.updateNextPrice(Decimal.ZERO);
     }
-  // storeRef is a stable ref — intentionally omitted from deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // storeRef is a stable ref — intentionally omitted from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculate token cost based on bonding curve
@@ -193,8 +190,8 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       !s.isBuying,
     );
     s.updateTokenB(calculatedTokenB);
-  // storeRef is stable — use the individual reactive values as deps instead
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // storeRef is stable — use the individual reactive values as deps instead
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   // Watch tokenB changes and calculate tokenA automatically
@@ -217,8 +214,8 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       s.isBuying,
     );
     s.updateTokenA(calculatedTokenA);
-  // storeRef is stable — use the individual reactive values as deps instead
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // storeRef is stable — use the individual reactive values as deps instead
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {

@@ -126,16 +126,6 @@ export function useWalletConnect() {
   }
 
   async function deepLinkWalletConnect() {
-    // const addressDeepLink = createDeepLinkUrl({
-    //   type: 'address',
-    //   'x-success': `${window.location.href.split('?')[0]
-    //     }?address={address}&networkId={networkId}`,
-    //   'x-cancel': window.location.href.split('?')[0],
-    // });
-    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // // @ts-ignore
-    // window.location = addressDeepLink;
-
     openDeepLink({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
@@ -258,9 +248,7 @@ export function useWalletConnect() {
         resolve(newWallet);
       };
 
-      const scannerConnection = new BrowserWindowMessageConnection({
-        debug: true,
-      });
+      const scannerConnection = new BrowserWindowMessageConnection();
       const stopScan = walletDetector(scannerConnection, handleWallets);
     });
 

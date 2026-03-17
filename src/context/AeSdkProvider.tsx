@@ -31,7 +31,7 @@ export const AeSdkContext = createContext<{
   currentBlockHeight: number,
   activeNetwork: INetwork,
   accounts: string[],
-  setActiveAccount: (account: string) => void,
+  setActiveAccount:(account: string) => void,
   setAccounts: (accounts: string[]) => void,
   getCurrentGeneration: () => void,
   addStaticAccount: (account: string) => void,
@@ -40,7 +40,7 @@ export const AeSdkContext = createContext<{
   initSdk: () => void,
   scanForAccounts: () => void,
   nodes: { instance: Node; name: string }[],
-}>(null);
+    }>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
   configs.networks,
@@ -221,7 +221,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                     'x-success': decodeURI(successUrl.href),
                     'x-cancel': decodeURI(cancelUrl.href),
                     target: '_blank',
-                    windowFeatures
+                    windowFeatures,
                   });
                 },
                 onCancel: () => {
@@ -237,7 +237,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 },
               },
             });
-
 
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes

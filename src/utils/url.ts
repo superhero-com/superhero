@@ -16,7 +16,6 @@ export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<strin
   return url.toString();
 }
 
-
 export const openDeepLink = ({
   type,
   target = '_self',
@@ -39,8 +38,6 @@ export const openDeepLink = ({
       webUrl.searchParams.set(name, String(value));
     });
 
-  
-  
   if (!IS_MOBILE) {
     return window.open(webUrl.toString(), target, windowFeatures);
   }

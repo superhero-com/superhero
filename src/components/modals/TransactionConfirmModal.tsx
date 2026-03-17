@@ -16,10 +16,9 @@ import { ImpactBadge } from '@/features/trending/components/ImpactBadge';
 import { TransactionConfirmDetailRow } from '@/features/trending/components/TransactionConfirmDetailRow';
 import { Decimal } from '@/libs/decimal';
 import { formatFractionalPrice } from '@/utils/common';
-import { COIN_SYMBOL } from '@/utils/constants';
+import { COIN_SYMBOL, PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '@/utils/constants';
 import { useAtomValue } from 'jotai';
 import { IconWallet } from '../../icons';
-import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../utils/constants';
 import AeButton from '../AeButton';
 
 interface TransactionConfirmModalProps {
@@ -28,11 +27,11 @@ interface TransactionConfirmModalProps {
   onClose: () => void;
 }
 
-function TradeTransactionConfirm({
+const TradeTransactionConfirm = ({
   onConfirm,
   onCancel,
   onClose,
-}: TransactionConfirmModalProps) {
+}: TransactionConfirmModalProps) => {
   const tokenA = useAtomValue(tokenAAtom);
   const tokenB = useAtomValue(tokenBAtom);
   const token = useAtomValue(tokenTradeTokenAtom);
@@ -176,13 +175,13 @@ function TradeTransactionConfirm({
       </div>
     </div>
   );
-}
+};
 
-function DefaultTransactionConfirm({
+const DefaultTransactionConfirm = ({
   onConfirm,
   onCancel,
   onClose,
-}: TransactionConfirmModalProps) {
+}: TransactionConfirmModalProps) => {
   const handleConfirm = () => {
     onConfirm();
     onClose();
@@ -234,13 +233,13 @@ function DefaultTransactionConfirm({
       </div>
     </div>
   );
-}
+};
 
-function CreateTokenTransactionConfirm({
+const CreateTokenTransactionConfirm = ({
   onConfirm,
   onCancel,
   onClose,
-}: TransactionConfirmModalProps) {
+}: TransactionConfirmModalProps) => {
   const details = useAtomValue(createTokenDetailsAtom);
 
   const handleConfirm = () => { onConfirm(); onClose(); };
@@ -281,7 +280,8 @@ function CreateTokenTransactionConfirm({
                   <FractionFormatter
                     fractionalPrice={formatFractionalPrice(Decimal.from(details.aeAmount ?? 0))}
                   />
-                  &nbsp;{COIN_SYMBOL}
+                  &nbsp;
+                  {COIN_SYMBOL}
                 </span>
               </TransactionConfirmDetailRow>
               {details.estimatedTokens && !details.estimatedTokens.isZero && (
@@ -290,7 +290,8 @@ function CreateTokenTransactionConfirm({
                     <FractionFormatter
                       fractionalPrice={formatFractionalPrice(details.estimatedTokens)}
                     />
-                    &nbsp;{details.tokenName}
+                    &nbsp;
+                    {details.tokenName}
                   </span>
                 </TransactionConfirmDetailRow>
               )}
@@ -302,7 +303,8 @@ function CreateTokenTransactionConfirm({
                   <FractionFormatter
                     fractionalPrice={formatFractionalPrice(Decimal.from(details?.tokenAmount ?? 0))}
                   />
-                  &nbsp;{details?.tokenName}
+                  &nbsp;
+                  {details?.tokenName}
                 </span>
               </TransactionConfirmDetailRow>
               {details?.estimatedCost && !details.estimatedCost.isZero && (
@@ -340,7 +342,7 @@ function CreateTokenTransactionConfirm({
       </div>
     </div>
   );
-}
+};
 
 const TransactionConfirmModal = (props: TransactionConfirmModalProps) => {
   const transactionType = useAtomValue(transactionTypeAtom);

@@ -226,12 +226,31 @@ export function useWalletConnect() {
   }
 
   /**
-     * Scan for wallets
-     */
+   * Scan for wallets
+   */
   async function scanForWallets(): Promise<Wallet | undefined> {
-    const foundWallet: Wallet | undefined = await new Promise((resolve) => {
+    // Concurrency guard: reuse the in-flight scan rather than starting a duplicate.
+    if (scanPromiseRef.current) return scanPromiseRef.current;
+
+    const promise = new Promise<Wallet | undefined>((resolve) => {
+      const scannerConnection = new BrowserWindowMessageConnection();
+      scanConnectionRef.current = scannerConnection;
+
+      // stopScan is assigned synchronously below; both async callbacks only fire
+      // after the current tick, so stopScan is always initialised by then.
+      let stopScan: (() => void) | undefined;
+
+      const cleanup = () => {
+        try { stopScan?.(); } catch { /* ignore */ }
+        try { scannerConnection.disconnect?.(); } catch { /* ignore */ }
+        scanStopRef.current = null;
+        scanConnectionRef.current = null;
+        scanPromiseRef.current = null;
+      };
+
       const $walletConnectTimeout = setTimeout(
         () => {
+          cleanup();
           resolve(undefined);
         },
         (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 2000,
@@ -244,15 +263,16 @@ export function useWalletConnect() {
         wallets: Wallets;
       }) => {
         clearTimeout($walletConnectTimeout);
-        stopScan();
+        cleanup();
         resolve(newWallet);
       };
 
-      const scannerConnection = new BrowserWindowMessageConnection();
-      const stopScan = walletDetector(scannerConnection, handleWallets);
+      stopScan = walletDetector(scannerConnection, handleWallets);
+      scanStopRef.current = stopScan;
     });
 
-    return foundWallet;
+    scanPromiseRef.current = promise;
+    return promise;
   }
 
   /**

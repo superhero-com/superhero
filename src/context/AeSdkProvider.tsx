@@ -211,7 +211,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                    * By setting a name and width/height,
                    * the extension is forced to open in a new window
                    */
-                  openDeepLink({
+                  newWindow = openDeepLink({
                     type: 'sign-transaction',
                     transaction: tx,
                     networkId: activeNetwork.networkId,

@@ -234,7 +234,7 @@ export function useWalletConnect() {
         () => {
           resolve(undefined);
         },
-        (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 1000,
+        (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 2000,
       );
 
       const handleWallets = async ({

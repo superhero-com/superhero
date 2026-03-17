@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Decimal } from '../../../libs/decimal';
 import SymbolPriceFormatter from './SymbolPriceFormatter';
 import FiatPriceFormatter from './FiatPriceFormatter';
@@ -37,8 +37,8 @@ const PriceFormatter = ({
 }: PriceFormatterProps) => {
   const [priceJustIncreased, setPriceJustIncreased] = useState(false);
   const [priceJustDecreased, setPriceJustDecreased] = useState(false);
-  const [prevPrice, setPrevPrice] = useState<Decimal | null>(null);
-  const [prevWatchKey, setPrevWatchKey] = useState<string | undefined>(undefined);
+  const prevPriceRef = useRef<Decimal | null>(null);
+  const prevWatchKeyRef = useRef<string | undefined>(undefined);
   let priceChangeClass = '';
   if (priceJustDecreased) {
     priceChangeClass = 'text-red-400';
@@ -47,17 +47,17 @@ const PriceFormatter = ({
   }
 
   useEffect(() => {
-    if (!aePrice || !prevPrice || !watchPrice || watchKey !== prevWatchKey) {
-      setPrevPrice(aePrice);
-      setPrevWatchKey(watchKey);
+    if (!aePrice || !prevPriceRef.current || !watchPrice || watchKey !== prevWatchKeyRef.current) {
+      prevPriceRef.current = aePrice;
+      prevWatchKeyRef.current = watchKey;
       return;
     }
 
-    if (aePrice.eq(prevPrice)) {
+    if (aePrice.eq(prevPriceRef.current)) {
       return;
     }
 
-    if (aePrice.gte(prevPrice)) {
+    if (aePrice.gte(prevPriceRef.current)) {
       setPriceJustIncreased(true);
       setTimeout(() => {
         setPriceJustIncreased(false);
@@ -69,9 +69,9 @@ const PriceFormatter = ({
       }, PRICE_CHANGE_DISPLAY_TIME);
     }
 
-    setPrevPrice(aePrice);
-    setPrevWatchKey(watchKey);
-  }, [aePrice, watchKey, watchPrice, prevPrice, prevWatchKey]);
+    prevPriceRef.current = aePrice;
+    prevWatchKeyRef.current = watchKey;
+  }, [aePrice, watchKey, watchPrice]);
 
   return (
     <div

@@ -1,19 +1,21 @@
+import WebSocketClient from '@/libs/WebSocketClient';
 import {
   AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
-  createContext, useEffect, useMemo, useRef, useState, useCallback,
+  createContext,
+  useCallback,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
-import WebSocketClient from '@/libs/WebSocketClient';
 import { activeAccountAtom } from '../atoms/accountAtoms';
 import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
-import { useModal } from '../hooks/useModal';
 import { configs } from '../configs';
+import { useModal } from '../hooks/useModal';
 import { NETWORK_MAINNET } from '../utils/constants';
 import { INetwork } from '../utils/types';
-import { createDeepLinkUrl } from '../utils/url';
+import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
 type TxQueueEntry = {
   status: string;
@@ -29,7 +31,7 @@ export const AeSdkContext = createContext<{
   currentBlockHeight: number,
   activeNetwork: INetwork,
   accounts: string[],
-  setActiveAccount:(account: string) => void,
+  setActiveAccount: (account: string) => void,
   setAccounts: (accounts: string[]) => void,
   getCurrentGeneration: () => void,
   addStaticAccount: (account: string) => void,
@@ -38,7 +40,7 @@ export const AeSdkContext = createContext<{
   initSdk: () => void,
   scanForAccounts: () => void,
   nodes: { instance: Node; name: string }[],
-    }>(null);
+}>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
   configs.networks,
@@ -209,7 +211,17 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                    * By setting a name and width/height,
                    * the extension is forced to open in a new window
                    */
-                  newWindow = window.open(signUrl, '_blank', windowFeatures);
+                  newWindow = openDeepLink({
+                    type: 'sign-transaction',
+                    transaction: tx,
+                    networkId: activeNetwork.networkId,
+                    innerTx: options?.innerTx === true ? 'true' : undefined,
+                    'replace-caller': 'true',
+                    'x-success': decodeURI(successUrl.href),
+                    'x-cancel': decodeURI(cancelUrl.href),
+                    target: '_blank',
+                    windowFeatures
+                  });
                 },
                 onCancel: () => {
                   cleanup();
@@ -224,6 +236,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 },
               },
             });
+
 
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes

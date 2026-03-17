@@ -79,7 +79,7 @@ const LatestTransactionsCarousel = () => {
     const handleResize = () => updateResponsiveValues();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateResponsiveValues]);
+  }, []);
 
   // Handle scrolling animation
   useEffect(() => {

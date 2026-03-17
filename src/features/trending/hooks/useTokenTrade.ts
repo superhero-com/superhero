@@ -1,7 +1,10 @@
-import BigNumber from 'bignumber.js';
-import { useCallback, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import BigNumber from 'bignumber.js';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect, useRef } from 'react';
+import { CONFIG } from '../../../config';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -12,18 +15,14 @@ import {
   toAe,
   toDecimals,
 } from '../../../utils/bondingCurve';
+import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../../utils/constants';
 import {
-  setupContractInstance,
   fetchUserTokenBalance,
-  getTokenSymbolName,
   getContractInstances,
+  getTokenSymbolName,
+  setupContractInstance,
 } from '../libs/tokenTradeContract';
-import { CONFIG } from '../../../config';
 import { useTokenTradeStore } from './useTokenTradeStore';
-
-// Constants from Vue implementation
-const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
-const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;
 
 interface UseTokenTradeProps {
   token: TokenDto;
@@ -34,12 +33,15 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     sdk, aeSdk, activeAccount, staticAeSdk,
   } = useAeSdk();
   const queryClient = useQueryClient();
-
-  // Use the new token trade store
+  const [, setTransactionType] = useAtom(transactionTypeAtom);
   const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
   const errorMessage = useRef<string | undefined>();
+  // storeRef lets effects/callbacks always access the latest store without
+  // listing `store` (a new object every render) as a reactive dependency.
+  const storeRef = useRef(store);
+  storeRef.current = store;
 
   const getConnectedWalletAddress = useCallback(() => {
     // eslint-disable-next-line no-underscore-dangle
@@ -58,12 +60,14 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           ),
         ),
       );
-      store.updateNextPrice(price);
+      storeRef.current.updateNextPrice(price);
     } catch (error) {
       console.error('Error calculating bonding curve price:', error);
-      store.updateNextPrice(Decimal.ZERO);
+      storeRef.current.updateNextPrice(Decimal.ZERO);
     }
-  }, [store]);
+    // storeRef is a stable ref — intentionally omitted from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -162,54 +166,57 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   // Update user balance when fetched
   useEffect(() => {
     if (fetchedUserBalance !== undefined) {
-      store.updateUserBalance(fetchedUserBalance);
+      storeRef.current.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance, store]);
+  }, [fetchedUserBalance]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
+    const s = storeRef.current;
     if (
-      // store.tokenA === undefined ||
-      // store.tokenA <= 0 ||
-      !store.tokenAFocused
+      !s.tokenAFocused
       || !tokenRef.current.sale_address
       || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-    if (store.tokenA === undefined || store.tokenA <= 0) {
-      store.updateTokenB(undefined);
+    if (s.tokenA === undefined || s.tokenA <= 0) {
+      s.updateTokenB(undefined);
       return;
     }
     const calculatedTokenB = calculateTokenCost(
-      store.tokenA,
-      store.isBuying,
-      !store.isBuying,
+      s.tokenA,
+      s.isBuying,
+      !s.isBuying,
     );
-    store.updateTokenB(calculatedTokenB);
-  }, [store, store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+    s.updateTokenB(calculatedTokenB);
+    // storeRef is stable — use the individual reactive values as deps instead
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   // Watch tokenB changes and calculate tokenA automatically
   useEffect(() => {
+    const s = storeRef.current;
     if (
-      store.tokenAFocused
+      s.tokenAFocused
       || !tokenRef.current.sale_address
       || !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-    if (store.tokenB === undefined || store.tokenB <= 0) {
-      store.updateTokenA(undefined);
+    if (s.tokenB === undefined || s.tokenB <= 0) {
+      s.updateTokenA(undefined);
       return;
     }
     const calculatedTokenA = calculateTokenCost(
-      store.tokenB,
-      store.isBuying,
-      store.isBuying,
+      s.tokenB,
+      s.isBuying,
+      s.isBuying,
     );
-
-    store.updateTokenA(calculatedTokenA);
-  }, [store, store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+    s.updateTokenA(calculatedTokenA);
+    // storeRef is stable — use the individual reactive values as deps instead
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {
     store.resetFormData(true);
@@ -367,6 +374,8 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   }, [getTokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
+    setTransactionType('trade');
+    store.setDesiredSlippage(store.slippage);
     store.updateLoadingTransaction(true);
     errorMessage.current = undefined;
 
@@ -386,7 +395,6 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         throw new Error('Wallet not connected');
       }
 
-      // Update token reference and store
       tokenRef.current = tokenToTrade;
       store.updateToken(tokenToTrade);
 
@@ -394,19 +402,26 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       // This prevents undefined signer state right after page refresh.
       await setupContractInstance(signingSdk, tokenToTrade);
 
+      // Fire-and-forget like Wordcraft — don't await so the modal can open
+      // as soon as signTransaction is triggered by the contract call.
       if (store.isBuying) {
-        await buy();
+        buy().finally(() => {
+          setTransactionType(null);
+          store.resetFormData();
+        });
       } else {
-        await sell();
+        sell().finally(() => {
+          setTransactionType(null);
+          store.resetFormData();
+        });
       }
     } catch (error: any) {
       errorMessage.current = error.message;
       store.updateLoadingTransaction(false);
-    } finally {
-      // Reset form data
+      setTransactionType(null);
       store.resetFormData();
     }
-  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell]);
+  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell, setTransactionType]);
 
   return {
     // State

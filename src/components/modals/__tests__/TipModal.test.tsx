@@ -13,7 +13,7 @@ const mockUseQueryClient = vi.fn();
 const mockSetTipStatus = vi.fn();
 
 vi.mock('../../AeButton', () => ({
-  default: ({ children, loading, ...props }: any) => <button {...props}>{children}</button>,
+  default: ({ children, ...props }: any) => <button type="button" {...props}>{children}</button>,
 }));
 
 vi.mock('../../../@components/Address/AddressAvatarWithChainName', () => ({

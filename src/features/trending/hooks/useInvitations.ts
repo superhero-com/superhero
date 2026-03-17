@@ -338,34 +338,34 @@ export function useInvitations() {
     if (inviteesToCheck.length === 0) return;
 
     const loadClaimed = async () => {
-      const _claimed: Record<string, ClaimedInfo | boolean>[] = await Promise.all(
+      const claimedResults: Record<string, ClaimedInfo | boolean>[] = await Promise.all(
         inviteesToCheck.map(async (invitee) => {
           // Mark as checked immediately to prevent duplicate requests
           checkedInviteesRef.current.add(invitee);
 
           try {
             const inviteeTransactions = await loadAccountInvitations(invitee);
+            const redeemTx = inviteeTransactions.find(
+              (tx) => tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code,
+            );
+            if (redeemTx) {
+              // The claimer's wallet address is passed
+              // as the second argument to redeemInvitationCode(secretKey, claimerAddress).
+              // The callerId is the invitation keypair address (invitee), NOT the actual claimer.
+              const claimerAddress = redeemTx.tx?.arguments?.[1]?.value as string | undefined;
 
-            for (const tx of inviteeTransactions) {
-              if (tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code) {
-                // The claimer's wallet address is passed
-                // as the second argument to redeemInvitationCode(secretKey, claimerAddress).
-                // The callerId is the invitation keypair address (invitee), NOT the actual claimer.
-                const claimerAddress = tx.tx?.arguments?.[1]?.value as string | undefined;
-
-                // Always mark as claimed when we see a redeem tx.
-                // If we can't extract claimer details,
-                // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
-                return {
-                  [invitee]: claimerAddress
-                    ? {
-                      claimedBy: claimerAddress,
-                      claimedAt: tx.microTime,
-                      claimTxHash: tx.hash,
-                    } as ClaimedInfo
-                    : true,
-                };
-              }
+              // Always mark as claimed when we see a redeem tx.
+              // If we can't extract claimer details,
+              // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
+              return {
+                [invitee]: claimerAddress
+                  ? {
+                    claimedBy: claimerAddress,
+                    claimedAt: redeemTx.microTime,
+                    claimTxHash: redeemTx.hash,
+                  } as ClaimedInfo
+                  : true,
+              };
             }
           } catch (error) {
             console.error(`Failed to load claimed status for ${invitee}:`, error);
@@ -375,7 +375,7 @@ export function useInvitations() {
       );
 
       let newClaimedInvitations: Record<string, ClaimedInfo | boolean> = {};
-      _claimed.forEach((claimed: Record<string, ClaimedInfo | boolean>) => {
+      claimedResults.forEach((claimed: Record<string, ClaimedInfo | boolean>) => {
         newClaimedInvitations = {
           ...newClaimedInvitations,
           ...claimed,

@@ -112,36 +112,44 @@ const AddressAvatar = ({
         ...style,
       }}
     >
-      {showImage ? (
-        <img
-          src={imageUrl!}
-          alt=""
-          className="w-full h-full object-cover"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setImageError(true)}
-        />
-      ) : avatarSvg ? (
-        <span
-          className="custom-address w-full h-full object-cover"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: avatarSvg }}
-        />
-      ) : (
-        <div
-          className="w-full h-full flex items-center justify-center"
-          style={{
-            backgroundColor: fallbackContent.backgroundColor,
-          }}
-        >
-          <span
-            className="text-white font-semibold"
-            style={{ fontSize: fallbackContent.fontSize }}
+      {(() => {
+        if (showImage) {
+          return (
+            <img
+              src={imageUrl!}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setImageError(true)}
+            />
+          );
+        }
+        if (avatarSvg) {
+          return (
+            <span
+              className="custom-address w-full h-full object-cover"
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: avatarSvg }}
+            />
+          );
+        }
+        return (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              backgroundColor: fallbackContent.backgroundColor,
+            }}
           >
-            {fallbackContent.initials}
-          </span>
-        </div>
-      )}
+            <span
+              className="text-white font-semibold"
+              style={{ fontSize: fallbackContent.fontSize }}
+            >
+              {fallbackContent.initials}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 };

@@ -13,7 +13,6 @@ const PAD = 2;
 interface PairLineChartProps {
   pairAddres: string;
   height?: number;
-  hideTimeframe?: boolean;
 }
 
 interface ChartPoint {

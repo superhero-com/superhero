@@ -31,11 +31,11 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('../../../../components/AeButton', () => ({
-  default: ({ children, loading, ...props }: any) => <button {...props}>{children}</button>,
+  default: ({ children, ...props }: any) => <button type="button" {...props}>{children}</button>,
 }));
 
 vi.mock('../../../../components/ConnectWalletButton', () => ({
-  ConnectWalletButton: (props: any) => <button {...props}>Connect</button>,
+  ConnectWalletButton: (props: any) => <button type="button" {...props}>Connect</button>,
 }));
 
 vi.mock('../../../../@components/Address/AddressAvatarWithChainName', () => ({

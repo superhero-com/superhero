@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len, import/no-unresolved */
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -8,6 +8,96 @@ import 'katex/dist/katex.min.css';
 import { useNavigate } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
 import FooterSection from '../components/layout/FooterSection';
+
+const markdownComponents: React.ComponentProps<typeof ReactMarkdown>['components'] = {
+  h1: ({ children }) => (
+    <h1 className="text-3xl font-bold text-white mb-2">{children}</h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-2xl font-bold text-white mt-10 mb-3 border-b border-white/10 pb-2">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-xl font-semibold text-white mt-6 mb-2">{children}</h3>
+  ),
+  h4: ({ children }) => (
+    <h4 className="text-base font-semibold text-white/90 mt-5 mb-2 uppercase tracking-wide">
+      {children}
+    </h4>
+  ),
+  p: ({ children }) => (
+    <p className="text-white/80 mb-4 leading-relaxed">{children}</p>
+  ),
+  strong: ({ children }) => (
+    <strong className="text-white font-semibold">{children}</strong>
+  ),
+  ul: ({ children }) => (
+    <ul className="list-disc pl-6 text-white/80 mb-4 leading-relaxed space-y-1">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="list-decimal pl-6 text-white/80 mb-4 leading-relaxed space-y-2">
+      {children}
+    </ol>
+  ),
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  code: ({ inline, children: codeChildren }) => (inline ? (
+    <code className="bg-white/10 text-white/90 px-1.5 py-0.5 rounded text-sm font-mono">
+      {codeChildren}
+    </code>
+  ) : (
+    <code className="bg-white/5 border border-white/10 rounded-lg px-0.5 text-white/80 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
+      {codeChildren}
+    </code>
+  )),
+  pre: ({ children }) => (
+    <pre className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4 overflow-x-auto">
+      {children}
+    </pre>
+  ),
+  table: ({ children }) => (
+    <div className="overflow-x-auto mb-6">
+      <table className="w-full text-sm text-white/80 border-collapse">
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children }) => (
+    <thead className="border-b border-white/20">{children}</thead>
+  ),
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr: ({ children }) => (
+    <tr className="border-b border-white/10 hover:bg-white/5 transition-colors">
+      {children}
+    </tr>
+  ),
+  th: ({ children }) => (
+    <th className="text-left py-2 px-3 text-white/60 font-medium uppercase text-xs tracking-wide">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="py-2.5 px-3 text-white/80 leading-relaxed">{children}</td>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-white/20 pl-4 my-4 text-white/60 italic">
+      {children}
+    </blockquote>
+  ),
+  hr: () => <hr className="border-white/10 my-8" />,
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      className="text-white underline underline-offset-2 hover:text-white/80 transition-colors"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  ),
+};
 
 const WHITEPAPER_CONTENT = `# Superhero Technical Whitepaper
 
@@ -421,95 +511,7 @@ const Whitepaper = () => {
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}
-          components={{
-            h1: ({ children }) => (
-              <h1 className="text-3xl font-bold text-white mb-2">{children}</h1>
-            ),
-            h2: ({ children }) => (
-              <h2 className="text-2xl font-bold text-white mt-10 mb-3 border-b border-white/10 pb-2">
-                {children}
-              </h2>
-            ),
-            h3: ({ children }) => (
-              <h3 className="text-xl font-semibold text-white mt-6 mb-2">{children}</h3>
-            ),
-            h4: ({ children }) => (
-              <h4 className="text-base font-semibold text-white/90 mt-5 mb-2 uppercase tracking-wide">
-                {children}
-              </h4>
-            ),
-            p: ({ children }) => (
-              <p className="text-white/80 mb-4 leading-relaxed">{children}</p>
-            ),
-            strong: ({ children }) => (
-              <strong className="text-white font-semibold">{children}</strong>
-            ),
-            ul: ({ children }) => (
-              <ul className="list-disc pl-6 text-white/80 mb-4 leading-relaxed space-y-1">
-                {children}
-              </ul>
-            ),
-            ol: ({ children }) => (
-              <ol className="list-decimal pl-6 text-white/80 mb-4 leading-relaxed space-y-2">
-                {children}
-              </ol>
-            ),
-            li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-            code: ({ inline, children }: { inline?: boolean; children?: React.ReactNode }) => (inline ? (
-              <code className="bg-white/10 text-white/90 px-1.5 py-0.5 rounded text-sm font-mono">
-                {children}
-              </code>
-            ) : (
-              <code className="bg-white/5 border border-white/10 rounded-lg px-0.5 text-white/80 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
-                {children}
-              </code>
-            )),
-            pre: ({ children }) => (
-              <pre className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4 overflow-x-auto">
-                {children}
-              </pre>
-            ),
-            table: ({ children }) => (
-              <div className="overflow-x-auto mb-6">
-                <table className="w-full text-sm text-white/80 border-collapse">
-                  {children}
-                </table>
-              </div>
-            ),
-            thead: ({ children }) => (
-              <thead className="border-b border-white/20">{children}</thead>
-            ),
-            tbody: ({ children }) => <tbody>{children}</tbody>,
-            tr: ({ children }) => (
-              <tr className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                {children}
-              </tr>
-            ),
-            th: ({ children }) => (
-              <th className="text-left py-2 px-3 text-white/60 font-medium uppercase text-xs tracking-wide">
-                {children}
-              </th>
-            ),
-            td: ({ children }) => (
-              <td className="py-2.5 px-3 text-white/80 leading-relaxed">{children}</td>
-            ),
-            blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-white/20 pl-4 my-4 text-white/60 italic">
-                {children}
-              </blockquote>
-            ),
-            hr: () => <hr className="border-white/10 my-8" />,
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                className="text-white underline underline-offset-2 hover:text-white/80 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {children}
-              </a>
-            ),
-          }}
+          components={markdownComponents}
         >
           {WHITEPAPER_CONTENT}
         </ReactMarkdown>

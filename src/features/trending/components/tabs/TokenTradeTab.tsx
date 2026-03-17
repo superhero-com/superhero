@@ -157,13 +157,13 @@ export const TokenTradeTab = ({
 
       {/* Chart */}
       <div className="mt-12">
-        {(isLoading && !token?.sale_address) ? (
-          <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
-        ) : (
-          token?.sale_address ? (
-            <TokenCandlestickChart token={token} height={window.innerHeight * 0.4} className="w-full" noBackground />
-          ) : null
-        )}
+        {(() => {
+          if (isLoading && !token?.sale_address) return <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />;
+          if (token?.sale_address) {
+            return <TokenCandlestickChart token={token} height={window.innerHeight * 0.4} className="w-full" noBackground />;
+          }
+          return null;
+        })()}
       </div>
 
       {/* Performance row */}

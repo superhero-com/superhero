@@ -77,7 +77,6 @@ const TokenListTableRow = ({
                 <TokenLineChart
                   saleAddress={saleAddress}
                   height={26}
-                  hideTimeframe
                   className="w-[72px]"
                 />
                 )}
@@ -162,7 +161,6 @@ const TokenListTableRow = ({
               <TokenLineChart
                 saleAddress={token.sale_address || tokenAddress}
                 height={40}
-                hideTimeframe
               />
             </div>
           )}

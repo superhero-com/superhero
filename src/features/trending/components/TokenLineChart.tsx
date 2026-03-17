@@ -15,12 +15,8 @@ const PAD = 2;
 interface TokenLineChartProps {
   saleAddress: string;
   height?: number;
-  hideTimeframe?: boolean;
-  showCrosshair?: boolean;
-  showTimeScale?: boolean;
   allTime?: boolean;
   showDateLegend?: boolean;
-  allowParentClick?: boolean;
   timeframe?: PriceMovementTimeframe;
   className?: string;
 }

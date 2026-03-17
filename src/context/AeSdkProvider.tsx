@@ -14,6 +14,7 @@ import { configs } from '../configs';
 import { IS_SAFARI, NETWORK_MAINNET } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl } from '../utils/url';
+import { openDeepLink } from '../utils/wallet';
 
 type TxQueueEntry = {
   status: string;
@@ -209,7 +210,18 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                    * By setting a name and width/height,
                    * the extension is forced to open in a new window
                    */
-                  newWindow = window.open(signUrl, '_blank', windowFeatures);
+                  openDeepLink({
+                    type: 'sign-transaction',
+                    transaction: tx,
+                    networkId: activeNetwork.networkId,
+                    innerTx: options?.innerTx === true ? 'true' : undefined,
+                    'replace-caller': 'true',
+                    'x-success': decodeURI(successUrl.href),
+                    'x-cancel': decodeURI(cancelUrl.href),
+                    target: '_blank',
+                    windowFeatures
+                  });
+                  // newWindow = window.open(signUrl, '_blank', windowFeatures);
                 },
                 onCancel: () => {
                   cleanup();

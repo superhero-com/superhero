@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from '../utils/constants';
 import { useAeSdk } from './useAeSdk';
-import { createDeepLinkUrl } from '../utils/url';
+import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 import { validateHash } from '../utils/address';
 import { configs } from '../configs';
 import type { Wallet, Wallets } from '../utils/types';
@@ -126,15 +126,22 @@ export function useWalletConnect() {
   }
 
   async function deepLinkWalletConnect() {
-    const addressDeepLink = createDeepLinkUrl({
+    // const addressDeepLink = createDeepLinkUrl({
+    //   type: 'address',
+    //   'x-success': `${window.location.href.split('?')[0]
+    //     }?address={address}&networkId={networkId}`,
+    //   'x-cancel': window.location.href.split('?')[0],
+    // });
+    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // // @ts-ignore
+    // window.location = addressDeepLink;
+
+    openDeepLink({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
         }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
-    });
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.location = addressDeepLink;
+    })
   }
 
   // eslint-disable-next-line consistent-return

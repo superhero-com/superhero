@@ -11,6 +11,7 @@
     "test:integration": "vitest run \"src/**/*.integration.test.{ts,tsx}\"",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:update-snapshots": "playwright test --update-snapshots",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",

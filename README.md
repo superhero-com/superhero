@@ -102,6 +102,7 @@ Defined in `package.json`:
 - `test` — run unit and component tests
 - `test:e2e` — run Playwright e2e tests (starts dev server if needed)
 - `test:e2e:ui` — run e2e tests in Playwright UI mode (watch, pick tests, debug)
+- `test:e2e:update-snapshots` — run e2e tests and update screenshot baselines (visual regression)
 
 ## End-to-end tests
 
@@ -123,6 +124,12 @@ npm run test:e2e
 
 ```bash
 npm run test:e2e:ui
+```
+
+**Update screenshot baselines** (after intentional UI changes to visual regression tests):
+
+```bash
+npm run test:e2e:update-snapshots
 ```
 
 Config: `playwright.config.ts`. Failure artifacts are under `test-results/`; the default reporter prints to the terminal.

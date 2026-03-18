@@ -12,6 +12,9 @@ export const TxPayloadType = {
   CreateToken: 'create_token',
   CreatePost: 'create_post',
   CreateComment: 'create_comment',
+  SwapToken: 'swap_token',
+  WrapToken: 'wrap_ae',
+  UnwrapToken: 'unwrap_wae',
 } as const;
 
 export type TxPayload =
@@ -20,7 +23,10 @@ export type TxPayload =
   | { type: typeof TxPayloadType.ApproveAllowance; tokenName: string; tokenSymbol: string; amount: string; stepNumber: number; totalSteps: number }
   | { type: typeof TxPayloadType.CreateToken; tokenName: string }
   | { type: typeof TxPayloadType.CreatePost; content: string }
-  | { type: typeof TxPayloadType.CreateComment; postId: string };
+  | { type: typeof TxPayloadType.CreateComment; postId: string }
+  | { type: typeof TxPayloadType.SwapToken; tokenInSymbol: string; tokenOutSymbol: string; amountIn: string; amountOut: string }
+  | { type: typeof TxPayloadType.WrapToken; amount: string }
+  | { type: typeof TxPayloadType.UnwrapToken; amount: string };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 

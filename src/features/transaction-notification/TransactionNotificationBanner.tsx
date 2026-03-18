@@ -20,13 +20,25 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
     case TxPayloadType.SellToken:
       return { title: 'Confirm in your wallet', subtitle: 'Sign the transaction to continue' };
     case TxPayloadType.ApproveAllowance:
-      return { title: 'Confirm in your wallet', subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — sign to continue` };
+      return {
+        title: 'Approve token spending',
+        subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — allow DEX to use your ${payload.tokenSymbol}`,
+      };
     case TxPayloadType.CreateToken:
       return { title: `Creating #${payload.tokenName}`, subtitle: 'Sign in your wallet to continue' };
     case TxPayloadType.CreatePost:
       return { title: 'Publishing post', subtitle: 'Sign in your wallet to continue' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Sign in your wallet to continue' };
+    case TxPayloadType.SwapToken:
+      return {
+        title: 'Confirm in your wallet',
+        subtitle: `Swapping ${fmt(payload.amountIn)} ${payload.tokenInSymbol} → ${fmt(payload.amountOut)} ${payload.tokenOutSymbol}`,
+      };
+    case TxPayloadType.WrapToken:
+      return { title: 'Confirm in your wallet', subtitle: `Wrapping ${fmt(payload.amount)} AE → WAE` };
+    case TxPayloadType.UnwrapToken:
+      return { title: 'Confirm in your wallet', subtitle: `Unwrapping ${fmt(payload.amount)} WAE → AE` };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
   }
@@ -39,13 +51,19 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
     case TxPayloadType.SellToken:
       return { title: 'Confirming on blockchain', subtitle: 'Usually takes a few seconds' };
     case TxPayloadType.ApproveAllowance:
-      return { title: 'Confirming on blockchain', subtitle: 'Allowance is being processed' };
+      return { title: `Approving ${payload.tokenSymbol}…`, subtitle: 'Confirming allowance on-chain' };
     case TxPayloadType.CreateToken:
       return { title: `Creating #${payload.tokenName}`, subtitle: 'Confirming on blockchain…' };
     case TxPayloadType.CreatePost:
       return { title: 'Publishing post', subtitle: 'Confirming on blockchain…' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Confirming on blockchain…' };
+    case TxPayloadType.SwapToken:
+      return { title: 'Swap in progress', subtitle: 'Usually confirms in a few seconds' };
+    case TxPayloadType.WrapToken:
+      return { title: 'Wrapping AE → WAE', subtitle: 'Confirming on-chain…' };
+    case TxPayloadType.UnwrapToken:
+      return { title: 'Unwrapping WAE → AE', subtitle: 'Confirming on-chain…' };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
   }
@@ -77,7 +95,37 @@ function getConfirmedMeta(payload: TxPayload): {
         },
       };
     case TxPayloadType.ApproveAllowance:
-      return { title: 'Allowance approved', line: null };
+      return { title: 'Allowance approved', line: { leftLabel: `${payload.tokenSymbol} approved`, leftColor: '#4ade80' } };
+    case TxPayloadType.SwapToken:
+      return {
+        title: 'Swap confirmed',
+        line: {
+          leftLabel: `-${fmt(payload.amountIn)} ${payload.tokenInSymbol}`,
+          leftColor: '#f87171',
+          rightLabel: `+${fmt(payload.amountOut)} ${payload.tokenOutSymbol}`,
+          rightColor: '#4ade80',
+        },
+      };
+    case TxPayloadType.WrapToken:
+      return {
+        title: 'Wrap complete',
+        line: {
+          leftLabel: `-${fmt(payload.amount)} AE`,
+          leftColor: '#f87171',
+          rightLabel: `+${fmt(payload.amount)} WAE`,
+          rightColor: '#4ade80',
+        },
+      };
+    case TxPayloadType.UnwrapToken:
+      return {
+        title: 'Unwrap complete',
+        line: {
+          leftLabel: `-${fmt(payload.amount)} WAE`,
+          leftColor: '#f87171',
+          rightLabel: `+${fmt(payload.amount)} AE`,
+          rightColor: '#4ade80',
+        },
+      };
     case TxPayloadType.CreateToken:
       return {
         title: 'Token created',

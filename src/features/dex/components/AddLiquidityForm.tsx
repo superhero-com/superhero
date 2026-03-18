@@ -15,7 +15,6 @@ import TokenInput from '../../../components/dex/core/TokenInput';
 import DexSettings from './DexSettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
-import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
 import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
@@ -54,12 +53,6 @@ const AddLiquidityForm = () => {
 
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successTxHash, setSuccessTxHash] = useState<string>('');
-  const [successAmounts, setSuccessAmounts] = useState<{
-    amountA: string;
-    amountB: string;
-  }>({ amountA: '', amountB: '' });
 
   // Helper function to find token by symbol or contract address
   const findToken = useCallback((identifier: string): DexTokenDto | null => {
@@ -377,46 +370,34 @@ const AddLiquidityForm = () => {
   const handleAddLiquidity = async () => {
     if (!tokenA || !tokenB || !amountA || !amountB) return;
 
+    // Close the confirmation dialog immediately; the banner handles ongoing state.
+    setShowConfirm(false);
+
     try {
-      const txHash = await executeAddLiquidity(
-        {
-          tokenA: tokenA.address,
-          tokenB: tokenB.address,
-          amountA,
-          amountB,
-          slippagePct,
-          deadlineMins,
-          isAePair:
-            tokenA.address === 'AE'
-            || tokenB.address === 'AE'
-            || tokenA.is_ae
-            || tokenB.is_ae
-            || false,
-        },
-        { suppressToast: true },
-      ); // Suppress toast since we're using the custom success notification
+      const txHash = await executeAddLiquidity({
+        tokenA: tokenA.is_ae ? 'AE' : tokenA.address,
+        tokenB: tokenB.is_ae ? 'AE' : tokenB.address,
+        symbolA: tokenA.symbol,
+        symbolB: tokenB.symbol,
+        amountA,
+        amountB,
+        slippagePct,
+        deadlineMins,
+        isAePair: tokenA.is_ae || tokenB.is_ae || tokenA.address === 'AE' || tokenB.address === 'AE',
+      });
 
       if (txHash) {
-        // Capture amounts before clearing form
-        setSuccessAmounts({ amountA, amountB });
-        setSuccessTxHash(txHash);
-        setShowSuccess(true);
-
-        // Clear form
         setAmountA('');
         setAmountB('');
-        setShowConfirm(false);
 
-        // Clear selection if we were adding to existing position
         if (currentAction === 'add') {
           clearSelection();
         }
 
-        // Refresh positions after successful transaction
         await onPositionUpdated();
       }
     } catch {
-      // Ignore execution errors here; UI already shows notifications.
+      // Errors are surfaced through the notification banner.
     }
   };
 
@@ -632,16 +613,6 @@ const AddLiquidityForm = () => {
         loading={state.loading}
       />
 
-      {/* Success Notification */}
-      <LiquiditySuccessNotification
-        show={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        tokenA={tokenA}
-        tokenB={tokenB}
-        amountA={successAmounts.amountA}
-        amountB={successAmounts.amountB}
-        txHash={successTxHash}
-      />
     </div>
   );
 };

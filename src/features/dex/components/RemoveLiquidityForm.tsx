@@ -10,6 +10,7 @@ import { Decimal } from '../../../libs/decimal';
 import { fromAettos } from '../../../libs/dex';
 import { usePool } from '../context/PoolProvider';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
+import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 
 const RemoveLiquidityForm = () => {
   const { t } = useTranslation('common');
@@ -17,6 +18,13 @@ const RemoveLiquidityForm = () => {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { executeRemoveLiquidity } = useAddLiquidity();
+  const { tokens } = useTokenList();
+
+  const resolveSymbol = (tokenAddress: string): string => {
+    if (tokenAddress === BridgeConstants.aeternity.default_ae) return 'AE';
+    const found = tokens.find((t) => t.address === tokenAddress);
+    return found?.symbol || tokenAddress.slice(0, 8);
+  };
 
   const [percentage, setPercentage] = useState<number>(25);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -82,21 +90,29 @@ const RemoveLiquidityForm = () => {
   const handleRemove = async () => {
     if (!address || !selectedPosition) return;
 
+    // Close the confirm screen immediately; the banner handles ongoing state.
+    setShowConfirm(false);
     setLoading(true);
+
+    const displayPct = useCustomAmount
+      ? ((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)
+      : String(percentage);
+
     try {
       const liquidityToRemove = removeAmountForTransaction;
 
-      // Determine if this is an AE pair
       const isAePair = (
         selectedPosition.token0 === BridgeConstants.aeternity.default_ae
         || selectedPosition.token1 === BridgeConstants.aeternity.default_ae
       );
 
-      // Execute remove liquidity
       const txHash = await executeRemoveLiquidity({
         tokenA: selectedPosition.token0,
         tokenB: selectedPosition.token1,
+        tokenASymbol: resolveSymbol(selectedPosition.token0),
+        tokenBSymbol: resolveSymbol(selectedPosition.token1),
         liquidity: liquidityToRemove,
+        liquidityPct: displayPct,
         slippagePct,
         deadlineMins,
         isAePair,
@@ -106,10 +122,7 @@ const RemoveLiquidityForm = () => {
 
       if (txHash) {
         setLoading(false);
-        setShowConfirm(false);
         clearSelection();
-
-        // Refresh positions after successful transaction
         await onPositionUpdated();
       }
     } catch {

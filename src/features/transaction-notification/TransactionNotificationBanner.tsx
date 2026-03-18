@@ -39,6 +39,16 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
       return { title: 'Confirm in your wallet', subtitle: `Wrapping ${fmt(payload.amount)} AE → WAE` };
     case TxPayloadType.UnwrapToken:
       return { title: 'Confirm in your wallet', subtitle: `Unwrapping ${fmt(payload.amount)} WAE → AE` };
+    case TxPayloadType.AddLiquidity:
+      return {
+        title: 'Confirm in your wallet',
+        subtitle: `Adding ${fmt(payload.amountA)} ${payload.tokenASymbol} + ${fmt(payload.amountB)} ${payload.tokenBSymbol}`,
+      };
+    case TxPayloadType.RemoveLiquidity:
+      return {
+        title: 'Confirm in your wallet',
+        subtitle: `Removing ${payload.liquidityPct}% from ${payload.tokenASymbol}/${payload.tokenBSymbol}`,
+      };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
   }
@@ -64,6 +74,16 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
       return { title: 'Wrapping AE → WAE', subtitle: 'Confirming on-chain…' };
     case TxPayloadType.UnwrapToken:
       return { title: 'Unwrapping WAE → AE', subtitle: 'Confirming on-chain…' };
+    case TxPayloadType.AddLiquidity:
+      return {
+        title: 'Adding liquidity…',
+        subtitle: `Depositing into ${payload.tokenASymbol}/${payload.tokenBSymbol} pool`,
+      };
+    case TxPayloadType.RemoveLiquidity:
+      return {
+        title: 'Removing liquidity…',
+        subtitle: `Withdrawing from ${payload.tokenASymbol}/${payload.tokenBSymbol} pool`,
+      };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
   }
@@ -135,6 +155,26 @@ function getConfirmedMeta(payload: TxPayload): {
       return { title: 'Post published', line: null };
     case TxPayloadType.CreateComment:
       return { title: 'Reply published', line: null };
+    case TxPayloadType.AddLiquidity:
+      return {
+        title: 'Liquidity added',
+        line: {
+          leftLabel: `+${fmt(payload.amountA)} ${payload.tokenASymbol}`,
+          leftColor: '#4ade80',
+          rightLabel: `+${fmt(payload.amountB)} ${payload.tokenBSymbol}`,
+          rightColor: '#4ade80',
+        },
+      };
+    case TxPayloadType.RemoveLiquidity:
+      return {
+        title: 'Liquidity removed',
+        line: {
+          leftLabel: `-${payload.liquidityPct}% LP`,
+          leftColor: '#f87171',
+          rightLabel: `${payload.tokenASymbol}/${payload.tokenBSymbol}`,
+          rightColor: '#9ca3af',
+        },
+      };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }

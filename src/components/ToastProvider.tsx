@@ -6,6 +6,10 @@ type Toast = { id: number; message: React.ReactNode };
 type ToastCtx = { push: (message: React.ReactNode) => void };
 const Ctx = createContext<ToastCtx>({ push: () => {} });
 
+/**
+ * @deprecated Use the transaction notification banner instead
+ * TODO: remove
+ */
 export function useToast() { return useContext(Ctx); }
 
 const ToastProvider = ({ children }: { children: React.ReactNode }) => {

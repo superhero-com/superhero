@@ -1,7 +1,7 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
+import { CONFIG } from '@/config';
 import { TxPayloadType, useTransactionNotification, type TxPayload } from '@/features/transaction-notification';
-import type { AeSdkBase } from '@aeternity/aepp-sdk';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -17,10 +17,10 @@ import {
   toDecimals,
 } from '../../../utils/bondingCurve';
 import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../../utils/constants';
-import { buyToken } from '../libs/tokenSale';
 import {
   fetchUserTokenBalance,
   getContractInstances,
+  getTokenSymbolName,
   setupContractInstance,
 } from '../libs/tokenTradeContract';
 import { useTokenTradeStore } from './useTokenTradeStore';
@@ -36,7 +36,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   const queryClient = useQueryClient();
   const [, setTransactionType] = useAtom(transactionTypeAtom);
   const {
-    notificationState, notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError,
+    notifySubmitted, notifyConfirmed, notifyError,
   } = useTransactionNotification();
   const store = useTokenTradeStore();
 
@@ -282,27 +282,11 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     return '0';
   }, [queryClient, getTokenSaleInstance, activeAccount, token, store]);
 
-  // When notification context marks our buy as confirmed (after polling), sync balance and success UI.
-  useEffect(() => {
-    if (notificationState.status !== 'confirmed') return;
-    const { payload } = notificationState;
-    if (payload.type !== TxPayloadType.BuyToken || payload.saleAddress !== token.sale_address) return;
-
-    onTransactionComplete().then((balance) => {
-      store.updateSuccessTxData({
-        isBuying: true,
-        sourceAmount: Decimal.from(payload.coinAmount),
-        destAmount: Decimal.from(payload.estimatedTokens),
-        symbol: payload.tokenSymbol,
-        userBalance: Decimal.from(balance),
-      });
-    });
-  }, [notificationState, token.sale_address, onTransactionComplete, store]);
-
-  // Buy tokens: broadcast with waitMined: false, then notification context polls until mined.
-  const buy = useCallback(async (signingSdk?: AeSdkBase) => {
+  // Buy tokens: call saleInstance.buy, parse decodedEvents, and update success state directly.
+  const buy = useCallback(async () => {
     errorMessage.current = undefined;
-    if (!tokenRef.current.sale_address) {
+    const saleInstance = getTokenSaleInstance();
+    if (!saleInstance) {
       errorMessage.current = 'Contract not initialized';
       return;
     }
@@ -323,24 +307,44 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     };
 
     store.updateLoadingTransaction(true);
-    notifySubmitted(buyPayload); // 1) Waiting for wallet confirmation
+    notifySubmitted(buyPayload);
     try {
-      const currentSdk = signingSdk ?? sdk;
-      const txHash = await buyToken(
-        tokenRef.current,
-        currentSdk,
-        store.tokenB,
-        undefined,
-        store.slippage,
+      const result = await saleInstance.buy(store.tokenB, undefined, store.slippage) as any;
+      const events: any[] = result?.decodedEvents || [];
+      const buyEvent = events.find((e: any) => e.name === 'Buy');
+      const tokenMintEvent = events.find(
+        (e: any) => e.name === 'Mint' && e.contract?.address === tokenRef.current.address,
       );
-      notifyPendingTx(buyPayload, txHash); // 2) Waiting for transaction confirmation (polling)
-      // Context will set status to 'confirmed' when poll finds block_height !== -1
+      const protocolMintEvent = events.find(
+        (e: any) => e.name === 'Mint' && e.contract?.address !== tokenRef.current.address,
+      );
+
+      const sourceAmount = Decimal.from(toAe(buyEvent?.args[0] || '0'));
+      const destAmount = Decimal.from(toAe(tokenMintEvent?.args[1] || '0'));
+      const protocolReward = protocolMintEvent
+        ? Decimal.from(toAe(protocolMintEvent.args[1]))
+        : undefined;
+      const protocolSymbol = protocolMintEvent
+        ? await getTokenSymbolName(protocolMintEvent.contract.address, CONFIG.MIDDLEWARE_URL)
+        : undefined;
+
+      const balance = await fetchUserTokenBalance(saleInstance, tokenRef.current, activeAccount!);
+      store.updateSuccessTxData({
+        isBuying: true,
+        symbol,
+        protocolSymbol,
+        sourceAmount,
+        destAmount,
+        protocolReward,
+        userBalance: Decimal.from(balance),
+      });
+      notifyConfirmed(buyPayload);
     } catch (error: any) {
       errorMessage.current = error?.message;
       notifyError(error?.message || 'Buy transaction failed');
     }
     store.updateLoadingTransaction(false);
-  }, [sdk, store, notifySubmitted, notifyPendingTx, notifyError]);
+  }, [getTokenSaleInstance, store, activeAccount, notifySubmitted, notifyConfirmed, notifyError]);
 
   // Sell tokens
   const sell = useCallback(async () => {
@@ -445,7 +449,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
       // Fire-and-forget: buy/sell run with the same SDK we used for setup.
       if (store.isBuying) {
-        buy(signingSdk).finally(() => {
+        buy().finally(() => {
           setTransactionType(null);
           store.resetFormData();
         });

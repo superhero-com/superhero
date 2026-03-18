@@ -22,7 +22,7 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
     case TxPayloadType.ApproveAllowance:
       return {
         title: 'Approve token spending',
-        subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — allow DEX to use your ${payload.tokenSymbol}`,
+        subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — allow Superhero to use your ${payload.tokenSymbol}`,
       };
     case TxPayloadType.CreateToken:
       return { title: `Creating #${payload.tokenName}`, subtitle: 'Sign in your wallet to continue' };

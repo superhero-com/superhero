@@ -6,6 +6,8 @@ import {
 } from '../../../libs/dex';
 import Spinner from '../../Spinner';
 import { Decimal } from '@/libs/decimal';
+import { RouteInfo } from '../types/dex';
+import SwapRouteInfo from './SwapRouteInfo';
 
 interface SwapConfirmationProps {
   show: boolean;
@@ -19,7 +21,8 @@ interface SwapConfirmationProps {
   slippagePct: number;
   deadlineMins: number;
   priceImpactPct: number | null;
-  path: string[];
+  routeInfo: RouteInfo;
+  tokens: DexTokenDto[];
   loading?: boolean;
   swapStep?: { current: number; total: number; label: string } | null;
 }
@@ -36,7 +39,8 @@ export default function SwapConfirmation({
   slippagePct,
   deadlineMins,
   priceImpactPct,
-  path,
+  routeInfo,
+  tokens,
   loading = false,
   swapStep = null,
 }: SwapConfirmationProps) {
@@ -197,14 +201,12 @@ export default function SwapConfirmation({
                 </div>
               )}
 
-              {path.length > 0 && (
-                <div className="flex justify-between text-[13px] text-white/60 items-start">
-                  <span>Route</span>
-                  <span className="text-white text-right max-w-[60%] break-all">
-                    {path.map((p, i) => (i > 0 ? ' → ' : '') + p).join('')}
-                  </span>
-                </div>
-              )}
+              <SwapRouteInfo
+                routeInfo={routeInfo}
+                tokens={tokens}
+                tokenIn={tokenIn}
+                tokenOut={tokenOut}
+              />
             </div>
           </div>
 

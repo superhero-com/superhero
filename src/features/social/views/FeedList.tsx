@@ -1225,18 +1225,14 @@ const FeedList = ({
       <div>
         <CreatePost
           ref={createPostRef}
-          onSuccess={(postId = null) => {
-            if (postId) {
-              navigate(`/post/${postId}`);
+          onSuccess={() => {
+            // Use ref to get current sortBy value instead of closure value
+            // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
+            const currentSortBy = sortByRef.current;
+            if (currentSortBy === 'hot') {
+              refetchPopular();
             } else {
-              // Use ref to get current sortBy value instead of closure value
-              // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
-              const currentSortBy = sortByRef.current;
-              if (currentSortBy === 'hot') {
-                refetchPopular();
-              } else {
-                refetchLatest();
-              }
+              refetchLatest();
             }
           }}
           onPostCreated={(postId = null) => {

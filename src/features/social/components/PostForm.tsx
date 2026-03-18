@@ -888,8 +888,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         // Ignore GIF preload errors
       }
     } catch (error: any) {
+      // TODO: add sentry capture
       notifyError(error?.message || (isPost ? 'Failed to publish post' : 'Failed to publish reply'));
-      throw error;
     } finally {
       setIsSubmitting(false);
     }

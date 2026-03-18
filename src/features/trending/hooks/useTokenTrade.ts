@@ -328,7 +328,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         ? await getTokenSymbolName(protocolMintEvent.contract.address, CONFIG.MIDDLEWARE_URL)
         : undefined;
 
-      const balance = await fetchUserTokenBalance(saleInstance, tokenRef.current, activeAccount!);
+      const balance = await onTransactionComplete();
       store.updateSuccessTxData({
         isBuying: true,
         symbol,
@@ -344,7 +344,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       notifyError(error?.message || 'Buy transaction failed');
     }
     store.updateLoadingTransaction(false);
-  }, [getTokenSaleInstance, store, activeAccount, notifySubmitted, notifyConfirmed, notifyError]);
+  }, [getTokenSaleInstance, onTransactionComplete, store, notifySubmitted, notifyConfirmed, notifyError]);
 
   // Sell tokens
   const sell = useCallback(async () => {

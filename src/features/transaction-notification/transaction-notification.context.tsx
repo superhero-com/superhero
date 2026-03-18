@@ -80,6 +80,10 @@ export const TransactionNotificationProvider: React.FC<{
   const [notificationState, setNotificationState] = useState<NotificationState>({ status: 'idle' });
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Incremented every time an active poll is cancelled. Each tryConfirm closure captures
+  // the generation at creation and discards its result if the value has since changed,
+  // preventing a stale in-flight fetch from overwriting newer notification state.
+  const pollGeneration = useRef(0);
 
   const clearDismissTimer = () => {
     if (dismissTimer.current) {
@@ -89,6 +93,7 @@ export const TransactionNotificationProvider: React.FC<{
   };
 
   const clearPollInterval = () => {
+    pollGeneration.current += 1;
     if (pollInterval.current) {
       clearInterval(pollInterval.current);
       pollInterval.current = null;
@@ -129,10 +134,14 @@ export const TransactionNotificationProvider: React.FC<{
     (payload: TxPayload, txHash: string) => {
       clearDismissTimer();
       clearPollInterval();
+      // Capture the generation after clearing so this poll cycle has a unique token.
+      const gen = pollGeneration.current;
       setNotificationState({ status: 'pending', payload, txHash });
 
       const tryConfirm = async () => {
         const mined = await checkTxMined(txHash);
+        // Discard the result if a newer notification superseded this poll cycle.
+        if (gen !== pollGeneration.current) return;
         if (mined) {
           clearPollInterval();
           setNotificationState({ status: 'confirmed', payload });

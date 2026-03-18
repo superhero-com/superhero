@@ -386,8 +386,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
       notifyConfirmed(txPayload);
 
+      let newPostId: string;
       if (isPost) {
-        const newPostId = `${decodedResult}_v3`;
+        newPostId = `${decodedResult}_v3`;
 
         // Create optimistic post object immediately (even before API call)
         // This ensures the post appears instantly even if backend isn't ready yet
@@ -874,10 +875,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
-        onPostCreated?.(postId);
+        onPostCreated?.(newPostId ?? postId);
       }
 
-      onSuccess?.(postId);
+      onSuccess?.(newPostId ?? postId);
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
@@ -932,8 +933,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
   return (
     <div
-      className={`${isPost ? 'w-full max-w-none' : 'mx-auto'
-        } mb-2 md:mb-4 ${className}`}
+      className={`${isPost ? 'w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">

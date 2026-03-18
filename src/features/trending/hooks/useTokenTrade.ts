@@ -1,12 +1,11 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { transactionTypeAtom } from '@/atoms/transactionConfirmAtom';
-import { useTransactionNotification, TxPayloadType, type TxPayload } from '@/features/transaction-notification';
+import { TxPayloadType, useTransactionNotification, type TxPayload } from '@/features/transaction-notification';
 import type { AeSdkBase } from '@aeternity/aepp-sdk';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
-import { CONFIG } from '../../../config';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -18,14 +17,13 @@ import {
   toDecimals,
 } from '../../../utils/bondingCurve';
 import { PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '../../../utils/constants';
+import { buyToken } from '../libs/tokenSale';
 import {
   fetchUserTokenBalance,
   getContractInstances,
-  getTokenSymbolName,
   setupContractInstance,
 } from '../libs/tokenTradeContract';
 import { useTokenTradeStore } from './useTokenTradeStore';
-import { buyToken } from '../libs/tokenSale';
 
 interface UseTokenTradeProps {
   token: TokenDto;
@@ -37,7 +35,9 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   } = useAeSdk();
   const queryClient = useQueryClient();
   const [, setTransactionType] = useAtom(transactionTypeAtom);
-  const { notificationState, notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError } = useTransactionNotification();
+  const {
+    notificationState, notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError,
+  } = useTransactionNotification();
   const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
@@ -285,7 +285,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   // When notification context marks our buy as confirmed (after polling), sync balance and success UI.
   useEffect(() => {
     if (notificationState.status !== 'confirmed') return;
-    const payload = notificationState.payload;
+    const { payload } = notificationState;
     if (payload.type !== TxPayloadType.BuyToken || payload.saleAddress !== token.sale_address) return;
 
     onTransactionComplete().then((balance) => {
@@ -461,7 +461,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       setTransactionType(null);
       store.resetFormData();
     }
-  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell, setTransactionType, notifyError]);
+  }, [aeSdk, staticAeSdk, activeAccount, getConnectedWalletAddress, store, buy, sell, setTransactionType]);
 
   return {
     // State

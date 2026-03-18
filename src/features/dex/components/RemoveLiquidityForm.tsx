@@ -22,7 +22,7 @@ const RemoveLiquidityForm = () => {
 
   const resolveSymbol = (tokenAddress: string): string => {
     if (tokenAddress === BridgeConstants.aeternity.default_ae) return 'AE';
-    const found = tokens.find((t) => t.address === tokenAddress);
+    const found = tokens.find((_t) => _t.address === tokenAddress);
     return found?.symbol || tokenAddress.slice(0, 8);
   };
 
@@ -231,10 +231,9 @@ const RemoveLiquidityForm = () => {
             type="button"
             onClick={handleRemove}
             disabled={loading}
-            className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              loading
-                ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+            className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${loading
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
             {loading ? (
@@ -321,10 +320,9 @@ const RemoveLiquidityForm = () => {
             <button
               type="button"
               onClick={() => setUseCustomAmount(false)}
-              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
-                useCustomAmount
-                  ? 'border-white/10 bg-white/[0.02] text-white/60'
-                  : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
+              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${useCustomAmount
+                ? 'border-white/10 bg-white/[0.02] text-white/60'
+                : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
               }`}
             >
               %
@@ -332,10 +330,9 @@ const RemoveLiquidityForm = () => {
             <button
               type="button"
               onClick={() => setUseCustomAmount(true)}
-              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
-                !useCustomAmount
-                  ? 'border-white/10 bg-white/[0.02] text-white/60'
-                  : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
+              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${!useCustomAmount
+                ? 'border-white/10 bg-white/[0.02] text-white/60'
+                : 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
               }`}
             >
               LP
@@ -352,10 +349,9 @@ const RemoveLiquidityForm = () => {
                   type="button"
                   key={pct}
                   onClick={() => setPercentage(pct)}
-                  className={`py-3 px-2 rounded-xl border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${
-                    percentage === pct
-                      ? 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
-                      : 'border-white/10 bg-white/[0.02] text-white hover:bg-white/10'
+                  className={`py-3 px-2 rounded-xl border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${percentage === pct
+                    ? 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
+                    : 'border-white/10 bg-white/[0.02] text-white hover:bg-white/10'
                   }`}
                 >
                   {pct}
@@ -467,10 +463,9 @@ const RemoveLiquidityForm = () => {
         disabled={
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
         }
-        className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
-            ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
-            : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+        className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
+          ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
+          : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
         💧 Remove

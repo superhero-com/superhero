@@ -90,7 +90,7 @@ const PROMPTS: string[] = [
   'Teach us something in 1 line. 🧠',
 ];
 
-const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
+const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const { t } = useTranslation();
   const tf = (key: string, options?: Record<string, unknown>) => t(`forms.${key}`, options);
   const ts = (key: string, options?: Record<string, unknown>) => t(`social.${key}`, options);

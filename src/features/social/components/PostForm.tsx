@@ -383,11 +383,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         trimmed,
         postMedia,
       );
+      let newPostId: string | undefined;
 
       notifyConfirmed(txPayload);
 
       if (isPost) {
-        const newPostId = `${decodedResult}_v3`;
+        newPostId = `${decodedResult}_v3`;
 
         // Create optimistic post object immediately (even before API call)
         // This ensures the post appears instantly even if backend isn't ready yet
@@ -874,10 +875,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
-        onPostCreated?.(postId);
+        onPostCreated?.(newPostId);
       }
 
-      onSuccess?.(postId);
+      onSuccess?.(newPostId);
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {

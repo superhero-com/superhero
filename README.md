@@ -24,8 +24,11 @@ npm run build
 # Preview the production build locally
 npm run preview
 
-# Run tests
+# Run unit/component tests
 npm test
+
+# Run e2e tests (starts dev server automatically)
+npm run test:e2e
 ```
 
 ## What’s inside (feature highlights)
@@ -87,7 +90,7 @@ npm run build
 - Routing: React Router v6
 - Styles: SCSS and Tailwind CSS
 - i18n: i18next
-- Testing: Vitest + Testing Library
+- Testing: Vitest + Testing Library (unit/component), Playwright (e2e)
 
 ## Scripts
 
@@ -97,6 +100,32 @@ Defined in `package.json`:
 - `build` — production build
 - `preview` — preview the `dist/` build
 - `test` — run unit and component tests
+- `test:e2e` — run Playwright e2e tests (starts dev server if needed)
+- `test:e2e:ui` — run e2e tests in Playwright UI mode (watch, pick tests, debug)
+
+## End-to-end tests
+
+E2e tests use [Playwright](https://playwright.dev/) and live in `e2e/`. They run against the Vite dev server (started automatically unless one is already running).
+
+**First-time setup** — install browsers (once per machine):
+
+```bash
+npx playwright install chromium
+```
+
+**Run all e2e tests:**
+
+```bash
+npm run test:e2e
+```
+
+**Interactive mode** (pick tests, watch, debug):
+
+```bash
+npm run test:e2e:ui
+```
+
+Config: `playwright.config.ts`. Failure artifacts are under `test-results/`; the default reporter prints to the terminal.
 
 ## Deployment
 

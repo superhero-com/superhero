@@ -1,9 +1,9 @@
-import React, {
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
+import moment from 'moment';
+import {
   useEffect, useId, useMemo, useRef, useState,
 } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import moment from 'moment';
-import { useAtomValue } from 'jotai';
 import { TransactionHistoricalService } from '../../../api/generated';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
 

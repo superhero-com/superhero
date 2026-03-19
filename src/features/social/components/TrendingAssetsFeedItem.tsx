@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { TokensService, type TokenDto } from '@/api/generated';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
+import { DEFAULT_PAST_TIMEFRAME, PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
+import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 const ITEM_LIMIT = 4;
 
@@ -74,13 +75,7 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
               const token = item;
               const tokenLabel = token.symbol || token.name || 'Unknown';
               const tokenAddress = getTokenAddress(token);
-              const changeRaw = (
-                token as TokenDto & {
-                  performance?: {
-                    past_7d?: { current_change_percent?: number | string };
-                  };
-                }
-              ).performance?.past_7d?.current_change_percent;
+              const changeRaw = token.performance?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent;
               const parsedChange = Number(changeRaw);
               const changePercent = Number.isFinite(parsedChange) ? parsedChange : null;
               const isPositive = changePercent !== null ? changePercent >= 0 : true;
@@ -138,7 +133,7 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
                       <TokenLineChart
                         saleAddress={tokenAddress}
                         height={40}
-                        timeframe="30d"
+                        timeframe={PRICE_MOVEMENT_TIMEFRAME_DEFAULT}
                         className="h-10 w-full pointer-events-none"
                       />
                     )}

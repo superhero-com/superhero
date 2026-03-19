@@ -95,7 +95,7 @@ export class TransactionHistoricalService {
          * Token address or name
          */
         address: string,
-        interval?: '1d' | '7d' | '30d',
+        interval?: '1d' | '7d' | '30d' | '90d' | '180d',
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',

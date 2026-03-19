@@ -81,7 +81,7 @@ function buildSvgPaths(
   const rangeVal = maxVal - minVal || 1;
 
   const toX = (d: number) => PAD + ((d - minDate) / rangeDate) * drawW;
-  const toY = (v: number) => PAD + drawH - ((v - minVal) / rangeVal) * drawH;
+  const toY = (v: number) => (maxVal === minVal ? PAD + drawH / 2 : PAD + drawH - ((v - minVal) / rangeVal) * drawH);
 
   const pts = points.map((p) => ({ x: toX(p.date.getTime()), y: toY(p.value) }));
 
@@ -210,6 +210,10 @@ export const TokenLineChart = ({
         date: new Date(item.end_time),
         value: Number(item.last_price),
       }));
+    if (points.length === 1) {
+      const [{ date, value }] = points;
+      return [{ date: new Date(date.getTime() - 3_600_000), value }, { date, value }];
+    }
     if (points.length < MIN_POINTS) {
       const { date: firstDate, value: firstValue } = points[0];
       const paddingCount = MIN_POINTS - points.length;

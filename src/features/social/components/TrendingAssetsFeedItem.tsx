@@ -16,33 +16,26 @@ function formatChange(changePercent: number) {
   return `${Math.abs(changePercent).toFixed(2)}%`;
 }
 
-const TrendingAssetsFeedItem = () => {
+const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
   const { data: tokensData, isLoading: tokensLoading } = useQuery<{
     items?: TokenDto[];
   }>({
-    queryKey: ['feed-trending-assets', 'tokens'],
+    queryKey: ['feed-trending-assets', 'tokens', `page-${page}`],
     queryFn: () => TokensService.listAll({
-      orderBy: 'trending_score' as any,
+      // TODO: change to trending_score, once it's been enhance in the backend.
+      orderBy: 'holders_count' as any,
+      // orderBy: 'trending_score' as any,
       orderDirection: 'DESC',
-      limit: 30,
+      limit: ITEM_LIMIT,
+      page,
     }),
     staleTime: 2 * 60 * 1000,
   });
 
-  const tokens = useMemo<TokenDto[]>(() => {
+  const topTokens = useMemo<TokenDto[]>(() => {
     const items = tokensData?.items;
-    return (Array.isArray(items) ? items : []).filter((item) => item.holders_count > 2);
+    return (Array.isArray(items) ? items : []);
   }, [tokensData]);
-
-  const topTokens = useMemo(() => {
-    // Shuffle array
-    const shuffled = [...tokens];
-    for (let i = shuffled.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled.slice(0, ITEM_LIMIT);
-  }, [tokens]);
 
   const isLoading = tokensLoading;
   const hasItems = topTokens.length > 0;

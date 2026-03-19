@@ -17,7 +17,7 @@ import { useInvitation } from '@/hooks/useInvitation';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
 import { ensureSdkInitializeContract } from '@/libs/initializeContractTyped';
-import { SETTINGS } from '@/utils/constants';
+import { APP_NAME } from '@/config';
 import { normalizeSecretKey } from '@/utils/secretKey';
 
 interface CollectInvitationLinkCardProps {
@@ -55,7 +55,7 @@ const CollectInvitationLinkCard = ({
     [invitationSender, activeAccount],
   );
 
-  const appName = SETTINGS.app.name;
+  const appName = APP_NAME;
 
   /**
    * Retrieves the invitation reward amount for a given invitation code.

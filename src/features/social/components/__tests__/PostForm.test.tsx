@@ -69,11 +69,16 @@ vi.mock('../../../../api/generated', () => ({
   },
 }));
 
-vi.mock('../../../../config', () => ({
-  CONFIG: {
-    CONTRACT_V3_ADDRESS: 'ct_tip',
-  },
-}));
+vi.mock('../../../../config', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../../../config')>();
+  return {
+    ...mod,
+    CONFIG: {
+      ...mod.CONFIG,
+      CONTRACT_V3_ADDRESS: 'ct_tip',
+    },
+  };
+});
 
 describe('PostForm', () => {
   let queryClient: QueryClient;

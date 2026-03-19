@@ -2,7 +2,8 @@
 import { useMemo, useState } from 'react';
 import { DexTokenDto } from '../../../api/generated';
 import { useAccount, useAeSdk } from '../../../hooks';
-import { DEX_ADDRESSES, fromAettos } from '../../../libs/dex';
+import { CONFIG } from '../../../config';
+import { fromAettos } from '../../../libs/dex';
 import { TokenBalance, WrapBalances } from '../types/dex';
 
 export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexTokenDto | null) {
@@ -23,7 +24,7 @@ export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexToken
   const wrapBalances = useMemo(() => ({
     ae: fromAettos(balance || 0),
     wae: fromAettos(aex9Balances.find(
-      (t) => t.contract_id === DEX_ADDRESSES.wae,
+      (t) => t.contract_id === CONFIG.DEX_WAE,
     )?.amount || 0),
   }), [aex9Balances]);
 

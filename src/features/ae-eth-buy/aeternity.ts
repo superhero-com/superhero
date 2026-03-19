@@ -1,5 +1,6 @@
 import { AeSdk } from '@aeternity/aepp-sdk';
-import { getTokenBalance, DEX_ADDRESSES } from '../../libs/dex';
+import { getTokenBalance } from '../../libs/dex';
+import { CONFIG } from '../../config';
 
 /**
  * Wait for æETH deposit to arrive on æternity network
@@ -22,7 +23,7 @@ export async function waitForAeEthDeposit(
       return false;
     }
     try {
-      const currentBalance = await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
+      const currentBalance = await getTokenBalance(sdk, CONFIG.DEX_AEETH, aeAccount);
 
       // Check if we received the expected amount (with some tolerance for precision)
       const actualIncrease = currentBalance - prevAeEthBalance;
@@ -51,7 +52,7 @@ export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bi
     throw new Error('æternity SDK not available');
   }
 
-  return getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
+  return getTokenBalance(sdk, CONFIG.DEX_AEETH, aeAccount);
 }
 
 /**

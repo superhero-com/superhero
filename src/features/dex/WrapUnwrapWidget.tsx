@@ -8,7 +8,7 @@ import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
 import { useAccount } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
-import { DEX_ADDRESSES } from '../../libs/dex';
+import { CONFIG } from '../../config';
 import { cn } from '../../lib/utils';
 import Spinner from '../../components/Spinner';
 
@@ -93,7 +93,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
       };
 
       const waeToken = {
-        address: DEX_ADDRESSES.wae,
+        address: CONFIG.DEX_WAE,
         name: 'Wrapped AE',
         symbol: 'WAE',
         decimals: 18,

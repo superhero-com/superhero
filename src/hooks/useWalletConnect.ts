@@ -10,11 +10,15 @@ import {
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
-import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from '../utils/constants';
+import {
+  CURRENT_NETWORK,
+  IS_FRAMED_AEPP,
+  IS_MOBILE,
+  IS_SAFARI,
+} from '../utils/constants';
 import { useAeSdk } from './useAeSdk';
 import { openDeepLink } from '../utils/url';
 import { validateHash } from '../utils/address';
-import { configs } from '../configs';
 import type { Wallet, Wallets } from '../utils/types';
 import {
   walletInfoAtom,
@@ -46,8 +50,8 @@ export function useWalletConnect() {
   const connectingWalletRef = useRef(connectingWallet);
   const connectWalletRef = useRef<(() => Promise<void | null>) | null>(null);
 
-  // Get available networks from config
-  const availableNetworks = Object.values(configs.networks).filter((network) => !network.disabled);
+  // Use only the current build network (mainnet or testnet; VITE_NETWORK)
+  const availableNetworks = [CURRENT_NETWORK];
 
   // React equivalent of Vue watch for route query parameters
   useEffect(() => {

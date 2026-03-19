@@ -1,4 +1,4 @@
-import { configs } from '@/configs';
+import { TRENDING_ENABLED } from '@/config';
 import {
   Home, Search, ArrowLeftRight, Gift, LucideIcon,
 } from 'lucide-react';
@@ -18,7 +18,7 @@ export const getNavigationItems = (): NavigationItem[] => [
     path: '/',
     icon: Home,
   },
-  configs.features.trending && {
+  TRENDING_ENABLED && {
     id: 'explore',
     label: 'Explore',
     path: '/trends/tokens',
@@ -30,7 +30,7 @@ export const getNavigationItems = (): NavigationItem[] => [
     path: '/defi',
     icon: ArrowLeftRight,
   },
-  configs.features.trending && {
+  TRENDING_ENABLED && {
     id: 'refer-earn',
     label: 'Refer & Earn',
     path: '/trends/invite',

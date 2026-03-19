@@ -9,7 +9,7 @@ import {
   DexPairService, DexService, DexTokenDto, PairDto,
 } from '../../../api/generated';
 import DexSettings from '../../../features/dex/components/DexSettings';
-import { DEX_ADDRESSES } from '../../../libs/dex';
+import { CONFIG } from '../../../config';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import { useSwapExecution } from '../hooks/useSwapExecution';
 import { useSwapQuote } from '../hooks/useSwapQuote';
@@ -50,8 +50,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     queryFn: () => {
       if (!tokenIn || !tokenOut) return null;
       return DexPairService.getPairByFromTokenAndToToken({
-        fromToken: tokenIn.address == 'AE' ? DEX_ADDRESSES.wae : tokenIn.address,
-        toToken: tokenOut.address == 'AE' ? DEX_ADDRESSES.wae : tokenOut.address,
+        fromToken: tokenIn.address == 'AE' ? CONFIG.DEX_WAE : tokenIn.address,
+        toToken: tokenOut.address == 'AE' ? CONFIG.DEX_WAE : tokenOut.address,
       });
     },
     enabled: !!tokenIn?.address && !!tokenOut?.address,
@@ -277,7 +277,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     const term = searchIn.trim().toLowerCase();
     const matches = (t: DexTokenDto) => !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
+    const wae = tokens.find((t) => t.address === CONFIG.DEX_WAE);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
@@ -290,7 +290,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     const term = searchOut.trim().toLowerCase();
     const matches = (t: DexTokenDto) => !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
+    const wae = tokens.find((t) => t.address === CONFIG.DEX_WAE);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);

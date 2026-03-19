@@ -693,7 +693,8 @@
     "removeLiquidityFailed": "Removing liquidity failed. Check amounts and try again.",
     "wrapFailed": "Wrapping failed. Try again.",
     "unwrapFailed": "Unwrapping failed. Try again.",
-    "genericError": "Something went wrong. Please try again."
+    "genericError": "Something went wrong. Please try again.",
+    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols."
   },
   "landing": {
     "hero": {

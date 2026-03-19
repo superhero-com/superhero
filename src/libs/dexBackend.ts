@@ -1,13 +1,12 @@
 import { CONFIG } from '../config';
 
 function pickDexBackendUrl(): string | null {
-  // Prefer explicit DEX_BACKEND_URL, otherwise choose based on NODE_URL
-  const explicit = (CONFIG as any).DEX_BACKEND_URL as string | undefined;
+  const explicit = CONFIG.DEX_BACKEND_URL;
   if (explicit) return explicit;
-  const isTestnet = /uat|testnet/i.test(CONFIG.NODE_URL);
-  const mainnet = (CONFIG as any).MAINNET_DEX_BACKEND_URL as string | undefined;
-  const testnet = (CONFIG as any).TESTNET_DEX_BACKEND_URL as string | undefined;
-  return (isTestnet ? testnet : mainnet) || null;
+  const isTestnet = CONFIG.NETWORK === 'ae_uat';
+  const mainnet = CONFIG.MAINNET_DEX_BACKEND_URL;
+  const testnetBackend = CONFIG.TESTNET_DEX_BACKEND_URL;
+  return (isTestnet ? testnetBackend : mainnet) ?? null;
 }
 
 async function safeFetch<T>(url: string, { timeoutMs = 2000 }: { timeoutMs?: number } = {}): Promise<T | null> {

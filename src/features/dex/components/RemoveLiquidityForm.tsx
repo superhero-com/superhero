@@ -1,7 +1,7 @@
 import { TokenChip } from '@/components/TokenChip';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
+import { CONFIG } from '@/config';
 import Spinner from '@/components/Spinner';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 
@@ -21,7 +21,7 @@ const RemoveLiquidityForm = () => {
   const { tokens } = useTokenList();
 
   const resolveSymbol = (tokenAddress: string): string => {
-    if (tokenAddress === BridgeConstants.aeternity.default_ae) return 'AE';
+    if (tokenAddress === CONFIG.DEX_WAE) return 'AE';
     const found = tokens.find((_t) => _t.address === tokenAddress);
     return found?.symbol || tokenAddress.slice(0, 8);
   };
@@ -102,8 +102,8 @@ const RemoveLiquidityForm = () => {
       const liquidityToRemove = removeAmountForTransaction;
 
       const isAePair = (
-        selectedPosition.token0 === BridgeConstants.aeternity.default_ae
-        || selectedPosition.token1 === BridgeConstants.aeternity.default_ae
+        selectedPosition.token0 === CONFIG.DEX_WAE
+        || selectedPosition.token1 === CONFIG.DEX_WAE
       );
 
       const txHash = await executeRemoveLiquidity({

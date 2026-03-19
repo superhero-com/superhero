@@ -3,11 +3,11 @@ import {
   useEffect, useMemo, useCallback, useRef,
 } from 'react';
 import { toAe } from '@aeternity/aepp-sdk';
-import { BridgeConstants } from '@/features/ae-eth-bridge';
 import { aex9BalancesAtom, balanceAtom, chainNamesAtom } from '../atoms/walletAtoms';
 import { useAeSdk } from './useAeSdk';
 import { Decimal } from '../libs/decimal';
-import { DEX_ADDRESSES, getTokenBalance } from '../libs/dex';
+import { CONFIG } from '../config';
+import { getTokenBalance } from '../libs/dex';
 
 const ACCOUNT_DATA_TTL_MS = 30_000;
 const accountLoadRequests = new Map<string, Promise<void>>();
@@ -55,7 +55,7 @@ export const useAccountBalances = (selectedAccount: string) => {
       // Check if url is already a full URL (absolute) or a relative path
       const fetchUrl = url.startsWith('http://') || url.startsWith('https://')
         ? url
-        : `${BridgeConstants.aeAPI}${url}`;
+        : `${CONFIG.MIDDLEWARE_URL}${url}`;
       const response = await fetch(fetchUrl);
 
       if (!response.ok) {
@@ -83,14 +83,14 @@ export const useAccountBalances = (selectedAccount: string) => {
     const balances = await loadAex9DataFromMdw(url, []);
 
     // Check if WAE is already in the middleware response
-    const hasWae = balances.some((b) => b.contract_id === DEX_ADDRESSES.wae);
+    const hasWae = balances.some((b) => b.contract_id === CONFIG.DEX_WAE);
 
     // Only fetch WAE separately if it's not in the middleware response
     // This eliminates an unnecessary blockchain call when WAE is already present
     if (!hasWae) {
-      const waeBalances = await getTokenBalance(sdkRef.current, DEX_ADDRESSES.wae, account);
+      const waeBalances = await getTokenBalance(sdkRef.current, CONFIG.DEX_WAE, account);
       balances.push({
-        contract_id: DEX_ADDRESSES.wae,
+        contract_id: CONFIG.DEX_WAE,
         amount: waeBalances.toString(),
         decimals: 18,
         name: 'Wrapped AE',

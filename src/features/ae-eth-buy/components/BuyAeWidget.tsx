@@ -25,7 +25,6 @@ import { ConnectEthereumWallet } from './ConnectEthereumWallet';
 import { useAeSdk, useDex, useRecentActivities } from '../../../hooks';
 import { useSwapQuote } from '../../../components/dex/hooks/useSwapQuote';
 import { DexService } from '../../../api/generated';
-import { DEX_ADDRESSES } from '../../../libs/dex';
 import { BRIDGE_ABI, BRIDGE_CONSTANTS } from '../constants';
 
 interface BuyAeWidgetProps {
@@ -151,11 +150,11 @@ const BuyAeWidgetContent = ({
     const loadTokens = async () => {
       try {
         // Load aeETH token
-        const aeEth = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.aeeth });
+        const aeEth = await DexService.getDexTokenByAddress({ address: CONFIG.DEX_AEETH });
         setAeEthToken(aeEth);
 
         // Load AE token (find by is_ae flag or use WAE address)
-        const ae = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.wae });
+        const ae = await DexService.getDexTokenByAddress({ address: CONFIG.DEX_WAE });
         // Create AE token object
         setAeToken({
           ...ae, is_ae: true, address: 'AE', symbol: 'AE',

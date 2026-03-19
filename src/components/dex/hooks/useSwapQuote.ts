@@ -8,8 +8,8 @@ import {
 import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
 import BigNumber from 'bignumber.js';
 import { useAeSdk } from '../../../hooks';
+import { CONFIG } from '../../../config';
 import {
-  DEX_ADDRESSES,
   fetchPairReserves,
   fromAettos,
   initDexContracts,
@@ -45,13 +45,13 @@ interface QuoteResult {
 
 // Helper functions
 function isAeToWae(tokenIn: DexTokenDto, tokenOut: DexTokenDto): boolean {
-  const isAetoWae = tokenIn.address === 'AE' && tokenOut.address === DEX_ADDRESSES.wae;
-  const isWaeToAe = tokenIn.address === DEX_ADDRESSES.wae && tokenOut.address === 'AE';
+  const isAetoWae = tokenIn.address === 'AE' && tokenOut.address === CONFIG.DEX_WAE;
+  const isWaeToAe = tokenIn.address === CONFIG.DEX_WAE && tokenOut.address === 'AE';
   return isAetoWae || isWaeToAe;
 }
 
 function getTokenAddress(token: DexTokenDto): string {
-  return token.is_ae ? DEX_ADDRESSES.wae : token.address;
+  return token.is_ae ? CONFIG.DEX_WAE : token.address;
 }
 
 /**
@@ -301,7 +301,7 @@ export function useSwapQuote() {
     };
   }> => {
     if (isAeToWae(tokenIn, tokenOut)) {
-      return { path: [DEX_ADDRESSES.wae] };
+      return { path: [CONFIG.DEX_WAE] };
     }
 
     try {
@@ -370,11 +370,11 @@ export function useSwapQuote() {
         return { path: [tokenInAddr, tokenOutAddr] };
       }
 
-      if (tokenInAddr !== DEX_ADDRESSES.wae && tokenOutAddr !== DEX_ADDRESSES.wae) {
-        const legA = await fetchPairReserves(sdk, factory, tokenInAddr, DEX_ADDRESSES.wae);
-        const legB = await fetchPairReserves(sdk, factory, DEX_ADDRESSES.wae, tokenOutAddr);
+      if (tokenInAddr !== CONFIG.DEX_WAE && tokenOutAddr !== CONFIG.DEX_WAE) {
+        const legA = await fetchPairReserves(sdk, factory, tokenInAddr, CONFIG.DEX_WAE);
+        const legB = await fetchPairReserves(sdk, factory, CONFIG.DEX_WAE, tokenOutAddr);
         if (legA && legB) {
-          return { path: [tokenInAddr, DEX_ADDRESSES.wae, tokenOutAddr] };
+          return { path: [tokenInAddr, CONFIG.DEX_WAE, tokenOutAddr] };
         }
       }
       return { path: null };
@@ -415,8 +415,8 @@ export function useSwapQuote() {
       // Handle AE to WAE conversion with 1:1 ratio
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
         const path = [
-          params.tokenIn.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae,
-          params.tokenOut.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae,
+          params.tokenIn.address === 'AE' ? 'AE' : CONFIG.DEX_WAE,
+          params.tokenOut.address === 'AE' ? 'AE' : CONFIG.DEX_WAE,
         ];
         const result: QuoteResult = {
           amountOut: params.isExactIn ? params.amountIn : undefined,

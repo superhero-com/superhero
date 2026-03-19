@@ -1,11 +1,9 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
-import { useQuery } from '@tanstack/react-query';
-import {
-  useEffect, useMemo, useRef, useState, type PointerEvent,
-} from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
+import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { useIsMobile } from '@/hooks';
+import { useQuery } from '@tanstack/react-query';
 import {
   BarChart3,
   Flame,
@@ -15,11 +13,16 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
-import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
-import { Head } from '../../../seo/Head';
+import {
+  useEffect, useMemo, useRef, useState, type PointerEvent,
+} from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
+import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
+
 import { TokensService } from '../../../api/generated/services/TokensService';
 import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
+import { Head } from '../../../seo/Head';
 
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import Token24hChange from '../../../components/Trendminer/Token24hChange';
@@ -32,15 +35,10 @@ import {
 import ShareModal from '../../../components/ui/ShareModal';
 
 // Feature components
-import TokenCreationBanner from '../components/TokenCreationBanner';
+import { CONFIG } from '../../../config';
+import { TokenSummary } from '../../bcl/components';
 import TokenCandlestickChartSkeleton from '../components/Skeletons/TokenCandlestickChartSkeleton';
 import TokenSaleSidebarSkeleton from '../components/Skeletons/TokenSaleSidebarSkeleton';
-import TokenRanking from '../components/TokenRanking/TokenRanking';
-import TokenTradeCard from '../components/TokenTradeCard';
-import { TokenSummary } from '../../bcl/components';
-import { useLiveTokenData } from '../hooks/useLiveTokenData';
-import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
-import { CONFIG } from '../../../config';
 import {
   TokenFeedTab,
   TokenHoldersTab,
@@ -48,6 +46,11 @@ import {
   TokenTradeTab,
   TokenTransactionsTab,
 } from '../components/tabs';
+import TokenCreationBanner from '../components/TokenCreationBanner';
+import TokenRanking from '../components/TokenRanking/TokenRanking';
+import TokenTradeCard from '../components/TokenTradeCard';
+import { useLiveTokenData } from '../hooks/useLiveTokenData';
+import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
 
 // Tab constants
 const TAB_DETAILS = 'details';
@@ -237,7 +240,7 @@ const TokenSaleDetails = () => {
 
   // Poll AE node every 5 seconds until transaction is mined (block_height !== -1)
   useEffect(() => {
-    if (!txHash || txConfirmed) return () => {};
+    if (!txHash || txConfirmed) return () => { };
 
     const pollTx = async () => {
       try {
@@ -261,9 +264,9 @@ const TokenSaleDetails = () => {
   // When txHash is present, wait for the transaction to be mined first.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('created') !== 'true') return () => {};
-    if (token?.sale_address) return () => {};
-    if (txHash && !txConfirmed) return () => {};
+    if (params.get('created') !== 'true') return () => { };
+    if (token?.sale_address) return () => { };
+    if (txHash && !txConfirmed) return () => { };
 
     const intervalId = setInterval(() => {
       refetch();
@@ -499,7 +502,8 @@ const TokenSaleDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1'
+          className={`${
+            isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1'
           } flex flex-col gap-6`}
         >
           {/* Token Header */}
@@ -547,7 +551,7 @@ const TokenSaleDetails = () => {
                       <Token24hChange
                         tokenAddress={token.address || token.sale_address}
                         createdAt={token.created_at}
-                        performance24h={tokenPerformance?.past_24h ?? null}
+                        performance24h={tokenPerformance?.[DEFAULT_PAST_TIMEFRAME] ?? null}
                       />
                     )}
                     <Button
@@ -634,7 +638,7 @@ const TokenSaleDetails = () => {
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
                   ? 'text-white border-b-2 border-[#4ecdc4]'
                   : 'text-white/60 hover:text-white'
-                }`}
+                  }`}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   Posts

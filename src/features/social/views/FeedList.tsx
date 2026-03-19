@@ -932,14 +932,16 @@ const FeedList = ({
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
     let nextInsertAt = 2;
+    let trendingPage = 1;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
         nodes.push(
-          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} />,
+          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} page={trendingPage} />,
         );
         const step = 7 + Math.floor(rng() * 9);
         nextInsertAt += step;
+        trendingPage += 1;
       }
     };
 
@@ -1057,14 +1059,16 @@ const FeedList = ({
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
     let nextInsertAt = 2;
+    let trendingPage = 1;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
         nodes.push(
-          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} />,
+          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} page={trendingPage} />,
         );
         const step = 7 + Math.floor(rng() * 9);
         nextInsertAt += step;
+        trendingPage += 1;
       }
     };
 

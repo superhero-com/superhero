@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
+import { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
 import { configs } from '../configs';
-import { INetwork, ICurrency } from './types';
+import { ICurrency, INetwork } from './types';
 
 export const SETTINGS = configs;
 /**
@@ -96,6 +97,8 @@ export const PRICE_MOVEMENT_TIMEFRAMES = ['1d', '7d', '30d'] as const;
 export type PriceMovementTimeframe = (typeof PRICE_MOVEMENT_TIMEFRAMES)[number];
 
 export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = '30d';
+
+export const DEFAULT_PAST_TIMEFRAME: keyof TokenPriceMovementDto = 'past_30d';
 
 export const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
 export const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;

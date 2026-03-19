@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { PriceDto } from './PriceDto';
+import type { TokenPriceMovementDto } from './TokenPriceMovementDto';
 export type TokenDto = {
     id: number;
     network_id: string;
@@ -34,5 +35,7 @@ export type TokenDto = {
     amount: PriceDto;
     unit_price: PriceDto;
     create_tx_hash?: string;
+
+    performance?: TokenPriceMovementDto;
 };
 

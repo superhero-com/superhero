@@ -41,16 +41,16 @@ const queryClient = new QueryClient({
           <Provider>
             <AePricePollingProvider>
               <ToastProvider>
-                <TransactionNotificationProvider>
-                  <TransactionNotificationBanner />
-                  <BrowserRouter>
+                <BrowserRouter>
+                  <TransactionNotificationProvider>
+                    <TransactionNotificationBanner />
                     <ErrorBoundary>
                       <AeSdkProvider>
                         <App />
                       </AeSdkProvider>
                     </ErrorBoundary>
-                  </BrowserRouter>
-                </TransactionNotificationProvider>
+                  </TransactionNotificationProvider>
+                </BrowserRouter>
               </ToastProvider>
             </AePricePollingProvider>
           </Provider>

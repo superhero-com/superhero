@@ -548,11 +548,7 @@ const TokenSaleDetails = () => {
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {!tokenDoesNotExist && token?.sale_address && (
-                      <Token24hChange
-                        tokenAddress={token.address || token.sale_address}
-                        createdAt={token.created_at}
-                        performance24h={tokenPerformance?.[DEFAULT_PAST_TIMEFRAME] ?? null}
-                      />
+                      <Token24hChange token={token} />
                     )}
                     <Button
                       variant="outline"

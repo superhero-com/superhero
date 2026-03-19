@@ -7,6 +7,7 @@ import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { TransactionNotificationProvider } from '../../../transaction-notification/transaction-notification.context';
 import PostForm from '../PostForm';
 
 const mockInitializeContractTyped = vi.fn();
@@ -152,14 +153,16 @@ describe('PostForm', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <PostForm
-          onSuccess={onSuccess}
-          onPostCreated={onPostCreated}
-          requiredHashtag="#nancy"
-          showEmojiPicker={false}
-          showGifInput={false}
-          showMediaFeatures={false}
-        />
+        <TransactionNotificationProvider>
+          <PostForm
+            onSuccess={onSuccess}
+            onPostCreated={onPostCreated}
+            requiredHashtag="#nancy"
+            showEmojiPicker={false}
+            showGifInput={false}
+            showMediaFeatures={false}
+          />
+        </TransactionNotificationProvider>
       </QueryClientProvider>,
     );
 

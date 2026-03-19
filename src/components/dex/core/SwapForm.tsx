@@ -508,7 +508,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         slippagePct={slippagePct}
         deadlineMins={deadlineMins}
         priceImpactPct={routeInfo.priceImpact || null}
-        path={routeInfo.path}
+        routeInfo={routeInfo}
+        tokens={tokens}
         loading={swapLoading}
         swapStep={swapStep}
       />

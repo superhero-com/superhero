@@ -6,6 +6,7 @@ import {
 } from 'vitest';
 
 import { Decimal } from '@/libs/decimal';
+import { TransactionNotificationProvider } from '@/features/transaction-notification/transaction-notification.context';
 import { useTokenTrade } from '../useTokenTrade';
 
 const mockUseTokenTradeStore = vi.fn();
@@ -120,7 +121,9 @@ describe('useTokenTrade', () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TransactionNotificationProvider>{children}</TransactionNotificationProvider>
+    </QueryClientProvider>
   );
 
   it('records successful buy transactions with derived amounts and refreshed balances', async () => {

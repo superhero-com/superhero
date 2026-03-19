@@ -48,7 +48,6 @@ const TokenTradeCard = ({
     setTokenAmount,
     setSlippage,
     placeTokenTradeOrder,
-    resetFormState,
   } = useTokenTrade({ token });
 
   // Keep a string buffer for slippage input so users can type intermediate states like "0."

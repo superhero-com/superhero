@@ -18,14 +18,20 @@ function formatChange(changePercent: number) {
 }
 
 const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
+  const orderBy = useMemo(() => {
+    if (page <= 1) {
+      return 'trending_score';
+    }
+
+    return 'market_cap';
+  }, [page]);
+
   const { data: tokensData, isLoading: tokensLoading } = useQuery<{
     items?: TokenDto[];
   }>({
-    queryKey: ['feed-trending-assets', 'tokens', `page-${page}`],
+    queryKey: ['feed-trending-assets', 'tokens', `page-${page}`, orderBy],
     queryFn: () => TokensService.listAll({
-      // TODO: change to trending_score, once it's been enhance in the backend.
-      orderBy: 'holders_count' as any,
-      // orderBy: 'trending_score' as any,
+      orderBy: orderBy as any,
       orderDirection: 'DESC',
       limit: ITEM_LIMIT,
       page,

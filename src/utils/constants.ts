@@ -93,10 +93,10 @@ export const WEB_SOCKET_CHANNELS = {
 
 export const WEB_SOCKET_RECONNECT_TIMEOUT = 1000;
 
-export const PRICE_MOVEMENT_TIMEFRAMES = ['1d', '7d', '30d', '90d', '180d'] as const;
+export const PRICE_MOVEMENT_TIMEFRAMES = ['1d', '7d', '30d'] as const;
 export type PriceMovementTimeframe = (typeof PRICE_MOVEMENT_TIMEFRAMES)[number];
 
-export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = '90d';
+export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = '30d';
 
 export const DEFAULT_PAST_TIMEFRAME: keyof TokenPriceMovementDto = 'past_30d';
 

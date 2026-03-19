@@ -26,11 +26,48 @@ interface ChartPoint {
   value: number;
 }
 
+function gaussianSmooth(points: ChartPoint[]): ChartPoint[] {
+  if (points.length <= 3) return points;
+  const n = points.length;
+  const sigma = Math.max(4, Math.round(n * 0.14));
+  const radius = sigma * 3;
+
+  const pass = (pts: ChartPoint[]) => pts.map((pt, i) => {
+    let sum = 0;
+    let wSum = 0;
+    const lo = Math.max(0, i - radius);
+    const hi = Math.min(n - 1, i + radius);
+    for (let j = lo; j <= hi; j += 1) {
+      const d = (i - j) / sigma;
+      const w = Math.exp(-0.5 * d * d);
+      sum += pts[j].value * w;
+      wSum += w;
+    }
+    return { date: pt.date, value: sum / wSum };
+  });
+
+  return pass(pass(points));
+}
+
+function downsample(points: ChartPoint[], maxPts: number): ChartPoint[] {
+  if (points.length <= maxPts) return points;
+  const result: ChartPoint[] = [points[0]];
+  const step = (points.length - 1) / (maxPts - 1);
+  for (let i = 1; i < maxPts - 1; i += 1) {
+    result.push(points[Math.round(i * step)]);
+  }
+  result.push(points[points.length - 1]);
+  return result;
+}
+
 function buildSvgPaths(
-  points: ChartPoint[],
+  rawPoints: ChartPoint[],
   canvasWidth: number,
   canvasHeight: number,
 ): { linePath: string; fillPath: string } {
+  const smoothed = gaussianSmooth(rawPoints);
+  const points = downsample(smoothed, 80);
+
   const drawW = canvasWidth - 2 * PAD;
   const drawH = canvasHeight - 2 * PAD;
 
@@ -48,12 +85,27 @@ function buildSvgPaths(
 
   const pts = points.map((p) => ({ x: toX(p.date.getTime()), y: toY(p.value) }));
 
+  if (pts.length < 2) return { linePath: '', fillPath: '' };
+
   let linePath = `M ${pts[0].x} ${pts[0].y}`;
-  for (let i = 1; i < pts.length; i += 1) {
-    const prev = pts[i - 1];
-    const curr = pts[i];
-    const cpX = (prev.x + curr.x) / 2;
-    linePath += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
+
+  if (pts.length === 2) {
+    linePath += ` L ${pts[1].x} ${pts[1].y}`;
+  } else {
+    const T = 6;
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const p0 = pts[Math.max(0, i - 1)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(pts.length - 1, i + 2)];
+
+      const cp1x = p1.x + (p2.x - p0.x) / T;
+      const cp1y = p1.y + (p2.y - p0.y) / T;
+      const cp2x = p2.x - (p3.x - p1.x) / T;
+      const cp2y = p2.y - (p3.y - p1.y) / T;
+
+      linePath += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    }
   }
 
   const last = pts[pts.length - 1];

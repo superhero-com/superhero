@@ -25,7 +25,7 @@ const Token24hChange = ({
     return `${fixed}%`;
   };
 
-  const performance = token?.performance?.[DEFAULT_PAST_TIMEFRAME] ?? null
+  const performance = token?.performance?.[DEFAULT_PAST_TIMEFRAME] ?? null;
 
   if (!performance) return null;
 

@@ -2,7 +2,7 @@ import { TokensService, type TokenDto } from '@/api/generated';
 import Token24hChange from '@/components/Trendminer/Token24hChange';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
-import { DEFAULT_PAST_TIMEFRAME, PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
+import { PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';

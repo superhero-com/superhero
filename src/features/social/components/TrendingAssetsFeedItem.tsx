@@ -1,5 +1,5 @@
 import { TokensService, type TokenDto } from '@/api/generated';
-import Token24hChange from '@/components/Trendminer/Token24hChange';
+import TokenChange from '@/components/Trendminer/TokenChange';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
@@ -44,7 +44,7 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
           <span className="text-[var(--neon-blue)] mr-0.5">#</span>
           {tokenLabel}
         </div>
-        <Token24hChange
+        <TokenChange
           token={token}
           hideNewBadge
         />
@@ -72,15 +72,23 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
     return 'market_cap';
   }, [page]);
 
+  const currentPage = useMemo(() => {
+    if (page <= 1) {
+      return 1;
+    }
+
+    return page - 1;
+  }, [page]);
+
   const { data: tokensData, isLoading: tokensLoading } = useQuery<{
     items?: TokenDto[];
   }>({
-    queryKey: ['feed-trending-assets', 'tokens', `page-${page}`, orderBy],
+    queryKey: ['feed-trending-assets', 'tokens', `page-${currentPage}`, orderBy],
     queryFn: () => TokensService.listAll({
       orderBy: orderBy as any,
       orderDirection: 'DESC',
       limit: ITEM_LIMIT,
-      page,
+      page: currentPage,
     }),
     staleTime: 2 * 60 * 1000,
   });

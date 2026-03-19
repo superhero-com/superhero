@@ -24,7 +24,7 @@ import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
 import { Head } from '../../../seo/Head';
 
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import Token24hChange from '../../../components/Trendminer/Token24hChange';
+import TokenChange from '../../../components/Trendminer/TokenChange';
 import TokenChat from '../../../components/Trendminer/TokenChat';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -537,7 +537,7 @@ const TokenSaleDetails = () => {
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {!tokenDoesNotExist && token?.sale_address && (
-                      <Token24hChange token={token} />
+                      <TokenChange token={token} />
                     )}
                     <Button
                       variant="outline"

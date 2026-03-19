@@ -2,15 +2,15 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { cn } from '@/lib/utils';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 
-interface Token24hChangeProps {
+interface TokenChangeProps {
   token: TokenDto;
   hideNewBadge?: boolean;
 }
 
-const Token24hChange = ({
+const TokenChange = ({
   token,
   hideNewBadge = false,
-}: Token24hChangeProps) => {
+}: TokenChangeProps) => {
   // Check if token is new (created less than 24 hours ago)
   const isNewToken = () => {
     const createdDate = new Date(token.created_at);
@@ -61,4 +61,4 @@ const Token24hChange = ({
   );
 };
 
-export default Token24hChange;
+export default TokenChange;

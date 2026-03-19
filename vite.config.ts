@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import path, { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 import { existsSync } from 'fs';
 import { createRequire } from 'module';
@@ -43,7 +44,16 @@ export default defineConfig(({ mode }) => {
   const envDir = __dirname;
   const env = loadEnv(mode, envDir, '');
   return {
-    plugins: [react(), svgr(), jsonPlugin()],
+    plugins: [
+      react(),
+      svgr(),
+      jsonPlugin(),
+      sentryVitePlugin({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+    ],
     ssr: {
       noExternal: ['react-helmet-async'],
     },
@@ -62,7 +72,7 @@ export default defineConfig(({ mode }) => {
       'process.env': env,
     },
     build: {
-      sourcemap: false,
+      sourcemap: 'hidden',
       chunkSizeWarningLimit: 900,
       rollupOptions: {
         input: {

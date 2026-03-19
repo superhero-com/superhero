@@ -1,9 +1,9 @@
+import { TokenDto } from '@/api/generated/models/TokenDto';
+import Spinner from '@/components/Spinner';
 import { formatFractionalPrice } from '@/utils/common';
 import { COIN_SYMBOL } from '@/utils/constants';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TokenDto } from '@/api/generated/models/TokenDto';
-import Spinner from '@/components/Spinner';
 import { Button } from '../../../components/ui/button';
 import WalletConnectBtn from '../../../components/WalletConnectBtn';
 import { useAeSdk } from '../../../hooks/useAeSdk';
@@ -36,7 +36,6 @@ const TokenTradeCard = ({
     isBuying,
     loadingTransaction,
     errorMessage,
-    successTxData,
     isInsufficientBalance,
     averageTokenPrice,
     priceImpactDiff,
@@ -276,47 +275,6 @@ const TokenTradeCard = ({
           >
             {t('settings.cancel')}
           </Button>
-        )}
-
-        {successTxData && (
-          <div className="mt-4">
-            <MessageBox
-              title={t('trending:success')}
-              text=""
-              color="success"
-              closable
-              onClose={resetFormState}
-            >
-              <div>
-                <span>
-                  {successTxData.isBuying ? t('bought') : t('sold')}
-                  {' '}
-                  {successTxData.destAmount.prettify()}
-                  {' '}
-                  {successTxData.symbol}
-                  {' '}
-                  {t('forLabel')}
-                  {' '}
-                  {successTxData.sourceAmount.prettify()}
-                  {' '}
-                  AE.
-                  {' '}
-                  {t('newBalance')}
-                  {' '}
-                  {successTxData.userBalance.prettify()}
-                </span>
-                {successTxData.protocolReward && (
-                  <span className="ml-1">
-                    Earned
-                    {' '}
-                    {successTxData.protocolReward.prettify()}
-                    {' '}
-                    {successTxData.protocolSymbol}
-                  </span>
-                )}
-              </div>
-            </MessageBox>
-          </div>
         )}
       </div>
 

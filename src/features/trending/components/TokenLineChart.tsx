@@ -27,7 +27,7 @@ interface ChartPoint {
 }
 
 function gaussianSmooth(points: ChartPoint[]): ChartPoint[] {
-  if (points.length <= 3) return points;
+  if (points.length <= 10) return points;
   const n = points.length;
   const sigma = Math.max(4, Math.round(n * 0.14));
   const radius = sigma * 3;
@@ -64,9 +64,11 @@ function buildSvgPaths(
   rawPoints: ChartPoint[],
   canvasWidth: number,
   canvasHeight: number,
-): { linePath: string; fillPath: string } {
+): { linePath: string; fillPath: string; visualTrendUp: boolean } {
   const smoothed = gaussianSmooth(rawPoints);
   const points = downsample(smoothed, 80);
+  const visualTrendUp = points.length < 2
+    || points[points.length - 1].value >= points[0].value;
 
   const drawW = canvasWidth - 2 * PAD;
   const drawH = canvasHeight - 2 * PAD;
@@ -85,7 +87,7 @@ function buildSvgPaths(
 
   const pts = points.map((p) => ({ x: toX(p.date.getTime()), y: toY(p.value) }));
 
-  if (pts.length < 2) return { linePath: '', fillPath: '' };
+  if (pts.length < 2) return { linePath: '', fillPath: '', visualTrendUp };
 
   let linePath = `M ${pts[0].x} ${pts[0].y}`;
 
@@ -111,7 +113,7 @@ function buildSvgPaths(
   const last = pts[pts.length - 1];
   const fillPath = `${linePath} L ${last.x} ${canvasHeight} L ${pts[0].x} ${canvasHeight} Z`;
 
-  return { linePath, fillPath };
+  return { linePath, fillPath, visualTrendUp };
 }
 
 function historyPagesToPoints(pages: any[]): ChartPoint[] {
@@ -232,17 +234,12 @@ export const TokenLineChart = ({
     }
   }, [lineData]);
 
-  const trendIsUp = useMemo(() => {
-    if (lineData.length < 2) return true;
-    return lineData[lineData.length - 1].value >= lineData[0].value;
-  }, [lineData]);
-
-  const strokeColor = trendIsUp ? COLOR_UP : COLOR_DOWN;
-
   const paths = useMemo(() => {
     if (!lineData.length || !resolvedWidth) return null;
     return buildSvgPaths(lineData, resolvedWidth, chartHeight);
   }, [lineData, resolvedWidth, chartHeight]);
+
+  const strokeColor = (paths?.visualTrendUp ?? true) ? COLOR_UP : COLOR_DOWN;
 
   return (
     <div className={`chart-container flex flex-col h-full ${className ?? ''}`}>

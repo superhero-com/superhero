@@ -42,7 +42,7 @@ const Token24hChange = ({
       )}
 
       {
-        (changePercent !== 0 && changePercent !== null) && (
+        (changePercent !== 0) && (
           <span
             className={cn(
               'text-sm font-semibold flex items-center gap-0.5 tabular-nums',

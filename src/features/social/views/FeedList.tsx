@@ -936,7 +936,7 @@ const FeedList = ({
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
-        nodes.push( //
+        nodes.push(
           <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} page={trendingPage} />,
         );
         const step = 7 + Math.floor(rng() * 9);

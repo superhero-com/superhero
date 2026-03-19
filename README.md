@@ -100,13 +100,27 @@ Defined in `package.json`:
 - `build` — production build
 - `preview` — preview the `dist/` build
 - `test` — run unit and component tests
-- `test:e2e` — run Playwright e2e tests (starts dev server if needed)
+- `test:e2e` — run e2e tests in Docker (same environment as CI; use for consistent screenshots)
 - `test:e2e:ui` — run e2e tests in Playwright UI mode (watch, pick tests, debug)
-- `test:e2e:update-snapshots` — run e2e tests and update screenshot baselines (visual regression)
+- `test:e2e:update-snapshots` — update screenshot baselines in Docker (writes to `e2e/` on the host)
+- `test:e2e:host` — run e2e tests on the host (starts dev server if needed)
+- `test:e2e:host:update-snapshots` — update screenshot baselines on the host (visual regression)
 
 ## End-to-end tests
 
 E2e tests use [Playwright](https://playwright.dev/) and live in `e2e/`. They run against the Vite dev server (started automatically unless one is already running).
+
+**Screenshot tests (visual regression)** should be run in Docker so CI and local runs produce identical results. Use these commands for anything that uses `toHaveScreenshot`:
+
+```bash
+# Run e2e (including screenshot comparison) — same as CI
+npm run test:e2e
+
+# Update screenshot baselines after intentional UI changes (writes to e2e/ on your machine)
+npm run test:e2e:update-snapshots
+```
+
+**Running e2e on the host** (no Docker) is still supported for quick iteration, but screenshot pixels may differ from CI (fonts, OS, DPI). For host runs:
 
 **First-time setup** — install browsers (once per machine):
 
@@ -114,10 +128,10 @@ E2e tests use [Playwright](https://playwright.dev/) and live in `e2e/`. They run
 npx playwright install chromium
 ```
 
-**Run all e2e tests:**
+**Run all e2e tests on the host:**
 
 ```bash
-npm run test:e2e
+npm run test:e2e:host
 ```
 
 **Interactive mode** (pick tests, watch, debug):
@@ -126,10 +140,10 @@ npm run test:e2e
 npm run test:e2e:ui
 ```
 
-**Update screenshot baselines** (after intentional UI changes to visual regression tests):
+**Update screenshot baselines on the host:**
 
 ```bash
-npm run test:e2e:update-snapshots
+npm run test:e2e:host:update-snapshots
 ```
 
 Config: `playwright.config.ts`. Failure artifacts are under `test-results/`; the default reporter prints to the terminal.

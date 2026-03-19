@@ -1,0 +1,26 @@
+# Dependencies (reinstalled in image)
+node_modules
+npm-debug.log*
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.swp
+*.swo
+
+# Build and test artifacts (not needed in image)
+dist
+test-results
+.blob
+*.log
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Docs and misc (optional, keeps image smaller)
+*.md
+!README.md

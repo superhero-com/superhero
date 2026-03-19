@@ -27,9 +27,9 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
       className={cn(
         'group rounded-2xl border border-white/10 bg-white/[0.04] p-3',
         'hover:bg-white/[0.06] hover:border-white/15 transition-colors',
-        'no-underline',
+        'no-underline block',
+        'cursor-pointer no-gradient-text',
       )}
-      onClick={(event) => event.stopPropagation()}
     >
       <div className="flex items-center justify-between gap-2">
         <div
@@ -109,6 +109,13 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
             <TrendingUp className="h-4 w-4 text-emerald-300" />
             Trending assets
           </h3>
+          <Link
+            to="/trends/tokens"
+            className="text-[12px] md:text-[13px] font-semibold text-[#4ecdc4] hover:text-[#6be4da] transition-colors no-underline"
+            onClick={(event) => event.stopPropagation()}
+          >
+            View all
+          </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {isLoading ? (
@@ -130,15 +137,6 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
               />
             ))
           )}
-        </div>
-        <div className="mt-3 flex justify-end">
-          <Link
-            to="/trends/tokens"
-            className="text-[12px] md:text-[13px] font-semibold text-[#4ecdc4] hover:text-[#6be4da] transition-colors no-underline"
-            onClick={(event) => event.stopPropagation()}
-          >
-            View all
-          </Link>
         </div>
       </div>
     </div>

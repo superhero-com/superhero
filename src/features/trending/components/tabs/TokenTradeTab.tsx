@@ -1,24 +1,22 @@
-import React from 'react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
-import type { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
 import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
-import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toOptionalFiniteNumber } from '@/utils/number';
+import { ArrowDown, ArrowUpRight } from 'lucide-react';
+import React from 'react';
 import TokenCandlestickChartSkeleton from '../Skeletons/TokenCandlestickChartSkeleton';
 
 type TokenTradeTabProps = {
   token?: TokenDto | null;
-  tokenPerformance?: TokenPriceMovementDto | null;
   isLoading?: boolean;
   isTokenPending?: boolean;
   onBuy: () => void;
   onSell: () => void;
 };
 
-const ChangePill = ({ tokenPerformance }: { tokenPerformance?: TokenPriceMovementDto | null }) => {
-  const pct = toOptionalFiniteNumber(tokenPerformance?.past_24h?.current_change_percent) ?? 0;
+const ChangePill = ({ token }: { token?: TokenDto | null }) => {
+  const pct = toOptionalFiniteNumber(token?.performance?.past_24h?.current_change_percent) ?? 0;
   const isPositive = pct > 0;
   const isNegative = pct < 0;
   return (
@@ -39,7 +37,6 @@ const ChangePill = ({ tokenPerformance }: { tokenPerformance?: TokenPriceMovemen
 
 export const TokenTradeTab = ({
   token,
-  tokenPerformance,
   isLoading = false,
   isTokenPending = false,
   onBuy,
@@ -51,7 +48,7 @@ export const TokenTradeTab = ({
     { id: 'past_30d' as const, name: '30 Days' },
     { id: 'all_time' as const, name: 'All-Time' },
   ].map((range) => {
-    const p = tokenPerformance?.[range.id];
+    const p = token?.performance?.[range.id];
     const direction = String(p?.current_change_direction || '');
     const pct = toOptionalFiniteNumber(p?.current_change_percent);
     const isUp = pct !== null ? pct > 0 : (direction === 'up' || direction === 'positive');
@@ -65,7 +62,7 @@ export const TokenTradeTab = ({
       isDown,
       changePercent,
     };
-  })), [tokenPerformance]);
+  })), [token]);
 
   if (!token) {
     return (
@@ -83,7 +80,7 @@ export const TokenTradeTab = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <div className="text-xs text-white/60">Price</div>
-              <ChangePill tokenPerformance={tokenPerformance} />
+              <ChangePill token={token} />
             </div>
             {token?.price_data ? (
               <PriceDataFormatter
@@ -101,9 +98,9 @@ export const TokenTradeTab = ({
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-right">
             <div>
               <div className="text-[10px] text-white/60">24h High</div>
-              {tokenPerformance?.past_24h?.high ? (
+              {token?.performance?.past_24h?.high ? (
                 <PriceDataFormatter
-                  priceData={tokenPerformance.past_24h.high}
+                  priceData={token?.performance?.past_24h?.high}
                   symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
@@ -114,9 +111,9 @@ export const TokenTradeTab = ({
             </div>
             <div>
               <div className="text-[10px] text-white/60">All‑Time High</div>
-              {tokenPerformance?.all_time?.high ? (
+              {token?.performance?.all_time?.high ? (
                 <PriceDataFormatter
-                  priceData={tokenPerformance.all_time.high}
+                  priceData={token?.performance?.all_time?.high}
                   symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
@@ -127,9 +124,9 @@ export const TokenTradeTab = ({
             </div>
             <div>
               <div className="text-[10px] text-white/60">24h Low</div>
-              {tokenPerformance?.past_24h?.low ? (
+              {token?.performance?.past_24h?.low ? (
                 <PriceDataFormatter
-                  priceData={tokenPerformance.past_24h.low}
+                  priceData={token?.performance?.past_24h?.low}
                   symbolTextClassName="text-xs"
                   hideFiatPrice
                   hideSymbol
@@ -140,9 +137,9 @@ export const TokenTradeTab = ({
             </div>
             <div>
               <div className="text-[10px] text-white/60">All‑Time Low</div>
-              {tokenPerformance?.all_time?.low ? (
+              {token?.performance?.all_time?.low ? (
                 <PriceDataFormatter
-                  priceData={tokenPerformance.all_time.low}
+                  priceData={token?.performance?.all_time?.low}
                   hideFiatPrice
                   hideSymbol
                   className="text-xs font-semibold"
@@ -174,7 +171,7 @@ export const TokenTradeTab = ({
               <div className="text-[10px] text-white/60 mb-1">{s.name}</div>
               <div className={cn(
                 'text-sm font-semibold tabular-nums',
-                !tokenPerformance ? 'text-white/40' : '',
+                !token?.performance ? 'text-white/40' : '',
                 s.isUp ? 'text-green-400' : '',
                 s.isDown ? 'text-red-400' : '',
                 (!s.isUp && !s.isDown) ? 'text-white/60' : '',

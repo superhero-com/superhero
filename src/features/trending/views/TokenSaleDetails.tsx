@@ -1,5 +1,4 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
-import type { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
 import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { useIsMobile } from '@/hooks';
@@ -290,14 +289,6 @@ const TokenSaleDetails = () => {
     }
   }, [showCreatedOverlay, token?.sale_address, isLoading, location.pathname, location.search, navigate]);
 
-  const { data: tokenPerformance } = useQuery<TokenPriceMovementDto>({
-    queryKey: ['TokensService.performance', token?.sale_address],
-    queryFn: () => TokensService.performance({ address: String(token?.sale_address || '') }),
-    enabled: !!token?.sale_address,
-    staleTime: 10_000,
-    refetchOnWindowFocus: true,
-  });
-
   const tokenHeaderTitle = useMemo(() => {
     const raw = String(token?.symbol || token?.name || tokenName || '');
     return raw ? `#${raw.toUpperCase()}` : '#TOKEN';
@@ -500,9 +491,8 @@ const TokenSaleDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${
-            isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1'
-          } flex flex-col gap-6`}
+          className={`${isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1'
+            } flex flex-col gap-6`}
         >
           {/* Token Header */}
           {!isMobile && (
@@ -632,7 +622,7 @@ const TokenSaleDetails = () => {
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
                   ? 'text-white border-b-2 border-[#4ecdc4]'
                   : 'text-white/60 hover:text-white'
-                }`}
+                  }`}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   Posts
@@ -737,7 +727,6 @@ const TokenSaleDetails = () => {
               ) : (
                 <TokenTradeTab
                   token={token}
-                  tokenPerformance={tokenPerformance}
                   isLoading={isLoading}
                   isTokenPending={isTokenPending}
                   onBuy={() => openTradeFor(true)}

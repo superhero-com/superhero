@@ -62,21 +62,26 @@ export function useSwapExecution() {
     notifySubmitted({ type: TxPayloadType.WrapToken, amount: amountAe });
 
     const result = await wae.deposit({ amount: aettos });
+    const txHash = extractAeTxHash(result);
 
-    if (activeAccount && result?.hash) {
+    if (!txHash) {
+      throw new Error('Transaction failed - no hash returned');
+    }
+
+    if (activeAccount) {
       addActivity({
         type: 'wrap',
-        hash: result.hash,
+        hash: txHash,
         account: activeAccount,
         tokenIn: 'AE',
         tokenOut: 'WAE',
         amountIn: amountAe,
         amountOut: amountAe,
       });
-      notifyPendingTx({ type: TxPayloadType.WrapToken, amount: amountAe }, result.hash);
     }
+    notifyPendingTx({ type: TxPayloadType.WrapToken, amount: amountAe }, txHash);
 
-    return result?.hash || null;
+    return txHash;
   }
 
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
@@ -89,21 +94,26 @@ export function useSwapExecution() {
     notifySubmitted({ type: TxPayloadType.UnwrapToken, amount: amountWae });
 
     const result = await wae.withdraw(aettos, null);
+    const txHash = extractAeTxHash(result);
 
-    if (activeAccount && result?.hash) {
+    if (!txHash) {
+      throw new Error('Transaction failed - no hash returned');
+    }
+
+    if (activeAccount) {
       addActivity({
         type: 'unwrap',
-        hash: result.hash,
+        hash: txHash,
         account: activeAccount,
         tokenIn: 'WAE',
         tokenOut: 'AE',
         amountIn: amountWae,
         amountOut: amountWae,
       });
-      notifyPendingTx({ type: TxPayloadType.UnwrapToken, amount: amountWae }, result.hash);
     }
+    notifyPendingTx({ type: TxPayloadType.UnwrapToken, amount: amountWae }, txHash);
 
-    return result?.hash || null;
+    return txHash;
   }
 
   async function approveIfNeeded(amountAettos: bigint, tokenIn: any): Promise<boolean> {
@@ -327,7 +337,11 @@ export function useSwapExecution() {
         throw new Error('Invalid route: AE to AE');
       }
 
-      if (activeAccount && txHash) {
+      if (!txHash) {
+        throw new Error('Transaction failed - no hash returned');
+      }
+
+      if (activeAccount) {
         addActivity({
           type: 'swap',
           hash: txHash,
@@ -340,11 +354,9 @@ export function useSwapExecution() {
       }
 
       // Tx is broadcast — hand off to the notification system for blockchain polling
-      if (txHash) {
-        notifyPendingTx(swapPayload, txHash);
-      }
+      notifyPendingTx(swapPayload, txHash);
 
-      return txHash || null;
+      return txHash;
     } catch (e: any) {
       const errorMsg = errorToUserMessage(e, {
         action: 'swap',

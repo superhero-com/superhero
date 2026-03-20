@@ -349,8 +349,12 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
+      if (!txHash) {
+        throw new Error('Transaction failed - no hash returned');
+      }
+
       // Track the add liquidity activity
-      if (address && txHash) {
+      if (address) {
         addActivity({
           type: 'add_liquidity',
           hash: txHash,

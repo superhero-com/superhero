@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { chainNamesAtom } from '../atoms/walletAtoms';
-import configs from '../configs';
+import { configs } from '../configs';
 
 const CHAIN_NAMES_REFRESH_INTERVAL = 1000 * 60 * 5; // 5 minutes
 

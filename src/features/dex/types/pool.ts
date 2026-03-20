@@ -1,4 +1,4 @@
-import { PairDto } from '@/api/generated';
+import type { PairDto } from '@/api/generated';
 
 export interface LiquidityPosition {
   pair: PairDto;
@@ -89,6 +89,8 @@ export interface LiquidityQuoteParams {
 export interface LiquidityExecutionParams {
   tokenA: string;
   tokenB: string;
+  symbolA?: string;
+  symbolB?: string;
   amountA: string;
   amountB: string;
   slippagePct: number;
@@ -99,7 +101,10 @@ export interface LiquidityExecutionParams {
 export interface RemoveLiquidityExecutionParams {
   tokenA: string;
   tokenB: string;
+  tokenASymbol?: string;
+  tokenBSymbol?: string;
   liquidity: string; // LP tokens to remove
+  liquidityPct?: string;
   slippagePct: number;
   deadlineMins: number;
   isAePair: boolean;

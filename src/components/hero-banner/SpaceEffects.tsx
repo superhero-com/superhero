@@ -2,6 +2,7 @@ import React from 'react';
 
 interface SpaceEffectsProps {
   supernovaColor: string;
+  reduced?: boolean;
 }
 
 // Far stars layer
@@ -110,29 +111,33 @@ const StarsNear = () => (
   </svg>
 );
 
-const SpaceEffects = ({ supernovaColor }: SpaceEffectsProps) => (
+const SpaceEffects = ({ supernovaColor, reduced = false }: SpaceEffectsProps) => (
   <div className="banner-space">
-    <div className="banner-aurora" />
-    <div
-      className="banner-supernova"
-      style={{
-        background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
-      }}
-    />
-    <div
-      className="banner-supernova banner-supernova--2"
-      style={{
-        background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
-      }}
-    />
-    <div className="banner-comet" />
+    {!reduced && <div className="banner-aurora" />}
+    {!reduced && (
+      <div
+        className="banner-supernova"
+        style={{
+          background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
+        }}
+      />
+    )}
+    {!reduced && (
+      <div
+        className="banner-supernova banner-supernova--2"
+        style={{
+          background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
+        }}
+      />
+    )}
+    {!reduced && <div className="banner-comet" />}
     <div className="banner-planet">
-      <div className="banner-ring" />
-      <span className="banner-token" />
-      <span className="banner-token t2" />
-      <span className="banner-token t3" />
+      {!reduced && <div className="banner-ring" />}
+      {!reduced && <span className="banner-token" />}
+      {!reduced && <span className="banner-token t2" />}
+      {!reduced && <span className="banner-token t3" />}
     </div>
-    <div className="banner-grid" />
+    {!reduced && <div className="banner-grid" />}
     <StarsFar />
     <StarsNear />
   </div>

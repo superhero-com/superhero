@@ -197,7 +197,6 @@ export default function Daos() {
               <TokenLineChart
                 saleAddress={token.sale_address || token.address}
                 height={48}
-                hideTimeframe
               />
             </div>
 

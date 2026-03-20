@@ -35,19 +35,28 @@ export const useAeSdk = () => {
    * This handles cases where account is set after SDK initialization.
    */
   useEffect(() => {
-    if (!walletConnected && activeAccount && context.staticAeSdk && context.addStaticAccount && context.sdkInitialized) {
+    const { staticAeSdk, addStaticAccount, sdkInitialized } = context;
+    if (!walletConnected && activeAccount && staticAeSdk && addStaticAccount && sdkInitialized) {
       // Check if the account is already added and selected
       // eslint-disable-next-line no-underscore-dangle
-      const currentAccounts = context.staticAeSdk._accounts?.current || {};
+      const currentAccounts = (staticAeSdk as any)._accounts?.current || {};
       const selectedAddress = Object.keys(currentAccounts)[0];
 
       // Only add if the account is not currently selected
       if (selectedAddress !== activeAccount) {
-        // Account not added or not selected, add/select it
-        context.addStaticAccount(activeAccount);
+        addStaticAccount(activeAccount);
       }
     }
-  }, [walletConnected, activeAccount, context.staticAeSdk, context.addStaticAccount, context.sdkInitialized]);
+    // Intentionally depend on specific context fields only so this effect does not
+    // re-run when context identity changes (e.g. currentBlockHeight polling).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    walletConnected,
+    activeAccount,
+    context.staticAeSdk,
+    context.addStaticAccount,
+    context.sdkInitialized,
+  ]);
 
   return {
     ...context,

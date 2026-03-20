@@ -53,3 +53,17 @@ export function formatCompactNumber(
 
   return negative ? `-${formatted}` : formatted;
 }
+
+// Parse numeric API values while treating missing/empty as null.
+export function toOptionalFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}

@@ -108,7 +108,7 @@ const FeedList = ({
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
   const sortBy = !popularFeedEnabled ? 'latest' : (urlSortBy || 'hot');
   const filterBy = urlQuery.get('filterBy') || 'all';
-  const initialWindow = (urlQuery.get('window') as '24h'|'7d'|'all' | null) || '24h';
+  const initialWindow = (urlQuery.get('window') as '24h' | '7d' | 'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
 
   // Keep sortByRef in sync with sortBy to avoid stale closures in callbacks
@@ -116,13 +116,13 @@ const FeedList = ({
     sortByRef.current = sortBy;
   }, [sortBy]);
 
-  const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
+  const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>(initialWindow);
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const fromUrl = (params.get('window') as '24h'|'7d'|'all' | null) || '24h';
+    const fromUrl = (params.get('window') as '24h' | '7d' | 'all' | null) || '24h';
     if (fromUrl !== popularWindow) {
       setPopularWindow(fromUrl);
       if (sortBy === 'hot') {
@@ -658,9 +658,9 @@ const FeedList = ({
     const cachedPosts = queryClient.getQueryData(['posts', {
       limit: 10, sortBy: 'latest', filterBy: 'all',
     }])
-                       || queryClient.getQueryData(['posts', {
-                         limit: 10, sortBy, filterBy,
-                       }]);
+      || queryClient.getQueryData(['posts', {
+        limit: 10, sortBy, filterBy,
+      }]);
     const cachedActivities = queryClient.getQueryData(['home-activities']);
 
     const hasCachedPostsData = cachedPosts && (cachedPosts as any)?.pages?.length > 0;
@@ -797,7 +797,7 @@ const FeedList = ({
     [navigate, queryClient, popularWindow, popularFeedEnabled, sortBy],
   );
 
-  const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
+  const handlePopularWindowChange = useCallback((w: '24h' | '7d' | 'all') => {
     setPopularWindow(w);
     if (sortBy === 'hot') {
       navigate(`/?sortBy=hot&window=${w}`);
@@ -932,14 +932,16 @@ const FeedList = ({
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
     let nextInsertAt = 2;
+    let trendingPage = 1;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
         nodes.push(
-          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} />,
+          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} page={trendingPage} />,
         );
         const step = 7 + Math.floor(rng() * 9);
         nextInsertAt += step;
+        trendingPage += 1;
       }
     };
 
@@ -1057,14 +1059,16 @@ const FeedList = ({
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
     let nextInsertAt = 2;
+    let trendingPage = 1;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
         nodes.push(
-          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} />,
+          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} page={trendingPage} />,
         );
         const step = 7 + Math.floor(rng() * 9);
         nextInsertAt += step;
+        trendingPage += 1;
       }
     };
 
@@ -1081,7 +1085,7 @@ const FeedList = ({
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {
     // Vite supports preloading dynamic chunks via import()
-    import('./PostDetail').catch(() => {});
+    import('./PostDetail').catch(() => { });
   }, []);
 
   // Restore scroll position when returning from detail pages
@@ -1235,9 +1239,10 @@ const FeedList = ({
               refetchLatest();
             }
           }}
-          onPostCreated={() => {
-            // Switch to latest tab if user is on popular tab when posting
-            if (sortBy === 'hot') {
+          onPostCreated={(postId = null) => {
+            if (postId) {
+              navigate(`/post/${postId}`);
+            } else if (sortBy === 'hot') {
               handleSortChange('latest');
               // Update ref immediately so onSuccess callback sees the new value
               sortByRef.current = 'latest';

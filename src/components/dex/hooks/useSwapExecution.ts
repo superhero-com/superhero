@@ -1,8 +1,7 @@
 /* eslint-disable */
 import waeACI from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
-import { CONFIG } from '../../../config';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -17,7 +16,7 @@ import {
 } from '../../../libs/dex';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { useToast } from '../../ToastProvider';
+import { TxPayloadType, useTransactionNotification } from '../../../features/transaction-notification/transaction-notification.context';
 import { SwapExecutionParams } from '../types/dex';
 
 type WaeContractApi = ContractMethodsBase & {
@@ -40,8 +39,8 @@ function extractAeTxHash(txResult: any): string {
 export function useSwapExecution() {
   const { sdk, activeAccount } = useAeSdk();
   const { addActivity } = useRecentActivities();
+  const { notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError } = useTransactionNotification();
 
-  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
   const [swapStep, setSwapStep] = useState<{ current: number; total: number; label: string } | null>(null);
@@ -59,22 +58,30 @@ export function useSwapExecution() {
       { aci: waeACI, address: DEX_ADDRESSES.wae },
     );
     const aettos = Decimal.from(amountAe).bigNumber;
-    const result = await wae.deposit({ amount: aettos });
 
-    // Track the wrap activity
-    if (activeAccount && result?.hash) {
+    notifySubmitted({ type: TxPayloadType.WrapToken, amount: amountAe });
+
+    const result = await wae.deposit({ amount: aettos });
+    const txHash = extractAeTxHash(result);
+
+    if (!txHash) {
+      throw new Error('Transaction failed - no hash returned');
+    }
+
+    if (activeAccount) {
       addActivity({
         type: 'wrap',
-        hash: result.hash,
+        hash: txHash,
         account: activeAccount,
         tokenIn: 'AE',
         tokenOut: 'WAE',
         amountIn: amountAe,
-        amountOut: amountAe, // 1:1 wrap ratio
+        amountOut: amountAe,
       });
     }
+    notifyPendingTx({ type: TxPayloadType.WrapToken, amount: amountAe }, txHash);
 
-    return result?.hash || null;
+    return txHash;
   }
 
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
@@ -83,22 +90,30 @@ export function useSwapExecution() {
       { aci: waeACI, address: DEX_ADDRESSES.wae },
     );
     const aettos = Decimal.from(amountWae).bigNumber;
-    const result = await wae.withdraw(aettos, null);
 
-    // Track the unwrap activity
-    if (activeAccount && result?.hash) {
+    notifySubmitted({ type: TxPayloadType.UnwrapToken, amount: amountWae });
+
+    const result = await wae.withdraw(aettos, null);
+    const txHash = extractAeTxHash(result);
+
+    if (!txHash) {
+      throw new Error('Transaction failed - no hash returned');
+    }
+
+    if (activeAccount) {
       addActivity({
         type: 'unwrap',
-        hash: result.hash,
+        hash: txHash,
         account: activeAccount,
         tokenIn: 'WAE',
         tokenOut: 'AE',
         amountIn: amountWae,
-        amountOut: amountWae, // 1:1 unwrap ratio
+        amountOut: amountWae,
       });
     }
+    notifyPendingTx({ type: TxPayloadType.UnwrapToken, amount: amountWae }, txHash);
 
-    return result?.hash || null;
+    return txHash;
   }
 
   async function approveIfNeeded(amountAettos: bigint, tokenIn: any): Promise<boolean> {
@@ -111,15 +126,36 @@ export function useSwapExecution() {
     if (needsApproval) {
       needsApprovalInCurrentSwap.current = true;
       setSwapStep({ current: 1, total: 2, label: 'Approve token' });
+
+      // Notify user to sign the approval in their wallet.
+      // This notification persists through both "waiting for signature"
+      // and "waiting for on-chain confirmation" since we don't have the
+      // approval txHash available for polling.
+      notifySubmitted({
+        type: TxPayloadType.ApproveAllowance,
+        tokenName: tokenIn.name || tokenIn.symbol,
+        tokenSymbol: tokenIn.symbol,
+        amount: fromAettos(amountAettos, tokenIn.decimals),
+        stepNumber: 1,
+        totalSteps: 2,
+      });
     }
 
     await ensureAllowanceForRouter(sdk, tokenIn.address, activeAccount, amountAettos);
 
+    if (needsApproval) {
+      notifyConfirmed({
+        type: TxPayloadType.ApproveAllowance,
+        tokenName: tokenIn.name || tokenIn.symbol,
+        tokenSymbol: tokenIn.symbol,
+        amount: fromAettos(amountAettos, tokenIn.decimals),
+        stepNumber: 1,
+        totalSteps: 2,
+      });
+    }
+
     try {
       const current = await getRouterTokenAllowance(sdk, tokenIn.address, activeAccount);
-      // if (current !== 0n) {
-      //   setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
-      // }
       setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
     } catch { }
 
@@ -163,31 +199,9 @@ export function useSwapExecution() {
         let txHash: string | null = null;
 
         if (params.tokenIn.address === 'AE' && params.tokenOut.address === DEX_ADDRESSES.wae) {
-          // AE -> WAE (wrap)
           txHash = await wrapAeToWae(params.amountIn);
         } else if (params.tokenIn.address === DEX_ADDRESSES.wae && params.tokenOut.address === 'AE') {
-          // WAE -> AE (unwrap)
           txHash = await unwrapWaeToAe(params.amountIn);
-        }
-
-        if (txHash) {
-          try {
-            const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
-            const actionName = params.tokenIn.address === 'AE' ? 'Wrap' : 'Unwrap';
-            toast.push(
-              React.createElement(
-                'div',
-                {},
-                React.createElement('div', {}, `${actionName} submitted`),
-                CONFIG.EXPLORER_URL && React.createElement('a', {
-                  href: url,
-                  target: '_blank',
-                  rel: 'noreferrer',
-                  style: { color: '#8bc9ff', textDecoration: 'underline' },
-                }, 'View on explorer'),
-              ),
-            );
-          } catch { }
         }
 
         return txHash;
@@ -214,17 +228,30 @@ export function useSwapExecution() {
       const isInAe = !!params.tokenIn?.is_ae;
       const isOutAe = !!params.tokenOut?.is_ae;
 
-      // Determine step based on whether approval was needed
-      if (needsApprovalInCurrentSwap.current) {
-        setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
-      } else {
-        setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
-      }
+      // Shared payload for swap notifications
+      const swapPayload = {
+        type: TxPayloadType.SwapToken as typeof TxPayloadType.SwapToken,
+        tokenInSymbol: params.tokenIn.symbol,
+        tokenOutSymbol: params.tokenOut.symbol,
+        amountIn: params.amountIn,
+        amountOut: params.amountOut,
+      };
+
+      // Helper: update step indicator and prompt wallet signature for the swap
+      const prepareSwapStep = () => {
+        if (needsApprovalInCurrentSwap.current) {
+          setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
+        } else {
+          setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
+        }
+        notifySubmitted(swapPayload);
+      };
 
       let txHash: string | undefined;
 
       if (!isInAe && !isOutAe) {
         if (params.isExactIn) {
+          prepareSwapStep();
           const res = await router.swap_exact_tokens_for_tokens(
             amountInAettos,
             minOutAettos,
@@ -239,12 +266,7 @@ export function useSwapExecution() {
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = (BigInt(addSlippage(inNeeded, params.slippagePct).toString()));
           await approveIfNeeded(maxIn, params.tokenIn);
-          // Set step for exact-out swap
-          if (needsApprovalInCurrentSwap.current) {
-            setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
-          } else {
-            setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
-          }
+          prepareSwapStep();
           const res = await router.swap_tokens_for_exact_tokens(
             amountOutAettos,
             maxIn,
@@ -257,6 +279,7 @@ export function useSwapExecution() {
         }
       } else if (isInAe && !isOutAe) {
         if (params.isExactIn) {
+          prepareSwapStep();
           const res = await router.swap_exact_ae_for_tokens(
             minOutAettos,
             p,
@@ -270,6 +293,7 @@ export function useSwapExecution() {
           const { decodedResult } = await router.get_amounts_in(amountOutAettos, p);
           const inNeeded = decodedResult[0] as bigint;
           const maxAe = addSlippage(inNeeded, params.slippagePct).toString();
+          prepareSwapStep();
           const res = await router.swap_ae_for_exact_tokens(
             amountOutAettos,
             p,
@@ -282,6 +306,7 @@ export function useSwapExecution() {
         }
       } else if (!isInAe && isOutAe) {
         if (params.isExactIn) {
+          prepareSwapStep();
           const res = await router.swap_exact_tokens_for_ae(
             amountInAettos,
             minOutAettos,
@@ -296,12 +321,7 @@ export function useSwapExecution() {
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = addSlippage(inNeeded, params.slippagePct);
           await approveIfNeeded(maxIn, params.tokenIn);
-          // Set step for exact-out swap
-          if (needsApprovalInCurrentSwap.current) {
-            setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
-          } else {
-            setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
-          }
+          prepareSwapStep();
           const res = await router.swap_tokens_for_exact_ae(
             amountOutAettos,
             maxIn,
@@ -317,8 +337,11 @@ export function useSwapExecution() {
         throw new Error('Invalid route: AE to AE');
       }
 
-      // Track the swap activity
-      if (activeAccount && txHash) {
+      if (!txHash) {
+        throw new Error('Transaction failed - no hash returned');
+      }
+
+      if (activeAccount) {
         addActivity({
           type: 'swap',
           hash: txHash,
@@ -330,24 +353,10 @@ export function useSwapExecution() {
         });
       }
 
-      try {
-        const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash || ''}` : '';
-        toast.push(
-          React.createElement(
-            'div',
-            {},
-            React.createElement('div', {}, 'Swap submitted'),
-            txHash && CONFIG.EXPLORER_URL && React.createElement('a', {
-              href: url,
-              target: '_blank',
-              rel: 'noreferrer',
-              style: { color: '#8bc9ff', textDecoration: 'underline' },
-            }, 'View on explorer'),
-          ),
-        );
-      } catch { }
+      // Tx is broadcast — hand off to the notification system for blockchain polling
+      notifyPendingTx(swapPayload, txHash);
 
-      return txHash || null;
+      return txHash;
     } catch (e: any) {
       const errorMsg = errorToUserMessage(e, {
         action: 'swap',
@@ -355,15 +364,7 @@ export function useSwapExecution() {
         deadlineMins: params.deadlineMins,
       });
 
-      try {
-        toast.push(React.createElement(
-          'div',
-          {},
-          React.createElement('div', {}, 'Swap failed'),
-          React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
-        ));
-      } catch { }
-
+      notifyError(errorMsg);
       throw new Error(errorMsg);
     } finally {
       setLoading(false);

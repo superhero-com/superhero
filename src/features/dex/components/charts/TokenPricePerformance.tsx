@@ -66,7 +66,7 @@ const TokenPricePerformance = ({
 
   // Initialize chart
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current) return () => {};
 
     const chart = createChart(chartContainerRef.current, {
       height: 400,

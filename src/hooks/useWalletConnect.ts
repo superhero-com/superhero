@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from '../utils/constants';
 import { useAeSdk } from './useAeSdk';
-import { createDeepLinkUrl, openDeepLink } from '../utils/url';
+import { openDeepLink } from '../utils/url';
 import { validateHash } from '../utils/address';
 import { configs } from '../configs';
 import type { Wallet, Wallets } from '../utils/types';
@@ -25,7 +25,7 @@ import {
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
-  const scanStopRef = useRef<null | (() => void)>(null);
+  const scanStopRef = useRef<null |(() => void)>(null);
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
@@ -129,9 +129,9 @@ export function useWalletConnect() {
     openDeepLink({
       type: 'address',
       'x-success': `${window.location.href.split('?')[0]
-        }?address={address}&networkId={networkId}`,
+      }?address={address}&networkId={networkId}`,
       'x-cancel': window.location.href.split('?')[0],
-    })
+    });
   }
 
   // eslint-disable-next-line consistent-return

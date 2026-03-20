@@ -1,20 +1,28 @@
-import BigNumber from 'bignumber.js';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useAtom } from 'jotai';
-import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
-import { CONFIG } from '../../../config';
-import { initializeContractTyped } from '../../../libs/initializeContractTyped';
+import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
+import BigNumber from 'bignumber.js';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect, useState } from 'react';
+import { providedLiquidityAtom } from '../../../atoms/dexAtoms';
+import { useAccount } from '../../../hooks/useAccount';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useDex } from '../../../hooks/useDex';
+import { useRecentActivities } from '../../../hooks/useRecentActivities';
 import {
-  ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
+  ACI, DEX_ADDRESSES,
+  MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
+  fromAettos, getPairInfo, initDexContracts,
+  subSlippage,
+  toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { useToast } from '../../../components/ToastProvider';
-import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
-
-import {
-  providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities,
-} from '../../../hooks';
+import { initializeContractTyped } from '../../../libs/initializeContractTyped';
+import { TxPayloadType, useTransactionNotification } from '../../transaction-notification/transaction-notification.context';
+import type {
+  AddLiquidityState,
+  LiquidityExecutionParams,
+  RemoveLiquidityExecutionParams,
+} from '../types/pool';
 
 type Aex9ContractApi = ContractMethodsBase & {
   meta_info: () => Promise<{ decodedResult: { decimals?: number | string; symbol?: string; name?: string } }>;
@@ -27,7 +35,7 @@ export function useAddLiquidity() {
   const { activeAccount: address } = useAccount();
   useDex();
   const { addActivity } = useRecentActivities();
-  const toast = useToast();
+  const { notifySubmitted, notifyPendingTx, notifyError } = useTransactionNotification();
 
   const [state, setState] = useState<AddLiquidityState>({
     tokenA: '',
@@ -227,12 +235,24 @@ export function useAddLiquidity() {
     computePairPreview();
   }, [computePairPreview]);
 
-  async function executeAddLiquidity(params: LiquidityExecutionParams, options?: { suppressToast?: boolean }) {
+  async function executeAddLiquidity(params: LiquidityExecutionParams) {
     if (!address) {
       throw new Error('Wallet not connected');
     }
 
+    const symbolA = params.symbolA || state.symbolA;
+    const symbolB = params.symbolB || state.symbolB;
+
+    const notifPayload = {
+      type: TxPayloadType.AddLiquidity as typeof TxPayloadType.AddLiquidity,
+      tokenASymbol: symbolA,
+      tokenBSymbol: symbolB,
+      amountA: params.amountA,
+      amountB: params.amountB,
+    };
+
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    notifySubmitted(notifPayload);
 
     try {
       const { router } = await initDexContracts(sdk);
@@ -329,37 +349,24 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
+      if (!txHash) {
+        throw new Error('Transaction failed - no hash returned');
+      }
+
       // Track the add liquidity activity
-      if (address && txHash) {
+      if (address) {
         addActivity({
           type: 'add_liquidity',
           hash: txHash,
           account: address,
-          tokenIn: state.symbolA || params.tokenA,
-          tokenOut: state.symbolB || params.tokenB,
+          tokenIn: symbolA || params.tokenA,
+          tokenOut: symbolB || params.tokenB,
           amountIn: params.amountA,
           amountOut: params.amountB,
         });
       }
 
-      // Show success toast only if not suppressed (for backward compatibility)
-      if (!options?.suppressToast) {
-        const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
-        toast.push(
-          React.createElement(
-            'div',
-            {},
-            React.createElement('div', { style: { fontWeight: 600, marginBottom: 4 } }, 'Liquidity added successfully! 🎉'),
-            React.createElement('div', { style: { fontSize: 13, opacity: 0.9, marginBottom: 8 } }, 'Your new position will appear in Active Positions within a few seconds'),
-            txHash && CONFIG.EXPLORER_URL && React.createElement('a', {
-              href: url,
-              target: '_blank',
-              rel: 'noreferrer',
-              style: { color: '#8bc9ff', textDecoration: 'underline', fontSize: 13 },
-            }, 'View transaction on explorer'),
-          ),
-        );
-      }
+      notifyPendingTx(notifPayload, txHash);
 
       // Reset form
       setState((prev) => ({
@@ -379,13 +386,7 @@ export function useAddLiquidity() {
       });
 
       setState((prev) => ({ ...prev, error: errorMsg, loading: false }));
-
-      toast.push(React.createElement(
-        'div',
-        {},
-        React.createElement('div', {}, 'Add liquidity failed'),
-        React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
-      ));
+      notifyError(errorMsg);
 
       throw new Error(errorMsg);
     }
@@ -401,7 +402,20 @@ export function useAddLiquidity() {
       throw new Error('SDK not available');
     }
 
+    const symbolA = params.tokenASymbol || params.tokenA;
+    const symbolB = params.tokenBSymbol || params.tokenB;
+    const liquidityPct = params.liquidityPct || '100';
+
+    const notifPayload = {
+      type: TxPayloadType.RemoveLiquidity as typeof TxPayloadType.RemoveLiquidity,
+      tokenASymbol: symbolA,
+      tokenBSymbol: symbolB,
+      liquidityPct,
+      lpAmount: params.liquidity,
+    };
+
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    notifySubmitted(notifPayload);
 
     try {
       // Initialize DEX contracts
@@ -527,24 +541,18 @@ export function useAddLiquidity() {
       setState((prev) => ({ ...prev, loading: false }));
 
       if (txHash) {
-        // Track the remove liquidity activity
         if (address) {
           addActivity({
             type: 'remove_liquidity',
             hash: txHash,
             account: address,
-            tokenIn: state.symbolA || params.tokenA,
-            tokenOut: state.symbolB || params.tokenB,
+            tokenIn: symbolA,
+            tokenOut: symbolB,
             amountIn: params.liquidity,
           });
         }
 
-        toast.push(React.createElement(
-          'div',
-          {},
-          React.createElement('div', {}, 'Remove liquidity successful'),
-          React.createElement('div', { style: { opacity: 0.9 } }, `Transaction: ${txHash.slice(0, 8)}...${txHash.slice(-8)}`),
-        ));
+        notifyPendingTx(notifPayload, txHash);
 
         return txHash;
       }
@@ -552,13 +560,7 @@ export function useAddLiquidity() {
     } catch (error: any) {
       const errorMsg = errorToUserMessage(error);
       setState((prev) => ({ ...prev, error: errorMsg, loading: false }));
-
-      toast.push(React.createElement(
-        'div',
-        {},
-        React.createElement('div', {}, 'Remove liquidity failed'),
-        React.createElement('div', { style: { opacity: 0.9 } }, errorMsg),
-      ));
+      notifyError(errorMsg);
 
       throw new Error(errorMsg);
     }

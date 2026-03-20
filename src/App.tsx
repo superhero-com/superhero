@@ -1,20 +1,26 @@
+import * as Sentry from '@sentry/react';
+
 import React, {
   Suspense, useEffect, useRef,
 } from 'react';
 import { useRoutes } from 'react-router-dom';
+import FeedbackButton from './components/FeedbackButton';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
-import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
+import { AppHeader } from './components/layout/app-header';
 import ModalProvider from './components/ModalProvider';
+import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import {
-  useAeSdk, useAccount, useIsMobile, useWalletConnect,
+  useAccount,
+  useAeSdk,
+  useIsMobile, useWalletConnect,
 } from './hooks';
+import { useSuperheroChainNames } from './hooks/useChainName';
 import { useProfileFeed } from './hooks/useProfileFeed';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
-import { AppHeader } from './components/layout/app-header';
-import { useSuperheroChainNames } from './hooks/useChainName';
-import FeedbackButton from './components/FeedbackButton';
+
+const useSentryRoutes = Sentry.wrapUseRoutes(useRoutes);
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -106,7 +112,7 @@ const App = () => {
         />
       </Suspense>
       <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        <div className="app-routes-container">{useSentryRoutes(routes as any)}</div>
       </Suspense>
       {/* TODO: Disable feedback button on mobile for now */}
       {!isMobile && <FeedbackButton />}

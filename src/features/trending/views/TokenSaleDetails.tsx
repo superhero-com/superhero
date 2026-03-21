@@ -581,30 +581,6 @@ const TokenSaleDetails = () => {
             </Card>
           )}
 
-          {!isMobile && !showTradePanels && tokenAddress && !tokenDoesNotExist && (
-            <button
-              type="button"
-              onClick={handleTradeClick}
-              onPointerUp={handleTradePointerUp}
-              className="w-full rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-transparent px-4 py-3 text-left shadow-[0_8px_24px_rgba(16,185,129,0.18)] transition-all duration-200 hover:border-emerald-300/60 hover:shadow-[0_10px_28px_rgba(16,185,129,0.28)] active:scale-[0.99]"
-              aria-label="Open trade"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">{tokenHeaderTitle}</span>
-                <span className="text-emerald-400 text-sm font-semibold">▲</span>
-              </div>
-              <div className="mt-2 h-6 w-full">
-                <TokenLineChart
-                  saleAddress={String(tokenAddress)}
-                  height={24}
-                  allTime
-                  showDateLegend
-                  className="h-full w-full"
-                />
-              </div>
-            </button>
-          )}
-
           {/* Chart */}
           {showTradePanels && !isMobile && !tokenDoesNotExist && (
             (isLoading && !token?.sale_address) ? (

@@ -1,287 +1,298 @@
 import { PriceDataFormatter } from '@/features/shared/components';
 import { useMemo } from 'react';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Decimal } from '../../../libs/decimal';
 import { TokenLineChart } from './TokenLineChart';
 
 interface TokenListTableRowProps {
   token: TokenDto;
   useCollectionRank?: boolean;
-  showCollectionColumn?: boolean;
   rank: number;
 }
 
-// Helper function to parse collection name
-function parseCollectionName(collection: string): string {
-  // For now, just return the collection string as is
-  // In the Vue version, this was used to extract collection names
-  return collection || 'default';
-}
+const PercentChange = ({
+  percent,
+  direction,
+}: {
+  percent?: number | null;
+  direction?: string | null;
+}) => {
+  if (percent == null) {
+    return <span className="text-white/30 text-xs tabular-nums">—</span>;
+  }
+  const isUp = direction ? direction === 'up' : percent >= 0;
+  const formatted = Decimal.from(Math.abs(percent)).prettify(2);
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-medium tabular-nums ${
+        isUp ? 'text-emerald-400' : 'text-red-400'
+      }`}
+    >
+      <span className="text-[9px]">{isUp ? '▲' : '▼'}</span>
+      {formatted}
+      %
+    </span>
+  );
+};
 
-// Component for token label
-const TokenLabel = ({ children }: { children: React.ReactNode }) => (
-  <span className="px-2 py-1 bg-white/[0.08] text-white/80 rounded-full text-xs font-medium backdrop-blur-[10px]">
-    {children}
-  </span>
-);
+const formatVolume = (volume?: number | null): string => {
+  if (!volume) return '—';
+  if (volume >= 1_000_000) return `${(volume / 1_000_000).toFixed(2)}M AE`;
+  if (volume >= 1_000) return `${(volume / 1_000).toFixed(2)}K AE`;
+  return `${volume.toFixed(2)} AE`;
+};
+
+const formatCirculatingSupply = (
+  totalSupply?: string,
+  decimals?: string,
+): string => {
+  try {
+    if (!totalSupply || !decimals) return '—';
+    const dec = parseInt(decimals, 10);
+    const supply = BigInt(totalSupply);
+    const divisor = BigInt(10) ** BigInt(dec);
+    const whole = supply / divisor;
+    const n = Number(whole);
+    let formatted: string;
+    if (n >= 1_000_000_000) formatted = `${(n / 1_000_000_000).toFixed(2)}B`;
+    else if (n >= 1_000_000) formatted = `${(n / 1_000_000).toFixed(2)}M`;
+    else if (n >= 1_000) formatted = `${(n / 1_000).toFixed(2)}K`;
+    else formatted = n.toLocaleString();
+    return formatted;
+  } catch {
+    return '—';
+  }
+};
 
 const TokenListTableRow = ({
   token,
   useCollectionRank = false,
-  showCollectionColumn = false,
   rank,
 }: TokenListTableRowProps) => {
   const tokenAddress = useMemo(() => token.address, [token.address]);
-
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
+  const saleAddress = useMemo(
+    () => token.sale_address || tokenAddress,
+    [token.sale_address, tokenAddress],
+  );
 
-  const saleAddress = useMemo(() => token.sale_address || tokenAddress, [token.sale_address, tokenAddress]);
+  const perf24h = token.performance?.past_24h;
+  const perf7d = token.performance?.past_7d;
+  const perf30d = token.performance?.past_30d;
+  const volume30d = (perf30d as any)?.volume ?? null;
 
-  // Show mobile card on screens smaller than 960px
+  const tokenHref = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
+
   return (
     <>
-      {/* Mobile compact two-row layout */}
+      {/* Mobile compact card row — 4 columns: rank | name+MC | price+30d% | chart */}
       <tr className="mobile-only-card md:hidden relative">
         <td className="cell-fake" />
+
         {/* Rank */}
-        <td className="pl-3 pr-3 py-1 align-middle text-white/60 text-[11px] font-semibold text-center">
+        <td className="cell cell-rank py-3 align-middle text-white/40 text-xs font-semibold text-center">
           {collectionRank}
         </td>
-        {/* Content cell spans remaining columns: Row 1 name, Row 2 mc/price/24h */}
-        <td className="pl-2 py-1 pr-3 align-middle relative" colSpan={3}>
-          {/* Row 1: full name (wrap allowed) */}
-          <div className="text-[14px] font-bold text-white leading-5 whitespace-nowrap overflow-hidden text-ellipsis">
-            <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
-            <span>{token.symbol || token.name}</span>
+
+        {/* Name + Market Cap */}
+        <td className="cell cell-name py-3 pl-2 pr-1 align-middle">
+          <div className="text-[13px] font-bold text-white truncate">
+            <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+            {token.symbol || token.name}
           </div>
-          {/* Row 2: left = MC, right = Price + 24h */}
-          <div className="flex items-center justify-between gap-3 pt-0">
-            <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
-              <PriceDataFormatter
-                bignumber
-                watchPrice={false}
-                className=""
-                priceData={token.market_cap_data}
-              />
-            </div>
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
-                <PriceDataFormatter
-                  watchPrice={false}
-                  hideFiatPrice
-                  className="text-white"
-                  priceData={token.price_data}
-                />
-              </div>
-              <div className="flex justify-end">
-                {saleAddress && (
-                <TokenLineChart
-                  saleAddress={saleAddress}
-                  height={26}
-                  className="w-[72px]"
-                />
-                )}
-              </div>
-            </div>
+          <div className="text-[11px] text-white/40 mt-0.5 tabular-nums">
+            <PriceDataFormatter
+              bignumber
+              hideFiatPrice
+              watchPrice={false}
+              priceData={token.market_cap_data}
+            />
           </div>
+        </td>
+
+        {/* Price + 30d % */}
+        <td className="cell cell-price py-3 px-2 align-middle text-right">
+          <div className="text-[12px] font-semibold text-white tabular-nums">
+            <PriceDataFormatter
+              hideFiatPrice
+              watchPrice={false}
+              priceData={token.price_data}
+            />
+          </div>
+          <div className="mt-0.5">
+            <PercentChange
+              percent={perf30d?.current_change_percent}
+              direction={perf30d?.current_change_direction}
+            />
+          </div>
+        </td>
+
+        {/* All Time chart */}
+        <td className="cell cell-chart py-3 pl-1 pr-3 align-middle text-right relative">
+          {saleAddress && (
+            <div className="flex justify-end">
+              <TokenLineChart saleAddress={saleAddress} height={28} width={64} interval="all-time" />
+            </div>
+          )}
           <a
-            href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
-            className="absolute inset-0 z-10"
-            aria-label={`View details for ${token.name || token.symbol}`}
+            href={tokenHref}
+            className="link absolute inset-0 z-10"
+            aria-label={`View ${token.name || token.symbol}`}
           />
         </td>
       </tr>
 
-      {/* Desktop table row for larger screens (including tablets) */}
+      {/* Desktop table row */}
       <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
-        {/* Fake cell to match header structure */}
         <td className="cell-fake" />
 
         {/* Rank */}
-        <td className="cell cell-rank pl-2 pl-md-4">
-          <div className="rank text-md font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent opacity-50">
-            {collectionRank}
-          </div>
+        <td className="cell cell-rank pl-3 pr-4">
+          <div className="text-sm font-semibold text-white/40 tabular-nums">{collectionRank}</div>
         </td>
 
-        {/* Name */}
-        <td className="cell cell-name px-1 px-lg-3">
-          <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent transition-colors">
-            <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
-            <span>{token.symbol || token.name}</span>
-          </div>
-        </td>
-
-        {/* Collection Label */}
-        {showCollectionColumn && (
-          <td className="cell cell-collection text-right px-1 px-md-3">
-            <TokenLabel>
-              {parseCollectionName(token.collection)}
-            </TokenLabel>
-          </td>
-        )}
-
-        {/* Price */}
-        <td className="cell cell-price px-1 px-lg-3 text-left text-md-right">
-          <div className="flex align-center md:block">
-            <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
-            <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
-              <PriceDataFormatter
-                hideFiatPrice
-                priceData={token.price_data}
-              />
+        {/* Token Name + Avatar + Buy */}
+        <td className="cell cell-name px-3">
+          <div className="flex items-center gap-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="token-name text-sm font-bold text-white truncate">
+                <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+                {token.symbol || token.name}
+              </div>
+              {token.name && token.symbol && token.name !== token.symbol && (
+                <div className="text-[11px] text-white/40 truncate leading-3 mt-0.5">
+                  {token.name}
+                </div>
+              )}
             </div>
           </div>
+        </td>
+
+        {/* Price */}
+        <td className="cell cell-price px-3 text-right">
+          <div className="text-sm font-semibold tabular-nums text-white">
+            <PriceDataFormatter hideFiatPrice priceData={token.price_data} />
+          </div>
+        </td>
+
+        {/* 24h % change */}
+        <td className="cell cell-change24h px-3 text-right">
+          <PercentChange
+            percent={perf24h?.current_change_percent}
+            direction={perf24h?.current_change_direction}
+          />
+        </td>
+
+        {/* 7d % change */}
+        <td className="cell cell-change7d px-3 text-right">
+          <PercentChange
+            percent={perf7d?.current_change_percent}
+            direction={perf7d?.current_change_direction}
+          />
+        </td>
+
+        {/* 30d % change */}
+        <td className="cell cell-change30d px-3 text-right hidden lg:table-cell">
+          <PercentChange
+            percent={perf30d?.current_change_percent}
+            direction={perf30d?.current_change_direction}
+          />
         </td>
 
         {/* Market Cap */}
-        <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
-          <div className="flex align-center md:block justify-between">
-            <div className="mobile-label block md:hidden text-white/60 w-16">MC:</div>
-            <div className="bg-gradient-to-r text-sm  from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              <PriceDataFormatter
-                bignumber
-                hideFiatPrice
-                priceData={token.market_cap_data}
-              />
-            </div>
+        <td className="cell cell-market-cap px-3 text-right">
+          <div className="text-sm text-white/80 tabular-nums">
+            <PriceDataFormatter bignumber hideFiatPrice priceData={token.market_cap_data} />
           </div>
         </td>
 
-        {/* Holders */}
-        <td className="cell cell-holders text-left px-1 px-lg-3">
-          <div className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent font-medium">
-            {token.holders_count?.toLocaleString() || '0'}
+        {/* Volume (7d) */}
+        <td className="cell cell-volume px-3 text-right hidden xl:table-cell">
+          <div className="text-sm text-white/70 tabular-nums">{formatVolume(volume30d)}</div>
+        </td>
+
+        {/* Circulating Supply */}
+        <td className="cell cell-supply px-3 text-right hidden xl:table-cell">
+          <div className="text-sm text-white/70 tabular-nums">
+            {formatCirculatingSupply(token.total_supply, token.decimals)}
           </div>
         </td>
 
-        {/* Chart */}
-        <td className="cell cell-chart text-right pr-md-4">
+        {/* Sparkline Chart */}
+        <td className="cell cell-chart pr-2 pr-md-4 align-middle">
           {tokenAddress && (
-            <div className="ml-auto chart max-w-[180px]">
-              <TokenLineChart
-                saleAddress={token.sale_address || tokenAddress}
-                height={40}
-              />
+            <div className="flex justify-end items-center">
+              <TokenLineChart saleAddress={saleAddress} height={40} interval="all-time" />
             </div>
           )}
         </td>
 
-        {/* Link that covers whole row */}
+        {/* Full-row link overlay */}
         <td className="cell cell-link">
           <a
-            href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
+            href={tokenHref}
             className="link absolute inset-0 z-10"
-            aria-label={`View details for ${token.name || token.symbol}`}
+            aria-label={`View ${token.name || token.symbol}`}
           />
         </td>
 
         <style>
           {`
-        .bctsl-token-list-table-row {
-          position: relative;
-          z-index: 1;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          /* Fix for Safari that doesn't support position: relative on tr */
-          transform: translate(0, 0);
-          
-
-        }
-
-
-        .bctsl-token-list-table-row:hover .token-name {
-          background: linear-gradient(to right, #fb923c, #fbbf24);
-          -webkit-background-clip: text;
-          background-clip: text;
-        }
-
-        .bctsl-token-list-table-row:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(17, 97, 254, 0.15);
-        }
-
-        .bctsl-token-list-table-row:active {
-          transform: translateY(0);
-        }
-
-        .bctsl-token-list-table-row:active::after {
-          background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .token-name {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .cell-rank {
-          font-family: var(--heading-font-family);
-          font-weight: bold;
-          opacity: 0.5;
-        }
-
-        .link {
-          position: absolute;
-          z-index: 2;
-          inset: 0;
-        }
-
-        .mobile-label {
-          text-wrap: nowrap;
-        }
-
-        /* Mobile responsive styles */
-        @media screen and (max-width: 767px) {
-          /* Hide AE price, show only fiat for market cap on mobile */
-          .mobile-market-cap .price {
-            display: none;
-          }
-          
           .bctsl-token-list-table-row {
-            display: grid;
-            grid-template-columns: 42px 1fr 1fr 1fr; /* rank + 3 cols */
-            grid-template-rows: auto auto; /* row1: name, row2: mc/price/24h */
-            grid-template-areas:
-              'rank name       name      name'
-              'rank market-cap price     chart';
-            margin-top: 0;
-            padding-block: 6px;
-            margin: 0;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translate(0, 0);
+          }
+
+          .bctsl-token-list-table-row::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            pointer-events: none;
+          }
+
+          .bctsl-token-list-table-row:hover::after {
+            background: rgba(17, 97, 254, 0.06);
+            border-color: rgba(17, 97, 254, 0.2);
+          }
+
+          .bctsl-token-list-table-row:hover {
+            transform: translateY(-1px);
+          }
+
+          .bctsl-token-list-table-row:hover .token-name {
+            color: #93c5fd;
+          }
+
+          .token-name {
+            transition: color 0.2s ease;
+          }
+
+          .link {
+            position: absolute;
+            z-index: 10;
+            inset: 0;
           }
 
           .cell-rank {
-            grid-area: rank;
-            padding-top: 4px;
-            font-size: 16px;
-            font-weight: normal;
-            letter-spacing: -0.1em;
+            font-family: var(--heading-font-family);
           }
 
-          .cell-name { grid-area: name; }
-          .cell-market-cap { grid-area: market-cap; }
-          .cell-price { grid-area: price; align-self: start; }
-          .cell-chart { grid-area: chart; align-self: start; }
-
-          .cell-collection,
-          .cell-holders {
-            display: none;
+          .mobile-label {
+            text-wrap: nowrap;
           }
-        }
 
-        /* On small screens put the chart below the token name */
-        @media screen and (max-width: 520px) {
-          .bctsl-token-list-table-row {
-            grid-template-areas:
-              'rank name       name'
-              'rank price      chart'
-              'rank market-cap chart';
+          @media screen and (max-width: 767px) {
+            .mobile-market-cap .price {
+              display: none;
+            }
           }
-        }
-
-        /* On tiny screens hide the chart */
-        @media screen and (max-width: 370px) {
-          .cell-chart {
-            display: none;
-          }
-        }
-      `}
+          `}
         </style>
       </tr>
     </>

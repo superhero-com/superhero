@@ -51,7 +51,7 @@ const TokenListTableRow = ({
   const perf24h = token.performance?.past_24h;
   const perf7d = token.performance?.past_7d;
   const perf30d = token.performance?.past_30d;
-  const volume30d = (perf30d as any)?.volume ?? null;
+  const volume = token.volume ? Decimal.from(token.volume) : null;
 
   const tokenHref = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
 
@@ -180,7 +180,7 @@ const TokenListTableRow = ({
 
         {/* Volume (7d) */}
         <td className="cell cell-volume px-3 text-right hidden xl:table-cell">
-          <div className="text-sm text-white/70 tabular-nums">{Decimal.from(volume30d).shorten()}</div>
+          <div className="text-sm text-white/70 tabular-nums">{volume ? volume.shorten() : '—'}</div>
         </td>
 
         {/* Circulating Supply */}

@@ -27,7 +27,7 @@ const TrendminerBanner = () => (
         <div className="flex flex-wrap gap-2">
           <AeButton
             variant="primary"
-            size="md"
+            size="sm"
             rounded
             onClick={() => { window.location.href = '/trends/create'; }}
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -37,7 +37,7 @@ const TrendminerBanner = () => (
 
           <AeButton
             variant="accent"
-            size="md"
+            size="sm"
             rounded
             onClick={() => { window.location.href = '/trends/daos'; }}
             className="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -47,7 +47,7 @@ const TrendminerBanner = () => (
 
           <AeButton
             variant="ghost"
-            size="md"
+            size="sm"
             rounded
             onClick={() => { window.location.href = '/trends/invite'; }}
             className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"

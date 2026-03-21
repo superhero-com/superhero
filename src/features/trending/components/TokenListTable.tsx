@@ -144,7 +144,7 @@ const TokenListTable = ({
               className="cell cell-price text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
               <span className="hidden md:inline">Price</span>
-              <span className="md:hidden">Price</span>
+              <span className="md:hidden">Price (30d)</span>
             </SortableColumnHeader>
 
             {/* 24h % — hidden on mobile */}

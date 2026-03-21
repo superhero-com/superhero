@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
-import { DEX_ADDRESSES } from '../../../libs/dex';
+import { CONFIG } from '../../../config';
 import Spinner from '../../Spinner';
 
 interface TokenSelectorProps {
@@ -47,10 +47,10 @@ export default function TokenSelector({
         || (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
       // if the token is WAE, skip it
-      if (skipToken?.address === DEX_ADDRESSES.wae && token.address === 'AE') {
+      if (skipToken?.address === CONFIG.DEX_WAE && token.address === 'AE') {
         return false;
       }
-      if (skipToken?.address === 'AE' && token.address === DEX_ADDRESSES.wae) {
+      if (skipToken?.address === 'AE' && token.address === CONFIG.DEX_WAE) {
         return false;
       }
       const notSkipped = !skipToken || token.address !== skipToken.address;

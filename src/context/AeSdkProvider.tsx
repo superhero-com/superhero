@@ -11,9 +11,9 @@ import {
 import { activeAccountAtom } from '../atoms/accountAtoms';
 import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
-import { configs } from '../configs';
+import { CONFIG } from '../config';
 import { useModal } from '../hooks/useModal';
-import { NETWORK_MAINNET } from '../utils/constants';
+import { CURRENT_NETWORK } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
@@ -42,17 +42,19 @@ export const AeSdkContext = createContext<{
   nodes: { instance: Node; name: string }[],
     }>(null);
 
-const nodes: { instance: Node; name: string }[] = Object.values(
-  configs.networks,
-).map(({ name, url }) => ({
-  name,
-  instance: new Node(url),
-}));
+const nodes: { instance: Node; name: string }[] = [
+  {
+    name: CURRENT_NETWORK.name,
+    instance: new Node(CURRENT_NETWORK.url),
+  },
+];
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   type LegacyInitializableSdk = {
     getContext: () => Record<string, unknown>;
-    initializeContract?: (options: Record<string, unknown>) => ReturnType<typeof Contract.initialize>;
+    initializeContract?: (
+      options: Record<string, unknown>,
+    ) => ReturnType<typeof Contract.initialize>;
   };
 
   const ensureLegacyInitializeContract = useCallback((sdkInstance: LegacyInitializableSdk) => {
@@ -70,7 +72,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
   const [accounts, setAccounts] = useState<string[]>([]);
   const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
-  const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
+  const [activeNetwork, setActiveNetwork] = useState<INetwork>(CURRENT_NETWORK);
   const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
   const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
   const transactionsQueueRef = useRef(transactionsQueue);
@@ -305,7 +307,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       name: 'Superhero',
       nodes,
       ttl: 10000,
-      onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
+      onCompiler: new CompilerHttp(CURRENT_NETWORK.compilerUrl),
       onAddressChange: (a: any) => {
         const newAddress = Object.keys(a.current || {})[0] as any;
 
@@ -326,7 +328,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const staticAeSdkInstance = new AeSdk({
       ttl: 10000,
       nodes,
-      onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
+      onCompiler: new CompilerHttp(CURRENT_NETWORK.compilerUrl),
     });
 
     // TODO:Remove this once libraries are updated to use the new Contract.initialize method
@@ -358,9 +360,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     setSdkInitialized(true);
 
-    // Connect to WebSocket for real-time updates
+    // Connect to WebSocket for real-time updates (empty URL would make socket.io use page origin)
     WebSocketClient.disconnect();
-    WebSocketClient.connect(activeNetwork.websocketUrl);
+    WebSocketClient.connect(
+      activeNetwork.websocketUrl || CONFIG.BACKEND_URL,
+    );
   }, [
     sdkInitialized,
     activeAccount,

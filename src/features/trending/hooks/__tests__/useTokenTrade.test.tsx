@@ -35,11 +35,16 @@ vi.mock('../../../../hooks/useAeSdk', () => ({
   }),
 }));
 
-vi.mock('../../../../config', () => ({
-  CONFIG: {
-    MIDDLEWARE_URL: 'https://middleware.example',
-  },
-}));
+vi.mock('../../../../config', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../../../config')>();
+  return {
+    ...mod,
+    CONFIG: {
+      ...mod.CONFIG,
+      MIDDLEWARE_URL: 'https://middleware.example',
+    },
+  };
+});
 
 function createStore(overrides: Record<string, unknown> = {}) {
   return {

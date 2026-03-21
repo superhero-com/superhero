@@ -20,7 +20,7 @@ import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 import { initializeContractTyped } from '../libs/initializeContractTyped';
 import {
-  ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts,
+  ACI, fromAettos, getPairAddress, initDexContracts,
 } from '../libs/dex';
 
 import { useAeSdk } from '../hooks';
@@ -158,7 +158,7 @@ export default function AddTokens() {
         const { factory } = await initDexContracts(sdk);
         const entries = await Promise.all(out.map(async (item) => {
           try {
-            const addr = await getPairAddress(sdk, factory, item.address, DEX_ADDRESSES.wae);
+            const addr = await getPairAddress(sdk, factory, item.address, CONFIG.DEX_WAE);
             return [item.address, !!addr] as const;
           } catch { return [item.address, false] as const; }
         }));

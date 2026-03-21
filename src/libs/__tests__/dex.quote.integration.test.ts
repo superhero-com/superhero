@@ -4,7 +4,7 @@ import {
   Node,
   type ContractMethodsBase,
 } from '@aeternity/aepp-sdk';
-import { DEX_ADDRESSES } from '../../libs/dex';
+import { NETWORKS } from '../../config';
 import { initializeContractTyped } from '../../libs/initializeContractTyped';
 // Use the same ACIs as production code
 // @ts-ignore
@@ -47,7 +47,7 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
     try {
       const router = await initializeContractTyped<RouterContractApi>(
         aeSdk,
-        { aci: RouterAci, address: DEX_ADDRESSES.router },
+        { aci: RouterAci, address: NETWORKS.ae_mainnet.DEX_ROUTER },
       );
       const { decodedResult } = await router.factory();
       const factoryAddress = typeof decodedResult === 'string' ? decodedResult : decodedResult?.$options?.address;
@@ -62,16 +62,16 @@ describe('DEX integration: contract initialization and quoting (live)', () => {
     if (!aeSdk) return;
     const router = await initializeContractTyped<RouterContractApi>(
       aeSdk,
-      { aci: RouterAci, address: DEX_ADDRESSES.router },
+      { aci: RouterAci, address: NETWORKS.ae_mainnet.DEX_ROUTER },
     );
     const factory = await initializeContractTyped<FactoryContractApi>(
       aeSdk,
-      { aci: FactoryAci, address: DEX_ADDRESSES.factory },
+      { aci: FactoryAci, address: NETWORKS.ae_mainnet.DEX_FACTORY },
     );
     // Try aeETH -> WAE first, then reverse
     const candidates: [string, string][] = [
-      [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae],
-      [DEX_ADDRESSES.wae, DEX_ADDRESSES.aeeth],
+      [NETWORKS.ae_mainnet.DEX_AEETH, NETWORKS.ae_mainnet.DEX_WAE],
+      [NETWORKS.ae_mainnet.DEX_WAE, NETWORKS.ae_mainnet.DEX_AEETH],
     ];
     let path: string[] | null = null;
     for (const [a, b] of candidates) {

@@ -4,9 +4,9 @@ import { useRef, useState } from 'react';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
+import { CONFIG } from '../../../config';
 import {
   addSlippage,
-  DEX_ADDRESSES,
   ensureAllowanceForRouter,
   fromAettos,
   getRouterTokenAllowance,
@@ -47,15 +47,15 @@ export function useSwapExecution() {
   const needsApprovalInCurrentSwap = useRef(false);
 
   function isAeToWae(tokenIn: any, tokenOut: any): boolean {
-    const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == DEX_ADDRESSES.wae;
-    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'AE';
+    const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == CONFIG.DEX_WAE;
+    const isWaeToAe = tokenIn.address == CONFIG.DEX_WAE && tokenOut.address == 'AE';
     return isAetoWae || isWaeToAe;
   }
 
   async function wrapAeToWae(amountAe: string): Promise<string | null> {
     const wae = await initializeContractTyped<WaeContractApi>(
       sdk,
-      { aci: waeACI, address: DEX_ADDRESSES.wae },
+      { aci: waeACI, address: CONFIG.DEX_WAE },
     );
     const aettos = Decimal.from(amountAe).bigNumber;
 
@@ -87,7 +87,7 @@ export function useSwapExecution() {
   async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
     const wae = await initializeContractTyped<WaeContractApi>(
       sdk,
-      { aci: waeACI, address: DEX_ADDRESSES.wae },
+      { aci: waeACI, address: CONFIG.DEX_WAE },
     );
     const aettos = Decimal.from(amountWae).bigNumber;
 
@@ -198,9 +198,9 @@ export function useSwapExecution() {
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
         let txHash: string | null = null;
 
-        if (params.tokenIn.address === 'AE' && params.tokenOut.address === DEX_ADDRESSES.wae) {
+        if (params.tokenIn.address === 'AE' && params.tokenOut.address === CONFIG.DEX_WAE) {
           txHash = await wrapAeToWae(params.amountIn);
-        } else if (params.tokenIn.address === DEX_ADDRESSES.wae && params.tokenOut.address === 'AE') {
+        } else if (params.tokenIn.address === CONFIG.DEX_WAE && params.tokenOut.address === 'AE') {
           txHash = await unwrapWaeToAe(params.amountIn);
         }
 

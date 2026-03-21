@@ -14,8 +14,8 @@ import {
   toAettos,
   subSlippage,
   ensureAllowanceForRouter,
-  DEX_ADDRESSES,
 } from '../../libs/dex';
+import { CONFIG } from '../../config';
 
 /**
  * Bridge service for ETH to AE operations
@@ -148,10 +148,10 @@ export class BridgeService {
   ): Promise<string> {
     const { router } = await initDexContracts(sdk);
 
-    const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];
+    const path = [CONFIG.DEX_AEETH, CONFIG.DEX_WAE];
 
     // Ensure allowance for router
-    await ensureAllowanceForRouter(sdk, DEX_ADDRESSES.aeeth, aeAccount, amountAeEth);
+    await ensureAllowanceForRouter(sdk, CONFIG.DEX_AEETH, aeAccount, amountAeEth);
 
     // Get expected output amount
     const { decodedResult } = await router.get_amounts_out(amountAeEth, path);

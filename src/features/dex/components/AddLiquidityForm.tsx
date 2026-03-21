@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TokenChip } from '@/components/TokenChip';
 import Spinner from '@/components/Spinner';
-import { DEX_ADDRESSES } from '../../../libs/dex';
+import { CONFIG } from '../../../config';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import { useAddLiquidity } from '../hooks';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
@@ -343,7 +343,7 @@ const AddLiquidityForm = () => {
       || token.symbol.toLowerCase().includes(term)
       || (token.address || '').toLowerCase().includes(term);
     const ae = tokens.find((token) => token.is_ae);
-    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const wae = tokens.find((token) => token.address === CONFIG.DEX_WAE);
     const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
@@ -358,7 +358,7 @@ const AddLiquidityForm = () => {
       || token.symbol.toLowerCase().includes(term)
       || (token.address || '').toLowerCase().includes(term);
     const ae = tokens.find((token) => token.is_ae);
-    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const wae = tokens.find((token) => token.address === CONFIG.DEX_WAE);
     const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { cn } from '@/lib/utils';
 import { DexTokenDto } from '../../../api/generated';
-import { DEX_ADDRESSES } from '../../../libs/dex';
+import { CONFIG } from '../../../config';
 import { RouteInfo } from '../types/dex';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
 import { Badge } from '../../ui/badge';
@@ -18,7 +18,7 @@ export default function SwapRouteInfo({
   routeInfo, tokens, tokenIn, tokenOut, className,
 }: SwapRouteInfoProps) {
   function routeLabel(addr: string): string {
-    if (addr === DEX_ADDRESSES.wae) return 'WAE';
+    if (addr === CONFIG.DEX_WAE) return 'WAE';
     if (tokenIn?.address === addr) return tokenIn.symbol;
     if (tokenOut?.address === addr) return tokenOut.symbol;
     const found = tokens.find((t) => t.address === addr);
@@ -27,7 +27,7 @@ export default function SwapRouteInfo({
 
   function tokenDecimals(addr?: string): number {
     if (!addr) return 18;
-    if (addr === DEX_ADDRESSES.wae) return 18;
+    if (addr === CONFIG.DEX_WAE) return 18;
     const t = tokens.find((x) => x.address === addr);
     return t?.decimals ?? 18;
   }

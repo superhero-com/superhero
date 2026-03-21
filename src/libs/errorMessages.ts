@@ -120,6 +120,8 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
         return t('invalidRecipient');
       case 'pair exists':
         return t('pairExists');
+      case 'name not allowed char':
+        return t('nameNotAllowedChar');
       default:
         break;
     }

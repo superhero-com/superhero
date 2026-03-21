@@ -6,6 +6,7 @@ import {
   Tag,
   unpackTx,
 } from '@aeternity/aepp-sdk';
+import { CONFIG } from '@/config';
 import { normalizeSecretKey } from '@/utils/secretKey';
 
 const PROFILE_FUNCTIONS = new Set([
@@ -20,12 +21,6 @@ const PROFILE_FUNCTIONS = new Set([
 const PROFILE_CONTRACT_NAME = 'ProfileRegistry';
 
 let payerSdk: AeSdk | null = null;
-
-const getPayForTxNodeUrl = (): string => (
-  ((import.meta as any)?.env?.VITE_PAY_FOR_TX_NODE_URL
-    || (typeof process !== 'undefined' && (process as any).env?.VITE_PAY_FOR_TX_NODE_URL)
-    || 'https://mainnet.aeternity.io') as string
-).trim();
 
 const getPayerSecret = () => (
   ((import.meta as any)?.env?.VITE_PAY_FOR_TX_ACCOUNT_PRIVATE_KEY
@@ -53,9 +48,9 @@ const getPayerSdk = (): AeSdk => {
   }
   const payerSecretKey = normalizePayerSecret(payerSecretRaw);
   const payerAccount = new MemoryAccount(payerSecretKey);
-  const node = new Node(getPayForTxNodeUrl());
+  const node = new Node(CONFIG.NODE_URL);
   const sdk = new AeSdk({
-    nodes: [{ name: 'ae_mainnet', instance: node }],
+    nodes: [{ name: CONFIG.NETWORK, instance: node }],
     accounts: [payerAccount],
   });
   payerSdk = sdk;

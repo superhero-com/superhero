@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
 import {
   Contract,
-  Encoded,
   type ContractMethodsBase,
 } from '@aeternity/aepp-sdk';
 
@@ -15,14 +14,7 @@ import PairAci from 'dex-contracts-v2/deployment/aci/AedexV2Pair.aci.json';
 // @ts-ignore
 import Aex9Aci from 'dex-contracts-v2/deployment/aci/FungibleTokenFull.aci.json';
 import { initializeContractTyped } from './initializeContractTyped';
-
-// Mainnet addresses copied from Superhero DEX defaults
-export const DEX_ADDRESSES = {
-  factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW' as Encoded.ContractAddress,
-  router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3' as Encoded.ContractAddress,
-  wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa' as Encoded.ContractAddress,
-  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh' as Encoded.ContractAddress, //
-};
+import { CONFIG } from '../config';
 
 // Match aepp-sdk's expected ACI format (raw contract object or array with contract entries)
 export const ACI = {
@@ -181,7 +173,7 @@ export type DexContracts = {
 const dexContractsCache: WeakMap<any, Map<string, Promise<DexContracts>>> = new WeakMap();
 
 export async function initDexContracts(sdk: any, routerAddress?: string): Promise<DexContracts> {
-  const addr = routerAddress || DEX_ADDRESSES.router;
+  const addr = routerAddress || CONFIG.DEX_ROUTER;
   let byAddr = dexContractsCache.get(sdk);
   if (!byAddr) { byAddr = new Map(); dexContractsCache.set(sdk, byAddr); }
   const cached = byAddr.get(addr);
@@ -198,7 +190,7 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
     } catch (error: any) {
       console.error(error);
     }
-    if (!factoryAddress) factoryAddress = DEX_ADDRESSES.factory;
+    if (!factoryAddress) factoryAddress = CONFIG.DEX_FACTORY;
     let factory = await initializeContractTyped<FactoryContractApi>(
       sdk,
       { aci: ACI.Factory, address: factoryAddress },
@@ -209,7 +201,7 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
     if (!factory || typeof factory.get_pair !== 'function') {
       factory = await initializeContractTyped<FactoryContractApi>(
         sdk,
-        { aci: ACI.Factory, address: DEX_ADDRESSES.factory },
+        { aci: ACI.Factory, address: CONFIG.DEX_FACTORY },
       );
     }
     return { router, factory };
@@ -250,7 +242,7 @@ export async function ensureAllowanceForRouter(
     sdk,
     { aci: ACI.AEX9, address: tokenAddress },
   );
-  const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
+  const forAccount = (routerAddress || CONFIG.DEX_ROUTER).replace('ct_', 'ak_');
   const { decodedResult } = await token.allowance({ from_account: owner, for_account: forAccount });
   const current = decodedResult ?? 0n;
   if (current >= needed) return;
@@ -288,7 +280,7 @@ export async function getRouterTokenAllowance(
     sdk,
     { aci: ACI.AEX9, address: tokenAddress },
   );
-  const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
+  const forAccount = (routerAddress || CONFIG.DEX_ROUTER).replace('ct_', 'ak_');
   const { decodedResult } = await token.allowance({ from_account: owner, for_account: forAccount });
   return (decodedResult ?? 0n) as bigint;
 }
@@ -325,7 +317,7 @@ export async function getPairAllowanceToRouter(
     sdk,
     { aci: ACI.Pair, address: pairAddress },
   );
-  const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
+  const forAccount = (routerAddress || CONFIG.DEX_ROUTER).replace('ct_', 'ak_');
   const { decodedResult } = await pair.allowance({ from_account: owner, for_account: forAccount });
   return (decodedResult ?? 0n) as bigint;
 }
@@ -341,7 +333,7 @@ export async function ensurePairAllowanceForRouter(
     sdk,
     { aci: ACI.Pair, address: pairAddress },
   );
-  const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
+  const forAccount = (routerAddress || CONFIG.DEX_ROUTER).replace('ct_', 'ak_');
   const { decodedResult } = await pair.allowance({ from_account: owner, for_account: forAccount });
   const current = decodedResult ?? 0n;
   if (current >= needed) return;

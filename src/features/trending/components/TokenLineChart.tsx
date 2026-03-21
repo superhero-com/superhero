@@ -26,6 +26,22 @@ interface ChartPoint {
   value: number;
 }
 
+function normalizePoints(points: ChartPoint[]): ChartPoint[] {
+  const deduped = new Map<number, ChartPoint>();
+
+  points.forEach((point) => {
+    const timestamp = point.date.getTime();
+    if (!Number.isFinite(timestamp) || !Number.isFinite(point.value)) return;
+    deduped.set(timestamp, { date: new Date(timestamp), value: point.value });
+  });
+
+  return [...deduped.values()].sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function gaussianSmooth(points: ChartPoint[]): ChartPoint[] {
   if (points.length <= 10) return points;
   const n = points.length;
@@ -66,7 +82,9 @@ function buildSvgPaths(
   canvasHeight: number,
 ): { linePath: string; fillPath: string; visualTrendUp: boolean } {
   const smoothed = gaussianSmooth(rawPoints);
-  const points = downsample(smoothed, 80);
+  const compactChart = canvasWidth <= 96 || canvasHeight <= 32;
+  const maxPts = Math.max(2, Math.min(80, Math.floor(canvasWidth / 2)));
+  const points = downsample(smoothed, maxPts);
   const visualTrendUp = points.length < 2
     || points[points.length - 1].value >= points[0].value;
 
@@ -91,8 +109,10 @@ function buildSvgPaths(
 
   let linePath = `M ${pts[0].x} ${pts[0].y}`;
 
-  if (pts.length === 2) {
-    linePath += ` L ${pts[1].x} ${pts[1].y}`;
+  if (pts.length === 2 || compactChart) {
+    for (let i = 1; i < pts.length; i += 1) {
+      linePath += ` L ${pts[i].x} ${pts[i].y}`;
+    }
   } else {
     const T = 6;
     for (let i = 0; i < pts.length - 1; i += 1) {
@@ -101,10 +121,12 @@ function buildSvgPaths(
       const p2 = pts[i + 1];
       const p3 = pts[Math.min(pts.length - 1, i + 2)];
 
-      const cp1x = p1.x + (p2.x - p0.x) / T;
-      const cp1y = p1.y + (p2.y - p0.y) / T;
-      const cp2x = p2.x - (p3.x - p1.x) / T;
-      const cp2y = p2.y - (p3.y - p1.y) / T;
+      const cp1x = clamp(p1.x + (p2.x - p0.x) / T, p1.x, p2.x);
+      const cp2x = clamp(p2.x - (p3.x - p1.x) / T, p1.x, p2.x);
+      const minY = Math.min(p0.y, p1.y, p2.y, p3.y);
+      const maxY = Math.max(p0.y, p1.y, p2.y, p3.y);
+      const cp1y = clamp(p1.y + (p2.y - p0.y) / T, minY, maxY);
+      const cp2y = clamp(p2.y - (p3.y - p1.y) / T, minY, maxY);
 
       linePath += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
     }
@@ -118,15 +140,16 @@ function buildSvgPaths(
 
 function historyPagesToPoints(pages: any[]): ChartPoint[] {
   const merged = pages.reduce((acc: any[], page: any[]) => [...acc, ...page], []);
-  return merged
-    .map((item: any) => {
-      const time = item?.timeClose || item?.time || item?.end_time;
-      const price = item?.quote?.close ?? item?.close ?? item?.last_price ?? item?.price;
-      if (!time || !Number.isFinite(Number(price))) return null;
-      return { date: new Date(time), value: Number(price) };
-    })
-    .filter(Boolean)
-    .sort((a: ChartPoint, b: ChartPoint) => a.date.getTime() - b.date.getTime());
+  return normalizePoints(
+    merged
+      .map((item: any) => {
+        const time = item?.timeClose || item?.time || item?.end_time;
+        const price = item?.quote?.close ?? item?.close ?? item?.last_price ?? item?.price;
+        if (!time || !Number.isFinite(Number(price))) return null;
+        return { date: new Date(time), value: Number(price) };
+      })
+      .filter(Boolean) as ChartPoint[],
+  );
 }
 
 export const TokenLineChart = ({
@@ -205,13 +228,16 @@ export const TokenLineChart = ({
       return historyPagesToPoints(pages);
     }
     if (!data?.result?.length) return [];
-    const points = data.result
-      .slice()
-      .sort((a: any, b: any) => moment(a.end_time).diff(moment(b.end_time)))
-      .map((item: any) => ({
-        date: new Date(item.end_time),
-        value: Number(item.last_price),
-      }));
+    const points = normalizePoints(
+      data.result
+        .slice()
+        .sort((a: any, b: any) => moment(a.end_time).diff(moment(b.end_time)))
+        .map((item: any) => ({
+          date: new Date(item.end_time),
+          value: Number(item.last_price),
+        })),
+    );
+    if (!points.length) return [];
     if (points.length === 1) {
       const [{ date, value }] = points;
       return [{ date: new Date(date.getTime() - 3_600_000), value }, { date, value }];
@@ -252,7 +278,7 @@ export const TokenLineChart = ({
           <svg
             width={resolvedWidth}
             height={chartHeight}
-            style={{ display: 'block', overflow: 'visible' }}
+            style={{ display: 'block', overflow: 'hidden' }}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

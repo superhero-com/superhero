@@ -70,6 +70,10 @@ cypress/screenshots/
 cypress/videos/
 cypress/downloads/
 
+# --- Playwright ---
+test-results/
+playwright/.cache/
+
 
 # --- IDE / Editors ---
 .idea/

@@ -85,6 +85,7 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
       setupFiles: './vitest.setup.ts',
       testTimeout: 30000,
       pool: 'forks',

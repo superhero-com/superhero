@@ -24,8 +24,11 @@ npm run build
 # Preview the production build locally
 npm run preview
 
-# Run tests
+# Run unit/component tests
 npm test
+
+# Run e2e tests (starts dev server automatically)
+npm run test:e2e
 ```
 
 ## What’s inside (feature highlights)
@@ -87,7 +90,7 @@ npm run build
 - Routing: React Router v6
 - Styles: SCSS and Tailwind CSS
 - i18n: i18next
-- Testing: Vitest + Testing Library
+- Testing: Vitest + Testing Library (unit/component), Playwright (e2e)
 
 ## Scripts
 
@@ -97,6 +100,53 @@ Defined in `package.json`:
 - `build` — production build
 - `preview` — preview the `dist/` build
 - `test` — run unit and component tests
+- `test:e2e` — run e2e tests in Docker (same environment as CI; use for consistent screenshots)
+- `test:e2e:ui` — run e2e tests in Playwright UI mode (watch, pick tests, debug)
+- `test:e2e:update-snapshots` — update screenshot baselines in Docker (writes to `e2e/` on the host)
+- `test:e2e:host` — run e2e tests on the host (starts dev server if needed)
+- `test:e2e:host:update-snapshots` — update screenshot baselines on the host (visual regression)
+
+## End-to-end tests
+
+E2e tests use [Playwright](https://playwright.dev/) and live in `e2e/`. They run against the Vite dev server (started automatically unless one is already running).
+
+**Screenshot tests (visual regression)** should be run in Docker so CI and local runs produce identical results. Use these commands for anything that uses `toHaveScreenshot`:
+
+```bash
+# Run e2e (including screenshot comparison) — same as CI
+npm run test:e2e
+
+# Update screenshot baselines after intentional UI changes (writes to e2e/ on your machine)
+npm run test:e2e:update-snapshots
+```
+
+**Running e2e on the host** (no Docker) is still supported for quick iteration, but screenshot pixels may differ from CI (fonts, OS, DPI). For host runs:
+
+**First-time setup** — install browsers (once per machine):
+
+```bash
+npx playwright install chromium
+```
+
+**Run all e2e tests on the host:**
+
+```bash
+npm run test:e2e:host
+```
+
+**Interactive mode** (pick tests, watch, debug):
+
+```bash
+npm run test:e2e:ui
+```
+
+**Update screenshot baselines on the host:**
+
+```bash
+npm run test:e2e:host:update-snapshots
+```
+
+Config: `playwright.config.ts`. Failure artifacts are under `test-results/`; the default reporter prints to the terminal.
 
 ## Deployment
 

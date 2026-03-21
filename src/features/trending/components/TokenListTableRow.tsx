@@ -50,8 +50,8 @@ const TokenListTableRow = ({
 
   const perf24h = token.performance?.past_24h;
   const perf7d = token.performance?.past_7d;
-  const perf30d = token.performance?.past_30d;
-  const volume = token.volume ? Decimal.from(token.volume) : null;
+  const perf30d: any = token.performance?.past_30d;
+  const volume = perf30d.volume ? Decimal.from(perf30d.volume) : null;
 
   const tokenHref = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
 

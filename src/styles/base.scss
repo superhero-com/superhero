@@ -142,12 +142,12 @@ body {
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
   /* Dark blue/black background (no red/green) */
-  background:
-    radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-    radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-    radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-    linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
-    background-attachment: fixed;
+  // background:
+  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
+  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
+  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
+  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  //   background-attachment: fixed;
 }
 
 /* iOS-safe fixed background to full viewport height */
@@ -161,11 +161,11 @@ body::before {
   height: 100dvh; /* ensure fixed to device viewport on mobile */
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-    radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-    radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-    linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  // background:
+  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
+  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
+  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
+  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
   will-change: transform;
   transform: translateZ(0); /* helps Safari keep it fixed */
 }

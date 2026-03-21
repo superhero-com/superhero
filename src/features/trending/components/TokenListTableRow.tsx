@@ -1,6 +1,7 @@
-import { PriceDataFormatter } from '@/features/shared/components';
-import { useMemo } from 'react';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { PriceDataFormatter } from '@/features/shared/components';
+import { toAe } from '@/utils/bondingCurve';
+import { useMemo } from 'react';
 import { Decimal } from '../../../libs/decimal';
 import { TokenLineChart } from './TokenLineChart';
 
@@ -33,35 +34,6 @@ const PercentChange = ({
       %
     </span>
   );
-};
-
-const formatVolume = (volume?: number | null): string => {
-  if (!volume) return '—';
-  if (volume >= 1_000_000) return `${(volume / 1_000_000).toFixed(2)}M AE`;
-  if (volume >= 1_000) return `${(volume / 1_000).toFixed(2)}K AE`;
-  return `${volume.toFixed(2)} AE`;
-};
-
-const formatCirculatingSupply = (
-  totalSupply?: string,
-  decimals?: string,
-): string => {
-  try {
-    if (!totalSupply || !decimals) return '—';
-    const dec = parseInt(decimals, 10);
-    const supply = BigInt(totalSupply);
-    const divisor = BigInt(10) ** BigInt(dec);
-    const whole = supply / divisor;
-    const n = Number(whole);
-    let formatted: string;
-    if (n >= 1_000_000_000) formatted = `${(n / 1_000_000_000).toFixed(2)}B`;
-    else if (n >= 1_000_000) formatted = `${(n / 1_000_000).toFixed(2)}M`;
-    else if (n >= 1_000) formatted = `${(n / 1_000).toFixed(2)}K`;
-    else formatted = n.toLocaleString();
-    return formatted;
-  } catch {
-    return '—';
-  }
 };
 
 const TokenListTableRow = ({
@@ -208,13 +180,13 @@ const TokenListTableRow = ({
 
         {/* Volume (7d) */}
         <td className="cell cell-volume px-3 text-right hidden xl:table-cell">
-          <div className="text-sm text-white/70 tabular-nums">{formatVolume(volume30d)}</div>
+          <div className="text-sm text-white/70 tabular-nums">{Decimal.from(volume30d).shorten()}</div>
         </td>
 
         {/* Circulating Supply */}
         <td className="cell cell-supply px-3 text-right hidden xl:table-cell">
           <div className="text-sm text-white/70 tabular-nums">
-            {formatCirculatingSupply(token.total_supply, token.decimals)}
+            {Decimal.from(toAe(token.total_supply)).shorten()}
           </div>
         </td>
 

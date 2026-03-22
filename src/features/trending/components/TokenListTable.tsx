@@ -303,7 +303,6 @@ const TokenListTable = ({
             position: sticky;
             top: 0;
             z-index: 20;
-            background: rgba(10, 10, 20, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
           }

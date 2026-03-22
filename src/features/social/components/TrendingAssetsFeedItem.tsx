@@ -2,7 +2,6 @@ import { TokensService, type TokenDto } from '@/api/generated';
 import TokenChange from '@/components/Trendminer/TokenChange';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
-import { PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
@@ -54,8 +53,7 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
           <TokenLineChart
             saleAddress={tokenAddress}
             height={40}
-            timeframe={PRICE_MOVEMENT_TIMEFRAME_DEFAULT}
-            className="h-10 w-full pointer-events-none"
+            width={160}
           />
         )}
       </div>

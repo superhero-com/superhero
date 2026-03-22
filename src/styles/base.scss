@@ -184,13 +184,6 @@ html.ios-webkit body::before {
   display: none;
 }
 
-html.ios-webkit [class*='backdrop-blur'],
-html.ios-webkit [style*='backdrop-filter'] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background-color: rgba(var(--background-color-rgb, 10, 10, 15), 0.90) !important;
-}
-
 html.ios-webkit {
   /* Override glass variables to opaque fallbacks since backdrop-filter is disabled */
   --glass-bg: rgba(var(--background-color-rgb, 10, 10, 15), 0.92);

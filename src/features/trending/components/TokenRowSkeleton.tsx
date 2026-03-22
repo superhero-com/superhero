@@ -1,55 +1,96 @@
 const TokenRowSkeleton = () => (
   <>
-    {/* Mobile skeleton layout matching TokenListTableRow */}
+    {/* Mobile skeleton — matches mobile-only-card layout */}
     <tr className="token-row-skeleton mobile-only-card md:hidden relative">
       <td className="cell-fake" />
-      <td className="pl-3 pr-3 py-1.5 align-middle text-center">
-        {/* Decorative skeleton. */}
+      <td className="pl-2 pr-1 py-2.5 align-middle text-center">
         <div
           className="skeleton-loader skeleton-text w-4 h-4 m-0"
           role="presentation"
           aria-hidden="true"
         />
       </td>
-      <td className="pl-2 py-1.5 pr-3 align-middle relative" colSpan={3}>
-        {/* Row 1: token name skeleton */}
-        <div className="skeleton-loader skeleton-text token-name w-3/4 h-4 mb-1" />
-        {/* Row 2: market cap and price/24h skeletons */}
-        <div className="flex items-center justify-between gap-3 pt-0.5">
-          <div className="skeleton-loader skeleton-text market-cap-value w-20 h-3" />
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="skeleton-loader skeleton-text price-value w-16 h-3" />
-            <div className="skeleton-loader skeleton-text change-skeleton h-5 w-12 rounded" />
+      <td className="pl-2 py-2.5 pr-3 align-middle relative" colSpan={3}>
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 min-w-0">
+            {/* Name skeleton */}
+            <div className="skeleton-loader skeleton-text token-name w-3/4 h-4 mb-1.5" role="presentation" aria-hidden="true" />
+            {/* MC + price skeleton */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="skeleton-loader skeleton-text w-20 h-3" role="presentation" aria-hidden="true" />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="skeleton-loader skeleton-text w-16 h-3" role="presentation" aria-hidden="true" />
+                <div className="skeleton-loader skeleton-text w-12 h-3 rounded" role="presentation" aria-hidden="true" />
+              </div>
+            </div>
           </div>
+          {/* Sparkline skeleton */}
+          <div className="skeleton-loader w-[68px] h-7 rounded flex-shrink-0" role="presentation" aria-hidden="true" />
         </div>
       </td>
     </tr>
 
-    {/* Desktop skeleton layout */}
+    {/* Desktop skeleton row */}
     <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
       <td className="cell-fake" />
+
+      {/* Rank */}
       <td className="cell cell-rank pl-2 pl-md-4">
-        <div className="rank">
-          <div className="skeleton-loader skeleton-text w-4 h-4 m-0" />
+        <div className="skeleton-loader skeleton-text w-4 h-4 m-0" role="presentation" aria-hidden="true" />
+      </td>
+
+      {/* Name */}
+      <td className="cell cell-name px-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 min-w-0">
+            <div className="skeleton-loader skeleton-text token-name w-3/4 h-4 m-0 mb-1" role="presentation" aria-hidden="true" />
+            <div className="skeleton-loader skeleton-text w-1/2 h-3 m-0" role="presentation" aria-hidden="true" />
+          </div>
         </div>
       </td>
-      <td className="cell cell-name px-1 px-lg-3">
-        <div className="skeleton-loader skeleton-text token-name w-full h-4 m-0" />
+
+      {/* Price */}
+      <td className="cell cell-price px-1 text-right">
+        <div className="skeleton-loader skeleton-text price-value w-full h-4 m-0" role="presentation" aria-hidden="true" />
       </td>
-      <td className="cell cell-price px-1 px-lg-3 text-left text-md-right">
-        <div className="skeleton-loader skeleton-text price-value w-full h-4 m-0" />
+
+      {/* 24h % */}
+      <td className="cell cell-change24h px-1 text-right">
+        <div className="skeleton-loader skeleton-text w-12 h-4 m-0 ml-auto" role="presentation" aria-hidden="true" />
       </td>
-      <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
-        <div className="skeleton-loader skeleton-text market-cap-value w-full h-4 m-0" />
+
+      {/* 7d % */}
+      <td className="cell cell-change7d px-1 text-right">
+        <div className="skeleton-loader skeleton-text w-12 h-4 m-0 ml-auto" role="presentation" aria-hidden="true" />
       </td>
-      <td className="cell cell-holders text-left px-1 px-lg-3">
-        <div className="skeleton-loader skeleton-text h-4 w-8 m-0" />
+
+      {/* 30d % */}
+      <td className="cell cell-change30d px-1 text-right hidden lg:table-cell">
+        <div className="skeleton-loader skeleton-text w-12 h-4 m-0 ml-auto" role="presentation" aria-hidden="true" />
       </td>
-      <td className="cell cell-chart text-right pr-md-4">
-        <div className="ml-auto chart max-w-[180px]">
-          <div className="skeleton-loader skeleton-text h-10 w-full m-0" />
+
+      {/* Market Cap */}
+      <td className="cell cell-market-cap px-1 text-right">
+        <div className="skeleton-loader skeleton-text market-cap-value w-full h-4 m-0" role="presentation" aria-hidden="true" />
+      </td>
+
+      {/* Volume (xl) */}
+      <td className="cell cell-volume px-1 text-right hidden xl:table-cell">
+        <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
+      </td>
+
+      {/* Circ. Supply (xl) */}
+      <td className="cell cell-supply px-1 text-right hidden xl:table-cell">
+        <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
+      </td>
+
+      {/* Chart */}
+      <td className="cell cell-chart text-right pr-2 pr-md-4">
+        <div className="ml-auto chart max-w-[160px]">
+          <div className="skeleton-loader skeleton-text h-10 w-full m-0" role="presentation" aria-hidden="true" />
         </div>
       </td>
+
       <td className="cell cell-link" />
     </tr>
 
@@ -61,12 +102,11 @@ const TokenRowSkeleton = () => (
           padding-block: 8px;
         }
 
-
         .skeleton-loader {
-          background: linear-gradient(90deg, 
-            rgba(255, 255, 255, 0.1) 25%, 
-            rgba(255, 255, 255, 0.2) 50%, 
-            rgba(255, 255, 255, 0.1) 75%
+          background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.08) 25%,
+            rgba(255, 255, 255, 0.16) 50%,
+            rgba(255, 255, 255, 0.08) 75%
           );
           background-size: 200% 100%;
           animation: loading 1.5s infinite;
@@ -74,48 +114,21 @@ const TokenRowSkeleton = () => (
         }
 
         @keyframes loading {
-          0% {
-            background-position: 200% 0;
-          }
-          100% {
-            background-position: -200% 0;
-          }
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
 
         .skeleton-text {
           border-radius: 4px;
         }
 
-        .rank .skeleton-text {
-          width: 16px;
-          height: 16px;
-          margin: 0;
-        }
-
         .token-name,
-        .collection-label,
         .price-value,
-        .market-cap-value,
-        .address-chip {
+        .market-cap-value {
           width: 100%;
         }
 
-        .token-name .skeleton-text,
-        .collection-label .skeleton-text,
-        .price-value .skeleton-text,
-        .market-cap-value .skeleton-text,
-        .address-chip .skeleton-text {
-          height: 16px;
-          margin: 0;
-        }
-
-        .change-skeleton {
-          display: inline-block;
-        }
-
-        /* Mobile: only show columns used in mobile layout */
         @media screen and (max-width: 767px) {
-          /* Keep the first (fake) column zero-width so header doesn't shift */
           .cell-fake { width: 0; padding: 0; }
 
           .token-row-skeleton {

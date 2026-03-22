@@ -1,6 +1,5 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
-import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { useIsMobile } from '@/hooks';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -13,7 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 import {
-  useEffect, useMemo, useRef, useState, type PointerEvent,
+  useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -111,7 +110,6 @@ const TokenSaleDetails = () => {
   const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>('24h');
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);
-  const tradeTouchHandledRef = useRef(false);
   const tabAutoScrollInitRef = useRef(false);
   const {
     switchTradeView,
@@ -235,7 +233,6 @@ const TokenSaleDetails = () => {
     ..._token,
     ...(tokenData || {}),
   }), [tokenData, _token]);
-  const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
 
   // Poll AE node every 5 seconds until transaction is mined (block_height !== -1)
   useEffect(() => {
@@ -291,10 +288,6 @@ const TokenSaleDetails = () => {
     }
   }, [showCreatedOverlay, token?.sale_address, isLoading, location.pathname, location.search, navigate]);
 
-  const tokenHeaderTitle = useMemo(() => {
-    const raw = String(token?.symbol || token?.name || tokenName || '');
-    return raw ? `#${raw.toUpperCase()}` : '#TOKEN';
-  }, [token?.symbol, token?.name, tokenName]);
   const openTradePanel = () => {
     const params = new URLSearchParams(location.search);
     params.set('showTrade', '1');
@@ -312,18 +305,7 @@ const TokenSaleDetails = () => {
     navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
     setShowTradePanels(true);
   };
-  const handleTradeClick = () => {
-    if (tradeTouchHandledRef.current) {
-      tradeTouchHandledRef.current = false;
-      return;
-    }
-    openTradePanel();
-  };
-  const handleTradePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
-    if (event.pointerType !== 'touch') return;
-    tradeTouchHandledRef.current = true;
-    openTradePanel();
-  };
+
   const openTradeFor = (buy: boolean) => {
     switchTradeView(buy);
     openTradePanel();

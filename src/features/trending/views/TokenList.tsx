@@ -1,15 +1,11 @@
+import AeButton from '@/components/AeButton';
+import Spinner from '@/components/Spinner';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import AeButton from '@/components/AeButton';
-import Spinner from '@/components/Spinner';
-import TokenListTable from '../components/TokenListTable';
-import TrendminerBanner from '../components/TrendminerBanner';
-import PerformanceTimeframeSelector from '../components/PerformanceTimeframeSelector';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import { useAccount } from '../../../hooks';
 import {
   Select,
   SelectContent,
@@ -17,7 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
+import { useAccount } from '../../../hooks';
 import { Head } from '../../../seo/Head';
+import TokenListTable from '../components/TokenListTable';
+import TrendminerBanner from '../components/TrendminerBanner';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -251,11 +250,6 @@ const TokenList = () => {
                 placeholder="Search tokens"
                 className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
               />
-
-              {/* Performance Timeframe Selector */}
-              <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">
-                <PerformanceTimeframeSelector />
-              </div>
             </div>
           </div>
 

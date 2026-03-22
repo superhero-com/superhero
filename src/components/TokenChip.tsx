@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useAeSdk } from '../hooks';
 import { copyToClipboard } from '../utils/address';
 import { DexTokenDto } from '../api/generated';
-import { DEX_ADDRESSES } from '../libs/dex';
+import { CONFIG } from '../config';
 import { Badge } from './ui/badge';
 
 interface TokenChipProps {
@@ -65,9 +65,9 @@ export const TokenChip = ({
 
   if (!tokenData) return null;
 
-  const isAeToken = tokenData?.address === DEX_ADDRESSES.wae
+  const isAeToken = tokenData?.address === CONFIG.DEX_WAE
     || tokenData?.is_ae
-    || address === DEX_ADDRESSES.wae;
+    || address === CONFIG.DEX_WAE;
   let tokenSymbol = tokenData?.symbol || address || 'TOKEN';
   if (isLoading) {
     tokenSymbol = '...';

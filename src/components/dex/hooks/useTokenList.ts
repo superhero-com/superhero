@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { DexService, DexTokenDto } from '../../../api/generated';
 import { TokenListState } from '../types/dex';
-import { DEX_ADDRESSES } from '../../../libs/dex';
 
 export function useTokenList(): TokenListState {
   const { data, isLoading } = useQuery({

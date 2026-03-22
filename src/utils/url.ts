@@ -1,10 +1,10 @@
-import { configs } from '../configs';
-import { IS_MOBILE, SETTINGS } from './constants';
+import { COMMON_CONFIG } from '../config';
+import { IS_MOBILE } from './constants';
 
 export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<string, string>) {
   const isIosMobileBrowser = /iPad|iPhone|iPod/.test(window.navigator.userAgent)
     && window.navigator.userAgent.includes('Mobi');
-  const baseUrl = isIosMobileBrowser ? 'superhero://' : `${configs.wallet.url}/`;
+  const baseUrl = isIosMobileBrowser ? 'superhero://' : `${COMMON_CONFIG.WALLET_URL}/`;
   const url = new URL(type, baseUrl);
   if (callbackUrl) {
     url.searchParams.set('x-success', callbackUrl);
@@ -30,7 +30,7 @@ export const openDeepLink = ({
   // Build the deep link URL (superhero://)
   const deepLink = new URL(`superhero://${type}`);
   // Build the fallback web URL
-  const webUrl = new URL(`${SETTINGS.wallet.url}/${type}`);
+  const webUrl = new URL(`${COMMON_CONFIG.WALLET_URL}/${type}`);
   Object.entries(params)
     .filter(([, value]: any) => ![undefined, null].includes(value))
     .forEach(([name, value]: any) => {

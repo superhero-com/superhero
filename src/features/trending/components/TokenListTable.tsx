@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { useIsMobile } from '@/hooks';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import TokenListTableRow from './TokenListTableRow';
 import TokenRowSkeleton from './TokenRowSkeleton';
 
@@ -34,21 +34,16 @@ const SortableColumnHeader = ({
 
   const getDisplayDirection = () => {
     if (isRankHeader) {
-      // For rank, show the opposite direction (since rank 1 is highest value)
       return currentDirection === 'DESC' ? '↓' : '↑';
     }
     if (sortKey === 'newest' || sortKey === 'oldest') {
-      // For date-based sorting, newest = DESC, oldest = ASC
       return sortKey === 'newest' ? 'DESC' : 'ASC';
     }
     return currentDirection;
   };
 
   const handleClick = () => {
-    // Special handling for rank - it should reverse the current sort direction
     if (isRankHeader) {
-      // For rank, we want to reverse whatever the current sort is
-      // This will toggle the direction of the current sort field
       onSort(currentSort);
     } else {
       onSort(sortKey);
@@ -84,7 +79,6 @@ const SortableColumnHeader = ({
 interface TokenListTableProps {
   pages?: Array<{ items: TokenDto[] }> | null;
   loading?: boolean;
-  showCollectionColumn?: boolean;
   orderBy: OrderByOption;
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
@@ -92,7 +86,7 @@ interface TokenListTableProps {
 }
 
 const TokenListTable = ({
-  pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0,
+  pages, loading, orderBy, orderDirection, onSort, rankOffset = 0,
 }: TokenListTableProps) => {
   const { t } = useTranslation('common');
 
@@ -105,9 +99,7 @@ const TokenListTable = ({
     [],
   );
 
-  // Detect mobile viewport to map the "Market cap" header to market_cap sorting
   const isMobile = useIsMobile();
-
   const isEmptyLoading = !!loading && !allItems?.length;
 
   return (
@@ -118,66 +110,85 @@ const TokenListTable = ({
             <th className="cell-fake">
               {/* Fake column that fixes ::before problem on rows */}
             </th>
+
+            {/* Rank */}
             <SortableColumnHeader
-              sortKey={orderBy} // This will be ignored for Rank due to special handling
+              sortKey={orderBy}
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4 whitespace-nowrap"
+              className="cell cell-rank text-xs opacity-50 text-left pl-3 pr-4 whitespace-nowrap"
               title={t('titles.clickToReverseRankingOrder')}
             >
-              <span className="hidden md:inline">Rank</span>
+              <span className="hidden md:inline">#</span>
               <span className="md:hidden inline">#</span>
             </SortableColumnHeader>
+
+            {/* Name */}
             <SortableColumnHeader
               sortKey={isMobile ? 'market_cap' : 'name'}
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-name text-xs opacity-50 text-left py-1 px-1 px-lg-3 whitespace-nowrap"
+              className="cell cell-name text-xs opacity-50 text-left py-1 px-3 whitespace-nowrap"
             >
-              <span className="hidden md:inline">Token Name</span>
-              <span className="md:hidden inline">Market cap</span>
+              Name
             </SortableColumnHeader>
-            {showCollectionColumn && (
-              <th className="cell cell-collection text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3 hidden md:table-cell">
-                <div title={t('titles.tokenCollectionCategory')}>
-                  Collection
-                </div>
-              </th>
-            )}
+
+            {/* Price */}
             <SortableColumnHeader
               sortKey="price"
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-price text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3 whitespace-nowrap"
+              className="cell cell-price text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
-              Price
+              <span className="hidden md:inline">Price</span>
+              <span className="md:hidden">Price (30d)</span>
             </SortableColumnHeader>
+
+            {/* 24h % — hidden on mobile */}
+            <th className="cell cell-change24h text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden md:table-cell">
+              24h %
+            </th>
+
+            {/* 7d % — hidden on mobile */}
+            <th className="cell cell-change7d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden md:table-cell">
+              7d %
+            </th>
+
+            {/* 30d % — hidden on mobile and sm */}
+            <th className="cell cell-change30d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden lg:table-cell">
+              30d %
+            </th>
+
+            {/* Market Cap */}
             <SortableColumnHeader
               sortKey="market_cap"
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-market-cap text-xs opacity-50 text-left py-1 px-1 px-lg-3 hidden md:table-cell"
+              className="cell cell-market-cap text-xs opacity-50 text-right py-1 px-3 hidden md:table-cell whitespace-nowrap"
             >
-              Market Cap
+              <span>Market Cap</span>
             </SortableColumnHeader>
-            <SortableColumnHeader
-              sortKey="holders_count"
-              currentSort={orderBy}
-              currentDirection={orderDirection}
-              onSort={onSort}
-              className="cell cell-holders text-xs opacity-50 text-left py-1 px-1 px-lg-3 hidden md:table-cell"
-            >
-              Holders
-            </SortableColumnHeader>
-            <th className="cell cell-chart text-xs text-center opacity-50 py-1 pl-3 whitespace-nowrap">
-              <span className="hidden md:inline">Performance</span>
-              <span className="md:hidden inline">Performance</span>
+
+            {/* Volume (30d) — xl+ only */}
+            <th className="cell cell-volume text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden xl:table-cell">
+              Volume (30d)
             </th>
-            <th className="cell-link hidden lg:table-cell">{/* Links placeholder column */}</th>
+
+            {/* Circulating Supply — xl+ only */}
+            <th className="cell cell-supply text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden xl:table-cell">
+              Circ. Supply
+            </th>
+
+            {/* Sparkline */}
+            <th className="cell cell-chart text-xs text-right opacity-50 py-1 pl-3 pr-2 whitespace-nowrap">
+              <span className="hidden md:inline">All Time</span>
+            </th>
+
+            <th className="cell-link hidden lg:table-cell">{/* Links placeholder */}</th>
           </tr>
         </thead>
 
@@ -193,7 +204,6 @@ const TokenListTable = ({
               <TokenListTableRow
                 key={token.address}
                 token={token}
-                showCollectionColumn={showCollectionColumn}
                 rank={rankOffset + index + 1}
               />
             ))}
@@ -205,7 +215,7 @@ const TokenListTable = ({
         {`
         .bctsl-token-list-table {
           border-collapse: separate;
-          border-spacing: 0 8px;
+          border-spacing: 0 6px;
         }
 
         @media screen and (max-width: 767px) {
@@ -213,12 +223,8 @@ const TokenListTable = ({
             border-spacing: 0;
           }
 
-          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-          }
-          
-          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td.cell-fake {
-            border-bottom: none !important;
+          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td:not(.cell-fake) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
           }
         }
 
@@ -250,55 +256,69 @@ const TokenListTable = ({
             width: 52px;
           }
 
-          .cell-collection {
-            width: 120px;
+          .cell-price {
+            width: 145px;
           }
 
-          .cell-price {
-            width: 170px;
+          .cell-change24h {
+            width: 110px;
           }
-          .cell-market-cap,
-          .cell-holders {
-            width: 170px;
+
+          .cell-change7d {
+            width: 110px;
+          }
+
+          .cell-change30d {
+            width: 110px;
+          }
+
+          .cell-market-cap {
+            width: 185px;
+          }
+
+          .cell-volume {
+            width: 115px;
+          }
+
+          .cell-supply {
+            width: 115px;
           }
 
           .cell-chart {
-            width: 210px;
+            width: 175px;
           }
 
           .cell-chart .chart {
-            max-width: 180px;
+            max-width: 155px;
           }
 
           .cell-link {
             width: 8px;
           }
         }
-        
-        /* Hide cell-link on tablets (768px - 1024px) */
-        @media screen and (min-width: 768px) and (max-width: 1024px) {
-          .bctsl-token-list-table .cell-link,
-          .bctsl-token-list-table > thead > tr > th.cell-link,
-          .bctsl-token-list-table > tbody > tr > td.cell-link {
-            display: none !important;
-            width: 0 !important;
-            padding: 0 !important;
-            border: none !important;
+
+        /* Sticky header — desktop + tablet */
+        @media screen and (min-width: 768px) {
+          .bctsl-token-list-table > thead {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
           }
-          
-          /* Ensure chart column has same width as desktop for consistent chart sizes */
-          .bctsl-token-list-table .cell-chart {
-            width: 210px;
-          }
-          
-          .bctsl-token-list-table .cell-chart .chart {
-            max-width: 180px;
+
+          .bctsl-token-list-table > thead th {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 10px;
+            padding-bottom: 10px;
           }
         }
 
+        /* Tablet: hide volume and supply (they're xl:table-cell) — handled via Tailwind */
+
         @media screen and (max-width: 1100px) {
           .cell-name {
-            font-size: 16px;
+            font-size: 15px;
           }
 
           .cell-price,
@@ -307,13 +327,14 @@ const TokenListTable = ({
           }
         }
 
-        /* Mobile header + rows (only for screens < 768px) */
+        /* Mobile header + rows */
         @media screen and (max-width: 767px) {
           .bctsl-token-list-table {
-            table-layout: fixed; /* stabilize widths during skeleton */
+            table-layout: fixed;
             width: 100%;
           }
 
+          /* Sticky header */
           .bctsl-token-list-table > thead {
             display: table-header-group;
             position: sticky;
@@ -323,88 +344,49 @@ const TokenListTable = ({
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
           }
-          
+
           .bctsl-token-list-table > thead th {
-            font-size: 11px; /* slightly smaller to fit labels */
+            font-size: 11px;
             line-height: 1rem;
-            white-space: nowrap; /* prevent wrapping by default */
+            white-space: nowrap;
             background: rgba(255, 255, 255, 0.05);
             padding-top: 8px;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            /* Full-width header - restore padding for content alignment */
-            padding-left: 16px;
-            padding-right: 16px;
-          }
-          
-          .bctsl-token-list-table > thead th.cell-rank {
-            padding-left: 16px;
-            padding-right: 12px;
-          }
-          
-          .bctsl-token-list-table > thead th.cell-name {
-            padding-left: 8px;
-          }
-          
-          .bctsl-token-list-table > thead th.cell-chart {
-            padding-inline: 0 16px;
-          }
-          
-          /* Center Price header on mobile */
-          .bctsl-token-list-table > thead > tr > th.cell-price {
-            text-align: center !important;
-            padding-right: 0 !important;
-          }
-          
-          .bctsl-token-list-table > thead > tr > th.cell-price > div {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100% !important;
-            gap: 4px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           }
 
-          /* Keep consistent column widths */
-          .bctsl-token-list-table .cell-fake { width: 0; padding: 0; }
-          .bctsl-token-list-table .cell-rank { 
-            width: 36px; 
-            padding-left: 8px !important; 
-            text-align: center !important;
-          }
-          .bctsl-token-list-table > thead > tr > th.cell-rank {
-            text-align: center !important;
-          }
-          .bctsl-token-list-table .cell-price { width: 32%; }
-          .bctsl-token-list-table .cell-chart { width: 24%; padding-right: 8px; }
-          
-          /* Ensure price alignment in mobile view */
-          .bctsl-token-list-table .mobile-only-card .only-fiat {
-            text-align: right;
-          }
-          
-          /* Allow wrapping for Price and Performance labels on very small screens */
-          @media screen and (max-width: 420px) {
-            .bctsl-token-list-table > thead > tr > th.cell-price,
-            .bctsl-token-list-table > thead > tr > th.cell-chart {
-              white-space: normal;
-            }
-          }
-          
-          /* Right-align Performance header on mobile */
-          .bctsl-token-list-table > thead > tr > th.cell-chart {
-            text-align: right !important;
+          /* Column widths */
+          .bctsl-token-list-table .cell-fake   { width: 0; padding: 0; }
+          .bctsl-token-list-table .cell-rank   { width: 36px; }
+          .bctsl-token-list-table .cell-price  { width: 88px; }
+          .bctsl-token-list-table .cell-chart  { width: 72px; }
+          /* hide all other columns on mobile */
+          .bctsl-token-list-table .cell-change24h,
+          .bctsl-token-list-table .cell-change7d,
+          .bctsl-token-list-table .cell-change30d,
+          .bctsl-token-list-table .cell-market-cap,
+          .bctsl-token-list-table .cell-volume,
+          .bctsl-token-list-table .cell-supply,
+          .bctsl-token-list-table .cell-link { display: none; }
+
+          /* Header cell padding */
+          .bctsl-token-list-table > thead th.cell-rank  { padding-inline: 12px 4px; text-align: center; }
+          .bctsl-token-list-table > thead th.cell-name  { padding-inline: 8px; }
+          .bctsl-token-list-table > thead th.cell-price { padding-inline: 4px 8px; text-align: right; }
+          .bctsl-token-list-table > thead th.cell-chart { padding-inline: 4px 12px; text-align: right; }
+
+          /* Row visibility */
+          .bctsl-token-list-table > tbody > tr.mobile-only-card { display: table-row; }
+          .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) { display: none; }
+
+          /* Row separator */
+          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td:not(.cell-fake) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
           }
 
-          .bctsl-token-list-table > tbody > tr.mobile-only-card td {
-            font-size: 14px;
-          }
-
+          /* Positioning context for the full-row link */
           .bctsl-token-list-table > tbody > tr.mobile-only-card {
-            display: table-row;
-          }
-
-          .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) {
-            display: none;
+            transform: translate(0, 0);
           }
         }
       `}

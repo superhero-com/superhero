@@ -1,15 +1,35 @@
 /* eslint-disable max-len */
 import { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
-import { configs } from '../configs';
+import {
+  CURRENT_NETWORK_CONFIG,
+  NETWORKS,
+} from '../config';
 import { ICurrency, INetwork } from './types';
 
-export const SETTINGS = configs;
+function toNetwork(network: typeof CURRENT_NETWORK_CONFIG): INetwork {
+  return {
+    name: network.name,
+    networkId: network.NETWORK,
+    apiUrl: network.SUPERHERO_API_URL || network.BACKEND_URL,
+    websocketUrl: network.websocketUrl,
+    url: network.NODE_URL,
+    middlewareUrl: network.MIDDLEWARE_URL,
+    explorerUrl: network.EXPLORER_URL || '',
+    compilerUrl: network.compilerUrl,
+    superheroBackendUrl: network.superheroBackendUrl,
+    disabled: network.disabled,
+  };
+}
+
 /**
  * Default `networkId` values returned by the Node after establishing the connection.
  * Nodes returns different values when connecting to the Hyperchains.
  */
 const NETWORK_ID_MAINNET = 'ae_mainnet';
-export const NETWORK_MAINNET: INetwork = configs.networks[NETWORK_ID_MAINNET];
+export const NETWORK_MAINNET: INetwork = toNetwork(NETWORKS[NETWORK_ID_MAINNET]);
+
+/** Network config for the current build (mainnet or testnet; VITE_NETWORK selects ae_mainnet vs ae_uat). */
+export const CURRENT_NETWORK: INetwork = toNetwork(CURRENT_NETWORK_CONFIG);
 
 export const DATE_LONG = 'YYYY-MM-DD HH:mm';
 

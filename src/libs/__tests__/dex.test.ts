@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Contract } from '@aeternity/aepp-sdk';
 import {
   ACI,
-  DEX_ADDRESSES,
   toAettos,
   fromAettos,
   addSlippage,
@@ -11,6 +10,7 @@ import {
   fetchPairReserves,
   initDexContracts,
 } from '../../libs/dex';
+import { CONFIG } from '../../config';
 
 describe('libs/dex helpers', () => {
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe('libs/dex helpers', () => {
     await ensureAllowanceForRouter(sdk, 'ct_token', owner, 100n);
     expect(tokenMock.allowance).toHaveBeenCalled();
     expect(created.length).toBe(1);
-    expect(created[0][0]).toBe(DEX_ADDRESSES.router.replace('ct_', 'ak_'));
+    expect(created[0][0]).toBe(CONFIG.DEX_ROUTER.replace('ct_', 'ak_'));
     expect(created[0][1]).toBe(100n);
 
     // Now pretend we have some allowance and need to increase

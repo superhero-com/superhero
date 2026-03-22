@@ -1,0 +1,15 @@
+# E2E tests and screenshot generation in a consistent Linux environment.
+# Use this for visual regression so CI and local runs produce identical results.
+# Base image includes Playwright browsers and system deps (no npm package).
+FROM mcr.microsoft.com/playwright:v1.58.2-noble
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY scripts ./scripts
+RUN npm ci
+
+COPY . .
+
+# Run e2e tests (playwright.config.ts starts the dev server automatically)
+CMD ["npm", "run", "test:e2e:host"]

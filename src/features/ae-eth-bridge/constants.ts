@@ -1,5 +1,6 @@
 import deployment from './deployment.json';
 import { Asset } from './types';
+import { CONFIG } from '../../config';
 
 export const ETHEREUM_FUNDS_ADDRESS = '0xb322a9eae7d95aa8e8ae731c8daf4c8ff419c784';
 export const AETERNITY_FUNDS_ADDRESS = 'ak_Kpsu4qiVRHuw6EKFKk9g5TqYF8XFUsmE9ynDyFpdRz8W5J6HW';
@@ -10,8 +11,8 @@ export const BRIDGE_USAGE_INTERVAL_IN_HOURS = 12;
 export const EVM_WALLET_INSTALL_URL = 'https://support.metamask.io/getting-started/getting-started-with-metamask/#how-to-install-metamask';
 export const SUPERHERO_WALLET_URL = 'https://wallet.superhero.com/';
 
-// Using mainnet for now - can be made configurable later
-const isMainnet = true;
+// Driven by VITE_NETWORK at build time (mainnet vs testnet / ae_uat)
+const isMainnet = CONFIG.NETWORK === 'ae_mainnet';
 
 interface BridgeNetworkConfig {
     chainId: string;

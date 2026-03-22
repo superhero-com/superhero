@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  /** Network at build time: ae_mainnet (default) or ae_uat (testnet) */
+  readonly VITE_NETWORK?: string;
   readonly VITE_GOVERNANCE_API_URL?: string;
   readonly VITE_GOVERNANCE_CONTRACT_ADDRESS?: string;
   readonly VITE_NODE_URL?: string;

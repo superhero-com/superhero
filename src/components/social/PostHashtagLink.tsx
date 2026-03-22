@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { SuperheroApi } from '@/api/backend';
 import { cn } from '@/lib/utils';
-import { toOptionalFiniteNumber } from '@/utils/number';
+import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 type TokenLike = {
   name?: string;
@@ -53,17 +53,7 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
 }
 
 function resolveChangePercent(performanceData: any): number | null {
-  if (!performanceData) return null;
-  const candidates: unknown[] = [
-    performanceData?.current_change_percent,
-    performanceData?.past_24h?.current_change_percent,
-    performanceData?.past_7d?.current_change_percent,
-    performanceData?.past_30d?.current_change_percent,
-    performanceData?.all_time?.current_change_percent,
-  ];
-  return candidates
-    .map((candidate) => toOptionalFiniteNumber(candidate))
-    .find((parsed): parsed is number => parsed !== null) ?? null;
+  return performanceData?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent ?? null;
 }
 
 const PostHashtagLink = ({
@@ -102,7 +92,6 @@ const PostHashtagLink = ({
     enabled: Boolean(tokenAddress) && !matchedMention?.performance,
   });
 
-  // TODO: We should use 24h performance, but it is not present for most of the tokens.
   const performanceData = matchedMention?.performance || (performance as any);
   const changePercent = resolveChangePercent(performanceData);
   const hasChange = changePercent !== null && changePercent !== 0;

@@ -1,4 +1,3 @@
-import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -8,8 +7,9 @@ import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useDex } from '../../../hooks/useDex';
 import { useRecentActivities } from '../../../hooks/useRecentActivities';
+import { CONFIG } from '../../../config';
 import {
-  ACI, DEX_ADDRESSES,
+  ACI,
   MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
   fromAettos, getPairInfo, initDexContracts,
   subSlippage,
@@ -120,8 +120,8 @@ export function useAddLiquidity() {
       }
 
       const { factory } = await initDexContracts(sdk);
-      const aAddr = state.tokenA === 'AE' ? DEX_ADDRESSES.wae : state.tokenA;
-      const bAddr = state.tokenB === 'AE' ? DEX_ADDRESSES.wae : state.tokenB;
+      const aAddr = state.tokenA === 'AE' ? CONFIG.DEX_WAE : state.tokenA;
+      const bAddr = state.tokenB === 'AE' ? CONFIG.DEX_WAE : state.tokenB;
 
       const info = await getPairInfo(sdk, factory, aAddr, bAddr);
 
@@ -268,7 +268,7 @@ export function useAddLiquidity() {
       }
 
       if (params.isAePair) {
-        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae || params.tokenA === 'AE';
+        const isTokenAAe = params.tokenA === CONFIG.DEX_WAE || params.tokenA === 'AE';
         const token = isTokenAAe ? params.tokenB : params.tokenA;
         const amountTokenDesired = isTokenAAe ? amountBAettos : amountAAettos;
         const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
@@ -440,11 +440,11 @@ export function useAddLiquidity() {
 
       if (params.isAePair) {
         // Handle AE pair removal
-        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae;
+        const isTokenAAe = params.tokenA === CONFIG.DEX_WAE || params.tokenA === 'AE';
         const token = isTokenAAe ? params.tokenB : params.tokenA;
 
         // Get pair info to calculate expected amounts (use wrapped AE address)
-        const waeAddress = DEX_ADDRESSES.wae;
+        const waeAddress = CONFIG.DEX_WAE;
         const pairInfo = await getPairInfo(sdk, factory, token, waeAddress);
 
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {

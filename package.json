@@ -7,8 +7,12 @@
     "dev": "vite --host",
     "build": "node ./scripts/generate-sitemap.cjs && vite build",
     "preview": "vite preview --port 5174",
-    "test": "vitest --exclude \"**/*.integration.test.{ts,tsx}\"",
-    "test:integration": "vitest run \"src/**/*.integration.test.{ts,tsx}\"",
+    "test": "vitest",
+    "test:e2e:host": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:host:update-snapshots": "playwright test --update-snapshots",
+    "test:e2e": "docker build -f Dockerfile.e2e -t superhero-e2e . && docker run --rm --ipc=host --init superhero-e2e",
+    "test:e2e:update-snapshots": "docker build -f Dockerfile.e2e -t superhero-e2e . && docker run --rm --ipc=host --init -v \"$(pwd)/e2e:/app/e2e\" superhero-e2e npm run test:e2e:host:update-snapshots",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
@@ -70,6 +74,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",

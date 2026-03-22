@@ -38,11 +38,16 @@ vi.mock('@/libs/initializeContractTyped', () => ({
   initializeContractTyped: (...args: any[]) => mockInitializeContractTyped(...args),
 }));
 
-vi.mock('@/config', () => ({
-  CONFIG: {
-    PROFILE_REGISTRY_CONTRACT_ADDRESS: 'ct_test_profile_registry',
-  },
-}));
+vi.mock('@/config', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@/config')>();
+  return {
+    ...mod,
+    CONFIG: {
+      ...mod.CONFIG,
+      PROFILE_REGISTRY_CONTRACT_ADDRESS: 'ct_test_profile_registry',
+    },
+  };
+});
 
 vi.mock('@/services/payForProfileTx', async () => {
   const actual = await vi.importActual<any>('@/services/payForProfileTx');

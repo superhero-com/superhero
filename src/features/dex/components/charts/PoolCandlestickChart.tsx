@@ -1,5 +1,5 @@
 import { DexPairService } from '@/api/generated';
-import { DEX_ADDRESSES } from '@/libs/dex';
+import { CONFIG } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 import {
   CandlestickSeries,
@@ -83,7 +83,7 @@ export const PoolCandlestickChart = ({
     if (fromTokenAddress) {
       const isAe = fromTokenAddress === 'AE';
       if (isAe) {
-        const WAE_ADDRESS = DEX_ADDRESSES.wae;
+        const WAE_ADDRESS = CONFIG.DEX_WAE;
         setFromToken(pair?.token0?.address === WAE_ADDRESS ? 'token0' : 'token1');
       } else {
         setFromToken(fromTokenAddress === pair?.token0?.address ? 'token0' : 'token1');

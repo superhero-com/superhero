@@ -142,12 +142,12 @@ body {
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
   /* Dark blue/black background (no red/green) */
-  background:
-    radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-    radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-    radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-    linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
-    background-attachment: fixed;
+  // background:
+  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
+  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
+  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
+  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  //   background-attachment: fixed;
 }
 
 /* iOS-safe fixed background to full viewport height */
@@ -161,11 +161,11 @@ body::before {
   height: 100dvh; /* ensure fixed to device viewport on mobile */
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-    radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-    radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-    linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  // background:
+  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
+  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
+  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
+  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
   will-change: transform;
   transform: translateZ(0); /* helps Safari keep it fixed */
 }
@@ -194,7 +194,6 @@ html.ios-webkit .mobile-app-header {
   top: 0 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: rgba(12, 12, 20, 0.92) !important;
 }
 
 html.ios-webkit .animate-glow,
@@ -511,9 +510,9 @@ textarea:disabled {
   h1 { 
     font-size: 2rem; 
     font-weight: 800;
-    background: $primary_gradient;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    // background: $primary_gradient;
+    // -webkit-background-clip: text;
+    // -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -1px;
     line-height: 1.1;

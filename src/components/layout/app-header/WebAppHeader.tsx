@@ -50,7 +50,6 @@ const WebAppHeader = () => {
     <aside
       className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col border-r z-[1000]"
       style={{
-        backgroundColor: 'rgba(12, 12, 20, 0.6)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderRightColor: 'rgba(255, 255, 255, 0.12)',

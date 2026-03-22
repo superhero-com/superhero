@@ -2,8 +2,9 @@
 import { useMemo } from 'react';
 import { DexTokenDto } from '../../../api/generated';
 import { useDex } from '../../../hooks';
+import { CONFIG } from '../../../config';
 import {
-  DEX_ADDRESSES, fromAettos, subSlippage, toAettos,
+  fromAettos, subSlippage, toAettos,
 } from '../../../libs/dex';
 import { Decimal } from '../../../libs/decimal';
 import { RouteInfo } from '../types/dex';
@@ -59,7 +60,7 @@ export default function SwapInfoDisplay({
   // Get token label for display
   const getTokenLabel = (address: string): string => {
     if (address === 'AE') return 'AE';
-    if (address === DEX_ADDRESSES.wae) return 'WAE';
+    if (address === CONFIG.DEX_WAE) return 'WAE';
 
     const token = tokens.find((t) => t.address === address);
     return token?.symbol || `${address.slice(0, 6)}...${address.slice(-4)}`;

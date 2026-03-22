@@ -9,6 +9,11 @@ import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { transactionTypeAtom, createTokenDetailsAtom } from '@/atoms/transactionConfirmAtom';
+import {
+  useTransactionNotification,
+  TxPayloadType,
+  type TxPayload,
+} from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { createCommunity } from '../libs/createCommunity';
@@ -57,6 +62,7 @@ const CreateTokenView = () => {
   const { activeAccount, sdk } = useAeSdk();
   const [, setTransactionType] = useAtom(transactionTypeAtom);
   const [, setCreateTokenDetails] = useAtom(createTokenDetailsAtom);
+  const { notifySubmitted, notifyPendingTx, notifyError } = useTransactionNotification();
   const nameInputRef = useRef<HTMLInputElement>(null);
   const {
     activeFactorySchema,
@@ -384,6 +390,11 @@ const CreateTokenView = () => {
       estimatedTokens: inputMode === 'AE' ? estimatedTokens : undefined,
     });
 
+    const notificationPayload: TxPayload = {
+      type: TxPayloadType.CreateToken,
+      tokenName,
+    };
+
     try {
       setErrorMessage(undefined);
       setAlreadyRegisteredAs(undefined);
@@ -411,6 +422,8 @@ const CreateTokenView = () => {
         initialBuyCount = Number(initialBuyVolume || 0);
       }
 
+      notifySubmitted(notificationPayload);
+
       const txHash = await createCommunity(
         sdk,
         selectedCollection.id,
@@ -425,11 +438,14 @@ const CreateTokenView = () => {
         factory.address,
       );
 
+      notifyPendingTx(notificationPayload, txHash);
+
       // Navigate to token details
       navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';
+      notifyError(message);
       if (message.includes('NAME_ALREADY_REGISTERED')) {
         try {
           const searchResult = await SuperheroApi.listTokens({

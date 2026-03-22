@@ -155,7 +155,7 @@ const MobileAppHeader = () => {
               <button
                 type="button"
                 className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/trends/tokens')}
                 aria-label={t('labels.back')}
               >
                 ←

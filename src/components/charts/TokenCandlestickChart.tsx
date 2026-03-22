@@ -573,7 +573,7 @@ export default function TokenCandlestickChart({
           {intervals.map((interval) => (
             <AeButton
               key={interval.value}
-              variant={intervalBy?.value === interval.value ? 'primary' : 'secondary-dark'}
+              variant="secondary-dark"
               size="small"
               onClick={() => onChangeInterval(interval)}
               className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
@@ -581,6 +581,9 @@ export default function TokenCandlestickChart({
                 minWidth: 32,
                 fontSize: 11,
                 fontWeight: 600,
+                background: intervalBy?.value === interval.value
+                  ? 'rgba(255,255,255,0.08)'
+                  : 'transparent',
               }}
             >
               {interval.label}

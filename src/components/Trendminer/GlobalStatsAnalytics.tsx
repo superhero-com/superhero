@@ -90,10 +90,10 @@ const GlobalStatsAnalytics = () => {
       {statsItems.map((item) => (
         <div key={item.name} className="p-2">
           <div className="text-xs opacity-80 mb-1">{item.name}</div>
-          <div className="font-extrabold text-sm sm:text-base">
+          <div className="flex align-center font-extrabold text-sm sm:text-base">
             {item.value}
             {item.fiat && (
-              <div className="text-xs font-normal opacity-70 mt-1">
+              <div className="px-2 text-xs font-normal opacity-70 mt-1">
                 {item.fiat}
               </div>
             )}

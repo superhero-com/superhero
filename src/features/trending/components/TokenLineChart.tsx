@@ -8,7 +8,7 @@ interface TokenLineChartProps {
 }
 
 export const TokenLineChart = ({
-  saleAddress, height, width = 120, interval = 'all-time',
+  saleAddress, height = 32, width = 120, interval = 'all-time',
 }: TokenLineChartProps) => (
   <img
     src={`${CONFIG.SUPERHERO_API_URL}/api/tokens/preview/${saleAddress}/sparkline.svg?interval=${interval}&height=${height}&width=${width}`}

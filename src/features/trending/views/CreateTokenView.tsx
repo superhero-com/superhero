@@ -509,6 +509,7 @@ const CreateTokenView = () => {
             You need to connect your wallet to create a token.
           </p>
           <AeButton
+            type="button"
             variant="secondary"
             size="md"
             outlined
@@ -697,6 +698,7 @@ const CreateTokenView = () => {
 
                         {/* Row 2: Full-width Buy button */}
                         <AeButton
+                          type="button"
                           size="md"
                           variant="success"
                           className="w-full"

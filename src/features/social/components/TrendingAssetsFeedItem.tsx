@@ -1,6 +1,5 @@
 import { TokensService, type TokenDto } from '@/api/generated';
 import TokenChange from '@/components/Trendminer/TokenChange';
-import { PriceDataFormatter } from '@/features/shared/components';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -60,7 +59,7 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
             height={60}
             width={240}
             showIntervalText
-            interval='all-time'
+            interval="all-time"
             backgroundEnabled
           />
         )}

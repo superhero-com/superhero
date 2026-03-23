@@ -102,8 +102,6 @@ const MobileAppHeader = () => {
     staleTime: 60 * 1000,
   });
 
-
-
   const changeRaw = tokenData?.performance?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent;
   const changePercent = Number.isFinite(Number(changeRaw)) ? Number(changeRaw) : null;
   const priceRaw = Number((tokenData as any)?.price);

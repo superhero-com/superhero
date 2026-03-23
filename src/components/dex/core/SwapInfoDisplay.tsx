@@ -8,7 +8,6 @@ import {
 } from '../../../libs/dex';
 import { Decimal } from '../../../libs/decimal';
 import { RouteInfo } from '../types/dex';
-import { TokenChip } from '../../TokenChip';
 import SwapRouteInfo from './SwapRouteInfo';
 
 interface SwapInfoDisplayProps {

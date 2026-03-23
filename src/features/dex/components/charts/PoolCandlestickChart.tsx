@@ -6,10 +6,11 @@ import {
   ColorType,
   HistogramSeries,
   ISeriesApi,
+  MismatchDirection,
 } from 'lightweight-charts';
 import moment from 'moment';
 import {
-  useCallback, useEffect, useMemo, useRef, useState,
+  useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
 import AeButton from '../../../../components/AeButton';
 import { TokenChip } from '../../../../components/TokenChip';
@@ -73,6 +74,7 @@ export const PoolCandlestickChart = ({
   const subscription = useRef<(() => void) | null>(null);
   const touchHandlersCleanup = useRef<(() => void) | null>(null);
   const crosshairMoveCleanup = useRef<(() => void) | null>(null);
+  const isChartActiveRef = useRef(false);
 
   const convertTo = useMemo(
     () => (useCurrentCurrency ? 'usd' : 'ae'),
@@ -139,8 +141,37 @@ export const PoolCandlestickChart = ({
   // Helper function to format large numbers for display
   const formatLargeNumber = (value: number): string => Decimal.from(value || '0').shorten();
 
+  const cleanupCrosshairMove = useCallback(() => {
+    if (crosshairMoveCleanup.current) {
+      crosshairMoveCleanup.current();
+      crosshairMoveCleanup.current = null;
+    }
+  }, []);
+
+  const cleanupTouchHandlers = useCallback(() => {
+    if (touchHandlersCleanup.current) {
+      touchHandlersCleanup.current();
+      touchHandlersCleanup.current = null;
+    }
+  }, []);
+
+  const removeSeriesIfPresent = useCallback(
+    (chartInstance: any, series: ISeriesApi<any> | null) => {
+      if (!chartInstance || !series) return;
+      try {
+        chartInstance.removeSeries(series);
+      } catch {
+        // Ignore stale series removals during re-init or teardown.
+      }
+    },
+    [],
+  );
+
   const updateSeriesData = useCallback((pages: any[]) => {
-    if (!candlestickSeries.current || !volumeSeries.current || !marketCapSeries.current) return;
+    if (!isChartActiveRef.current
+      || !candlestickSeries.current
+      || !volumeSeries.current
+      || !marketCapSeries.current) return;
 
     // Merge pages arrays
     const newData = pages.reduce((acc, page) => [...acc, ...page], []);
@@ -251,38 +282,26 @@ export const PoolCandlestickChart = ({
     containerEl?: HTMLDivElement | null,
     shouldRemoveExisting = true,
   ) => {
+    if (!chartInstance || !isChartActiveRef.current) return;
+
     // Clear existing series only if we're reinitializing and they exist
     if (shouldRemoveExisting) {
-      if (crosshairMoveCleanup.current) {
-        crosshairMoveCleanup.current();
-        crosshairMoveCleanup.current = null;
-      }
+      cleanupCrosshairMove();
+      cleanupTouchHandlers();
       if (candlestickSeries.current) {
         const existingSeries = candlestickSeries.current;
         candlestickSeries.current = null;
-        try {
-          chartInstance.removeSeries(existingSeries);
-        } catch (error) {
-          console.warn('Error removing candlestick series:', error);
-        }
+        removeSeriesIfPresent(chartInstance, existingSeries);
       }
       if (volumeSeries.current) {
         const existingSeries = volumeSeries.current;
         volumeSeries.current = null;
-        try {
-          chartInstance.removeSeries(existingSeries);
-        } catch (error) {
-          console.warn('Error removing volume series:', error);
-        }
+        removeSeriesIfPresent(chartInstance, existingSeries);
       }
       if (marketCapSeries.current) {
         const existingSeries = marketCapSeries.current;
         marketCapSeries.current = null;
-        try {
-          chartInstance.removeSeries(existingSeries);
-        } catch (error) {
-          console.warn('Error removing market cap series:', error);
-        }
+        removeSeriesIfPresent(chartInstance, existingSeries);
       }
     }
 
@@ -359,8 +378,25 @@ export const PoolCandlestickChart = ({
       },
     });
 
+    const applyTouchCrosshairAtX = (xInContainer: number) => {
+      const time = chartInstance.timeScale().coordinateToTime(xInContainer);
+      if (time === null) return;
+
+      const pointIndex = chartInstance.timeScale().timeToIndex(time, true);
+      if (pointIndex === null) return;
+
+      const bar = candlestickSeriesInstance.dataByIndex(
+        pointIndex,
+        MismatchDirection.NearestLeft,
+      );
+      if (!bar || !('close' in bar) || typeof bar.close !== 'number') return;
+
+      chartInstance.setCrosshairPosition(bar.close, time, candlestickSeriesInstance);
+    };
+
     // Subscribe to crosshair moves
     const handleCrosshairMove = (param: any) => {
+      if (!isChartActiveRef.current) return;
       if (param.time) {
         const candleData = param.seriesData.get(candlestickSeriesInstance) as any;
         const volumeData = param.seriesData.get(volumeSeriesInstance) as any;
@@ -377,34 +413,28 @@ export const PoolCandlestickChart = ({
     crosshairMoveCleanup.current = () => {
       try {
         chartInstance.unsubscribeCrosshairMove(handleCrosshairMove);
-      } catch (error) {
-        console.warn('[PoolCandlestickChart] Error unsubscribing crosshair handler:', error);
+      } catch {
+        // Ignore duplicate teardown.
       }
     };
 
     // Add touch handlers for mobile drag support
     // Clean up any existing touch handlers first to prevent memory leaks
-    if (touchHandlersCleanup.current) {
-      touchHandlersCleanup.current();
-      touchHandlersCleanup.current = null;
-    }
+    cleanupTouchHandlers();
 
     const container = containerEl;
     if (container) {
       const handleTouchStart = (e: TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!chartInstance || !container) return;
+        if (!isChartActiveRef.current || !chartInstance || !container) return;
 
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         const x = touch.clientX - rect.left;
 
         try {
-          const time = chartInstance.timeScale().coordinateToTime(x);
-          if (time !== null) {
-            chartInstance.setCrosshairPosition(x, 0, { time: time as any });
-          }
+          applyTouchCrosshairAtX(x);
         } catch (error) {
           console.warn('[PoolCandlestickChart] Error setting crosshair on touchstart:', error);
         }
@@ -413,7 +443,7 @@ export const PoolCandlestickChart = ({
       const handleTouchMove = (e: TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!chartInstance || !container) return;
+        if (!isChartActiveRef.current || !chartInstance || !container) return;
 
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
@@ -423,10 +453,7 @@ export const PoolCandlestickChart = ({
         const clampedX = Math.max(0, Math.min(x, rect.width));
 
         try {
-          const time = chartInstance.timeScale().coordinateToTime(clampedX);
-          if (time !== null) {
-            chartInstance.setCrosshairPosition(clampedX, 0, { time: time as any });
-          }
+          applyTouchCrosshairAtX(clampedX);
         } catch (error) {
           console.warn('[PoolCandlestickChart] Error setting crosshair on touchmove:', error);
         }
@@ -435,10 +462,10 @@ export const PoolCandlestickChart = ({
       const handleTouchEnd = (e: TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!chartInstance) return;
+        if (!isChartActiveRef.current || !chartInstance) return;
 
         try {
-          chartInstance.setCrosshairPosition(-1, -1, {});
+          chartInstance.clearCrosshairPosition();
         } catch (error) {
           console.warn('[PoolCandlestickChart] Error clearing crosshair on touchend:', error);
         }
@@ -461,7 +488,14 @@ export const PoolCandlestickChart = ({
     candlestickSeries.current = candlestickSeriesInstance;
     volumeSeries.current = volumeSeriesInstance;
     marketCapSeries.current = marketCapSeriesInstance;
-  }, [fromToken, pair, convertTo]);
+  }, [
+    cleanupCrosshairMove,
+    cleanupTouchHandlers,
+    convertTo,
+    fromToken,
+    pair,
+    removeSeriesIfPresent,
+  ]);
 
   const { chartContainer, chart } = useChart({
     height,
@@ -479,6 +513,9 @@ export const PoolCandlestickChart = ({
       },
     },
     onChartReady: (chartInstance) => {
+      isChartActiveRef.current = true;
+      cleanupCrosshairMove();
+      cleanupTouchHandlers();
       initializeSeries(chartInstance, chartContainer.current, false);
     },
   });
@@ -511,7 +548,10 @@ export const PoolCandlestickChart = ({
     subscription.current = WebSocketClient.subscribeForTokenHistories(
       `PairTransaction::${pairAddress}`,
       (tx: any) => {
-        if (!candlestickSeries.current || !volumeSeries.current || !marketCapSeries.current) return;
+        if (!isChartActiveRef.current
+          || !candlestickSeries.current
+          || !volumeSeries.current
+          || !marketCapSeries.current) return;
 
         const currentData = candlestickSeries.current.data();
         const currentVolumeData = volumeSeries.current.data();
@@ -551,8 +591,12 @@ export const PoolCandlestickChart = ({
           const additionalVolume = parseVolume(tx.data?.volume || '0');
           const newVolume = safeParseNumber(currentVolumeValue + additionalVolume, 0);
           const newMarketCap = safeParseNumber(tx.data?.market_cap?.[convertTo], 0);
-          const isGreen = !currentData.length || currentData.length < 2
-            || safeParseNumber((currentData[currentData.length - 2] as any).close, 0) < currentPrice;
+          const isGreen = !currentData.length
+            || currentData.length < 2
+            || safeParseNumber(
+              (currentData[currentData.length - 2] as any).close,
+              0,
+            ) < currentPrice;
 
           volumeSeries.current.update({
             time: (latestVolume as any).time as any,
@@ -567,7 +611,9 @@ export const PoolCandlestickChart = ({
           });
         } else {
           // Create new candle
-          const openPrice = latestCandle ? safeParseNumber((latestCandle as any).close, 0) : currentPrice;
+          const openPrice = latestCandle
+            ? safeParseNumber((latestCandle as any).close, 0)
+            : currentPrice;
 
           candlestickSeries.current.update({
             time: currentTime as any,
@@ -597,8 +643,12 @@ export const PoolCandlestickChart = ({
     };
   }, [pairAddress, intervalBy.value, convertTo, fromToken]);
 
-  // Cleanup touch handlers when component unmounts or chart changes
-  useEffect(() => () => {
+  // Cleanup only on unmount. Depending on `chart` would also fire
+  // during the initial null -> chartApi transition and disable the graph.
+  useLayoutEffect(() => () => {
+    isChartActiveRef.current = false;
+    subscription.current?.();
+    subscription.current = null;
     if (crosshairMoveCleanup.current) {
       crosshairMoveCleanup.current();
       crosshairMoveCleanup.current = null;
@@ -607,7 +657,10 @@ export const PoolCandlestickChart = ({
       touchHandlersCleanup.current();
       touchHandlersCleanup.current = null;
     }
-  }, [chart]);
+    candlestickSeries.current = null;
+    volumeSeries.current = null;
+    marketCapSeries.current = null;
+  }, []);
 
   if (hasError) {
     return (

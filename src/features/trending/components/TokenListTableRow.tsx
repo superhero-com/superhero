@@ -103,7 +103,7 @@ const TokenListTableRow = ({
         <td className="cell cell-chart py-3 pl-1 pr-3 align-middle text-right">
           {saleAddress && (
             <div className="flex justify-end">
-              <TokenLineChart saleAddress={saleAddress} height={28} width={64} interval="all-time" />
+              <TokenLineChart saleAddress={saleAddress} height={40} width={64} interval="all-time" />
             </div>
           )}
           <a

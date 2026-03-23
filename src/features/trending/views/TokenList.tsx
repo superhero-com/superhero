@@ -37,7 +37,7 @@ type CollectionOption = 'all' | string; // Can be 'all' or specific collection a
 
 const TokenList = () => {
   const [collection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [search, setSearch] = useState('');
   const [searchThrottled, setSearchThrottled] = useState('');
@@ -58,7 +58,7 @@ const TokenList = () => {
       value: SORT.marketCap,
     },
     {
-      title: 'Trending Score',
+      title: 'Trending',
       value: SORT.trendingScore,
     },
     {

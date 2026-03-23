@@ -116,10 +116,12 @@ const MobileAppHeader = () => {
   };
 
   function onNavigateBack() {
-    if (window.history.length > 1) {
+    const state = (window.history?.state as any) || {};
+    const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : false;
+    if (canGoBack) {
       navigate(-1);
     } else {
-      navigate('/');
+      navigate('/trends/tokens');
     }
   }
 

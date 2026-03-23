@@ -1,23 +1,24 @@
-import React, {
-  useState, useEffect, useMemo,
-} from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { AeButton } from '@/components/ui/ae-button';
-import { SuperheroApi } from '@/api/backend';
+import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { formatNumber } from '@/utils/number';
-import SearchInput from '../../SearchInput';
+import { useQuery } from '@tanstack/react-query';
+import React, {
+  useEffect, useMemo,
+  useState,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HeaderLogo } from '../../../icons';
+import SearchInput from '../../SearchInput';
 
-import { getNavigationItems } from './navigationItems';
-import AddressAvatar from '../../AddressAvatar';
+import { TokensService } from '../../../api/generated/services/TokensService';
+import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import { useModal } from '../../../hooks';
+import AddressAvatar from '../../AddressAvatar';
 import FooterSection from '../FooterSection';
-import { TokensService } from '../../../api/generated/services/TokensService';
+import { getNavigationItems } from './navigationItems';
 
 const MobileAppHeader = () => {
   const { t } = useTranslation('common');
@@ -101,15 +102,7 @@ const MobileAppHeader = () => {
     staleTime: 60 * 1000,
   });
 
-  const tokenAddress = (tokenData as any)?.sale_address || (tokenData as any)?.address;
-  const { data: tokenPerformance } = useQuery({
-    queryKey: ['mobile-header-token-performance', tokenAddress],
-    queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
-    enabled: Boolean(tokenAddress),
-    staleTime: 60 * 1000,
-  });
-
-  const changeRaw = (tokenPerformance as any)?.past_7d?.current_change_percent;
+  const changeRaw = tokenData?.performance?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent;
   const changePercent = Number.isFinite(Number(changeRaw)) ? Number(changeRaw) : null;
   const priceRaw = Number((tokenData as any)?.price);
   const priceText = Number.isFinite(priceRaw)
@@ -121,6 +114,16 @@ const MobileAppHeader = () => {
     if (path === '/') return pathname === '/';
     return pathname.startsWith(path);
   };
+
+  function onNavigateBack() {
+    const state = (window.history?.state as any) || {};
+    const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : false;
+    if (canGoBack) {
+      navigate(-1);
+    } else {
+      navigate('/trends/tokens');
+    }
+  }
 
   return (
     <div
@@ -155,7 +158,7 @@ const MobileAppHeader = () => {
               <button
                 type="button"
                 className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-                onClick={() => navigate('/trends/tokens')}
+                onClick={() => onNavigateBack()}
                 aria-label={t('labels.back')}
               >
                 ←

@@ -2,7 +2,7 @@ import React, {
   useEffect, useRef, useState, useCallback,
 } from 'react';
 import {
-  createChart, IChartApi, ISeriesApi, ColorType, LineSeries, HistogramSeries,
+  createChart, IChartApi, ISeriesApi, ColorType, LineSeries, HistogramSeries, MismatchDirection,
 } from 'lightweight-charts';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import AeButton from '../../../../components/AeButton';
@@ -116,6 +116,24 @@ const TokenPricePerformance = ({
     // Add touch handlers for mobile drag support
     const container = chartContainerRef.current;
     if (container) {
+      const applyTouchCrosshairAtX = (xInContainer: number) => {
+        if (!seriesRef.current) return;
+
+        const time = chart.timeScale().coordinateToTime(xInContainer);
+        if (time === null) return;
+
+        const pointIndex = chart.timeScale().timeToIndex(time, true);
+        if (pointIndex === null) return;
+
+        const dataPoint = seriesRef.current.dataByIndex(
+          pointIndex,
+          MismatchDirection.NearestLeft,
+        );
+        if (!dataPoint || !('value' in dataPoint) || typeof dataPoint.value !== 'number') return;
+
+        chart.setCrosshairPosition(dataPoint.value, time, seriesRef.current);
+      };
+
       const handleTouchStart = (e: TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -126,11 +144,7 @@ const TokenPricePerformance = ({
         const x = touch.clientX - rect.left;
 
         try {
-          const time = chart.timeScale().coordinateToTime(x);
-          if (time !== null) {
-            // @ts-expect-error - time is not used
-            chart.setCrosshairPosition(x, 0, { time: time as any });
-          }
+          applyTouchCrosshairAtX(x);
         } catch (error) {
           console.warn('[TokenPricePerformance] Error setting crosshair on touchstart:', error);
         }
@@ -149,11 +163,7 @@ const TokenPricePerformance = ({
         const clampedX = Math.max(0, Math.min(x, rect.width));
 
         try {
-          const time = chart.timeScale().coordinateToTime(clampedX);
-          if (time !== null) {
-            // @ts-expect-error - time is not used
-            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
-          }
+          applyTouchCrosshairAtX(clampedX);
         } catch (error) {
           console.warn('[TokenPricePerformance] Error setting crosshair on touchmove:', error);
         }
@@ -165,8 +175,7 @@ const TokenPricePerformance = ({
         if (!chart) return;
 
         try {
-          // @ts-expect-error - time is not used
-          chart.setCrosshairPosition(-1, -1, {});
+          chart.clearCrosshairPosition();
         } catch (error) {
           console.warn('[TokenPricePerformance] Error clearing crosshair on touchend:', error);
         }

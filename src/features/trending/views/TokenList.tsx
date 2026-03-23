@@ -1,4 +1,3 @@
-import AeButton from '@/components/AeButton';
 import Spinner from '@/components/Spinner';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
@@ -13,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { useAccount } from '../../../hooks';
 import { Head } from '../../../seo/Head';
 import TokenListTable from '../components/TokenListTable';
 import TrendminerBanner from '../components/TrendminerBanner';
@@ -38,12 +36,9 @@ type OrderByOption = typeof SORT[keyof typeof SORT];
 type CollectionOption = 'all' | string; // Can be 'all' or specific collection addresses
 
 const TokenList = () => {
-  const { activeAccount } = useAccount();
-
   const [collection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
-  const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [searchThrottled, setSearchThrottled] = useState('');
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
@@ -106,11 +101,6 @@ const TokenList = () => {
     return orderDirection;
   }, [orderBy, orderDirection]);
 
-  const ownerAddress = useMemo(
-    () => (ownedOnly ? activeAccount : undefined),
-    [ownedOnly, activeAccount],
-  );
-
   const {
     data, isFetching, fetchNextPage, hasNextPage,
   } = useInfiniteQuery({
@@ -120,7 +110,6 @@ const TokenList = () => {
       orderDirection: finalOrderDirection,
       collection: collection === 'all' ? undefined : (collection as any),
       search: searchThrottled || undefined,
-      ownerAddress,
       limit: 20,
       page: pageParam,
     }),
@@ -138,7 +127,6 @@ const TokenList = () => {
       finalOrderDirection,
       collection,
       searchThrottled,
-      ownerAddress,
     ],
     staleTime: 1000 * 60, // 1 minute
   });
@@ -226,22 +214,6 @@ const TokenList = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Owned by me */}
-              {activeAccount && (
-                <div className={`w-full md:w-auto flex-shrink-0 ${ownedOnly ? '' : 'rounded-2xl border-2 border-pink-500/80'}`}>
-                  <AeButton
-                    variant={ownedOnly ? 'primary' : 'ghost'}
-                    className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
-                      : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
-                    }`}
-                    onClick={() => setOwnedOnly(!ownedOnly)}
-                  >
-                    <span className="text-xs">Owned Only</span>
-                  </AeButton>
-                </div>
-              )}
 
               {/* Search */}
               <input

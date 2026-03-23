@@ -1,5 +1,6 @@
 import { TokensService, type TokenDto } from '@/api/generated';
 import TokenChange from '@/components/Trendminer/TokenChange';
+import { PriceDataFormatter } from '@/features/shared/components';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -24,15 +25,15 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
     <Link
       to={tokenHref}
       className={cn(
-        'group rounded-2xl border border-white/10 bg-white/[0.04] p-3',
+        'group rounded-2xl border border-white/10 bg-white/[0.4] p-3',
         'hover:bg-white/[0.06] hover:border-white/15 transition-colors',
         'no-underline block',
         'cursor-pointer no-gradient-text',
       )}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <div
-          className="text-[13px] font-semibold text-[var(--neon-blue)] truncate group-hover:underline underline-offset-2"
+          className="text-[11px] font-semibold text-[var(--neon-blue)] truncate group-hover:underline underline-offset-2"
           style={{
             background: 'none',
             WebkitTextFillColor: 'currentColor',
@@ -42,18 +43,24 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
         >
           <span className="text-[var(--neon-blue)] mr-0.5">#</span>
           {tokenLabel}
+
         </div>
-        <TokenChange
-          token={token}
-          hideNewBadge
-        />
+        <div className="flex-col text-right gap-2 -mb-2">
+          <TokenChange
+            token={token}
+            hideNewBadge
+          />
+        </div>
       </div>
-      <div className="mt-3 h-10">
+
+      <div className="mt-3">
         {tokenAddress && (
           <TokenLineChart
             saleAddress={tokenAddress}
-            height={40}
-            width={160}
+            height={60}
+            width={240}
+            showIntervalText
+            interval='all-time'
           />
         )}
       </div>
@@ -123,7 +130,7 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
             View all
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {isLoading ? (
             skeletonKeys.map((key) => (
               <div

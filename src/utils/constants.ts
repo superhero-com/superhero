@@ -118,7 +118,14 @@ export type PriceMovementTimeframe = (typeof PRICE_MOVEMENT_TIMEFRAMES)[number];
 
 export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = '30d';
 
-export const DEFAULT_PAST_TIMEFRAME: keyof TokenPriceMovementDto = 'past_30d';
+export const DEFAULT_PAST_TIMEFRAME: keyof TokenPriceMovementDto = `past_${PRICE_MOVEMENT_TIMEFRAME_DEFAULT}`;
+
+export const PRICE_MOVEMENT_TIMEFRAME_TEXT: Record<string, string> = {
+  'all-time': 'All Time',
+  '30d': '30 DAY',
+  '7d': '7 DAY',
+  '1d': '1 DAY',
+};
 
 export const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
 export const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;

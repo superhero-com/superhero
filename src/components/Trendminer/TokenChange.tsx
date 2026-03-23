@@ -1,6 +1,6 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { cn } from '@/lib/utils';
-import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
+import { DEFAULT_PAST_TIMEFRAME, PRICE_MOVEMENT_TIMEFRAME_DEFAULT, PRICE_MOVEMENT_TIMEFRAME_TEXT } from '@/utils/constants';
 
 interface TokenChangeProps {
   token: TokenDto;
@@ -51,8 +51,15 @@ const TokenChange = ({
                 : 'text-red-400',
             )}
           >
-            <span className="text-[11px] leading-none">{isPositive ? '▲' : '▼'}</span>
-            <span>{formatPercentage(changePercent)}</span>
+
+            <div className="flex-col items-center">
+              <div className="flex items-center align-center text-right gap-0.5">
+                <div className="text-[11px] leading-none">{isPositive ? '▲' : '▼'}</div>
+                <div className="text-[11px] leading-none">{formatPercentage(changePercent)}</div>
+              </div>
+              <div className="text-[8px] text-white/70">{PRICE_MOVEMENT_TIMEFRAME_TEXT[PRICE_MOVEMENT_TIMEFRAME_DEFAULT]}</div>
+            </div>
+
           </span>
         )
       }

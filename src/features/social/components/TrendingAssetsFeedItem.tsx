@@ -61,6 +61,7 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
             width={240}
             showIntervalText
             interval='all-time'
+            backgroundEnabled
           />
         )}
       </div>

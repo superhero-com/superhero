@@ -54,7 +54,7 @@ export const DataTable = <T, >({
   const queryKey = useMemo(() => ['DataTable', params, initialParams, queryFn], [params, initialParams, queryFn]);
 
   const {
-    data, isLoading, error, refetch,
+    data, isLoading, isFetching, error, refetch,
   } = useQuery({
     queryKey,
     queryFn: () => queryFn({
@@ -63,6 +63,8 @@ export const DataTable = <T, >({
     }),
     placeholderData: (previousData) => previousData,
   });
+
+  const isTableLoading = isLoading || isFetching;
 
   const handlePageChange = (page: number) => {
     setParams((prev) => ({ ...prev, page }));
@@ -142,7 +144,7 @@ export const DataTable = <T, >({
         <DataTablePagination
           meta={data.meta}
           onPageChange={handlePageChange}
-          isLoading={isLoading}
+          isLoading={isTableLoading}
         />
       )}
     </div>

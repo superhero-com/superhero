@@ -33,6 +33,7 @@ export function useWalletConnect() {
   const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
+  const connectOperationRef = useRef<Promise<void | null> | null>(null);
 
   const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
   const [scanningForAccounts, setScanningForAccounts] = useAtom(scanningForAccountsAtom);
@@ -140,6 +141,8 @@ export function useWalletConnect() {
 
   // eslint-disable-next-line consistent-return
   async function connectWallet() {
+    if (connectOperationRef.current) return connectOperationRef.current;
+    const run = (async () => {
     // when trying to connect to the wallet all states should be reset
     // and sdk should be disconnected
     setWalletConnected(false);
@@ -171,6 +174,14 @@ export function useWalletConnect() {
       disconnectWallet();
     }
     setConnectingWallet(false);
+    return null;
+    })();
+    connectOperationRef.current = run;
+    try {
+      return await run;
+    } finally {
+      connectOperationRef.current = null;
+    }
   }
   connectWalletRef.current = connectWallet;
 
@@ -306,6 +317,33 @@ export function useWalletConnect() {
     }
   }, []);
 
+  const reconnectWalletSession = useCallback(async (expectedAddress?: string) => {
+    if (connectingWalletRef.current) return false;
+    if (walletConnectedRef.current && activeAccountRef.current) {
+      if (!expectedAddress || activeAccountRef.current === expectedAddress) return true;
+    }
+
+    try {
+      await connectWalletRef.current?.();
+    } catch {
+      // swallow and evaluate final state below
+    }
+
+    if (walletConnectedRef.current && activeAccountRef.current) {
+      if (!expectedAddress || activeAccountRef.current === expectedAddress) return true;
+    }
+
+    if (expectedAddress) {
+      try {
+        await addStaticAccount(expectedAddress);
+      } catch {
+        //
+      }
+    }
+
+    return !!walletConnectedRef.current;
+  }, [addStaticAccount]);
+
   // Monitor wallet connection health - if walletInfo exists but connection is lost, clear state
   useEffect(() => {
     if (!aeSdk || !walletConnected || !walletInfo) return undefined;
@@ -338,6 +376,7 @@ export function useWalletConnect() {
   return {
     walletInfo,
     attemptReconnection,
+    reconnectWalletSession,
     connectWallet,
     deepLinkWalletConnect,
     disconnectWallet,

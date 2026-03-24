@@ -25,15 +25,6 @@ import {
 import { RouteInfo, SwapQuoteParams } from '../types/dex';
 import { Decimal } from '../../../libs/decimal';
 
-// Helper types
-interface PairWithReserves {
-  address: string;
-  token0: { address: string; decimals: number };
-  token1: { address: string; decimals: number };
-  reserve0?: string;
-  reserve1?: string;
-}
-
 export interface BackendRoutePair {
   address: string;
   token0: string;
@@ -70,36 +61,6 @@ function isAeToWae(tokenIn: DexTokenDto, tokenOut: DexTokenDto): boolean {
 
 function getTokenAddress(token: DexTokenDto): string {
   return token.is_ae ? CONFIG.DEX_WAE : token.address;
-}
-
-export function getHumanPairRatio(
-  pair: PairWithReserves,
-  tokenInAddr: string,
-  tokenOutAddr: string,
-): Decimal | null {
-  const isToken0ToToken1 = pair.token0.address === tokenInAddr && pair.token1.address === tokenOutAddr;
-  const isToken1ToToken0 = pair.token1.address === tokenInAddr && pair.token0.address === tokenOutAddr;
-
-  if (!isToken0ToToken1 && !isToken1ToToken0) {
-    return null;
-  }
-
-  const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-  const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
-  const decimalsIn = isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals;
-  const decimalsOut = isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals;
-
-  if (!reserveIn || !reserveOut) {
-    return null;
-  }
-
-  try {
-    const rawRatio = Decimal.from(reserveOut).div(reserveIn);
-    const decimalAdjustment = Decimal.from(`1e${decimalsIn - decimalsOut}`);
-    return rawRatio.mul(decimalAdjustment);
-  } catch {
-    return null;
-  }
 }
 
 function sortTokens(tokenA: string, tokenB: string): [string, string] {

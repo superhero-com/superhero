@@ -143,10 +143,11 @@ export const DataTable = <T, >({
       <div className="relative">
         <div className={`space-y-2 transition-opacity ${isPageTransitioning ? 'opacity-50' : ''}`}>
           {data.items.map((item, index) => {
-            const rowKey = (item as any).id
+            const itemIdentifier = (item as any).id
               ?? (item as any).address
               ?? (item as any).hash
               ?? JSON.stringify(item);
+            const rowKey = `${params.page ?? data.meta?.currentPage ?? 1}-${itemIdentifier}-${index}`;
             return (
               <div key={rowKey}>
                 {renderRow({ item, index })}

@@ -40,34 +40,12 @@ export const GifSelectorDialog = ({
     queryKey: ['giphy', query],
     queryFn: async ({ pageParam = 0 }) => {
       const url = new URL(
-        `https://api.giphy.com/v1/gifs/${query ? 'search' : 'trending'}`,
+        `${CONFIG.SUPERHERO_API_URL}/api/giphy/search`,
       );
       if (query) url.searchParams.set('q', query);
       url.searchParams.set('limit', '12');
       url.searchParams.set('offset', pageParam.toString());
-      if (CONFIG.GIPHY_API_KEY) {
-        url.searchParams.set('api_key', CONFIG.GIPHY_API_KEY);
-      }
-      const { data: responseData, pagination } = await fetchJson(url.toString());
-      return {
-        results: responseData.map(({ images, id }: any) => ({
-          id, // Use Giphy's unique ID
-          still: images?.fixed_width_still?.url,
-          animated: images?.fixed_width?.url,
-          // Prefer lightweight mp4 for smooth autoplay where available
-          mp4:
-            images?.fixed_width?.mp4
-            || images?.downsized_small?.mp4
-            || images?.original_mp4?.mp4,
-          original: images?.original?.url,
-          // capture intrinsic dimensions to preserve aspect ratio downstream
-          width: Number(images?.original?.width),
-          height: Number(images?.original?.height),
-        })),
-        totalCount: pagination.total_count,
-        nextOffset: pagination.offset + pagination.count,
-        hasMore: pagination.offset + pagination.count < pagination.total_count,
-      };
+      return fetchJson(url.toString());
     },
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextOffset : undefined),
     initialPageParam: 0,
@@ -199,7 +177,7 @@ export const GifSelectorDialog = ({
             ref={scrollContainerRef}
             className="grid grid-cols-3 gap-3 h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
           >
-              {results.map((result) => (
+              {results.map((result) => result?.id && (
                 <div
                   key={result.id}
                   onClick={() => handleGifClick(result)}

@@ -74,7 +74,11 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   }, []);
 
   // Calculate token cost based on bonding curve
-  const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
+  const calculateTokenCost = useCallback((
+    amount?: number,
+    _isBuying = false,
+    _isUsingToken = false,
+  ): number => {
     const tokenDecimals = tokenRef.current.decimals ?? 18;
     const tokenSupply = new BigNumber(tokenRef.current.total_supply ?? 0);
     let currentSupply = Decimal.from(toAe(tokenSupply.toString()));
@@ -451,11 +455,13 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       if (store.isBuying) {
         buy().finally(() => {
           setTransactionType(null);
+          store.updateLoadingTransaction(false);
           store.resetFormData();
         });
       } else {
         sell().finally(() => {
           setTransactionType(null);
+          store.updateLoadingTransaction(false);
           store.resetFormData();
         });
       }

@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useRef, useState,
+  useCallback, useEffect, useLayoutEffect, useRef, useState,
 } from 'react';
 import {
   createChart,
@@ -25,22 +25,25 @@ export function useChart({
   const chart = useRef<IChartApi | null>(null);
   const onChartReadyRef = useRef(onChartReady);
   const latestChartOptionsRef = useRef(chartOptions);
+  const isChartDisposedRef = useRef(false);
   const [chartApi, setChartApi] = useState<IChartApi | null>(null);
   const [isDarkMode] = useState(true); // For now, assuming dark mode
+  onChartReadyRef.current = onChartReady;
   latestChartOptionsRef.current = chartOptions;
 
-  useEffect(() => {
-    onChartReadyRef.current = onChartReady;
-  }, [onChartReady]);
-
   const resizeHandler = useCallback(() => {
-    if (!chart.current || !chartContainer.current) return;
+    if (isChartDisposedRef.current || !chart.current || !chartContainer.current) return;
     const dimensions = chartContainer.current.getBoundingClientRect();
-    chart.current.resize(dimensions.width, height);
+    try {
+      chart.current.resize(dimensions.width, height);
+    } catch {
+      // Ignore resize callbacks that race with chart teardown.
+    }
   }, [height]);
 
   const initChart = useCallback(() => {
     if (!chartContainer.current || chart.current) return;
+    isChartDisposedRef.current = false;
 
     const defaultChartOptions: DeepPartial<ChartOptions> = {
       layout: {
@@ -82,17 +85,22 @@ export function useChart({
     onChartReadyRef.current?.(chartInstance);
   }, [height, isDarkMode]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     initChart();
     window.addEventListener('resize', resizeHandler);
 
     return () => {
+      isChartDisposedRef.current = true;
+      window.removeEventListener('resize', resizeHandler);
       if (chart.current) {
-        chart.current.remove();
+        try {
+          chart.current.remove();
+        } catch {
+          // Ignore duplicate disposal during teardown.
+        }
         chart.current = null;
       }
       setChartApi(null);
-      window.removeEventListener('resize', resizeHandler);
     };
   }, [initChart, resizeHandler]);
 

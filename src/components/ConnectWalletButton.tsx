@@ -58,6 +58,7 @@ export const ConnectWalletButton = ({
 
   return (
     <AeButton
+      type="button"
       onClick={() => openModal({ name: 'connect-wallet' })}
       disabled={connectingWallet}
       loading={connectingWallet}

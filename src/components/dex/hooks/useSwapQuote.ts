@@ -5,8 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
-import BigNumber from 'bignumber.js';
+import { DexTokenDto } from '@/api/generated';
 import { useAeSdk } from '../../../hooks';
 import { CONFIG } from '../../../config';
 import {
@@ -15,21 +14,31 @@ import {
   initDexContracts,
   toAettos,
 } from '../../../libs/dex';
+import { getSwapRoutes } from '../../../libs/dexBackend';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { getPriceImpactForRoute } from '../../../libs/swapUtils';
+import {
+  getPath,
+  getPriceImpactForRoute,
+  ratioFromRoute,
+  ratioWithDecimals,
+} from '../../../libs/swapUtils';
 import { RouteInfo, SwapQuoteParams } from '../types/dex';
 import { Decimal } from '../../../libs/decimal';
 
-// Helper types
-interface PairWithReserves {
+export interface BackendRoutePair {
   address: string;
-  token0: { address: string; decimals: number };
-  token1: { address: string; decimals: number };
-  reserve0?: string;
-  reserve1?: string;
+  token0: string;
+  token1: string;
+  synchronized?: boolean | string;
+  liquidityInfo: {
+    reserve0: string;
+    reserve1: string;
+    totalSupply?: string;
+    height?: number | string;
+  };
 }
 
-interface LiquidityStatus {
+export interface LiquidityStatus {
   exceedsLiquidity: boolean;
   maxAvailable?: string;
   pairAddress?: string;
@@ -54,178 +63,99 @@ function getTokenAddress(token: DexTokenDto): string {
   return token.is_ae ? CONFIG.DEX_WAE : token.address;
 }
 
-/**
- * Calculate ratio from reserves: reserveOut / reserveIn
- */
-function calculateRatio(reserveIn: string, reserveOut: string): BigNumber {
-  const reserveInBN = new BigNumber(reserveIn);
-  const reserveOutBN = new BigNumber(reserveOut);
-  return reserveOutBN.div(reserveInBN);
+function sortTokens(tokenA: string, tokenB: string): [string, string] {
+  return tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA];
 }
 
-/**
- * Calculate direct pair swap amount using ratio
- */
-function calculateDirectPairAmount(
+function getHumanRouteRatio(
+  route: BackendRoutePair[],
+  tokenIn: DexTokenDto,
+  tokenOut: DexTokenDto,
+): Decimal | null {
+  try {
+    const rawRatio = ratioFromRoute(route as any, getTokenAddress(tokenIn)).toString();
+    const normalizedRatio = ratioWithDecimals(rawRatio, {
+      decimalsA: tokenIn.decimals,
+      decimalsB: tokenOut.decimals,
+    }).toString();
+    return Decimal.from(normalizedRatio);
+  } catch {
+    return null;
+  }
+}
+
+function calculateRouteAmount(
   params: SwapQuoteParams,
-  pair: PairWithReserves,
-  tokenInAddr: string,
-  tokenOutAddr: string,
+  route: BackendRoutePair[],
 ): {
   amountOut?: string;
   amountIn?: string;
-  maxOut?: string;
-  liquidityStatus?: LiquidityStatus;
 } {
-  const isToken0ToToken1 = pair.token0.address === tokenInAddr && pair.token1.address === tokenOutAddr;
-  const isToken1ToToken0 = pair.token1.address === tokenInAddr && pair.token0.address === tokenOutAddr;
-
-  if (!isToken0ToToken1 && !isToken1ToToken0) {
+  if (!params.tokenIn || !params.tokenOut) {
     return {};
   }
 
-  const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-  const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
-
-  if (!reserveIn || !reserveOut) {
+  const humanRatio = getHumanRouteRatio(route, params.tokenIn, params.tokenOut);
+  if (!humanRatio) {
     return {};
   }
-
-  const ratio = calculateRatio(reserveIn, reserveOut);
-  const reserveInAettos = BigInt(reserveIn);
 
   if (params.isExactIn) {
-    const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-    const amountOutAettosBN = new BigNumber(amountInAettos.toString()).multipliedBy(ratio);
-    const amountOut = fromAettos(amountOutAettosBN.toFixed(0), params.tokenOut.decimals);
-
-    let maxOut: string | undefined;
-    let liquidityStatus: LiquidityStatus | undefined;
-
-    if (amountInAettos > reserveInAettos) {
-      const maxAvailableAettos = reserveInAettos;
-      const maxAvailableDecimal = Decimal.from(fromAettos(maxAvailableAettos, params.tokenIn.decimals));
-      const maxAvailableOutAettosBN = new BigNumber(maxAvailableAettos.toString()).multipliedBy(ratio);
-      maxOut = fromAettos(maxAvailableOutAettosBN.toFixed(0), params.tokenOut.decimals);
-      liquidityStatus = {
-        exceedsLiquidity: true,
-        maxAvailable: maxAvailableDecimal.toString(),
-        pairAddress: pair.address,
-      };
-    } else {
-      liquidityStatus = { exceedsLiquidity: false, pairAddress: pair.address };
-    }
-
-    return { amountOut, maxOut, liquidityStatus };
-  }
-  const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-  const amountOutAettosBN = new BigNumber(amountOutAettos.toString());
-  const calculatedAmountInAettosBN = amountOutAettosBN.div(ratio);
-  const calculatedAmountInAettos = BigInt(calculatedAmountInAettosBN.toFixed(0));
-  const amountIn = fromAettos(calculatedAmountInAettosBN.toFixed(0), params.tokenIn.decimals);
-
-  let maxOut: string | undefined;
-  let liquidityStatus: LiquidityStatus | undefined;
-
-  if (calculatedAmountInAettos > reserveInAettos) {
-    const maxAvailableInAettos = reserveInAettos;
-    const maxAvailableInDecimal = Decimal.from(fromAettos(maxAvailableInAettos, params.tokenIn.decimals));
-    const maxAvailableInAettosBN = new BigNumber(maxAvailableInAettos.toString());
-    const maxAvailableOutAettosBN = maxAvailableInAettosBN.multipliedBy(ratio);
-    maxOut = fromAettos(maxAvailableOutAettosBN.toFixed(0), params.tokenOut.decimals);
-    liquidityStatus = {
-      exceedsLiquidity: true,
-      maxAvailable: maxAvailableInDecimal.toString(),
-      pairAddress: pair.address,
+    return {
+      amountOut: Decimal.from(params.amountIn).mul(humanRatio).toString(),
     };
-  } else {
-    liquidityStatus = { exceedsLiquidity: false, pairAddress: pair.address };
   }
 
-  return { amountIn, maxOut, liquidityStatus };
+  return {
+    amountIn: Decimal.from(params.amountOut).div(humanRatio).toString(),
+  };
 }
 
-/**
- * Calculate multi-hop route amount using sequential ratios
- */
-function calculateMultiHopAmount(
-  params: SwapQuoteParams,
-  pathPairs: PairWithReserves[],
+function getFirstRouteHop(
+  route: BackendRoutePair[],
   path: string[],
-): {
-  amountOut?: string;
-  amountIn?: string;
-  maxOut?: string;
-  liquidityStatus?: LiquidityStatus;
-} {
-  let currentAmount = params.isExactIn
-    ? Decimal.from(params.amountIn)
-    : Decimal.from(params.amountOut);
-
-  if (params.isExactIn) {
-    // Forward calculation: multiply ratios
-    for (let i = 0; i < pathPairs.length; i++) {
-      const pair = pathPairs[i];
-      const currentTokenAddr = path[i];
-      const nextTokenAddr = path[i + 1];
-      const isToken0ToToken1 = pair.token0.address === currentTokenAddr && pair.token1.address === nextTokenAddr;
-
-      const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-      const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
-
-      if (!reserveIn || !reserveOut) continue;
-
-      const hopRatio = calculateRatio(reserveIn, reserveOut);
-      const currentAmountAettos = toAettos(currentAmount.toString(), isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals);
-      const currentAmountAettosBN = new BigNumber(currentAmountAettos.toString());
-      const nextAmountAettosBN = currentAmountAettosBN.multipliedBy(hopRatio);
-      const nextDecimals = isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals;
-      currentAmount = Decimal.from(fromAettos(nextAmountAettosBN.toFixed(0), nextDecimals));
-    }
-    return { amountOut: currentAmount.toString() };
+): { pair: BackendRoutePair; reserveIn: string } | null {
+  if (route.length === 0 || path.length < 2) {
+    return null;
   }
-  // Backward calculation: divide ratios
-  for (let i = pathPairs.length - 1; i >= 0; i--) {
-    const pair = pathPairs[i];
-    const currentTokenAddr = path[i + 1];
-    const prevTokenAddr = path[i];
-    const isToken0ToToken1 = pair.token0.address === prevTokenAddr && pair.token1.address === currentTokenAddr;
 
-    const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-    const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
+  const [tokenInAddr, nextTokenAddr] = path;
+  const firstPair = route.find(({ token0, token1 }) => (
+    (token0 === tokenInAddr && token1 === nextTokenAddr)
+    || (token1 === tokenInAddr && token0 === nextTokenAddr)
+  ));
 
-    if (!reserveIn || !reserveOut) continue;
-
-    const hopRatio = calculateRatio(reserveIn, reserveOut);
-    const currentAmountAettos = toAettos(currentAmount.toString(), isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals);
-    const currentAmountAettosBN = new BigNumber(currentAmountAettos.toString());
-    const prevAmountAettosBN = currentAmountAettosBN.div(hopRatio);
-    const prevDecimals = isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals;
-    currentAmount = Decimal.from(fromAettos(prevAmountAettosBN.toFixed(0), prevDecimals));
+  if (!firstPair) {
+    return null;
   }
-  return { amountIn: currentAmount.toString() };
+
+  return {
+    pair: firstPair,
+    reserveIn: firstPair.token0 === tokenInAddr
+      ? firstPair.liquidityInfo.reserve0
+      : firstPair.liquidityInfo.reserve1,
+  };
 }
 
-/**
- * Check liquidity and calculate maxOut for multi-hop routes
- */
-function checkMultiHopLiquidity(
+export function checkRouteLiquidity(
   params: SwapQuoteParams,
-  pathPairs: PairWithReserves[],
+  route: BackendRoutePair[],
   path: string[],
   calculatedAmountIn?: string,
 ): {
   maxOut?: string;
   liquidityStatus?: LiquidityStatus;
 } {
-  if (pathPairs.length === 0) {
+  if (route.length === 0 || !params.tokenIn || !params.tokenOut) {
     return {};
   }
 
-  const firstPair = pathPairs[0] as PairWithReserves;
-  const firstTokenAddr = path[0];
-  const isToken0 = firstPair.token0.address === firstTokenAddr;
-  const reserveToCheck = isToken0 ? firstPair.reserve0 : firstPair.reserve1;
+  const firstHop = getFirstRouteHop(route, path);
+  if (!firstHop) {
+    return {};
+  }
+
+  const { pair: firstPair, reserveIn: reserveToCheck } = firstHop;
 
   if (!reserveToCheck) {
     return {};
@@ -243,37 +173,15 @@ function checkMultiHopLiquidity(
     };
   }
 
-  // Calculate maxOut with max available input
-  const maxAvailableInAettos = reserveAettos;
-  let maxOutAmount = Decimal.from(fromAettos(maxAvailableInAettos, params.tokenIn.decimals));
-
-  if (params.isExactIn) {
-    // Apply all hops with max available input
-    for (let i = 0; i < pathPairs.length; i++) {
-      const pair = pathPairs[i] as PairWithReserves;
-      const currentTokenAddr = path[i];
-      const nextTokenAddr = path[i + 1];
-      const isToken0ToToken1 = pair.token0.address === currentTokenAddr && pair.token1.address === nextTokenAddr;
-
-      const reserveIn = isToken0ToToken1 ? pair.reserve0 : pair.reserve1;
-      const reserveOut = isToken0ToToken1 ? pair.reserve1 : pair.reserve0;
-
-      if (!reserveIn || !reserveOut) continue;
-
-      const hopRatio = calculateRatio(reserveIn, reserveOut);
-      const currentAmountAettos = toAettos(maxOutAmount.toString(), isToken0ToToken1 ? pair.token0.decimals : pair.token1.decimals);
-      const currentAmountAettosBN = new BigNumber(currentAmountAettos.toString());
-      const nextAmountAettosBN = currentAmountAettosBN.multipliedBy(hopRatio);
-      const nextDecimals = isToken0ToToken1 ? pair.token1.decimals : pair.token0.decimals;
-      maxOutAmount = Decimal.from(fromAettos(nextAmountAettosBN.toFixed(0), nextDecimals));
-    }
-  }
+  const humanRatio = getHumanRouteRatio(route, params.tokenIn, params.tokenOut);
+  const maxAvailableIn = fromAettos(reserveAettos, params.tokenIn.decimals);
+  const maxAvailableDecimal = Decimal.from(maxAvailableIn);
 
   return {
-    maxOut: params.isExactIn ? maxOutAmount.toString() : params.amountOut,
+    maxOut: humanRatio ? maxAvailableDecimal.mul(humanRatio).toString() : undefined,
     liquidityStatus: {
       exceedsLiquidity: true,
-      maxAvailable: fromAettos(reserveAettos, params.tokenIn.decimals),
+      maxAvailable: maxAvailableIn,
       pairAddress: firstPair.address,
     },
   };
@@ -295,10 +203,7 @@ export function useSwapQuote() {
     tokenOut: DexTokenDto,
   ): Promise<{
     path: string[] | null;
-    pairData?: {
-      directPairs?: PairDto[];
-      paths?: PairDto[][];
-    };
+    route?: BackendRoutePair[];
   }> => {
     if (isAeToWae(tokenIn, tokenOut)) {
       return { path: [CONFIG.DEX_WAE] };
@@ -312,54 +217,26 @@ export function useSwapQuote() {
 
       if (!tokenInAddr || !tokenOutAddr) return { path: null };
 
-      // Use the providers API endpoint to find swap routes
+      // Match dex-ui: fetch swap-routes from dex-backend and derive
+      // path/ratio from ordered route reserves.
       try {
-        const result = await DexPairService.findPairsForTokens({
-          fromToken: tokenInAddr,
-          toToken: tokenOutAddr,
-        });
+        const [sortedA, sortedB] = sortTokens(tokenInAddr, tokenOutAddr);
+        const routes = await getSwapRoutes(sortedA, sortedB);
+        const synchronizedRoutes = routes?.filter((pairs) => pairs.every((pair: any) => pair.synchronized))
+          ?? [];
+        const candidateRoutes = synchronizedRoutes.length ? synchronizedRoutes : (routes ?? []);
 
-        // Check for direct pairs first
-        if (result?.hasDirectPath && result?.directPairs?.length) {
-          const directPair = result.directPairs[0];
-          return {
-            path: [tokenInAddr, tokenOutAddr],
-            pairData: {
-              directPairs: result.directPairs as PairDto[],
-              paths: result.paths,
-            },
-          };
-        }
-
-        // Check for paths (multi-hop routes)
-        if (result?.paths?.length && result.paths[0]?.length) {
-          const firstPath = result.paths[0];
-          const hops = [tokenInAddr];
-
-          for (const pair of firstPath) {
-            const last = hops[hops.length - 1];
-            const next = pair.token0?.address === last
-              ? pair.token1?.address
-              : pair.token1?.address === last
-                ? pair.token0?.address
-                : null;
-
-            if (!next) break;
-            hops.push(next);
-          }
-
-          if (hops[hops.length - 1] === tokenOutAddr) {
+        for (const route of candidateRoutes) {
+          const computedPath = getPath(route as any, tokenInAddr);
+          if (computedPath[computedPath.length - 1] === tokenOutAddr) {
             return {
-              path: hops,
-              pairData: {
-                directPairs: result.directPairs,
-                paths: result.paths,
-              },
+              path: computedPath,
+              route: route as BackendRoutePair[],
             };
           }
         }
       } catch (e) {
-        // Ignore provider route discovery failures and fall back to on-chain.
+        // Ignore dex-backend route discovery failures and fall back to on-chain.
       }
 
       // Fallback via contracts
@@ -434,10 +311,7 @@ export function useSwapQuote() {
         return result;
       }
 
-      const tokenInAddr = getTokenAddress(params.tokenIn);
-      const tokenOutAddr = getTokenAddress(params.tokenOut);
-
-      const { path, pairData } = await buildBestPath(params.tokenIn, params.tokenOut);
+      const { path, route } = await buildBestPath(params.tokenIn, params.tokenOut);
 
       if (!path) throw new Error('No route found');
 
@@ -452,48 +326,22 @@ export function useSwapQuote() {
         liquidityInfo: { reserve0: string; reserve1: string };
       }> | undefined;
 
-      // Use ratio-based calculation if pairData is available from backend
-      if (pairData) {
-        // Direct pair swap
-        if (path.length === 2 && pairData.directPairs?.length) {
-          const pair = pairData.directPairs[0] as PairWithReserves;
-          const result = calculateDirectPairAmount(params, pair, tokenInAddr, tokenOutAddr);
-          amountOut = result.amountOut;
-          amountIn = result.amountIn;
-          maxOut = result.maxOut;
-          liquidityStatus = result.liquidityStatus;
-          if (pair.reserve0 && pair.reserve1) {
-            currentRouteForPriceImpact = [{
-              token0: pair.token0.address,
-              token1: pair.token1.address,
-              liquidityInfo: {
-                reserve0: pair.reserve0,
-                reserve1: pair.reserve1,
-              },
-            }];
-          }
-        }
-        // Multi-hop route
-        else if (path.length > 2 && pairData.paths?.length && pairData.paths[0]?.length) {
-          const pathPairs = pairData.paths[0] as PairWithReserves[];
-          const multiHopResult = calculateMultiHopAmount(params, pathPairs, path);
-          amountOut = multiHopResult.amountOut;
-          amountIn = multiHopResult.amountIn;
+      if (route?.length) {
+        const routeResult = calculateRouteAmount(params, route);
+        amountOut = routeResult.amountOut;
+        amountIn = routeResult.amountIn;
 
-          const liquidityResult = checkMultiHopLiquidity(params, pathPairs, path, amountIn);
-          maxOut = liquidityResult.maxOut;
-          liquidityStatus = liquidityResult.liquidityStatus;
-          currentRouteForPriceImpact = pathPairs
-            .filter((pair) => pair.reserve0 && pair.reserve1)
-            .map((pair) => ({
-              token0: pair.token0.address,
-              token1: pair.token1.address,
-              liquidityInfo: {
-                reserve0: pair.reserve0!,
-                reserve1: pair.reserve1!,
-              },
-            }));
-        }
+        const liquidityResult = checkRouteLiquidity(params, route, path, amountIn);
+        maxOut = liquidityResult.maxOut;
+        liquidityStatus = liquidityResult.liquidityStatus;
+        currentRouteForPriceImpact = route.map((pair) => ({
+          token0: pair.token0,
+          token1: pair.token1,
+          liquidityInfo: {
+            reserve0: pair.liquidityInfo.reserve0,
+            reserve1: pair.liquidityInfo.reserve1,
+          },
+        }));
       }
 
       // Always get router contract's actual expected output for swap execution
@@ -519,6 +367,14 @@ export function useSwapQuote() {
         } catch (e) {
           // Ignore and fall back to ratio-based calculation.
         }
+      }
+
+      // Use reserve-derived route math for spot ratio and liquidity checks,
+      // but prefer the router quote for the actual displayed swap amounts.
+      if (params.isExactIn && routerAmountOut !== undefined) {
+        amountOut = routerAmountOut;
+      } else if (!params.isExactIn && routerAmountIn !== undefined) {
+        amountIn = routerAmountIn;
       }
 
       // Fallback to router contract if no pairData available
@@ -553,12 +409,12 @@ export function useSwapQuote() {
         setRouteInfo({
           path,
           priceImpact,
-          pairData: pairData
-            ? {
-              directPairs: pairData.directPairs as any,
-              paths: pairData.paths as any,
-            }
-            : undefined,
+          reserves: route?.map((pair) => ({
+            token0: pair.token0,
+            token1: pair.token1,
+            reserve0: pair.liquidityInfo.reserve0,
+            reserve1: pair.liquidityInfo.reserve1,
+          })),
           liquidityStatus,
           routerAmountOut: routerAmountOut || amountOut,
           routerAmountIn: routerAmountIn || amountIn,

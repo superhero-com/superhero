@@ -13,7 +13,6 @@ export type CommonConfig = {
   MAINNET_DEX_BACKEND_URL?: string;
   TESTNET_DEX_BACKEND_URL?: string;
   POPULAR_FEED_ENABLED: boolean;
-  GIPHY_API_KEY?: string;
   /** X (Twitter) OAuth 2.0 client id for "Connect X" (PKCE flow). If unset, Connect X is hidden. */
   X_OAUTH_CLIENT_ID?: string;
   /** Profile registry contract used for profile writes/reads. */
@@ -79,7 +78,6 @@ export const COMMON_CONFIG = {
   MAINNET_DEX_BACKEND_URL: 'https://dex-backend-mainnet.prd.service.aepps.com',
   TESTNET_DEX_BACKEND_URL: 'https://dex-backend-testnet.prd.service.aepps.com',
   POPULAR_FEED_ENABLED: true,
-  GIPHY_API_KEY: process.env.VITE_GIPHY_API_KEY ?? 'P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM',
   X_OAUTH_CLIENT_ID: (process.env as any).VITE_X_OAUTH_CLIENT_ID ?? '',
   PROFILE_REGISTRY_CONTRACT_ADDRESS: (
     (import.meta as any)?.env?.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS

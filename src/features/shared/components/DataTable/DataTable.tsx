@@ -29,6 +29,7 @@ export interface DataTableProps<T> {
   className?: string;
   emptyMessage?: string;
   loadingComponent?: React.ReactNode;
+  fetchingOverlayComponent?: React.ReactNode;
   errorComponent?: (error: Error) => React.ReactNode;
   showPagination?: boolean;
   itemsPerPage?: number;
@@ -41,6 +42,7 @@ export const DataTable = <T, >({
   className = '',
   emptyMessage = 'No data found',
   loadingComponent,
+  fetchingOverlayComponent,
   errorComponent,
   showPagination = true,
   itemsPerPage = 10,
@@ -49,6 +51,7 @@ export const DataTable = <T, >({
     page: 1,
     limit: itemsPerPage,
   });
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
   const queryKey = useMemo(() => ['DataTable', params, initialParams, queryFn], [params, initialParams, queryFn]);
@@ -64,9 +67,10 @@ export const DataTable = <T, >({
     placeholderData: (previousData) => previousData,
   });
 
-  const isTableLoading = isLoading || isFetching;
+  const isTableLoading = isLoading || isPageTransitioning;
 
   const handlePageChange = (page: number) => {
+    setIsPageTransitioning(true);
     setParams((prev) => ({ ...prev, page }));
   };
 
@@ -74,6 +78,17 @@ export const DataTable = <T, >({
   useEffect(() => {
     // You can expose these methods through a ref if needed
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      setIsPageTransitioning(false);
+      return;
+    }
+
+    if (!isFetching && data?.meta?.currentPage === params.page) {
+      setIsPageTransitioning(false);
+    }
+  }, [data?.meta?.currentPage, error, isFetching, params.page]);
 
   if (isLoading && !data) {
     return (
@@ -125,18 +140,31 @@ export const DataTable = <T, >({
   return (
     <div className={`space-y-2 ${className}`}>
       {/* Data Table Content */}
-      <div className="space-y-2">
-        {data.items.map((item, index) => {
-          const rowKey = (item as any).id
-            ?? (item as any).address
-            ?? (item as any).hash
-            ?? JSON.stringify(item);
-          return (
-            <div key={rowKey}>
-              {renderRow({ item, index })}
-            </div>
-          );
-        })}
+      <div className="relative">
+        <div className={`space-y-2 transition-opacity ${isPageTransitioning ? 'opacity-50' : ''}`}>
+          {data.items.map((item, index) => {
+            const rowKey = (item as any).id
+              ?? (item as any).address
+              ?? (item as any).hash
+              ?? JSON.stringify(item);
+            return (
+              <div key={rowKey}>
+                {renderRow({ item, index })}
+              </div>
+            );
+          })}
+        </div>
+
+        {isPageTransitioning && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            {fetchingOverlayComponent || (
+              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm">
+                <Spinner className="h-4 w-4" />
+                <span>Loading page...</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Pagination */}

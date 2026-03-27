@@ -218,6 +218,12 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
               <Spinner className="w-6 h-6" />
             </div>
           )}
+          fetchingOverlayComponent={(
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm">
+              <Spinner className="w-4 h-4" />
+              <span>Loading trades...</span>
+            </div>
+          )}
         />
       </div>
     </div>

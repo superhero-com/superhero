@@ -110,7 +110,6 @@ export const TransactionNotificationProvider: React.FC<{
 
   const scheduleAutoDismiss = (payload: TxPayload, ms: number) => {
     clearDismissTimer();
-    if (payload.type === TxPayloadType.CreateToken) return;
     dismissTimer.current = setTimeout(() => {
       setNotificationState({ status: 'idle' });
     }, ms);

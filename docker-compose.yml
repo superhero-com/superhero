@@ -1,0 +1,24 @@
+services:
+  middleware:
+    # TODO: use upstream after solving https://github.com/aeternity/ae_mdw/issues/1758
+    image: davidyuk/temp:mdw-dev-mode-1.104.5-pr-2167
+    ports:
+      - '4000:4000'
+      - '4001:4001'
+      - '3013:3013'
+      - '3313:3313'
+    volumes:
+      - ./docker/aeternity.yaml:/home/aeternity/.aeternity/aeternity/aeternity.yaml
+    stop_grace_period: 0s
+
+  explorer:
+    image: aeternity/aescan:0.24.2
+    ports:
+      - '3070:8080'
+    environment:
+      - NUXT_PUBLIC_NETWORK_NAME=Local network
+      - NUXT_PUBLIC_NODE_URL=http://host.docker.internal:3013/v3
+      - NUXT_PUBLIC_MIDDLEWARE_URL=http://host.docker.internal:4000/v3
+      - NUXT_PUBLIC_WEBSOCKET_URL=ws://host.docker.internal:4001/v2/websocket
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

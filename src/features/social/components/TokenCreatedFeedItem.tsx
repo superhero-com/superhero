@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
+import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
@@ -97,7 +98,10 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                   <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
                 </div>
               </div>
-              <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+              <div className="mt-1 flex items-center gap-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] min-w-0">
+                <span className="truncate">{authorAddress}</span>
+                <InlineCopyButton value={authorAddress} className="shrink-0" />
+              </div>
             </>
           ) : (
             <>
@@ -108,8 +112,9 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                 <span className="text-white/50 shrink-0">·</span>
                 <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
               </div>
-              <div className="md:hidden mt-1 text-[9px] text-white/65 font-mono leading-[1.2] truncate">
-                {authorAddress}
+              <div className="md:hidden mt-1 flex items-center gap-1 text-[9px] text-white/65 font-mono leading-[1.2] min-w-0">
+                <span className="truncate">{authorAddress}</span>
+                <InlineCopyButton value={authorAddress} className="shrink-0" />
               </div>
               <div className="hidden md:block text-[15px] font-semibold text-white truncate" title={authorAddress}>
                 {authorAddress}

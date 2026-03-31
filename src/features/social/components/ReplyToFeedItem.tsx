@@ -11,6 +11,7 @@ import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
+import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
@@ -248,8 +249,9 @@ const ReplyToFeedItem = memo(({
                     <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
                   )}
                 </div>
-                <div className="text-[10px] text-white/60 font-mono truncate">
-                  {formatAddress(authorAddress, 10, false)}
+                <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
+                  <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+                  <InlineCopyButton value={authorAddress} className="shrink-0" />
                 </div>
               </>
             ) : (
@@ -276,8 +278,9 @@ const ReplyToFeedItem = memo(({
                     <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
                   )}
                 </div>
-                <div className="md:hidden text-[10px] text-white/60 font-mono truncate">
-                  {formatAddress(authorAddress, 10, false)}
+                <div className="md:hidden flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
+                  <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+                  <InlineCopyButton value={authorAddress} className="shrink-0" />
                 </div>
                 <div className="hidden md:block text-[15px] font-semibold text-white truncate" title={authorAddress}>
                   {authorAddress}

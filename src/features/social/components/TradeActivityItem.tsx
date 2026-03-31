@@ -9,6 +9,7 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { useWallet } from '../../../hooks';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { formatCompactNumber } from '../../../utils/number';
+import { formatAddress } from '../../../utils/address';
 import { Decimal } from '../../../libs/decimal';
 import { formatFractionalPrice } from '../../../utils/common';
 import FractionFormatter from '../../shared/components/FractionFormatter';
@@ -35,7 +36,8 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames, profileDisplayNames } = useWallet();
   const account = item.account || item.address || '';
-  const displayName = profileDisplayNames?.[account] ?? chainNames?.[account] ?? t('common:defaultDisplayName');
+  const displayName = (profileDisplayNames?.[account] ?? chainNames?.[account] ?? '').trim();
+  const hasDisplayName = Boolean(displayName);
   const tokenName = item?.token?.name || item?.token?.symbol || '';
   const tokenLabel = item?.token?.symbol || item?.token?.name || 'Token';
   const tokenTag = tokenName || tokenLabel;
@@ -109,14 +111,39 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
             </div>
           </div>
           <div className="min-w-0">
-            <div className="flex items-baseline gap-2 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-              <span className="text-white/50 shrink-0">·</span>
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
-                {compactTime(item.created_at)}
-              </div>
-            </div>
-            <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
+            {hasDisplayName ? (
+              <>
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+                  <span className="text-white/50 shrink-0">·</span>
+                  <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
+                    {compactTime(item.created_at)}
+                  </div>
+                </div>
+                <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-2 min-w-0 md:hidden">
+                  <div className="text-[15px] font-semibold text-white truncate" title={account}>
+                    {formatAddress(account, 6, true)}
+                  </div>
+                  <span className="text-white/50 shrink-0">·</span>
+                  <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
+                    {compactTime(item.created_at)}
+                  </div>
+                </div>
+                <div className="md:hidden mt-1 text-[9px] text-white/65 font-mono leading-[1.2] truncate">
+                  {account}
+                </div>
+                <div className="hidden md:block text-[15px] font-semibold text-white truncate" title={account}>
+                  {account}
+                </div>
+                <div className="hidden md:block mt-1 text-[10px] text-white/65 leading-[1.2] truncate" title={fullTimestamp(item.created_at)}>
+                  {compactTime(item.created_at)}
+                </div>
+              </>
+            )}
           </div>
         </div>
         <div className="flex-1 min-w-0">

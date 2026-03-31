@@ -9,8 +9,8 @@ type IdenticonProps = {
 };
 
 const Identicon = ({ address, size = 32, name }: IdenticonProps) => {
-  // Check if this is a .chain name (has a name and it's not 'Legend')
-  const isChainName = name && name !== 'Legend' && name !== address;
+  // Check if this is a .chain name rather than the raw address
+  const isChainName = name && name !== address;
 
   if (isChainName) {
     // Use multiavatar for .chain names

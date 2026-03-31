@@ -43,6 +43,7 @@ import { CONFIG } from '../config';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { IconDiamond, IconLink } from '../icons';
+import { formatAddress } from '../utils/address';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
@@ -94,6 +95,9 @@ export default function UserProfile({
     staleTime: 10_000,
     refetchInterval: 10_000,
   });
+  const profileDisplayName = (profileInfo?.public_name || chainName || '').trim();
+  const hasProfileDisplayName = Boolean(profileDisplayName);
+  const profileHeading = profileDisplayName || formatAddress(effectiveAddress, 6, true);
 
   const { data: onChainProfile, refetch: refetchOnChainProfile } = useQuery({
     queryKey: ['ProfileRegistry.getProfileOnChain', effectiveAddress],
@@ -375,8 +379,16 @@ export default function UserProfile({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight">
-                {profileInfo?.public_name || chainName || 'Legend'}
+              <h1
+                className={[
+                  'font-extrabold text-[var(--neon-teal)] tracking-tight min-w-0',
+                  hasProfileDisplayName
+                    ? 'text-xl md:text-2xl truncate'
+                    : 'text-lg md:text-xl leading-tight truncate',
+                ].join(' ')}
+                title={hasProfileDisplayName ? profileHeading : effectiveAddress}
+              >
+                {profileHeading}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}

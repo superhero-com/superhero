@@ -1,11 +1,11 @@
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
 import { compactTime } from '../../../utils/time';
+import { formatAddress } from '../../../utils/address';
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
@@ -43,11 +43,11 @@ const TokenCreatedActivityItem = memo(({
   mobileTightTop = false,
   mobileTightBottom = false,
 }: TokenCreatedActivityItemProps) => {
-  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { chainNames, profileDisplayNames } = useWallet();
   const creator = item.sender_address;
-  const displayName = profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? t('defaultDisplayName');
+  const displayName = (profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? '').trim();
+  const creatorLabel = displayName || formatAddress(creator, 6, true);
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
@@ -65,17 +65,17 @@ const TokenCreatedActivityItem = memo(({
       className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding && 'pt-0'} ${((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding && 'pb-0'} ${((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
-      <div className="flex items-center justify-between gap-3 md:h-8">
-        <div className="flex items-center gap-1 min-w-0">
+      <div className="flex items-center justify-between gap-3 md:min-h-8">
+        <div className="flex items-center gap-1 min-w-0 py-[1px]">
           <AddressAvatarWithChainName address={creator} size={20} showAddressAndChainName={false} variant="feed" />
-          <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
+          <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.35]">
             <a
               href={`/users/${creator}`}
               onClick={(e) => e.stopPropagation()}
-              className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch] no-gradient-text"
-              title={displayName}
+              className="min-w-0 max-w-[18ch] shrink truncate whitespace-nowrap font-semibold text-white/90 no-gradient-text md:max-w-none"
+              title={displayName || creator}
             >
-              {displayName}
+              {creatorLabel}
             </a>
             <span className="text-white/70 shrink-0">created</span>
             {tokenName && (

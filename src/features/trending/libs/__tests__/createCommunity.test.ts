@@ -4,24 +4,29 @@ import {
 
 import { createCommunity } from '../createCommunity';
 
-const mockInitializeContractTyped = vi.fn();
-const mockDenominationTokenDecimals = vi.fn();
-const mockEstimateInitialBuyPriceAetto = vi.fn();
-const mockToTokenDecimals = vi.fn();
+const {
+  mockInitializeContractTyped,
+  mockDenominationTokenDecimals,
+  mockEstimateInitialBuyPriceAetto,
+  mockToTokenDecimals,
+} = vi.hoisted(() => ({
+  mockInitializeContractTyped: vi.fn(),
+  mockDenominationTokenDecimals: vi.fn(),
+  mockEstimateInitialBuyPriceAetto: vi.fn(),
+  mockToTokenDecimals: vi.fn(),
+}));
 
 vi.mock('@/libs/initializeContractTyped', () => ({
   initializeContractTyped: (...args: any[]) => mockInitializeContractTyped(...args),
 }));
 
-vi.mock('bctsl-sdk', async () => {
-  const actual = await vi.importActual<any>('bctsl-sdk');
-  return {
-    ...actual,
-    denominationTokenDecimals: (...args: any[]) => mockDenominationTokenDecimals(...args),
-    estimateInitialBuyPriceAetto: (...args: any[]) => mockEstimateInitialBuyPriceAetto(...args),
-    toTokenDecimals: (...args: any[]) => mockToTokenDecimals(...args),
-  };
-});
+// Do not use vi.importActual('bctsl-sdk'): the package's ESM entry uses directory imports
+// that Node/Vitest does not resolve (ERR_UNSUPPORTED_DIR_IMPORT).
+vi.mock('bctsl-sdk', () => ({
+  denominationTokenDecimals: (...args: any[]) => mockDenominationTokenDecimals(...args),
+  estimateInitialBuyPriceAetto: (...args: any[]) => mockEstimateInitialBuyPriceAetto(...args),
+  toTokenDecimals: (...args: any[]) => mockToTokenDecimals(...args),
+}));
 
 vi.mock('bctsl-contracts/generated/CommunityFactory.aci.json', () => ({
   default: {},

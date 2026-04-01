@@ -19,7 +19,9 @@
       "saveProfile": "Save profile",
       "sendFeedback": "Send Feedback",
       "retry": "Retry",
-      "connectX": "Connect X"
+      "connectX": "Connect X",
+      "getChainName": "+ Get .chain name",
+      "claimChainName": "Claim"
     },
     "labels": {
       "superheroHome": "Superhero Home",
@@ -44,7 +46,8 @@
       "none": "None",
       "connectX": "Link X account",
       "xAccount": "X account",
-      "profile": "Profile"
+      "profile": "Profile",
+      "claimChainName": "Claim a new .chain name"
     },
     "actions": {
       "copy": "Copy"
@@ -88,7 +91,10 @@
       "fullname": "Your full name",
       "avatarurl": "https://...",
       "username": "your_username",
-      "selectChainName": "Select one of your chain names"
+      "selectChainName": "Select one of your chain names",
+      "solName": "Your Solana name",
+      "xAccessToken": "Paste your X OAuth access token",
+      "claimChainName": "myuniquename123"
     },
     "messages": {
       "somethingWentWrong": "Something went wrong",
@@ -109,6 +115,28 @@
       "failedToRefreshProfile": "Profile transaction succeeded but refresh failed. Please reload the page.",
       "tooManyRequests": "Too many requests. Please wait and try again.",
       "noChainNamesFound": "No owned chain names found for this account.",
+      "connectWalletToClaimChainName": "Connect your wallet to claim a .chain name",
+      "chainNameClaimRequired": "Enter the name you want to claim.",
+      "chainNameClaimHint": "Use letters, numbers, or hyphens. More than 12 characters name is for free.",
+      "chainNameClaimInvalidChars": "Chain names can use letters, numbers, and hyphens, and can't start or end with a hyphen.",
+      "chainNameClaimChecking": "Checking…",
+      "chainNameClaimTooShort": "Sponsored claims require more than 12 characters before .chain.",
+      "chainNameClaimLoading": "Claiming…",
+      "chainNameClaimStarted": "Claim submitted. Waiting for backend sponsorship and transfer…",
+      "chainNameClaimPending": "Claim status: {{status}}",
+      "chainNameClaimCompleted": ".chain name claimed successfully.",
+      "chainNameClaimWalletUnavailable": "Wallet message signing is not available right now. Please try again.",
+      "chainNameClaimNameTaken": "That .chain name is already taken. Try another one.",
+      "chainNameClaimNameInProgress": "That .chain name is currently being claimed. Try another one.",
+      "chainNameClaimAddressInProgress": "You already have a sponsored .chain claim in progress.",
+      "chainNameClaimAddressClaimed": "This wallet already has a sponsored .chain name.",
+      "chainNameClaimChallengeExpired": "Your claim session expired. Please try again.",
+      "chainNameClaimVerificationFailed": "We could not verify your wallet signature. Please try again.",
+      "chainNameClaimUnavailable": "Sponsored .chain claiming is temporarily unavailable. Please try again later.",
+      "chainNameClaimRetry": "We could not start the .chain claim. Please try again.",
+      "chainNameClaimFailed": "Failed to claim .chain name.",
+      "chainNameClaimTimedOut": "The claim is still processing. Please check back in a moment.",
+      "selectChainNameForDisplaySource": "Choose a chain name before using Chain as display source.",
       "oops": "Oops",
       "loading": "Loading…",
       "connectXHint": "Link your X account so your profile can show your X username. You will sign in with X once; no token to copy.",

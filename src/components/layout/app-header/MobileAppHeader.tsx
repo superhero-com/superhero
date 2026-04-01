@@ -312,7 +312,6 @@ const MobileAppHeader = () => {
                       showBalance
                       showAddressAndChainName={false}
                       showPrimaryOnly
-                      hideFallbackName
                       contentClassName="px-2 pb-0"
                     />
                   </button>

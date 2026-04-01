@@ -68,6 +68,40 @@ export type XAttestationResponse = {
   signature_base64: string;
 };
 
+export type ChainNameChallengeResponse = {
+  nonce: string;
+  expires_at: string | number;
+  message: string;
+};
+
+export type ChainNameClaimRequest = {
+  address: string;
+  name: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  signature_hex: string;
+};
+
+export type ChainNameClaimResponse = {
+  status: string;
+  message?: string | null;
+};
+
+export type ChainNameClaimStatusResponse = {
+  status: string;
+  name?: string | null;
+  error?: string | null;
+  preclaim_tx_hash?: string | null;
+  claim_tx_hash?: string | null;
+  update_tx_hash?: string | null;
+  transfer_tx_hash?: string | null;
+  expires_at?: string | number | null;
+  approximate_expire_time?: string | number | null;
+  approximateExpireTime?: string | number | null;
+  expire_time?: string | number | null;
+  expireTime?: string | number | null;
+};
+
 // Superhero API client
 export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
@@ -375,6 +409,29 @@ export const SuperheroApi = {
         accessToken,
       }),
     }) as Promise<XAttestationResponse>;
+  },
+  createChainNameChallenge(address: string) {
+    return this.fetchJson('/api/profile/chain-name/challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+      }),
+    }) as Promise<ChainNameChallengeResponse>;
+  },
+  claimChainName(payload: ChainNameClaimRequest) {
+    return this.fetchJson('/api/profile/chain-name/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<ChainNameClaimResponse>;
+  },
+  getChainNameClaimStatus(address: string) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/chain-name-claim`) as Promise<ChainNameClaimStatusResponse>;
   },
   /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
   createXAttestationFromCode(

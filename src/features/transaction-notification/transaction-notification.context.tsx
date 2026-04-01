@@ -12,6 +12,7 @@ export const TxPayloadType = {
   CreateToken: 'create_token',
   CreatePost: 'create_post',
   CreateComment: 'create_comment',
+  ClaimChainName: 'claim_chain_name',
   SwapToken: 'swap_token',
   WrapToken: 'wrap_ae',
   UnwrapToken: 'unwrap_wae',
@@ -26,6 +27,7 @@ export type TxPayload =
   | { type: typeof TxPayloadType.CreateToken; tokenName: string }
   | { type: typeof TxPayloadType.CreatePost; content: string }
   | { type: typeof TxPayloadType.CreateComment; postId: string }
+  | { type: typeof TxPayloadType.ClaimChainName; name: string; step?: 'wallet' | 'queued' | 'preclaim' | 'claim' | 'update' | 'transfer' }
   | { type: typeof TxPayloadType.SwapToken; tokenInSymbol: string; tokenOutSymbol: string; amountIn: string; amountOut: string }
   | { type: typeof TxPayloadType.WrapToken; amount: string }
   | { type: typeof TxPayloadType.UnwrapToken; amount: string }
@@ -44,6 +46,7 @@ export type NotificationState =
 type TransactionNotificationContextValue = {
   notificationState: NotificationState;
   notifySubmitted: (payload: TxPayload) => void;
+  notifyPending: (payload: TxPayload) => void;
   notifyPendingTx: (payload: TxPayload, txHash: string) => void;
   notifyConfirmed: (payload: TxPayload) => void;
   notifyError: (message: string) => void;
@@ -121,6 +124,12 @@ export const TransactionNotificationProvider: React.FC<{
     setNotificationState({ status: 'submitted', payload });
   }, []);
 
+  const notifyPending = useCallback((payload: TxPayload) => {
+    clearDismissTimer();
+    clearPollInterval();
+    setNotificationState({ status: 'pending', payload, txHash: '' });
+  }, []);
+
   const notifyConfirmed = useCallback((payload: TxPayload) => {
     clearDismissTimer();
     clearPollInterval();
@@ -167,6 +176,7 @@ export const TransactionNotificationProvider: React.FC<{
   const contextValue = useMemo(() => ({
     notificationState,
     notifySubmitted,
+    notifyPending,
     notifyPendingTx,
     notifyConfirmed,
     notifyError,
@@ -174,6 +184,7 @@ export const TransactionNotificationProvider: React.FC<{
   }), [
     notificationState,
     notifySubmitted,
+    notifyPending,
     notifyPendingTx,
     notifyConfirmed,
     notifyError,

@@ -14,13 +14,14 @@ import {
 } from '../../features/trending/components/Invitation';
 import Shell from '../../components/layout/Shell';
 import { useAeSdk } from '../../hooks';
-import { useInvitations } from '../../features/trending/hooks/useInvitations';
 import NetworkVisualization from '../../features/trending/components/Invitation/graphics/NetworkVisualization';
 import EarningFlow from '../../features/trending/components/Invitation/graphics/EarningFlow';
+import { useAtomValue } from 'jotai';
+import { invitationListAtom } from '../../atoms/invitationAtoms';
 
 export default function Invite() {
   const { activeAccount } = useAeSdk();
-  const { invitations } = useInvitations();
+  const invitationList = useAtomValue(invitationListAtom);
   const [showStepGuide, setShowStepGuide] = useState<boolean>(() => {
     try {
       if (localStorage.getItem('invite_step_guide_dismissed') === '1') return false;
@@ -39,7 +40,9 @@ export default function Invite() {
     setShowStepGuide(false);
   };
 
-  const inviteCount = invitations?.length || 0;
+  const inviteCount = activeAccount
+    ? invitationList.filter(({ inviter }) => inviter === activeAccount).length
+    : 0;
 
   return (
     <Shell>

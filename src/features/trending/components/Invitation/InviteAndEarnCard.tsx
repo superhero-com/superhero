@@ -143,8 +143,9 @@ const InviteAndEarnCard = ({
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
   };
 
-  const shareToDiscord = (link: string) => {
-    copyToClipboard(link, -1);
+  const shareToDiscord = (link: string, index: number) => {
+    // Provide visual feedback by using the row index (same as the copy button)
+    copyToClipboard(link, index);
   };
 
   const canUseNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
@@ -368,7 +369,7 @@ const InviteAndEarnCard = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => shareToDiscord(link)}
+                      onClick={() => shareToDiscord(link, index)}
                       className="flex-1 min-w-[7rem] flex items-center justify-center gap-2 px-3 py-2 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 rounded-lg transition-all duration-300 text-sm text-white"
                     >
                       <MessageCircle className="w-4 h-4" />
@@ -377,7 +378,17 @@ const InviteAndEarnCard = ({
                     {canUseNativeShare && (
                       <button
                         type="button"
-                        onClick={() => navigator.share({ text: link, title: 'Superhero Invite Link' })}
+                        onClick={async () => {
+                          try {
+                            await navigator.share({ text: link, title: 'Superhero Invite Link' });
+                          } catch (err: any) {
+                            // Swallow user-cancelled share; log other errors
+                            if (err?.name !== 'AbortError') {
+                              // eslint-disable-next-line no-console
+                              console.error('Share failed:', err);
+                            }
+                          }
+                        }}
                         className="flex-1 min-w-[7rem] flex items-center justify-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-300 text-sm text-white"
                       >
                         <Share2 className="w-4 h-4" />

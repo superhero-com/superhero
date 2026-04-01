@@ -267,12 +267,14 @@ const ProfileEditModal = ({
   address,
   initialBio,
   initialSection = 'profile',
+  onBuyChainName,
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
   address?: string;
   initialBio?: string;
   initialSection?: 'profile' | 'x';
+  onBuyChainName?: () => void;
 }) => {
   const { t } = useTranslation('common');
   const {
@@ -460,6 +462,15 @@ const ProfileEditModal = ({
     setChainPickerOpen(true);
   };
 
+  const handleChainNameAction = () => {
+    const hasChainName = Boolean(trimmedForm.chain_name);
+    if (hasChainName || availableChainNames.length > 0) {
+      openChainPicker();
+      return;
+    }
+    onBuyChainName?.();
+  };
+
   const applyChainPicker = () => {
     setForm((prev) => ({
       ...prev,
@@ -642,6 +653,7 @@ const ProfileEditModal = ({
   const selectedChainLabel = trimmedForm.chain_name
     ? formatChainNameLabel(trimmedForm.chain_name)
     : null;
+  const canChooseChainName = Boolean(trimmedForm.chain_name) || availableChainNames.length > 0;
 
   return (
     <>
@@ -708,7 +720,7 @@ const ProfileEditModal = ({
                   </div>
                   <button
                     type="button"
-                    onClick={openChainPicker}
+                    onClick={handleChainNameAction}
                     className="shrink-0 rounded-xl px-3 py-2 text-[12px] font-semibold border border-solid transition-colors whitespace-nowrap"
                     style={NEON_ACTION_BUTTON_STYLE}
                     onMouseEnter={(e) => {
@@ -718,7 +730,7 @@ const ProfileEditModal = ({
                       (e.currentTarget as HTMLButtonElement).style.background = NEON_ACTION_BUTTON_STYLE.background;
                     }}
                   >
-                    {selectedChainLabel ? t('buttons.changeChainName') : t('buttons.buyChainName')}
+                    {canChooseChainName ? t('buttons.chooseChainName') : t('buttons.buyChainName')}
                   </button>
                 </div>
               </div>

@@ -44,6 +44,7 @@ import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
+import ClaimChainNameModal from '@/components/modals/ClaimChainNameModal';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks';
@@ -104,6 +105,7 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [claimChainNameOpen, setClaimChainNameOpen] = useState(false);
   const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
 
   // Get tab from URL search params, default to "feed"
@@ -619,6 +621,15 @@ export default function UserProfile({
         address={effectiveAddress}
         initialBio={bioText}
         initialSection={editInitialSection}
+        onBuyChainName={() => {
+          setEditOpen(false);
+          setClaimChainNameOpen(true);
+        }}
+      />
+      <ClaimChainNameModal
+        open={claimChainNameOpen}
+        onClose={() => setClaimChainNameOpen(false)}
+        address={effectiveAddress}
       />
     </Shell>
   ) : (
@@ -651,6 +662,15 @@ export default function UserProfile({
         address={effectiveAddress}
         initialBio={bioText}
         initialSection={editInitialSection}
+        onBuyChainName={() => {
+          setEditOpen(false);
+          setClaimChainNameOpen(true);
+        }}
+      />
+      <ClaimChainNameModal
+        open={claimChainNameOpen}
+        onClose={() => setClaimChainNameOpen(false)}
+        address={effectiveAddress}
       />
     </>
   );

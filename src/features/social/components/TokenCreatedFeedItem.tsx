@@ -4,11 +4,14 @@ import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { linkify } from '../../../utils/linkify';
+import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
+import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
 import { compactTime, fullTimestamp } from '../../../utils/time';
+import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 
 interface TokenCreatedFeedItemProps {
   item: PostDto;
@@ -35,9 +38,36 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   const authorAddress = item.sender_address;
   const { t } = useTranslation(['common', 'social']);
   const { chainNames, profileDisplayNames } = useWallet();
-  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
+  const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
+  const hasDisplayName = Boolean(displayName);
+  const authorLabel = displayName || formatAddress(authorAddress, 6, true);
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
+  const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
+  const unnamedHeader = isCompact ? (
+    <>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
+          {formatAddress(authorAddress, 6, true)}
+        </div>
+        <span className="text-white/50 shrink-0">·</span>
+        <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+      </div>
+      <div className="mt-1 flex items-center gap-1 text-[9px] text-white/65 font-mono leading-[1.2] min-w-0">
+        <span className="truncate">{authorAddress}</span>
+        <InlineCopyButton value={authorAddress} className="shrink-0" />
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
+        {authorAddress}
+      </div>
+      <div className="mt-1 text-[10px] text-white/65 leading-[1.2] truncate" title={fullTimestamp(item.created_at as unknown as string)}>
+        {compactTime(item.created_at as unknown as string)}
+      </div>
+    </>
+  );
 
   const handleOpen = useCallback(() => onOpenPost(postId), [onOpenPost, postId]);
   const navigate = useNavigate();
@@ -45,6 +75,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <article
+      ref={containerRef}
       className={cn(
         'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]',
       )}
@@ -67,32 +98,40 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
             sender={item.sender_address}
             contract={(item as any).contract_address}
             postId={String(item.id)}
-            className="px-2"
-            showLabel
+            className={cn('px-2', isCompact && 'px-0')}
+            showLabel={!isCompact}
           />
         </div>
       )}
 
       <div className="flex gap-2 md:gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
-          <div className="md:hidden">
+          {isCompact ? (
             <AddressAvatarWithChainName address={authorAddress} size={34} showAddressAndChainName={false} variant="feed" />
-          </div>
-          <div className="hidden md:block">
+          ) : (
             <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
-          </div>
+          )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          {/* Header: name · time */}
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-baseline gap-2.5 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-              <span className="text-white/50 shrink-0">·</span>
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-            </div>
-          </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+        <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
+          {/* Header: keep named-user layout; show address-first layout for unnamed users */}
+          {hasDisplayName ? (
+            <>
+              <div className="flex items-center justify-between gap-2.5">
+                <div className={cn('flex items-baseline min-w-0', isCompact ? 'gap-2' : 'gap-2.5')}>
+                  <div className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}>{displayName}</div>
+                  <span className="text-white/50 shrink-0">·</span>
+                  <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+                </div>
+              </div>
+              <div className="mt-1 flex items-center gap-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] min-w-0">
+                <span className="truncate">{authorAddress}</span>
+                <InlineCopyButton value={authorAddress} className="shrink-0" />
+              </div>
+            </>
+          ) : (
+            unnamedHeader
+          )}
 
           {/* Tokenized trend header */}
           <div
@@ -100,7 +139,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
             title={t('social:openToken')}
           >
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-[11px] text-white/65 shrink-0">{displayName}</span>
+              <span className="text-[11px] text-white/65 shrink-0">{authorLabel}</span>
               <span className="text-[11px] text-white/65 shrink-0">{t('social:created')}</span>
               {tokenName && (
                 <span className="text-[12px] truncate">

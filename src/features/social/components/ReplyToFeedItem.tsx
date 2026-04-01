@@ -11,10 +11,12 @@ import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
+import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
 import { compactTime, fullTimestamp } from '../../../utils/time';
+import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -78,7 +80,9 @@ const ReplyToFeedItem = memo(({
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames, profileDisplayNames } = useWallet();
-  const displayName = profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? t('common:defaultDisplayName');
+  const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
+  const hasDisplayName = Boolean(displayName);
+  const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -128,6 +132,66 @@ const ReplyToFeedItem = memo(({
   const media = Array.isArray(item.media)
     ? item.media.filter((m) => (typeof m === 'string' ? !m.startsWith('comment:') : true))
     : [];
+  const unnamedHeader = isCompact ? (
+    <>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
+          {formatAddress(authorAddress, 6, true)}
+        </div>
+        <span className="text-white/50 shrink-0">·</span>
+        {item.tx_hash ? (
+          <BlockchainInfoPopover
+            txHash={(item as any).tx_hash}
+            createdAt={item.created_at as unknown as string}
+            sender={(item as any).sender_address}
+            contract={(item as any).contract_address}
+            postId={String(item.id)}
+            triggerContent={(
+              <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                {compactTime(item.created_at as unknown as string)}
+              </span>
+            )}
+          />
+        ) : (
+          <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+        )}
+      </div>
+      <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
+        <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+        <InlineCopyButton value={authorAddress} className="shrink-0" />
+      </div>
+    </>
+  ) : (
+    <>
+      <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
+        {authorAddress}
+      </div>
+      <div>
+        {item.tx_hash ? (
+          <BlockchainInfoPopover
+            txHash={(item as any).tx_hash}
+            createdAt={item.created_at as unknown as string}
+            sender={(item as any).sender_address}
+            contract={(item as any).contract_address}
+            postId={String(item.id)}
+            triggerContent={(
+              <span className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
+                {compactTime(item.created_at as unknown as string)}
+                {' '}
+                ago
+              </span>
+            )}
+          />
+        ) : (
+          <div className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
+            {compactTime(item.created_at as unknown as string)}
+            {' '}
+            ago
+          </div>
+        )}
+      </div>
+    </>
+  );
 
   // Compute total descendant comments (all levels) for this item
   const { data: descendantCount } = useQuery<number>({
@@ -178,6 +242,7 @@ const ReplyToFeedItem = memo(({
 
   return (
     <article
+      ref={containerRef}
       className={cn(
         'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
         !isActive && 'cursor-pointer hover:bg-white/[0.04]',
@@ -204,51 +269,56 @@ const ReplyToFeedItem = memo(({
             sender={item.sender_address}
             contract={(item as any).contract_address}
             postId={String(item.id)}
-            className="px-2"
-            showLabel
+            className={cn('px-2', isCompact && 'px-0')}
+            showLabel={!isCompact}
           />
         </div>
       )}
       {/* Main row: avatar left, content right */}
       <div className="flex gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
-          <div className="md:hidden">
+          {isCompact ? (
             <AddressAvatarWithChainName address={authorAddress} size={36} showAddressAndChainName={false} variant="feed" />
-          </div>
-          <div className="hidden md:block">
+          ) : (
             <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
-          </div>
+          )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          {/* Header: name · handle (wide desktop) · time */}
-          <div className="items-centermin-w-0">
-            <div className="flex items-center gap-2">
-              <div className="text-[15px] font-semibold text-white truncate">
-                {displayName}
-              </div>
-              <span className="text-white/50 shrink-0">·</span>
-              {item.tx_hash ? (
-                <BlockchainInfoPopover
-                  txHash={(item as any).tx_hash}
-                  createdAt={item.created_at as unknown as string}
-                  sender={(item as any).sender_address}
-                  contract={(item as any).contract_address}
-                  postId={String(item.id)}
-                  triggerContent={(
-                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                      {compactTime(item.created_at as unknown as string)}
-                    </span>
+        <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
+          {/* Header: keep named-user layout; show address-first layout for unnamed users */}
+          <div className="min-w-0">
+            {hasDisplayName ? (
+              <>
+                <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
+                  <div className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}>
+                    {displayName}
+                  </div>
+                  <span className="text-white/50 shrink-0">·</span>
+                  {item.tx_hash ? (
+                    <BlockchainInfoPopover
+                      txHash={(item as any).tx_hash}
+                      createdAt={item.created_at as unknown as string}
+                      sender={(item as any).sender_address}
+                      contract={(item as any).contract_address}
+                      postId={String(item.id)}
+                      triggerContent={(
+                        <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                          {compactTime(item.created_at as unknown as string)}
+                        </span>
+                      )}
+                    />
+                  ) : (
+                    <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
                   )}
-                />
-              ) : (
-                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-              )}
-            </div>
-            <div className="text-[10px] text-white/60 font-mono truncate">
-              {formatAddress(authorAddress, 10, false)}
-            </div>
-
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
+                  <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+                  <InlineCopyButton value={authorAddress} className="shrink-0" />
+                </div>
+              </>
+            ) : (
+              unnamedHeader
+            )}
           </div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
@@ -287,7 +357,7 @@ const ReplyToFeedItem = memo(({
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? (profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? t('common:defaultDisplayName')) : t('parent')}
+                    {parent ? ((profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? '').trim() || formatAddress(parent.sender_address, 6, true)) : t('parent')}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>

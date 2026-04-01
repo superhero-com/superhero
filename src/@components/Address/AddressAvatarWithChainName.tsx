@@ -173,19 +173,23 @@ export const AddressAvatarWithChainName = memo(({
           <div className={cn(contentBaseClass, contentClassName)}>
             {showPrimaryOnly ? (
               (() => {
-                const displayName = preferredName || (!hideFallbackName ? 'Legend' : '');
-                return displayName ? (
-                  <span
-                    className={[
-                      'chain-name text-[14px] md:text-[15px] font-bold',
-                      'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-                      'bg-clip-text text-transparent block truncate w-full',
-                    ].join(' ')}
-                    title={displayName}
-                  >
-                    {displayName}
-                  </span>
-                ) : (
+                const displayName = preferredName;
+                if (displayName) {
+                  return (
+                    <span
+                      className={[
+                        'chain-name text-[14px] md:text-[15px] font-bold',
+                        'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
+                        'bg-clip-text text-transparent block truncate w-full',
+                      ].join(' ')}
+                      title={displayName}
+                    >
+                      {displayName}
+                    </span>
+                  );
+                }
+                if (hideFallbackName) return null;
+                return (
                   <span
                     className={cn(
                       'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
@@ -199,19 +203,38 @@ export const AddressAvatarWithChainName = memo(({
               })()
             ) : (
               showAddressAndChainName && (
-              <>
-                <span className={chainNameClass}>
-                  {preferredName || (hideFallbackName ? '' : 'Legend')}
-                </span>
-                <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
-                  <AddressFormatted
-                    address={address}
-                    truncate={false}
-                    truncateFixed={false}
-                    className={className}
-                  />
-                </span>
-              </>
+                (() => {
+                  if (preferredName) {
+                    return (
+                      <>
+                        <span className={chainNameClass}>
+                          {preferredName}
+                        </span>
+                        <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
+                          <AddressFormatted
+                            address={address}
+                            truncate={false}
+                            truncateFixed={false}
+                            className={className}
+                          />
+                        </span>
+                      </>
+                    );
+                  }
+                  if (hideFallbackName) return null;
+                  return (
+                    <span
+                      className={[
+                        'chain-name text-[14px] md:text-[15px] font-bold',
+                        'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
+                        'bg-clip-text text-transparent block truncate w-full',
+                      ].join(' ')}
+                      title={address}
+                    >
+                      {address ? `${address.slice(0, 6)}...${address.slice(-6)}` : ''}
+                    </span>
+                  );
+                })()
               )
             )}
             <div>

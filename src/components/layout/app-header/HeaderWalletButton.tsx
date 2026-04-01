@@ -64,7 +64,6 @@ const HeaderWalletButton = () => {
           showBalance={false}
           showAddressAndChainName={false}
           showPrimaryOnly
-          hideFallbackName
           contentClassName="px-2 pb-0 max-w-[160px] overflow-hidden"
           className="w-full max-w-[210px]"
         />

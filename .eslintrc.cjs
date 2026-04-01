@@ -117,5 +117,11 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
       },
     },
+    {
+      files: ['docker/init-state.ts'],
+      rules: {
+        'no-console': 'off',
+      },
+    },
   ],
 };

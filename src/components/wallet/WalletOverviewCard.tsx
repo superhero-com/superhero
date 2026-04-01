@@ -205,7 +205,6 @@ const WalletOverviewCard = ({
             showBalance={false}
             showAddressAndChainName={false}
             showPrimaryOnly
-            hideFallbackName
             contentClassName="px-2 pb-0"
             secondary={(
               <div className="text-[11px] text-[var(--light-font-color)]">

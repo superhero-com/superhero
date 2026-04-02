@@ -59,7 +59,7 @@ const WebAppHeader = () => {
       <div className="flex items-center h-16 px-6">
         <Link
           to="/"
-          className="flex items-center no-underline hover:no-underline no-gradient-text"
+          className="flex items-center no-underline hover:no-underline"
           style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }}
           aria-label={t('labels.superheroHome')}
         >
@@ -88,7 +88,7 @@ const WebAppHeader = () => {
                 <button
                   key={item.id}
                   type="button"
-                  className={`${commonClass} no-gradient-text text-left`}
+                  className={`${commonClass} text-left`}
                   style={idleStyles}
                   onClick={handleConnect}
                 >
@@ -107,7 +107,7 @@ const WebAppHeader = () => {
                   href={item.path}
                   target="_blank"
                   rel="noreferrer"
-                  className={`${commonClass} no-gradient-text`}
+                  className={commonClass}
                   style={isActive ? activeStyles : idleStyles}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -134,7 +134,7 @@ const WebAppHeader = () => {
               <Link
                 key={item.id}
                 to={item.path}
-                className={`${commonClass} no-gradient-text`}
+                className={commonClass}
                 style={isActive ? activeStyles : idleStyles}
               >
                 <span className="w-6 flex items-center justify-center">

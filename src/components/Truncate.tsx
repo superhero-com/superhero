@@ -87,7 +87,7 @@ export const Truncate = ({
             '--animation-delay': '1s !important',
           } as React.CSSProperties : undefined}
         >
-          <div className="chain-name text-[14px] md:text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">{nameComponent}</div>
+          <div className="chain-name text-[14px] md:text-sm font-bold text-[var(--standard-font-color)]">{nameComponent}</div>
         </div>
       </div>
       {nameComponent !== str && (

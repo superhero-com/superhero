@@ -44,7 +44,7 @@ const LiquidityConfirmation = ({
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/[0.02] text-white border border-white/10 rounded-[24px] p-6 sm:p-8 w-[480px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-[1001] outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <Dialog.Title className="text-xl font-bold m-0 sh-dex-title">
+            <Dialog.Title className="text-xl font-bold m-0">
               Confirm Add Liquidity
             </Dialog.Title>
             <Dialog.Close asChild>

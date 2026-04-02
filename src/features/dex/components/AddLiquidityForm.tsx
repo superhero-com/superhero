@@ -437,7 +437,7 @@ const AddLiquidityForm = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold m-0 sh-dex-title">{tDex('addLiquidityForm.title')}</h2>
+          <h2 className="text-xl font-bold m-0">{tDex('addLiquidityForm.title')}</h2>
         </div>
 
         <div className="flex gap-2 items-center">

@@ -54,7 +54,7 @@ const DexExploreTokens = () => {
       <div className="mx-2 md:mx-auto bg-transparent border-none rounded-none p-0 md:px-2 shadow-none relative overflow-visible backdrop-blur-0">
         {/* Header Card */}
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
+          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3">
             Explore Tokens
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">

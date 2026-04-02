@@ -42,7 +42,7 @@ const PoolContent = () => {
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-[28px] font-bold m-0 mb-2 sh-dex-title">
+              <h1 className="text-[28px] font-bold m-0 mb-2">
                 Your Liquidity Positions
               </h1>
               <p className="text-sm text-white/60 m-0 leading-6">

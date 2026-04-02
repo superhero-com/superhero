@@ -13,6 +13,7 @@ const messages: Record<string, string> = {
   'messages.chainNameClaimChallengeExpired': 'Your claim session expired. Please try again.',
   'messages.chainNameClaimVerificationFailed': 'We could not verify your wallet signature. Please try again.',
   'messages.chainNameClaimUnavailable': 'Sponsored .chain claiming is temporarily unavailable. Please try again later.',
+  'messages.chainNameClaimTooShort': 'Sponsored claims require more than 12 characters before .chain.',
   'messages.chainNameClaimRetry': 'We could not start the .chain claim. Please try again.',
   'messages.chainNameClaimFailed': 'Failed to claim .chain name.',
 };
@@ -54,6 +55,11 @@ describe('resolveClaimErrorMessage', () => {
       new Error('Superhero API error (400): Invalid challenge signature'),
       t,
     )).toBe(messages['messages.chainNameClaimVerificationFailed']);
+
+    expect(resolveClaimErrorMessage(
+      new Error('Superhero API error (400): name shorter than 13'),
+      t,
+    )).toBe(messages['messages.chainNameClaimTooShort']);
   });
 
   it('maps temporary backend availability issues to generic unavailable copy', () => {

@@ -203,7 +203,7 @@ const MobileAppHeader = () => {
             </>
           ) : (
             <>
-              <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
+              <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
                 <HeaderLogo className="h-7 w-auto" />
               </Link>
               <div className="flex-grow hidden md:block" />
@@ -268,9 +268,6 @@ const MobileAppHeader = () => {
                 style={{
                   color: 'rgba(255,255,255,0.8)',
                   background: 'transparent',
-                  backgroundImage: 'none',
-                  WebkitTextFillColor: 'rgba(255,255,255,0.8)',
-                  WebkitBackgroundClip: 'initial' as any,
                 }}
               >
                 {t('labels.menu')}
@@ -343,7 +340,7 @@ const MobileAppHeader = () => {
                       target="_blank"
                       rel="noreferrer"
                       className={`${commonClasses} bg-transparent`}
-                      style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                      style={{ background: 'none' }}
                       onClick={handleNavigationClick}
                     >
                       <span className="text-lg sm:text-base">{item.label}</span>
@@ -355,7 +352,7 @@ const MobileAppHeader = () => {
                       to={item.path}
                       onClick={handleNavigationClick}
                       className={`${commonClasses} bg-transparent`}
-                      style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                      style={{ background: 'none' }}
                     >
                       <span className="text-lg sm:text-base">{item.label}</span>
                     </Link>
@@ -377,7 +374,7 @@ const MobileAppHeader = () => {
                   to="/defi/buy-ae-with-eth"
                   onClick={handleNavigationClick}
                   className="w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5 bg-transparent"
-                  style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                  style={{ background: 'none' }}
                 >
                   <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
                 </Link>

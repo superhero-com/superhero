@@ -147,7 +147,7 @@ export const BlockchainInfoPopover = ({
           <div className="grid grid-cols-[auto,1fr] items-center gap-2">
             <div className="text-xs text-white/70">Tx hash</div>
             <div className="flex items-center justify-end gap-2 min-w-0">
-              <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
+              <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
               <button
                 type="button"
                 className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
@@ -161,7 +161,7 @@ export const BlockchainInfoPopover = ({
             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Sender</div>
               <div className="flex items-center justify-end gap-2 min-w-0">
-                <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
+                <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${sender.slice(0, 6)}...${sender.slice(-4)}`}
                 </a>
                 <button
@@ -178,7 +178,7 @@ export const BlockchainInfoPopover = ({
             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Contract</div>
               <div className="flex items-center justify-end gap-2 min-w-0">
-                <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
+                <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${contract.slice(0, 6)}...${contract.slice(-4)}`}
                 </a>
                 <button
@@ -209,18 +209,18 @@ export const BlockchainInfoPopover = ({
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-1 py-2 flex items-center justify-between gap-2">
-          <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+          <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
             <span>View on æScan</span>
             <span aria-hidden>↗</span>
           </a>
           {senderUrl && (
-            <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+            <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
               <span>Sender</span>
               <span aria-hidden>↗</span>
             </a>
           )}
           {contractUrl && (
-            <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+            <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
               <span>Contract</span>
               <span aria-hidden>↗</span>
             </a>

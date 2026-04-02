@@ -118,7 +118,7 @@ const BridgeTokenSelector = ({
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
-            <Dialog.Title className="font-bold text-lg sm:text-xl m-0 sh-dex-title">
+            <Dialog.Title className="font-bold text-lg sm:text-xl m-0">
               {t('bridge.selectAToken')}
             </Dialog.Title>
             <Dialog.Close asChild>

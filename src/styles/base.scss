@@ -245,55 +245,16 @@ html.safari.safari-zooming [style*='backdrop-filter'] {
   -webkit-backdrop-filter: none !important;
 }
 
-a { 
-  color: $custom_links_color; 
+a {
+  color: inherit;
   text-decoration: none;
-  background: $accent_gradient;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-a:hover { 
-  filter: brightness(1.1);
+a:hover {
+  color: inherit;
   transform: none;
   text-shadow: none;
-}
-
-a::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -2px;
-  left: 0;
-  background: $accent_gradient;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 1px;
-}
-
-a:hover::after {
-  width: 100%;
-}
-
-/* Utility: disable gradient text for specific links */
-a.no-gradient-text {
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  -webkit-text-fill-color: currentColor !important;
-  background-clip: initial !important;
-  color: inherit !important;
-}
-a.no-gradient-text:hover {
-  color: inherit !important;
-  filter: none;
-  transform: none;
-  text-shadow: none;
-}
-a.no-gradient-text::after {
-  display: none;
 }
 
 /* Reduce gap only between consecutive token activity items on desktop, not between activity and posts */
@@ -303,30 +264,11 @@ a.no-gradient-text::after {
   }
 }
 
-/* Specific override for white-with-purple CTA on banner */
-.banner-explore-btn {
-  background: #ffffff !important;
-  color: #6d28d9 !important; /* violet-700 */
-  -webkit-text-fill-color: #6d28d9 !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  border: 1px solid rgba(255,255,255,0.25) !important;
-}
-
 /* Banner CTA shared hover: gentle nudge up, subtle scale, no underline bar */
 .banner-cta { position: relative; transform: translateY(0); transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease; }
 .banner-cta::after { display: none !important; }
 .banner-cta:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
 .banner-cta:active { transform: translateY(0) scale(0.995); }
-
-/* Force 'Learn more' to white text, disable gradient on anchor while keeping bg-color */
-.banner-learn-btn {
-  color: rgba(255,255,255,0.8) !important;
-  -webkit-text-fill-color: rgba(255,255,255,0.8) !important;
-  background-image: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-}
 
 img, video { max-width: 100%; height: auto; display: block; }
 
@@ -509,32 +451,26 @@ textarea:disabled {
   }
   
   /* Gen Z Ultra Modern Typography */
-  h1 { 
-    font-size: 2rem; 
+  h1 {
+    font-size: 2rem;
     font-weight: 800;
-    // background: $primary_gradient;
-    // -webkit-background-clip: text;
-    // -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--standard-font-color);
     letter-spacing: -1px;
     line-height: 1.1;
   }
-  h2 { 
-    font-size: 1.75rem; 
+  h2 {
+    font-size: 1.75rem;
     font-weight: 700;
-    background: $primary_gradient;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--standard-font-color);
     letter-spacing: -0.5px;
   }
-  h3 { 
-    font-size: 1.5rem; 
+  h3 {
+    font-size: 1.5rem;
     font-weight: 600;
-    color: var(--neon-teal);
+    color: var(--standard-font-color);
   }
-  h4 { 
-    font-size: 1.25rem; 
+  h4 {
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--neon-blue);
   }
@@ -542,8 +478,8 @@ textarea:disabled {
     font-size: 1.125rem; 
     font-weight: 500;
   }
-  h6 { 
-    font-size: 1rem; 
+  h6 {
+    font-size: 1rem;
     font-weight: 500;
     color: var(--neon-yellow);
   }

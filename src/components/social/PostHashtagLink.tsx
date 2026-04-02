@@ -107,13 +107,7 @@ const PostHashtagLink = ({
           : 'inline-flex items-baseline gap-1 text-[var(--neon-blue)] underline-offset-2 hover:underline text-[13px] font-medium',
         'no-underline outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 break-words',
       )}
-      style={{
-        outline: 'none',
-        background: 'none',
-        WebkitTextFillColor: 'currentColor',
-        WebkitBackgroundClip: 'initial',
-        backgroundClip: 'initial',
-      }}
+      style={{ outline: 'none' }}
       onClick={(e) => e.stopPropagation()}
     >
       <span className="leading-none">{label}</span>

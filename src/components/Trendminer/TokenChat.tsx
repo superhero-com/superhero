@@ -131,12 +131,12 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
           title="Open the public chat on Quali.chat"
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
-              <span className="no-gradient-text">🌐</span>
+              <span>🌐</span>
             </div>
             <div className="flex-1">
               <div className="font-semibold leading-tight">
@@ -152,12 +152,12 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
           title="Open the private chat on Quali.chat (holders only)"
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
-              <span className="no-gradient-text">🔒</span>
+              <span>🔒</span>
             </div>
             <div className="flex-1">
               <div className="font-semibold leading-tight">

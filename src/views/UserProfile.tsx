@@ -403,7 +403,7 @@ export default function UserProfile({
 
           {/* Action buttons */}
           <div className="flex flex-row gap-2 shrink-0">
-            {(canEdit && false) ? (
+            {canEdit && false ? (
               <AeButton
                 size="sm"
                 variant="ghost"
@@ -445,7 +445,7 @@ export default function UserProfile({
         </div>
       </div>
 
-      {(canEdit && !isXVerified && false) && (
+      {canEdit && !isXVerified && false && (
         <button
           type="button"
           onClick={() => {

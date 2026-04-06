@@ -43,7 +43,8 @@
       "displaySourceX": "X",
       "none": "None",
       "connectX": "Link X account",
-      "xAccount": "X account"
+      "xAccount": "X account",
+      "profile": "Profile"
     },
     "actions": {
       "copy": "Copy"

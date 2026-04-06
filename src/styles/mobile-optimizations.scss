@@ -8,8 +8,9 @@
   flex-direction: column;
   
   @include mobile {
-    /* Navigation is now fixed, no padding needed */
+    /* Keep content clear of the fixed mobile header/footer */
     padding-top: 0;
+    padding-bottom: var(--mobile-footer-actual-height, calc(var(--mobile-footer-height) + env(safe-area-inset-bottom) + 12px));
   }
 
   @media (min-width: 1024px) {

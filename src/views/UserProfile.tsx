@@ -38,6 +38,7 @@ import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 import { SuperheroApi } from '../api/backend';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
+import ClaimChainNameModal from '@/components/modals/ClaimChainNameModal';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks';
@@ -97,6 +98,7 @@ export default function UserProfile({
   });
   const profileDisplayName = (profileInfo?.public_name || chainName || '').trim();
   const hasProfileDisplayName = Boolean(profileDisplayName);
+  const showClaimChainNameCta = Boolean(canEdit && !chainName);
   const profileHeading = profileDisplayName || formatAddress(effectiveAddress, 6, true);
 
   const { data: onChainProfile, refetch: refetchOnChainProfile } = useQuery({
@@ -108,6 +110,7 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [claimChainNameOpen, setClaimChainNameOpen] = useState(false);
   const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
 
   // Get tab from URL search params, default to "feed"
@@ -379,17 +382,34 @@ export default function UserProfile({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h1
-                className={[
-                  'font-extrabold text-[var(--neon-teal)] tracking-tight min-w-0',
-                  hasProfileDisplayName
-                    ? 'text-xl md:text-2xl truncate'
-                    : 'text-lg md:text-xl leading-tight truncate',
-                ].join(' ')}
-                title={hasProfileDisplayName ? profileHeading : effectiveAddress}
-              >
-                {profileHeading}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <h1
+                  className={[
+                    'font-extrabold text-[var(--neon-teal)] tracking-tight min-w-0',
+                    hasProfileDisplayName
+                      ? 'text-xl md:text-2xl truncate'
+                      : 'text-lg md:text-xl leading-tight truncate',
+                  ].join(' ')}
+                  title={hasProfileDisplayName ? profileHeading : effectiveAddress}
+                >
+                  {profileHeading}
+                </h1>
+                {showClaimChainNameCta && (
+                  <button
+                    type="button"
+                    onClick={() => setClaimChainNameOpen(true)}
+                    className={[
+                      'inline-flex h-7 shrink-0 items-center rounded-full border border-solid border-white/20',
+                      'box-border whitespace-nowrap bg-white/[0.06] px-2.5 text-[11px] leading-none text-white/80',
+                      '!normal-case !tracking-normal !font-medium !shadow-none !transform-none',
+                      'transition-colors hover:border-white hover:bg-white/[0.06] hover:text-white',
+                      'hover:!shadow-none hover:!transform-none',
+                    ].join(' ')}
+                  >
+                    {t('buttons.getChainName')}
+                  </button>
+                )}
+              </div>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
               </div>
@@ -403,19 +423,6 @@ export default function UserProfile({
 
           {/* Action buttons */}
           <div className="flex flex-row gap-2 shrink-0">
-            {(canEdit && false) ? (
-              <AeButton
-                size="sm"
-                variant="ghost"
-                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
-                onClick={() => {
-                  setEditInitialSection('profile');
-                  setEditOpen(true);
-                }}
-              >
-                {t('buttons.editProfile')}
-              </AeButton>
-            ) : null}
             {!canEdit ? (
               <AeButton
                 onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
@@ -444,19 +451,6 @@ export default function UserProfile({
           </div>
         </div>
       </div>
-
-      {(canEdit && !isXVerified && false) && (
-        <button
-          type="button"
-          onClick={() => {
-            setEditInitialSection('x');
-            setEditOpen(true);
-          }}
-          className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
-        >
-          Claim 100 AE by verifying your X account.
-        </button>
-      )}
 
       {/* Portfolio Chart and Stats - Side by side on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
@@ -600,6 +594,11 @@ export default function UserProfile({
         initialBio={bioText}
         initialSection={editInitialSection}
       />
+      <ClaimChainNameModal
+        open={claimChainNameOpen}
+        onClose={() => setClaimChainNameOpen(false)}
+        address={effectiveAddress}
+      />
     </Shell>
   ) : (
     <>
@@ -629,6 +628,11 @@ export default function UserProfile({
         address={effectiveAddress}
         initialBio={bioText}
         initialSection={editInitialSection}
+      />
+      <ClaimChainNameModal
+        open={claimChainNameOpen}
+        onClose={() => setClaimChainNameOpen(false)}
+        address={effectiveAddress}
       />
     </>
   );

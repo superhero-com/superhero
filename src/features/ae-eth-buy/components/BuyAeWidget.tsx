@@ -411,7 +411,7 @@ const BuyAeWidgetContent = ({
             <span>Buy AE with ETH</span>
           </h2>
         ) : (
-          <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
+          <h2 className="text-lg sm:text-xl font-bold m-0 min-w-0 flex-shrink">
             Buy AE with ETH
           </h2>
         )}

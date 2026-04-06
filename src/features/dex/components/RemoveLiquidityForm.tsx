@@ -148,7 +148,7 @@ const RemoveLiquidityForm = () => {
               💧
             </div>
             <div>
-              <h2 className="text-xl font-bold m-0 sh-dex-title">
+              <h2 className="text-xl font-bold m-0">
                 Confirm Removal
               </h2>
               <p className="text-xs text-white/60 mt-0.5">
@@ -257,7 +257,7 @@ const RemoveLiquidityForm = () => {
             💧
           </div>
           <div>
-            <h2 className="text-xl font-bold m-0 sh-dex-title">
+            <h2 className="text-xl font-bold m-0">
               Remove Liquidity
             </h2>
             <p className="text-xs text-white/60 mt-0.5">

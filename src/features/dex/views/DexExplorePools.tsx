@@ -70,7 +70,7 @@ const DexExplorePools = () => {
       <div className="grid grid-cols-1 items-start">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
+          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3">
             Explore Pools
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">

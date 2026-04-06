@@ -70,7 +70,11 @@ type SetProfileInput = {
 
 type ProfileRegistryContractApi = ContractMethodsBase & {
   _calldata: {
-    encode: (contractName: string, functionName: string, args: unknown[]) => Encoded.ContractBytearray;
+    encode: (
+      contractName: string,
+      functionName: string,
+      args: unknown[],
+    ) => Encoded.ContractBytearray;
   };
 };
 

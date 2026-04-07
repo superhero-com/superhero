@@ -173,7 +173,7 @@ const Dao = () => {
 
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
-            to={`/trends/tokens/${encodeURIComponent(saleAddress || '')}`}
+            to={`/trends/tokens/${encodeURIComponent(token?.name || '')}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
             {t('backToTokenSale')}

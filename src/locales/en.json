@@ -5,8 +5,6 @@
       "connecting": "Connecting…",
       "copy": "Copy",
       "copied": "Copied",
-      "getStarted": "Get started",
-      "swapTokens": "Swap Tokens",
       "confirmInWallet": "Confirm in wallet…",
       "connectWalletDex": "CONNECT WALLET",
       "connectWalletToGenerate": "CONNECT WALLET TO GENERATE",
@@ -16,10 +14,7 @@
       "disconnect": "Disconnect",
       "logout": "Logout",
       "cancel": "Cancel",
-      "postOnChain": "Post on-chain",
       "connectWalletToBuyAe": "CONNECT WALLET TO BUY AE",
-      "editBio": "Edit bio",
-      "addBio": "Add bio",
       "editProfile": "Edit profile",
       "saveProfile": "Save profile",
       "sendFeedback": "Send Feedback",
@@ -27,7 +22,6 @@
       "connectX": "Connect X"
     },
     "labels": {
-      "numberOfInvites": "Number of invites",
       "superheroHome": "Superhero Home",
       "back": "Back",
       "openSettings": "open-settings",
@@ -48,18 +42,14 @@
       "displaySourceChain": "Chain",
       "displaySourceX": "X",
       "none": "None",
-      "xAccessToken": "X access token (optional)",
       "connectX": "Link X account",
       "xAccount": "X account"
     },
     "actions": {
-      "copy": "Copy",
-      "share": "Share"
+      "copy": "Copy"
     },
     "titles": {
       "editProfile": "Edit Profile",
-      "editBio": "Edit bio",
-      "addBio": "Add bio",
       "swapTokensOnDex": "Swap tokens on the DEX",
       "wrapOrUnwrapAe": "Wrap or unwrap AE",
       "buyAeWithEth": "Buy AE with ETH",
@@ -67,25 +57,16 @@
       "tokenizeATrend": "Tokenize a trend",
       "exploreAllTrends": "Explore all trends",
       "exploreTrends": "Explore trends",
-      "clickToToggleLiveFeed": "Click to toggle live feed",
       "openChat": "Open Chat",
       "liquiditySettings": "Liquidity Settings",
       "sendATip": "Send a tip",
       "openOnAescan": "Open on æScan",
       "clickToReverseRankingOrder": "Click to reverse current ranking order",
-      "tokenCollectionCategory": "Token collection category",
       "conference": "Conference",
       "sortByBalance": "Sort by balance",
       "clickToExpandTips": "Click to expand tips"
     },
     "aria": {
-      "back": "Back",
-      "superheroHome": "Superhero Home",
-      "toggleTheme": "Toggle theme",
-      "search": "Search",
-      "openMenu": "Open Menu",
-      "closeMenuOverlay": "Close menu overlay",
-      "closeMenu": "Close menu",
       "loading": "Loading",
       "viewProfile": "View profile",
       "accountMenu": "Account menu",
@@ -93,39 +74,25 @@
       "sendFeedbackOnGitHub": "Send Feedback on GitHub",
       "primary": "Primary",
       "main": "Main",
-      "openSettings": "open-settings",
       "media": "media",
       "portfolioValueTooltip": "What does Portfolio Value include?",
       "closeTooltip": "Close tooltip",
       "openTrade": "Open trade",
-      "tipPost": "Tip post",
-      "addNewPost": "Add new post",
-      "dismiss": "Dismiss"
+      "tipPost": "Tip post"
     },
     "placeholders": {
       "bio": "Tell the world about you",
       "amount": "0.0",
-      "amountDecimal": "0.00",
-      "search": "Search",
       "custom": "Custom",
-      "writeReply": "Write a reply...",
       "fullname": "Your full name",
-      "nostrkey": "npub...",
       "avatarurl": "https://...",
       "username": "your_username",
-      "selectChainName": "Select one of your chain names",
-      "solName": "Your Solana name",
-      "xAccessToken": "Paste your X OAuth access token"
+      "selectChainName": "Select one of your chain names"
     },
     "messages": {
-      "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
-      "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}",
       "somethingWentWrong": "Something went wrong",
       "success": "Success",
-      "posting": "Posting…",
       "savingProfile": "Saving profile…",
-      "bioCannotBeEmpty": "Bio cannot be empty",
-      "bioUpdateSubmitted": "Bio update submitted. Waiting for on-chain confirmation…",
       "failedToUpdateProfile": "Failed to update profile",
       "profileUpdated": "Profile updated successfully",
       "profileNothingToUpdate": "Add at least one field to update",
@@ -136,13 +103,11 @@
       "invalidUsername": "Username must contain only letters, numbers, and underscores (2-32 chars)",
       "invalidSolName": "Sol name must be between 1 and 255 characters",
       "connectWalletToEditProfile": "Connect your wallet to edit your profile",
-      "missingXToken": "X access token is required for X verification.",
       "failedXAttestation": "Failed to verify X account. Please check your token and try again.",
       "profileContractNotConfigured": "Profile contract is not configured in this environment.",
       "failedToRefreshProfile": "Profile transaction succeeded but refresh failed. Please reload the page.",
       "tooManyRequests": "Too many requests. Please wait and try again.",
       "noChainNamesFound": "No owned chain names found for this account.",
-      "selectChainNameForDisplaySource": "Choose a chain name before using Chain as display source.",
       "oops": "Oops",
       "loading": "Loading…",
       "connectXHint": "Link your X account so your profile can show your X username. You will sign in with X once; no token to copy.",
@@ -173,7 +138,6 @@
       "contributeOnGitHub": "Contribute on GitHub",
       "whitepaper": "Whitepaper",
       "status": "Status",
-      "blockchain": "Blockchain",
       "backend": "Backend",
       "liveDashboard": "Live Dashboard",
       "blockchainStatus": "Blockchain Status",
@@ -204,29 +168,6 @@
       "categorySecurity": "Security",
       "categoryTrading": "Trading",
       "categoryInvestment": "Investment"
-    },
-    "defaultDisplayName": "Legend"
-  },
-  "navigation": {
-    "home": "Social",
-    "mobileHome": "Home",
-    "explore": "Explore",
-    "trending": "Trends",
-    "trendingChildren": {
-      "leaderboard": "Trading Leaderboard",
-      "invite": "Invite & Earn"
-    },
-    "referEarn": "Refer & Earn",
-    "defi": "DeFi",
-    "defiChildren": {
-      "swap": "SWAP",
-      "wrap": "WRAP",
-      "bridge": "BRIDGE",
-      "buyAe": "BUY AE",
-      "pool": "POOL",
-      "exploreTokens": "Explore Tokens",
-      "explorePools": "Explore Pools",
-      "transactions": "Transactions"
     }
   },
   "dex": {
@@ -256,7 +197,6 @@
       "fromNetwork": "From Network",
       "ethereumAccount": "Ethereum Account",
       "refresh": "Refresh",
-      "noEthereumAccount": "No Ethereum account connected",
       "networks": {
         "aeternity": "æternity",
         "aeternityTestnet": "Testnet",
@@ -265,8 +205,6 @@
       },
       "from": "From",
       "to": "To",
-      "destination": "Destination",
-      "destinationAddress": "Destination {{network}} Address",
       "loadingBalance": "Loading balance...",
       "balance": "Balance: {{balance}}",
       "bridgeTo": "Bridge to {{network}}",
@@ -325,7 +263,6 @@
       "waitingForApprovalConfirmation": "Waiting for approval confirmation...",
       "approvalConfirmed": "Approval confirmed!",
       "allowanceCheckFailed": "Allowance check failed, proceeding with approval...",
-      "failedToApproveToken": "Failed to approve token. Please check your network connection and try again.",
       "insufficientEthForGas": "Insufficient ETH for gas fees",
       "failedToConnectTokenContract": "Failed to connect to token contract. Please check the network and try again.",
       "transactionRejectedByUser": "Transaction was rejected by user",
@@ -386,25 +323,8 @@
       "amount": "Amount",
       "openInExplorer": "Open in Explorer"
     },
-    "liquidity": {
-      "rate": "Rate",
-      "poolShare": "Pool Share",
-      "lpTokens": "LP Tokens",
-      "exchangeRate": "Exchange Rate",
-      "yourPoolShare": "Your Pool Share",
-      "lpTokensToReceive": "LP Tokens to Receive",
-      "slippageTolerance": "Slippage Tolerance",
-      "transactionDeadline": "Transaction Deadline"
-    },
     "viewPair": "View Pair:",
     "searchTokenPlaceholder": "Search by name, symbol, or address",
-    "searchPools": "Search pools...",
-    "clearSearch": "Clear search",
-    "selectTransactionType": "Select transaction type",
-    "enterPairAddress": "Enter pair contract address",
-    "enterAccountAddress": "Enter account address",
-    "closeExploreMenu": "Close explore menu",
-    "pageTitleSwap": "Swap AE and tokens – Superhero DEX",
     "filterPools": "Filter pools",
     "filterBySymbolAddress": "Filter by symbol/address",
     "createNewPoolAndLiquidity": "Create new pool and add liquidity",
@@ -413,12 +333,6 @@
     "swapButton": "Swap",
     "rescan": "Rescan",
     "scanning": "Scanning…",
-    "pagination": {
-      "firstPage": "First page",
-      "previousPage": "Previous page",
-      "nextPage": "Next page",
-      "lastPage": "Last page"
-    },
     "settings": {
       "title": "DEX Settings",
       "slippageTolerance": "Slippage Tolerance",
@@ -463,8 +377,6 @@
     "allowedSlippage": "Allowed Slippage",
     "priceImpact": "Price Impact",
     "placeOrder": "Place Order",
-    "forLabel": "for",
-    "newBalance": "New balance:",
     "bought": "Bought",
     "sold": "Sold",
     "addLiquidityForm": {
@@ -482,8 +394,6 @@
     }
   },
   "social": {
-    "showFullThread": "Show full thread",
-    "commentsCount": "Comments count",
     "share": "Share",
     "sharePost": "Share post",
     "shareComment": "Share comment",
@@ -502,21 +412,15 @@
     "postNeedsToInclude": "Post needs to include {{hashtag}}",
     "openParent": "Open parent",
     "buy": "Buy",
-    "openPost": "Open post",
-    "openToken": "Open token",
     "clickToCopyLink": "Click to copy link",
-    "addNewPost": "Add new post",
     "feedPageTitle": "Superhero.com – The All‑in‑One Social + Crypto App",
     "tips": "Tips",
     "replies": "Replies",
-    "loadingTips": "Loading tips…",
-    "noTipsYet": "No tips yet.",
     "loading": "Loading…",
     "created": "created",
     "bought": "Bought",
     "of": "of",
     "at": "at",
-    "holder": "Holder",
     "replyingTo": "Replying to",
     "showPost": "Show post",
     "loadingReplies": "Loading replies…",
@@ -632,7 +536,6 @@
     "success": "Success",
     "bought": "Bought",
     "sold": "Sold",
-    "closeTimeframeMenu": "Close timeframe menu",
     "leaderboardPageTitle": "Superhero.com – Trading Leaderboard",
     "invitations": {
       "revoked": "Revoked",
@@ -651,11 +554,8 @@
       "revoke": "Revoke",
       "revokedOn": "Revoked on"
     },
-    "tradeToken": "Trade Token",
-    "rank": "Rank",
     "tokenName": "Token Name",
     "marketCap": "Market cap",
-    "performance": "Performance",
     "unableToLoadLeaderboard": "Unable to load leaderboard. Please try again.",
     "leaderboardTip1": "Trade trend tokens regularly to build up your volume.",
     "leaderboardTip2": "Keep your PnL and ROI positive over time.",
@@ -768,11 +668,6 @@
     },
     "cta": {
       "becomeToday": "Become a Superhero Today"
-    },
-    "stats": {
-      "tipsAggregated": "Tips aggregated",
-      "totalTipsValue": "Total Tips Value",
-      "uniqueTipSenders": "Unique Tip Senders"
     }
   },
   "forms": {
@@ -793,7 +688,6 @@
     "beFirstToSpeak": "Be the first to speak about {{hashtag}}."
   },
   "transactions": {
-    "placeholder": "placeholder",
     "processingTransaction": "Processing transaction…"
   },
   "dao": {
@@ -868,8 +762,6 @@
     "noTokensInWallet": "No tokens with balance found in your wallet."
   },
   "explore": {
-    "searchTokens": "Search tokens...",
-    "clearSearch": "Clear search",
     "topAccounts": "Top Accounts",
     "accountDetails": "Account Details",
     "noTokens": "No tokens",
@@ -882,23 +774,13 @@
     "sortBy": "Sort by",
     "address": "Address",
     "actions": "Actions",
-    "noRepositoriesFound": "No repositories found",
-    "exploreTrends": "Explore Trends",
     "marketCap": "Market cap",
-    "performance": "Performance",
     "dataWillBeShownShortly": "Data will be shown shortly",
-    "waitingForWalletConfirmation": "Waiting for Wallet Confirmation...",
-    "priceDiscoveryMechanism": "Price Discovery Mechanism",
-    "theMathBehindIt": "The Math Behind It",
-    "daoTreasury": "DAO Treasury",
-    "feesAndAffiliations": "Fees & Affiliations",
-    "tradingLive": "Trading live",
     "holders": "Holders",
     "price": "Price",
     "volume": "Volume",
     "tvl": "Total Value Locked",
     "fees": "Fees",
-    "failedToLoadTokenData": "Failed to load token data",
     "createdTrends": "Created Trends",
     "feed": "Feed",
     "ownedTrends": "Owned Trends",
@@ -913,8 +795,6 @@
     "tokens": "Tokens",
     "pairs": "Pairs",
     "pools": "Pools",
-    "searchTrendsPlaceholder": "Search trends...",
-    "tryAdjustingSearch": "Try adjusting your search terms or filters.",
     "totalVolume": "Total Volume",
     "totalTx": "Total TX",
     "buyTx": "Buy TX",

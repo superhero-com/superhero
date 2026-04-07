@@ -1,11 +1,11 @@
 import { atom } from 'jotai';
 import { Decimal } from '@/libs/decimal';
 
-export type TransactionType = 'trade' | 'create-token' | null;
+type TransactionType = 'trade' | 'create-token' | null;
 
 export const transactionTypeAtom = atom<TransactionType>(null as TransactionType);
 
-export interface CreateTokenDetails {
+interface CreateTokenDetails {
   tokenName: string;
   inputMode: 'AE' | 'TOKEN';
   aeAmount?: string;

@@ -29,7 +29,7 @@ async function safeFetch<T>(url: string, { timeoutMs = 2000 }: { timeoutMs?: num
   }
 }
 
-export type ListedToken = {
+type ListedToken = {
   address: string;
   name: string;
   symbol: string;
@@ -50,14 +50,6 @@ export async function getTokenWithUsd(tokenId: string): Promise<any | null> {
 
 export async function getPairs(onlyListed = false): Promise<any[] | null> {
   return safeFetch<any[]>(`pairs?only-listed=${onlyListed ? 'true' : 'false'}`);
-}
-
-export async function getPairDetails(pairAddress: string): Promise<any | null> {
-  return safeFetch<any>(`pairs/${pairAddress}`);
-}
-
-export async function getPairsByToken(tokenId: string): Promise<any[] | null> {
-  return safeFetch<any[]>(`tokens/${tokenId}/pairs`);
 }
 
 export async function getPairsByTokenUsd(tokenId: string): Promise<any[] | null> {

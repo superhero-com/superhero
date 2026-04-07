@@ -6,8 +6,7 @@ import { DexTokenDto } from '@/api/generated';
 // Import RecentActivity type
 import type { RecentActivity } from '../components/dex/types/dex';
 
-// Type for individual liquidity position data
-export type LiquidityPositionData = {
+type LiquidityPositionData = {
   balance: string;
   token0: DexTokenDto;
   token1: DexTokenDto;
@@ -37,7 +36,6 @@ export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', (() => {
 // DEX state atoms
 // Structure: {[accountAddress]: {[pairAddress]: LiquidityPositionData}}
 export const providedLiquidityAtom = atom<Record<string, Record<string, LiquidityPositionData>>>({});
-export const poolInfoAtom = atom<Record<string, { totalSupply: string | null; reserveA: string; reserveB: string } | undefined>>({});
 
 // Recent activities with localStorage persistence
 // Structure: {[accountAddress]: RecentActivity[]}

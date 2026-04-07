@@ -5,7 +5,7 @@ import type {
 } from '@/utils/constants';
 import { CancelablePromise } from '@/api/generated/core/CancelablePromise';
 
-export type NetworkId = 'ae_mainnet' | 'ae_uat';
+type NetworkId = 'ae_mainnet' | 'ae_uat';
 
 export interface INetwork {
   url: string;
@@ -19,28 +19,6 @@ export interface INetwork {
   superheroBackendUrl: string;
   index?: number;
   disabled?: boolean;
-}
-
-export interface IAppConfigs {
-  app: {
-    name: string;
-    logo: {
-      width: string;
-      height: string;
-    };
-    allowSwitchTheme?: boolean;
-  };
-  wallet: {
-    name: string;
-    url: string;
-  };
-  networks: Record<NetworkId, INetwork>;
-  // languages: SupportedLanguage[];
-  avatarServiceUrl: string;
-
-  features: {
-    trending: boolean;
-  };
 }
 
 export interface Wallet {
@@ -117,7 +95,7 @@ export interface ITopHeader {
 /**
  * Convert `key: val` objects into union of values.
  */
-export type ObjectValues<T> = T[keyof T];
+type ObjectValues<T> = T[keyof T];
 
 export type WebSocketChannelName = ObjectValues<typeof WEB_SOCKET_CHANNELS>;
 
@@ -125,22 +103,22 @@ export interface IWebSocketSubscriptionMessage {
   payload: WebSocketChannelName;
   target?: string;
 }
-export interface ITxArguments {
+interface ITxArguments {
   type: 'tuple' | 'list' | 'int';
   value: any; // TODO find type, this was not correct: (string | number | any[])
 }
 /**
  * TxFunction names coming directly from the API or ready to be sent.
  */
-export type TxFunctionRaw = ObjectValues<typeof TX_FUNCTIONS>;
+type TxFunctionRaw = ObjectValues<typeof TX_FUNCTIONS>;
 /**
  * TxFunctions used internally by the app.
  */
-export type TxFunctionParsed = keyof typeof TX_FUNCTIONS;
-export type TxType = 'ContractCreateTx' | 'ContractCallTx';
+type TxFunctionParsed = keyof typeof TX_FUNCTIONS;
+type TxType = 'ContractCreateTx' | 'ContractCallTx';
 
 export type TxFunction = TxFunctionRaw | TxFunctionParsed;
-export interface ITx {
+interface ITx {
   abiVersion: number;
   accountId?: Encoded.AccountAddress;
   amount: number;

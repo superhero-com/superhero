@@ -9,7 +9,7 @@ export type QualiMessage = {
   type: 'm.room.message';
 }
 
-export type MessagesListResponse = {
+type MessagesListResponse = {
   data: QualiMessage[];
   end: string | null;
 };

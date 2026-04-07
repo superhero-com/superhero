@@ -12,7 +12,7 @@ const X_OAUTH_AUTHORIZE = 'https://x.com/i/oauth2/authorize';
 const X_OAUTH_SCOPE = 'users.read tweet.read';
 
 /** Path for the OAuth redirect callback. Register full URL in X Developer Portal. */
-export const X_OAUTH_CALLBACK_PATH = '/profile/x/callback';
+const X_OAUTH_CALLBACK_PATH = '/profile/x/callback';
 
 /**
  * Redirect URI for the current origin.
@@ -43,7 +43,7 @@ export function generateCodeVerifier(): string {
 }
 
 /** Compute code_challenge = BASE64URL(SHA256(ASCII(code_verifier))). */
-export async function computeCodeChallenge(verifier: string): Promise<string> {
+async function computeCodeChallenge(verifier: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
   const hash = await crypto.subtle.digest('SHA-256', data);
@@ -67,9 +67,9 @@ export function isOurOAuthState(state: string): boolean {
   return typeof state === 'string' && state.startsWith(X_OAUTH_STATE_PREFIX);
 }
 
-export const X_OAUTH_STORAGE_KEY = 'superhero_x_oauth_pkce';
+const X_OAUTH_STORAGE_KEY = 'superhero_x_oauth_pkce';
 
-export type XOAuthStored = {
+type XOAuthStored = {
   state: string;
   codeVerifier: string;
   address: string;

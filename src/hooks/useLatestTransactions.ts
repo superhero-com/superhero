@@ -12,7 +12,7 @@ import WebSocketClient from '../libs/WebSocketClient';
 let initialized = false;
 let unsubscribeLatestTransactions: (() => void) | null = null;
 
-export type TransactionDtoWithToken = TransactionDto & {
+type TransactionDtoWithToken = TransactionDto & {
   address: string;
   token: TokenDto;
 };

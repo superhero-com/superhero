@@ -47,13 +47,6 @@ export const recentlyRevokedInvitationsAtom = atom<string[]>([]);
 export const invitationLoadingAtom = atom<boolean>(false);
 export const invitationRefreshTriggerAtom = atom<number>(0);
 
-// Computed atom for active account invitations
-export const activeAccountInvitationsAtom = atom<(get) => InvitationInfo[]>((get) => {
-  const invitations = get(invitationListAtom);
-  // This will be filtered by the hook based on active account
-  return invitations;
-});
-
 // Atom to trigger refresh of invitation data
 export const refreshInvitationsAtom = atom(
   null,

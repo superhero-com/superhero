@@ -6,8 +6,6 @@ export { default as TransactionConfirmDetailRow } from './TransactionConfirmDeta
 export { default as ImpactBadge } from './ImpactBadge';
 export { default as FractionFormatter } from '@/features/shared/components/FractionFormatter';
 export { default as TokenRanking } from './TokenRanking';
-export { default as TrendminerBanner } from './TrendminerBanner';
-
 // Skeleton components
 export * from './Skeletons';
 

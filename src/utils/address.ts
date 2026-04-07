@@ -24,7 +24,7 @@ const ADDRESS_TYPES: Record<string, string> = {
   [Encoding.TxHash]: 'transactions',
 };
 
-export interface ValidatedHash {
+interface ValidatedHash {
   valid: boolean;
   isName: boolean;
   prefix: string | null;

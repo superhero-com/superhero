@@ -35,7 +35,7 @@ type ContractTxResult = Promise<{
   transactionHash?: string;
 }>;
 
-export interface RouterContractApi extends ContractMethodsBase {
+interface RouterContractApi extends ContractMethodsBase {
   factory: () => ContractCallResult<string | { $options?: { address?: string } }>;
   get_amounts_out: (amountIn: bigint, path: string[]) => ContractCallResult<(bigint | string)[]>;
   get_amounts_in: (amountOut: bigint, path: string[]) => ContractCallResult<(bigint | string)[]>;
@@ -130,7 +130,7 @@ export interface RouterContractApi extends ContractMethodsBase {
   ) => ContractTxResult;
 }
 
-export interface FactoryContractApi extends ContractMethodsBase {
+interface FactoryContractApi extends ContractMethodsBase {
   get_pair: (tokenA: string, tokenB: string) => ContractCallResult<string | null | undefined>;
 }
 
@@ -148,7 +148,7 @@ export interface Aex9ContractApi extends ContractMethodsBase {
   }>;
 }
 
-export interface PairContractApi extends ContractMethodsBase {
+interface PairContractApi extends ContractMethodsBase {
   token0: () => ContractCallResult<string>;
   get_reserves: () => ContractCallResult<{ reserve0: bigint | string; reserve1: bigint | string }>;
   allowance: (
@@ -160,11 +160,9 @@ export interface PairContractApi extends ContractMethodsBase {
   balance: (owner: string) => ContractCallResult<bigint | string | null | undefined>;
 }
 
-export type RouterContract = InitializedContract & RouterContractApi;
-export type FactoryContract = InitializedContract & FactoryContractApi;
-export type Aex9Contract = InitializedContract & Aex9ContractApi;
-export type PairContract = InitializedContract & PairContractApi;
-export type DexContracts = {
+type RouterContract = InitializedContract & RouterContractApi;
+type FactoryContract = InitializedContract & FactoryContractApi;
+type DexContracts = {
   router: RouterContract;
   factory: FactoryContract;
 };
@@ -307,21 +305,6 @@ export async function getTokenBalance(
   }
 }
 
-export async function getPairAllowanceToRouter(
-  sdk: any,
-  pairAddress: string,
-  owner: string,
-  routerAddress?: string,
-): Promise<bigint> {
-  const pair = await initializeContractTyped<PairContractApi>(
-    sdk,
-    { aci: ACI.Pair, address: pairAddress },
-  );
-  const forAccount = (routerAddress || CONFIG.DEX_ROUTER).replace('ct_', 'ak_');
-  const { decodedResult } = await pair.allowance({ from_account: owner, for_account: forAccount });
-  return (decodedResult ?? 0n) as bigint;
-}
-
 export async function ensurePairAllowanceForRouter(
   sdk: any,
   pairAddress: string,
@@ -342,23 +325,6 @@ export async function ensurePairAllowanceForRouter(
   } else {
     await pair.change_allowance(forAccount, needed - current);
   }
-}
-
-// Helpers
-export function estimateRemovalMinimums(
-  reserveA: bigint,
-  reserveB: bigint,
-  totalSupply: bigint,
-  lpToBurn: bigint,
-  slippagePct: number,
-): { minA: bigint; minB: bigint } {
-  if (totalSupply <= 0n || lpToBurn <= 0n) return { minA: 0n, minB: 0n };
-  const amountAExp = (lpToBurn * reserveA) / totalSupply;
-  const amountBExp = (lpToBurn * reserveB) / totalSupply;
-  return {
-    minA: subSlippage(amountAExp, slippagePct),
-    minB: subSlippage(amountBExp, slippagePct),
-  };
 }
 
 // Pair helpers and liquidity flows
@@ -411,11 +377,7 @@ export async function getPairInfo(
   };
 }
 
-export function sortAddresses(a: string, b: string): [string, string] {
-  return a < b ? [a, b] : [b, a];
-}
-
-export type AddLiquidityParams = {
+type AddLiquidityParams = {
   tokenA: string; // ct_
   tokenB: string; // ct_
   amountADesired: bigint;
@@ -447,7 +409,7 @@ export async function addLiquidity(
   );
 }
 
-export type AddLiquidityAeParams = {
+type AddLiquidityAeParams = {
   token: string; // ct_ for the non-AE token
   amountTokenDesired: bigint;
   amountAeDesired: bigint;
@@ -477,7 +439,7 @@ export async function addLiquidityAe(
   );
 }
 
-export type RemoveLiquidityParams = {
+type RemoveLiquidityParams = {
   tokenA: string;
   tokenB: string;
   liquidity: bigint;
@@ -502,7 +464,7 @@ export async function removeLiquidity(
   );
 }
 
-export type RemoveLiquidityAeParams = {
+type RemoveLiquidityAeParams = {
   token: string;
   liquidity: bigint;
   minAmountToken: bigint;
@@ -523,17 +485,4 @@ export async function removeLiquidityAe(
     params.toAccount,
     BigInt(params.deadlineMs),
   );
-}
-
-export async function getLpBalance(
-  sdk: any,
-  pairAddress: string,
-  owner: string,
-): Promise<bigint> {
-  const pair = await initializeContractTyped<PairContractApi>(
-    sdk,
-    { aci: ACI.Pair, address: pairAddress },
-  );
-  const { decodedResult } = await pair.balance(owner);
-  return BigInt(decodedResult ?? 0);
 }

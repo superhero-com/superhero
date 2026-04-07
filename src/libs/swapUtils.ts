@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 
-export type NumberLike = BigNumber.Value | bigint | number | string;
-export type Reserves = [NumberLike, NumberLike];
+type NumberLike = BigNumber.Value | bigint | number | string;
+type Reserves = [NumberLike, NumberLike];
 
 type RoutePair = {
   token0: string;

@@ -1,9 +1,6 @@
 /* eslint-disable max-len */
 import { TokenPriceMovementDto } from '@/api/generated/models/TokenPriceMovementDto';
-import {
-  CURRENT_NETWORK_CONFIG,
-  NETWORKS,
-} from '../config';
+import { CURRENT_NETWORK_CONFIG } from '../config';
 import { ICurrency, INetwork } from './types';
 
 function toNetwork(network: typeof CURRENT_NETWORK_CONFIG): INetwork {
@@ -20,13 +17,6 @@ function toNetwork(network: typeof CURRENT_NETWORK_CONFIG): INetwork {
     disabled: network.disabled,
   };
 }
-
-/**
- * Default `networkId` values returned by the Node after establishing the connection.
- * Nodes returns different values when connecting to the Hyperchains.
- */
-const NETWORK_ID_MAINNET = 'ae_mainnet';
-export const NETWORK_MAINNET: INetwork = toNetwork(NETWORKS[NETWORK_ID_MAINNET]);
 
 /** Network config for the current build (mainnet or testnet; VITE_NETWORK selects ae_mainnet vs ae_uat). */
 export const CURRENT_NETWORK: INetwork = toNetwork(CURRENT_NETWORK_CONFIG);

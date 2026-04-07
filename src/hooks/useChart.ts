@@ -10,7 +10,7 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 
-export interface UseChartProps {
+interface UseChartProps {
   onChartReady?: (chart: IChartApi) => void;
   height?: number;
   chartOptions?: DeepPartial<ChartOptions>;

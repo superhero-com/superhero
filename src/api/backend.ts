@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import { CONFIG } from '../config';
 
-export type ProfileEditablePayload = {
+type ProfileEditablePayload = {
   fullname?: string;
   bio?: string;
   nostrkey?: string;
@@ -12,14 +12,14 @@ export type ProfileEditablePayload = {
   sol_name?: string;
 };
 
-export type ProfileChallengeResponse = {
+type ProfileChallengeResponse = {
   challenge: string;
   payload_hash: string;
   expires_at: string;
   ttl_seconds: number;
 };
 
-export type ProfileUpdateResponse = {
+type ProfileUpdateResponse = {
   address: string;
   fullname: string | null;
   bio: string | null;
@@ -33,9 +33,9 @@ export type ProfileUpdateResponse = {
   updated_at: string;
 };
 
-export type DisplaySource = 'custom' | 'chain' | 'x';
+type DisplaySource = 'custom' | 'chain' | 'x';
 
-export type ProfilePayload = {
+type ProfilePayload = {
   fullname: string;
   bio: string;
   avatarurl: string;
@@ -420,8 +420,3 @@ export const SuperheroApi = {
     }) as Promise<ProfileUpdateResponse>;
   },
 };
-
-// API function for new posts endpoint (legacy helper used by some screens)
-export async function fetchPosts(limit: number = 5) {
-  return SuperheroApi.listPosts({ limit });
-}

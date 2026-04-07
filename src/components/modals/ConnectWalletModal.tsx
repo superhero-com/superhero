@@ -75,7 +75,7 @@ const ConnectWalletModal = ({ onClose }: Props) => {
         {' '}
         <Link
           to="/terms"
-          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+          className="no-underline text-[var(--primary-color)] hover:opacity-90"
         >
           Terms of Use
         </Link>
@@ -84,7 +84,7 @@ const ConnectWalletModal = ({ onClose }: Props) => {
         {' '}
         <Link
           to="/privacy"
-          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+          className="no-underline text-[var(--primary-color)] hover:opacity-90"
         >
           Privacy Policy
         </Link>
@@ -102,7 +102,7 @@ const ConnectWalletModal = ({ onClose }: Props) => {
             {' '}
             <Link
               to="/terms"
-              className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+              className="no-underline text-[var(--primary-color)] hover:opacity-90"
             >
               Terms of Use
             </Link>
@@ -111,7 +111,7 @@ const ConnectWalletModal = ({ onClose }: Props) => {
             {' '}
             <Link
               to="/privacy"
-              className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+              className="no-underline text-[var(--primary-color)] hover:opacity-90"
             >
               Privacy Policy
             </Link>

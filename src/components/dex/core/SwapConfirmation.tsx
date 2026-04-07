@@ -69,7 +69,7 @@ export default function SwapConfirmation({
 
           {/* Header */}
           <div className="flex justify-between items-center mb-3">
-            <Dialog.Title className="font-bold text-base m-0 sh-dex-title">
+            <Dialog.Title className="font-bold text-base m-0">
               Confirm Swap
             </Dialog.Title>
             <Dialog.Close asChild>

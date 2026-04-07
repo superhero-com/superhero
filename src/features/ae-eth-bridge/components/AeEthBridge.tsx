@@ -925,7 +925,7 @@ export const AeEthBridge = () => {
           <div className="w-full mx-auto bg-transparent border-0 p-0 relative overflow-hidden box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
             {/* Header */}
             <div className="flex justify-between items-center mb-2 sm:mb-3 min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
+              <h2 className="text-lg sm:text-xl font-bold m-0 min-w-0 flex-shrink">
                 {t('bridge.title')}
               </h2>
 

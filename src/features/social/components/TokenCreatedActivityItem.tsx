@@ -72,7 +72,7 @@ const TokenCreatedActivityItem = memo(({
             <a
               href={`/users/${creator}`}
               onClick={(e) => e.stopPropagation()}
-              className="min-w-0 max-w-[18ch] shrink truncate whitespace-nowrap font-semibold text-white/90 no-gradient-text md:max-w-none"
+              className="min-w-0 max-w-[18ch] shrink truncate whitespace-nowrap font-semibold text-white/90 md:max-w-none"
               title={displayName || creator}
             >
               {creatorLabel}

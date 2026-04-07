@@ -64,14 +64,6 @@ const TAB_LABELS: Record<SearchTab, string> = {
 
 type OrderByOption = typeof SORT[keyof typeof SORT];
 
-const NO_GRADIENT_STYLE: React.CSSProperties = {
-  color: 'var(--standard-font-color)',
-  WebkitTextFillColor: 'var(--standard-font-color)',
-  background: 'none',
-  WebkitBackgroundClip: 'initial',
-  backgroundClip: 'initial',
-};
-
 const ORDER_BY_OPTIONS: SelectOptions<OrderByOption> = [
   { title: 'Market Cap', value: SORT.marketCap },
   { title: 'Trending', value: SORT.trendingScore },
@@ -114,8 +106,7 @@ const SearchSectionShell = ({
   <section className="overflow-hidden bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
     <div className="flex flex-col gap-1 mb-4">
       <h2
-        className="no-gradient-text text-lg sm:text-xl font-semibold text-white"
-        style={NO_GRADIENT_STYLE}
+        className="text-lg sm:text-xl font-semibold text-white"
       >
         {title}
       </h2>
@@ -183,8 +174,7 @@ const UserResultsList = ({ items }: { items: Array<TrendUserItem | LeaderboardIt
         <Link
           key={address}
           to={`/users/${address}`}
-          className="no-gradient-text flex flex-col gap-3 px-1 py-4 text-white transition-colors hover:bg-white/[0.03] hover:text-white rounded-xl sm:flex-row sm:items-center sm:justify-between"
-          style={NO_GRADIENT_STYLE}
+          className="flex flex-col gap-3 px-1 py-4 text-white transition-colors hover:bg-white/[0.03] hover:text-white rounded-xl sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-center gap-3 min-w-0">
             <AddressAvatar address={address} size={40} borderRadius="50%" />
@@ -579,10 +569,9 @@ const TokenList = () => {
                       key={tab}
                       type="button"
                       onClick={() => setActiveTab(tab)}
-                      className={`no-gradient-text normal-case tracking-normal relative pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm ${
+                      className={`normal-case tracking-normal relative pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm ${
                         isActive ? 'text-white' : 'text-white/55 hover:text-white/80'
                       }`}
-                      style={NO_GRADIENT_STYLE}
                     >
                       {TAB_LABELS[tab]}
                       {isActive ? (
@@ -698,8 +687,7 @@ const TokenList = () => {
                   </div>
                   <Link
                     to="/trends/create"
-                    className="no-gradient-text inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/[0.08] hover:border-white/25 hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] active:scale-[0.97] cursor-pointer"
-                    style={NO_GRADIENT_STYLE}
+                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/[0.08] hover:border-white/25 hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] active:scale-[0.97] cursor-pointer"
                   >
                     Tokenize Trend
                   </Link>

@@ -1,31 +1,24 @@
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { AeButton } from '@/components/ui/ae-button';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/ae-dropdown-menu';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { formatNumber } from '@/utils/number';
 import { useQuery } from '@tanstack/react-query';
-import React, {
-  useEffect, useMemo,
-  useState,
-} from 'react';
+import { LogOut, User } from 'lucide-react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AddressAvatar from '../../AddressAvatar';
 import { HeaderLogo } from '../../../icons';
-import SearchInput from '../../SearchInput';
-
 import { TokensService } from '../../../api/generated/services/TokensService';
 import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import AddressAvatar from '../../AddressAvatar';
-import FooterSection from '../FooterSection';
-import { getNavigationItems } from './navigationItems';
+import Favicon from '../../../svg/favicon.svg?react';
 
 const MobileAppHeader = () => {
   const { t } = useTranslation('common');
-  const navigationItems = getNavigationItems();
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
@@ -37,48 +30,6 @@ const MobileAppHeader = () => {
     await disconnectWallet();
     window.location.reload();
   };
-  const handleProfileClick = () => {
-    if (activeAccount) {
-      navigate(`/users/${activeAccount}`);
-      setShowOverlay(false);
-    }
-  };
-
-  const handleMenuToggle = () => {
-    setShowOverlay(!showOverlay);
-    if (showSearch) {
-      setShowSearch(false);
-    }
-  };
-
-  const handleNavigationClick = () => {
-    setShowOverlay(false);
-    setShowSearch(false);
-  };
-
-  // Close mobile overlays when route changes
-  useEffect(() => {
-    setShowOverlay(false);
-    setShowSearch(false);
-  }, [pathname]);
-
-  // Close mobile overlays on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowOverlay(false);
-        setShowSearch(false);
-      }
-    };
-
-    if (showOverlay || showSearch) {
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [showOverlay, showSearch]);
 
   const tokenPathMatch = useMemo(() => pathname.match(/^\/trends\/tokens\/([^/?#]+)/i), [pathname]);
   const tokenNameParam = useMemo(() => {
@@ -109,12 +60,6 @@ const MobileAppHeader = () => {
     ? `$${formatNumber(priceRaw, priceRaw < 1 ? 6 : 2)}`
     : '—';
 
-  // Active route helper for mobile nav buttons
-  const isActiveRoute = (path: string) => {
-    if (path === '/') return pathname === '/';
-    return pathname.startsWith(path);
-  };
-
   function onNavigateBack() {
     const state = (window.history?.state as any) || {};
     const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : false;
@@ -135,259 +80,100 @@ const MobileAppHeader = () => {
         boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
       }}
     >
-      {/* Search Mode */}
-      {showSearch ? (
-        <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
-          <button
-            type="button"
-            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-            onClick={() => setShowSearch(false)}
-            aria-label={t('labels.back')}
-          >
-            ←
-          </button>
-          <div className="flex-1">
-            <SearchInput />
-          </div>
-        </div>
-      ) : (
-        /* Normal Navigation Mode */
-        <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
-          {isTokenDetail ? (
-            <>
-              <button
-                type="button"
-                className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-                onClick={() => onNavigateBack()}
-                aria-label={t('labels.back')}
-              >
-                ←
-              </button>
-              <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2">
-                <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
-                  #
-                  {String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
-                </div>
-                <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
-                  <span className="text-white/90">{priceText}</span>
-                  {typeof changePercent === 'number' ? (
-                    <span className={`font-semibold tabular-nums ${changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {changePercent >= 0 ? '▲' : '▼'}
-                      {' '}
-                      {Math.abs(changePercent).toFixed(2)}
-                      %
-                    </span>
-                  ) : (
-                    <span className="text-white/50">—</span>
-                  )}
-                </div>
-                {
-                  tokenData?.sale_address && (
-                    <button
-                      type="button"
-                      className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
-                      onClick={() => {
-                        const params = new URLSearchParams(search);
-                        params.set('showTrade', '1');
-                        params.set('openTrade', '1');
-                        navigate({ pathname, search: params.toString() });
-                      }}
-                      aria-label="Open trade"
-                    >
-                      Trade
-                    </button>
-                  )
-                }
-
+      <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
+        {isTokenDetail ? (
+          <>
+            <button
+              type="button"
+              className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
+              onClick={() => onNavigateBack()}
+              aria-label={t('labels.back')}
+            >
+              ←
+            </button>
+            <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2">
+              <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
+                #
+                {String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
               </div>
-            </>
-          ) : (
-            <>
-              <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
-                <HeaderLogo className="h-7 w-auto" />
-              </Link>
-              <div className="flex-grow hidden md:block" />
-            </>
-          )}
-
-          {/* Wallet button hidden in the top mobile header */}
-          {/* <HeaderWalletButton className="flex-1" /> */}
-          {!isTokenDetail && (
-            <>
-              <div className="flex-grow md:hidden" />
-
-              <button
-                type="button"
-                className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
-                onClick={(e) => {
-                  handleMenuToggle();
-                  (e.currentTarget as HTMLButtonElement).blur();
-                }}
-                onTouchEnd={(e) => {
-                  (e.currentTarget as HTMLButtonElement).blur();
-                }}
-                aria-label={t('labels.openMenu')}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                tabIndex={-1}
-              >
-                <span className="flex items-center gap-2">
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 6h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    <path d="M4 12h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    <path d="M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
-                  {activeAccount && (
-                    <AddressAvatar address={activeAccount} size={28} />
-                  )}
-                </span>
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Navigation Overlay */}
-      {showOverlay && (
-        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            onClick={() => setShowOverlay(false)}
-            aria-label={t('labels.closeMenu')}
-          />
-          <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-            <div className="flex items-center justify-between h-[70px] px-3 border-b border-white/10 sm:px-3 flex-shrink-0">
-              <h2
-                className="m-0 px-4 text-md font-semibold uppercase tracking-[0.02em] !text-white/80 !bg-transparent"
-                style={{
-                  color: 'rgba(255,255,255,0.8)',
-                  background: 'transparent',
-                }}
-              >
-                {t('labels.menu')}
-              </h2>
-              <button
-                type="button"
-                className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center leading-none cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none focus:shadow-none active:shadow-none"
-                onClick={(e) => {
-                  setShowOverlay(false);
-                  (e.currentTarget as HTMLButtonElement).blur();
-                }}
-                aria-label={t('labels.closeMenu')}
-                tabIndex={-1}
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
+              <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
+                <span className="text-white/90">{priceText}</span>
+                {typeof changePercent === 'number' ? (
+                  <span className={`font-semibold tabular-nums ${changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {changePercent >= 0 ? '▲' : '▼'}
+                    {' '}
+                    {Math.abs(changePercent).toFixed(2)}
+                    %
+                  </span>
+                ) : (
+                  <span className="text-white/50">—</span>
+                )}
+              </div>
+              {tokenData?.sale_address && (
+                <button
+                  type="button"
+                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                  onClick={() => {
+                    const params = new URLSearchParams(search);
+                    params.set('showTrade', '1');
+                    params.set('openTrade', '1');
+                    navigate({ pathname, search: params.toString() });
+                  }}
+                  aria-label="Open trade"
                 >
-                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
-              {activeAccount ? (
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleProfileClick}
-                    className="w-full flex items-center gap-3 hover:opacity-80 transition-opacity"
-                  >
-                    <AddressAvatarWithChainName
-                      isHoverEnabled={false}
-                      address={activeAccount}
-                      size={40}
-                      showBalance
-                      showAddressAndChainName={false}
-                      showPrimaryOnly
-                      contentClassName="px-2 pb-0"
-                    />
-                  </button>
-                  <div className="mt-3">
-                    <AeButton
-                      onClick={handleLogout}
-                      className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
-                      variant="ghost"
-                    >
-                      {t('buttons.disconnect')}
-                    </AeButton>
-                  </div>
-                </div>
-              ) : (
-                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
-                  {t('buttons.connectWalletDex')}
-                </AeButton>
+                  Trade
+                </button>
               )}
             </div>
-
-            <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
-              {navigationItems.filter((item) => !!item.id).map((item) => {
-                const commonClasses = 'w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5';
-                const baseBg = 'bg-white/5 hover:bg-white/10';
-                const node = item.isExternal ? (
-                  <div key={item.id} className={`${baseBg} rounded-xl`}>
-                    <a
-                      href={item.path}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`${commonClasses} bg-transparent`}
-                      style={{ background: 'none' }}
-                      onClick={handleNavigationClick}
-                    >
-                      <span className="text-lg sm:text-base">{item.label}</span>
-                    </a>
-                  </div>
-                ) : (
-                  <div key={item.id} className={`${baseBg} rounded-xl ${isActiveRoute(item.path) ? 'ring-2 ring-[var(--accent-color)]' : ''}`}>
-                    <Link
-                      to={item.path}
-                      onClick={handleNavigationClick}
-                      className={`${commonClasses} bg-transparent`}
-                      style={{ background: 'none' }}
-                    >
-                      <span className="text-lg sm:text-base">{item.label}</span>
-                    </Link>
-                  </div>
-                );
-
-                return (
-                  <React.Fragment key={`nav-${item.id}`}>
-                    {node}
-                  </React.Fragment>
-                );
-              })}
-            </nav>
-
-            {/* Buy AE button at the bottom */}
-            <div className="px-6 pb-4 sm:px-5 sm:pb-3">
-              <div className="bg-white/5 hover:bg-white/10 rounded-xl">
-                <Link
-                  to="/defi/buy-ae-with-eth"
-                  onClick={handleNavigationClick}
-                  className="w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5 bg-transparent"
-                  style={{ background: 'none' }}
-                >
-                  <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Footer from right rail inside mobile menu (compact) */}
-            <div className="mt-auto pb-5 pt-2 px-3">
-              <FooterSection compact />
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        ) : (
+          <>
+            <Link
+              to="/"
+              className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline"
+              style={{ textDecoration: 'none' }}
+              aria-label={t('labels.superheroHome')}
+            >
+              <HeaderLogo className="h-7 w-auto" />
+            </Link>
+            <div className="flex-grow" />
+            {activeAccount ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full border border-white/10 bg-white/5 transition-colors duration-200 hover:bg-white/10 cursor-pointer"
+                    aria-label={t('aria.viewProfile')}
+                  >
+                    <AddressAvatar address={activeAccount} size={28} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8} className="min-w-[180px] z-[1101]">
+                  <DropdownMenuItem onClick={() => navigate(`/users/${activeAccount}`)}>
+                    <User className="mr-2 h-4 w-4" />
+                    {t('labels.profile')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('buttons.disconnect')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <AeButton
+                type="button"
+                onClick={handleConnect}
+                size="sm"
+                noShadow
+                className="h-10 rounded-full px-4 text-xs normal-case tracking-normal"
+              >
+                <Favicon className="h-4 w-4" />
+                {t('buttons.connectWalletDex')}
+              </AeButton>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

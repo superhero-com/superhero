@@ -829,8 +829,19 @@ const TokenSaleDetails = () => {
 
       {/* Mobile Trading Modal */}
       {(showTradePanels && tradeActionSheet && token?.sale_address) && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
-          <div className="w-full max-h-[85vh] overflow-y-auto  supports-not-[backdrop-filter]:bg-black/70 [backdrop-filter:blur(8px)] [-webkit-backdrop-filter:blur(8px)]">
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-end"
+          onClick={closeTradeActionSheet}
+          role="presentation"
+          style={{
+            paddingBottom: 'var(--mobile-footer-actual-height, calc(var(--mobile-footer-height) + env(safe-area-inset-bottom) + 12px))',
+          }}
+        >
+          <div
+            className="w-full max-h-[85vh] overflow-y-auto supports-not-[backdrop-filter]:bg-black/70 [backdrop-filter:blur(8px)] [-webkit-backdrop-filter:blur(8px)]"
+            onClick={(event) => event.stopPropagation()}
+            role="presentation"
+          >
             <TokenTradeCard
               token={token}
               onClose={closeTradeActionSheet}

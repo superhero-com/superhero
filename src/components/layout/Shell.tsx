@@ -23,11 +23,11 @@ const Shell = ({
   const hasMaxWidth = containerClassName && /(^|\s)max-w-/.test(containerClassName);
   let gridColumns = '';
   if (hasLeft && hasRight) {
-    gridColumns = 'lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)]';
+    gridColumns = 'lg:grid-cols-[minmax(220px,260px)_minmax(0,1fr)_minmax(260px,300px)] xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)]';
   } else if (hasLeft) {
     gridColumns = 'lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]';
   } else if (hasRight) {
-    gridColumns = 'lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]';
+    gridColumns = 'lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]';
   }
 
   return (

@@ -572,7 +572,7 @@ export default function UserProfile({
   );
 
   return standalone ? (
-    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell right={<RightRail />} containerClassName="mx-auto">
       {content}
       <ProfileEditModal
         open={editOpen}

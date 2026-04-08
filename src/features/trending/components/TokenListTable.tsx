@@ -103,7 +103,7 @@ const TokenListTable = ({
   const isEmptyLoading = !!loading && !allItems?.length;
 
   return (
-    <div className="relative -mx-4 md:mx-0">
+    <div className="relative -mx-4 md:mx-0" style={{ containerType: 'inline-size' }}>
       <table className="w-full bctsl-token-list-table">
         <thead className={`${isMobile && isEmptyLoading ? 'hidden md:table-header-group' : ''}`}>
           <tr>
@@ -148,17 +148,17 @@ const TokenListTable = ({
             </SortableColumnHeader>
 
             {/* 24h % — hidden on mobile */}
-            <th className="cell cell-change24h text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden md:table-cell">
+            <th className="cell cell-change24h text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
               24h %
             </th>
 
             {/* 7d % — hidden on mobile */}
-            <th className="cell cell-change7d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden md:table-cell">
+            <th className="cell cell-change7d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
               7d %
             </th>
 
             {/* 30d % — hidden on mobile and sm */}
-            <th className="cell cell-change30d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden lg:table-cell">
+            <th className="cell cell-change30d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
               30d %
             </th>
 
@@ -168,18 +168,18 @@ const TokenListTable = ({
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-market-cap text-xs opacity-50 text-right py-1 px-3 hidden md:table-cell whitespace-nowrap"
+              className="cell cell-market-cap text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
               <span>Market Cap</span>
             </SortableColumnHeader>
 
             {/* Volume (30d) — xl+ only */}
-            <th className="cell cell-volume text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden xl:table-cell">
+            <th className="cell cell-volume text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
               Volume (30d)
             </th>
 
             {/* Circulating Supply — xl+ only */}
-            <th className="cell cell-supply text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap hidden xl:table-cell">
+            <th className="cell cell-supply text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
               Circ. Supply
             </th>
 
@@ -188,7 +188,7 @@ const TokenListTable = ({
               <span className="hidden md:inline">All Time</span>
             </th>
 
-            <th className="cell-link hidden lg:table-cell">{/* Links placeholder */}</th>
+            <th className="cell-link">{/* Links placeholder */}</th>
           </tr>
         </thead>
 
@@ -251,54 +251,58 @@ const TokenListTable = ({
           text-decoration: underline;
         }
 
-        @media screen and (min-width: 961px) {
-          .cell-rank {
-            width: 52px;
-          }
+        /* --- Container-query-based column visibility --- */
+        /* Default: hide all optional columns (narrow container / mobile) */
+        .bctsl-token-list-table .cell-change24h,
+        .bctsl-token-list-table .cell-change7d,
+        .bctsl-token-list-table .cell-change30d,
+        .bctsl-token-list-table .cell-market-cap,
+        .bctsl-token-list-table .cell-volume,
+        .bctsl-token-list-table .cell-supply,
+        .bctsl-token-list-table .cell-link {
+          display: none;
+        }
 
-          .cell-price {
-            width: 145px;
-          }
-
-          .cell-change24h {
-            width: 110px;
-          }
-
-          .cell-change7d {
-            width: 110px;
-          }
-
-          .cell-change30d {
-            width: 110px;
-          }
-
-          .cell-market-cap {
-            width: 185px;
-          }
-
-          .cell-volume {
-            width: 115px;
-          }
-
-          .cell-supply {
-            width: 115px;
-          }
-
-          .cell-chart {
-            width: 175px;
-          }
-
-          .cell-chart .chart {
-            max-width: 155px;
-          }
-
-          .cell-link {
-            width: 8px;
+        /* ≥ 768px container: show 24h%, 7d%, Market Cap, link */
+        @container (min-width: 768px) {
+          .bctsl-token-list-table .cell-change24h,
+          .bctsl-token-list-table .cell-change7d,
+          .bctsl-token-list-table .cell-market-cap,
+          .bctsl-token-list-table .cell-link {
+            display: table-cell;
           }
         }
 
-        /* Sticky header — desktop + tablet */
-        @media screen and (min-width: 768px) {
+        /* ≥ 960px container: show 30d%, set column widths */
+        @container (min-width: 960px) {
+          .bctsl-token-list-table .cell-change30d {
+            display: table-cell;
+          }
+
+          .cell-rank { width: 52px; }
+          .cell-price { width: 145px; }
+          .cell-change24h { width: 110px; }
+          .cell-change7d { width: 110px; }
+          .cell-change30d { width: 110px; }
+          .cell-market-cap { width: 185px; }
+          .cell-chart { width: 175px; }
+          .cell-chart .chart { max-width: 155px; }
+          .cell-link { width: 8px; }
+        }
+
+        /* ≥ 1200px container: show Volume and Supply */
+        @container (min-width: 1200px) {
+          .bctsl-token-list-table .cell-volume,
+          .bctsl-token-list-table .cell-supply {
+            display: table-cell;
+          }
+
+          .cell-volume { width: 115px; }
+          .cell-supply { width: 115px; }
+        }
+
+        /* Sticky header — when container is ≥ 768px */
+        @container (min-width: 768px) {
           .bctsl-token-list-table > thead {
             position: sticky;
             top: 0;
@@ -314,9 +318,8 @@ const TokenListTable = ({
           }
         }
 
-        /* Tablet: hide volume and supply (they're xl:table-cell) — handled via Tailwind */
-
-        @media screen and (max-width: 1100px) {
+        /* Narrower container: reduce font sizes */
+        @container (max-width: 1100px) {
           .cell-name {
             font-size: 15px;
           }

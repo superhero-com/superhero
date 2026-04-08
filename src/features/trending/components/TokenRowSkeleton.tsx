@@ -65,7 +65,7 @@ const TokenRowSkeleton = () => (
       </td>
 
       {/* 30d % */}
-      <td className="cell cell-change30d px-1 text-right hidden lg:table-cell">
+      <td className="cell cell-change30d px-1 text-right">
         <div className="skeleton-loader skeleton-text w-12 h-4 m-0 ml-auto" role="presentation" aria-hidden="true" />
       </td>
 
@@ -75,12 +75,12 @@ const TokenRowSkeleton = () => (
       </td>
 
       {/* Volume (xl) */}
-      <td className="cell cell-volume px-1 text-right hidden xl:table-cell">
+      <td className="cell cell-volume px-1 text-right">
         <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
       </td>
 
       {/* Circ. Supply (xl) */}
-      <td className="cell cell-supply px-1 text-right hidden xl:table-cell">
+      <td className="cell cell-supply px-1 text-right">
         <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
       </td>
 

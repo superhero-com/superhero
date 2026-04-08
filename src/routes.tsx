@@ -29,6 +29,7 @@ const TokenSaleDetails = lazy(
 const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
+const Download = lazy(() => import('./views/Download'));
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
@@ -142,6 +143,7 @@ export const routes: RouteObject[] = [
   },
   { path: '/profile/x/callback', element: <ProfileXCallback /> },
   { path: '/landing', element: <Landing /> },
+  { path: '/download', element: <Download /> },
   { path: '/meet/:room?', element: <Conference /> },
   { path: '/voting', element: <Governance /> },
   { path: '/voting/p/:id', element: <Governance /> },

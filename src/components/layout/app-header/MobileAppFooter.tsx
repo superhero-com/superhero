@@ -67,7 +67,7 @@ const MobileAppFooter = () => {
       >
         {navigationItems.map((item) => {
           const Icon = item.icon;
-          const isActive = !item.isExternal && item.path === activeNavPath;
+          const isActive = !item.isExternal && !!item.path && item.path === activeNavPath;
           const baseClassName = 'no-gradient-text flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center transition-colors duration-200';
           const activeClassName = isActive
             ? 'bg-white/10 text-[var(--standard-font-color)]'

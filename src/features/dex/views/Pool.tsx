@@ -24,11 +24,11 @@ const PoolContent = () => {
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Top Row - Forms and Positions */}
-      <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start">
+      <div className="grid grid-cols-1 min-[1360px]:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start">
         {/* Mobile: Forms First, Desktop: Forms First (left column) */}
-        <div className="lg:order-1 order-1">
+        <div className="min-[1360px]:order-1 order-1">
           {/* Liquidity Forms */}
-          <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-6">
+          <div id="liquidity-forms-section" className="min-[1360px]:sticky min-[1360px]:top-5 flex flex-col gap-6">
             {currentAction === 'remove' ? (
               <RemoveLiquidityForm />
             ) : (
@@ -38,7 +38,7 @@ const PoolContent = () => {
         </div>
 
         {/* Mobile: Positions Second, Desktop: Positions Second (right column) */}
-        <div className="lg:order-2 order-2">
+        <div className="min-[1360px]:order-2 order-2">
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">

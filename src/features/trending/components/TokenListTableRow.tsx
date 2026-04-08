@@ -58,7 +58,7 @@ const TokenListTableRow = ({
   return (
     <>
       {/* Mobile compact card row — 4 columns: rank | name+MC | price+30d% | chart */}
-      <tr className="mobile-only-card md:hidden relative">
+      <tr className="mobile-only-card relative">
         <td className="cell-fake" />
 
         {/* Rank */}
@@ -115,7 +115,7 @@ const TokenListTableRow = ({
       </tr>
 
       {/* Desktop table row */}
-      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
+      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
         <td className="cell-fake" />
 
         {/* Rank */}

@@ -1,6 +1,8 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { useIsMobile } from '@/hooks';
-import { useMemo } from 'react';
+import {
+  useLayoutEffect, useMemo, useRef, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import TokenListTableRow from './TokenListTableRow';
 import TokenRowSkeleton from './TokenRowSkeleton';
@@ -94,18 +96,67 @@ const TokenListTable = ({
     () => (pages?.length ? pages.map((page) => page.items).flat() : []),
     [pages],
   );
+  const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const skeletonRows = useMemo(
     () => Array.from({ length: 12 }, (_, idx) => `row-${idx + 1}`),
     [],
   );
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
 
-  const isMobile = useIsMobile();
+  const isViewportMobile = useIsMobile();
   const isEmptyLoading = !!loading && !allItems?.length;
+  const isCompactTable = containerWidth !== null && containerWidth < 768;
+  const isContainerMd = (containerWidth ?? 0) >= 768;
+  const isContainerLg = (containerWidth ?? 0) >= 960;
+  const isContainerXl = (containerWidth ?? 0) >= 1200;
+  const isContainerNarrow = containerWidth !== null && containerWidth <= 1100;
+
+  useLayoutEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return undefined;
+
+    const updateWidth = () => {
+      const nextWidth = Math.round(container.getBoundingClientRect().width);
+      setContainerWidth((currentWidth) => (currentWidth === nextWidth ? currentWidth : nextWidth));
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateWidth);
+      return () => {
+        window.removeEventListener('resize', updateWidth);
+      };
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
-    <div className="relative -mx-4 md:mx-0" style={{ containerType: 'inline-size' }}>
+    <div
+      ref={tableContainerRef}
+      className="bctsl-token-list-container relative -mx-4 md:mx-0"
+      data-compact={isCompactTable}
+      data-container-md={isContainerMd}
+      data-container-lg={isContainerLg}
+      data-container-xl={isContainerXl}
+      data-container-narrow={isContainerNarrow}
+      style={{
+        '--token-list-sticky-top': isViewportMobile
+          ? 'calc(var(--mobile-navigation-height) + env(safe-area-inset-top))'
+          : '0px',
+      } as React.CSSProperties}
+    >
       <table className="w-full bctsl-token-list-table">
-        <thead className={`${isMobile && isEmptyLoading ? 'hidden md:table-header-group' : ''}`}>
+        <thead className={isCompactTable && isEmptyLoading ? 'hidden' : ''}>
           <tr>
             <th className="cell-fake">
               {/* Fake column that fixes ::before problem on rows */}
@@ -120,13 +171,12 @@ const TokenListTable = ({
               className="cell cell-rank text-xs opacity-50 text-left pl-3 pr-4 whitespace-nowrap"
               title={t('titles.clickToReverseRankingOrder')}
             >
-              <span className="hidden md:inline">#</span>
-              <span className="md:hidden inline">#</span>
+              #
             </SortableColumnHeader>
 
             {/* Name */}
             <SortableColumnHeader
-              sortKey={isMobile ? 'market_cap' : 'name'}
+              sortKey={isCompactTable ? 'market_cap' : 'name'}
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
@@ -143,8 +193,7 @@ const TokenListTable = ({
               onSort={onSort}
               className="cell cell-price text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
-              <span className="hidden md:inline">Price</span>
-              <span className="md:hidden">Price (30d)</span>
+              {isCompactTable ? 'Price (30d)' : 'Price'}
             </SortableColumnHeader>
 
             {/* 24h % — hidden on mobile */}
@@ -185,7 +234,7 @@ const TokenListTable = ({
 
             {/* Sparkline */}
             <th className="cell cell-chart text-xs text-right opacity-50 py-1 pl-3 pr-2 whitespace-nowrap">
-              <span className="hidden md:inline">All Time</span>
+              {isCompactTable ? null : <span>All Time</span>}
             </th>
 
             <th className="cell-link">{/* Links placeholder */}</th>
@@ -218,14 +267,8 @@ const TokenListTable = ({
           border-spacing: 0 6px;
         }
 
-        @media screen and (max-width: 767px) {
-          .bctsl-token-list-table {
-            border-spacing: 0;
-          }
-
-          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td:not(.cell-fake) {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
-          }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table {
+          border-spacing: 0;
         }
 
         .bctsl-token-list-table th {
@@ -251,7 +294,7 @@ const TokenListTable = ({
           text-decoration: underline;
         }
 
-        /* --- Container-query-based column visibility --- */
+        /* --- Container-width-based column visibility --- */
         /* Default: hide all optional columns (narrow container / mobile) */
         .bctsl-token-list-table .cell-change24h,
         .bctsl-token-list-table .cell-change7d,
@@ -264,133 +307,120 @@ const TokenListTable = ({
         }
 
         /* ≥ 768px container: show 24h%, 7d%, Market Cap, link */
-        @container (min-width: 768px) {
-          .bctsl-token-list-table .cell-change24h,
-          .bctsl-token-list-table .cell-change7d,
-          .bctsl-token-list-table .cell-market-cap,
-          .bctsl-token-list-table .cell-link {
-            display: table-cell;
-          }
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-change24h,
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-change7d,
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-market-cap,
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-link {
+          display: table-cell;
         }
 
         /* ≥ 960px container: show 30d%, set column widths */
-        @container (min-width: 960px) {
-          .bctsl-token-list-table .cell-change30d {
-            display: table-cell;
-          }
-
-          .cell-rank { width: 52px; }
-          .cell-price { width: 145px; }
-          .cell-change24h { width: 110px; }
-          .cell-change7d { width: 110px; }
-          .cell-change30d { width: 110px; }
-          .cell-market-cap { width: 185px; }
-          .cell-chart { width: 175px; }
-          .cell-chart .chart { max-width: 155px; }
-          .cell-link { width: 8px; }
+        .bctsl-token-list-container[data-container-lg="true"] .bctsl-token-list-table .cell-change30d {
+          display: table-cell;
         }
+
+        .bctsl-token-list-container[data-container-lg="true"] .cell-rank { width: 52px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-price { width: 145px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change24h { width: 110px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change7d { width: 110px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change30d { width: 110px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-market-cap { width: 185px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-chart { width: 175px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-chart .chart { max-width: 155px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-link { width: 8px; }
 
         /* ≥ 1200px container: show Volume and Supply */
-        @container (min-width: 1200px) {
-          .bctsl-token-list-table .cell-volume,
-          .bctsl-token-list-table .cell-supply {
-            display: table-cell;
-          }
-
-          .cell-volume { width: 115px; }
-          .cell-supply { width: 115px; }
+        .bctsl-token-list-container[data-container-xl="true"] .bctsl-token-list-table .cell-volume,
+        .bctsl-token-list-container[data-container-xl="true"] .bctsl-token-list-table .cell-supply {
+          display: table-cell;
         }
 
-        /* Sticky header — when container is ≥ 768px */
-        @container (min-width: 768px) {
-          .bctsl-token-list-table > thead {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-          }
+        .bctsl-token-list-container[data-container-xl="true"] .cell-volume { width: 115px; }
+        .bctsl-token-list-container[data-container-xl="true"] .cell-supply { width: 115px; }
 
-          .bctsl-token-list-table > thead th {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 10px;
-            padding-bottom: 10px;
-          }
+        /* Sticky header — when container is ≥ 768px */
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table > thead {
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table > thead th {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 10px;
+          padding-bottom: 10px;
         }
 
         /* Narrower container: reduce font sizes */
-        @container (max-width: 1100px) {
-          .cell-name {
-            font-size: 15px;
-          }
-
-          .cell-price,
-          .cell-market-cap {
-            font-size: 0.814em;
-          }
+        .bctsl-token-list-container[data-container-narrow="true"] .cell-name {
+          font-size: 15px;
         }
 
-        /* Mobile header + rows */
-        @media screen and (max-width: 767px) {
-          .bctsl-token-list-table {
-            table-layout: fixed;
-            width: 100%;
-          }
+        .bctsl-token-list-container[data-container-narrow="true"] .cell-price,
+        .bctsl-token-list-container[data-container-narrow="true"] .cell-market-cap {
+          font-size: 0.814em;
+        }
 
-          /* Sticky header */
-          .bctsl-token-list-table > thead {
-            display: table-header-group;
-            position: sticky;
-            top: calc(var(--mobile-navigation-height) + env(safe-area-inset-top));
-            z-index: 20;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-          }
+        /* Compact table layout */
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table {
+          table-layout: fixed;
+          width: 100%;
+        }
 
-          .bctsl-token-list-table > thead th {
-            font-size: 11px;
-            line-height: 1rem;
-            white-space: nowrap;
-            background: rgba(255, 255, 255, 0.05);
-            padding-top: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead {
+          display: table-header-group;
+          position: sticky;
+          top: var(--token-list-sticky-top);
+          z-index: 20;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
 
-          /* Column widths */
-          .bctsl-token-list-table .cell-fake   { width: 0; padding: 0; }
-          .bctsl-token-list-table .cell-rank   { width: 36px; }
-          .bctsl-token-list-table .cell-price  { width: 88px; }
-          .bctsl-token-list-table .cell-chart  { width: 72px; }
-          /* hide all other columns on mobile */
-          .bctsl-token-list-table .cell-change24h,
-          .bctsl-token-list-table .cell-change7d,
-          .bctsl-token-list-table .cell-change30d,
-          .bctsl-token-list-table .cell-market-cap,
-          .bctsl-token-list-table .cell-volume,
-          .bctsl-token-list-table .cell-supply,
-          .bctsl-token-list-table .cell-link { display: none; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th {
+          font-size: 11px;
+          line-height: 1rem;
+          white-space: nowrap;
+          background: rgba(255, 255, 255, 0.05);
+          padding-top: 8px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-          /* Header cell padding */
-          .bctsl-token-list-table > thead th.cell-rank  { padding-inline: 12px 4px; text-align: center; }
-          .bctsl-token-list-table > thead th.cell-name  { padding-inline: 8px; }
-          .bctsl-token-list-table > thead th.cell-price { padding-inline: 4px 8px; text-align: right; }
-          .bctsl-token-list-table > thead th.cell-chart { padding-inline: 4px 12px; text-align: right; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-fake { width: 0; padding: 0; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-rank { width: 36px; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-price { width: 88px; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-chart { width: 72px; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-change24h,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-change7d,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-change30d,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-market-cap,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-volume,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-supply,
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-link { display: none; }
 
-          /* Row visibility */
-          .bctsl-token-list-table > tbody > tr.mobile-only-card { display: table-row; }
-          .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) { display: none; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th.cell-rank { padding-inline: 12px 4px; text-align: center; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th.cell-name { padding-inline: 8px; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th.cell-price { padding-inline: 4px 8px; text-align: right; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th.cell-chart { padding-inline: 4px 12px; text-align: right; }
 
-          /* Row separator */
-          .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td:not(.cell-fake) {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-          }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > tbody > tr.mobile-only-card { display: table-row; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) { display: none; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > tbody > tr.mobile-only-card:not(:last-child) > td:not(.cell-fake) {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > tbody > tr.mobile-only-card {
+          transform: translate(0, 0);
+        }
 
-          /* Positioning context for the full-row link */
-          .bctsl-token-list-table > tbody > tr.mobile-only-card {
-            transform: translate(0, 0);
-          }
+        /* Standard table layout */
+        .bctsl-token-list-container[data-compact="false"] .bctsl-token-list-table > tbody > tr.mobile-only-card {
+          display: none;
+        }
+        .bctsl-token-list-container[data-compact="false"] .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) {
+          display: table-row;
         }
       `}
       </style>

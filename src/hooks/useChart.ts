@@ -87,11 +87,15 @@ export function useChart({
 
   useLayoutEffect(() => {
     initChart();
-    window.addEventListener('resize', resizeHandler);
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', resizeHandler);
+    }
 
     return () => {
       isChartDisposedRef.current = true;
-      window.removeEventListener('resize', resizeHandler);
+      if (typeof ResizeObserver === 'undefined') {
+        window.removeEventListener('resize', resizeHandler);
+      }
       if (chart.current) {
         try {
           chart.current.remove();
@@ -103,6 +107,20 @@ export function useChart({
       setChartApi(null);
     };
   }, [initChart, resizeHandler]);
+
+  useEffect(() => {
+    if (!chartContainer.current || typeof ResizeObserver === 'undefined') return undefined;
+
+    const resizeObserver = new ResizeObserver(() => {
+      resizeHandler();
+    });
+
+    resizeObserver.observe(chartContainer.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [resizeHandler]);
 
   useEffect(() => {
     if (!chart.current) return;

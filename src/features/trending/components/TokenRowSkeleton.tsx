@@ -1,7 +1,7 @@
 const TokenRowSkeleton = () => (
   <>
     {/* Mobile skeleton — matches mobile-only-card layout */}
-    <tr className="token-row-skeleton mobile-only-card md:hidden relative">
+    <tr className="token-row-skeleton mobile-only-card relative">
       <td className="cell-fake" />
       <td className="pl-2 pr-1 py-2.5 align-middle text-center">
         <div
@@ -31,7 +31,7 @@ const TokenRowSkeleton = () => (
     </tr>
 
     {/* Desktop skeleton row */}
-    <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
+    <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
       <td className="cell-fake" />
 
       {/* Rank */}
@@ -65,7 +65,7 @@ const TokenRowSkeleton = () => (
       </td>
 
       {/* 30d % */}
-      <td className="cell cell-change30d px-1 text-right hidden lg:table-cell">
+      <td className="cell cell-change30d px-1 text-right">
         <div className="skeleton-loader skeleton-text w-12 h-4 m-0 ml-auto" role="presentation" aria-hidden="true" />
       </td>
 
@@ -75,12 +75,12 @@ const TokenRowSkeleton = () => (
       </td>
 
       {/* Volume (xl) */}
-      <td className="cell cell-volume px-1 text-right hidden xl:table-cell">
+      <td className="cell cell-volume px-1 text-right">
         <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
       </td>
 
       {/* Circ. Supply (xl) */}
-      <td className="cell cell-supply px-1 text-right hidden xl:table-cell">
+      <td className="cell cell-supply px-1 text-right">
         <div className="skeleton-loader skeleton-text w-full h-4 m-0" role="presentation" aria-hidden="true" />
       </td>
 

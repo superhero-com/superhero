@@ -58,7 +58,7 @@ const TokenListTableRow = ({
   return (
     <>
       {/* Mobile compact card row — 4 columns: rank | name+MC | price+30d% | chart */}
-      <tr className="mobile-only-card md:hidden relative">
+      <tr className="mobile-only-card relative">
         <td className="cell-fake" />
 
         {/* Rank */}
@@ -115,7 +115,7 @@ const TokenListTableRow = ({
       </tr>
 
       {/* Desktop table row */}
-      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
+      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
         <td className="cell-fake" />
 
         {/* Rank */}
@@ -164,7 +164,7 @@ const TokenListTableRow = ({
         </td>
 
         {/* 30d % change */}
-        <td className="cell cell-change30d px-3 text-right hidden lg:table-cell">
+        <td className="cell cell-change30d px-3 text-right">
           <PercentChange
             percent={perf30d?.current_change_percent}
             direction={perf30d?.current_change_direction}
@@ -179,12 +179,12 @@ const TokenListTableRow = ({
         </td>
 
         {/* Volume (7d) */}
-        <td className="cell cell-volume px-3 text-right hidden xl:table-cell">
+        <td className="cell cell-volume px-3 text-right">
           <div className="text-sm text-white/70 tabular-nums">{volume ? volume.shorten() : '—'}</div>
         </td>
 
         {/* Circulating Supply */}
-        <td className="cell cell-supply px-3 text-right hidden xl:table-cell">
+        <td className="cell cell-supply px-3 text-right">
           <div className="text-sm text-white/70 tabular-nums">
             {Decimal.from(toAe(token.total_supply)).shorten()}
           </div>

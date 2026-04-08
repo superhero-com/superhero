@@ -153,39 +153,41 @@ const DexLayout = ({ children }: DexLayoutProps) => {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 md:pt-0">
+      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 lg:pt-0">
         {/* Top pill navigation for tablet/desktop */}
-        <div className="hidden md:block top-0 z-30 md:mb-2">
-          <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
-            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = isActiveRoute(item.path);
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleNavigation(item.path)}
-                    aria-label={item.label}
-                    title={item.description}
-                    className={`
+        <div className="hidden lg:block top-0 z-30 lg:mb-2">
+          <div className="w-full overflow-x-auto px-2 py-2 lg:px-3 lg:py-0">
+            <div className="flex min-w-max items-center gap-3 lg:gap-4 whitespace-nowrap">
+              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = isActiveRoute(item.path);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavigation(item.path)}
+                      aria-label={item.label}
+                      title={item.description}
+                      className={`
                       flex items-center gap-2 px-3.5 py-2.5 rounded-full
                       border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
                       transition-all duration-200
                       ${isActive
-                      ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
-                      : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
+                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
+                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
                       }
                     `}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
               {/* Explore group */}
-              <div className="hidden md:flex items-center gap-2 md:pl-[76px]">
+              <div className="flex items-center gap-2 shrink-0 ml-6">
                 <span className="text-xs opacity-70 pl-1.5 pr-1">
                   Explore
                 </span>
@@ -200,14 +202,14 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       aria-label={item.label}
                       title={item.description}
                       className={`
-                        flex items-center gap-1.5 px-3 py-2 rounded-full
-                        border-[1.5px] text-xs font-semibold
-                        transition-all duration-200
-                        ${isActive
+                          flex items-center gap-1.5 px-3 py-2 rounded-full
+                          border-[1.5px] text-xs font-semibold
+                          transition-all duration-200
+                          ${isActive
                         ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
                         : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
-                        }
-                      `}
+                          }
+                        `}
                     >
                       <Icon className="w-3.5 h-3.5" />
                       {item.label}
@@ -220,13 +222,13 @@ const DexLayout = ({ children }: DexLayoutProps) => {
         </div>
 
         {/* Content */}
-        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-4">
+        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 lg:gap-0 lg:p-1 lg:px-4">
           <main className="min-w-0 overflow-hidden pt-1">{children}</main>
         </div>
       </div>
 
       {/* Mobile: Horizontal top navigation tabs (positioned after header) */}
-      <div className="block md:hidden w-full fixed top-16 left-0 right-0 z-[900] border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+      <div className="block lg:hidden w-full fixed top-16 left-0 right-0 z-[900] border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
         <div className="pt-4 pb-2">
           <div className="px-2">
             <div className="flex items-center justify-between w-full">

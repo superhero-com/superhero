@@ -111,7 +111,16 @@ const TokenPricePerformance = ({
     };
 
     handleResize(); // Initial resize
-    window.addEventListener('resize', handleResize);
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', handleResize);
+    }
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(() => {
+        handleResize();
+      });
+    resizeObserver?.observe(chartContainerRef.current);
 
     // Add touch handlers for mobile drag support
     const container = chartContainerRef.current;
@@ -196,7 +205,10 @@ const TokenPricePerformance = ({
     }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (typeof ResizeObserver === 'undefined') {
+        window.removeEventListener('resize', handleResize);
+      }
+      resizeObserver?.disconnect();
       if (touchHandlersCleanup.current) {
         touchHandlersCleanup.current();
         touchHandlersCleanup.current = null;

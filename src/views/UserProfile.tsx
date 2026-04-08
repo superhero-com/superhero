@@ -331,6 +331,13 @@ export default function UserProfile({
     });
   }, [effectiveAddress, queryClient]);
 
+  const profileTabs = [
+    { key: 'feed', label: t('explore:feed') },
+    { key: 'owned', label: t('explore:ownedTrends') },
+    { key: 'created', label: t('explore:createdTrends') },
+    { key: 'transactions', label: t('explore:transactions') },
+  ] as const;
+
   const content = (
     <div className="w-full">
       <Head
@@ -532,18 +539,32 @@ export default function UserProfile({
       <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
         <div>
-          <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
-            {([
-              { key: 'feed', label: t('explore:feed') },
-              { key: 'owned', label: t('explore:ownedTrends') },
-              { key: 'created', label: t('explore:createdTrends') },
-              { key: 'transactions', label: t('explore:transactions') },
-            ] as const).map(({ key, label }) => (
+          <div className="grid grid-cols-4 items-stretch border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-2 md:hidden">
+            {profileTabs.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => handleTabChange(key as TabType)}
                 className={[
-                  'relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm',
+                  'relative min-w-0 px-1 py-3 text-[11px] leading-none font-semibold transition-colors !bg-transparent !shadow-none text-center focus:!outline-none focus-visible:!ring-0',
+                  tab === key
+                    ? "text-white after:content-[''] after:absolute after:left-1 after:right-1 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full"
+                    : 'text-white/70',
+                ].join(' ')}
+              >
+                <span className="block whitespace-nowrap">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div
+            className="hidden md:flex items-center justify-start border-b border-white/15 md:w-full md:mx-0 md:gap-[clamp(0.5rem,1.4vw,1.6875rem)] md:pb-0 xl:overflow-visible"
+          >
+            {profileTabs.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => handleTabChange(key as TabType)}
+                className={[
+                  'relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-1 lg:px-2 xl:px-3 md:py-3 md:text-sm',
                   'hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none',
                   tab === key
                     ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
@@ -572,7 +593,7 @@ export default function UserProfile({
   );
 
   return standalone ? (
-    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell right={<RightRail />} containerClassName="mx-auto">
       {content}
       <ProfileEditModal
         open={editOpen}

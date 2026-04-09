@@ -672,7 +672,7 @@ const TokenList = () => {
                     </div>
                     <div className="w-full sm:w-auto sm:flex-shrink-0">
                       <Select value={orderBy} onValueChange={updateOrderBy}>
-                        <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.02] px-2 py-2 text-xs text-white backdrop-blur-[10px] transition-all duration-300 hover:bg-white/[0.05] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+                        <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-white/10">

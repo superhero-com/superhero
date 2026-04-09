@@ -7,9 +7,10 @@
   display: flex;
   flex-direction: column;
   
-  @include mobile {
-    /* Navigation is now fixed, no padding needed */
+  @media (max-width: 1023px) {
+    /* Keep content clear of the fixed mobile header/footer */
     padding-top: 0;
+    padding-bottom: var(--mobile-footer-actual-height, calc(var(--mobile-footer-height) + env(safe-area-inset-bottom) + 12px));
   }
 
   @media (min-width: 1024px) {
@@ -21,7 +22,7 @@
 .app-routes-container {
   padding-top: 18px;
 
-  @include mobile {
+  @media (max-width: 1023px) {
     /* Default top padding to offset fixed mobile header */
     padding-top: 84px;
     
@@ -33,7 +34,7 @@
 }
 
 /* iOS WebKit uses sticky mobile header (in-flow), so fixed-header offsets are too large. */
-@include mobile {
+@media (max-width: 1023px) {
   html.ios-webkit .app-routes-container {
     padding-top: 8px;
   }
@@ -67,7 +68,7 @@
   max-width: 1536px;
   margin: 0 auto;
   
-  @include mobile {
+  @media (max-width: 1023px) {
     padding: 0 0.5rem;
     max-width: 100%;
     

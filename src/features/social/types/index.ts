@@ -16,12 +16,6 @@ export interface FeedItemProps {
   onItemClick: (postId: string) => void;
 }
 
-export interface PostAvatarProps {
-  authorAddress: string;
-  chainName?: string;
-  size?: number;
-}
-
 export interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
@@ -32,19 +26,6 @@ export interface EmptyStateProps {
   error?: Error | null;
   hasSearch?: boolean;
   onRetry?: () => void;
-}
-
-export interface CommentItemProps {
-  comment: PostDto;
-  chainNames: Record<string, string>;
-  replies?: PostDto[];
-  onCommentAdded?: () => void;
-  depth?: number;
-  maxDepth?: number;
-}
-
-export interface PostContentProps {
-  post: any; // Using any for now since the old Backend API structure is different from PostDto
 }
 
 export interface CommentFormProps {

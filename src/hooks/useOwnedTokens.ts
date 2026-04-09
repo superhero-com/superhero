@@ -7,7 +7,7 @@ type AccountTokensResponse = {
   meta?: unknown;
 };
 
-export type OwnedTokenLike = Record<string, any>;
+type OwnedTokenLike = Record<string, any>;
 
 function extractTokenLike(item: unknown): OwnedTokenLike | null {
   if (!item || typeof item !== 'object') return null;

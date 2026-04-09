@@ -24,21 +24,15 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
     <Link
       to={tokenHref}
       className={cn(
-        'group rounded-2xl border border-white/10 bg-white/[0.4] p-3',
+        'group rounded-2xl border border-white/10 bg-transparent p-3',
         'hover:bg-white/[0.06] hover:border-white/15 transition-colors',
         'no-underline block',
-        'cursor-pointer no-gradient-text',
+        'cursor-pointer',
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div
           className="text-[11px] font-semibold text-[var(--neon-blue)] truncate group-hover:underline underline-offset-2"
-          style={{
-            background: 'none',
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-          }}
         >
           <span className="text-[var(--neon-blue)] mr-0.5">#</span>
           {tokenLabel}

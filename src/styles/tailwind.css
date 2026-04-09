@@ -83,14 +83,6 @@
     @apply font-bold text-white;
   }
 
-  .sh-dex-title {
-    @apply font-bold;
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
-    background: none;
-    -webkit-background-clip: initial;
-    background-clip: initial;
-  }
 }
 
 @keyframes truncate-scroll {

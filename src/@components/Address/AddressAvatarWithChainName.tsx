@@ -161,13 +161,11 @@ export const AddressAvatarWithChainName = memo(({
         const chainNameClass = variant === 'feed'
           ? [
             'chain-name text-[14px] md:text-sm font-bold',
-            'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-            'bg-clip-text text-transparent',
+            'text-[var(--standard-font-color)]',
           ].join(' ')
           : [
             'chain-name text-[14px] md:text-[15px] font-bold',
-            'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-            'bg-clip-text text-transparent',
+            'text-[var(--standard-font-color)]',
           ].join(' ');
         return (
           <div className={cn(contentBaseClass, contentClassName)}>
@@ -179,8 +177,7 @@ export const AddressAvatarWithChainName = memo(({
                     <span
                       className={[
                         'chain-name text-[14px] md:text-[15px] font-bold',
-                        'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-                        'bg-clip-text text-transparent block truncate w-full',
+                        'text-[var(--standard-font-color)] block truncate w-full',
                       ].join(' ')}
                       title={displayName}
                     >
@@ -192,7 +189,7 @@ export const AddressAvatarWithChainName = memo(({
                 return (
                   <span
                     className={cn(
-                      'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
+                      'text-sm font-bold text-[var(--standard-font-color)] leading-tight font-sans',
                       className,
                     )}
                     title={address}
@@ -210,7 +207,7 @@ export const AddressAvatarWithChainName = memo(({
                         <span className={chainNameClass}>
                           {preferredName}
                         </span>
-                        <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
+                        <span className="text-xs text-white/70 font-mono leading-[0.9]">
                           <AddressFormatted
                             address={address}
                             truncate={false}
@@ -226,8 +223,7 @@ export const AddressAvatarWithChainName = memo(({
                     <span
                       className={[
                         'chain-name text-[14px] md:text-[15px] font-bold',
-                        'bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300',
-                        'bg-clip-text text-transparent block truncate w-full',
+                        'text-[var(--standard-font-color)] block truncate w-full',
                       ].join(' ')}
                       title={address}
                     >

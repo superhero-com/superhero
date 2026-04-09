@@ -1,12 +1,12 @@
 import type { PriceDto } from '@/api/generated/models/PriceDto';
 
-export type NormalizedTransactionFields = {
+type NormalizedTransactionFields = {
   address: string;
   price_data: PriceDto;
   spent_amount_data: PriceDto;
 };
 
-export const EMPTY_PRICE_DATA: PriceDto = Object.freeze({
+const EMPTY_PRICE_DATA: PriceDto = Object.freeze({
   ae: 0,
   usd: 0,
   eur: 0,

@@ -61,7 +61,7 @@ interface PollOverviewResponse {
   voteCount: number;
 }
 
-export type VotesStateResponse = PollOverviewResponse;
+type VotesStateResponse = PollOverviewResponse;
 
 interface DelegatedPowerResponse {
   delegatedPower: string;

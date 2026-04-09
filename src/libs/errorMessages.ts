@@ -1,6 +1,6 @@
 import i18n from '../i18n';
 
-export type ErrorContext = {
+type ErrorContext = {
   action?: 'quote' | 'swap' | 'add-liquidity' | 'remove-liquidity' | 'wrap' | 'unwrap' | 'generic';
   tokenInSymbol?: string;
   tokenOutSymbol?: string;

@@ -7,7 +7,7 @@ import { Encoded } from '@aeternity/aepp-sdk';
 export type Network = 'ae_mainnet' | 'ae_uat';
 
 /** Settings shared across mainnet and testnet builds (not tied to chain RPC / contracts). */
-export type CommonConfig = {
+type CommonConfig = {
   WALLET_URL: string;
   JITSI_DOMAIN: string;
   MAINNET_DEX_BACKEND_URL?: string;
@@ -23,7 +23,7 @@ export type CommonConfig = {
  * Per-network RPC URLs, DEX deployment, and governance
  * (mainnet vs testnet branch at build time).
  */
-export type NetworkConfig = {
+type NetworkConfig = {
   /** Current network id: ae_mainnet or ae_uat (testnet). Driven by VITE_NETWORK. */
   NETWORK: Network;
   BACKEND_URL: string;
@@ -42,7 +42,7 @@ export type NetworkConfig = {
   GOVERNANCE_CONTRACT_ADDRESS: Encoded.ContractAddress;
 };
 
-export type AppConfig = CommonConfig & NetworkConfig;
+type AppConfig = CommonConfig & NetworkConfig;
 export type NetworkDefinition = NetworkConfig & {
   name: string;
   websocketUrl: string;
@@ -51,12 +51,6 @@ export type NetworkDefinition = NetworkConfig & {
   disabled?: boolean;
 };
 export const APP_NAME = 'Superhero';
-export const APP_LOGO = {
-  width: '187px',
-  height: '30px',
-} as const;
-export const WALLET_NAME = 'Superhero Wallet';
-export const AVATAR_SERVICE_URL = 'https://avatars.superherowallet.com/';
 export const TRENDING_ENABLED = true;
 
 function getNetworkFromEnv(): Network {

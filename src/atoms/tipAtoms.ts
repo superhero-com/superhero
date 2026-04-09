@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-export type TipPhase = 'pending' | 'success' | 'error';
+type TipPhase = 'pending' | 'success' | 'error';
 
 export const tipStatusAtom = atom<Record<string, { status: TipPhase; updatedAt: number }>>({});
 

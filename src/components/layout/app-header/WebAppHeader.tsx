@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User } from 'lucide-react';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
-import { getNavigationItems } from './navigationItems';
+import AppNavigationItemAction from './AppNavigationItemAction';
+import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useModal } from '../../../hooks';
 
 const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
-  const navigationItems = getNavigationItems();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
 
@@ -21,30 +20,16 @@ const WebAppHeader = () => {
     localStorage.setItem('theme', 'dark');
   }, []);
 
-  const sidebarItems = useMemo(() => {
-    const items = [...navigationItems];
-    items.push({
-      id: 'account',
-      label: 'Account',
-      path: activeAccount ? `/users/${activeAccount}` : '',
-      icon: User,
-    });
-    return items;
-  }, [navigationItems, activeAccount]);
+  const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);
 
   const handleConnect = useCallback(() => openModal({ name: 'connect-wallet' }), [openModal]);
 
-  const activeNavPath = React.useMemo(() => {
-    const matches = sidebarItems
-      .filter((item: any) => !!item?.path && !item?.isExternal)
-      .filter((item: any) => (item.path === '/'
-        ? pathname === '/'
-        : pathname === item.path || pathname.startsWith(`${item.path}/`)))
-      .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
-    return matches[0]?.path || '';
-  }, [sidebarItems, pathname]);
+  const activeNavPath = useMemo(
+    () => getActiveNavigationPath(pathname, sidebarItems),
+    [pathname, sidebarItems],
+  );
 
-  const isActiveRoute = (path: string) => path === activeNavPath;
+  const isActiveRoute = (path?: string) => !!path && path === activeNavPath;
 
   return (
     <aside
@@ -59,7 +44,7 @@ const WebAppHeader = () => {
       <div className="flex items-center h-16 px-6">
         <Link
           to="/"
-          className="flex items-center no-underline hover:no-underline no-gradient-text"
+          className="flex items-center no-underline hover:no-underline"
           style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }}
           aria-label={t('labels.superheroHome')}
         >
@@ -73,6 +58,7 @@ const WebAppHeader = () => {
           .map((item: any) => {
             const commonClass = 'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium';
             const isActive = isActiveRoute(item.path);
+            const isDisconnectedAccount = item.id === 'account' && !activeAccount;
             const activeStyles = {
               color: 'var(--standard-font-color)',
               backgroundColor: 'rgba(255, 255, 255, 0.08)',
@@ -81,67 +67,37 @@ const WebAppHeader = () => {
               color: 'var(--light-font-color)',
               backgroundColor: 'transparent',
             };
+            let itemStyles = idleStyles;
+            if (isActive) itemStyles = activeStyles;
             const Icon = item.icon;
 
-            if (item.id === 'account' && !activeAccount) {
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`${commonClass} no-gradient-text text-left`}
-                  style={idleStyles}
-                  onClick={handleConnect}
-                >
-                  <span className="w-6 flex items-center justify-center">
-                    <Icon className="w-[18px] h-[18px]" />
-                  </span>
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            }
-
-            if (item.isExternal) {
-              return (
-                <a
-                  key={item.id}
-                  href={item.path}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`${commonClass} no-gradient-text`}
-                  style={isActive ? activeStyles : idleStyles}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = 'var(--standard-font-color)';
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = 'var(--light-font-color)';
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  <span className="w-6 flex items-center justify-center">
-                    <Icon className="w-[18px] h-[18px]" />
-                  </span>
-                  <span className="truncate">{item.label}</span>
-                </a>
-              );
-            }
-
             return (
-              <Link
+              <AppNavigationItemAction
                 key={item.id}
-                to={item.path}
-                className={`${commonClass} no-gradient-text`}
-                style={isActive ? activeStyles : idleStyles}
+                item={item}
+                activeAccount={activeAccount}
+                isActive={isActive}
+                className={isDisconnectedAccount ? `${commonClass} text-left` : commonClass}
+                style={itemStyles}
+                onConnect={handleConnect}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--standard-font-color)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--light-font-color)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
               >
                 <span className="w-6 flex items-center justify-center">
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
                 <span className="truncate">{item.label}</span>
-              </Link>
+              </AppNavigationItemAction>
             );
           })}
       </nav>

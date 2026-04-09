@@ -191,3 +191,120 @@ export async function fetchTopTraders(limit: number = DEFAULT_TAB_LIMIT) {
     sortDir: 'DESC',
   }) as Promise<SearchSection<LeaderboardItem>>;
 }
+
+/** Max combined results for the home right-rail search dropdown (no fallback lists). */
+export const FEED_RAIL_SEARCH_LIMIT = 10;
+
+/** Try to show this many hits per category before redistributing spare slots. */
+export const FEED_RAIL_SEARCH_TARGET_PER_CATEGORY = 3;
+
+/**
+ * Delay before a rail search triggers one batched triple fetch (tokens + accounts + posts).
+ * UI should debounce input by this amount so each keystroke burst does not call the trio repeatedly.
+ */
+export const FEED_RAIL_SEARCH_DEBOUNCE_MS = 400;
+
+/** URL query param for prefilled Explore search (`/trends/tokens?q=…`). */
+export const EXPLORE_SEARCH_QUERY_KEY = 'q';
+
+export type FeedRailSearchItem =
+  | { type: 'token'; item: TrendTokenItem }
+  | { type: 'user'; item: TrendUserItem }
+  | { type: 'post'; item: TrendPostItem };
+
+async function fetchFeedRailSearchPreview(search: string) {
+  const term = search.trim();
+  const limit = FEED_RAIL_SEARCH_LIMIT;
+
+  const [tokens, users, posts] = await Promise.allSettled([
+    SuperheroApi.listTokens({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'market_cap',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
+    fetchAccountSearch(limit, term),
+    SuperheroApi.listPosts({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendPostItem>>,
+  ]);
+
+  return {
+    tokens: normalizeSection(settledValue(tokens)),
+    users: normalizeSection(settledValue(users)),
+    posts: normalizeSection(settledValue(posts)),
+  };
+}
+
+/**
+ * Take up to {@link FEED_RAIL_SEARCH_TARGET_PER_CATEGORY} from each bucket, then output
+ * **all trends, then all users, then all posts** (grouped by type). Remaining slots up to
+ * `max` are filled in **trends → users → posts** order so empty buckets donate capacity
+ * to earlier types first.
+ */
+function mergeFeedRailSearchGroupedWithBackfill(
+  preview: Awaited<ReturnType<typeof fetchFeedRailSearchPreview>>,
+  max: number,
+): FeedRailSearchItem[] {
+  const tokenItems: FeedRailSearchItem[] = preview.tokens.items.map((item) => ({
+    type: 'token',
+    item,
+  }));
+  const userItems: FeedRailSearchItem[] = preview.users.items.map((item) => ({
+    type: 'user',
+    item,
+  }));
+  const postItems: FeedRailSearchItem[] = preview.posts.items.map((item) => ({
+    type: 'post',
+    item,
+  }));
+
+  const buckets = [tokenItems, userItems, postItems];
+  const t = FEED_RAIL_SEARCH_TARGET_PER_CATEGORY;
+  const counts = [
+    Math.min(t, buckets[0].length),
+    Math.min(t, buckets[1].length),
+    Math.min(t, buckets[2].length),
+  ];
+
+  let total = counts[0] + counts[1] + counts[2];
+
+  while (total < max) {
+    let added = false;
+    for (let i = 0; i < 3; i++) {
+      if (total >= max) break;
+      if (counts[i] < buckets[i].length) {
+        counts[i] += 1;
+        total += 1;
+        added = true;
+        break;
+      }
+    }
+    if (!added) break;
+  }
+
+  const out: FeedRailSearchItem[] = [];
+  for (let i = 0; i < 3; i++) {
+    out.push(...buckets[i].slice(0, counts[i]));
+  }
+  return out;
+}
+
+/**
+ * Search tokens, users, and posts (same APIs as Explore). Up to
+ * {@link FEED_RAIL_SEARCH_TARGET_PER_CATEGORY} per category when available, grouped as
+ * trends → users → posts; spare slots (when a category is short or empty) backfill in that
+ * same type order. Capped at {@link FEED_RAIL_SEARCH_LIMIT}. No trending/leaderboard fallbacks.
+ */
+export async function fetchFeedRailSearchItems(search: string): Promise<FeedRailSearchItem[]> {
+  const term = search.trim();
+  if (!term) return [];
+
+  const preview = await fetchFeedRailSearchPreview(term);
+  return mergeFeedRailSearchGroupedWithBackfill(preview, FEED_RAIL_SEARCH_LIMIT);
+}

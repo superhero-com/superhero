@@ -1,13 +1,12 @@
 import { Encoding, isEncoded } from '@aeternity/aepp-sdk';
 import Spinner from '@/components/Spinner';
-import AddressAvatar from '@/components/AddressAvatar';
 import { Input } from '@/components/ui/input';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Search as SearchIcon } from 'lucide-react';
 import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import {
@@ -18,10 +17,9 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Head } from '../../../seo/Head';
-import { formatAddress } from '../../../utils/address';
-import { formatCompactNumber } from '../../../utils/number';
 import {
   DEFAULT_TAB_LIMIT,
+  EXPLORE_SEARCH_QUERY_KEY,
   FALLBACK_LIMIT,
   SEARCH_PREVIEW_LIMIT,
   fetchPopularPosts,
@@ -37,7 +35,11 @@ import {
 } from '../api/trendsSearch';
 import type { LeaderboardItem } from '../api/leaderboard';
 import TokenListTable from '../components/TokenListTable';
-import ReplyToFeedItem from '../../social/components/ReplyToFeedItem';
+import {
+  PostResultsList,
+  TokenResultsList,
+  UserResultsList,
+} from '../components/TrendSearchExploreResultLists';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -73,10 +75,6 @@ const ORDER_BY_OPTIONS: SelectOptions<OrderByOption> = [
   { title: 'Oldest', value: SORT.oldest },
   { title: 'Holders Count', value: SORT.holdersCount },
 ];
-
-function isLeaderboardItem(item: TrendUserItem | LeaderboardItem): item is LeaderboardItem {
-  return 'pnl_usd' in item || 'aum_usd' in item || 'roi_pct' in item || 'mdd_pct' in item;
-}
 
 function getFallbackSubtitle(tab: SearchTab) {
   if (tab === 'tokens') {
@@ -130,105 +128,28 @@ const InlineLoading = ({ label = 'Loading...' }: { label?: string }) => (
   </div>
 );
 
-const TokenResultsList = ({ items }: { items: TrendTokenItem[] }) => (
-  <TokenListTable
-    pages={[{ items }]}
-    loading={false}
-    orderBy="market_cap"
-    orderDirection="DESC"
-    onSort={() => {}}
-  />
-);
-
-const UserStatsCell = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <div className="text-white/50">{label}</div>
-    <div className="text-white">{value}</div>
-  </div>
-);
-
-function getUserStats(item: TrendUserItem | LeaderboardItem) {
-  if (isLeaderboardItem(item)) {
-    return [
-      { label: 'PnL', value: `$${formatCompactNumber(item.pnl_usd, 2, 1)}` },
-      { label: 'ROI', value: `${formatCompactNumber(item.roi_pct, 2, 1)}%` },
-      { label: 'AUM', value: `$${formatCompactNumber(item.aum_usd, 2, 1)}` },
-    ];
-  }
-
-  return [
-    { label: 'Volume', value: `${formatCompactNumber(item.total_volume, 2, 1)} AE` },
-    { label: 'Txs', value: formatCompactNumber(item.total_tx_count, 0, 1) },
-    { label: 'Created', value: formatCompactNumber(item.total_created_tokens, 0, 1) },
-  ];
-}
-
-const UserResultsList = ({ items }: { items: Array<TrendUserItem | LeaderboardItem> }) => (
-  <>
-    {items.map((item) => {
-      const { address } = item;
-      const title = item.chain_name || formatAddress(address, 6);
-      const stats = getUserStats(item);
-
-      return (
-        <Link
-          key={address}
-          to={`/users/${address}`}
-          className="flex flex-col gap-3 px-1 py-4 text-white transition-colors hover:bg-white/[0.03] hover:text-white rounded-xl sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <AddressAvatar address={address} size={40} borderRadius="50%" />
-            <div className="min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{title}</div>
-              <div className="text-[10px] text-white/60 font-mono truncate">
-                {formatAddress(address, 10, false)}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-3 sm:text-right sm:min-w-[340px]">
-            {stats.map((s) => (
-              <UserStatsCell key={s.label} label={s.label} value={s.value} />
-            ))}
-          </div>
-        </Link>
-      );
-    })}
-  </>
-);
-
-const PostResultsList = ({
-  items,
-  onOpenPost,
-}: {
-  items: TrendPostItem[];
-  onOpenPost: (slugOrId: string) => void;
-}) => (
-  <>
-    {items.map((post) => (
-      <ReplyToFeedItem
-        key={post.id}
-        item={post}
-        commentCount={post.total_comments ?? 0}
-        allowInlineRepliesToggle={false}
-        onOpenPost={onOpenPost}
-      />
-    ))}
-  </>
-);
-
 const TokenList = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(qFromUrl);
+  const [searchTerm, setSearchTerm] = useState(qFromUrl);
   const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
     tokens: false,
     users: false,
     posts: false,
   });
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (qFromUrl) {
+      setSearchInput(qFromUrl);
+      setSearchTerm(qFromUrl);
+    }
+  }, [qFromUrl]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {

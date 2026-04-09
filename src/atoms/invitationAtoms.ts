@@ -31,6 +31,7 @@ export const invitationListAtom = atomWithStorage<InvitationInfo[]>('invite_list
 
 // Current invitation code from URL
 export const invitationCodeAtom = atomWithStorage<string | undefined>('invite_code', undefined);
+export const xInviteCodeAtom = atomWithStorage<string | undefined>('x_invite_code', undefined);
 
 // Claimed invitations cache - stores claimer info
 export interface ClaimedInfo {

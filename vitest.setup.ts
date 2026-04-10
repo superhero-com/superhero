@@ -3,6 +3,7 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 // Provide a default CONFIG for tests unless overridden
 import { CONFIG } from './src/config';
+import './src/i18n';
 
 (global as any).CONFIG = CONFIG;
 

@@ -1,7 +1,8 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Decimal } from '../../../libs/decimal';
 import { TokenLineChart } from './TokenLineChart';
 
@@ -41,6 +42,7 @@ const TokenListTableRow = ({
   useCollectionRank = false,
   rank,
 }: TokenListTableRowProps) => {
+  const navigate = useNavigate();
   const tokenAddress = useMemo(() => token.address, [token.address]);
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
   const saleAddress = useMemo(
@@ -54,11 +56,59 @@ const TokenListTableRow = ({
   const volume = perf30d?.volume ? Decimal.from(perf30d.volume) : null;
 
   const tokenHref = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
+  const tokenLabel = token.name || token.symbol || token.address;
+
+  const handleRowClick = useCallback(
+    (event: React.MouseEvent<HTMLTableRowElement>) => {
+      if ((event.target as HTMLElement).closest('a, button')) return;
+      if (event.metaKey || event.ctrlKey) {
+        window.open(tokenHref, '_blank', 'noopener');
+      } else if (event.shiftKey) {
+        window.open(tokenHref);
+      } else {
+        navigate(tokenHref);
+      }
+    },
+    [navigate, tokenHref],
+  );
+
+  const handleRowAuxClick = useCallback(
+    (event: React.MouseEvent<HTMLTableRowElement>) => {
+      if (event.button === 1) {
+        event.preventDefault();
+        window.open(tokenHref, '_blank', 'noopener');
+      }
+    },
+    [tokenHref],
+  );
+
+  const handleRowKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (event.metaKey || event.ctrlKey) {
+          window.open(tokenHref, '_blank', 'noopener');
+        } else {
+          navigate(tokenHref);
+        }
+      }
+    },
+    [navigate, tokenHref],
+  );
 
   return (
     <>
       {/* Mobile compact card row — 4 columns: rank | name+MC | price+30d% | chart */}
-      <tr className="mobile-only-card relative">
+      <tr
+        className="mobile-only-card relative"
+        onClick={handleRowClick}
+        onAuxClick={handleRowAuxClick}
+        onKeyDown={handleRowKeyDown}
+        tabIndex={0}
+        role="link"
+        aria-label={`View ${tokenLabel}`}
+      >
+        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />
 
         {/* Rank */}
@@ -106,16 +156,20 @@ const TokenListTableRow = ({
               <TokenLineChart saleAddress={saleAddress} height={40} width={64} interval="all-time" />
             </div>
           )}
-          <a
-            href={tokenHref}
-            className="link absolute inset-0 z-10"
-            aria-label={`View ${token.name || token.symbol}`}
-          />
         </td>
       </tr>
 
-      {/* Desktop table row */}
-      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
+      {/* Desktop row: Safari-safe — no overlay links, no row transforms */}
+      <tr
+        className="bctsl-token-list-table-row"
+        onClick={handleRowClick}
+        onAuxClick={handleRowAuxClick}
+        onKeyDown={handleRowKeyDown}
+        tabIndex={0}
+        role="link"
+        aria-label={`View ${tokenLabel}`}
+      >
+        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />
 
         {/* Rank */}
@@ -199,73 +253,7 @@ const TokenListTableRow = ({
           )}
         </td>
 
-        {/* Full-row link overlay */}
-        <td className="cell cell-link">
-          <a
-            href={tokenHref}
-            className="link absolute inset-0 z-10"
-            aria-label={`View ${token.name || token.symbol}`}
-          />
-        </td>
-
-        <style>
-          {`
-          .bctsl-token-list-table-row {
-            position: relative;
-            z-index: 1;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translate(0, 0);
-          }
-
-          .bctsl-token-list-table-row::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            pointer-events: none;
-          }
-
-          .bctsl-token-list-table-row:hover::after {
-            background: rgba(17, 97, 254, 0.06);
-            border-color: rgba(17, 97, 254, 0.2);
-          }
-
-          .bctsl-token-list-table-row:hover {
-            transform: translateY(-1px);
-          }
-
-          .bctsl-token-list-table-row:hover .token-name {
-            color: #93c5fd;
-          }
-
-          .token-name {
-            transition: color 0.2s ease;
-          }
-
-          .link {
-            position: absolute;
-            z-index: 10;
-            inset: 0;
-          }
-
-          .cell-rank {
-            font-family: var(--heading-font-family);
-          }
-
-          .mobile-label {
-            text-wrap: nowrap;
-          }
-
-          @media screen and (max-width: 767px) {
-            .mobile-market-cap .price {
-              display: none;
-            }
-          }
-          `}
-        </style>
+        <td className="cell cell-link" aria-hidden="true" />
       </tr>
     </>
   );

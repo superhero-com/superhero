@@ -1,5 +1,6 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { useIsMobile } from '@/hooks';
+import { IS_SAFARI } from '@/utils/constants';
 import {
   useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
@@ -143,7 +144,8 @@ const TokenListTable = ({
   return (
     <div
       ref={tableContainerRef}
-      className="bctsl-token-list-container relative -mx-4 md:mx-0"
+      className="bctsl-token-list-container relative isolate -mx-4 md:mx-0"
+      data-safari={IS_SAFARI ? 'true' : undefined}
       data-compact={isCompactTable}
       data-container-md={isContainerMd}
       data-container-lg={isContainerLg}
@@ -153,6 +155,7 @@ const TokenListTable = ({
         '--token-list-sticky-top': isViewportMobile
           ? 'calc(var(--mobile-navigation-height) + env(safe-area-inset-top))'
           : '0px',
+        '--bctsl-table-v-spacing': isCompactTable ? '0px' : '6px',
       } as React.CSSProperties}
     >
       <table className="w-full bctsl-token-list-table">
@@ -264,11 +267,7 @@ const TokenListTable = ({
         {`
         .bctsl-token-list-table {
           border-collapse: separate;
-          border-spacing: 0 6px;
-        }
-
-        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table {
-          border-spacing: 0;
+          border-spacing: 0 var(--bctsl-table-v-spacing, 6px);
         }
 
         .bctsl-token-list-table th {
@@ -285,13 +284,77 @@ const TokenListTable = ({
           width: auto;
         }
 
-        .cell-clickable-item {
-          color: inherit;
+        /* Desktop token rows — solid td backgrounds (no tr::after, no row transform): Safari scroll compositing */
+        .bctsl-token-list-table-row {
+          position: relative;
           cursor: pointer;
+          outline: none;
         }
 
-        .cell-clickable-item:hover {
-          text-decoration: underline;
+        .bctsl-token-list-table > tbody > tr.mobile-only-card {
+          cursor: pointer;
+          outline: none;
+        }
+
+        .bctsl-token-list-table-row td {
+          background-color: rgba(255, 255, 255, 0.035);
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .bctsl-token-list-table-row td.cell-fake {
+          background: transparent;
+          border: none;
+        }
+
+        .bctsl-token-list-table-row td.cell-rank {
+          border-left: 1px solid rgba(255, 255, 255, 0.06);
+          border-top-left-radius: 12px;
+          border-bottom-left-radius: 12px;
+        }
+
+        .bctsl-token-list-table-row td.cell-link {
+          border-right: 1px solid rgba(255, 255, 255, 0.06);
+          border-top-right-radius: 12px;
+          border-bottom-right-radius: 12px;
+        }
+
+        .bctsl-token-list-table-row:hover td:not(.cell-fake) {
+          background-color: rgba(17, 97, 254, 0.08);
+        }
+
+        .bctsl-token-list-table-row:hover td.cell-rank {
+          border-left-color: rgba(17, 97, 254, 0.22);
+        }
+
+        .bctsl-token-list-table-row:hover td.cell-link {
+          border-right-color: rgba(17, 97, 254, 0.22);
+        }
+
+        .bctsl-token-list-table-row:hover .token-name {
+          color: #93c5fd;
+        }
+
+        .bctsl-token-list-table-row:focus-visible td:not(.cell-fake) {
+          border-top-color: rgba(147, 197, 253, 0.55);
+          border-bottom-color: rgba(147, 197, 253, 0.55);
+        }
+
+        .bctsl-token-list-table-row:focus-visible td.cell-rank {
+          border-left-color: rgba(147, 197, 253, 0.55);
+        }
+
+        .bctsl-token-list-table-row:focus-visible td.cell-link {
+          border-right-color: rgba(147, 197, 253, 0.55);
+        }
+
+        .bctsl-token-list-table-row .token-name {
+          transition: color 0.2s ease;
+        }
+
+        .bctsl-token-list-table-row .cell-rank {
+          font-family: var(--heading-font-family);
         }
 
         /* --- Container-width-based column visibility --- */
@@ -338,19 +401,35 @@ const TokenListTable = ({
         .bctsl-token-list-container[data-container-xl="true"] .cell-volume { width: 115px; }
         .bctsl-token-list-container[data-container-xl="true"] .cell-supply { width: 115px; }
 
-        /* Sticky header — when container is ≥ 768px */
+        /* Sticky header — ≥768px container (Safari: opaque only — backdrop-filter washes table while scrolling) */
         .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table > thead {
           position: sticky;
           top: 0;
           z-index: 20;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(var(--background-color-rgb), 0.97);
         }
 
         .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table > thead th {
+          background: rgba(var(--background-color-rgb), 0.97);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           padding-top: 10px;
           padding-bottom: 10px;
+        }
+
+        /* Chrome / Firefox / etc.: restore frosted sticky header (not @supports(-webkit-touch-callout) — that matches Chrome too) */
+        .bctsl-token-list-container:not([data-safari="true"])[data-container-md="true"][data-compact="false"] .bctsl-token-list-table > thead {
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          background: rgba(var(--background-color-rgb), 0.2);
+        }
+
+        .bctsl-token-list-container:not([data-safari="true"])[data-container-md="true"][data-compact="false"] .bctsl-token-list-table > thead th {
+          background: rgba(var(--background-color-rgb), 0.08);
+        }
+
+        /* Safari: sticky thead + border-spacing leaves a gap above the header (WebKit applies outer vertical spacing) */
+        .bctsl-token-list-container[data-safari="true"][data-container-md="true"][data-compact="false"] .bctsl-token-list-table > thead {
+          top: calc(-2 * var(--bctsl-table-v-spacing, 6px));
         }
 
         /* Narrower container: reduce font sizes */
@@ -374,19 +453,27 @@ const TokenListTable = ({
           position: sticky;
           top: var(--token-list-sticky-top);
           z-index: 20;
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(var(--background-color-rgb), 0.97);
         }
 
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table > thead th {
           font-size: 11px;
           line-height: 1rem;
           white-space: nowrap;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(var(--background-color-rgb), 0.97);
           padding-top: 8px;
           padding-bottom: 8px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bctsl-token-list-container:not([data-safari="true"])[data-compact="true"] .bctsl-token-list-table > thead {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          background: rgba(var(--background-color-rgb), 0.24);
+        }
+
+        .bctsl-token-list-container:not([data-safari="true"])[data-compact="true"] .bctsl-token-list-table > thead th {
+          background: rgba(var(--background-color-rgb), 0.1);
         }
 
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-fake { width: 0; padding: 0; }

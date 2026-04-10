@@ -140,11 +140,10 @@ const TokenList = () => {
     return t('tokenList.fallbackPosts');
   }, [t]);
 
+  /** Sync input and search term with `?q=`, including when `q` is dropped from the URL. */
   useEffect(() => {
-    if (qFromUrl) {
-      setSearchInput(qFromUrl);
-      setSearchTerm(qFromUrl);
-    }
+    setSearchInput(qFromUrl);
+    setSearchTerm(qFromUrl);
   }, [qFromUrl]);
 
   useEffect(() => {
@@ -314,7 +313,7 @@ const TokenList = () => {
   const searchOrder = useMemo(() => {
     const preview = searchPreviewQuery.data;
     if (!preview) {
-      return [activeTab, ...SEARCH_TABS.filter((t) => t !== activeTab)];
+      return [activeTab, ...SEARCH_TABS.filter((tab) => tab !== activeTab)];
     }
 
     const counts: Record<SearchTab, number> = {
@@ -330,7 +329,7 @@ const TokenList = () => {
       );
     const hasExactTokenMatch = isAddress
       && preview.tokens.items.some(
-        (t) => (t as any).address?.toLowerCase() === searchTerm.toLowerCase(),
+        (token) => (token as any).address?.toLowerCase() === searchTerm.toLowerCase(),
       );
 
     const score = (tab: SearchTab): number => {

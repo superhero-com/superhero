@@ -108,21 +108,21 @@ function settledValue<T>(
   return result.status === 'fulfilled' ? result.value : undefined;
 }
 
-export async function fetchTrendSearchPreview(search: string) {
+async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   const term = search.trim();
 
   const [tokens, users, posts] = await Promise.allSettled([
     SuperheroApi.listTokens({
       search: term,
-      limit: SEARCH_PREVIEW_LIMIT,
+      limit,
       page: 1,
       orderBy: 'market_cap',
       orderDirection: 'DESC',
     }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
-    fetchAccountSearch(SEARCH_PREVIEW_LIMIT, term),
+    fetchAccountSearch(limit, term),
     SuperheroApi.listPosts({
       search: term,
-      limit: SEARCH_PREVIEW_LIMIT,
+      limit,
       page: 1,
       orderBy: 'created_at',
       orderDirection: 'DESC',
@@ -134,6 +134,10 @@ export async function fetchTrendSearchPreview(search: string) {
     users: normalizeSection(settledValue(users)),
     posts: normalizeSection(settledValue(posts)),
   };
+}
+
+export async function fetchTrendSearchPreview(search: string) {
+  return fetchTrendSearchPreviewWithLimit(search, SEARCH_PREVIEW_LIMIT);
 }
 
 export async function fetchTrendSearchSection(tab: SearchTab, search: string) {
@@ -200,7 +204,8 @@ export const FEED_RAIL_SEARCH_TARGET_PER_CATEGORY = 3;
 
 /**
  * Delay before a rail search triggers one batched triple fetch (tokens + accounts + posts).
- * UI should debounce input by this amount so each keystroke burst does not call the trio repeatedly.
+ * UI should debounce input by this amount so each keystroke burst does not call the trio
+ * repeatedly.
  */
 export const FEED_RAIL_SEARCH_DEBOUNCE_MS = 400;
 
@@ -212,35 +217,6 @@ export type FeedRailSearchItem =
   | { type: 'user'; item: TrendUserItem }
   | { type: 'post'; item: TrendPostItem };
 
-async function fetchFeedRailSearchPreview(search: string) {
-  const term = search.trim();
-  const limit = FEED_RAIL_SEARCH_LIMIT;
-
-  const [tokens, users, posts] = await Promise.allSettled([
-    SuperheroApi.listTokens({
-      search: term,
-      limit,
-      page: 1,
-      orderBy: 'market_cap',
-      orderDirection: 'DESC',
-    }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
-    fetchAccountSearch(limit, term),
-    SuperheroApi.listPosts({
-      search: term,
-      limit,
-      page: 1,
-      orderBy: 'created_at',
-      orderDirection: 'DESC',
-    }) as Promise<PaginatedApiResponse<TrendPostItem>>,
-  ]);
-
-  return {
-    tokens: normalizeSection(settledValue(tokens)),
-    users: normalizeSection(settledValue(users)),
-    posts: normalizeSection(settledValue(posts)),
-  };
-}
-
 /**
  * Take up to {@link FEED_RAIL_SEARCH_TARGET_PER_CATEGORY} from each bucket, then output
  * **all trends, then all users, then all posts** (grouped by type). Remaining slots up to
@@ -248,7 +224,7 @@ async function fetchFeedRailSearchPreview(search: string) {
  * to earlier types first.
  */
 function mergeFeedRailSearchGroupedWithBackfill(
-  preview: Awaited<ReturnType<typeof fetchFeedRailSearchPreview>>,
+  preview: Awaited<ReturnType<typeof fetchTrendSearchPreviewWithLimit>>,
   max: number,
 ): FeedRailSearchItem[] {
   const tokenItems: FeedRailSearchItem[] = preview.tokens.items.map((item) => ({
@@ -276,7 +252,7 @@ function mergeFeedRailSearchGroupedWithBackfill(
 
   while (total < max) {
     let added = false;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i += 1) {
       if (total >= max) break;
       if (counts[i] < buckets[i].length) {
         counts[i] += 1;
@@ -289,7 +265,7 @@ function mergeFeedRailSearchGroupedWithBackfill(
   }
 
   const out: FeedRailSearchItem[] = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i += 1) {
     out.push(...buckets[i].slice(0, counts[i]));
   }
   return out;
@@ -305,6 +281,6 @@ export async function fetchFeedRailSearchItems(search: string): Promise<FeedRail
   const term = search.trim();
   if (!term) return [];
 
-  const preview = await fetchFeedRailSearchPreview(term);
+  const preview = await fetchTrendSearchPreviewWithLimit(term, FEED_RAIL_SEARCH_LIMIT);
   return mergeFeedRailSearchGroupedWithBackfill(preview, FEED_RAIL_SEARCH_LIMIT);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 const STORAGE_KEY = 'superhero:feedRailRecentSearches';
 const MAX_ITEMS = 10;
@@ -115,10 +115,6 @@ function normalizeList(
  */
 export function useFeedRailRecentSearches() {
   const [items, setItems] = useState<FeedRailRecentEntry[]>(() => readStored());
-
-  useEffect(() => {
-    setItems(readStored());
-  }, []);
 
   /**
    * Persist before `setState` so a same-tick `navigate()` unmount does not skip the updater

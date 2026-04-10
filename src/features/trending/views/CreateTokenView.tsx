@@ -16,6 +16,7 @@ import {
 } from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
@@ -31,23 +32,6 @@ import type {
   IAllowedNameChars,
   ICollectionData,
 } from '../../../utils/types';
-
-// Debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 interface TokenMetaInfo {
   collection: string;
@@ -112,9 +96,9 @@ const CreateTokenView = () => {
   // Factory and collections state
   const [loading, setLoading] = useState(true);
 
-  const initialBuyVolumeDebounced = useDebounce(initialBuyVolume, 300);
-  const aeAmountDebounced = useDebounce(aeAmount, 300);
-  const tokenNameDebounced = useDebounce(tokenName, 400);
+  const initialBuyVolumeDebounced = useDebouncedValue(initialBuyVolume, 300);
+  const aeAmountDebounced = useDebouncedValue(aeAmount, 300);
+  const tokenNameDebounced = useDebouncedValue(tokenName, 400);
 
   // Computed values - use from the hook
   const activeFactoryCollectionsArr = useMemo(

@@ -1,13 +1,13 @@
 import { Encoding, isEncoded } from '@aeternity/aepp-sdk';
 import Spinner from '@/components/Spinner';
-import AddressAvatar from '@/components/AddressAvatar';
 import { Input } from '@/components/ui/input';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Search as SearchIcon } from 'lucide-react';
 import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import {
@@ -18,10 +18,9 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Head } from '../../../seo/Head';
-import { formatAddress } from '../../../utils/address';
-import { formatCompactNumber } from '../../../utils/number';
 import {
   DEFAULT_TAB_LIMIT,
+  EXPLORE_SEARCH_QUERY_KEY,
   FALLBACK_LIMIT,
   SEARCH_PREVIEW_LIMIT,
   fetchPopularPosts,
@@ -37,7 +36,11 @@ import {
 } from '../api/trendsSearch';
 import type { LeaderboardItem } from '../api/leaderboard';
 import TokenListTable from '../components/TokenListTable';
-import ReplyToFeedItem from '../../social/components/ReplyToFeedItem';
+import {
+  PostResultsList,
+  TokenResultsList,
+  UserResultsList,
+} from '../components/TrendSearchExploreResultLists';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -56,39 +59,7 @@ const SORT = {
 
 const SEARCH_TABS: SearchTab[] = ['tokens', 'users', 'posts'];
 
-const TAB_LABELS: Record<SearchTab, string> = {
-  tokens: 'Tokens',
-  users: 'Users',
-  posts: 'Posts',
-};
-
 type OrderByOption = typeof SORT[keyof typeof SORT];
-
-const ORDER_BY_OPTIONS: SelectOptions<OrderByOption> = [
-  { title: 'Market Cap', value: SORT.marketCap },
-  { title: 'Trending', value: SORT.trendingScore },
-  { title: 'Price', value: SORT.price },
-  { title: 'Name', value: SORT.name },
-  { title: 'Newest', value: SORT.newest },
-  { title: 'Oldest', value: SORT.oldest },
-  { title: 'Holders Count', value: SORT.holdersCount },
-];
-
-function isLeaderboardItem(item: TrendUserItem | LeaderboardItem): item is LeaderboardItem {
-  return 'pnl_usd' in item || 'aum_usd' in item || 'roi_pct' in item || 'mdd_pct' in item;
-}
-
-function getFallbackSubtitle(tab: SearchTab) {
-  if (tab === 'tokens') {
-    return 'No matching tokens found. Showing trending tokens instead.';
-  }
-
-  if (tab === 'users') {
-    return 'No matching users found. Showing top traders instead.';
-  }
-
-  return 'No matching posts found. Showing popular posts instead.';
-}
 
 const SearchSectionShell = ({
   title,
@@ -123,112 +94,57 @@ const EmptyPanel = ({ message }: { message: string }) => (
   </div>
 );
 
-const InlineLoading = ({ label = 'Loading...' }: { label?: string }) => (
+const InlineLoading = ({ label }: { label: string }) => (
   <div className="flex items-center justify-center gap-2 py-8 text-sm text-white/70">
     <Spinner className="w-4 h-4" />
     <span>{label}</span>
   </div>
 );
 
-const TokenResultsList = ({ items }: { items: TrendTokenItem[] }) => (
-  <TokenListTable
-    pages={[{ items }]}
-    loading={false}
-    orderBy="market_cap"
-    orderDirection="DESC"
-    onSort={() => {}}
-  />
-);
-
-const UserStatsCell = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <div className="text-white/50">{label}</div>
-    <div className="text-white">{value}</div>
-  </div>
-);
-
-function getUserStats(item: TrendUserItem | LeaderboardItem) {
-  if (isLeaderboardItem(item)) {
-    return [
-      { label: 'PnL', value: `$${formatCompactNumber(item.pnl_usd, 2, 1)}` },
-      { label: 'ROI', value: `${formatCompactNumber(item.roi_pct, 2, 1)}%` },
-      { label: 'AUM', value: `$${formatCompactNumber(item.aum_usd, 2, 1)}` },
-    ];
-  }
-
-  return [
-    { label: 'Volume', value: `${formatCompactNumber(item.total_volume, 2, 1)} AE` },
-    { label: 'Txs', value: formatCompactNumber(item.total_tx_count, 0, 1) },
-    { label: 'Created', value: formatCompactNumber(item.total_created_tokens, 0, 1) },
-  ];
-}
-
-const UserResultsList = ({ items }: { items: Array<TrendUserItem | LeaderboardItem> }) => (
-  <>
-    {items.map((item) => {
-      const { address } = item;
-      const title = item.chain_name || formatAddress(address, 6);
-      const stats = getUserStats(item);
-
-      return (
-        <Link
-          key={address}
-          to={`/users/${address}`}
-          className="flex flex-col gap-3 px-1 py-4 text-white transition-colors hover:bg-white/[0.03] hover:text-white rounded-xl sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <AddressAvatar address={address} size={40} borderRadius="50%" />
-            <div className="min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{title}</div>
-              <div className="text-[10px] text-white/60 font-mono truncate">
-                {formatAddress(address, 10, false)}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-3 sm:text-right sm:min-w-[340px]">
-            {stats.map((s) => (
-              <UserStatsCell key={s.label} label={s.label} value={s.value} />
-            ))}
-          </div>
-        </Link>
-      );
-    })}
-  </>
-);
-
-const PostResultsList = ({
-  items,
-  onOpenPost,
-}: {
-  items: TrendPostItem[];
-  onOpenPost: (slugOrId: string) => void;
-}) => (
-  <>
-    {items.map((post) => (
-      <ReplyToFeedItem
-        key={post.id}
-        item={post}
-        commentCount={post.total_comments ?? 0}
-        allowInlineRepliesToggle={false}
-        onOpenPost={onOpenPost}
-      />
-    ))}
-  </>
-);
-
 const TokenList = () => {
+  const { t } = useTranslation('trending');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(qFromUrl);
+  const [searchTerm, setSearchTerm] = useState(qFromUrl);
   const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
     tokens: false,
     users: false,
     posts: false,
   });
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
+
+  const tabLabels = useMemo((): Record<SearchTab, string> => ({
+    tokens: t('tokenList.tabTokens'),
+    users: t('tokenList.tabUsers'),
+    posts: t('tokenList.tabPosts'),
+  }), [t]);
+
+  const orderByOptions = useMemo((): SelectOptions<OrderByOption> => [
+    { title: t('tokenList.sortMarketCap'), value: SORT.marketCap },
+    { title: t('tokenList.sortTrending'), value: SORT.trendingScore },
+    { title: t('tokenList.sortPrice'), value: SORT.price },
+    { title: t('tokenList.sortName'), value: SORT.name },
+    { title: t('tokenList.sortNewest'), value: SORT.newest },
+    { title: t('tokenList.sortOldest'), value: SORT.oldest },
+    { title: t('tokenList.sortHoldersCount'), value: SORT.holdersCount },
+  ], [t]);
+
+  const getFallbackSubtitle = useCallback((tab: SearchTab) => {
+    if (tab === 'tokens') return t('tokenList.fallbackTokens');
+    if (tab === 'users') return t('tokenList.fallbackUsers');
+    return t('tokenList.fallbackPosts');
+  }, [t]);
+
+  /** Sync input and search term with `?q=`, including when `q` is dropped from the URL. */
+  useEffect(() => {
+    setSearchInput(qFromUrl);
+    setSearchTerm(qFromUrl);
+  }, [qFromUrl]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -397,7 +313,7 @@ const TokenList = () => {
   const searchOrder = useMemo(() => {
     const preview = searchPreviewQuery.data;
     if (!preview) {
-      return [activeTab, ...SEARCH_TABS.filter((t) => t !== activeTab)];
+      return [activeTab, ...SEARCH_TABS.filter((tab) => tab !== activeTab)];
     }
 
     const counts: Record<SearchTab, number> = {
@@ -413,7 +329,7 @@ const TokenList = () => {
       );
     const hasExactTokenMatch = isAddress
       && preview.tokens.items.some(
-        (t) => (t as any).address?.toLowerCase() === searchTerm.toLowerCase(),
+        (token) => (token as any).address?.toLowerCase() === searchTerm.toLowerCase(),
       );
 
     const score = (tab: SearchTab): number => {
@@ -531,14 +447,14 @@ const TokenList = () => {
 
   const showSearchLoading = hasSearch && searchPreviewQuery.isLoading;
   const searchError = hasSearch && searchPreviewQuery.isError
-    ? 'Unable to load search results right now. Please try again.'
+    ? t('tokenList.searchError')
     : null;
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
       <Head
-        title="Superhero.com – Search Trends, Users and Posts"
-        description="Search tokenized trends, creators, traders, and posts across Superhero."
+        title={t('tokenList.pageTitle')}
+        description={t('tokenList.pageDescription')}
         canonicalPath="/trends/tokens"
       />
 
@@ -550,10 +466,10 @@ const TokenList = () => {
                 <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45 pointer-events-none" />
                 <Input
                   id="trend-search"
-                  aria-label="Search tokens, users and posts"
+                  aria-label={t('tokenList.inputAria')}
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Search trends, users or posts"
+                  placeholder={t('tokenList.searchPlaceholder')}
                   className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#1161FE]"
                 />
               </div>
@@ -573,7 +489,7 @@ const TokenList = () => {
                         isActive ? 'text-white' : 'text-white/55 hover:text-white/80'
                       }`}
                     >
-                      {TAB_LABELS[tab]}
+                      {tabLabels[tab]}
                       {isActive ? (
                         <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#1161FE]" />
                       ) : null}
@@ -586,7 +502,7 @@ const TokenList = () => {
 
           {searchError ? <EmptyPanel message={searchError} /> : null}
 
-          {showSearchLoading ? <InlineLoading label="Searching trends..." /> : null}
+          {showSearchLoading ? <InlineLoading label={t('tokenList.searchingTrends')} /> : null}
 
           {hasSearch && !showSearchLoading && !searchError ? (
             <div className="flex flex-col gap-4">
@@ -605,9 +521,11 @@ const TokenList = () => {
                 );
 
                 const subtitle = state.hasResults
-                  ? `${state.totalItems} result${state.totalItems === 1 ? '' : 's'}`
+                  ? t('tokenList.resultsCount', { count: state.totalItems })
                   : getFallbackSubtitle(tab);
-                const footerLabel = expanded && !state.usesFallback ? 'Show less' : 'View all';
+                const footerLabel = expanded && !state.usesFallback
+                  ? t('tokenList.showLess')
+                  : t('tokenList.viewAll');
 
                 let sectionBody: React.ReactNode = null;
                 if (tab === 'tokens') {
@@ -630,7 +548,7 @@ const TokenList = () => {
                 return (
                   <SearchSectionShell
                     key={tab}
-                    title={TAB_LABELS[tab]}
+                    title={tabLabels[tab]}
                     subtitle={subtitle}
                     contentClassName={tab === 'posts' ? 'divide-y-0' : undefined}
                     footer={state.canExpand || state.usesFallback ? (
@@ -651,7 +569,9 @@ const TokenList = () => {
                     ) : null}
                   >
                     {sectionBody}
-                    {expanded && isLoadingExpanded ? <InlineLoading label="Loading more results..." /> : null}
+                    {expanded && isLoadingExpanded ? (
+                      <InlineLoading label={t('tokenList.loadingMore')} />
+                    ) : null}
                   </SearchSectionShell>
                 );
               })}
@@ -668,7 +588,7 @@ const TokenList = () => {
                 <div className="flex w-full flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
                     <div className="text-xl font-bold text-white sm:text-2xl">
-                      Tokenized Trends
+                      {t('tokenList.tokenizedTrends')}
                     </div>
                     <div className="w-full sm:w-auto sm:flex-shrink-0">
                       <Select value={orderBy} onValueChange={updateOrderBy}>
@@ -676,7 +596,7 @@ const TokenList = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-white/10">
-                          {ORDER_BY_OPTIONS.map((option) => (
+                          {orderByOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
                               {option.title}
                             </SelectItem>
@@ -689,14 +609,14 @@ const TokenList = () => {
                     to="/trends/create"
                     className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/[0.08] hover:border-white/25 hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] active:scale-[0.97] cursor-pointer"
                   >
-                    Tokenize Trend
+                    {t('tokenList.tokenizeTrend')}
                   </Link>
                 </div>
               </div>
 
               {(!tokenPages?.pages?.length || !tokenPages.pages[0].items.length)
               && !isFetchingTokens ? (
-                <EmptyPanel message="No token sales are available right now." />
+                <EmptyPanel message={t('tokenList.noTokenSales')} />
                 ) : null}
 
               <TokenListTable
@@ -723,9 +643,9 @@ const TokenList = () => {
                     {isFetchingTokens ? (
                       <div className="flex items-center justify-center gap-2">
                         <Spinner className="w-4 h-4" />
-                        Loading...
+                        {t('tokenList.loadingEllipsis')}
                       </div>
-                    ) : 'Load More'}
+                    ) : t('tokenList.loadMore')}
                   </button>
                 </div>
               ) : null}
@@ -733,20 +653,26 @@ const TokenList = () => {
           ) : null}
 
           {!hasSearch && activeTab === 'users' ? (
-            <SearchSectionShell title="Top Traders" subtitle="The most active traders on Superhero right now.">
-              {usersTabQuery.isLoading ? <InlineLoading /> : null}
+            <SearchSectionShell
+              title={t('tokenList.topTradersTitle')}
+              subtitle={t('tokenList.topTradersSubtitle')}
+            >
+              {usersTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
               {!usersTabQuery.isLoading && usersTabQuery.data?.items.length ? (
                 <UserResultsList items={usersTabQuery.data.items} />
               ) : null}
               {!usersTabQuery.isLoading && !usersTabQuery.data?.items.length ? (
-                <div className="py-6 text-sm text-white/60">No leaderboard data is available right now.</div>
+                <div className="py-6 text-sm text-white/60">{t('tokenList.noLeaderboard')}</div>
               ) : null}
             </SearchSectionShell>
           ) : null}
 
           {!hasSearch && activeTab === 'posts' ? (
-            <SearchSectionShell title="Popular Posts" subtitle="What the community is talking about the most.">
-              {postsTabQuery.isLoading ? <InlineLoading /> : null}
+            <SearchSectionShell
+              title={t('tokenList.popularPostsTitle')}
+              subtitle={t('tokenList.popularPostsSubtitle')}
+            >
+              {postsTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
               {!postsTabQuery.isLoading && postsTabQuery.data?.items.length ? (
                 <PostResultsList
                   items={postsTabQuery.data.items}
@@ -754,7 +680,7 @@ const TokenList = () => {
                 />
               ) : null}
               {!postsTabQuery.isLoading && !postsTabQuery.data?.items.length ? (
-                <div className="py-6 text-sm text-white/60">No popular posts are available right now.</div>
+                <div className="py-6 text-sm text-white/60">{t('tokenList.noPopularPosts')}</div>
               ) : null}
             </SearchSectionShell>
           ) : null}

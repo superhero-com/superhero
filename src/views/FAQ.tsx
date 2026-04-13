@@ -51,6 +51,18 @@ const QUESTION_DEFS: QuestionDef[] = [
     id: 'accounts', categoryKey: 'categoryAccountsRankings', titleKey: 'qAccountsTitle', answerKey: 'qAccountsAnswer',
   },
   {
+    id: 'rewards-program', categoryKey: 'categoryRewardsProgram', titleKey: 'qRewardsProgramTitle', answerKey: 'qRewardsProgramAnswer',
+  },
+  {
+    id: 'rewards-milestones', categoryKey: 'categoryRewardsProgram', titleKey: 'qRewardsMilestonesTitle', listKeys: ['qRewardsMilestonesLi1', 'qRewardsMilestonesLi2', 'qRewardsMilestonesLi3'],
+  },
+  {
+    id: 'rewards-claim', categoryKey: 'categoryRewardsProgram', titleKey: 'qRewardsClaimTitle', answerKey: 'qRewardsClaimAnswer',
+  },
+  {
+    id: 'rewards-eligibility', categoryKey: 'categoryRewardsProgram', titleKey: 'qRewardsEligibilityTitle', answerKey: 'qRewardsEligibilityAnswer',
+  },
+  {
     id: 'invites', categoryKey: 'categoryInvitesRewards', titleKey: 'qInvitesTitle', answerKey: 'qInvitesAnswer',
   },
   {
@@ -76,7 +88,7 @@ const QUESTION_DEFS: QuestionDef[] = [
   },
 ];
 
-const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryNameClaims', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
+const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryRewardsProgram', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryNameClaims', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
 
 export default function FAQ() {
   const { t } = useTranslation('faq');

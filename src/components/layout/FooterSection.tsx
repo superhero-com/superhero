@@ -1,9 +1,33 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect, useMemo, useState, type MouseEvent,
+} from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { currencyRatesAtom, currencyRatesLastErrorAtAtom, currencyRatesUpdatedAtAtom } from '@/atoms/currencyAtoms';
+
+type FooterLink =
+  | { kind: 'internal'; to: string; labelKey: string }
+  | { kind: 'external'; href: string; labelKey: string };
+
+const FOOTER_LINKS: FooterLink[] = [
+  { kind: 'internal', to: '/terms', labelKey: 'layout.termsOfUse' },
+  { kind: 'internal', to: '/privacy', labelKey: 'layout.privacyPolicy' },
+  { kind: 'external', href: 'https://github.com/superhero-com/superhero', labelKey: 'layout.contributeOnGitHub' },
+  { kind: 'internal', to: '/whitepaper', labelKey: 'layout.whitepaper' },
+  { kind: 'internal', to: '/faq', labelKey: 'layout.faq' },
+];
+
+const handleLinkMouseEnter = (e: MouseEvent<HTMLAnchorElement>) => {
+  e.currentTarget.style.color = 'var(--custom-links-color)';
+  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+};
+
+const handleLinkMouseLeave = (e: MouseEvent<HTMLAnchorElement>) => {
+  e.currentTarget.style.color = 'var(--light-font-color)';
+  e.currentTarget.style.backgroundColor = 'transparent';
+};
 
 const FooterSection = ({ compact = false }: { compact?: boolean }) => {
   const { t } = useTranslation('common');
@@ -17,25 +41,19 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
   const ratesUpdatedAt = useAtomValue(currencyRatesUpdatedAtAtom);
   const lastRatesErrorAt = useAtomValue(currencyRatesLastErrorAtAtom);
 
+  const linkClassName = `no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`;
+  const linkStyle = { color: 'var(--light-font-color)' };
+
   const derivedBackendStatus = useMemo(() => {
-    // If we have any rates and they were updated recently by the global poller,
-    // consider the backend "online" without making any extra requests here.
     const hasRates = currencyRates && Object.keys(currencyRates).length > 0;
     const lastSuccessAge = ratesUpdatedAt ? now - ratesUpdatedAt : Infinity;
 
-    // Fresh rates => online
     if (hasRates && lastSuccessAge < 60_000) return 'online';
 
-    // If we have never successfully fetched rates yet:
-    // - if we already saw a fetch error => offline
-    // - otherwise => checking (still booting / in-flight)
     if (!ratesUpdatedAt) return lastRatesErrorAt ? 'offline' : 'checking';
 
-    // If rates are stale AND the last poll attempt that happened after the last success failed,
-    // treat as offline (backend unreachable) and keep it until the next successful update.
     if (lastSuccessAge >= 60_000 && lastRatesErrorAt > ratesUpdatedAt) return 'offline';
 
-    // Otherwise: stale but no recent error signal (e.g. background throttling) => checking
     return 'checking';
   }, [currencyRates, ratesUpdatedAt, lastRatesErrorAt, now]);
 
@@ -45,7 +63,6 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Update clock periodically so `derivedBackendStatus` can age out without fetching.
     const interval = setInterval(() => setNow(Date.now()), 30_000);
     return () => {
       clearInterval(interval);
@@ -84,69 +101,36 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
       <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3 flex flex-col items-center gap-1.5' : 'px-4 flex gap-4 items-center'} md:flex-col md:gap-4 md:px-4 md:text-center sm:px-3 sm:gap-3`}>
         <div className={`${compact ? 'text-xs w-full text-center order-1' : 'hidden'}`} style={{ color: 'var(--light-font-color)' }}>{t('layout.openSource')}</div>
         <nav className={`${compact ? 'w-full order-2 ml-0 justify-center gap-x-2 gap-y-1' : 'ml-auto'} flex flex-wrap ${compact ? '' : 'gap-3'} md:ml-0 md:order-1 md:justify-center md:gap-2 sm:gap-1.5`}>
-          <Link
-            to="/terms"
-            className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
-            style={{ color: 'var(--light-font-color)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
-            }}
-          >
-            {t('layout.termsOfUse')}
-          </Link>
-          <Link
-            to="/privacy"
-            className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
-            style={{ color: 'var(--light-font-color)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
-            }}
-          >
-            {t('layout.privacyPolicy')}
-          </Link>
-          <a
-            href="https://github.com/superhero-com/superhero"
-            target="_blank"
-            rel="noreferrer"
-            className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
-            style={{ color: 'var(--light-font-color)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--custom-links-color)';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--light-font-color)';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            {t('layout.contributeOnGitHub')}
-          </a>
-
-          <Link
-            to="/whitepaper"
-            className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
-            style={{ color: 'var(--light-font-color)' }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
-              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
-            }}
-          >
-            {t('layout.whitepaper')}
-          </Link>
+          {FOOTER_LINKS.map((link) => {
+            if (link.kind === 'external') {
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={linkClassName}
+                  style={linkStyle}
+                  onMouseEnter={handleLinkMouseEnter}
+                  onMouseLeave={handleLinkMouseLeave}
+                >
+                  {t(link.labelKey)}
+                </a>
+              );
+            }
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={linkClassName}
+                style={linkStyle}
+                onMouseEnter={handleLinkMouseEnter}
+                onMouseLeave={handleLinkMouseLeave}
+              >
+                {t(link.labelKey)}
+              </Link>
+            );
+          })}
         </nav>
         <div className={`${compact ? 'hidden' : 'text-sm'} md:order-2 md:text-[13px]`} style={{ color: 'var(--light-font-color)' }}>{t('layout.openSource')}</div>
       </div>

@@ -105,14 +105,12 @@ const InviteAndEarnCard = ({
   };
 
   const pulseCloseBlocked = useCallback(() => {
-    // retrigger animation even on repeated attempts
     setCloseBlockedPulse(false);
     requestAnimationFrame(() => setCloseBlockedPulse(true));
     window.setTimeout(() => setCloseBlockedPulse(false), 500);
   }, []);
 
   const handleCopyDialogOpenChange = useCallback((open: boolean) => {
-    // Block closing until user confirms
     if (!open && !linkHasBeenCopied) {
       pulseCloseBlocked();
       return;
@@ -125,43 +123,44 @@ const InviteAndEarnCard = ({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
-      <div className="flex items-center gap-4 mb-6">
-        <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
-          🎯
+    <div className={`bg-[#0d1117]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden ${className || ''}`}>
+      <div className="flex items-start justify-between gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Generate Invites
-        </h3>
       </div>
+
+      <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2">
+        Generate Invites
+      </h3>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        {/* Description - Left Side */}
-        <div className="flex-1 space-y-4 text-sm text-muted-foreground">
-          <p>
+        <div className="flex-1 space-y-4 text-sm text-white/50">
+          <p className="m-0 leading-relaxed">
             Create invite links by funding a one-time AE reward per invite. Each
             link contains a secret code; when someone opens the link and claims
             it, they receive the funded reward and the invitation is marked as
             used.
           </p>
-          <p>
+          <p className="m-0 leading-relaxed">
             You can generate multiple links at once and share them with friends
-            or your community. You can also revoke an invite before it’s claimed.
+            or your community. You can also revoke an invite before it&apos;s claimed.
           </p>
-          <p className="text-xs opacity-60">
+          <p className="text-xs text-white/30 m-0">
             Important: save your links before closing the popup. The secret code
             is only shown to you at creation time.
           </p>
         </div>
 
-        {/* Form - Right Side */}
         <div className="flex-1">
-          <form onSubmit={generateInviteLink} className="space-y-6">
+          <form onSubmit={generateInviteLink} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Amount Input */}
               <div className="space-y-2">
                 <Label
                   htmlFor="amount"
-                  className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
+                  className="text-xs font-semibold text-white/40 tracking-wider uppercase"
                 >
                   Amount per invite (AE)
                 </Label>
@@ -175,18 +174,17 @@ const InviteAndEarnCard = ({
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={t('common:placeholders.amount')}
                   disabled={!activeAccount}
-                  className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                  className="bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm transition-all duration-200 outline-none font-medium w-full box-border focus:border-cyan-500/50 focus:shadow-[0_0_0_2px_rgba(6,182,212,0.1)] placeholder:text-white/20"
                 />
-                <div className="text-xs text-slate-400/80">
+                <div className="text-xs text-white/30">
                   This amount will be claimable by the recipient who redeems the link.
                 </div>
               </div>
 
-              {/* Number of Invites Input */}
               <div className="space-y-2">
                 <Label
                   htmlFor="invites"
-                  className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
+                  className="text-xs font-semibold text-white/40 tracking-wider uppercase"
                 >
                   {t('numberOfInvites')}
                 </Label>
@@ -199,12 +197,11 @@ const InviteAndEarnCard = ({
                   value={invitesNumber}
                   onChange={(e) => setInvitesNumber(Math.max(1, Number(e.target.value || 1)))}
                   disabled={!activeAccount}
-                  className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                  className="bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm transition-all duration-200 outline-none font-medium w-full box-border focus:border-cyan-500/50 focus:shadow-[0_0_0_2px_rgba(6,182,212,0.1)] placeholder:text-white/20"
                 />
               </div>
             </div>
 
-            {/* Error Messages */}
             {errorMessage && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -221,20 +218,19 @@ const InviteAndEarnCard = ({
               </Alert>
             )}
 
-            {/* Submit Button */}
             {activeAccount ? (
               <button
                 type="submit"
                 disabled={generatingInviteLink || !activeAccount}
-                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
+                className={`w-full p-3 md:p-4 text-sm font-semibold flex items-center justify-center gap-2 uppercase tracking-wider rounded-lg transition-all duration-200 ${
                   !activeAccount
-                    ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
-                    : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
+                    ? 'opacity-50 cursor-not-allowed bg-white/5 text-white/30'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25'
                 }`}
               >
                 {generatingInviteLink ? (
                   <>
-                    <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
+                    <Spinner className="w-4 h-4" />
                     {t('buttons.creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
@@ -248,7 +244,6 @@ const InviteAndEarnCard = ({
         </div>
       </div>
 
-      {/* Copy Invite Link Dialog */}
       <Dialog
         open={copyInviteLinkDialog}
         onOpenChange={handleCopyDialogOpenChange}
@@ -280,7 +275,6 @@ const InviteAndEarnCard = ({
               {t('inviteLinksGeneratedSuccessfully')}
             </p>
 
-            {/* Links */}
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {invitationLinks.map((link) => (
                 <CopyText
@@ -292,18 +286,13 @@ const InviteAndEarnCard = ({
               ))}
             </div>
 
-            {/* Warning */}
             <Alert>
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="flex items-center gap-2">
-                <span>⚠️</span>
-                <span>
-                  {t('saveLinksBeforeClosing')}
-                </span>
+              <AlertDescription>
+                {t('saveLinksBeforeClosing')}
               </AlertDescription>
             </Alert>
 
-            {/* Confirmation Checkbox */}
             <div
               className={`flex items-center space-x-2 rounded-lg p-2 transition-colors ${
                 closeBlockedPulse && !linkHasBeenCopied
@@ -327,7 +316,6 @@ const InviteAndEarnCard = ({
               </div>
             )}
 
-            {/* Close Button */}
             <AeButton
               variant="default"
               size="lg"

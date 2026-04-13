@@ -66,11 +66,17 @@ const QUESTION_DEFS: QuestionDef[] = [
     id: 'help', categoryKey: 'categorySupport', titleKey: 'qHelpTitle', answerKey: 'qHelpAnswer',
   },
   {
+    id: 'sponsored-name-claim', categoryKey: 'categoryNameClaims', titleKey: 'qSponsoredNameClaimTitle', answerKey: 'qSponsoredNameClaimAnswer',
+  },
+  {
+    id: 'claim-more-names', categoryKey: 'categoryNameClaims', titleKey: 'qClaimMoreNamesTitle', answerKey: 'qClaimMoreNamesAnswer',
+  },
+  {
     id: 'glossary', categoryKey: 'categoryGlossary', titleKey: 'qGlossaryTitle', listKeys: ['qGlossaryLi1', 'qGlossaryLi2', 'qGlossaryLi3', 'qGlossaryLi4'],
   },
 ];
 
-const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
+const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryNameClaims', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
 
 export default function FAQ() {
   const { t } = useTranslation('faq');

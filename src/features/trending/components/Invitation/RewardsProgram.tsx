@@ -54,8 +54,47 @@ interface CompletedOp {
   label: string;
 }
 
+const CLAIMED_MILESTONES: MilestoneData[] = [
+  {
+    id: 'verify-x',
+    icon: '🛡️',
+    title: 'Verify X Account & Post',
+    description: 'Connect your account and verify wallet signatures to prove ownership.',
+    rewardAe: 50,
+    status: 'completed',
+    current: 100,
+    total: 100,
+  },
+  {
+    id: 'invite-grow',
+    icon: '👥',
+    title: 'Invite & Grow',
+    description: 'Refer 5 new users to the platform to unlock 200 AE.',
+    rewardAe: 100,
+    status: 'in_progress',
+    current: 2,
+    total: 5,
+  },
+  {
+    id: 'post-about',
+    icon: '📋',
+    title: 'Post about Superhero',
+    description: 'Publish 10 posts about superhero. Post should include "superhero.com" in text.',
+    rewardAe: 100,
+    status: 'completed',
+    current: 10,
+    total: 10,
+  },
+];
+
+const DEBUG_STAGES = [
+  { label: 'In Progress', data: INITIAL_MILESTONES },
+  { label: 'Claimed', data: CLAIMED_MILESTONES },
+] as const;
+
 const RewardsProgram = () => {
-  const [milestones] = useState<MilestoneData[]>(INITIAL_MILESTONES);
+  const [debugStage, setDebugStage] = useState(0);
+  const milestones = DEBUG_STAGES[debugStage].data;
 
   const completedOps: CompletedOp[] = milestones
     .filter((m) => m.status === 'completed')
@@ -75,6 +114,15 @@ const RewardsProgram = () => {
 
   return (
     <div className="mb-10">
+      {/* DEBUG toggle — remove before production */}
+      <button
+        type="button"
+        onClick={() => setDebugStage((s) => (s + 1) % DEBUG_STAGES.length)}
+        className="mb-4 px-3 py-1.5 rounded-md bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-xs font-mono hover:bg-yellow-500/30 transition-colors"
+      >
+        DEBUG: {DEBUG_STAGES[debugStage].label} → {DEBUG_STAGES[(debugStage + 1) % DEBUG_STAGES.length].label}
+      </button>
+
       {/* Hero */}
       <div className="mb-8 py-2">
         <div className="text-xs md:text-sm font-bold tracking-[0.25em] uppercase text-cyan-400 mb-3">

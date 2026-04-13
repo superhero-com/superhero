@@ -29,6 +29,11 @@ export const useAeSdk = () => {
     return context.staticAeSdk;
   }, [walletConnected, walletInfo, activeAccount, context.aeSdk, context.staticAeSdk]);
 
+  const isWalletSessionReady = useMemo(
+    () => Boolean(context.sdkInitialized && walletConnected && walletInfo && activeAccount),
+    [context.sdkInitialized, walletConnected, walletInfo, activeAccount],
+  );
+
   /**
    * Ensure that when we're using staticAeSdk and have an activeAccount,
    * that account is properly added to the SDK.
@@ -61,6 +66,7 @@ export const useAeSdk = () => {
   return {
     ...context,
     sdk,
+    isWalletSessionReady,
     // Override activeAccount from context with the atom value to ensure reactivity
     activeAccount,
   };

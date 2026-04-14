@@ -138,6 +138,7 @@
       "privacyPolicy": "Privacy Policy",
       "contributeOnGitHub": "Contribute on GitHub",
       "whitepaper": "Whitepaper",
+      "faq": "FAQ",
       "status": "Status",
       "backend": "Backend",
       "liveDashboard": "Live Dashboard",
@@ -169,6 +170,30 @@
       "categorySecurity": "Security",
       "categoryTrading": "Trading",
       "categoryInvestment": "Investment"
+    },
+    "feedRailSearch": {
+      "searchOnExplore": "Search on Explore",
+      "trend": "Trend",
+      "people": "People",
+      "post": "Post",
+      "postPreviewFallback": "Post",
+      "recent": "Recent",
+      "clearAll": "Clear all",
+      "recentsEmpty": "Try searching for trends, people, posts",
+      "recentRegionAria": "Recent searches",
+      "inputAria": "Search trends, users and posts",
+      "inputPlaceholder": "Search trends, users or posts",
+      "searching": "Searching…",
+      "searchFailed": "Search failed. Try again.",
+      "noResults": "No results",
+      "exploreSearchAria": "Search \"{{query}}\" on Explore",
+      "aria": {
+        "removeRecentQuery": "Remove recent search \"{{query}}\"",
+        "removeRecentToken": "Remove this trend from recent searches",
+        "removeRecentUser": "Remove this profile from recent searches",
+        "removeRecentPost": "Remove this post from recent searches",
+        "removeRecentDefault": "Remove from recent searches"
+      }
     }
   },
   "dex": {
@@ -564,7 +589,55 @@
     "retry": "Retry",
     "noTopTraders": "No top traders for this view yet",
     "leaderboardHighlights": "The leaderboard highlights wallets with strong on-chain trading performance over the selected timeframe.",
-    "tryDifferentTimeframe": "Try a different timeframe or metric, then come back as your on-chain activity grows."
+    "tryDifferentTimeframe": "Try a different timeframe or metric, then come back as your on-chain activity grows.",
+    "exploreSearch": {
+      "userStats": {
+        "pnl": "PnL",
+        "roi": "ROI",
+        "aum": "AUM",
+        "volume": "Volume",
+        "txs": "Txs",
+        "created": "Created"
+      }
+    },
+    "tokenList": {
+      "tabTokens": "Tokens",
+      "tabUsers": "Users",
+      "tabPosts": "Posts",
+      "sortMarketCap": "Market Cap",
+      "sortTrending": "Trending",
+      "sortPrice": "Price",
+      "sortName": "Name",
+      "sortNewest": "Newest",
+      "sortOldest": "Oldest",
+      "sortHoldersCount": "Holders Count",
+      "fallbackTokens": "No matching tokens found. Showing trending tokens instead.",
+      "fallbackUsers": "No matching users found. Showing top traders instead.",
+      "fallbackPosts": "No matching posts found. Showing popular posts instead.",
+      "loading": "Loading...",
+      "searchingTrends": "Searching trends...",
+      "loadingMore": "Loading more results...",
+      "searchError": "Unable to load search results right now. Please try again.",
+      "inputAria": "Search tokens, users and posts",
+      "searchPlaceholder": "Search trends, users or posts",
+      "resultsCount_one": "{{count}} result",
+      "resultsCount_other": "{{count}} results",
+      "showLess": "Show less",
+      "viewAll": "View all",
+      "pageTitle": "Superhero.com – Search Trends, Users and Posts",
+      "pageDescription": "Search tokenized trends, creators, traders, and posts across Superhero.",
+      "tokenizedTrends": "Tokenized Trends",
+      "tokenizeTrend": "Tokenize Trend",
+      "noTokenSales": "No token sales are available right now.",
+      "loadMore": "Load More",
+      "loadingEllipsis": "Loading...",
+      "topTradersTitle": "Top Traders",
+      "topTradersSubtitle": "The most active traders on Superhero right now.",
+      "noLeaderboard": "No leaderboard data is available right now.",
+      "popularPostsTitle": "Popular Posts",
+      "popularPostsSubtitle": "What the community is talking about the most.",
+      "noPopularPosts": "No popular posts are available right now."
+    }
   },
   "errors": {
     "userRejected": "Transaction was rejected in your wallet.",

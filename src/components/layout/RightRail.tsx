@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
+import FeedRailSearch from '@/components/layout/FeedRailSearch';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
 import { useAeSdk } from '../../hooks/useAeSdk';
@@ -19,6 +20,9 @@ const RightRail = ({
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
+  const isSocialHomeFeed = location.pathname === '/';
+  /** Dedicated AE Price card: not on home feed (feed search uses its own panel). */
+  const showAePricePanel = !hidePriceSection && !isSocialHomeFeed;
   const { activeAccount } = useAeSdk();
   const { currentCurrencyCode, setCurrentCurrency, currencyRates } = useCurrencies();
 
@@ -74,10 +78,15 @@ const RightRail = ({
     'hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)]',
     'hover:scrollbar-thumb-to-pink-500/80',
   ].join(' ');
-  const cardClassName = [
+  const walletRailCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4',
     'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
     'relative overflow-hidden',
+  ].join(' ');
+  const feedSearchCardClassName = [
+    'bg-white/[0.03] border border-white/10 rounded-[20px] p-3',
+    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'relative overflow-visible',
   ].join(' ');
   const priceCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] p-4',
@@ -87,9 +96,15 @@ const RightRail = ({
 
   return (
     <div id="right-rail-root" className={railClassName}>
+      {isSocialHomeFeed ? (
+        <div className={feedSearchCardClassName}>
+          <FeedRailSearch />
+        </div>
+      ) : null}
+
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
-        <div className={cardClassName}>
+        <div className={walletRailCardClassName}>
           <WalletOverviewCard
             key={activeAccount}
             selectedCurrency={selectedCurrency}
@@ -98,8 +113,9 @@ const RightRail = ({
         </div>
       )}
 
-      {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
-      {!hidePriceSection && (
+      {/* Enhanced Price Section (via hidePriceSection;
+      omitted on home — feed search is its own panel) */}
+      {showAePricePanel && (
         <div className={priceCardClassName}>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
@@ -139,7 +155,7 @@ const RightRail = ({
                 </div>
               </div>
               <div className="flex-shrink-0">
-                {/* Sparkline removed: AE price is now globally polled via AePricePollingProvider */}
+                {/* Sparkline removed: price from AePricePollingProvider */}
               </div>
             </div>
 

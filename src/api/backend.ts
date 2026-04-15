@@ -157,12 +157,24 @@ export const SuperheroApi = {
       throw err;
     }
   },
-  // GET /api/posts/popular?window=all&page=1&limit=50
-  listPopularPosts(params: { window?: '24h'|'7d'|'all'; page?: number; limit?: number } = {}) {
+  listPopularPosts(params: {
+    window?: '24h'|'7d'|'all';
+    page?: number;
+    limit?: number;
+    weights?: Partial<Record<
+      'comments'|'tipsAmountAE'|'tipsCount'|'uniqueTippers'|'trendingBoost'|'contentQuality'|'reads'|'interactionsPerHour',
+      'low'|'med'|'high'
+    >>;
+  } = {}) {
     const qp = new URLSearchParams();
     if (params.window) qp.set('window', params.window);
     if (params.page != null) qp.set('page', String(params.page));
     if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.weights) {
+      Object.entries(params.weights).forEach(([key, value]) => {
+        if (value) qp.set(key, value);
+      });
+    }
     const query = qp.toString();
     return this.fetchJson(`/api/posts/popular${query ? `?${query}` : ''}`);
   },

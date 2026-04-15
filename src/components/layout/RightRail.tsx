@@ -6,8 +6,7 @@ import FeedRailSearch from '@/components/layout/FeedRailSearch';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
 import { useAeSdk } from '../../hooks/useAeSdk';
-import { BuyAeWidget } from '../../features/ae-eth-buy';
-
+// import { BuyAeWidget } from '../../features/ae-eth-buy';
 import { useWallet } from '../../hooks';
 import { useAddressByChainName } from '../../hooks/useChainName';
 
@@ -183,10 +182,11 @@ const RightRail = ({
 
       {/* Enhanced Trending Section removed for now. */}
 
-      {/* Buy AE with ETH widget (compact) */}
+      {/* Buy AE with ETH (disabled): uncomment BuyAeWidget import above, then the block below.
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
         <BuyAeWidget embedded />
       </div>
+      */}
 
       {/* Trading Leaderboard promo */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
@@ -250,6 +250,16 @@ const RightRail = ({
           >
             📦 Wrap AE
           </button>
+          <a
+            href="https://quali.chat"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            title={t('titles.openChat')}
+          >
+            💬 Chat
+          </a>
+          {/* Buy AE with ETH quick action (disabled)
           <button
             type="button"
             className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
@@ -258,6 +268,7 @@ const RightRail = ({
           >
             🌉 Buy AE with ETH
           </button>
+          */}
           <button
             type="button"
             className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
@@ -266,15 +277,6 @@ const RightRail = ({
           >
             💧 Provide Liquidity
           </button>
-          <a
-            href="https://quali.chat"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title={t('titles.openChat')}
-          >
-            💬 Chat
-          </a>
         </div>
       </div>
     </div>

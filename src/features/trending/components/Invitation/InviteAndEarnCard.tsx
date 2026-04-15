@@ -123,7 +123,7 @@ const InviteAndEarnCard = ({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className={`bg-[#0d1117]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden ${className || ''}`}>
+    <div className={`bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden ${className || ''}`}>
       <div className="flex items-start justify-between gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -137,18 +137,15 @@ const InviteAndEarnCard = ({
         Generate Invites
       </h3>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        <div className="flex-1 space-y-4 text-sm text-white/50">
+        <div className="flex-1 space-y-4 text-sm text-white/60">
           <p className="m-0 leading-relaxed">
             Create invite links by funding a one-time AE reward per invite. Each
             link contains a secret code; when someone opens the link and claims
             it, they receive the funded reward and the invitation is marked as
-            used.
+            used. You can generate multiple links at once and share them with friends or your community. You can also revoke an invite before it&apos;s claimed.
           </p>
-          <p className="m-0 leading-relaxed">
-            You can generate multiple links at once and share them with friends
-            or your community. You can also revoke an invite before it&apos;s claimed.
-          </p>
-          <p className="text-xs text-white/30 m-0">
+         
+          <p className="text-xs text-white/80 m-0">
             Important: save your links before closing the popup. The secret code
             is only shown to you at creation time.
           </p>
@@ -160,7 +157,7 @@ const InviteAndEarnCard = ({
               <div className="space-y-2">
                 <Label
                   htmlFor="amount"
-                  className="text-xs font-semibold text-white/40 tracking-wider uppercase"
+                  className="text-xs font-semibold text-white/50 tracking-wider uppercase"
                 >
                   Amount per invite (AE)
                 </Label>
@@ -176,7 +173,7 @@ const InviteAndEarnCard = ({
                   disabled={!activeAccount}
                   className="bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm transition-all duration-200 outline-none font-medium w-full box-border focus:border-cyan-500/50 focus:shadow-[0_0_0_2px_rgba(6,182,212,0.1)] placeholder:text-white/20"
                 />
-                <div className="text-xs text-white/30">
+                <div className="text-xs text-white/50">
                   This amount will be claimable by the recipient who redeems the link.
                 </div>
               </div>

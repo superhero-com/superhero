@@ -4,8 +4,8 @@ import {
   ArrowLeftRight,
   Droplet,
   Package,
-  Network,
-  Gem,
+  // Network,
+  // Gem,
   Coins,
   Waves,
   ClipboardList,
@@ -45,20 +45,20 @@ const navigationItems: NavigationItem[] = [
     path: '/defi/wrap',
     description: 'Convert AE ↔ WAE',
   },
-  {
-    id: 'bridge',
-    label: 'BRIDGE',
-    icon: Network,
-    path: '/defi/bridge',
-    description: 'Bridge tokens between Ethereum and æternity',
-  },
-  {
-    id: 'buy-ae',
-    label: 'BUY AE',
-    icon: Gem,
-    path: '/defi/buy-ae-with-eth',
-    description: 'Buy AE with ETH',
-  },
+  // {
+  //   id: 'bridge',
+  //   label: 'BRIDGE',
+  //   icon: Network,
+  //   path: '/defi/bridge',
+  //   description: 'Bridge tokens between Ethereum and æternity',
+  // },
+  // {
+  //   id: 'buy-ae',
+  //   label: 'BUY AE',
+  //   icon: Gem,
+  //   path: '/defi/buy-ae-with-eth',
+  //   description: 'Buy AE with ETH',
+  // },
 ];
 
 const exploreItems: NavigationItem[] = [

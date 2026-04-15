@@ -250,7 +250,7 @@ const CollectRewardsCard = () => {
   }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
 
   return (
-    <div className="bg-[#0d1117]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+    <div className="bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
@@ -269,7 +269,7 @@ const CollectRewardsCard = () => {
       {/* Content */}
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Description */}
-        <div className="flex-1 space-y-4 text-sm text-white/50">
+        <div className="flex-1 space-y-4 text-sm text-white/70">
           <p className="m-0 leading-relaxed">
             Rewards accumulate as your direct invitees participate in token sales. You can withdraw once
             {' '}
@@ -289,7 +289,7 @@ const CollectRewardsCard = () => {
             {' '}
             (cumulative).
           </p>
-          <p className="text-xs text-white/30 m-0">
+          <p className="text-xs text-white/60 m-0">
             Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
           </p>
         </div>

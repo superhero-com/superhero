@@ -31,18 +31,17 @@ export default function Invite() {
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
 
-        {/* ========== Separator + Trading Affiliate Program header ========== */}
-        <div className="border-t border-white/10 my-10" />
+       
 
         <div className="mb-8">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold m-0 text-white">
-            Trading Affiliate Program
+            Affiliate Program
           </h2>
         </div>
 
         {/* Info Card (existing, dismissible) */}
         {showInfo && (
-          <div className="mb-6 sm:mb-8 bg-[#0d1117]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-5 md:p-6 relative overflow-hidden">
+          <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
             <button
               onClick={() => {
                 try {
@@ -80,7 +79,7 @@ export default function Invite() {
                     <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-semibold text-white/50 flex-shrink-0 text-xs">
                       {i + 1}
                     </div>
-                    <div className="text-white/50 leading-relaxed text-sm flex-1 min-w-0 pt-0.5">
+                    <div className="text-white/80 leading-relaxed text-sm flex-1 min-w-0 pt-0.5">
                       {text}
                     </div>
                   </div>
@@ -106,7 +105,7 @@ export default function Invite() {
 
         {/* ========== Disclaimer ========== */}
         <div className="border-t border-white/10 mt-10 pt-6 pb-8">
-          <p className="text-xs text-white/30 leading-relaxed m-0">
+          <p className="text-xs text-white/50 leading-relaxed m-0">
             {DISCLAIMER_TEXT}
           </p>
         </div>

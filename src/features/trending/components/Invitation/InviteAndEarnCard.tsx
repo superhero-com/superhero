@@ -144,7 +144,7 @@ const InviteAndEarnCard = ({
             it, they receive the funded reward and the invitation is marked as
             used. You can generate multiple links at once and share them with friends or your community. You can also revoke an invite before it&apos;s claimed.
           </p>
-         
+
           <p className="text-xs text-white/80 m-0">
             Important: save your links before closing the popup. The secret code
             is only shown to you at creation time.

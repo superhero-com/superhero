@@ -13,7 +13,7 @@ import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarous
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
-import SortControls from '../components/SortControls';
+import SortControls, { type PopularWeights } from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
 import PostSkeleton from '../components/PostSkeleton';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
@@ -117,6 +117,7 @@ const FeedList = ({
   }, [sortBy]);
 
   const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>(initialWindow);
+  const [popularWeights, setPopularWeights] = useState<PopularWeights>({});
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
@@ -411,12 +412,13 @@ const FeedList = ({
     refetch: refetchPopular,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot',
-    queryKey: ['popular-posts', { limit: 10, window: popularWindow }],
+    queryKey: ['popular-posts', { limit: 10, window: popularWindow, weights: popularWeights }],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await SuperheroApi.listPopularPosts({
         window: popularWindow,
         page: pageParam as number,
         limit: 10,
+        weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
       });
       return response as PostApiResponse;
     },
@@ -801,10 +803,14 @@ const FeedList = ({
     setPopularWindow(w);
     if (sortBy === 'hot') {
       navigate(`/?sortBy=hot&window=${w}`);
-      // Reset pages for new window
       queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
     }
   }, [navigate, sortBy, queryClient]);
+
+  const handlePopularWeightsChange = useCallback((weights: PopularWeights) => {
+    setPopularWeights(weights);
+    queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
+  }, [queryClient]);
 
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
@@ -1259,6 +1265,8 @@ const FeedList = ({
             popularWindow={popularWindow}
             onPopularWindowChange={handlePopularWindowChange}
             popularFeedEnabled={popularFeedEnabled}
+            popularWeights={popularWeights}
+            onPopularWeightsChange={handlePopularWeightsChange}
           />
         </div>
         <div className="hidden md:block">
@@ -1268,6 +1276,8 @@ const FeedList = ({
             popularWindow={popularWindow}
             onPopularWindowChange={handlePopularWindowChange}
             popularFeedEnabled={popularFeedEnabled}
+            popularWeights={popularWeights}
+            onPopularWeightsChange={handlePopularWeightsChange}
           />
         </div>
       </div>

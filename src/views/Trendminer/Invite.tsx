@@ -31,8 +31,6 @@ export default function Invite() {
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
 
-       
-
         <div className="mb-8">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold m-0 text-white">
             Affiliate Program

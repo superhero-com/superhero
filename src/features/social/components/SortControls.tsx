@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,34 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { AeButton } from '../../../components/ui/ae-button';
 
+export type WeightKey =
+  | 'comments'
+  | 'tipsAmountAE'
+  | 'tipsCount'
+  | 'uniqueTippers'
+  | 'trendingBoost'
+  | 'contentQuality'
+  | 'reads'
+  | 'interactionsPerHour';
+
+export type WeightValue = 'low' | 'med' | 'high';
+
+export type PopularWeights = Partial<Record<WeightKey, WeightValue>>;
+
+const WEIGHT_LABELS: Record<WeightKey, string> = {
+  comments: 'Comments',
+  tipsAmountAE: 'Tip Amount',
+  tipsCount: 'Tip Count',
+  uniqueTippers: 'Unique Tippers',
+  trendingBoost: 'Trending Boost',
+  contentQuality: 'Content Quality',
+  reads: 'Reads',
+  interactionsPerHour: 'Activity Rate',
+};
+
+const WEIGHT_KEYS = Object.keys(WEIGHT_LABELS) as WeightKey[];
+const WEIGHT_VALUES: WeightValue[] = ['low', 'med', 'high'];
+
 interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
@@ -16,13 +44,38 @@ interface SortControlsProps {
   popularWindow?: '24h' | '7d' | 'all';
   onPopularWindowChange?: (value: '24h' | '7d' | 'all') => void;
   popularFeedEnabled?: boolean;
+  popularWeights?: PopularWeights;
+  onPopularWeightsChange?: (weights: PopularWeights) => void;
 }
 
 // Component: Sort Controls
 const SortControls = memo(
   ({
     sortBy, onSortChange, className = '', popularWindow = 'all', onPopularWindowChange, popularFeedEnabled = true,
+    popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
+    const [customizeOpen, setCustomizeOpen] = useState(false);
+
+    const hasCustomWeights = Object.keys(popularWeights).length > 0;
+
+    const getEffectiveWeight = (key: WeightKey): WeightValue => popularWeights[key] ?? 'med';
+
+    const handleWeightChange = (key: WeightKey, value: WeightValue) => {
+      if (!onPopularWeightsChange) return;
+      const next = { ...popularWeights };
+      const effective = getEffectiveWeight(key);
+      if (effective === value) return;
+      if (value === 'med') {
+        delete next[key];
+      } else {
+        next[key] = value;
+      }
+      onPopularWeightsChange(next);
+    };
+
+    const handleResetWeights = () => {
+      if (onPopularWeightsChange) onPopularWeightsChange({});
+    };
     // Show "Latest Feed" title if popular feed is disabled
     if (!popularFeedEnabled) {
       return (
@@ -156,11 +209,86 @@ const SortControls = memo(
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+            {sortBy === 'hot' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      'relative overflow-visible p-2 rounded-full transition-all duration-200',
+                      hasCustomWeights
+                        ? 'text-[#1161FE]'
+                        : 'text-white/50 hover:text-white/80',
+                    )}
+                    title="Customize popular feed"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    {hasCustomWeights && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#1161FE] rounded-full ring-2 ring-[#0d0d0d]" />
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="bg-[#0d0d0d] border-white/15 text-white min-w-[280px] p-0 rounded-xl shadow-2xl"
+                  style={{
+                    background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+                  }}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/10">
+                    <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">Feed Weights</span>
+                    {hasCustomWeights && (
+                      <button
+                        type="button"
+                        onClick={handleResetWeights}
+                        className="flex items-center gap-1 text-[11px] text-white/50 hover:text-white/80 transition-colors"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                  <div className="p-3 flex flex-col gap-2">
+                    {WEIGHT_KEYS.map((key) => (
+                      <div key={key} className="flex items-center justify-between gap-3">
+                        <span className="text-xs text-white/70 min-w-[90px]">{WEIGHT_LABELS[key]}</span>
+                        <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+                          {WEIGHT_VALUES.map((val) => {
+                            const isActive = getEffectiveWeight(key) === val;
+                            return (
+                              <button
+                                type="button"
+                                key={val}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleWeightChange(key, val);
+                                }}
+                                className={cn(
+                                  'px-2 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                                  isActive
+                                    ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                                    : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
+                                )}
+                              >
+                                {val}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
         {/* Desktop: keep existing pill style */}
-        <div className="hidden md:flex w-full items-center justify-between gap-2">
+        <div className="hidden md:flex w-full items-center gap-2 pr-1">
           <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
             <AeButton
               onClick={() => onSortChange('hot')}
@@ -192,30 +320,105 @@ const SortControls = memo(
             </AeButton>
           </div>
           {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
-            {(['24h', '7d', 'all'] as const).map((tf) => {
-              const isActive = popularWindow === tf;
-              const label = getPopularLabel(tf);
-              return (
+          <div className="inline-flex items-center gap-2 ml-auto">
+            <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10">
+              {(['24h', '7d', 'all'] as const).map((tf) => {
+                const isActive = popularWindow === tf;
+                const label = getPopularLabel(tf);
+                return (
+                  <button
+                    type="button"
+                    key={tf}
+                    onClick={() => {
+                      if (onPopularWindowChange) {
+                        onPopularWindowChange(tf);
+                      }
+                    }}
+                    className={cn(
+                      'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
+                      isActive
+                        ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                        : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10',
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <DropdownMenu open={customizeOpen} onOpenChange={setCustomizeOpen}>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  key={tf}
-                  onClick={() => {
-                    if (onPopularWindowChange) {
-                      onPopularWindowChange(tf);
-                    }
-                  }}
                   className={cn(
-                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
-                    isActive
-                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                      : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10',
+                    'relative overflow-visible p-1.5 rounded-full border transition-all duration-200',
+                    hasCustomWeights
+                      ? 'bg-[#1161FE]/20 border-[#1161FE]/50 text-[#1161FE]'
+                      : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10',
                   )}
+                  title="Customize popular feed"
                 >
-                  {label}
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  {hasCustomWeights && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#1161FE] rounded-full ring-2 ring-[#0d0d0d]" />
+                  )}
                 </button>
-              );
-            })}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className="bg-[#0d0d0d] border-white/15 text-white min-w-[300px] p-0 rounded-xl shadow-2xl"
+                style={{
+                  background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+                }}
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
+                <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/10">
+                  <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">Feed Weights</span>
+                  {hasCustomWeights && (
+                    <button
+                      type="button"
+                      onClick={handleResetWeights}
+                      className="flex items-center gap-1 text-[11px] text-white/50 hover:text-white/80 transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <div className="p-3 flex flex-col gap-2">
+                  {WEIGHT_KEYS.map((key) => (
+                    <div key={key} className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-white/70 min-w-[100px]">{WEIGHT_LABELS[key]}</span>
+                      <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+                        {WEIGHT_VALUES.map((val) => {
+                          const isActive = getEffectiveWeight(key) === val;
+                          return (
+                            <button
+                              type="button"
+                              key={val}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleWeightChange(key, val);
+                              }}
+                              className={cn(
+                                'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                                isActive
+                                  ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                                  : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
+                              )}
+                            >
+                              {val}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           )}
         </div>

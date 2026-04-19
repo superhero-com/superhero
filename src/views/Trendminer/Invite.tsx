@@ -30,13 +30,9 @@ export default function Invite() {
       <div className="mx-auto px-4 py-2">
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
-
-        <div className="mb-8">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold m-0 text-white">
-            Affiliate Program
-          </h2>
-        </div>
-
+        <h3 className="m-5 text-2xl md:text-2xl font-bold text-white">
+          Referral Program
+        </h3>
         {/* Info Card (existing, dismissible) */}
         {showInfo && (
           <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">

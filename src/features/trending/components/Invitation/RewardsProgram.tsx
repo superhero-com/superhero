@@ -3,9 +3,8 @@ import MilestoneCard from './MilestoneCard';
 import type { MilestoneStep } from './MilestoneCard';
 
 const VERIFY_STEPS_INITIAL: MilestoneStep[] = [
-  { text: 'Authenticate your Twitter account and verify ownership', done: false },
-  { text: 'Sign a message with your wallet and link your X account to SuperheroID onchain', done: false },
-  { text: 'Post one tweet about Superhero with your linked X account', done: false },
+  { text: 'Link your X account to your on-chain SuperheroID', done: false },
+  { text: 'Post about Superhero with your linked X account', done: false },
 ];
 
 const RewardsProgram = () => {
@@ -24,8 +23,7 @@ const RewardsProgram = () => {
 
   const verifyActionLabels: Record<number, string> = {
     0: 'Connect Twitter',
-    1: 'Sign Message',
-    2: 'Post on X',
+    1: 'Post on X',
   };
   const verifyActionLabel = verifyActionLabels[currentVerifyStep];
 
@@ -71,6 +69,7 @@ const RewardsProgram = () => {
           {' '}
           <span className="text-cyan-400 font-bold">
             {totalAe}
+            +
             {' '}
             AE
           </span>
@@ -114,10 +113,11 @@ const RewardsProgram = () => {
 
       {/* Milestones */}
       <div className="space-y-5">
-        {/* Milestone 1: Verify X Account */}
+        {/* Milestone 1: Link X Account */}
         <MilestoneCard
-          title="Verify X Account & Post"
-          description="Link your wallet and prove social presence to unlock your first reward."
+          title="Link X Account & Post"
+          description="Verify ownership of your X account and link it on-chain to your SuperheroID. SuperheroID is a digital identity smart contract that connects all your social accounts to your wallet address. After linking, make a post about Superhero on X from your account to spread the word and share with your network. By completing this milestone, you earn 50 AE tokens!"
+          earnLabel="Earn"
           rewardAe={50}
           status={verifyCompleted ? 'completed' : 'in_progress'}
           current={verifyDone}
@@ -130,11 +130,13 @@ const RewardsProgram = () => {
         {/* Milestone 2: Post & Earn */}
         <MilestoneCard
           title="Post & Earn"
-          description="Publish posts about Superhero. Each post must include your ref link in the text."
-          rewardAe={150}
+          description="Publish posts about Superhero from your linked X account to spread the word and share with your network. Each post must include your unique referral link in the post content. Post about your trades, your experience, or share news about Superhero. For every post that meets the criteria, you earn 10 AE tokens. Daily streaks will earn you bonus rewards, so keep posting and engaging with the community!"
+          earnLabel="Earn Daily"
+          rewardAe={10}
           // eslint-disable-next-line no-nested-ternary
           status={postCompleted ? 'completed' : (verifyCompleted ? 'in_progress' : 'locked')}
           current={postCount}
+          steps={[{ info: true, text: 'Posting each day for a 10-day streak unlocks 50 AE Bonus' }]}
           total={postTotal}
           actionLabel={postCompleted ? undefined : 'Post on X'}
           onAction={handlePostOnX}

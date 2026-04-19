@@ -32,7 +32,7 @@ export const getNavigationItems = (): NavigationItem[] => [
   },
   TRENDING_ENABLED && {
     id: 'refer-earn',
-    label: 'Refer & Earn',
+    label: 'Earn Rewards',
     path: '/trends/invite',
     icon: Gift,
   },
@@ -56,7 +56,7 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
   ...getNavigationItems(),
   {
     id: 'account',
-    label: 'Account',
+    label: 'SuperheroID',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },

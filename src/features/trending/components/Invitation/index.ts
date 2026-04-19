@@ -3,4 +3,3 @@ export { default as InvitationList } from './InvitationList';
 export { default as CollectRewardsCard } from './CollectRewardsCard';
 export { default as CollectInvitationLinkCard } from './CollectInvitationLinkCard';
 export { default as RewardsProgram } from './RewardsProgram';
-export { default as MilestoneCard } from './MilestoneCard';

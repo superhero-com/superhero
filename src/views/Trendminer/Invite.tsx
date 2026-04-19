@@ -28,18 +28,27 @@ export default function Invite() {
   return (
     <Shell>
       <div className="mx-auto px-4 py-2">
+        {/* Hero */}
+        <div className="mb-8 py-2">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold m-0 leading-tight">
+            <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              Superhero
+              {' '}
+            </span>
+            <span className="text-white">Rewards</span>
+          </h1>
+
+        </div>
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
 
-        <div className="mb-8">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold m-0 text-white">
-            Affiliate Program
-          </h2>
-        </div>
-
-        {/* Info Card (existing, dismissible) */}
-        {showInfo && (
-          <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
+        <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
+          <h3 className="mb-5 m-1 text-2xl md:text-2xl font-bold text-white">
+            Refer & Earn
+          </h3>
+          {/* Info Card (existing, dismissible) */}
+          {showInfo && (
+          <div className="bg-[#0d1117]/50 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
             <button
               onClick={() => {
                 try {
@@ -85,11 +94,13 @@ export default function Invite() {
               </div>
             </div>
           </div>
-        )}
-        {/* Main Action Cards */}
-        <div className="space-y-8 mb-12">
-          <InviteAndEarnCard />
-          <CollectRewardsCard />
+          )}
+          {/* Main Action Cards */}
+
+          <div className="space-y-8">
+            <InviteAndEarnCard />
+            <CollectRewardsCard />
+          </div>
         </div>
         {/* User Invitations */}
         {activeAccount && (

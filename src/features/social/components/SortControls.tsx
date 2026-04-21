@@ -1,13 +1,51 @@
-import React, { memo } from 'react';
+import React, {
+  memo, useEffect, useRef, useState,
+} from 'react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
+import {
+  ChevronDown, SlidersHorizontal, RotateCcw, Rocket, X,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { AeButton } from '../../../components/ui/ae-button';
+
+export type WeightKey =
+  | 'comments'
+  | 'tipsAmountAE'
+  | 'tipsCount'
+  | 'uniqueTippers'
+  | 'trendingBoost'
+  | 'contentQuality'
+  | 'reads'
+  | 'interactionsPerHour';
+
+export type WeightValue = 'low' | 'med' | 'high';
+
+export type PopularWeights = Partial<Record<WeightKey, WeightValue>>;
+
+const WEIGHT_LABELS: Record<WeightKey, string> = {
+  comments: 'Comments',
+  tipsAmountAE: 'Tip Amount',
+  tipsCount: 'Tip Count',
+  uniqueTippers: 'Unique Tippers',
+  trendingBoost: 'Trending Boost',
+  contentQuality: 'Content Quality',
+  reads: 'Reads',
+  interactionsPerHour: 'Activity Rate',
+};
+
+const WEIGHT_KEYS = Object.keys(WEIGHT_LABELS) as WeightKey[];
+const WEIGHT_VALUES: WeightValue[] = ['low', 'med', 'high'];
 
 interface SortControlsProps {
   sortBy: string;
@@ -16,13 +54,77 @@ interface SortControlsProps {
   popularWindow?: '24h' | '7d' | 'all';
   onPopularWindowChange?: (value: '24h' | '7d' | 'all') => void;
   popularFeedEnabled?: boolean;
+  popularWeights?: PopularWeights;
+  onPopularWeightsChange?: (weights: PopularWeights) => void;
 }
 
 // Component: Sort Controls
 const SortControls = memo(
   ({
-    sortBy, onSortChange, className = '', popularWindow = 'all', onPopularWindowChange, popularFeedEnabled = true,
+    sortBy, onSortChange, className = '', popularWindow = '24h', onPopularWindowChange, popularFeedEnabled = true,
+    popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
+    const mobileSortRef = useRef<HTMLDivElement>(null);
+    const [customizeOpen, setCustomizeOpen] = useState(false);
+    const [mobileSortOpen, setMobileSortOpen] = useState(false);
+    const [mobileCustomizeOpen, setMobileCustomizeOpen] = useState(false);
+
+    const hasCustomWeights = Object.keys(popularWeights).length > 0;
+
+    const getEffectiveWeight = (key: WeightKey): WeightValue => popularWeights[key] ?? 'med';
+
+    const handleWindowChange = (value: '24h' | '7d' | 'all') => {
+      if (onPopularWindowChange) onPopularWindowChange(value);
+    };
+
+    const handleWeightChange = (key: WeightKey, value: WeightValue) => {
+      if (!onPopularWeightsChange) return;
+      const next = { ...popularWeights };
+      const effective = getEffectiveWeight(key);
+      if (effective === value) return;
+      if (value === 'med') {
+        delete next[key];
+      } else {
+        next[key] = value;
+      }
+      onPopularWeightsChange(next);
+    };
+
+    const handleResetWeights = () => {
+      if (onPopularWeightsChange) onPopularWeightsChange({});
+    };
+
+    const handleResetCustomSettings = () => {
+      handleResetWeights();
+      handleWindowChange('24h');
+    };
+
+    useEffect(() => {
+      if (!mobileSortOpen) return undefined;
+
+      const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+        if (!mobileSortRef.current?.contains(event.target as Node)) {
+          setMobileSortOpen(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handlePointerDown);
+      document.addEventListener('touchstart', handlePointerDown);
+
+      return () => {
+        document.removeEventListener('mousedown', handlePointerDown);
+        document.removeEventListener('touchstart', handlePointerDown);
+      };
+    }, [mobileSortOpen]);
+
+    useEffect(() => {
+      setMobileSortOpen(false);
+      if (sortBy !== 'hot') {
+        setMobileCustomizeOpen(false);
+        setCustomizeOpen(false);
+      }
+    }, [sortBy, popularWindow]);
+
     // Show "Latest Feed" title if popular feed is disabled
     if (!popularFeedEnabled) {
       return (
@@ -52,115 +154,257 @@ const SortControls = memo(
       return `Popular ${timeLabel.toLowerCase()}`;
     };
 
-    // Helper function to handle dropdown selection
-    const handleMobileOptionSelect = (option: string) => {
-      if (option === 'latest') {
-        onSortChange('latest');
-      } else if (option === 'this-week') {
-        onSortChange('hot');
-        if (onPopularWindowChange) {
-          onPopularWindowChange('7d');
-        }
-      } else if (option === 'all-time') {
-        onSortChange('hot');
-        if (onPopularWindowChange) {
-          onPopularWindowChange('all');
-        }
-      } else if (option === 'today') {
-        onSortChange('hot');
-        if (onPopularWindowChange) {
-          onPopularWindowChange('24h');
-        }
-      }
+    const handleMobileSortToggle = (newSort: 'hot' | 'latest') => {
+      setMobileSortOpen(false);
+      onSortChange(newSort);
     };
+
+    const hasNonDefaultWindow = popularWindow !== '24h';
+    const hasCustomSettings = hasCustomWeights || hasNonDefaultWindow;
+
+    const renderCustomizeControls = (isMobile = false) => (
+      <>
+        {!isMobile && (
+          <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/10">
+            <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">Customize Feed</span>
+            {hasCustomSettings && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleResetCustomSettings();
+                }}
+                className="flex items-center gap-1 text-[11px] text-white/50 hover:text-white/80 transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </button>
+            )}
+          </div>
+        )}
+        <div className="px-4 pt-3 pb-2">
+          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Time Window</span>
+          <div className="mt-1.5 inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+            {(['24h', '7d', 'all'] as const).map((tf) => {
+              const isActive = popularWindow === tf;
+              const label = getPopularLabel(tf);
+              return (
+                <button
+                  type="button"
+                  key={tf}
+                  onClick={(e) => {
+                    if (!isMobile) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                    handleWindowChange(tf);
+                  }}
+                  className={cn(
+                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-200',
+                    isActive
+                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                      : 'bg-transparent text-white/70 border-transparent hover:text-white/90 hover:bg-white/10',
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="px-4 pt-2 pb-1">
+          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Weights</span>
+        </div>
+        <div className="px-3 pb-3 flex flex-col gap-2">
+          {WEIGHT_KEYS.map((key) => (
+            <div key={key} className="flex items-center justify-between gap-3 px-1">
+              <span className="text-xs text-white/70 min-w-[90px]">{WEIGHT_LABELS[key]}</span>
+              <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+                {WEIGHT_VALUES.map((val) => {
+                  const isActive = getEffectiveWeight(key) === val;
+                  return (
+                    <button
+                      type="button"
+                      key={val}
+                      onClick={(e) => {
+                        if (!isMobile) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                        handleWeightChange(key, val);
+                      }}
+                      className={cn(
+                        'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                        isActive
+                          ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                          : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
+                      )}
+                    >
+                      {val}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+
+    const renderCustomizeDropdownContent = (minWidth: string) => (
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className={cn('bg-[#0d0d0d] border-white/15 text-white p-0 rounded-xl shadow-2xl', minWidth)}
+        style={{
+          background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+        }}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {renderCustomizeControls()}
+      </DropdownMenuContent>
+    );
 
     return (
       <div className={cn('w-full mb-0 md:mb-3', className)}>
         {/* Mobile: title with dropdown */}
         <div className="md:hidden">
           <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 min-w-0">
+              <div ref={mobileSortRef} className="relative min-w-0">
+                {mobileSortOpen && (
+                  <div
+                    className="absolute left-0 top-[calc(100%+8px)] z-[1200] min-w-[180px] rounded-2xl border border-white/15 bg-[#0d0d0d] p-1 text-white shadow-2xl"
+                    style={{
+                      background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+                    }}
+                    role="menu"
+                    aria-label="Feed sort options"
+                  >
+                    {sortBy === 'hot' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleMobileSortToggle('latest')}
+                        className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
+                        role="menuitem"
+                      >
+                        Latest
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleMobileSortToggle('hot')}
+                        className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
+                        role="menuitem"
+                      >
+                        Popular
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="button"
                   className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none"
+                  aria-haspopup="menu"
+                  aria-expanded={mobileSortOpen}
+                  onClick={() => {
+                    setMobileCustomizeOpen(false);
+                    setMobileSortOpen((open) => !open);
+                  }}
                 >
                   <span>{getMobileTitle()}</span>
-                  <ChevronDown className="h-4 w-4 text-white/70" />
+                  <ChevronDown className={cn('h-4 w-4 text-white/70 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                sideOffset={8}
-                className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[240px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
-                style={{
-                  background: 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                }}
-              >
-                {sortBy === 'hot' ? (
-                  <>
-                    {popularWindow !== '24h' && (
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('today')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      Today
-                    </DropdownMenuItem>
+              </div>
+              {sortBy === 'hot' && (
+                <Dialog open={mobileCustomizeOpen} onOpenChange={setMobileCustomizeOpen}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileSortOpen(false);
+                      setMobileCustomizeOpen(true);
+                    }}
+                    className={cn(
+                      'relative overflow-visible p-2.5 rounded-full transition-all duration-200 shrink-0',
+                      hasCustomSettings
+                        ? 'text-[#1161FE]'
+                        : 'text-white/50 hover:text-white/80',
                     )}
-                    {popularWindow !== '7d' && (
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('this-week')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      This week
-                    </DropdownMenuItem>
+                    title="Customize popular feed"
+                  >
+                    <SlidersHorizontal className="h-5 w-5" />
+                    {hasCustomSettings && (
+                      <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-[#1161FE] rounded-full ring-2 ring-[#0d0d0d]" />
                     )}
-                    {popularWindow !== 'all' && (
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('all-time')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      All time
-                    </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('latest')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      Latest
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('today')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      Popular today
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('this-week')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      Popular this week
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleMobileOptionSelect('all-time')}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-                    >
-                      Popular all time
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </button>
+                  <DialogContent
+                    hideClose
+                    className="!left-0 !right-0 !top-auto !bottom-0 !z-[1200] !w-full !max-w-none !translate-x-0 !translate-y-0 gap-0 rounded-t-[28px] rounded-b-none border-white/15 bg-[#0d0d0d] p-0 text-white shadow-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-left-0 data-[state=open]:slide-in-from-left-0 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:!max-w-none"
+                  >
+                    <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-white/15" />
+                    <div className="max-h-[85vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
+                      <div className="flex items-start justify-between gap-4 border-b border-white/10 px-4 pt-3 pb-3">
+                        <div>
+                          <DialogTitle className="text-base font-semibold text-white">
+                            Customize Feed
+                          </DialogTitle>
+                          <DialogDescription className="mt-1 text-sm text-white/60">
+                            Tune the popular feed ranking and time window.
+                          </DialogDescription>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMobileCustomizeOpen(false)}
+                          className="rounded-full p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                          aria-label="Close customization panel"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                          Popular Feed Settings
+                        </span>
+                        {hasCustomSettings && (
+                          <button
+                            type="button"
+                            onClick={handleResetCustomSettings}
+                            className="flex items-center gap-1 text-[11px] text-white/50 transition-colors hover:text-white/80"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                      {renderCustomizeControls(true)}
+                      <div className="px-4 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setMobileCustomizeOpen(false)}
+                          className="flex min-h-[44px] w-full items-center justify-center rounded-2xl bg-[#1161FE] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0e50d8]"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+            <Link
+              to="/trends/create"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] shrink-0"
+            >
+              <Rocket className="h-3 w-3" />
+              Tokenize Trend
+            </Link>
           </div>
         </div>
 
-        {/* Desktop: keep existing pill style */}
-        <div className="hidden md:flex w-full items-center justify-between gap-2">
+        {/* Desktop */}
+        <div className="hidden md:flex w-full items-center gap-2 pr-1">
           <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
             <AeButton
               onClick={() => onSortChange('hot')}
@@ -192,32 +436,34 @@ const SortControls = memo(
             </AeButton>
           </div>
           {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
-            {(['24h', '7d', 'all'] as const).map((tf) => {
-              const isActive = popularWindow === tf;
-              const label = getPopularLabel(tf);
-              return (
+            <DropdownMenu open={customizeOpen} onOpenChange={setCustomizeOpen} modal={false}>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  key={tf}
-                  onClick={() => {
-                    if (onPopularWindowChange) {
-                      onPopularWindowChange(tf);
-                    }
-                  }}
                   className={cn(
-                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
-                    isActive
-                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                      : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10',
+                    'relative overflow-visible p-2.5 rounded-full border transition-all duration-200',
+                    hasCustomSettings
+                      ? 'bg-[#1161FE]/20 border-[#1161FE]/50 text-[#1161FE]'
+                      : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10',
                   )}
+                  title="Customize popular feed"
                 >
-                  {label}
+                  <SlidersHorizontal className="h-5 w-5" />
+                  {hasCustomSettings && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#1161FE] rounded-full ring-2 ring-[#0d0d0d]" />
+                  )}
                 </button>
-              );
-            })}
-          </div>
+              </DropdownMenuTrigger>
+              {renderCustomizeDropdownContent('min-w-[300px]')}
+            </DropdownMenu>
           )}
+          <Link
+            to="/trends/create"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] ml-auto"
+          >
+            <Rocket className="h-3 w-3" />
+            Tokenize Trend
+          </Link>
         </div>
       </div>
     );

@@ -1,6 +1,6 @@
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User,
+  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -11,45 +11,47 @@ export interface NavigationItem {
   isExternal?: boolean;
 }
 
-export const getNavigationItems = (): NavigationItem[] => [
-  {
-    id: 'home',
-    label: 'Home',
-    path: '/',
-    icon: Home,
-  },
-  TRENDING_ENABLED && {
-    id: 'explore',
-    label: 'Explore',
-    path: '/trends/tokens',
-    icon: Search,
-  },
-  {
-    id: 'dex',
-    label: 'DeFi',
-    path: '/defi',
-    icon: ArrowLeftRight,
-  },
-  TRENDING_ENABLED && {
-    id: 'refer-earn',
-    label: 'Refer & Earn',
-    path: '/trends/invite',
-    icon: Gift,
-  },
+const HOME_ITEM: NavigationItem = {
+  id: 'home',
+  label: 'Home',
+  path: '/',
+  icon: Home,
+};
 
-  // {
-  //     id: 'landing',
-  //     label: 'Info',
-  //     path: '/landing',
-  //     icon: Info,
-  // },
-  // {
-  //     id: 'github',
-  //     label: 'GitHub',
-  //     path: 'https://github.com/aeternity/superhero-ui',
-  //     icon: Github,
-  //     isExternal: true,
-  // },
+const EXPLORE_ITEM: NavigationItem = {
+  id: 'explore',
+  label: 'Explore',
+  path: '/trends/tokens',
+  icon: Search,
+};
+
+const DEFI_ITEM: NavigationItem = {
+  id: 'dex',
+  label: 'DeFi',
+  path: '/defi',
+  icon: ArrowLeftRight,
+};
+
+const DAO_ITEM: NavigationItem = {
+  id: 'dao',
+  label: 'DAO',
+  path: '/trends/daos',
+  icon: Vote,
+};
+
+const REFER_EARN_ITEM: NavigationItem = {
+  id: 'refer-earn',
+  label: 'Refer & Earn',
+  path: '/trends/invite',
+  icon: Gift,
+};
+
+export const getNavigationItems = (): NavigationItem[] => [
+  HOME_ITEM,
+  TRENDING_ENABLED && EXPLORE_ITEM,
+  DEFI_ITEM,
+  TRENDING_ENABLED && DAO_ITEM,
+  TRENDING_ENABLED && REFER_EARN_ITEM,
 ].filter(Boolean) as NavigationItem[];
 
 export const getAppNavigationItems = (activeAccount?: string | null): NavigationItem[] => [
@@ -60,6 +62,32 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },
+];
+
+/**
+ * Items rendered directly in the mobile footer bar. DeFi and DAO are moved
+ * into the "More" dropdown to keep the bar compact on small screens.
+ */
+export const getMobileFooterNavigationItems = (
+  activeAccount?: string | null,
+): NavigationItem[] => [
+  HOME_ITEM,
+  ...(TRENDING_ENABLED ? [EXPLORE_ITEM] : []),
+  ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
+  {
+    id: 'account',
+    label: 'Account',
+    path: activeAccount ? `/users/${activeAccount}` : undefined,
+    icon: User,
+  },
+];
+
+/**
+ * Items shown inside the mobile "More" dropdown.
+ */
+export const getMobileMoreNavigationItems = (): NavigationItem[] => [
+  DEFI_ITEM,
+  ...(TRENDING_ENABLED ? [DAO_ITEM] : []),
 ];
 
 export const getActiveNavigationPath = (

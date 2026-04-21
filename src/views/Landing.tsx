@@ -55,7 +55,7 @@ function FeatureCard({
 /* ------------------------------------------------------------------ */
 /*  Main Product Page                                                 */
 /* ------------------------------------------------------------------ */
-export default function Product() {
+export default function Landing() {
   return (
     <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-pink-500/30">
 
@@ -193,7 +193,7 @@ export default function Product() {
               icon={BarChart3}
               number="03"
               title="Real-time attention pricing"
-              description="Trendminer analytics surface trending tokens, hashtags, and communities as a real-time prediction layer over the social graph."
+              description="Trend analytics surface trending tokens, hashtags, and communities as a real-time prediction layer over the social graph."
             />
             <FeatureCard
               icon={Coins}
@@ -275,7 +275,7 @@ export default function Product() {
                   <span className="text-lg font-bold text-blue-400/80 font-mono">3</span>
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-white/90 mb-1">Track with Trendminer</h3>
+                  <h3 className="text-[15px] font-semibold text-white/90 mb-1">Track Trends</h3>
                   <p className="text-[13px] text-white/40 leading-relaxed">
                     Real-time analytics surface trending tokens, hashtags, and communities.
                     A prediction layer over the entire social graph.

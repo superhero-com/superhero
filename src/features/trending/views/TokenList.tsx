@@ -607,7 +607,7 @@ const TokenList = () => {
                   </div>
                   <Link
                     to="/trends/create"
-                    className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/[0.08] hover:border-white/25 hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] active:scale-[0.97] cursor-pointer"
+                    className="inline-flex cursor-pointer items-center justify-center rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0"
                   >
                     {t('tokenList.tokenizeTrend')}
                   </Link>

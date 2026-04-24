@@ -47,6 +47,15 @@ const WEIGHT_LABELS: Record<WeightKey, string> = {
 const WEIGHT_KEYS = Object.keys(WEIGHT_LABELS) as WeightKey[];
 const WEIGHT_VALUES: WeightValue[] = ['low', 'med', 'high'];
 
+/**
+ * Tailwind `lg` — matches `WebAppHeader` (`hidden lg:flex`).
+ * Below this width the fixed rail is absent.
+ */
+const DESKTOP_SIDEBAR_MEDIA_QUERY = '(min-width: 1024px)';
+/** `w-64` rail + same gutter as `top`/`right`/`bottom` in collisionPadding */
+const SIDEBAR_COLLISION_PADDING_LEFT = 256 + 16;
+const COLLISION_PADDING_EDGE = 16;
+
 interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
@@ -68,6 +77,25 @@ const SortControls = memo(
     const [customizeOpen, setCustomizeOpen] = useState(false);
     const [mobileSortOpen, setMobileSortOpen] = useState(false);
     const [mobileCustomizeOpen, setMobileCustomizeOpen] = useState(false);
+
+    const getHasDesktopSidebar = () => {
+      if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+      return window.matchMedia(DESKTOP_SIDEBAR_MEDIA_QUERY).matches;
+    };
+    const [hasDesktopSidebar, setHasDesktopSidebar] = useState(getHasDesktopSidebar);
+
+    useEffect(() => {
+      if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+      const mq = window.matchMedia(DESKTOP_SIDEBAR_MEDIA_QUERY);
+      const onChange = () => setHasDesktopSidebar(mq.matches);
+      onChange();
+      if (mq.addEventListener) {
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+      }
+      mq.addListener?.(onChange);
+      return () => mq.removeListener?.(onChange);
+    }, []);
 
     const hasCustomWeights = Object.keys(popularWeights).length > 0;
 
@@ -254,7 +282,13 @@ const SortControls = memo(
 
     const renderCustomizeDropdownContent = (minWidth: string) => (
       <DropdownMenuContent
-        align="end"
+        align="start"
+        collisionPadding={{
+          top: COLLISION_PADDING_EDGE,
+          right: COLLISION_PADDING_EDGE,
+          bottom: COLLISION_PADDING_EDGE,
+          left: hasDesktopSidebar ? SIDEBAR_COLLISION_PADDING_LEFT : COLLISION_PADDING_EDGE,
+        }}
         sideOffset={8}
         className={cn('bg-[#0d0d0d] border-white/15 text-white p-0 rounded-xl shadow-2xl', minWidth)}
         style={{
@@ -270,7 +304,7 @@ const SortControls = memo(
       <div className={cn('w-full mb-0 md:mb-3', className)}>
         {/* Mobile: title with dropdown */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
+          <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-5 pt-3 pb-3">
             <div className="flex items-center gap-2 min-w-0">
               <div ref={mobileSortRef} className="relative min-w-0">
                 {mobileSortOpen && (
@@ -404,7 +438,7 @@ const SortControls = memo(
         </div>
 
         {/* Desktop */}
-        <div className="hidden md:flex w-full items-center gap-2 pr-1">
+        <div className="hidden md:flex w-full items-center gap-2 px-4 py-1.5">
           <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
             <AeButton
               onClick={() => onSortChange('hot')}

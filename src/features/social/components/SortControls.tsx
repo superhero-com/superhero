@@ -270,7 +270,7 @@ const SortControls = memo(
       <div className={cn('w-full mb-0 md:mb-3', className)}>
         {/* Mobile: title with dropdown */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
+          <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-5 pt-3 pb-3">
             <div className="flex items-center gap-2 min-w-0">
               <div ref={mobileSortRef} className="relative min-w-0">
                 {mobileSortOpen && (
@@ -404,7 +404,7 @@ const SortControls = memo(
         </div>
 
         {/* Desktop */}
-        <div className="hidden md:flex w-full items-center gap-2 pr-1">
+        <div className="hidden md:flex w-full items-center gap-2 px-4 py-1.5">
           <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
             <AeButton
               onClick={() => onSortChange('hot')}

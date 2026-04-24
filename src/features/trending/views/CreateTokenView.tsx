@@ -532,10 +532,10 @@ const CreateTokenView = () => {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
-      <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
-        <div className="max-w-[1400px] mx-auto p-0 md:p-6">
+      <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
+        <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
           {/* Hero heading — visible on mobile/tablet above the form; hidden on xl (shown in left column instead) */}
-          <div className="xl:hidden px-2 pt-4 pb-2 text-center">
+          <div className="xl:hidden px-2 pt-2 pb-2 text-center">
             <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3">
               Create Your Token.
               <br />

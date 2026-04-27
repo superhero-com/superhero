@@ -24,7 +24,7 @@ export class TokensService {
         factoryAddress,
         search,
     }: {
-        orderBy?: 'name' | 'price' | 'market_cap' | 'created_at' | 'holders_count',
+        orderBy?: 'name' | 'price' | 'market_cap' | 'created_at' | 'holders_count' | 'treasury',
         orderDirection?: 'ASC' | 'DESC',
         collection?: 'all' | 'word' | 'number',
         limit?: number,

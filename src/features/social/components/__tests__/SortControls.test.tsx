@@ -24,7 +24,21 @@ vi.mock('lucide-react', () => ({
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children, ...props }: any) => <div data-testid="dropdown-menu" {...props}>{children}</div>,
-  DropdownMenuContent: ({ children, ...props }: any) => <div data-testid="dropdown-content" {...props}>{children}</div>,
+  DropdownMenuContent: ({
+    children, collisionPadding, ...props
+  }: any) => (
+    <div
+      data-testid="dropdown-content"
+      data-collision-padding-left={
+        collisionPadding && typeof collisionPadding === 'object'
+          ? String(collisionPadding.left)
+          : ''
+      }
+      {...props}
+    >
+      {children}
+    </div>
+  ),
   DropdownMenuItem: ({ children, onClick, ...props }: any) => (
     <button type="button" data-testid="dropdown-item" onClick={onClick} {...props}>{children}</button>
   ),
@@ -136,6 +150,38 @@ describe('SortControls', () => {
   });
 
   describe('customize dropdown content', () => {
+    it('opens the desktop customize dropdown away from the left rail', () => {
+      renderControls();
+      const dropdownContent = screen.getByTestId('dropdown-content');
+      expect(dropdownContent).toHaveAttribute('align', 'start');
+    });
+
+    it('uses wide left collision padding only when the lg sidebar is present', () => {
+      const createMql = (matches: boolean): Partial<MediaQueryList> => ({
+        matches,
+        media: '(min-width: 1024px)',
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      });
+
+      const matchMediaSpy = vi.spyOn(window, 'matchMedia').mockImplementation(
+        () => createMql(false) as MediaQueryList,
+      );
+
+      const { unmount } = renderControls();
+      expect(screen.getByTestId('dropdown-content')).toHaveAttribute('data-collision-padding-left', '16');
+
+      unmount();
+      matchMediaSpy.mockImplementation(() => createMql(true) as MediaQueryList);
+      renderControls();
+      expect(screen.getByTestId('dropdown-content')).toHaveAttribute('data-collision-padding-left', '272');
+
+      matchMediaSpy.mockRestore();
+    });
+
     it('contains time window buttons (Today, This week, All time)', () => {
       renderControls();
       expect(screen.getAllByText('Today').length).toBeGreaterThanOrEqual(1);

@@ -116,17 +116,17 @@ const Daos = () => {
     <div className="max-w-6xl mx-auto p-4 text-white">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
         <div className="text-3xl font-extrabold text-white">DAOs</div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2.5 rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+            className="h-10 min-h-10 box-border px-4 text-sm rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
           />
           <AppSelect
             value={orderBy}
             onValueChange={(v) => updateOrderBy(v as OrderByOption)}
-            triggerClassName="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none transition-all duration-300 hover:bg-white/[0.05]"
+            triggerClassName="h-10 min-h-10 w-auto min-w-[10rem] shrink-0 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-0 text-sm text-white backdrop-blur-[10px] transition-all duration-300 hover:bg-white/[0.05] focus:outline-none data-[placeholder]:text-white/60"
             contentClassName="bg-gray-900 border-white/10"
           >
             {orderByOptions.map((option) => (

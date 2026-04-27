@@ -6,22 +6,17 @@ import { useAtom } from 'jotai';
 import {
   createContext,
   useCallback,
-  useEffect, useMemo, useRef, useState,
+  useEffect, useMemo, useRef, useState, type SetStateAction,
 } from 'react';
 import { activeAccountAtom } from '../atoms/accountAtoms';
-import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
+import { transactionsQueueAtom, type TxQueueEntry } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks/useModal';
 import { CURRENT_NETWORK } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
-
-type TxQueueEntry = {
-  status: string;
-  tx: Encoded.Transaction;
-  signUrl: string;
-};
+import { consumeNextTxQueueCallback } from '../utils/txQueueCallback';
 
 export const AeSdkContext = createContext<{
   aeSdk: AeSdkAepp,
@@ -36,7 +31,7 @@ export const AeSdkContext = createContext<{
   getCurrentGeneration: () => void,
   addStaticAccount: (account: string) => void,
   setActiveNetwork: (network: INetwork) => void,
-  setTransactionsQueue: (queue: Record<string, TxQueueEntry>) => void,
+  setTransactionsQueue: (queue: SetStateAction<Record<string, TxQueueEntry>>) => void,
   initSdk: () => void,
   scanForAccounts: () => void,
   nodes: { instance: Node; name: string }[],
@@ -50,17 +45,18 @@ const nodes: { instance: Node; name: string }[] = [
 ];
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
+  type ContractInitializeOptions = Parameters<typeof Contract.initialize>[0];
   type LegacyInitializableSdk = {
-    getContext: () => Record<string, unknown>;
+    getContext: () => Partial<ContractInitializeOptions>;
     initializeContract?: (
-      options: Record<string, unknown>,
+      options: ContractInitializeOptions,
     ) => ReturnType<typeof Contract.initialize>;
   };
 
   const ensureLegacyInitializeContract = useCallback((sdkInstance: LegacyInitializableSdk) => {
     if (typeof sdkInstance.initializeContract === 'function') return;
     // eslint-disable-next-line no-param-reassign -- intentional patch for legacy SDK
-    sdkInstance.initializeContract = (options: Record<string, unknown>) => Contract.initialize({
+    sdkInstance.initializeContract = (options: ContractInitializeOptions) => Contract.initialize({
       ...sdkInstance.getContext(),
       ...options,
     });
@@ -134,16 +130,32 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
           currentUrl.searchParams.delete('status');
 
           const currentDomain = currentUrl.origin;
+          const returnUrl = currentUrl.href;
+          const callbackState = consumeNextTxQueueCallback();
 
           // append transaction parameter for success case
           // const successUrl = new URL(currentUrl.href);
           const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
           successUrl.searchParams.set('transaction', '{transaction}');
           successUrl.searchParams.set('status', 'completed');
+          successUrl.searchParams.set('returnUrl', returnUrl);
+          if (callbackState?.successAction) {
+            successUrl.searchParams.set('successAction', callbackState.successAction);
+          }
+          if (callbackState?.successUrl) {
+            successUrl.searchParams.set('successUrl', callbackState.successUrl);
+          }
+          if (callbackState?.accountAddress) {
+            successUrl.searchParams.set('accountAddress', callbackState.accountAddress);
+          }
+          if (callbackState?.content) {
+            successUrl.searchParams.set('content', callbackState.content);
+          }
 
           // append transaction parameter for failed case
           const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
           cancelUrl.searchParams.set('status', 'cancelled');
+          cancelUrl.searchParams.set('returnUrl', returnUrl);
 
           const signUrl: any = createDeepLinkUrl({
             type: 'sign-transaction',

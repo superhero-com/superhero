@@ -3,7 +3,9 @@ import Spinner from '@/components/Spinner';
 import { Decimal } from '@/libs/decimal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SuperheroIcon from '@/svg/favicon.svg?react';
+import { PostsService } from '@/api/generated';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
@@ -301,15 +303,85 @@ const NotificationConfirmed = ({
   );
 };
 
+const delay = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve) => {
+  if (signal?.aborted) {
+    resolve();
+    return;
+  }
+
+  const timer = window.setTimeout(resolve, ms);
+  signal?.addEventListener('abort', () => {
+    window.clearTimeout(timer);
+    resolve();
+  }, { once: true });
+});
+
+async function findPostPathByTxHash(
+  txHash: string,
+  accountAddress?: string,
+  signal?: AbortSignal,
+  attempt = 0,
+): Promise<string | undefined> {
+  if (attempt >= 20 || signal?.aborted) return undefined;
+
+  try {
+    const request = PostsService.listAll({
+      accountAddress,
+      limit: 20,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+    });
+    signal?.addEventListener('abort', () => request.cancel(), { once: true });
+
+    const response: any = await request;
+    const post = (Array.isArray(response?.items) ? response.items : [])
+      .find((item: any) => item?.tx_hash === txHash);
+
+    if (post?.id) {
+      return `/post/${encodeURIComponent(String(post.id))}`;
+    }
+  } catch (error: any) {
+    if (signal?.aborted || error?.isCancelled) return undefined;
+    // Backend indexing can lag right after broadcast; keep polling briefly.
+  }
+
+  await delay(3000, signal);
+  return findPostPathByTxHash(txHash, accountAddress, signal, attempt + 1);
+}
+
 // ─── Main banner ─────────────────────────────────────────────────────────────
 
 export const TransactionNotificationBanner = () => {
   const { notificationState, dismissNotification } = useTransactionNotification();
   const activeAccount = useAtomValue(activeAccountAtom);
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
+  const redirectedTxRef = useRef<string | null>(null);
+  const postRedirectPollTxRef = useRef<string | null>(null);
+  const postRedirectAbortRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+  const postRedirectGenerationRef = useRef(0);
 
   const isActive = notificationState.status !== 'idle';
+  const postRedirectTxHash = (
+    (notificationState.status === 'pending' || notificationState.status === 'confirmed')
+    && notificationState.payload.type === TxPayloadType.CreatePost
+  ) ? notificationState.txHash : undefined;
+  const postRedirectAccountAddress = (
+    (notificationState.status === 'pending' || notificationState.status === 'confirmed')
+    && notificationState.payload.type === TxPayloadType.CreatePost
+  ) ? notificationState.payload.accountAddress : undefined;
+  const activeNotificationTxHash = (
+    notificationState.status === 'pending' || notificationState.status === 'confirmed'
+  ) ? notificationState.txHash : undefined;
+
+  const abortPostRedirectPoll = () => {
+    postRedirectAbortRef.current?.abort();
+    postRedirectAbortRef.current = null;
+    postRedirectPollTxRef.current = null;
+  };
 
   useEffect(() => {
     if (isActive) {
@@ -318,6 +390,66 @@ export const TransactionNotificationBanner = () => {
       setVisible(false);
     }
   }, [isActive]);
+
+  useEffect(() => () => {
+    isMountedRef.current = false;
+    postRedirectAbortRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!postRedirectTxHash) {
+      if (
+        activeNotificationTxHash
+        && activeNotificationTxHash !== postRedirectPollTxRef.current
+      ) {
+        postRedirectGenerationRef.current += 1;
+        abortPostRedirectPoll();
+      }
+      return undefined;
+    }
+    const txHash = postRedirectTxHash;
+    if (redirectedTxRef.current === txHash || postRedirectPollTxRef.current === txHash) {
+      return undefined;
+    }
+
+    const generation = postRedirectGenerationRef.current + 1;
+    postRedirectGenerationRef.current = generation;
+    postRedirectPollTxRef.current = txHash;
+    postRedirectAbortRef.current?.abort();
+    const abortController = new AbortController();
+    postRedirectAbortRef.current = abortController;
+    findPostPathByTxHash(
+      txHash,
+      postRedirectAccountAddress || activeAccount,
+      abortController.signal,
+    ).then((postPath) => {
+      if (postRedirectAbortRef.current === abortController) {
+        postRedirectAbortRef.current = null;
+        postRedirectPollTxRef.current = null;
+      }
+      if (
+        abortController.signal.aborted
+        || !isMountedRef.current
+        || postRedirectGenerationRef.current !== generation
+        || !postPath
+        || redirectedTxRef.current === txHash
+      ) return;
+      redirectedTxRef.current = txHash;
+      navigate(postPath);
+    });
+
+    return () => {
+      if (!isMountedRef.current && postRedirectAbortRef.current === abortController) {
+        abortPostRedirectPoll();
+      }
+    };
+  }, [
+    activeAccount,
+    activeNotificationTxHash,
+    navigate,
+    postRedirectAccountAddress,
+    postRedirectTxHash,
+  ]);
 
   if (!isActive && !visible) return null;
 

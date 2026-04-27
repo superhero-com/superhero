@@ -17,6 +17,7 @@ import { CONFIG } from '../../../config';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
+import { clearNextTxQueueCallback, setNextTxQueueCallback } from '../../../utils/txQueueCallback';
 import { GifSelectorDialog } from './GifSelectorDialog';
 
 type TippingV3ContractApi = ContractMethodsBase & {
@@ -355,11 +356,12 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     const trimmed = text.trim();
     if (!trimmed) return;
     if (!activeAccount) return;
+    if (!isPost && !postId) return;
 
     setIsSubmitting(true);
 
     const txPayload = isPost
-      ? { type: TxPayloadType.CreatePost, content: trimmed } as const
+      ? { type: TxPayloadType.CreatePost, content: trimmed, accountAddress: activeAccount } as const
       : { type: TxPayloadType.CreateComment, postId: postId! } as const;
 
     notifySubmitted(txPayload);
@@ -377,6 +379,14 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         postMedia = [...mediaUrls];
       } else if (postId) {
         postMedia = [`comment:${postId}`, ...mediaUrls];
+      }
+
+      if (isPost) {
+        setNextTxQueueCallback({
+          successAction: 'redirect-post-by-tx',
+          accountAddress: activeAccount,
+          content: trimmed,
+        });
       }
 
       const { decodedResult } = await contract.post_without_tip(
@@ -870,15 +880,19 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       }
 
       // Reset after success
-      setText(initialText || '');
-      setMediaUrls([]);
+      if (isMountedRef.current) {
+        setText(initialText || '');
+        setMediaUrls([]);
+      }
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
-      if (isPost) {
+      if (isMountedRef.current && isPost) {
         onPostCreated?.(newPostId ?? postId);
       }
 
-      onSuccess?.(newPostId ?? postId);
+      if (isMountedRef.current) {
+        onSuccess?.(newPostId ?? postId);
+      }
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
@@ -891,7 +905,12 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       // TODO: add sentry capture
       notifyError(error?.message || (isPost ? 'Failed to publish post' : 'Failed to publish reply'));
     } finally {
-      setIsSubmitting(false);
+      if (isPost) {
+        clearNextTxQueueCallback();
+      }
+      if (isMountedRef.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 

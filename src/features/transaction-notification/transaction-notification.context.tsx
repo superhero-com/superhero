@@ -24,7 +24,7 @@ export type TxPayload =
   | { type: typeof TxPayloadType.SellToken; tokenName: string; tokenSymbol: string; tokenAmount: string; estimatedCoin: string; saleAddress?: string }
   | { type: typeof TxPayloadType.ApproveAllowance; tokenName: string; tokenSymbol: string; amount: string; stepNumber: number; totalSteps: number }
   | { type: typeof TxPayloadType.CreateToken; tokenName: string }
-  | { type: typeof TxPayloadType.CreatePost; content: string }
+  | { type: typeof TxPayloadType.CreatePost; content: string; accountAddress?: string }
   | { type: typeof TxPayloadType.CreateComment; postId: string }
   | { type: typeof TxPayloadType.SwapToken; tokenInSymbol: string; tokenOutSymbol: string; amountIn: string; amountOut: string }
   | { type: typeof TxPayloadType.WrapToken; amount: string }
@@ -38,7 +38,7 @@ export type NotificationState =
   | { status: 'idle' }
   | { status: 'submitted'; payload: TxPayload }
   | { status: 'pending'; payload: TxPayload; txHash: string }
-  | { status: 'confirmed'; payload: TxPayload }
+  | { status: 'confirmed'; payload: TxPayload; txHash?: string }
   | { status: 'error'; message: string };
 
 type TransactionNotificationContextValue = {
@@ -143,7 +143,7 @@ export const TransactionNotificationProvider: React.FC<{
         if (gen !== pollGeneration.current) return;
         if (mined) {
           clearPollInterval();
-          setNotificationState({ status: 'confirmed', payload });
+          setNotificationState({ status: 'confirmed', payload, txHash });
           scheduleAutoDismiss(payload, AUTO_DISMISS_MS);
         }
       };

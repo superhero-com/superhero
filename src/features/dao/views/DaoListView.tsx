@@ -162,7 +162,7 @@ const Daos = () => {
             <div className="flex justify-between items-start gap-2 mb-2">
               <div className="flex flex-col gap-1.5">
                 <div className="font-black text-white text-lg tracking-wide">
-                  {t.symbol}
+                  {`#${t.symbol}`}
                 </div>
                 {activeAccount === t.owner_address && (
                 <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">

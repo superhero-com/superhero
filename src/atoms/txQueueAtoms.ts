@@ -8,6 +8,10 @@ export type TxQueueEntry = {
   transaction?: Encoded.Transaction;
 };
 
+export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';
+export const TX_QUEUE_RESULT_PREFIX = 'txQueue:result:';
+export const TX_QUEUE_RESULT_TTL_MS = 5 * 60 * 1000;
+
 // atomWithBroadcast implementation for cross-tab communication
 function atomWithBroadcast<Value>(key: string, initialValue: Value) {
   const baseAtom = atom(initialValue);

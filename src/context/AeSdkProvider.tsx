@@ -9,11 +9,16 @@ import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { activeAccountAtom } from '../atoms/accountAtoms';
-import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
+import {
+  TX_QUEUE_ACK_CHANNEL,
+  TX_QUEUE_RESULT_PREFIX,
+  TX_QUEUE_RESULT_TTL_MS,
+  transactionsQueueAtom,
+} from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks/useModal';
-import { CURRENT_NETWORK } from '../utils/constants';
+import { CURRENT_NETWORK, IS_MOBILE } from '../utils/constants';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
@@ -50,17 +55,18 @@ const nodes: { instance: Node; name: string }[] = [
 ];
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
+  type ContractInitializeOptions = Parameters<typeof Contract.initialize>[0];
   type LegacyInitializableSdk = {
-    getContext: () => Record<string, unknown>;
+    getContext: () => Partial<ContractInitializeOptions>;
     initializeContract?: (
-      options: Record<string, unknown>,
+      options: ContractInitializeOptions,
     ) => ReturnType<typeof Contract.initialize>;
   };
 
   const ensureLegacyInitializeContract = useCallback((sdkInstance: LegacyInitializableSdk) => {
     if (typeof sdkInstance.initializeContract === 'function') return;
     // eslint-disable-next-line no-param-reassign -- intentional patch for legacy SDK
-    sdkInstance.initializeContract = (options: Record<string, unknown>) => Contract.initialize({
+    sdkInstance.initializeContract = (options: ContractInitializeOptions) => Contract.initialize({
       ...sdkInstance.getContext(),
       ...options,
     });
@@ -167,6 +173,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
           return new Promise((resolve, reject) => {
             let newWindow: Window | null = null;
+            const ackChannel = typeof BroadcastChannel !== 'undefined'
+              ? new BroadcastChannel(TX_QUEUE_ACK_CHANNEL)
+              : null;
             const windowFeatures = [
               'name=Superhero Wallet',
               'width=362',
@@ -181,6 +190,38 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             let timeout: NodeJS.Timeout | null = null;
             let isCleanedUp = false;
             let unloadHandler: (() => void) | null = null;
+            const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
+
+            const removeStoredResult = () => {
+              try {
+                localStorage.removeItem(storedResultKey);
+              } catch {
+                // Ignore unavailable storage; the in-memory broadcast path still applies.
+              }
+            };
+
+            const readStoredResult = () => {
+              try {
+                const storedResult = localStorage.getItem(storedResultKey);
+                const parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
+                const createdAt = Number(parsedStoredResult?.createdAt || 0);
+                const expiresAt = Number(parsedStoredResult?.expiresAt || 0);
+                const isExpired = parsedStoredResult && (
+                  (expiresAt && Date.now() > expiresAt)
+                  || (!expiresAt && (!createdAt || Date.now() - createdAt > TX_QUEUE_RESULT_TTL_MS))
+                );
+
+                if (isExpired) {
+                  removeStoredResult();
+                  return null;
+                }
+
+                return parsedStoredResult;
+              } catch {
+                removeStoredResult();
+                return null;
+              }
+            };
 
             // Cleanup function to prevent memory leaks
             const cleanup = () => {
@@ -203,6 +244,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 newWindow.close();
                 newWindow = null;
               }
+              ackChannel?.close();
             };
 
             openModal({
@@ -243,12 +285,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
             timeout = setTimeout(() => {
+              removeStoredResult();
               cleanup();
               reject(new Error('Transaction polling timeout'));
             }, MAX_POLL_TIME);
 
             // Handle page unload to cleanup interval
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && !IS_MOBILE) {
               unloadHandler = () => {
                 cleanup();
               };
@@ -257,8 +300,18 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
             interval = setInterval(() => {
               const currentQueue = transactionsQueueRef.current;
-              if (Object.keys(currentQueue).includes(uniqueId)) {
-                if (currentQueue[uniqueId]?.status === 'cancelled') {
+              const parsedStoredResult = readStoredResult();
+              const isTerminalStoredResult = ['cancelled', 'completed'].includes(
+                parsedStoredResult?.status,
+              );
+              const queueEntry = isTerminalStoredResult
+                ? parsedStoredResult
+                : currentQueue[uniqueId];
+
+              if (queueEntry) {
+                if (queueEntry.status === 'cancelled') {
+                  ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
+                  removeStoredResult();
                   cleanup();
                   reject(new Error('Transaction cancelled'));
                   // delete transaction from queue
@@ -269,10 +322,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 }
 
                 if (
-                  currentQueue[uniqueId]?.status === 'completed'
+                  queueEntry.status === 'completed'
                 ) {
-                  const signedTx = currentQueue[uniqueId]?.transaction;
+                  const signedTx = queueEntry.transaction;
                   if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
+                    removeStoredResult();
                     cleanup();
                     // delete transaction from queue
                     const newQueue = { ...currentQueue };
@@ -281,8 +335,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                     reject(new Error('Wallet did not return a signed transaction'));
                     return;
                   }
+                  ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
+                  removeStoredResult();
                   cleanup();
-                  resolve(signedTx);
+                  resolve(signedTx as Encoded.Transaction);
                   // delete transaction from queue
                   const newQueue = { ...currentQueue };
                   delete newQueue[uniqueId];

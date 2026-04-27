@@ -686,7 +686,7 @@ const CreateTokenView = () => {
                           size="md"
                           variant="success"
                           className="w-full"
-                          onClick={() => navigate(`/trends/tokens/${foundToken?.address || alreadyRegisteredAs}`)}
+                          onClick={() => navigate(`/trends/tokens/${foundToken?.name || alreadyRegisteredName}`)}
                         >
                           BUY TOKEN
                         </AeButton>

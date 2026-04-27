@@ -14,6 +14,10 @@ import { AddressChip } from '@/components/AddressChip';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import Spinner from '@/components/Spinner';
 
+type TokensListOrderBy = NonNullable<
+  Parameters<typeof TokensService.listAll>[0]['orderBy']
+>;
+
 type SelectOptions<T> = Array<{
   title: string;
   disabled?: boolean;
@@ -22,6 +26,7 @@ type SelectOptions<T> = Array<{
 
 const SORT = {
   marketCap: 'market_cap',
+  treasury: 'treasury',
   newest: 'newest',
   holdersCount: 'holders_count',
 } as const;
@@ -42,6 +47,10 @@ const Daos = () => {
       value: SORT.marketCap,
     },
     {
+      title: 'Treasury',
+      value: SORT.treasury,
+    },
+    {
       title: 'Newest',
       value: SORT.newest,
     },
@@ -51,7 +60,7 @@ const Daos = () => {
     },
   ];
 
-  const orderByMapped = useMemo(() => {
+  const orderByMapped = useMemo((): TokensListOrderBy => {
     if (orderBy === SORT.newest || orderBy === SORT.holdersCount) {
       return 'created_at';
     }
@@ -79,7 +88,7 @@ const Daos = () => {
   } = useInfiniteQuery({
     initialPageParam: 1,
     queryFn: ({ pageParam = 1 }) => TokensService.listAll({
-      orderBy: orderByMapped as any,
+      orderBy: orderByMapped,
       orderDirection: finalOrderDirection,
       search: searchThrottled || undefined,
       limit: 20,

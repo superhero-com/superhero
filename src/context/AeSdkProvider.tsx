@@ -12,7 +12,6 @@ import { activeAccountAtom } from '../atoms/accountAtoms';
 import {
   TX_QUEUE_ACK_CHANNEL,
   TX_QUEUE_RESULT_PREFIX,
-  TX_QUEUE_RESULT_TTL_MS,
   transactionsQueueAtom,
 } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
@@ -192,37 +191,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             let unloadHandler: (() => void) | null = null;
             const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
 
-            const removeStoredResult = () => {
-              try {
-                localStorage.removeItem(storedResultKey);
-              } catch {
-                // Ignore unavailable storage; the in-memory broadcast path still applies.
-              }
-            };
-
-            const readStoredResult = () => {
-              try {
-                const storedResult = localStorage.getItem(storedResultKey);
-                const parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
-                const createdAt = Number(parsedStoredResult?.createdAt || 0);
-                const expiresAt = Number(parsedStoredResult?.expiresAt || 0);
-                const isExpired = parsedStoredResult && (
-                  (expiresAt && Date.now() > expiresAt)
-                  || (!expiresAt && (!createdAt || Date.now() - createdAt > TX_QUEUE_RESULT_TTL_MS))
-                );
-
-                if (isExpired) {
-                  removeStoredResult();
-                  return null;
-                }
-
-                return parsedStoredResult;
-              } catch {
-                removeStoredResult();
-                return null;
-              }
-            };
-
             // Cleanup function to prevent memory leaks
             const cleanup = () => {
               if (isCleanedUp) return;
@@ -285,7 +253,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
             timeout = setTimeout(() => {
-              removeStoredResult();
+              localStorage.removeItem(storedResultKey);
               cleanup();
               reject(new Error('Transaction polling timeout'));
             }, MAX_POLL_TIME);
@@ -300,18 +268,19 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
             interval = setInterval(() => {
               const currentQueue = transactionsQueueRef.current;
-              const parsedStoredResult = readStoredResult();
-              const isTerminalStoredResult = ['cancelled', 'completed'].includes(
-                parsedStoredResult?.status,
-              );
-              const queueEntry = isTerminalStoredResult
-                ? parsedStoredResult
-                : currentQueue[uniqueId];
+              const storedResult = localStorage.getItem(storedResultKey);
+              let parsedStoredResult: any = null;
+              try {
+                parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
+              } catch {
+                localStorage.removeItem(storedResultKey);
+              }
+              const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
 
               if (queueEntry) {
                 if (queueEntry.status === 'cancelled') {
                   ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
-                  removeStoredResult();
+                  localStorage.removeItem(storedResultKey);
                   cleanup();
                   reject(new Error('Transaction cancelled'));
                   // delete transaction from queue
@@ -326,7 +295,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 ) {
                   const signedTx = queueEntry.transaction;
                   if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
-                    removeStoredResult();
+                    localStorage.removeItem(storedResultKey);
                     cleanup();
                     // delete transaction from queue
                     const newQueue = { ...currentQueue };
@@ -336,7 +305,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                     return;
                   }
                   ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
-                  removeStoredResult();
+                  localStorage.removeItem(storedResultKey);
                   cleanup();
                   resolve(signedTx as Encoded.Transaction);
                   // delete transaction from queue

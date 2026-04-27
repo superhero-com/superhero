@@ -5,7 +5,6 @@ import { useAtom } from 'jotai';
 import {
   TX_QUEUE_ACK_CHANNEL,
   TX_QUEUE_RESULT_PREFIX,
-  TX_QUEUE_RESULT_TTL_MS,
   transactionsQueueAtom,
 } from '../atoms/txQueueAtoms';
 
@@ -89,20 +88,14 @@ const TxQueue = () => {
           ...(status === 'completed' && !signedTx ? { status: 'cancelled' } : {}),
         } as any, // Using any here because query can contain various properties
       }));
-      try {
-        localStorage.setItem(
-          `${TX_QUEUE_RESULT_PREFIX}${id}`,
-          JSON.stringify({
-            ...query,
-            createdAt: Date.now(),
-            expiresAt: Date.now() + TX_QUEUE_RESULT_TTL_MS,
-            ...(signedTx ? { transaction: signedTx } : {}),
-            ...(status === 'completed' && !signedTx ? { status: 'cancelled' } : {}),
-          }),
-        );
-      } catch {
-        // The broadcast atom path still covers browsers where storage is unavailable.
-      }
+      localStorage.setItem(
+        `${TX_QUEUE_RESULT_PREFIX}${id}`,
+        JSON.stringify({
+          ...query,
+          ...(signedTx ? { transaction: signedTx } : {}),
+          ...(status === 'completed' && !signedTx ? { status: 'cancelled' } : {}),
+        }),
+      );
 
       // Android Chrome may open the callback in a temporary tab while the original
       // app tab is still alive. Give that tab a moment to acknowledge the relay

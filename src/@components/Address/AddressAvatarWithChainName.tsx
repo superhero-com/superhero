@@ -45,10 +45,14 @@ export const AddressAvatarWithChainName = memo(({
   variant = 'default',
 }: AddressAvatarWithChainNameProps) => {
   const navigate = useNavigate();
+  const resolvedShowBalanceInHover = showBalanceInHover ?? (variant === 'feed' ? showBalance : true);
 
   // Hooks must be called unconditionally before any early returns
   // Use empty string as fallback to ensure hooks are always called with a valid value
-  const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address || '');
+  const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(
+    address || '',
+    { enabled: showBalance },
+  );
   const { chainName } = useChainName(address || '');
   const { data: cachedProfile } = useQuery({
     queryKey: ['SuperheroApi.getProfile', address || ''],
@@ -101,10 +105,13 @@ export const AddressAvatarWithChainName = memo(({
   // Start loading data immediately when hover starts (not when card becomes visible)
   // This way data is loading/loaded by the time the 300ms delay expires
   useEffect(() => {
-    if (address && (showBalance || hover)) {
+    if (
+      address
+      && (showBalance || (hover && isHoverEnabled && resolvedShowBalanceInHover))
+    ) {
       loadAccountDataRef.current();
     }
-  }, [address, showBalance, hover]);
+  }, [address, isHoverEnabled, resolvedShowBalanceInHover, showBalance, hover]);
 
   // Handle click outside to close card
   useEffect(() => {
@@ -123,8 +130,6 @@ export const AddressAvatarWithChainName = memo(({
     e.stopPropagation();
     navigate(`/users/${address}`);
   };
-
-  const resolvedShowBalanceInHover = showBalanceInHover ?? (variant === 'feed' ? showBalance : true);
 
   // Guard against undefined/null address after hooks are called
   if (!address) {

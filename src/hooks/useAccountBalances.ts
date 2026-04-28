@@ -13,7 +13,14 @@ const ACCOUNT_DATA_TTL_MS = 30_000;
 const accountLoadRequests = new Map<string, Promise<void>>();
 const accountLastLoadedAt = new Map<string, number>();
 
-export const useAccountBalances = (selectedAccount: string) => {
+interface UseAccountBalancesOptions {
+  enabled?: boolean;
+}
+
+export const useAccountBalances = (
+  selectedAccount: string,
+  { enabled = true }: UseAccountBalancesOptions = {},
+) => {
   const { sdk } = useAeSdk();
   const [chainNames] = useAtom(chainNamesAtom);
   const [_balance, setBalance] = useAtom(balanceAtom);
@@ -153,10 +160,10 @@ export const useAccountBalances = (selectedAccount: string) => {
   // Automatically reload account data when the selected account changes
   // Only depend on selectedAccount to avoid infinite loops
   useEffect(() => {
-    if (selectedAccount) {
+    if (enabled && selectedAccount) {
       loadAccountDataRef.current();
     }
-  }, [selectedAccount]);
+  }, [enabled, selectedAccount]);
 
   return {
     selectedAccount,

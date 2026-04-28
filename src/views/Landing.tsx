@@ -110,6 +110,28 @@ export default function Landing() {
 
           {/* CTAs */}
           <div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4"
+          >
+
+            <a
+              href="#mobile"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+            >
+              <Smartphone className="w-4 h-4" />
+              Download on Mobile
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="#mobile"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              Openclaw or Claude
+              {' '}
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+          </div>
+          <div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
             <Link
@@ -119,13 +141,7 @@ export default function Landing() {
               Continue on Web
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
-            <a
-              href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
-            >
-              <Smartphone className="w-4 h-4" />
-              Download on Mobile
-            </a>
+
           </div>
 
           {/* Video */}
@@ -230,11 +246,21 @@ export default function Landing() {
                 <br />
                 <span className="text-white/40">W3C standard</span>
               </h2>
-              <p className="text-[15px] text-white/40 leading-relaxed mb-8">
+              <p className="text-[15px] text-white/40 leading-relaxed">
                 A decentralized DID that links your social accounts to your wallet.
                 Your identity is verifiable, portable, and censorship-resistant —
                 following the W3C standard for decentralized identifiers.
               </p>
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-5 mt-3">
+
+                <Link
+                  to="/whitepaper"
+                  className="inline-flex items-center gap-2 text-[14px] text-white/50 hover:text-white/80 transition-colors"
+                >
+                  Read the Whitepaper
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
               <div className="space-y-4">
                 {[
                   { icon: Fingerprint, label: 'W3C DID standard compliant' },
@@ -249,6 +275,7 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
+
             </div>
 
             {/* Right — visual placeholder */}
@@ -268,14 +295,14 @@ export default function Landing() {
       {/* ============================================================ */}
       {/*  MOBILE APP                                                  */}
       {/* ============================================================ */}
-      <section id="mobile" className="relative py-32 border-t border-white/[0.04]">
+      <section id="mobile" className="relative py-20 border-t border-white/[0.04]">
         <FloatingOrb className="w-[400px] h-[400px] bg-pink-700 bottom-0 left-0" />
 
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
             Mobile App
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-12">
             Seamless experience,
             <br />
             <span className="text-white/40">wallet built in</span>
@@ -288,7 +315,7 @@ export default function Landing() {
               className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
             />
           </div>
-          <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-12">
+          <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed my-12">
             The Superhero app comes with a built-in wallet so you can post, trade, tip,
             and govern — all without leaving the app. No extensions, no friction.
           </p>
@@ -326,7 +353,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/*  BOTTOM CTA                                                  */}
       {/* ============================================================ */}
-      <section className="relative py-32 border-t border-white/[0.04]">
+      <section className="relative py-20 border-t border-white/[0.04]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
@@ -335,21 +362,39 @@ export default function Landing() {
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
             Join the attention market. Trade conviction. Own your identity.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4"
+          >
+
+            <a
+              href="#mobile"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+            >
+              <Smartphone className="w-4 h-4" />
+              Download on Mobile
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="#mobile"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              Openclaw or Claude
+              {' '}
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+          </div>
+          <div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold text-[15px] px-8 py-4 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25"
             >
-              Launch App
+              Continue on Web
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
-            <Link
-              to="/whitepaper"
-              className="inline-flex items-center gap-2 text-[14px] text-white/50 hover:text-white/80 transition-colors"
-            >
-              Read the Whitepaper
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+
           </div>
         </div>
       </section>

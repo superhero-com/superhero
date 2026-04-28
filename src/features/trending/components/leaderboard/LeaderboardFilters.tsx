@@ -35,7 +35,7 @@ export const LeaderboardFilters = ({
           Timeframe
         </span>
       </div>
-      <div className="flex w-full items-center justify-between gap-2">
+      <div className="grid w-full grid-cols-5 gap-2">
         {LEADERBOARD_TIMEFRAME_OPTIONS.map((option) => {
           const isActive = option.value === timeframe;
           return (
@@ -43,7 +43,7 @@ export const LeaderboardFilters = ({
               key={option.value}
               type="button"
               onClick={() => onTimeframeChange(option.value)}
-              className={`flex-1 px-2 py-2 h-10 text-xs rounded-lg border transition-all duration-300 focus:outline-none ${
+              className={`px-2 py-2 h-10 text-xs rounded-lg border transition-all duration-300 focus:outline-none ${
                 isActive
                   ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
                   : 'bg-white/[0.02] text-white border-white/10 hover:bg-white/[0.05]'

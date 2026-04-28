@@ -149,16 +149,9 @@ The ProfileRegistry.aes contract is the decentralized identity layer of the Supe
 
 Each profile is represented as a \`profile\` record, combining user-facing metadata with multiple identity sources:
 
-- **fullname** — A free-text display name (max 64 characters).
-- **bio** — A short biography or description (max 280 characters).
-- **avatarurl** — A URL or identifier pointing to the user's avatar image (max 512 characters).
-- **username** — An optional custom name chosen by the user, unique across the platform.
+- **nostr** — A nostr public key or identifier used for chat and messaging.
 - **x_username** — An optional X (formerly Twitter) handle, verified through backend attestation.
 - **chain_name** — An optional æternity chain name (AENS), with an associated expiration timestamp.
-- **display_source** — An enum (\`Custom | Chain | X\`) indicating which name source the user prefers to display publicly.
-- **chain_expires_at** — An optional expiration timestamp for the linked chain name.
-
-Profiles are stored in a map indexed by æternity address (\`profiles_by_address\`), ensuring one profile per wallet. Three additional maps — \`custom_owner\`, \`chain_owner\`, and \`x_owner\` — enforce global uniqueness of names across their respective namespaces, all keyed by normalized name strings.
 
 #### Name Types and Registration
 

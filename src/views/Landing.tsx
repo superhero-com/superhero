@@ -7,7 +7,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, TrendingUp, Users, Fingerprint, Smartphone,
-  MessageCircle, ArrowRight, Play, ChevronDown, Sparkles, Globe, BarChart3, Coins,
+  MessageCircle, ArrowRight, ChevronDown, Sparkles, Globe, BarChart3, Coins,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -128,22 +128,19 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Video placeholder */}
+          {/* Video */}
           <div
             className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
           >
-            <div className="aspect-video flex items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-600/10 via-purple-600/10 to-blue-600/10" />
-              <button
-                type="button"
-                className="relative z-10 flex items-center justify-center w-20 h-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/15 hover:border-white/30 group"
-                aria-label="Play video"
-              >
-                <Play className="w-8 h-8 text-white/80 ml-1 group-hover:text-white transition-colors" />
-              </button>
-              <span className="absolute bottom-6 text-[13px] text-white/30 tracking-wide">
-                Product video coming soon
-              </span>
+            <div className="aspect-video bg-gradient-to-br from-pink-600/10 via-purple-600/10 to-blue-600/10">
+              <video
+                className="w-full h-full object-cover"
+                src="/superhero-video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
             </div>
           </div>
 

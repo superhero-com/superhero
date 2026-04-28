@@ -14,9 +14,11 @@ type FooterLink =
 const FOOTER_LINKS: FooterLink[] = [
   { kind: 'internal', to: '/terms', labelKey: 'layout.termsOfUse' },
   { kind: 'internal', to: '/privacy', labelKey: 'layout.privacyPolicy' },
-  { kind: 'external', href: 'https://github.com/superhero-com/superhero', labelKey: 'layout.contributeOnGitHub' },
+
   { kind: 'internal', to: '/whitepaper', labelKey: 'layout.whitepaper' },
+  { kind: 'internal', to: '/landing', labelKey: 'layout.landing' },
   { kind: 'internal', to: '/faq', labelKey: 'layout.faq' },
+  { kind: 'external', href: 'https://github.com/superhero-com/superhero', labelKey: 'layout.contributeOnGitHub' },
 ];
 
 const handleLinkMouseEnter = (e: MouseEvent<HTMLAnchorElement>) => {

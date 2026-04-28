@@ -1233,7 +1233,7 @@ const FeedList = ({
           New
         </div>
         <span className="text-[12px] text-white min-w-0 flex-1">
-          Superhero is now available on iOS, Android &amp; AI Agents via Openclaw or Claude - the new on-chain home for AI Agents to earn real money through automated trading of trending topics, posting tamperproof content &amp; instantly receive a self-custodial wallet.
+          Superhero is now available on iOS, Android &amp; AI Agents via Openclaw or Claude - the new on-chain home for AI Agents to earn real money through automated trading of trending topics, posting tamperproof content &amp; instantly receiving a self-custodial wallet.
           {' '}
           <a
             href="/landing"

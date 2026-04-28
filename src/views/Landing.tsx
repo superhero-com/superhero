@@ -115,15 +115,17 @@ export default function Landing() {
 
             <a
               href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
               Download on Mobile
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
-              href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              href="https://github.com/superhero-com/superhero-agent-skill"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
               Openclaw or Claude
@@ -136,7 +138,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
               Continue on Web
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -161,8 +163,8 @@ export default function Landing() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="mt-16 flex justify-center animate-bounce">
-            <ChevronDown className="w-5 h-5 text-white/20" />
+          <div className="mt-16 flex justify-center">
+            <ChevronDown className="w-10 h-10 text-white/20" />
           </div>
         </div>
       </section>
@@ -320,7 +322,7 @@ export default function Landing() {
             and govern — all without leaving the app. No extensions, no friction.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-row items-center justify-center gap-4 mb-16">
             <a
               href="https://apps.apple.com/us/app/superhero-web3-communities/id6758045846"
               target="_blank"
@@ -362,21 +364,24 @@ export default function Landing() {
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
             Join the attention market. Trade conviction. Own your identity.
           </p>
+          {/* CTAs */}
           <div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4"
           >
 
             <a
               href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
               Download on Mobile
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
-              href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              href="https://github.com/superhero-com/superhero-agent-skill"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
               Openclaw or Claude
@@ -389,7 +394,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
               Continue on Web
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />

@@ -19,11 +19,21 @@ import {
   LEADERBOARD_METRIC_OPTIONS,
 } from '../constants/leaderboard';
 
+const DEFAULT_LEADERBOARD_PAGE_SIZE = 15;
+const RECENT_LEADERBOARD_PAGE_SIZE = 50;
+
+const isRecentTimeframe = (timeframe: LeaderboardTimeframe) => (
+  timeframe === '30m' || timeframe === '1h'
+);
+
 const LeaderboardView = () => {
   const { t } = useTranslation('trending');
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('7d');
   const [metric, setMetric] = useState<LeaderboardMetric>('pnl');
   const [page, setPage] = useState(1);
+  const leaderboardPageSize = isRecentTimeframe(timeframe)
+    ? RECENT_LEADERBOARD_PAGE_SIZE
+    : DEFAULT_LEADERBOARD_PAGE_SIZE;
 
   const timeframeOption = LEADERBOARD_TIMEFRAME_OPTIONS.find(
     (option) => option.value === timeframe,
@@ -41,12 +51,12 @@ const LeaderboardView = () => {
     refetch,
     isFetching,
   } = useQuery<PaginatedResponse<LeaderboardItem>>({
-    queryKey: ['leaderboard', timeframe, metric, page],
+    queryKey: ['leaderboard', timeframe, metric, page, leaderboardPageSize],
     queryFn: () => fetchLeaderboard({
       timeframe,
       metric,
       page,
-      limit: 15,
+      limit: leaderboardPageSize,
       sortDir: metric === 'mdd' ? 'ASC' : 'DESC',
     }),
     staleTime: 60 * 1000, // cache results per window/metric for 1 minute
@@ -83,7 +93,8 @@ const LeaderboardView = () => {
             </h1>
             <p className="mt-2 text-sm md:text-base leading-relaxed text-white/70 max-w-2xl">
               Discover the most active Superhero traders ranked by on-chain performance.
-              Increase your trading volume, consistency, and trend ownership to climb the board and turn your wallet into a public on-chain track record.
+              Increase your trading volume, consistency, and trend ownership to climb the
+              board and turn your wallet into a public on-chain track record.
             </p>
           </div>
 
@@ -153,7 +164,7 @@ const LeaderboardView = () => {
                 {items.map((item, index) => (
                   <LeaderboardCard
                     key={item.address}
-                    rank={(currentPage - 1) * 15 + index + 1}
+                    rank={(currentPage - 1) * leaderboardPageSize + index + 1}
                     item={item}
                     timeframeLabel={timeframeLabel}
                     metricLabel={metricLabel}

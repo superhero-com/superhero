@@ -207,8 +207,8 @@ export default function Landing() {
             <FeatureCard
               icon={BarChart3}
               number="03"
-              title="Real-time attention pricing"
-              description="Trend analytics surface trending tokens, hashtags, and communities as a real-time prediction layer over the social graph."
+              title="Attention Market"
+              description="Trends = Hashtags = Communities = Tokens. Get real-time market data on attention and sentiment for any trend or community."
             />
             <FeatureCard
               icon={Coins}

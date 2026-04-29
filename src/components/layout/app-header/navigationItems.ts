@@ -41,7 +41,7 @@ const DAO_ITEM: NavigationItem = {
 
 const REFER_EARN_ITEM: NavigationItem = {
   id: 'refer-earn',
-  label: 'Refer & Earn',
+  label: 'Earn Rewards',
   path: '/trends/invite',
   icon: Gift,
 };
@@ -58,7 +58,7 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
   ...getNavigationItems(),
   {
     id: 'account',
-    label: 'Account',
+    label: 'Superhero ID',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },

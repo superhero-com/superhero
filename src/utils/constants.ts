@@ -13,7 +13,6 @@ function toNetwork(network: typeof CURRENT_NETWORK_CONFIG): INetwork {
     middlewareUrl: network.MIDDLEWARE_URL,
     explorerUrl: network.EXPLORER_URL || '',
     compilerUrl: network.compilerUrl,
-    superheroBackendUrl: network.superheroBackendUrl,
     disabled: network.disabled,
   };
 }

@@ -29,7 +29,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined,
   );
-  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
+  const effectiveAddress = isChainName ? (resolvedAddress || '') : (address as string);
 
   const fetchTransactions = async (params: any) => {
     const response = (await TransactionsService.listTransactions({

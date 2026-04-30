@@ -430,7 +430,7 @@ Used for SEO only; same base URL.
 
 ## 5. Not api.superhero.com
 
-- **Chain names:** `configs.networks.ae_mainnet.superheroBackendUrl` → `https://superhero-backend-mainnet.prd.service.aepps.com/cache/chainNames` (different host).
+- **Chain names:** `CURRENT_NETWORK.middlewareUrl` → `/v3/names?owned_by={address}&state=active` and `/v3/names/{name}`.
 - **GIPHY:** `api.giphy.com` (GifSelectorDialog).
 - **Invitations middleware:** `activeNetwork.middlewareUrl` (middleware), not api.superhero.com.
 

@@ -30,8 +30,8 @@ const RightRail = ({
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? params.address : undefined,
   );
-  const effectiveProfileAddress = isChainName && resolvedAddress
-    ? resolvedAddress
+  const effectiveProfileAddress = isChainName
+    ? (resolvedAddress || undefined)
     : (params.address as string | undefined);
 
   // Check if we're on the user's own profile page

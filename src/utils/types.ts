@@ -16,7 +16,6 @@ export interface INetwork {
   networkId: NetworkId;
   compilerUrl: string;
   websocketUrl: string;
-  superheroBackendUrl: string;
   index?: number;
   disabled?: boolean;
 }

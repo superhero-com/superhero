@@ -15,6 +15,7 @@ import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
+import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 
@@ -105,6 +106,11 @@ const ReplyToFeedItem = memo(({
     enabled: showReplies,
     refetchInterval: 120 * 1000,
   });
+  const postsWithSenderNames = useMemo(
+    () => [item, parent, ...childReplies],
+    [item, parent, childReplies],
+  );
+  useStorePostSenderChainNames(postsWithSenderNames);
 
   useEffect(() => {
     let cancelled = false;

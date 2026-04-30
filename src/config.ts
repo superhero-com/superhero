@@ -47,7 +47,6 @@ export type NetworkDefinition = NetworkConfig & {
   name: string;
   websocketUrl: string;
   compilerUrl: string;
-  superheroBackendUrl: string;
   disabled?: boolean;
 };
 export const APP_NAME = 'Superhero';
@@ -91,7 +90,6 @@ export const NETWORKS: Record<Network, NetworkDefinition> = {
     EXPLORER_URL: 'https://aescan.io',
     websocketUrl: 'https://api.superhero.com',
     compilerUrl: 'https://v7.compiler.aepps.com',
-    superheroBackendUrl: 'https://superhero-backend-mainnet.prd.service.aepps.com',
     DEX_BACKEND_URL: 'https://dex-backend-mainnet.prd.service.aepps.com',
     DEX_FACTORY: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW' as Encoded.ContractAddress,
     DEX_ROUTER: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3' as Encoded.ContractAddress,
@@ -112,7 +110,6 @@ export const NETWORKS: Record<Network, NetworkDefinition> = {
     EXPLORER_URL: 'https://testnet.aescan.io',
     websocketUrl: 'https://testnet.api.dev.tokensale.org',
     compilerUrl: 'https://v7.compiler.aepps.com',
-    superheroBackendUrl: 'https://superhero-backend-testnet.prd.service.aepps.com',
     DEX_BACKEND_URL: 'https://dex-backend-testnet.prd.service.aepps.com',
     DEX_FACTORY: 'ct_NhbxN8wg8NLkGuzwRNDQhMDKSKBwDAQgxQawK7tkigi2aC7i9' as Encoded.ContractAddress,
     DEX_ROUTER: 'ct_MLXQEP12MBn99HL6WDaiTqDbG4bJQ3Q9Bzr57oLfvEkghvpFb' as Encoded.ContractAddress,

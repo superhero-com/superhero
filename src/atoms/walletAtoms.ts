@@ -22,6 +22,7 @@ export const aex9BalancesAtom = atomWithStorage<Record<string, any[]>>('wallet:a
 export const profileAtom = atom<Record<string, any>>({});
 export const pinnedItemsAtom = atom<any[]>([]);
 export const chainNamesAtom = atomWithStorage<Record<string, string>>('wallet:chainNames', {});
+export const chainNameLookupCheckedAtAtom = atomWithStorage<Record<string, number>>('wallet:chainNames:checkedAt', {});
 /** Profile display names (public_name from /api/profile). Used for author labels in feed. */
 export const profileDisplayNamesAtom = atom<Record<string, string>>({});
 export const verifiedUrlsAtom = atom<string[]>([]);

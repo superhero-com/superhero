@@ -34,7 +34,7 @@ import { TransactionsService } from '../api/generated/services/TransactionsServi
 import { PostApiResponse } from '../features/social/types';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
-import { useAddressByChainName, useChainName } from '../hooks/useChainName';
+import { useAddressByChainName, useChainName, useEnsureChainName } from '../hooks/useChainName';
 import { SuperheroApi } from '../api/backend';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
@@ -59,9 +59,10 @@ export default function UserProfile({
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined,
   );
-  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
+  const effectiveAddress = isChainName ? (resolvedAddress || '') : (address as string);
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
-  const { chainName } = useChainName(effectiveAddress);
+  useEnsureChainName(effectiveAddress);
+  const { chainName } = useChainName(effectiveAddress, { lookup: false });
   const { getProfile, getProfileOnChain, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
   const queryClient = useQueryClient();

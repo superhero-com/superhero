@@ -207,99 +207,100 @@ const LeaderboardView = () => {
           </div>
         )}
 
-        {/* Content */}
-        <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
-          {/* Loading */}
-          {isLoading && (
-            <>
-              <div className="hidden md:block">
-                <LeaderboardSkeleton rows={8} variant="table" />
-              </div>
-              <div className="md:hidden">
-                <LeaderboardSkeleton rows={6} variant="card" />
-              </div>
-            </>
-          )}
-
-          {/* Empty state */}
-          {!isLoading && !isFetching && items.length === 0 && !isError && (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <h2 className="text-base font-semibold text-white">
-                {t('noTopTraders')}
-              </h2>
-              <p className="text-sm text-white/70 max-w-md">
-                {t('leaderboardHighlights')}
-              </p>
-              <ul className="text-xs text-white/50 space-y-1 max-w-md list-disc list-inside text-left sm:text-center sm:list-none sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center sm:flex-wrap">
-                <li>{t('leaderboardTip1')}</li>
-                <li>{t('leaderboardTip2')}</li>
-                <li>{t('leaderboardTip3')}</li>
-              </ul>
-              <p className="text-xs text-white/40 mt-1">
-                {t('tryDifferentTimeframe')}
-              </p>
-            </div>
-          )}
-
-          {/* Data */}
-          {items.length > 0 && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                {items.map((item, index) => (
-                  <LeaderboardCard
-                    key={item.address}
-                    rank={(currentPage - 1) * leaderboardPageSize + index + 1}
-                    item={item}
-                    timeframeLabel={timeframeLabel}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
-                <div className="text-xs text-white/60">
-                  Page
-                  {' '}
-                  <span className="font-semibold text-white">
-                    {currentPage}
-                  </span>
-                  {' '}
-                  of
-                  {' '}
-                  <span className="font-semibold text-white">
-                    {totalPages}
-                  </span>
+        {!isError && (
+          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
+            {/* Loading */}
+            {isLoading && (
+              <>
+                <div className="hidden md:block">
+                  <LeaderboardSkeleton rows={8} variant="table" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={currentPage <= 1 || isFetching}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
-                      currentPage <= 1 || isFetching
-                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                        : 'bg-white/5 text-white/80 hover:bg-white/10'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentPage >= totalPages || isFetching}
-                    onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
-                      currentPage >= totalPages || isFetching
-                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
-                        : 'bg-white/5 text-white/80 hover:bg-white/10'
-                    }`}
-                  >
-                    Next
-                  </button>
+                <div className="md:hidden">
+                  <LeaderboardSkeleton rows={6} variant="card" />
                 </div>
+              </>
+            )}
+
+            {/* Empty state */}
+            {!isLoading && !isFetching && items.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+                <h2 className="text-base font-semibold text-white">
+                  {t('noTopTraders')}
+                </h2>
+                <p className="text-sm text-white/70 max-w-md">
+                  {t('leaderboardHighlights')}
+                </p>
+                <ul className="text-xs text-white/50 space-y-1 max-w-md list-disc list-inside text-left sm:text-center sm:list-none sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center sm:flex-wrap">
+                  <li>{t('leaderboardTip1')}</li>
+                  <li>{t('leaderboardTip2')}</li>
+                  <li>{t('leaderboardTip3')}</li>
+                </ul>
+                <p className="text-xs text-white/40 mt-1">
+                  {t('tryDifferentTimeframe')}
+                </p>
               </div>
-            </>
-          )}
-        </div>
+            )}
+
+            {/* Data */}
+            {items.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                  {items.map((item, index) => (
+                    <LeaderboardCard
+                      key={item.address}
+                      rank={(currentPage - 1) * leaderboardPageSize + index + 1}
+                      item={item}
+                      timeframeLabel={timeframeLabel}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
+                  <div className="text-xs text-white/60">
+                    Page
+                    {' '}
+                    <span className="font-semibold text-white">
+                      {currentPage}
+                    </span>
+                    {' '}
+                    of
+                    {' '}
+                    <span className="font-semibold text-white">
+                      {totalPages}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1 || isFetching}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
+                        currentPage <= 1 || isFetching
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          : 'bg-white/5 text-white/80 hover:bg-white/10'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages || isFetching}
+                      onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium border border-white/15 transition-colors ${
+                        currentPage >= totalPages || isFetching
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          : 'bg-white/5 text-white/80 hover:bg-white/10'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,9 @@
 /* eslint-disable max-len */
+import {
+  createClampedNumberJSONStorage,
+  safeLocalJSONStorage,
+  type SyncJSONNumberStorage,
+} from '@/utils/jotaiSafeLocalStorage';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { DexTokenDto } from '@/api/generated';
@@ -14,24 +19,22 @@ type LiquidityPositionData = {
   valueUsd?: string;
 };
 
-// DEX settings with localStorage persistence
-export const slippagePctAtom = atomWithStorage<number>('dex:slippage', (() => {
-  try {
-    const v = localStorage.getItem('dex:slippage');
-    return v != null ? Math.max(0, Math.min(50, Number(v) || 5)) : 5;
-  } catch {
-    return 5;
-  }
-})());
+const dexSlippagePctStorage = createClampedNumberJSONStorage(safeLocalJSONStorage as SyncJSONNumberStorage, {
+  min: 0,
+  max: 50,
+  writeFallback: 5,
+});
 
-export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', (() => {
-  try {
-    const v = localStorage.getItem('dex:deadline');
-    return v != null ? Math.max(1, Math.min(60, Number(v) || 30)) : 30;
-  } catch {
-    return 30;
-  }
-})());
+const dexDeadlineMinsStorage = createClampedNumberJSONStorage(safeLocalJSONStorage as SyncJSONNumberStorage, {
+  min: 1,
+  max: 60,
+  writeFallback: 30,
+});
+
+// DEX settings (quota-safe persistence; clamped on read/write and in useDex on write)
+export const slippagePctAtom = atomWithStorage<number>('dex:slippage', 5, dexSlippagePctStorage);
+
+export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', 30, dexDeadlineMinsStorage);
 
 // DEX state atoms
 // Structure: {[accountAddress]: {[pairAddress]: LiquidityPositionData}}
@@ -39,4 +42,8 @@ export const providedLiquidityAtom = atom<Record<string, Record<string, Liquidit
 
 // Recent activities with localStorage persistence
 // Structure: {[accountAddress]: RecentActivity[]}
-export const recentActivitiesAtom = atomWithStorage<Record<string, RecentActivity[]>>('dex:recentActivities', {});
+export const recentActivitiesAtom = atomWithStorage<Record<string, RecentActivity[]>>(
+  'dex:recentActivities',
+  {},
+  safeLocalJSONStorage,
+);

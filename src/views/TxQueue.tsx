@@ -7,6 +7,7 @@ import {
   TX_QUEUE_RESULT_PREFIX,
   transactionsQueueAtom,
 } from '../atoms/txQueueAtoms';
+import { safeLocalStringStorage } from '../utils/jotaiSafeLocalStorage';
 
 const RELAY_ACK_TIMEOUT_MS = 1500;
 
@@ -88,7 +89,7 @@ const TxQueue = () => {
           ...(status === 'completed' && !signedTx ? { status: 'cancelled' } : {}),
         } as any, // Using any here because query can contain various properties
       }));
-      localStorage.setItem(
+      safeLocalStringStorage.setItem(
         `${TX_QUEUE_RESULT_PREFIX}${id}`,
         JSON.stringify({
           ...query,

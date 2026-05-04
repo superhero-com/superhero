@@ -9,21 +9,11 @@ export const useDex = () => {
   const setSlippage = useCallback((value: number) => {
     const clampedValue = Math.max(0, Math.min(50, value || 0));
     setSlippagePct(clampedValue);
-    try {
-      localStorage.setItem('dex:slippage', String(clampedValue));
-    } catch {
-      // Ignore storage errors
-    }
   }, [setSlippagePct]);
 
   const setDeadline = useCallback((value: number) => {
     const clampedValue = Math.max(1, Math.min(60, value || 10));
     setDeadlineMins(clampedValue);
-    try {
-      localStorage.setItem('dex:deadline', String(clampedValue));
-    } catch {
-      // Ignore storage errors
-    }
   }, [setDeadlineMins]);
 
   // TODO: should improve this, it should come from a cached API

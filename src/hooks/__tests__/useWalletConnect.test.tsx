@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
-import { Provider } from 'jotai';
+import { createStore, Provider } from 'jotai';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import { recentActivitiesAtom } from '@/atoms/dexAtoms';
+import { balanceAtom, walletInfoAtom } from '@/atoms/walletAtoms';
+import { liquidityPositionsAtom } from '@/features/dex/atoms/positionsAtoms';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -9,6 +12,8 @@ import { useWalletConnect } from '../useWalletConnect';
 const walletConnectMocks = vi.hoisted(() => {
   let currentLocation = { search: '' };
   let activeAccount: string | undefined;
+  let accounts: string[] = [];
+  let sdkInitialized = true;
   let latestWalletHandler: ((payload: any) => void) | undefined;
 
   const mockNavigate = vi.fn((to: any) => {
@@ -57,12 +62,22 @@ const walletConnectMocks = vi.hoisted(() => {
     resetState: () => {
       currentLocation = { search: '' };
       activeAccount = undefined;
+      accounts = [];
+      sdkInitialized = true;
       latestWalletHandler = undefined;
       createdConnections.length = 0;
     },
+    setSdkInitialized: (value: boolean) => {
+      sdkInitialized = value;
+    },
+    getSdkInitialized: () => sdkInitialized,
     setActiveAccountValue: (value?: string) => {
       activeAccount = value;
     },
+    setAccountsValue: (value: string[]) => {
+      accounts = value;
+    },
+    getAccounts: () => accounts,
     setLocationSearch: (search: string) => {
       currentLocation = { search };
     },
@@ -72,7 +87,9 @@ const walletConnectMocks = vi.hoisted(() => {
 
 vi.mock('@aeternity/aepp-sdk', () => ({
   BrowserWindowMessageConnection: walletConnectMocks.MockBrowserWindowMessageConnection,
-  walletDetector: (...args: any[]) => walletConnectMocks.walletDetectorMock(...args),
+  walletDetector: (connection: unknown, handler: (payload: any) => void) => (
+    walletConnectMocks.walletDetectorMock(connection, handler)
+  ),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -96,6 +113,8 @@ vi.mock('@/hooks/useAeSdk', () => ({
     setActiveAccount: (...args: any[]) => walletConnectMocks.mockSetActiveAccount(...args),
     setAccounts: (...args: any[]) => walletConnectMocks.mockSetAccounts(...args),
     activeAccount: walletConnectMocks.getActiveAccount(),
+    accounts: walletConnectMocks.getAccounts(),
+    sdkInitialized: walletConnectMocks.getSdkInitialized(),
   }),
 }));
 
@@ -109,11 +128,82 @@ describe('useWalletConnect', () => {
   beforeEach(() => {
     walletConnectMocks.resetState();
     vi.clearAllMocks();
+    localStorage.clear();
     walletConnectMocks.mockValidateHash.mockReturnValue({ valid: true });
     walletConnectMocks.mockAddStaticAccount.mockResolvedValue(undefined);
     walletConnectMocks.mockDisconnectWallet.mockResolvedValue(undefined);
     walletConnectMocks.mockScanForAccounts.mockResolvedValue(undefined);
     walletConnectMocks.mockSubscribeAddress.mockResolvedValue(undefined);
+  });
+
+  it('does not wipe per-account balance cache before sdkInitialized; clears once ready with no session', async () => {
+    walletConnectMocks.setSdkInitialized(false);
+
+    const store = createStore();
+    store.set(balanceAtom, { ak_persist: 42 });
+
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { rerender } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    expect(store.get(balanceAtom)).toEqual({ ak_persist: 42 });
+
+    walletConnectMocks.setSdkInitialized(true);
+    rerender();
+
+    await waitFor(() => {
+      expect(store.get(balanceAtom)).toEqual({});
+    });
+  });
+
+  it('does not wipe caches while a persisted wallet session may reconnect', async () => {
+    const store = createStore();
+    store.set(balanceAtom, { ak_persist: 42 });
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    await waitFor(() => {
+      expect(store.get(balanceAtom)).toEqual({ ak_persist: 42 });
+    });
+  });
+
+  it('prunes per-account caches to restored sdk accounts', async () => {
+    walletConnectMocks.setAccountsValue(['ak_keep']);
+    walletConnectMocks.setActiveAccountValue('ak_active');
+
+    const store = createStore();
+    store.set(balanceAtom, { ak_keep: 1, ak_active: 2, ak_drop: 3 });
+    store.set(recentActivitiesAtom, {
+      ak_keep: [{ account: 'ak_keep', hash: 'th_keep' } as any],
+      ak_drop: [{ account: 'ak_drop', hash: 'th_drop' } as any],
+    });
+    store.set(liquidityPositionsAtom, {
+      ak_active: [{ balance: '1' } as any],
+      ak_drop: [{ balance: '2' } as any],
+    });
+
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    await waitFor(() => {
+      expect(store.get(balanceAtom)).toEqual({ ak_keep: 1, ak_active: 2 });
+      expect(store.get(recentActivitiesAtom)).toEqual({
+        ak_keep: [{ account: 'ak_keep', hash: 'th_keep' }],
+      });
+      expect(store.get(liquidityPositionsAtom)).toEqual({
+        ak_active: [{ balance: '1' }],
+      });
+    });
   });
 
   it('consumes the address query only once after restoring a valid static account', async () => {
@@ -175,6 +265,9 @@ describe('useWalletConnect', () => {
 
     localStorage.setItem('account:activeAccount', 'ak_saved');
     localStorage.setItem('wallet:walletInfo', '{"name":"wallet"}');
+    localStorage.setItem('wallet:balance', '{"ak_old":1,"ak_other":2}');
+    localStorage.setItem('dex:recentActivities', '{"ak_old":[]}');
+    localStorage.setItem('liquidityPositions', '{"ak_old":[]}');
 
     const pendingScan = result.current.scanForWallets();
     const pendingConnection = walletConnectMocks.createdConnections[0];
@@ -185,6 +278,9 @@ describe('useWalletConnect', () => {
 
     expect(localStorage.getItem('account:activeAccount')).toBeNull();
     expect([null, 'undefined']).toContain(localStorage.getItem('wallet:walletInfo'));
+    expect(localStorage.getItem('wallet:balance')).toBe('{}');
+    expect(localStorage.getItem('dex:recentActivities')).toBe('{}');
+    expect(localStorage.getItem('liquidityPositions')).toBe('{}');
     expect(walletConnectMocks.mockStopScan).toHaveBeenCalledTimes(1);
     expect(pendingConnection.disconnect).toHaveBeenCalledTimes(1);
     expect(walletConnectMocks.mockDisconnectWallet).toHaveBeenCalledTimes(1);

@@ -11,8 +11,6 @@ import { useAccount } from './useAccount';
 import { useCommunityFactory } from './useCommunityFactory';
 
 const INVITE_CODE_QUERY_KEY = 'invite_code';
-const LS_KEY_INVITE_LIST = 'invite_list';
-const LS_KEY_INVITE_CODE = 'invite_code';
 
 export interface InvitationInfo {
   inviter: Encoded.AccountAddress;
@@ -22,33 +20,10 @@ export interface InvitationInfo {
   amount: number;
 }
 
-// LocalStorage helper functions
-function readAllInvitations(): InvitationInfo[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY_INVITE_LIST);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
-  } catch {
-    return [];
-  }
-}
-
-function writeAllInvitations(list: InvitationInfo[]) {
-  localStorage.setItem(LS_KEY_INVITE_LIST, JSON.stringify(list));
-}
-
-function getActiveAccountInviteList(inviter: Encoded.AccountAddress): InvitationInfo[] {
-  return readAllInvitations().filter((x) => x.inviter === inviter);
-}
-
 function prepareInviteLink(secretKey: string): string {
   // eslint-disable-next-line no-restricted-globals
   return `${location.protocol}//${location.host}#${INVITE_CODE_QUERY_KEY}=${normalizeSecretKey(secretKey)}`;
 }
-
-let initialized = false;
 
 export function useInvitation() {
   const navigate = useNavigate();
@@ -58,19 +33,6 @@ export function useInvitation() {
 
   const [invitationCode, setInvitationCode] = useState<string | undefined>();
   const [invitationList, setInvitationList] = useState<InvitationInfo[]>([]);
-
-  // Initialize invitation list from localStorage
-  useEffect(() => {
-    if (!initialized) {
-      initialized = true;
-      try {
-        const storedList = readAllInvitations();
-        setInvitationList(storedList);
-      } catch {
-        // Handle error silently
-      }
-    }
-  }, []);
 
   // Computed equivalent - active account's invitations
   const activeAccountInviteList = useMemo(() => {
@@ -101,7 +63,7 @@ export function useInvitation() {
       amountValue,
     );
 
-    // Add to localStorage and update state
+    // Keep generated invitations in memory for the current session only.
     const now = Date.now();
     const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, address }) => ({
       inviter: activeAccount as Encoded.AccountAddress,
@@ -111,15 +73,7 @@ export function useInvitation() {
       date: now,
     }));
 
-    // Update localStorage
-    const currentList = readAllInvitations();
-    newInvitations.forEach((invitation) => {
-      currentList.unshift(invitation);
-    });
-    writeAllInvitations(currentList);
-
-    // Update local state
-    setInvitationList(currentList);
+    setInvitationList((prev) => [...newInvitations, ...prev]);
 
     return keyPairs.map(({ secretKey }) => secretKey);
   }, [activeAccount, getAffiliationTreasury]);
@@ -128,19 +82,12 @@ export function useInvitation() {
   const removeStoredInvite = useCallback((invitee: Encoded.AccountAddress, secretKey?: string) => {
     if (!activeAccount) return;
 
-    const list = readAllInvitations();
-    const filtered = list.filter(
-      (inv) => inv.secretKey !== secretKey || inv.invitee !== invitee,
-    );
-    writeAllInvitations(filtered);
-
-    // Update local state
-    setInvitationList(filtered);
+    setInvitationList((prev) => prev
+      .filter((inv) => inv.secretKey !== secretKey || inv.invitee !== invitee));
   }, [activeAccount]);
 
   // Reset invite code function
   const resetInviteCode = useCallback(() => {
-    localStorage.removeItem(LS_KEY_INVITE_CODE);
     const currentHash = location.hash;
     if (currentHash) {
       navigate({ hash: '' });
@@ -148,19 +95,9 @@ export function useInvitation() {
     setInvitationCode(undefined);
   }, [location.hash, navigate]);
 
-  // Load invitation code from localStorage on mount
+  // Clear current-session invitations when active account disconnects.
   useEffect(() => {
-    const code = localStorage.getItem(LS_KEY_INVITE_CODE);
-    if (code) {
-      setInvitationCode(code);
-    }
-  }, []);
-
-  // Load invitation list when active account changes
-  useEffect(() => {
-    if (activeAccount) {
-      setInvitationList(getActiveAccountInviteList(activeAccount as Encoded.AccountAddress));
-    } else {
+    if (!activeAccount) {
       setInvitationList([]);
     }
   }, [activeAccount]);
@@ -173,7 +110,6 @@ export function useInvitation() {
       const inviteCode = hashParsed.get(INVITE_CODE_QUERY_KEY);
       if (inviteCode) {
         setInvitationCode(inviteCode);
-        localStorage.setItem(LS_KEY_INVITE_CODE, inviteCode);
         navigate('/', { replace: true }); // Navigate to home route
       }
     }

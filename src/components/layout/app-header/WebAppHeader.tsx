@@ -17,7 +17,11 @@ const WebAppHeader = () => {
   useEffect(() => {
     // force theme to be dark
     document.documentElement.dataset.theme = 'dark';
-    localStorage.setItem('theme', 'dark');
+    try {
+      localStorage.setItem('theme', 'dark');
+    } catch {
+      // ignore quota / private mode
+    }
   }, []);
 
   const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);

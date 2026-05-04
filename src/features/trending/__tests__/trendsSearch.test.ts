@@ -291,7 +291,6 @@ describe('trendsSearch api helpers', () => {
       orderDirection: 'DESC',
     });
     expect(SuperheroApi.listPopularPosts).toHaveBeenCalledWith({
-      window: 'all',
       limit: 3,
       page: 1,
     });

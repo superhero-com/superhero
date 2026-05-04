@@ -284,7 +284,7 @@ export function useInvitations() {
       inviteAmount,
     );
 
-    // Add to state and localStorage
+    // Keep generated invitations in memory for the current session only.
     const now = Date.now();
     const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, address }) => ({
       inviter: activeAccount as Encoded.AccountAddress,
@@ -294,7 +294,6 @@ export function useInvitations() {
       date: now,
     }));
 
-    // Update state (this will also update localStorage via atomWithStorage)
     setInvitationList((prev) => [...newInvitations, ...prev]);
 
     // Trigger refresh to update invitation statuses

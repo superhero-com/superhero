@@ -4,7 +4,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AreaChart, Area, ResponsiveContainer,
+  AreaChart, Area, ResponsiveContainer, YAxis,
 } from 'recharts';
 import moment from 'moment';
 import { SuperheroApi } from '@/api/backend';
@@ -79,6 +79,20 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   const DRAG_THRESHOLD = 10; // pixels
   const rafRef = useRef<number | null>(null);
   const pendingXRef = useRef<number | null>(null);
+  const yAxisDomain = useMemo<[number, number]>(() => {
+    const values = data.map((point) => point.value).filter(Number.isFinite);
+    if (values.length === 0) return [0, 1];
+
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    const padding = range > 0 ? range * 0.08 : Math.max(Math.abs(maxValue) * 0.01, 0.000001);
+
+    return [
+      Math.max(0, minValue - padding),
+      maxValue + padding,
+    ];
+  }, [data]);
 
   // Use native event listeners to allow preventDefault
   useEffect(() => {
@@ -530,6 +544,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
               </linearGradient>
             </defs>
+            <YAxis type="number" domain={yAxisDomain} width={0} hide />
             <Area
               type="monotone"
               dataKey="value"

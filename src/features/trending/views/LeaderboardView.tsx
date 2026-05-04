@@ -6,6 +6,7 @@ import {
   LeaderboardFilters,
   LeaderboardCard,
   LeaderboardSkeleton,
+  type LeaderboardDateRangeInputs,
 } from '../components';
 import {
   fetchLeaderboard,
@@ -16,34 +17,84 @@ import {
 } from '../api/leaderboard';
 import {
   LEADERBOARD_TIMEFRAME_OPTIONS,
-  LEADERBOARD_METRIC_OPTIONS,
 } from '../constants/leaderboard';
 
 const DEFAULT_LEADERBOARD_PAGE_SIZE = 15;
-const RECENT_LEADERBOARD_PAGE_SIZE = 50;
+const DATE_TIME_INPUT_LENGTH = 16;
+const DATE_TIME_INPUT_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/;
 
-const isRecentTimeframe = (timeframe: LeaderboardTimeframe) => (
-  timeframe === '30m' || timeframe === '1h'
-);
+const parseDateTimeInput = (value: string) => {
+  if (!value) return null;
+
+  const match = DATE_TIME_INPUT_PATTERN.exec(value);
+  if (!match) return null;
+
+  const [, dayValue, monthValue, yearValue, hourValue, minuteValue] = match;
+  const day = Number(dayValue);
+  const month = Number(monthValue);
+  const year = Number(yearValue);
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+    hour,
+    minute,
+    0,
+    0,
+  );
+
+  if (
+    date.getFullYear() !== year
+    || date.getMonth() !== month - 1
+    || date.getDate() !== day
+    || date.getHours() !== hour
+    || date.getMinutes() !== minute
+  ) {
+    return null;
+  }
+
+  return date;
+};
 
 const LeaderboardView = () => {
   const { t } = useTranslation('trending');
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('7d');
   const [metric, setMetric] = useState<LeaderboardMetric>('pnl');
+  const [dateRange, setDateRange] = useState<LeaderboardDateRangeInputs>({
+    startDate: '',
+    endDate: '',
+  });
   const [page, setPage] = useState(1);
-  const leaderboardPageSize = isRecentTimeframe(timeframe)
-    ? RECENT_LEADERBOARD_PAGE_SIZE
-    : DEFAULT_LEADERBOARD_PAGE_SIZE;
+  const leaderboardPageSize = DEFAULT_LEADERBOARD_PAGE_SIZE;
+  const parsedStartDate = parseDateTimeInput(dateRange.startDate);
+  const parsedEndDate = parseDateTimeInput(dateRange.endDate);
+  const hasCustomDateInput = Boolean(dateRange.startDate || dateRange.endDate);
+  const hasInvalidDateFormat = Boolean(
+    (dateRange.startDate.length === DATE_TIME_INPUT_LENGTH && !parsedStartDate)
+      || (dateRange.endDate.length === DATE_TIME_INPUT_LENGTH && !parsedEndDate),
+  );
+  const isCustomDateRangeComplete = Boolean(parsedStartDate && parsedEndDate);
+  const isDateRangeInvalid = Boolean(
+    hasInvalidDateFormat
+      || (
+        parsedStartDate
+        && parsedEndDate
+        && parsedStartDate.getTime() > parsedEndDate.getTime()
+      ),
+  );
+  const customDateRange = isCustomDateRangeComplete && !isDateRangeInvalid
+    ? {
+      startDate: parsedStartDate!.toISOString(),
+      endDate: parsedEndDate!.toISOString(),
+    }
+    : null;
 
   const timeframeOption = LEADERBOARD_TIMEFRAME_OPTIONS.find(
     (option) => option.value === timeframe,
   );
-  const timeframeLabel = timeframeOption?.label ?? '7D';
-  const metricOption = LEADERBOARD_METRIC_OPTIONS.find(
-    (option) => option.value === metric,
-  );
-  const metricLabel = metricOption?.label ?? 'PnL';
-
+  const timeframeLabel = customDateRange ? 'Custom' : timeframeOption?.label ?? '7D';
   const {
     data,
     isLoading,
@@ -51,14 +102,25 @@ const LeaderboardView = () => {
     refetch,
     isFetching,
   } = useQuery<PaginatedResponse<LeaderboardItem>>({
-    queryKey: ['leaderboard', timeframe, metric, page, leaderboardPageSize],
+    queryKey: [
+      'leaderboard',
+      timeframe,
+      metric,
+      page,
+      leaderboardPageSize,
+      customDateRange?.startDate,
+      customDateRange?.endDate,
+    ],
     queryFn: () => fetchLeaderboard({
       timeframe,
       metric,
       page,
       limit: leaderboardPageSize,
       sortDir: metric === 'mdd' ? 'ASC' : 'DESC',
+      startDate: customDateRange?.startDate,
+      endDate: customDateRange?.endDate,
     }),
+    enabled: !isDateRangeInvalid,
     staleTime: 60 * 1000, // cache results per window/metric for 1 minute
     gcTime: 5 * 60 * 1000, // keep cached windows around for 5 minutes
   });
@@ -69,11 +131,17 @@ const LeaderboardView = () => {
 
   const handleTimeframeChange = (value: LeaderboardTimeframe) => {
     setTimeframe(value);
+    setDateRange({ startDate: '', endDate: '' });
     setPage(1);
   };
 
   const handleMetricChange = (value: LeaderboardMetric) => {
     setMetric(value);
+    setPage(1);
+  };
+
+  const handleDateRangeChange = (value: LeaderboardDateRangeInputs) => {
+    setDateRange(value);
     setPage(1);
   };
 
@@ -103,11 +171,27 @@ const LeaderboardView = () => {
             <LeaderboardFilters
               timeframe={timeframe}
               metric={metric}
+              dateRange={dateRange}
               onTimeframeChange={handleTimeframeChange}
               onMetricChange={handleMetricChange}
+              onDateRangeChange={handleDateRangeChange}
             />
           </div>
         </div>
+
+        {isDateRangeInvalid && (
+          <div className="bg-amber-500/10 border border-amber-500/40 text-amber-100 text-sm rounded-2xl px-4 py-3">
+            {hasInvalidDateFormat
+              ? 'Use valid dates and times in dd/mm/yyyy hh:mm format.'
+              : 'Start date must be before end date.'}
+          </div>
+        )}
+
+        {hasCustomDateInput && !isCustomDateRangeComplete && !isDateRangeInvalid && (
+          <div className="bg-white/[0.03] border border-white/10 text-white/60 text-sm rounded-2xl px-4 py-3">
+            Enter both start and end dates to apply a custom leaderboard range.
+          </div>
+        )}
 
         {/* Error state */}
         {isError && (
@@ -167,7 +251,6 @@ const LeaderboardView = () => {
                     rank={(currentPage - 1) * leaderboardPageSize + index + 1}
                     item={item}
                     timeframeLabel={timeframeLabel}
-                    metricLabel={metricLabel}
                   />
                 ))}
               </div>

@@ -107,7 +107,6 @@ const TokenSaleDetails = () => {
   });
   const { ownedTokens } = useOwnedTokens();
   const [holdersOnly, setHoldersOnly] = useState(true);
-  const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>('24h');
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);
   const tabAutoScrollInitRef = useRef(false);
@@ -692,8 +691,6 @@ const TokenSaleDetails = () => {
                 showComposer={showComposer}
                 holdersOnly={holdersOnly}
                 setHoldersOnly={setHoldersOnly}
-                popularWindow={popularWindow}
-                setPopularWindow={setPopularWindow}
                 showTradePanels={showTradePanels}
                 setShowTradePanels={setShowTradePanels}
               />

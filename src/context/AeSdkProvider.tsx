@@ -18,6 +18,7 @@ import { walletInfoAtom } from '../atoms/walletAtoms';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks/useModal';
 import { CURRENT_NETWORK, IS_MOBILE } from '../utils/constants';
+import { safeLocalStringStorage } from '../utils/jotaiSafeLocalStorage';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
@@ -253,7 +254,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             // Set a timeout to prevent infinite polling (5 minutes max)
             const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
             timeout = setTimeout(() => {
-              localStorage.removeItem(storedResultKey);
+              safeLocalStringStorage.removeItem(storedResultKey);
               cleanup();
               reject(new Error('Transaction polling timeout'));
             }, MAX_POLL_TIME);
@@ -268,19 +269,19 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
             interval = setInterval(() => {
               const currentQueue = transactionsQueueRef.current;
-              const storedResult = localStorage.getItem(storedResultKey);
+              const storedResult = safeLocalStringStorage.getItem(storedResultKey);
               let parsedStoredResult: any = null;
               try {
                 parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
               } catch {
-                localStorage.removeItem(storedResultKey);
+                safeLocalStringStorage.removeItem(storedResultKey);
               }
               const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
 
               if (queueEntry) {
                 if (queueEntry.status === 'cancelled') {
                   ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
-                  localStorage.removeItem(storedResultKey);
+                  safeLocalStringStorage.removeItem(storedResultKey);
                   cleanup();
                   reject(new Error('Transaction cancelled'));
                   // delete transaction from queue
@@ -295,7 +296,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 ) {
                   const signedTx = queueEntry.transaction;
                   if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
-                    localStorage.removeItem(storedResultKey);
+                    safeLocalStringStorage.removeItem(storedResultKey);
                     cleanup();
                     // delete transaction from queue
                     const newQueue = { ...currentQueue };
@@ -305,7 +306,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                     return;
                   }
                   ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
-                  localStorage.removeItem(storedResultKey);
+                  safeLocalStringStorage.removeItem(storedResultKey);
                   cleanup();
                   resolve(signedTx as Encoded.Transaction);
                   // delete transaction from queue

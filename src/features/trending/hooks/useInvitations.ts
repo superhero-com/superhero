@@ -34,6 +34,29 @@ import {
 import { ITransaction } from '../../../utils/types';
 
 const INVITE_CODE_QUERY_KEY = 'invite_code';
+const ACCOUNT_ADDRESS_PREFIX = 'ak_';
+
+function collectAccountAddresses(value: unknown): Encoded.AccountAddress[] {
+  if (typeof value === 'string') {
+    return value.startsWith(ACCOUNT_ADDRESS_PREFIX)
+      ? [value as Encoded.AccountAddress]
+      : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(collectAccountAddresses);
+  }
+
+  if (value && typeof value === 'object' && 'value' in value) {
+    return collectAccountAddresses((value as { value: unknown }).value);
+  }
+
+  return [];
+}
+
+export function getArgumentAccountAddresses(argument: unknown): Encoded.AccountAddress[] {
+  return collectAccountAddresses(argument);
+}
 
 export function useInvitations() {
   const navigate = useNavigate();
@@ -75,18 +98,9 @@ export function useInvitations() {
     const revokeTx = transactionList.find((tx) => {
       if (tx?.tx?.function !== TX_FUNCTIONS.revoke_invitation_code) return false;
 
-      const arg0 = tx?.tx?.arguments?.[0]?.value;
-
-      // Middleware can return either:
-      // - { type: "address", value: "ak_..." }
-      // - { type: "list", value: [{ type: "address", value: "ak_..." }, ...] }
-      if (typeof arg0 === 'string') return arg0 === invitee;
-
-      if (Array.isArray(arg0)) {
-        return arg0.some((item: any) => item?.value === invitee || item === invitee);
-      }
-
-      return false;
+      return getArgumentAccountAddresses(tx?.tx?.arguments?.[0]?.value).includes(
+        invitee as Encoded.AccountAddress,
+      );
     }) ?? false;
 
     return revokeTx || recentlyRevokedInvitations.includes(invitee);
@@ -109,25 +123,17 @@ export function useInvitations() {
     [activeAccountInviteList],
   );
 
-  const getInvitationStatus = useCallback((
+  const getInvitationStatusDetails = useCallback((
     invitee: Encoded.AccountAddress,
-    transaction: ITransaction,
-  ): InvitationStatus => {
+  ) => {
     const revokeStatus = getInvitationRevokeStatus(invitee);
     const claimedData = claimedInvitations[invitee];
     const claimed = !!claimedData;
-    const status = determineInvitationStatus(claimed, revokeStatus);
-    const secretKey = getInvitationSecretKey(invitee);
-
-    // Extract claimed info if available
     const claimedInfo = typeof claimedData === 'object' ? claimedData as ClaimedInfo : null;
 
     return {
-      hash: transaction.hash,
-      status,
+      status: determineInvitationStatus(claimed, revokeStatus),
       invitee,
-      date: moment(transaction.microTime).format(DATE_LONG),
-      amount: Decimal.from(toAe(transaction.tx.arguments[2].value)).prettify(),
       revoked: !!revokeStatus,
       ...(typeof revokeStatus === 'object' && {
         revokedAt: moment(revokeStatus.microTime).format(DATE_LONG),
@@ -136,25 +142,74 @@ export function useInvitations() {
       claimed,
       ...(claimedInfo && {
         claimedBy: claimedInfo.claimedBy,
-        claimedAt: claimedInfo.claimedAt ? moment(claimedInfo.claimedAt).format(DATE_LONG) : undefined,
+        claimedAt: claimedInfo.claimedAt
+          ? moment(claimedInfo.claimedAt).format(DATE_LONG)
+          : undefined,
         claimTxHash: claimedInfo.claimTxHash,
       }),
-      secretKey,
     };
   }, [
     getInvitationRevokeStatus,
     claimedInvitations,
     determineInvitationStatus,
+  ]);
+
+  const getInvitationStatus = useCallback((
+    invitee: Encoded.AccountAddress,
+    transaction: ITransaction,
+  ): InvitationStatus => {
+    const secretKey = getInvitationSecretKey(invitee);
+
+    return {
+      ...getInvitationStatusDetails(invitee),
+      hash: transaction.hash,
+      date: moment(transaction.microTime).format(DATE_LONG),
+      amount: Decimal.from(toAe(transaction.tx.arguments[2].value)).prettify(),
+      secretKey,
+    };
+  }, [
+    getInvitationStatusDetails,
     getInvitationSecretKey,
   ]);
 
+  const getStoredInvitationStatus = useCallback((
+    invitation: InvitationInfo,
+  ): InvitationStatus => {
+    const invitee = invitation.invitee as Encoded.AccountAddress;
+
+    return {
+      ...getInvitationStatusDetails(invitee),
+      hash: `local-${invitee}`,
+      date: moment(invitation.date).format(DATE_LONG),
+      amount: Decimal.from(invitation.amount).prettify(),
+      secretKey: invitation.secretKey,
+    };
+  }, [
+    getInvitationStatusDetails,
+  ]);
+
   // Computed invitations with status
-  const invitations = useMemo(() => transactionList
-    .filter((transaction) => transaction?.tx?.function === TX_FUNCTIONS.register_invitation_code)
-    .flatMap((transaction) => {
-      const invitees = transaction.tx.arguments?.[0]?.value?.map((item: any) => item.value) || [];
-      return invitees.map((invitee: string) => getInvitationStatus(invitee as `ak_${string}`, transaction));
-    }), [transactionList, getInvitationStatus]);
+  const invitations = useMemo(() => {
+    const transactionInvitations = transactionList
+      .filter((transaction) => transaction?.tx?.function === TX_FUNCTIONS.register_invitation_code)
+      .flatMap((transaction) => getArgumentAccountAddresses(transaction.tx.arguments?.[0]?.value)
+        .map((invitee) => getInvitationStatus(invitee, transaction)));
+
+    const transactionInvitees = new Set(
+      transactionInvitations.map(({ invitee }) => invitee),
+    );
+
+    const storedInvitations = activeAccountInviteList
+      .filter(({ invitee }) => !transactionInvitees.has(invitee))
+      .map(getStoredInvitationStatus);
+
+    return [...transactionInvitations, ...storedInvitations];
+  }, [
+    transactionList,
+    activeAccountInviteList,
+    getInvitationStatus,
+    getStoredInvitationStatus,
+  ]);
 
   // Load transactions from middleware
   const loadTransactionsFromMiddleware = useCallback(async (
@@ -229,7 +284,7 @@ export function useInvitations() {
       inviteAmount,
     );
 
-    // Add to state and localStorage
+    // Keep generated invitations in memory for the current session only.
     const now = Date.now();
     const newInvitations: InvitationInfo[] = keyPairs.map(({ secretKey, address }) => ({
       inviter: activeAccount as Encoded.AccountAddress,
@@ -239,7 +294,6 @@ export function useInvitations() {
       date: now,
     }));
 
-    // Update state (this will also update localStorage via atomWithStorage)
     setInvitationList((prev) => [...newInvitations, ...prev]);
 
     // Trigger refresh to update invitation statuses
@@ -326,10 +380,7 @@ export function useInvitations() {
   }, [activeAccount, refreshTrigger, loadAccountInvitations, setLoading]);
 
   // Load claimed invitations when we have invitations to check
-  // Use transactionList as dependency to avoid infinite loop caused by claimedInvitations updates
   useEffect(() => {
-    if (transactionList.length === 0) return;
-
     // Get list of invitees that need to be checked (haven't been checked yet)
     const inviteesToCheck = invitations
       .filter((inv) => !checkedInviteesRef.current.has(inv.invitee))
@@ -389,7 +440,7 @@ export function useInvitations() {
     };
 
     loadClaimed();
-  }, [transactionList, invitations, loadAccountInvitations, setClaimedInvitations]);
+  }, [invitations, loadAccountInvitations, setClaimedInvitations]);
 
   return {
     // Data

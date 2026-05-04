@@ -44,7 +44,7 @@ export const useWallet = () => {
 
   const resetState = useCallback(() => {
     setAddress(null);
-    setBalance(0);
+    setBalance({});
     setProfile({});
     setCookiesConsent({});
   }, [setAddress, setBalance, setProfile, setCookiesConsent]);

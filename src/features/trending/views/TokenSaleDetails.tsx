@@ -176,24 +176,11 @@ const TokenSaleDetails = () => {
     }
   }, [location.search, showTradePanels, isMobile]);
 
-  // Check if token is newly created (from local storage or state)
+  // Post-deploy flow: CreateTokenView navigates here with ?created=true (see also txHash).
   const isTokenNewlyCreated = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    const hasCreatedParam = params.get('created') === 'true';
-
-    if (hasCreatedParam) {
-      return true;
-    }
-
-    try {
-      const recentTokens = JSON.parse(
-        localStorage.getItem('recentlyCreatedTokens') || '[]',
-      );
-      return recentTokens.includes(tokenName);
-    } catch {
-      return false;
-    }
-  }, [tokenName, location.search]);
+    return params.get('created') === 'true';
+  }, [location.search]);
 
   const txHash = useMemo(() => {
     const params = new URLSearchParams(location.search);

@@ -62,7 +62,7 @@ describe('useInvitation', () => {
       });
   });
 
-  it('registers generated invite keys and stores them locally', async () => {
+  it('registers generated invite keys and keeps them in memory', async () => {
     const { useInvitation } = await import('../useInvitation');
     const { result } = renderHook(() => useInvitation());
 
@@ -76,18 +76,19 @@ describe('useInvitation', () => {
       2000000000000000000n,
     );
 
-    const stored = JSON.parse(localStorage.getItem('invite_list') || '[]');
-    expect(stored).toEqual([
-      expect.objectContaining({
-        inviter: 'ak_inviter',
-        invitee: 'ak_invitee_two',
-        secretKey: 'sk_two',
-        amount: 2,
-      }),
+    expect(localStorage.getItem('invite_list')).toBeNull();
+
+    expect(result.current.activeAccountInviteList).toEqual([
       expect.objectContaining({
         inviter: 'ak_inviter',
         invitee: 'ak_invitee_one',
         secretKey: 'sk_one',
+        amount: 2,
+      }),
+      expect.objectContaining({
+        inviter: 'ak_inviter',
+        invitee: 'ak_invitee_two',
+        secretKey: 'sk_two',
         amount: 2,
       }),
     ]);
@@ -107,7 +108,7 @@ describe('useInvitation', () => {
       expect(result.current.invitationCode).toBe('secret-123');
     });
 
-    expect(localStorage.getItem('invite_code')).toBe('secret-123');
+    expect(localStorage.getItem('invite_code')).toBeNull();
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
 
     act(() => {

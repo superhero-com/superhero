@@ -1,3 +1,4 @@
+import { safeLocalJSONStorage } from '@/utils/jotaiSafeLocalStorage';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
@@ -7,6 +8,7 @@ import type { CurrencyRates } from '../utils/types';
 export const currencyRatesAtom = atomWithStorage<CurrencyRates>(
   'currency:rates',
   {},
+  safeLocalJSONStorage,
 );
 
 // Updated whenever currencyRatesAtom is refreshed by the global poller.

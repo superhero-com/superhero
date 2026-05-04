@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
 import type { Encoded } from '@aeternity/aepp-sdk';
 
 export interface InvitationInfo {
@@ -26,11 +25,11 @@ export interface InvitationStatus {
   secretKey?: string;
 }
 
-// Persistent storage for generated invitations
-export const invitationListAtom = atomWithStorage<InvitationInfo[]>('invite_list', []);
+// Current-session generated invitations. Do not persist invitation secrets locally.
+export const invitationListAtom = atom<InvitationInfo[]>([]);
 
-// Current invitation code from URL
-export const invitationCodeAtom = atomWithStorage<string | undefined>('invite_code', undefined);
+// Current invitation code from URL.
+export const invitationCodeAtom = atom<string | undefined>(undefined);
 
 // Claimed invitations cache - stores claimer info
 export interface ClaimedInfo {

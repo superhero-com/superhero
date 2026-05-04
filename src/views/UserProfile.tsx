@@ -38,6 +38,7 @@ import { useAddressByChainName, useChainName, useEnsureChainName } from '../hook
 import { SuperheroApi } from '../api/backend';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
+import EditSuperheroIdModal from '@/components/modals/EditSuperheroIdModal';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks';
@@ -109,6 +110,8 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [claimChainNameOpen, setClaimChainNameOpen] = useState(false);
+  const [editSuperheroIdOpen, setEditSuperheroIdOpen] = useState(false);
   const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
 
   // Get tab from URL search params, default to "feed"
@@ -411,19 +414,7 @@ export default function UserProfile({
 
           {/* Action buttons */}
           <div className="flex flex-row gap-2 shrink-0">
-            {(canEdit && false) ? (
-              <AeButton
-                size="sm"
-                variant="ghost"
-                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
-                onClick={() => {
-                  setEditInitialSection('profile');
-                  setEditOpen(true);
-                }}
-              >
-                {t('buttons.editProfile')}
-              </AeButton>
-            ) : null}
+
             {!canEdit ? (
               <AeButton
                 onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
@@ -436,6 +427,25 @@ export default function UserProfile({
                 Tip
               </AeButton>
             ) : null}
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setEditSuperheroIdOpen(true)}
+                className={[
+                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-solid',
+                  'box-border whitespace-nowrap px-3 text-[12px] font-semibold leading-none',
+                  '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
+                  'hover:!shadow-none hover:!transform-none',
+                ].join(' ')}
+                style={{
+                  background: 'rgba(0,255,157,0.08)',
+                  borderColor: 'rgba(0,255,157,0.3)',
+                  color: 'var(--neon-teal)',
+                }}
+              >
+                ✦ Edit Superhero ID
+              </button>
+            )}
             <AeButton
               variant="ghost"
               size="sm"
@@ -622,6 +632,12 @@ export default function UserProfile({
         initialBio={bioText}
         initialSection={editInitialSection}
       />
+      <EditSuperheroIdModal
+        open={editSuperheroIdOpen}
+        onClose={() => setEditSuperheroIdOpen(false)}
+        address={effectiveAddress}
+        chainName={chainName}
+      />
     </Shell>
   ) : (
     <>
@@ -651,6 +667,13 @@ export default function UserProfile({
         address={effectiveAddress}
         initialBio={bioText}
         initialSection={editInitialSection}
+      />
+
+      <EditSuperheroIdModal
+        open={editSuperheroIdOpen}
+        onClose={() => setEditSuperheroIdOpen(false)}
+        address={effectiveAddress}
+        chainName={chainName}
       />
     </>
   );

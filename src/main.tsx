@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { OpenAPI } from './api/generated';
 import { CONFIG } from './config';
+import { evictLegacyAex9BalancesCache } from './utils/jotaiSafeLocalStorage';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
@@ -31,6 +32,7 @@ const queryClient = new QueryClient({
 });
 
 (async () => {
+  evictLegacyAex9BalancesCache();
   root.render(
     <React.StrictMode>
       <HelmetProvider>

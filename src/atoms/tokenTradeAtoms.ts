@@ -1,3 +1,8 @@
+import {
+  createClampedNumberJSONStorage,
+  safeLocalJSONStorage,
+  type SyncJSONNumberStorage,
+} from '@/utils/jotaiSafeLocalStorage';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { TokenDto } from '@/api/generated/models/TokenDto';
@@ -33,15 +38,16 @@ export const tokenBAtom = atom<number | undefined>(undefined);
 export const tokenAFocusedAtom = atom<boolean>(false);
 export const nextPriceAtom = atom<Decimal>(Decimal.ZERO);
 
-// Slippage with localStorage persistence
-export const slippageAtom = atomWithStorage<number>('tokenTrade:slippage', (() => {
-  try {
-    const v = localStorage.getItem('tokenTrade:slippage');
-    return v != null ? Math.max(0, Math.min(50, Number(v) || 1)) : 1;
-  } catch {
-    return 1;
-  }
-})());
+const tokenTradeSlippageStorage = createClampedNumberJSONStorage(
+  safeLocalJSONStorage as SyncJSONNumberStorage,
+  {
+    min: 0,
+    max: 50,
+    writeFallback: 1,
+  },
+);
+
+export const slippageAtom = atomWithStorage<number>('tokenTrade:slippage', 1, tokenTradeSlippageStorage);
 
 // Computed atoms
 export const currentTokenUnitPriceAtom = atom<Decimal>((get) => {
@@ -96,9 +102,11 @@ export const priceImpactPercentAtom = atom<Decimal>((get) => {
   return priceImpactDiff.div(currentTokenUnitPrice).mul(100);
 });
 
-export const estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom = atom<string>((get) => {
-  const priceImpactPercent = get(priceImpactPercentAtom);
-  return priceImpactPercent.gt(Decimal.from(1))
-    ? priceImpactPercent.prettify(2)
-    : priceImpactPercent.prettify();
-});
+export const estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom = atom<string>(
+  (get) => {
+    const priceImpactPercent = get(priceImpactPercentAtom);
+    return priceImpactPercent.gt(Decimal.from(1))
+      ? priceImpactPercent.prettify(2)
+      : priceImpactPercent.prettify();
+  },
+);

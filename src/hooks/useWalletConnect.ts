@@ -3,13 +3,12 @@ import {
   BrowserWindowMessageConnection,
   walletDetector,
 } from '@aeternity/aepp-sdk';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import {
   useCallback,
   useEffect, useRef,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
 import {
   CURRENT_NETWORK,
   IS_FRAMED_AEPP,
@@ -20,12 +19,45 @@ import { useAeSdk } from './useAeSdk';
 import { openDeepLink } from '../utils/url';
 import { validateHash } from '../utils/address';
 import type { Wallet, Wallets } from '../utils/types';
+import { recentActivitiesAtom } from '../atoms/dexAtoms';
 import {
+  aex9BalancesAtom,
+  balanceAtom,
   walletInfoAtom,
   walletConnectedAtom,
   connectingWalletAtom,
   scanningForAccountsAtom,
 } from '../atoms/walletAtoms';
+import { liquidityPositionsAtom } from '../features/dex/atoms/positionsAtoms';
+
+function pruneAccountKeyedMap<T>(
+  prev: Record<string, T>,
+  allowed: Set<string>,
+): Record<string, T> {
+  if (allowed.size === 0) return {};
+  const next: Record<string, T> = {};
+  let changed = false;
+  Object.entries(prev).forEach(([k, v]) => {
+    if (allowed.has(k)) next[k] = v;
+    else changed = true;
+  });
+  if (Object.keys(prev).length !== Object.keys(next).length) changed = true;
+  return changed ? next : prev;
+}
+
+/** Jotai may type persisted atoms as possibly async; runtime storage here is sync. */
+function asSyncAccountMap<T>(
+  prev: Record<string, T> | Promise<Record<string, T>>,
+): Record<string, T> {
+  return prev instanceof Promise ? {} : prev;
+}
+
+function clearAccountKeyedMap<T>(
+  prev: Record<string, T> | Promise<Record<string, T>>,
+): Record<string, T> {
+  const syncPrev = asSyncAccountMap(prev);
+  return Object.keys(syncPrev).length === 0 ? syncPrev : {};
+}
 
 export function useWalletConnect() {
   const wallet = useRef<Wallet | undefined>(undefined);
@@ -34,7 +66,7 @@ export function useWalletConnect() {
   const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
   const reconnectionAttemptedRef = useRef(false);
 
-  const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
+  const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
   const [scanningForAccounts, setScanningForAccounts] = useAtom(scanningForAccountsAtom);
   const [connectingWallet, setConnectingWallet] = useAtom(connectingWalletAtom);
   const [walletConnected, setWalletConnected] = useAtom(walletConnectedAtom);
@@ -42,8 +74,19 @@ export function useWalletConnect() {
   const location = useLocation();
   const navigate = useNavigate();
   const {
-    aeSdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount,
+    aeSdk,
+    scanForAccounts,
+    addStaticAccount,
+    setActiveAccount,
+    setAccounts,
+    activeAccount,
+    accounts,
+    sdkInitialized,
   } = useAeSdk();
+  const setBalanceByAccount = useSetAtom(balanceAtom);
+  const setAex9ByAccount = useSetAtom(aex9BalancesAtom);
+  const setRecentActivitiesByAccount = useSetAtom(recentActivitiesAtom);
+  const setLiquidityPositionsByAccount = useSetAtom(liquidityPositionsAtom);
   const activeAccountRef = useRef(activeAccount);
   const walletInfoRef = useRef(walletInfo);
   const walletConnectedRef = useRef(walletConnected);
@@ -76,6 +119,39 @@ export function useWalletConnect() {
     }
     checkAddressWalletConnection();
   }, [activeAccount, addStaticAccount, location.search, navigate]);
+
+  // Drop per-account caches for addresses no longer in this session (balance, tokens,
+  // DEX activity / LP) so localStorage does not grow without bound across past accounts.
+  useEffect(() => {
+    if (!sdkInitialized) return;
+
+    const allowed = new Set(
+      [...(accounts ?? []), activeAccount].filter(Boolean) as string[],
+    );
+    if (allowed.size === 0) {
+      if (walletInfo || connectingWallet || walletConnected) return;
+      setBalanceByAccount(clearAccountKeyedMap);
+      setAex9ByAccount(clearAccountKeyedMap);
+      setRecentActivitiesByAccount(clearAccountKeyedMap);
+      setLiquidityPositionsByAccount(clearAccountKeyedMap);
+      return;
+    }
+    setBalanceByAccount((prev) => pruneAccountKeyedMap(asSyncAccountMap(prev), allowed));
+    setAex9ByAccount((prev) => pruneAccountKeyedMap(asSyncAccountMap(prev), allowed));
+    setRecentActivitiesByAccount((prev) => pruneAccountKeyedMap(asSyncAccountMap(prev), allowed));
+    setLiquidityPositionsByAccount((prev) => pruneAccountKeyedMap(asSyncAccountMap(prev), allowed));
+  }, [
+    sdkInitialized,
+    activeAccount,
+    accounts,
+    walletInfo,
+    connectingWallet,
+    walletConnected,
+    setBalanceByAccount,
+    setAex9ByAccount,
+    setRecentActivitiesByAccount,
+    setLiquidityPositionsByAccount,
+  ]);
 
   // Cleanup any pending wallet detection when this hook's owner unmounts
   useEffect(() => () => {
@@ -195,6 +271,9 @@ export function useWalletConnect() {
     try {
       localStorage.removeItem('account:activeAccount');
       localStorage.removeItem('wallet:walletInfo');
+      localStorage.removeItem('wallet:balance');
+      localStorage.removeItem('dex:recentActivities');
+      localStorage.removeItem('liquidityPositions');
     } catch {
       // ignore storage errors
     }
@@ -222,6 +301,10 @@ export function useWalletConnect() {
     setWalletConnected(false);
     setActiveAccount(undefined);
     setAccounts([]);
+    setBalanceByAccount({});
+    setAex9ByAccount({});
+    setRecentActivitiesByAccount({});
+    setLiquidityPositionsByAccount({});
     try {
       await aeSdk.disconnectWallet();
     } catch {
@@ -319,7 +402,6 @@ export function useWalletConnect() {
 
         // If we think we're connected but have no accounts, the connection is stale
         if (!hasAccounts) {
-          console.warn('Wallet connection lost, cleaning up state');
           setWalletConnected(false);
           setWalletInfo(undefined);
           wallet.current = undefined;

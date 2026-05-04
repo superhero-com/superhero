@@ -1,3 +1,4 @@
+import { safeLocalJSONStorage } from '@/utils/jotaiSafeLocalStorage';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { LiquidityPosition } from '../types/pool';
@@ -6,6 +7,7 @@ import { LiquidityPosition } from '../types/pool';
 export const liquidityPositionsAtom = atomWithStorage<Record<string, LiquidityPosition[]>>(
   'liquidityPositions',
   {},
+  safeLocalJSONStorage,
 );
 
 // Loading state for positions

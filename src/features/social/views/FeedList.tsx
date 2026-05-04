@@ -109,7 +109,6 @@ const FeedList = ({
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
   const sortBy = !popularFeedEnabled ? 'latest' : (urlSortBy || 'hot');
   const filterBy = urlQuery.get('filterBy') || 'all';
-  const initialWindow = (urlQuery.get('window') as '24h' | '7d' | 'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
 
   // Keep sortByRef in sync with sortBy to avoid stale closures in callbacks
@@ -117,22 +116,8 @@ const FeedList = ({
     sortByRef.current = sortBy;
   }, [sortBy]);
 
-  const [popularWindow, setPopularWindow] = useState<'24h' | '7d' | 'all'>(initialWindow);
   const [popularWeights, setPopularWeights] = useState<PopularWeights>({});
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
-
-  // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const fromUrl = (params.get('window') as '24h' | '7d' | 'all' | null) || '24h';
-    if (fromUrl !== popularWindow) {
-      setPopularWindow(fromUrl);
-      if (sortBy === 'hot') {
-        // Reset cached pages to avoid mixing windows
-        queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
-      }
-    }
-  }, [location.search, sortBy, queryClient, popularWindow]);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -413,10 +398,9 @@ const FeedList = ({
     refetch: refetchPopular,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot',
-    queryKey: ['popular-posts', { limit: 10, window: popularWindow, weights: popularWeights }],
+    queryKey: ['popular-posts', { limit: 10, weights: popularWeights }],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await SuperheroApi.listPopularPosts({
-        window: popularWindow,
         page: pageParam as number,
         limit: 10,
         weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
@@ -531,7 +515,7 @@ const FeedList = ({
     isFetchingNextPage: fetchingMoreLatestForHot,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot' && (popularExhausted || (popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length < 10 : false)),
-    queryKey: ['latest-posts-for-hot', { limit: 10, window: popularWindow, excludeIds: Array.from(popularPostIds).sort().join(',') }],
+    queryKey: ['latest-posts-for-hot', { limit: 10, excludeIds: Array.from(popularPostIds).sort().join(',') }],
     queryFn: async ({ pageParam = 1 }) => {
       // Get fresh popularPostIds from the current popularData
       const currentPopularIds = new Set<string>();
@@ -792,21 +776,13 @@ const FeedList = ({
       }
 
       if (newSortBy === 'hot') {
-        navigate(`/?sortBy=hot&window=${popularWindow}`);
+        navigate('/?sortBy=hot');
       } else {
         navigate(`/?sortBy=${newSortBy}`);
       }
     },
-    [navigate, queryClient, popularWindow, popularFeedEnabled, sortBy],
+    [navigate, queryClient, popularFeedEnabled, sortBy],
   );
-
-  const handlePopularWindowChange = useCallback((w: '24h' | '7d' | 'all') => {
-    setPopularWindow(w);
-    if (sortBy === 'hot') {
-      navigate(`/?sortBy=hot&window=${w}`);
-      queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
-    }
-  }, [navigate, sortBy, queryClient]);
 
   const handlePopularWeightsChange = useCallback((weights: PopularWeights) => {
     setPopularWeights(weights);
@@ -1282,8 +1258,6 @@ const FeedList = ({
             sortBy={sortBy}
             onSortChange={handleSortChange}
             className="sticky top-0 z-10 w-full"
-            popularWindow={popularWindow}
-            onPopularWindowChange={handlePopularWindowChange}
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
@@ -1293,8 +1267,6 @@ const FeedList = ({
           <SortControls
             sortBy={sortBy}
             onSortChange={handleSortChange}
-            popularWindow={popularWindow}
-            onPopularWindowChange={handlePopularWindowChange}
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}

@@ -60,12 +60,10 @@ vi.mock('../../../../components/ui/ae-button', () => ({
 
 describe('SortControls', () => {
   let onSortChange: ReturnType<typeof vi.fn>;
-  let onPopularWindowChange: ReturnType<typeof vi.fn>;
   let onPopularWeightsChange: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     onSortChange = vi.fn();
-    onPopularWindowChange = vi.fn();
     onPopularWeightsChange = vi.fn();
   });
 
@@ -74,8 +72,6 @@ describe('SortControls', () => {
       <SortControls
         sortBy="hot"
         onSortChange={onSortChange}
-        popularWindow="24h"
-        onPopularWindowChange={onPopularWindowChange}
         onPopularWeightsChange={onPopularWeightsChange}
         {...overrides}
       />
@@ -182,20 +178,6 @@ describe('SortControls', () => {
       matchMediaSpy.mockRestore();
     });
 
-    it('contains time window buttons (Today, This week, All time)', () => {
-      renderControls();
-      expect(screen.getAllByText('Today').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('This week').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('All time').length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('calls onPopularWindowChange when clicking a time window', () => {
-      renderControls();
-      const weekButtons = screen.getAllByText('This week');
-      fireEvent.click(weekButtons[0]);
-      expect(onPopularWindowChange).toHaveBeenCalledWith('7d');
-    });
-
     it('renders all 8 weight labels', () => {
       renderControls();
       const expectedLabels = [
@@ -243,23 +225,16 @@ describe('SortControls', () => {
       expect(resetButtons.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('renders Reset when non-default window is set', () => {
-      renderControls({ popularWindow: '7d' });
-      const resetButtons = screen.getAllByText('Reset');
-      expect(resetButtons.length).toBeGreaterThanOrEqual(1);
-    });
-
     it('does not render Reset when defaults are active', () => {
-      renderControls({ popularWeights: {}, popularWindow: '24h' });
+      renderControls({ popularWeights: {} });
       expect(screen.queryByText('Reset')).not.toBeInTheDocument();
     });
 
-    it('resets both weights and window on click', () => {
-      renderControls({ popularWeights: { comments: 'high' }, popularWindow: '7d' });
+    it('resets custom weights on click', () => {
+      renderControls({ popularWeights: { comments: 'high' } });
       const resetButtons = screen.getAllByText('Reset');
       fireEvent.click(resetButtons[0]);
       expect(onPopularWeightsChange).toHaveBeenCalledWith({});
-      expect(onPopularWindowChange).toHaveBeenCalledWith('24h');
     });
   });
 

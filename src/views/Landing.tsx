@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import {
   Shield, TrendingUp, Users, Fingerprint, Smartphone,
   MessageCircle, ArrowRight, ChevronDown, Sparkles, Globe, BarChart3, Coins,
+  Hash, Brain, Palette, Handshake, Bot, Zap, ChevronRight,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -48,6 +49,49 @@ function FeatureCard({
         <h3 className="text-[15px] font-semibold text-white/90 mb-2 leading-snug">{title}</h3>
         <p className="text-[13px] text-white/50 leading-relaxed">{description}</p>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Audience card component                                           */
+/* ------------------------------------------------------------------ */
+function AudienceCard({
+  icon: Icon,
+  title,
+  description,
+  color = 'pink',
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  color?: 'pink' | 'blue' | 'purple' | 'green';
+}) {
+  const colorMap = {
+    pink: 'from-pink-500/20 to-pink-600/10 border-pink-500/20 text-pink-400',
+    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/20 text-blue-400',
+    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/20 text-purple-400',
+    green: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 text-emerald-400',
+  };
+  return (
+    <div className="group relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-1">
+      <div className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${colorMap[color]} border mb-4`}>
+        <Icon className={`w-5 h-5 ${colorMap[color].split(' ').pop()}`} />
+      </div>
+      <h3 className="text-[15px] font-semibold text-white/90 mb-2">{title}</h3>
+      <p className="text-[13px] text-white/50 leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  FAQ item component                                                */
+/* ------------------------------------------------------------------ */
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+  return (
+    <div className="border-b border-white/[0.06] py-6">
+      <h3 className="text-[15px] font-semibold text-white/90 mb-2">{question}</h3>
+      <p className="text-[14px] text-white/50 leading-relaxed">{answer}</p>
     </div>
   );
 }
@@ -102,10 +146,13 @@ export default function Landing() {
 
           {/* Sub */}
           <p
-            className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-10"
+            className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-6"
           >
-            Superhero is the on-chain attention market where you can discover,
-            trade, and govern the trends you believe in — before everyone else.
+            Create and participate in
+            {' '}
+            <span className="text-white/70 font-medium">#tokens</span>
+            {' '}
+            — shared signals around hashtags, ideas, memes, narratives, and emerging cultural moments.
           </p>
 
           {/* CTAs */}
@@ -170,63 +217,223 @@ export default function Landing() {
       </section>
 
       {/* ============================================================ */}
-      {/*  WHAT IS SUPERHERO                                           */}
+      {/*  WHAT IS A #TOKEN                                            */}
       {/* ============================================================ */}
       <section id="features" className="relative py-32">
         <div className="max-w-[1180px] mx-auto px-6">
           {/* Section header */}
           <div className="max-w-2xl mb-16">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
-              What is Superhero?
+              What is a #token?
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              A decentralized attention market
+              A shared coordination primitive
               <br />
-              <span className="text-white/40">for social trends</span>
+              <span className="text-white/40">around a signal</span>
             </h2>
             <p className="text-[15px] text-white/40 leading-relaxed">
-              Where creators own their content, communities become tradable markets,
-              and attention is priced in real time.
+              Each #token becomes a live space where attention gathers — open-ended signals
+              that evolve with the internet and enable ongoing participation.
             </p>
           </div>
 
-          {/* Feature grid */}
+          {/* Token types grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FeatureCard
-              icon={Shield}
+              icon={Hash}
               number="01"
-              title="Own your content & identity"
-              description="On-chain posts and Superhero Onchain ID give creators full ownership. Your content is immutable, your identity is yours."
+              title="Hashtags & ideas"
+              description="Turn #AI, #BTC, #SF, or any idea into a live coordination space. Hashtags become more than labels — they become communities."
             />
             <FeatureCard
               icon={TrendingUp}
               number="02"
-              title="Tradable trend markets"
-              description="Communities and hashtags become tradable via bonding curve tokens. Attention and conviction show up directly in the price."
-            />
-            <FeatureCard
-              icon={BarChart3}
-              number="03"
-              title="Attention Market"
-              description="Trends = Hashtags = Communities = Tokens. Get real-time market data on attention and sentiment for any trend or community."
-            />
-            <FeatureCard
-              icon={Coins}
-              number="04"
-              title="Rewards & referrals"
-              description="The platform rewards participation through an affiliation system and ProtocolDAO token. Engage, refer, and earn."
+              title="Emerging narratives"
+              description="Surface signals early, before they're saturated. Track what's gaining attention in real time across the network."
             />
             <FeatureCard
               icon={MessageCircle}
-              number="05"
-              title="On-chain posts & tipping"
-              description="Immutable content anchored to verifiable events. Tip creators directly — every interaction is transparent and permanent."
+              number="03"
+              title="Memes & cultural moments"
+              description="Capture cultural moments as they happen. A meme, a movement, a moment — all can become a #token."
             />
             <FeatureCard
               icon={Users}
+              number="04"
+              title="Communities & niches"
+              description="Every #token can evolve into a conversation, community, or movement. Coordinate with others around shared focus."
+            />
+            <FeatureCard
+              icon={BarChart3}
+              number="05"
+              title="Visible attention"
+              description="Attention is made visible and participatory, not hidden in algorithmic feeds. See what the internet is actually caring about."
+            />
+            <FeatureCard
+              icon={Coins}
               number="06"
-              title="On-chain identity"
-              description="Wallet + chain names + X handle — all linked together. Your identity lives on-chain, not on a corporate server."
+              title="Rewards & referrals"
+              description="The platform rewards participation through an affiliation system and ProtocolDAO token. Engage, refer, and earn."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  WHY SUPERHERO — COMPARISON                                  */}
+      {/* ============================================================ */}
+      <section className="relative py-32 border-t border-white/[0.04]">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="max-w-2xl mb-16">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
+              Why Superhero?
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
+              The internet runs on attention —
+              <br />
+              <span className="text-white/40">it should be yours to see</span>
+            </h2>
+            <p className="text-[15px] text-white/40 leading-relaxed">
+              Today, attention is fragmented, opaque, and controlled by algorithms.
+              Superhero makes it visible, participatory, and community-driven.
+            </p>
+          </div>
+
+          {/* Comparison table */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+            {/* Traditional */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+              <h3 className="text-[13px] font-semibold tracking-wider uppercase text-white/30 mb-6">Traditional social media</h3>
+              <ul className="space-y-4">
+                {[
+                  'Scroll feeds passively',
+                  'Algorithm decides relevance',
+                  'Attention is extracted',
+                  'Guess what matters',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-[14px] text-white/40">
+                    <span className="mt-0.5 w-4 h-4 rounded-full border border-white/[0.12] flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Superhero */}
+            <div className="bg-gradient-to-br from-blue-500/[0.07] to-purple-500/[0.07] border border-blue-500/20 rounded-2xl p-8">
+              <h3 className="text-[13px] font-semibold tracking-wider uppercase text-blue-400/80 mb-6">Superhero</h3>
+              <ul className="space-y-4">
+                {[
+                  'Signals are user-created',
+                  'Attention is visible',
+                  'Participation is intentional',
+                  'Communities form around shared focus',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-[14px] text-white/70">
+                    <Zap className="mt-0.5 w-4 h-4 text-blue-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  HOW IT WORKS                                                */}
+      {/* ============================================================ */}
+      <section className="relative py-32 border-t border-white/[0.04]">
+        <FloatingOrb className="w-[500px] h-[500px] bg-blue-700 top-0 right-0 opacity-10" />
+        <div className="max-w-[1180px] mx-auto px-6 relative z-10">
+          <div className="max-w-2xl mb-16">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
+              How it works
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
+              Four steps to a signal
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                step: '01',
+                icon: Hash,
+                title: 'Create a #token',
+                body: 'Pick a signal — a hashtag, idea, or narrative — and make it discoverable for the network.',
+              },
+              {
+                step: '02',
+                icon: BarChart3,
+                title: 'Participate',
+                body: 'Engage with #tokens you care about and follow how attention develops in real time.',
+              },
+              {
+                step: '03',
+                icon: MessageCircle,
+                title: 'Contribute',
+                body: 'Share, discuss, and bring others into the signal. Every post and tip is on-chain.',
+              },
+              {
+                step: '04',
+                icon: Users,
+                title: 'Coordinate',
+                body: 'Communities form naturally around shared focus — no opaque algorithm required.',
+              },
+            ].map(({
+              step, icon: Icon, title, body,
+            }) => (
+              <div key={step} className="relative bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 hover:bg-white/[0.05] transition-all duration-300 hover:-translate-y-1">
+                <span className="text-[10px] font-mono text-white/20 tracking-wider mb-4 block">{step}</span>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20 flex items-center justify-center mb-4">
+                  <Icon className="w-5 h-5 text-pink-400" />
+                </div>
+                <h3 className="text-[15px] font-semibold text-white/90 mb-2">{title}</h3>
+                <p className="text-[13px] text-white/50 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  WHO IT'S FOR                                                */}
+      {/* ============================================================ */}
+      <section className="relative py-32 border-t border-white/[0.04]">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="max-w-2xl mb-16">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
+              Who it's for
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
+              Built for anyone who shapes
+              <br />
+              <span className="text-white/40">what the internet cares about</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AudienceCard
+              icon={Brain}
+              color="blue"
+              title="Researchers & analysts"
+              description="Track emerging narratives and cultural signals early — before they reach mainstream feeds."
+            />
+            <AudienceCard
+              icon={Palette}
+              color="pink"
+              title="Creators"
+              description="Launch and grow communities around your ideas or content. Your audience, your signal."
+            />
+            <AudienceCard
+              icon={Handshake}
+              color="purple"
+              title="Communities"
+              description="Coordinate around shared beliefs, interests, or goals with transparent, on-chain primitives."
+            />
+            <AudienceCard
+              icon={Bot}
+              color="green"
+              title="Agents"
+              description="Monitor and interact with real-time attention flows. #tokens are machine-readable coordination layers."
             />
           </div>
         </div>
@@ -353,16 +560,61 @@ export default function Landing() {
       </section>
 
       {/* ============================================================ */}
+      {/*  FAQ                                                         */}
+      {/* ============================================================ */}
+      <section className="relative py-32 border-t border-white/[0.04]">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div>
+              <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
+                FAQ
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
+                Common questions
+              </h2>
+              <p className="text-[15px] text-white/40 leading-relaxed">
+                The deeper idea: the internet is a network of signals.
+                Superhero turns those signals into shared coordination layers —
+                visible, interactive, and collective.
+              </p>
+            </div>
+            <div>
+              <FaqItem
+                question="What is a #token really?"
+                answer="A #token is a shared signal space that people can gather around — combining conversation, visibility, and participation around a hashtag, idea, or cultural moment."
+              />
+              <FaqItem
+                question="Is this about trading?"
+                answer="Superhero focuses on participation, discovery, and coordination around signals. Different forms of interaction may exist, but the core is engagement with ideas and communities."
+              />
+              <FaqItem
+                question="Why does this matter?"
+                answer="Because attention shapes culture, technology, and the future — and it should be visible and participatory, not controlled by opaque systems."
+              />
+              <FaqItem
+                question="Who controls what matters?"
+                answer="No single entity. Signals emerge from collective participation — not from an algorithm optimizing for engagement."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/*  BOTTOM CTA                                                  */}
       {/* ============================================================ */}
       <section className="relative py-20 border-t border-white/[0.04]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
-            Ready to discover the next trend?
+            Don't just consume the internet.
+            <br />
+            <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              Participate in what shapes it.
+            </span>
           </h2>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
-            Join the attention market. Trade conviction. Own your identity.
+            Create a #token. Join a signal. Build something that matters.
           </p>
           {/* CTAs */}
           <div

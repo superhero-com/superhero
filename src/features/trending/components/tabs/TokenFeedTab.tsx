@@ -10,8 +10,6 @@ type TokenFeedTabProps = {
   showComposer: boolean;
   holdersOnly: boolean;
   setHoldersOnly: (next: boolean) => void;
-  popularWindow: '24h' | '7d' | 'all';
-  setPopularWindow: (next: '24h' | '7d' | 'all') => void;
   showTradePanels: boolean;
   setShowTradePanels: (next: boolean | ((prev: boolean) => boolean)) => void;
 };
@@ -22,8 +20,6 @@ export const TokenFeedTab = ({
   showComposer,
   holdersOnly: _holdersOnly,
   setHoldersOnly,
-  popularWindow,
-  setPopularWindow,
   showTradePanels,
   setShowTradePanels,
 }: TokenFeedTabProps) => {
@@ -61,28 +57,6 @@ export const TokenFeedTab = ({
               </button>
             </div>
 
-            {holdersOnly && (
-              <div className="flex items-center gap-1">
-                {(['24h', '7d', 'all'] as const).map((window) => (
-                  <button
-                    key={window}
-                    type="button"
-                    onClick={() => setPopularWindow(window)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${popularWindow === window
-                      ? 'bg-white/15 text-white'
-                      : 'bg-white/5 text-white/60 hover:text-white'
-                    }`}
-                    aria-pressed={popularWindow === window}
-                  >
-                    {(() => {
-                      if (window === '24h') return '24h';
-                      if (window === '7d') return '7d';
-                      return 'All';
-                    })()}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

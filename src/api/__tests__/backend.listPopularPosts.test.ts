@@ -25,25 +25,24 @@ describe('SuperheroApi.listPopularPosts', () => {
     return call[0] as string;
   };
 
-  it('builds URL with window, page, and limit', async () => {
-    await SuperheroApi.listPopularPosts({ window: '7d', page: 2, limit: 20 });
+  it('builds URL with page and limit', async () => {
+    await SuperheroApi.listPopularPosts({ page: 2, limit: 20 });
     const url = getCalledUrl();
-    expect(url).toContain('window=7d');
+    expect(url).not.toContain('window=');
     expect(url).toContain('page=2');
     expect(url).toContain('limit=20');
   });
 
   it('builds URL without weights when none provided', async () => {
-    await SuperheroApi.listPopularPosts({ window: '24h', page: 1, limit: 10 });
+    await SuperheroApi.listPopularPosts({ page: 1, limit: 10 });
     const url = getCalledUrl();
-    expect(url).toContain('window=24h');
+    expect(url).not.toContain('window=');
     expect(url).not.toContain('comments');
     expect(url).not.toContain('reads');
   });
 
   it('appends weight params to URL', async () => {
     await SuperheroApi.listPopularPosts({
-      window: '24h',
       page: 1,
       limit: 10,
       weights: { comments: 'high', reads: 'low' },
@@ -55,7 +54,6 @@ describe('SuperheroApi.listPopularPosts', () => {
 
   it('appends all weight keys when provided', async () => {
     await SuperheroApi.listPopularPosts({
-      window: 'all',
       page: 1,
       limit: 10,
       weights: {
@@ -82,7 +80,6 @@ describe('SuperheroApi.listPopularPosts', () => {
 
   it('skips undefined weight values', async () => {
     await SuperheroApi.listPopularPosts({
-      window: '24h',
       page: 1,
       limit: 10,
       weights: { comments: 'high' },
@@ -95,25 +92,23 @@ describe('SuperheroApi.listPopularPosts', () => {
 
   it('does not append weights when weights is undefined', async () => {
     await SuperheroApi.listPopularPosts({
-      window: '24h',
       page: 1,
       limit: 10,
       weights: undefined,
     });
     const url = getCalledUrl();
     const params = new URL(url).searchParams;
-    expect([...params.keys()]).toEqual(['window', 'page', 'limit']);
+    expect([...params.keys()]).toEqual(['page', 'limit']);
   });
 
   it('does not append weights when weights is empty object', async () => {
     await SuperheroApi.listPopularPosts({
-      window: '24h',
       page: 1,
       limit: 10,
       weights: {},
     });
     const url = getCalledUrl();
     const params = new URL(url).searchParams;
-    expect([...params.keys()]).toEqual(['window', 'page', 'limit']);
+    expect([...params.keys()]).toEqual(['page', 'limit']);
   });
 });

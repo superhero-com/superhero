@@ -180,7 +180,6 @@ export async function fetchTrendingTokens(limit: number = DEFAULT_TAB_LIMIT) {
 
 export async function fetchPopularPosts(limit: number = DEFAULT_TAB_LIMIT) {
   return normalizeSection<TrendPostItem>(await SuperheroApi.listPopularPosts({
-    window: 'all',
     limit,
     page: 1,
   }) as PaginatedApiResponse<TrendPostItem>);

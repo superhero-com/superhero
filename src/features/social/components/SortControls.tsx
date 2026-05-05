@@ -60,8 +60,6 @@ interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
   className?: string;
-  popularWindow?: '24h' | '7d' | 'all';
-  onPopularWindowChange?: (value: '24h' | '7d' | 'all') => void;
   popularFeedEnabled?: boolean;
   popularWeights?: PopularWeights;
   onPopularWeightsChange?: (weights: PopularWeights) => void;
@@ -70,7 +68,7 @@ interface SortControlsProps {
 // Component: Sort Controls
 const SortControls = memo(
   ({
-    sortBy, onSortChange, className = '', popularWindow = '24h', onPopularWindowChange, popularFeedEnabled = true,
+    sortBy, onSortChange, className = '', popularFeedEnabled = true,
     popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
     const mobileSortRef = useRef<HTMLDivElement>(null);
@@ -101,10 +99,6 @@ const SortControls = memo(
 
     const getEffectiveWeight = (key: WeightKey): WeightValue => popularWeights[key] ?? 'med';
 
-    const handleWindowChange = (value: '24h' | '7d' | 'all') => {
-      if (onPopularWindowChange) onPopularWindowChange(value);
-    };
-
     const handleWeightChange = (key: WeightKey, value: WeightValue) => {
       if (!onPopularWeightsChange) return;
       const next = { ...popularWeights };
@@ -124,7 +118,6 @@ const SortControls = memo(
 
     const handleResetCustomSettings = () => {
       handleResetWeights();
-      handleWindowChange('24h');
     };
 
     useEffect(() => {
@@ -151,7 +144,7 @@ const SortControls = memo(
         setMobileCustomizeOpen(false);
         setCustomizeOpen(false);
       }
-    }, [sortBy, popularWindow]);
+    }, [sortBy]);
 
     // Show "Latest Feed" title if popular feed is disabled
     if (!popularFeedEnabled) {
@@ -166,20 +159,11 @@ const SortControls = memo(
       );
     }
 
-    // Helper function to get the display title
-    const getPopularLabel = (window: '24h' | '7d' | 'all') => {
-      if (window === '24h') return 'Today';
-      if (window === '7d') return 'This week';
-      return 'All time';
-    };
-
     const getMobileTitle = () => {
       if (sortBy === 'latest') {
         return 'Latest';
       }
-      // Popular feed
-      const timeLabel = getPopularLabel(popularWindow);
-      return `Popular ${timeLabel.toLowerCase()}`;
+      return 'Popular';
     };
 
     const handleMobileSortToggle = (newSort: 'hot' | 'latest') => {
@@ -187,8 +171,7 @@ const SortControls = memo(
       onSortChange(newSort);
     };
 
-    const hasNonDefaultWindow = popularWindow !== '24h';
-    const hasCustomSettings = hasCustomWeights || hasNonDefaultWindow;
+    const hasCustomSettings = hasCustomWeights;
 
     const renderCustomizeControls = (isMobile = false) => (
       <>
@@ -211,36 +194,6 @@ const SortControls = memo(
             )}
           </div>
         )}
-        <div className="px-4 pt-3 pb-2">
-          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Time Window</span>
-          <div className="mt-1.5 inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
-            {(['24h', '7d', 'all'] as const).map((tf) => {
-              const isActive = popularWindow === tf;
-              const label = getPopularLabel(tf);
-              return (
-                <button
-                  type="button"
-                  key={tf}
-                  onClick={(e) => {
-                    if (!isMobile) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                    handleWindowChange(tf);
-                  }}
-                  className={cn(
-                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-200',
-                    isActive
-                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                      : 'bg-transparent text-white/70 border-transparent hover:text-white/90 hover:bg-white/10',
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
         <div className="px-4 pt-2 pb-1">
           <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Weights</span>
         </div>
@@ -385,7 +338,7 @@ const SortControls = memo(
                             Customize Feed
                           </DialogTitle>
                           <DialogDescription className="mt-1 text-sm text-white/60">
-                            Tune the popular feed ranking and time window.
+                            Tune the popular feed ranking.
                           </DialogDescription>
                         </div>
                         <button

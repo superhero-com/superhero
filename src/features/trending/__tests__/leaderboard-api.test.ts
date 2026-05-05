@@ -59,8 +59,10 @@ describe('leaderboard API', () => {
     });
   });
 
-  it('uses recent time filter params for live leaderboard windows', async () => {
+  it('uses custom start and end dates when provided', async () => {
     const fetchJsonMock = SuperheroApi.fetchJson as any;
+    const startDate = '2026-05-04T10:00:00.000Z';
+    const endDate = '2026-05-04T18:00:00.000Z';
 
     fetchJsonMock.mockResolvedValueOnce({
       items: [{ address: 'ak_live', volume_usd: 800 }],
@@ -78,23 +80,27 @@ describe('leaderboard API', () => {
     });
 
     const result = await fetchLeaderboard({
-      timeframe: '30m',
+      timeframe: '7d',
       metric: 'pnl',
       page: 1,
       limit: 50,
+      startDate,
+      endDate,
     });
 
     expect(fetchJsonMock).toHaveBeenCalledTimes(1);
     const calledPath = fetchJsonMock.mock.calls[0][0] as string;
     const url = new URL(`https://example.com${calledPath}`);
 
-    expect(url.searchParams.get('timePeriod')).toBe('30');
-    expect(url.searchParams.get('timeUnit')).toBe('minutes');
+    expect(url.searchParams.get('startDate')).toBe(startDate);
+    expect(url.searchParams.get('endDate')).toBe(endDate);
     expect(url.searchParams.get('sortBy')).toBe('pnl');
     expect(url.searchParams.get('sortDir')).toBe('DESC');
     expect(url.searchParams.get('limit')).toBe('50');
     expect(url.searchParams.has('window')).toBe(false);
     expect(url.searchParams.has('points')).toBe(false);
+    expect(url.searchParams.has('timePeriod')).toBe(false);
+    expect(url.searchParams.has('timeUnit')).toBe(false);
     expect(result.meta.timeFilter).toEqual({
       value: 30,
       unit: 'minutes',

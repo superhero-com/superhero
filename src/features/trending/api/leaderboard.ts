@@ -1,10 +1,8 @@
 import { SuperheroApi } from '../../../api/backend';
 
-export type LeaderboardTimeUnit = 'minutes' | 'hours';
-
 export interface LeaderboardTimeFilterMeta {
   value: number;
-  unit: LeaderboardTimeUnit;
+  unit: 'minutes' | 'hours';
   start: string;
   end: string;
 }
@@ -20,8 +18,8 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Timeframe options: recent windows, 7d, 30d, all-time
-export const LEADERBOARD_TIMEFRAMES = ['30m', '1h', '7d', '30d', 'all'] as const;
+// Timeframe options: preset windows plus optional custom start/end dates.
+export const LEADERBOARD_TIMEFRAMES = ['7d', '30d', 'all'] as const;
 export type LeaderboardTimeframe = (typeof LEADERBOARD_TIMEFRAMES)[number];
 
 // Metrics map directly to /api/accounts/leaderboard?sortBy=<metric>.
@@ -48,23 +46,19 @@ export interface LeaderboardQueryParams {
   page?: number;
   limit?: number;
   sortDir?: 'ASC' | 'DESC';
+  startDate?: string;
+  endDate?: string;
 }
 
 interface LeaderboardApiTimeframeParams {
   window?: string;
   points?: number;
-  timePeriod?: number;
-  timeUnit?: LeaderboardTimeUnit;
 }
 
 function mapTimeframeToApiParams(
   timeframe: LeaderboardTimeframe,
 ): LeaderboardApiTimeframeParams {
   switch (timeframe) {
-    case '30m':
-      return { timePeriod: 30, timeUnit: 'minutes' };
-    case '1h':
-      return { timePeriod: 1, timeUnit: 'hours' };
     case '7d':
       return { window: '7d', points: 7 };
     case '30d':
@@ -79,19 +73,20 @@ export async function fetchLeaderboard(
   params: LeaderboardQueryParams,
 ): Promise<PaginatedResponse<LeaderboardItem>> {
   const {
-    timeframe, metric, page = 1, limit = 18, sortDir,
+    timeframe, metric, page = 1, limit = 18, sortDir, startDate, endDate,
   } = params;
 
   const timeframeParams = mapTimeframeToApiParams(timeframe);
   const resolvedSortDir = sortDir ?? (metric === 'mdd' ? 'ASC' : 'DESC');
 
   const searchParams = new URLSearchParams();
-  if (timeframeParams.window) searchParams.set('window', timeframeParams.window);
-  if (timeframeParams.points) searchParams.set('points', String(timeframeParams.points));
-  if (timeframeParams.timePeriod) {
-    searchParams.set('timePeriod', String(timeframeParams.timePeriod));
+  if (startDate && endDate) {
+    searchParams.set('startDate', startDate);
+    searchParams.set('endDate', endDate);
+  } else {
+    if (timeframeParams.window) searchParams.set('window', timeframeParams.window);
+    if (timeframeParams.points) searchParams.set('points', String(timeframeParams.points));
   }
-  if (timeframeParams.timeUnit) searchParams.set('timeUnit', timeframeParams.timeUnit);
   searchParams.set('sortBy', metric);
   searchParams.set('sortDir', resolvedSortDir);
   searchParams.set('page', String(page));

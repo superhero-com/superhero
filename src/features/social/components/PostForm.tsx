@@ -10,7 +10,9 @@ import { TxPayloadType, useTransactionNotification } from '@/features/transactio
 
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
-import { IconClose, IconGif, IconSmile } from '../../../icons';
+import {
+  IconClose, IconGif, IconLink, IconSmile,
+} from '../../../icons';
 // @ts-ignore
 import { PostsService } from '../../../api/generated';
 import { CONFIG } from '../../../config';
@@ -18,6 +20,9 @@ import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
+import { LinkPreviewCard } from './LinkPreviewCard';
+import { YouTubeEmbed } from './YouTubeEmbed';
+import { useLinkDetection } from '../hooks/useLinkDetection';
 
 type TippingV3ContractApi = ContractMethodsBase & {
   post_without_tip: (
@@ -155,6 +160,12 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
+  const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
+
+  const detectedLink = useLinkDetection(text);
+  const showLinkPreview = Boolean(
+    detectedLink && detectedLink.url !== dismissedLinkUrl,
+  );
 
   // Shared ID normalization function - ensures consistent ID format across the component
   const normalizeId = (id: string): string => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
@@ -872,6 +883,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       // Reset after success
       setText(initialText || '');
       setMediaUrls([]);
+      setDismissedLinkUrl(null);
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
@@ -949,7 +961,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               </div>
             )}
             <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
-              <div className="relative">
+              <div className="relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
                 <textarea
                   ref={textareaRef}
                   placeholder={currentPlaceholder}
@@ -987,7 +999,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       });
                     }
                   }}
-                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
+                  className="bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{ minHeight: computedMinHeight }}
                   rows={1}
                   maxLength={characterLimit}
@@ -1010,7 +1022,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   </div>
                 )}
 
-                <div className="md:hidden absolute bottom-5 left-2">
+                <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
                   {/* Mobile-only GIF button inside textarea corner */}
                   {showGifInput && (
                     <button
@@ -1044,6 +1056,22 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {text.length}
                     /
                     {characterLimit}
+                  </div>
+                )}
+
+                {showLinkPreview && detectedLink && (
+                  <div className="px-2.5 pb-2.5 pt-1 md:px-4 md:pb-3 md:pt-0">
+                    {detectedLink.type === 'youtube' && detectedLink.youtubeId ? (
+                      <YouTubeEmbed
+                        videoId={detectedLink.youtubeId}
+                        onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
+                      />
+                    ) : (
+                      <LinkPreviewCard
+                        url={detectedLink.url}
+                        onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
+                      />
+                    )}
                   </div>
                 )}
 

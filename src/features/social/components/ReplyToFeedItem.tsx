@@ -18,6 +18,29 @@ import { useWallet } from '../../../hooks';
 import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
+import { useLinkDetection } from '../hooks/useLinkDetection';
+import { LinkPreviewCard } from './LinkPreviewCard';
+import { YouTubeEmbed } from './YouTubeEmbed';
+
+// Small component so the hook is always called unconditionally
+const PostLinkPreview = memo(({ content }: { content: string }) => {
+  const link = useLinkDetection(content);
+  if (!link) return null;
+  if (link.type === 'youtube' && link.youtubeId) {
+    return (
+      <div className="mt-3">
+        <YouTubeEmbed videoId={link.youtubeId} />
+      </div>
+    );
+  }
+  return (
+    <div className="mt-3">
+      <LinkPreviewCard url={link.url} />
+    </div>
+  );
+});
+
+PostLinkPreview.displayName = 'PostLinkPreview';
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -400,6 +423,9 @@ const ReplyToFeedItem = memo(({
               trendMentions: (item as any)?.trend_mentions,
             })}
           </div>
+
+          {/* Link preview (YouTube embed or OG card) */}
+          <PostLinkPreview content={item.content || ''} />
 
           {/* Media */}
           {media.length > 0 && (

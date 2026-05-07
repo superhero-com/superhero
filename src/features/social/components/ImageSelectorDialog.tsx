@@ -16,13 +16,13 @@ async function searchOpenverse(query: string, page: number) {
   if (query) {
     url.searchParams.set('q', query);
   } else {
-    url.searchParams.set('sort', 'popularity');
-    url.searchParams.set('mature', 'false');
+    url.searchParams.set('q', 'blockchain');
   }
   url.searchParams.set('page_size', PER_PAGE.toString());
   url.searchParams.set('page', page.toString());
   url.searchParams.set('license_type', 'commercial,modification');
   url.searchParams.set('extension', 'jpg,png');
+  url.searchParams.set('mature', 'false');
   const res = await fetch(url.toString(), {
     headers: { Accept: 'application/json' },
   });
@@ -57,7 +57,11 @@ export const ImageSelectorDialog = ({
   } = useInfiniteQuery({
     queryKey: ['openverse-image-search', query],
     queryFn: ({ pageParam = 1 }) => searchOpenverse(query, pageParam as number),
-    getNextPageParam: (lastPage) => (lastPage.next ? lastPage.page + 1 : undefined),
+    getNextPageParam: (lastPage: { page?: number; page_count?: number }) => {
+      const page = lastPage.page ?? 1;
+      const pageCount = lastPage.page_count ?? 0;
+      return page < pageCount ? page + 1 : undefined;
+    },
     initialPageParam: 1,
     enabled: open,
   });
@@ -68,7 +72,7 @@ export const ImageSelectorDialog = ({
     const urlOk = /\.(jpe?g|png)(\?|$)/i.test(photo?.url ?? '');
     return ft === 'jpg' || ft === 'jpeg' || ft === 'png' || (!ft && urlOk);
   });
-  const totalCount: number = data?.pages[0]?.count ?? 0;
+  const totalCount: number = data?.pages[0]?.result_count ?? 0;
   const isTrending = query.length === 0;
 
   // Auto-load more on scroll using IntersectionObserver
@@ -117,7 +121,8 @@ export const ImageSelectorDialog = ({
           />
 
           <span className="text-xs text-white/60 font-medium block">
-            {isTrending ? 'Trending · Openverse (CC)' : totalCount > 0 ? `${totalCount.toLocaleString()} Results · Openverse (CC)` : ''}
+            {isTrending && 'Trending · Openverse (CC)'}
+            {!isTrending && totalCount > 0 && `${totalCount.toLocaleString()} Results · Openverse (CC)`}
           </span>
 
           {/* Already selected images */}

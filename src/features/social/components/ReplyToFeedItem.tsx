@@ -280,6 +280,9 @@ const ReplyToFeedItem = memo(({
           />
         </div>
       )}
+      <div className="absolute bottom-4 right-2 md:bottom-5 md:right-5 z-10">
+        <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
+      </div>
       {/* Main row: avatar left, content right */}
       <div className="flex gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
@@ -422,7 +425,7 @@ const ReplyToFeedItem = memo(({
           )}
 
           {/* Actions */}
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center pr-10 md:pr-12">
             <div className="inline-flex items-center gap-5 text-[13px] text-white/70">
               <button
                 type="button"
@@ -445,7 +448,6 @@ const ReplyToFeedItem = memo(({
               </button>
               <PostTipButton toAddress={authorAddress} postId={String(postId)} />
             </div>
-            <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
           </div>
 
           {/* Nested replies for this item */}

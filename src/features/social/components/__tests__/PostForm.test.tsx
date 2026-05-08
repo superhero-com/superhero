@@ -165,6 +165,7 @@ describe('PostForm', () => {
             requiredHashtag="#nancy"
             showEmojiPicker={false}
             showGifInput={false}
+            showImageInput={false}
             showMediaFeatures={false}
           />
         </TransactionNotificationProvider>
@@ -174,7 +175,9 @@ describe('PostForm', () => {
     fireEvent.change(screen.getByRole('textbox'), {
       target: { value: '#NANCY hello world' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Post' }));
+    const form = screen.getByRole('textbox').closest('form');
+    expect(form).toBeTruthy();
+    fireEvent.submit(form!);
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledTimes(1);

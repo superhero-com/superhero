@@ -21,8 +21,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
-import { LinkPreviewCard } from './LinkPreviewCard';
-import { YouTubeEmbed } from './YouTubeEmbed';
+import { DetectedLinkPreview } from './DetectedLinkPreview';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 
 type TippingV3ContractApi = ContractMethodsBase & {
@@ -167,8 +166,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
 
   const detectedLink = useLinkDetection(text);
+  const linkPreviewDismissedForCurrent = Boolean(
+    detectedLink && dismissedLinkUrl === detectedLink.url,
+  );
   const showLinkPreview = Boolean(
-    detectedLink && detectedLink.url !== dismissedLinkUrl,
+    detectedLink && !linkPreviewDismissedForCurrent,
   );
 
   // Shared ID normalization function - ensures consistent ID format across the component
@@ -1089,15 +1091,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     <button
                       type="button"
                       className={`md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] border outline outline-1 text-[11px] leading-none transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1 ${
-                        dismissedLinkUrl !== null
+                        linkPreviewDismissedForCurrent
                           ? 'bg-primary-100/20 border-primary-400/50 outline-primary-400/50 text-primary-400'
                           : 'bg-transparent border-white/10 outline-white/10 text-white/80 hover:border-white/20'
                       }`}
-                      title={dismissedLinkUrl ? 'Restore link preview' : 'Dismiss link preview'}
+                      title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (dismissedLinkUrl) {
+                        if (linkPreviewDismissedForCurrent) {
                           setDismissedLinkUrl(null);
                         } else {
                           setDismissedLinkUrl(detectedLink.url);
@@ -1107,7 +1109,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (dismissedLinkUrl) {
+                        if (linkPreviewDismissedForCurrent) {
                           setDismissedLinkUrl(null);
                         } else {
                           setDismissedLinkUrl(detectedLink.url);
@@ -1129,17 +1131,10 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
                 {showLinkPreview && detectedLink && (
                   <div className="px-2.5 pb-2.5 pt-1 md:px-4 md:pb-3 md:pt-0">
-                    {detectedLink.type === 'youtube' && detectedLink.youtubeId ? (
-                      <YouTubeEmbed
-                        videoId={detectedLink.youtubeId}
-                        onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
-                      />
-                    ) : (
-                      <LinkPreviewCard
-                        url={detectedLink.url}
-                        onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
-                      />
-                    )}
+                    <DetectedLinkPreview
+                      link={detectedLink}
+                      onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
+                    />
                   </div>
                 )}
 
@@ -1201,13 +1196,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <button
                         type="button"
                         className={`border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
-                          dismissedLinkUrl !== null
+                          linkPreviewDismissedForCurrent
                             ? 'bg-primary-100 border-primary-300 text-primary-600'
                             : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
                         }`}
-                        title={dismissedLinkUrl ? 'Restore link preview' : 'Dismiss link preview'}
+                        title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
                         onClick={() => {
-                          if (dismissedLinkUrl) {
+                          if (linkPreviewDismissedForCurrent) {
                             setDismissedLinkUrl(null);
                           } else {
                             setDismissedLinkUrl(detectedLink.url);

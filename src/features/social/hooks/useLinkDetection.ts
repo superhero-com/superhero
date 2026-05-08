@@ -1,11 +1,16 @@
 import { useMemo } from 'react';
 
-export type LinkType = 'youtube' | 'image' | 'webpage';
+export type LinkType = 'youtube' | 'spotify' | 'twitter' | 'github' | 'image' | 'webpage';
 
 export interface DetectedLink {
   url: string;
   type: LinkType;
   youtubeId?: string;
+  spotifyType?: string;
+  spotifyId?: string;
+  twitterUrl?: string;
+  githubOwner?: string;
+  githubRepo?: string;
 }
 
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/g;
@@ -15,16 +20,71 @@ const YOUTUBE_PATTERNS = [
 ];
 
 function extractYouTubeId(url: string): string | null {
-  for (const pattern of YOUTUBE_PATTERNS) {
-    const m = url.match(pattern);
-    if (m) return m[1];
-  }
+  const match = YOUTUBE_PATTERNS
+    .map((pattern) => url.match(pattern))
+    .find((m): m is RegExpMatchArray => m !== null);
+  return match ? match[1] : null;
+}
+
+function extractSpotify(url: string): { spotifyType: string; spotifyId: string } | null {
+  const m = url.match(/open\.spotify\.com\/(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
+  if (m) return { spotifyType: m[1], spotifyId: m[2] };
   return null;
 }
 
-function classifyUrl(url: string): { type: LinkType; youtubeId?: string } {
+function extractTwitter(url: string): string | null {
+  if (/(?:twitter\.com|x\.com)\/\w+\/status\/\d+/.test(url)) return url;
+  return null;
+}
+
+function extractGitHub(url: string): { githubOwner: string; githubRepo: string } | null {
+  const m = url.match(/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\/.*)?$/);
+  if (m) return { githubOwner: m[1], githubRepo: m[2] };
+  return null;
+}
+
+/**
+ * Strips trailing prose punctuation from a URL.
+ *
+ * A trailing `)` is only stripped when it's unbalanced (more `)` than `(`
+ * in the URL), so links that legitimately end in `)` — e.g.
+ * `https://en.wikipedia.org/wiki/Rust_(programming_language)` — stay intact,
+ * while a URL pasted inside parentheses like `(https://example.com)` still
+ * has its trailing `)` removed.
+ */
+function stripTrailingPunctuation(url: string): string {
+  let result = url;
+  let changed = true;
+  while (changed && result.length > 0) {
+    changed = false;
+    const last = result[result.length - 1];
+    if (/[.,;:!?'"]/.test(last)) {
+      result = result.slice(0, -1);
+      changed = true;
+    } else if (last === ')') {
+      const opens = (result.match(/\(/g) ?? []).length;
+      const closes = (result.match(/\)/g) ?? []).length;
+      if (closes > opens) {
+        result = result.slice(0, -1);
+        changed = true;
+      }
+    }
+  }
+  return result;
+}
+
+function classifyUrl(url: string): Omit<DetectedLink, 'url'> {
   const ytId = extractYouTubeId(url);
   if (ytId) return { type: 'youtube', youtubeId: ytId };
+
+  const spotify = extractSpotify(url);
+  if (spotify) return { type: 'spotify', ...spotify };
+
+  const tweetUrl = extractTwitter(url);
+  if (tweetUrl) return { type: 'twitter', twitterUrl: tweetUrl };
+
+  const github = extractGitHub(url);
+  if (github) return { type: 'github', ...github };
 
   if (/\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(url)) {
     return { type: 'image' };
@@ -45,16 +105,10 @@ export function useLinkDetection(text: string): DetectedLink | null {
     // Use the first URL found
     const rawUrl = matches[0];
     // Strip trailing punctuation that might be part of prose
-    const url = rawUrl.replace(/[.,;:!?)'"]+$/, '');
+    const url = stripTrailingPunctuation(rawUrl);
 
-    try {
-      // Validate it's actually a parseable URL
-      new URL(url);
-    } catch {
-      return null;
-    }
+    if (!URL.canParse(url)) return null;
 
-    const { type, youtubeId } = classifyUrl(url);
-    return { url, type, youtubeId };
+    return { url, ...classifyUrl(url) };
   }, [text]);
 }

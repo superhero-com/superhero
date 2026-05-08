@@ -19,25 +19,12 @@ import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 import { useLinkDetection } from '../hooks/useLinkDetection';
-import { LinkPreviewCard } from './LinkPreviewCard';
-import { YouTubeEmbed } from './YouTubeEmbed';
+import { DetectedLinkPreview } from './DetectedLinkPreview';
 
 // Small component so the hook is always called unconditionally
 const PostLinkPreview = memo(({ content }: { content: string }) => {
   const link = useLinkDetection(content);
-  if (!link) return null;
-  if (link.type === 'youtube' && link.youtubeId) {
-    return (
-      <div className="mt-3">
-        <YouTubeEmbed videoId={link.youtubeId} />
-      </div>
-    );
-  }
-  return (
-    <div className="mt-3">
-      <LinkPreviewCard url={link.url} />
-    </div>
-  );
+  return <DetectedLinkPreview link={link} className="mt-3" />;
 });
 
 PostLinkPreview.displayName = 'PostLinkPreview';

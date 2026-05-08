@@ -14,59 +14,78 @@ interface LinkPreviewCardProps {
   onDismiss?: () => void;
 }
 
-export function LinkPreviewCard({ url, onDismiss }: LinkPreviewCardProps) {
-  const [data, setData] = useState<OgData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+// Try these proxies in order — first one to return parseable OG data wins
+const PROXIES = [
+  (u: string) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+  (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+];
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    setData(null);
+function parseOg(html: string, fallbackUrl: string): OgData | null {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const getOg = (prop: string) => doc.querySelector(`meta[property="og:${prop}"]`)?.getAttribute('content') ?? null;
+  const getMeta = (name: string) => doc.querySelector(`meta[name="${name}"]`)?.getAttribute('content') ?? null;
 
-    let cancelled = false;
+  const title = getOg('title') ?? doc.querySelector('title')?.textContent?.trim() ?? undefined;
+  const description = getOg('description') ?? getMeta('description') ?? undefined;
+  const image = getOg('image') ?? undefined;
+  const resolvedUrl = getOg('url') ?? fallbackUrl;
+  const siteName = getOg('site_name') ?? undefined;
 
-    const encoded = encodeURIComponent(url);
-    fetch(`https://api.codetabs.com/v1/proxy/?quest=${encoded}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('fetch failed');
-        return r.text();
-      })
-      .then((html) => {
-        if (cancelled) return;
-        if (!html) { setError(true); return; }
+  if (!title && !image) return null;
+  return {
+    title, description, image, url: resolvedUrl, siteName,
+  };
+}
 
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const getOg = (prop: string) =>
-          doc.querySelector(`meta[property="og:${prop}"]`)?.getAttribute('content') ?? null;
-        const getMeta = (name: string) =>
-          doc.querySelector(`meta[name="${name}"]`)?.getAttribute('content') ?? null;
+async function tryProxy(buildProxy: (u: string) => string, url: string): Promise<OgData | null> {
+  try {
+    const r = await fetch(buildProxy(url), { signal: AbortSignal.timeout(7000) });
+    if (!r.ok) return null;
+    const html = await r.text();
+    return parseOg(html, url);
+  } catch {
+    return null;
+  }
+}
 
-        const title = getOg('title') ?? doc.querySelector('title')?.textContent?.trim() ?? undefined;
-        const description = getOg('description') ?? getMeta('description') ?? undefined;
-        const image = getOg('image') ?? undefined;
-        const resolvedUrl = getOg('url') ?? url;
-        const siteName = getOg('site_name') ?? undefined;
+function fetchOgData(url: string): Promise<OgData | null> {
+  return PROXIES.reduce<Promise<OgData | null>>(
+    (prev, buildProxy) => prev.then((acc) => acc ?? tryProxy(buildProxy, url)),
+    Promise.resolve(null),
+  );
+}
 
-        if (!title && !image) { setError(true); return; }
-        setData({ title, description, image, url: resolvedUrl, siteName });
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [url]);
+export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
+  // null = not yet loaded, false = all proxies failed (show minimal), OgData = full card
+  const [data, setData] = useState<OgData | false | null>(null);
 
   let domain = '';
   try {
     domain = new URL(url).hostname.replace(/^www\./, '');
   } catch { /* ignore */ }
 
-  if (loading) {
+  useEffect(() => {
+    setData(null);
+    let cancelled = false;
+    fetchOgData(url).then((result) => {
+      if (!cancelled) setData(result ?? false);
+    });
+    return () => { cancelled = true; };
+  }, [url]);
+
+  const dismissBtn = onDismiss ? (
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(); }}
+      className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
+      aria-label="Dismiss preview"
+    >
+      <IconClose className="w-3 h-3 text-white" />
+    </button>
+  ) : null;
+
+  // Loading skeleton
+  if (data === null) {
     return (
       <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden animate-pulse">
         {onDismiss && (
@@ -91,8 +110,34 @@ export function LinkPreviewCard({ url, onDismiss }: LinkPreviewCardProps) {
     );
   }
 
-  if (error || !data) return null;
+  // Minimal fallback: all proxies failed — show favicon + domain so the link is never invisible
+  if (data === false) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex items-center gap-3 px-3 py-2.5 hover:bg-white/8 hover:border-white/20 transition-all duration-200 no-underline pr-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {dismissBtn}
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+          alt=""
+          className="w-5 h-5 rounded flex-shrink-0"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+        />
+        <div className="min-w-0 flex-1">
+          <span className="text-[11px] text-white/50 uppercase tracking-wide font-medium block truncate">
+            {domain}
+          </span>
+          <span className="text-xs text-white/60 block truncate">{url}</span>
+        </div>
+      </a>
+    );
+  }
 
+  // Full OG card
   return (
     <a
       href={data.url ?? url}
@@ -101,16 +146,7 @@ export function LinkPreviewCard({ url, onDismiss }: LinkPreviewCardProps) {
       className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex gap-0 hover:bg-white/8 hover:border-white/20 transition-all duration-200 group no-underline"
       onClick={(e) => e.stopPropagation()}
     >
-      {onDismiss && (
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(); }}
-          className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-          aria-label="Dismiss preview"
-        >
-          <IconClose className="w-3 h-3 text-white" />
-        </button>
-      )}
+      {dismissBtn}
       {data.image && (
         <div className="flex-shrink-0 w-[120px] md:w-[160px] overflow-hidden">
           <img
@@ -138,10 +174,7 @@ export function LinkPreviewCard({ url, onDismiss }: LinkPreviewCardProps) {
             {data.description}
           </span>
         )}
-        {!data.siteName && domain && (
-          <span className="text-[11px] text-white/40 mt-0.5 truncate">{domain}</span>
-        )}
       </div>
     </a>
   );
-}
+};

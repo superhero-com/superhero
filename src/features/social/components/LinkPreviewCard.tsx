@@ -27,22 +27,29 @@ export function LinkPreviewCard({ url, onDismiss }: LinkPreviewCardProps) {
     let cancelled = false;
 
     const encoded = encodeURIComponent(url);
-    fetch(`https://api.microlink.io?url=${encoded}&meta=false`)
+    fetch(`https://api.codetabs.com/v1/proxy/?quest=${encoded}`)
       .then((r) => {
         if (!r.ok) throw new Error('fetch failed');
-        return r.json();
+        return r.text();
       })
-      .then((json) => {
+      .then((html) => {
         if (cancelled) return;
-        const d = json?.data;
-        if (!d) { setError(true); return; }
-        setData({
-          title: d.title ?? undefined,
-          description: d.description ?? undefined,
-          image: d.image?.url ?? d.screenshot?.url ?? undefined,
-          url: d.url ?? url,
-          siteName: d.publisher ?? d.author ?? undefined,
-        });
+        if (!html) { setError(true); return; }
+
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const getOg = (prop: string) =>
+          doc.querySelector(`meta[property="og:${prop}"]`)?.getAttribute('content') ?? null;
+        const getMeta = (name: string) =>
+          doc.querySelector(`meta[name="${name}"]`)?.getAttribute('content') ?? null;
+
+        const title = getOg('title') ?? doc.querySelector('title')?.textContent?.trim() ?? undefined;
+        const description = getOg('description') ?? getMeta('description') ?? undefined;
+        const image = getOg('image') ?? undefined;
+        const resolvedUrl = getOg('url') ?? url;
+        const siteName = getOg('site_name') ?? undefined;
+
+        if (!title && !image) { setError(true); return; }
+        setData({ title, description, image, url: resolvedUrl, siteName });
       })
       .catch(() => {
         if (!cancelled) setError(true);

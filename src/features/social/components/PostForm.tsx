@@ -10,7 +10,9 @@ import { TxPayloadType, useTransactionNotification } from '@/features/transactio
 
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
-import { IconClose, IconGif, IconSmile } from '../../../icons';
+import {
+  IconClose, IconGif, IconImage, IconLink, IconSmile,
+} from '../../../icons';
 // @ts-ignore
 import { PostsService } from '../../../api/generated';
 import { CONFIG } from '../../../config';
@@ -18,6 +20,9 @@ import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
+import { ImageSelectorDialog } from './ImageSelectorDialog';
+import { DetectedLinkPreview } from './DetectedLinkPreview';
+import { useLinkDetection } from '../hooks/useLinkDetection';
 
 type TippingV3ContractApi = ContractMethodsBase & {
   post_without_tip: (
@@ -50,6 +55,7 @@ interface PostFormProps {
   showMediaFeatures?: boolean;
   showEmojiPicker?: boolean;
   showGifInput?: boolean;
+  showImageInput?: boolean;
   characterLimit?: number;
   autoFocus?: boolean;
 }
@@ -108,6 +114,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     showMediaFeatures = true,
     showEmojiPicker = true,
     showGifInput = true,
+    showImageInput = true,
     characterLimit = 280,
     autoFocus = false,
   } = props;
@@ -154,7 +161,17 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
+  const [showImage, setShowImage] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
+  const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
+
+  const detectedLink = useLinkDetection(text);
+  const linkPreviewDismissedForCurrent = Boolean(
+    detectedLink && dismissedLinkUrl === detectedLink.url,
+  );
+  const showLinkPreview = Boolean(
+    detectedLink && !linkPreviewDismissedForCurrent,
+  );
 
   // Shared ID normalization function - ensures consistent ID format across the component
   const normalizeId = (id: string): string => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
@@ -872,6 +889,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       // Reset after success
       setText(initialText || '');
       setMediaUrls([]);
+      setDismissedLinkUrl(null);
+      setShowImage(false);
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
@@ -949,7 +968,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               </div>
             )}
             <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
-              <div className="relative">
+              <div className="relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
                 <textarea
                   ref={textareaRef}
                   placeholder={currentPlaceholder}
@@ -987,7 +1006,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       });
                     }
                   }}
-                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
+                  className="bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{ minHeight: computedMinHeight }}
                   rows={1}
                   maxLength={characterLimit}
@@ -1010,7 +1029,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   </div>
                 )}
 
-                <div className="md:hidden absolute bottom-5 left-2">
+                <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
                   {/* Mobile-only GIF button inside textarea corner */}
                   {showGifInput && (
                     <button
@@ -1038,6 +1057,69 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <span className="uppercase tracking-wide">{ts('gif')}</span>
                     </button>
                   )}
+                  {/* Mobile-only Image button */}
+                  {showImageInput && (
+                    <button
+                      type="button"
+                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1"
+                      title="Image"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowImage((s) => !s);
+                        setShowGif(false);
+                        setShowEmoji(false);
+                      }}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowImage((s) => !s);
+                        setShowGif(false);
+                        setShowEmoji(false);
+                      }}
+                    >
+                      <IconImage className="w-3 h-3" />
+                      <span className="uppercase tracking-wide">IMG</span>
+                    </button>
+                  )}
+                  {/* Mobile-only Link preview toggle */}
+                  {detectedLink && (
+                    <button
+                      type="button"
+                      className={`md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] border outline outline-1 text-[11px] leading-none transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1 ${
+                        linkPreviewDismissedForCurrent
+                          ? 'bg-primary-100/20 border-primary-400/50 outline-primary-400/50 text-primary-400'
+                          : 'bg-transparent border-white/10 outline-white/10 text-white/80 hover:border-white/20'
+                      }`}
+                      title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (linkPreviewDismissedForCurrent) {
+                          setDismissedLinkUrl(null);
+                        } else {
+                          setDismissedLinkUrl(detectedLink.url);
+                        }
+                      }}
+                      onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (linkPreviewDismissedForCurrent) {
+                          setDismissedLinkUrl(null);
+                        } else {
+                          setDismissedLinkUrl(detectedLink.url);
+                        }
+                      }}
+                    >
+                      <IconLink className="w-3 h-3" />
+                      <span className="uppercase tracking-wide">LINK</span>
+                    </button>
+                  )}
                 </div>
                 {characterLimit && (
                   <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
@@ -1047,9 +1129,18 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   </div>
                 )}
 
+                {showLinkPreview && detectedLink && (
+                  <div className="px-2.5 pb-2.5 pt-1 md:px-4 md:pb-3 md:pt-0">
+                    <DetectedLinkPreview
+                      link={detectedLink}
+                      onDismiss={() => setDismissedLinkUrl(detectedLink.url)}
+                    />
+                  </div>
+                )}
+
               </div>
 
-              {(showEmojiPicker || showGifInput) && (
+              {(showEmojiPicker || showGifInput || showImageInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
                     {showEmojiPicker && (
@@ -1077,10 +1168,49 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         onClick={() => {
                           setShowGif((s) => !s);
                           setShowEmoji(false);
+                          setShowImage(false);
                         }}
                       >
                         <IconGif className="w-4 h-4" />
                         <span>{ts('gif')}</span>
+                      </button>
+                    )}
+
+                    {showImageInput && (
+                      <button
+                        type="button"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        title="Image"
+                        onClick={() => {
+                          setShowImage((s) => !s);
+                          setShowGif(false);
+                          setShowEmoji(false);
+                        }}
+                      >
+                        <IconImage className="w-4 h-4" />
+                        <span>Image</span>
+                      </button>
+                    )}
+
+                    {detectedLink && (
+                      <button
+                        type="button"
+                        className={`border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
+                          linkPreviewDismissedForCurrent
+                            ? 'bg-primary-100 border-primary-300 text-primary-600'
+                            : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
+                        }`}
+                        title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
+                        onClick={() => {
+                          if (linkPreviewDismissedForCurrent) {
+                            setDismissedLinkUrl(null);
+                          } else {
+                            setDismissedLinkUrl(detectedLink.url);
+                          }
+                        }}
+                      >
+                        <IconLink className="w-4 h-4" />
+                        <span>Link</span>
                       </button>
                     )}
 
@@ -1108,6 +1238,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <GifSelectorDialog
                         open={showGif}
                         onOpenChange={setShowGif}
+                        mediaUrls={mediaUrls}
+                        onMediaUrlsChange={setMediaUrls}
+                      />
+                    )}
+
+                    {showImageInput && (
+                      <ImageSelectorDialog
+                        open={showImage}
+                        onOpenChange={setShowImage}
                         mediaUrls={mediaUrls}
                         onMediaUrlsChange={setMediaUrls}
                       />

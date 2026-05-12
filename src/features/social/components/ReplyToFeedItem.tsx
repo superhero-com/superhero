@@ -18,6 +18,16 @@ import { useWallet } from '../../../hooks';
 import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
+import { useLinkDetection } from '../hooks/useLinkDetection';
+import { DetectedLinkPreview } from './DetectedLinkPreview';
+
+// Small component so the hook is always called unconditionally
+const PostLinkPreview = memo(({ content }: { content: string }) => {
+  const link = useLinkDetection(content);
+  return <DetectedLinkPreview link={link} className="mt-3" />;
+});
+
+PostLinkPreview.displayName = 'PostLinkPreview';
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -403,6 +413,9 @@ const ReplyToFeedItem = memo(({
               trendMentions: (item as any)?.trend_mentions,
             })}
           </div>
+
+          {/* Link preview (YouTube embed or OG card) */}
+          <PostLinkPreview content={item.content || ''} />
 
           {/* Media */}
           {media.length > 0 && (

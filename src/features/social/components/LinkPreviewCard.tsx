@@ -56,7 +56,7 @@ function fetchOgData(url: string): Promise<OgData | null> {
 }
 
 export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
-  // null = not yet loaded, false = all proxies failed (show minimal), OgData = full card
+  // null = not yet loaded, false = all proxies failed, OgData = full card
   const [data, setData] = useState<OgData | false | null>(null);
 
   let domain = '';
@@ -110,31 +110,8 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
     );
   }
 
-  // Minimal fallback: all proxies failed — show favicon + domain so the link is never invisible
   if (data === false) {
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex items-center gap-3 px-3 py-2.5 hover:bg-white/8 hover:border-white/20 transition-all duration-200 no-underline pr-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {dismissBtn}
-        <img
-          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-          alt=""
-          className="w-5 h-5 rounded flex-shrink-0"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-        />
-        <div className="min-w-0 flex-1">
-          <span className="text-[11px] text-white/50 uppercase tracking-wide font-medium block truncate">
-            {domain}
-          </span>
-          <span className="text-xs text-white/60 block truncate">{url}</span>
-        </div>
-      </a>
-    );
+    return null;
   }
 
   // Full OG card

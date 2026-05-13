@@ -587,6 +587,7 @@
     "leaderboardTip1": "Trade trend tokens regularly to build up your volume.",
     "leaderboardTip2": "Keep your PnL and ROI positive over time.",
     "leaderboardTip3": "Own and hold trending tokens to grow your AUM.",
+    "leaderboardRoiExplanation": "ROI shows how efficiently a user turned capital into profit during the selected leaderboard period. For most leaderboard windows, it is calculated as PNL divided by the portfolio value at the start of the period, shown as a percentage.",
     "retry": "Retry",
     "noTopTraders": "No top traders for this view yet",
     "leaderboardHighlights": "The leaderboard highlights wallets with strong on-chain trading performance over the selected timeframe.",

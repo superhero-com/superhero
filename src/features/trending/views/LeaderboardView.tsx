@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Head } from '../../../seo/Head';
@@ -192,6 +193,16 @@ const LeaderboardView = () => {
             Enter both start and end dates to apply a custom leaderboard range.
           </div>
         )}
+
+        <div className="flex items-start gap-3 rounded-2xl border border-sky-400/20 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
+          <AlertCircle
+            aria-hidden="true"
+            className="mt-0.5 h-4 w-4 shrink-0 text-sky-200"
+          />
+          <p className="leading-relaxed text-sky-50/90">
+            {t('leaderboardRoiExplanation')}
+          </p>
+        </div>
 
         {/* Error state */}
         {isError && (

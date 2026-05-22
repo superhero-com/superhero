@@ -27,6 +27,7 @@ import Shell from '../components/layout/Shell';
 
 import { PostsService } from '../api/generated';
 import type { PostDto } from '../api/generated';
+import { getLinkedXUsername, isXLinked, SuperheroApi } from '@/api/backend';
 import { AccountsService } from '../api/generated/services/AccountsService';
 import { AccountTokensService } from '../api/generated/services/AccountTokensService';
 import { TokensService } from '../api/generated/services/TokensService';
@@ -34,8 +35,7 @@ import { TransactionsService } from '../api/generated/services/TransactionsServi
 import { PostApiResponse } from '../features/social/types';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
-import { useAddressByChainName, useChainName, useEnsureChainName } from '../hooks/useChainName';
-import { SuperheroApi } from '../api/backend';
+import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
@@ -59,11 +59,10 @@ export default function UserProfile({
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined,
   );
-  const effectiveAddress = isChainName ? (resolvedAddress || '') : (address as string);
+  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
-  useEnsureChainName(effectiveAddress);
-  const { chainName } = useChainName(effectiveAddress, { lookup: false });
-  const { getProfile, getProfileOnChain, canEdit } = useProfile(effectiveAddress);
+  const { chainName } = useChainName(effectiveAddress);
+  const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
@@ -95,16 +94,6 @@ export default function UserProfile({
     enabled: !!effectiveAddress,
     staleTime: 10_000,
     refetchInterval: 10_000,
-  });
-  const profileDisplayName = (profileInfo?.public_name || chainName || '').trim();
-  const hasProfileDisplayName = Boolean(profileDisplayName);
-  const profileHeading = profileDisplayName || formatAddress(effectiveAddress, 6, true);
-
-  const { data: onChainProfile, refetch: refetchOnChainProfile } = useQuery({
-    queryKey: ['ProfileRegistry.getProfileOnChain', effectiveAddress],
-    queryFn: () => getProfileOnChain(effectiveAddress),
-    enabled: !!effectiveAddress && !!getProfileOnChain,
-    staleTime: 30_000,
   });
 
   const [profile, setProfile] = useState<any>(null);
@@ -200,10 +189,9 @@ export default function UserProfile({
   const bioText = (profileInfo?.profile?.bio || '').trim()
     || (accountInfo?.bio || '').trim()
     || profile?.profile?.bio;
-  const isXVerified = Boolean(
-    String(profileInfo?.profile?.x_username || '').trim()
-    || String(onChainProfile?.x_username || '').trim(),
-  );
+  const displayName = (profileInfo?.public_name || chainName || '').trim()
+    || formatAddress(effectiveAddress, 6, true);
+  const isXVerified = isXLinked(accountInfo);
 
   useEffect(() => {
     if (!effectiveAddress) return;
@@ -332,23 +320,16 @@ export default function UserProfile({
     });
   }, [effectiveAddress, queryClient]);
 
-  const profileTabs = [
-    { key: 'feed', label: t('explore:feed') },
-    { key: 'owned', label: t('explore:ownedTrends') },
-    { key: 'created', label: t('explore:createdTrends') },
-    { key: 'transactions', label: t('explore:transactions') },
-  ] as const;
-
   const content = (
     <div className="w-full">
       <Head
-        title={`${chainName || effectiveAddress} – Profile – Superhero`}
-        description={(bioText || `View ${chainName || effectiveAddress} on Superhero, the crypto social network.`).slice(0, 160)}
+        title={`${displayName} – Profile – Superhero`}
+        description={(bioText || `View ${displayName} on Superhero, the crypto social network.`).slice(0, 160)}
         canonicalPath={`/users/${address}`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Person',
-          name: chainName || effectiveAddress,
+          name: displayName,
           identifier: effectiveAddress,
           description: bioText || undefined,
         }}
@@ -373,7 +354,7 @@ export default function UserProfile({
 
       {/* Compact Profile Header */}
       <div className="mb-4 md:mb-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
           {/* Avatar and Identity */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="relative shrink-0">
@@ -386,17 +367,9 @@ export default function UserProfile({
                 className="relative"
               />
             </div>
-            <div className="min-w-0 flex-1">
-              <h1
-                className={[
-                  'font-extrabold text-[var(--neon-teal)] tracking-tight min-w-0',
-                  hasProfileDisplayName
-                    ? 'text-xl md:text-2xl truncate'
-                    : 'text-lg md:text-xl leading-tight truncate',
-                ].join(' ')}
-                title={hasProfileDisplayName ? profileHeading : effectiveAddress}
-              >
-                {profileHeading}
+            <div className="min-w-0 flex-1 md:pr-3">
+              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight leading-tight break-all">
+                {displayName}
               </h1>
               <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
                 {effectiveAddress}
@@ -410,7 +383,7 @@ export default function UserProfile({
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-row gap-2 shrink-0">
+          <div className="flex flex-row flex-wrap gap-2 shrink-0 md:max-w-[40%] md:justify-end">
             {canEdit ? (
               <AeButton
                 size="sm"
@@ -462,7 +435,7 @@ export default function UserProfile({
           }}
           className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
         >
-          Claim 100 AE by verifying your X account.
+          Link your X account to show your X username on your profile.
         </button>
       )}
 
@@ -482,8 +455,9 @@ export default function UserProfile({
             <div className="text-base md:text-lg font-bold text-white">
               {decimalBalance ? (() => {
                 try {
-                  const value = typeof decimalBalance.toNumber === 'function'
-                    ? decimalBalance.toNumber()
+                  const decimalBalanceValue = decimalBalance as any;
+                  const value = typeof decimalBalanceValue?.toNumber === 'function'
+                    ? decimalBalanceValue.toNumber()
                     : typeof decimalBalance === 'number'
                       ? decimalBalance
                       : Number(decimalBalance);
@@ -540,32 +514,18 @@ export default function UserProfile({
       <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
         <div>
-          <div className="grid grid-cols-4 items-stretch border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-2 md:hidden">
-            {profileTabs.map(({ key, label }) => (
+          <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
+            {([
+              { key: 'feed', label: t('explore:feed') },
+              { key: 'owned', label: t('explore:ownedTrends') },
+              { key: 'created', label: t('explore:createdTrends') },
+              { key: 'transactions', label: t('explore:transactions') },
+            ] as const).map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => handleTabChange(key as TabType)}
                 className={[
-                  'relative min-w-0 px-1 py-3 text-[11px] leading-none font-semibold transition-colors !bg-transparent !shadow-none text-center focus:!outline-none focus-visible:!ring-0',
-                  tab === key
-                    ? "text-white after:content-[''] after:absolute after:left-1 after:right-1 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full"
-                    : 'text-white/70',
-                ].join(' ')}
-              >
-                <span className="block whitespace-nowrap">{label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div
-            className="hidden md:flex items-center justify-start border-b border-white/15 md:w-full md:mx-0 md:gap-[clamp(0.5rem,1.4vw,1.6875rem)] md:pb-0 xl:overflow-visible"
-          >
-            {profileTabs.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => handleTabChange(key as TabType)}
-                className={[
-                  'relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-1 lg:px-2 xl:px-3 md:py-3 md:text-sm',
+                  'relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm',
                   'hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none',
                   tab === key
                     ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
@@ -594,7 +554,7 @@ export default function UserProfile({
   );
 
   return standalone ? (
-    <Shell right={<RightRail />} containerClassName="mx-auto">
+    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
       {content}
       <ProfileEditModal
         open={editOpen}
@@ -603,19 +563,25 @@ export default function UserProfile({
           setEditInitialSection('profile');
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
-              ...oldData,
-              bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-              fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-              avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-              username: updatedProfile?.profile?.username ?? oldData?.username,
-              chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-              x_username: updatedProfile?.profile?.x_username ?? oldData?.x_username,
-            }));
+            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
+              const xUsername = getLinkedXUsername(updatedProfile) ?? getLinkedXUsername(oldData);
+              return {
+                ...oldData,
+                bio: updatedProfile?.profile?.bio ?? oldData?.bio,
+                fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
+                avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
+                username: updatedProfile?.profile?.username ?? oldData?.username,
+                chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
+                x_username: xUsername ?? oldData?.x_username,
+                links: xUsername ? { ...oldData?.links, x: xUsername } : oldData?.links,
+                profile: updatedProfile?.profile
+                  ? { ...oldData?.profile, ...updatedProfile.profile }
+                  : oldData?.profile,
+              };
+            });
             setProfile(updatedProfile);
             refetchAccount();
             refetchProfile();
-            refetchOnChainProfile();
           }
         }}
         address={effectiveAddress}
@@ -633,19 +599,25 @@ export default function UserProfile({
           setEditInitialSection('profile');
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => ({
-              ...oldData,
-              bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-              fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-              avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-              username: updatedProfile?.profile?.username ?? oldData?.username,
-              chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-              x_username: updatedProfile?.profile?.x_username ?? oldData?.x_username,
-            }));
+            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
+              const xUsername = getLinkedXUsername(updatedProfile) ?? getLinkedXUsername(oldData);
+              return {
+                ...oldData,
+                bio: updatedProfile?.profile?.bio ?? oldData?.bio,
+                fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
+                avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
+                username: updatedProfile?.profile?.username ?? oldData?.username,
+                chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
+                x_username: xUsername ?? oldData?.x_username,
+                links: xUsername ? { ...oldData?.links, x: xUsername } : oldData?.links,
+                profile: updatedProfile?.profile
+                  ? { ...oldData?.profile, ...updatedProfile.profile }
+                  : oldData?.profile,
+              };
+            });
             setProfile(updatedProfile);
             refetchAccount();
             refetchProfile();
-            refetchOnChainProfile();
           }
         }}
         address={effectiveAddress}

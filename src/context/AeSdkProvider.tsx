@@ -11,7 +11,9 @@ import {
 import { activeAccountAtom } from '../atoms/accountAtoms';
 import {
   TX_QUEUE_ACK_CHANNEL,
+  TX_QUEUE_REQUEST_PREFIX,
   TX_QUEUE_RESULT_PREFIX,
+  type MessageSignRequest,
   transactionsQueueAtom,
 } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
@@ -24,8 +26,15 @@ import { createDeepLinkUrl, openDeepLink } from '../utils/url';
 
 type TxQueueEntry = {
   status: string;
-  tx: Encoded.Transaction;
   signUrl: string;
+  tx?: Encoded.Transaction;
+  transaction?: Encoded.Transaction;
+  message?: string;
+  signature?: string;
+};
+
+type SignMessageOptions = {
+  request?: MessageSignRequest;
 };
 
 export const AeSdkContext = createContext<{
@@ -40,6 +49,7 @@ export const AeSdkContext = createContext<{
   setAccounts: (accounts: string[]) => void,
   getCurrentGeneration: () => void,
   addStaticAccount: (account: string) => void,
+  signMessage: (message: string, options?: SignMessageOptions) => Promise<string>,
   setActiveNetwork: (network: INetwork) => void,
   setTransactionsQueue: (queue: Record<string, TxQueueEntry>) => void,
   initSdk: () => void,
@@ -54,28 +64,44 @@ const nodes: { instance: Node; name: string }[] = [
   },
 ];
 
-export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
-  type ContractInitializeOptions = Parameters<typeof Contract.initialize>[0];
-  type LegacyInitializableSdk = {
-    getContext: () => Partial<ContractInitializeOptions>;
-    initializeContract?: (
-      options: ContractInitializeOptions,
-    ) => ReturnType<typeof Contract.initialize>;
-  };
+type ContractInitializeOptions = Parameters<typeof Contract.initialize>[0];
+type LegacyInitializableSdk = {
+  getContext: () => Partial<ContractInitializeOptions>;
+  initializeContract?: (
+    options: ContractInitializeOptions,
+  ) => ReturnType<typeof Contract.initialize>;
+};
 
-  const ensureLegacyInitializeContract = useCallback((sdkInstance: LegacyInitializableSdk) => {
-    if (typeof sdkInstance.initializeContract === 'function') return;
-    // eslint-disable-next-line no-param-reassign -- intentional patch for legacy SDK
-    sdkInstance.initializeContract = (options: ContractInitializeOptions) => Contract.initialize({
+const ensureLegacyInitializeContract = (sdkInstance: LegacyInitializableSdk) => {
+  if (typeof sdkInstance.initializeContract === 'function') return;
+  Object.defineProperty(sdkInstance, 'initializeContract', {
+    configurable: true,
+    value: (options: ContractInitializeOptions) => Contract.initialize({
       ...sdkInstance.getContext(),
       ...options,
-    });
-  }, []);
+    }),
+  });
+};
 
+const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
+  .map((byte) => byte.toString(16).padStart(2, '0'))
+  .join('');
+
+const normalizeSignatureResult = (signature: any): string => {
+  if (typeof signature === 'string') return signature;
+  if (signature instanceof Uint8Array || Array.isArray(signature)) return bytesToHex(signature);
+  if (typeof signature?.signature === 'string') return signature.signature;
+  if (signature?.signature instanceof Uint8Array || Array.isArray(signature?.signature)) {
+    return bytesToHex(signature.signature);
+  }
+  throw new Error('Wallet did not return a valid signature');
+};
+
+export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   const aeSdkRef = useRef<AeSdkAepp>();
   const staticAeSdkRef = useRef<AeSdk | null>(null);
   const [sdkInitialized, setSdkInitialized] = useState(false);
-  const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
+  const [activeAccount, setActiveAccount] = useAtom(activeAccountAtom);
   const [accounts, setAccounts] = useState<string[]>([]);
   const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
   const [activeNetwork, setActiveNetwork] = useState<INetwork>(CURRENT_NETWORK);
@@ -113,6 +139,146 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       setCurrentBlockHeight(result.keyBlock.height);
     });
   }, [aeSdkRef]);
+
+  const signMessage = useCallback(async (
+    message: string,
+    options?: SignMessageOptions,
+  ): Promise<string> => {
+    const signer = aeSdkRef.current as any;
+    if (typeof signer?.signMessage === 'function') {
+      try {
+        return normalizeSignatureResult(await signer.signMessage(message));
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error || '');
+        if (!/not connected|not.*wallet|wallet.*not|no.*wallet/i.test(errorMessage)) {
+          throw error;
+        }
+      }
+    }
+
+    const uniqueId = Math.random().toString(36).substring(7);
+    const currentDomain = new URL(window.location.href).origin;
+    const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+    successUrl.searchParams.set('signature', '{signature}');
+    successUrl.searchParams.set('status', 'completed');
+    const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+    cancelUrl.searchParams.set('status', 'cancelled');
+
+    const signUrl = createDeepLinkUrl({
+      type: 'sign-message',
+      message,
+      'x-success': decodeURI(successUrl.href),
+      'x-cancel': decodeURI(cancelUrl.href),
+    });
+
+    setTransactionsQueue((prev) => ({
+      ...prev,
+      [uniqueId]: {
+        status: 'pending',
+        message,
+        signUrl,
+      },
+    }));
+
+    return new Promise((resolve, reject) => {
+      const ackChannel = typeof BroadcastChannel !== 'undefined'
+        ? new BroadcastChannel(TX_QUEUE_ACK_CHANNEL)
+        : null;
+      const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
+      const storedRequestKey = `${TX_QUEUE_REQUEST_PREFIX}${uniqueId}`;
+      if (options?.request) {
+        safeLocalStringStorage.setItem(storedRequestKey, JSON.stringify(options.request));
+      }
+      const windowFeatures = [
+        'name=Superhero Wallet',
+        'width=362',
+        'height=594',
+        'toolbar=false',
+        'location=false',
+        'menubar=false',
+        'popup',
+      ].join(',');
+
+      let interval: NodeJS.Timeout | null = null;
+      let timeout: NodeJS.Timeout | null = null;
+      let newWindow: Window | null = openDeepLink({
+        type: 'sign-message',
+        message,
+        'x-success': decodeURI(successUrl.href),
+        'x-cancel': decodeURI(cancelUrl.href),
+        target: '_blank',
+        windowFeatures,
+      });
+      let isCleanedUp = false;
+
+      const cleanup = () => {
+        if (isCleanedUp) return;
+        isCleanedUp = true;
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        if (newWindow) {
+          newWindow.close();
+          newWindow = null;
+        }
+        ackChannel?.close();
+      };
+
+      const MAX_POLL_TIME = 5 * 60 * 1000;
+      timeout = setTimeout(() => {
+        safeLocalStringStorage.removeItem(storedResultKey);
+        safeLocalStringStorage.removeItem(storedRequestKey);
+        cleanup();
+        reject(new Error('Message signing timeout'));
+      }, MAX_POLL_TIME);
+
+      interval = setInterval(() => {
+        const currentQueue = transactionsQueueRef.current;
+        const storedResult = safeLocalStringStorage.getItem(storedResultKey);
+        let parsedStoredResult: any = null;
+        try {
+          parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
+        } catch {
+          safeLocalStringStorage.removeItem(storedResultKey);
+        }
+        const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+        if (!queueEntry) return;
+
+        if (queueEntry.status === 'cancelled') {
+          ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
+          safeLocalStringStorage.removeItem(storedResultKey);
+          safeLocalStringStorage.removeItem(storedRequestKey);
+          cleanup();
+          const newQueue = { ...currentQueue };
+          delete newQueue[uniqueId];
+          setTransactionsQueue(newQueue);
+          reject(new Error('Message signing cancelled'));
+          return;
+        }
+
+        if (queueEntry.status === 'completed') {
+          const signature = queueEntry.signature?.trim();
+          ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
+          safeLocalStringStorage.removeItem(storedResultKey);
+          safeLocalStringStorage.removeItem(storedRequestKey);
+          cleanup();
+          const newQueue = { ...currentQueue };
+          delete newQueue[uniqueId];
+          setTransactionsQueue(newQueue);
+          if (!signature) {
+            reject(new Error('Wallet did not return a signature'));
+            return;
+          }
+          resolve(signature);
+        }
+      }, 500);
+    });
+  }, [setTransactionsQueue]);
 
   const addStaticAccount = useCallback(async (address: string) => {
     // should wait till staticAeSdk is initialized
@@ -318,10 +484,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             }, 500);
           });
         },
+        signMessage,
       } as any,
       { select: true },
     );
-  }, [setActiveAccount, activeNetwork.networkId, setTransactionsQueue, openModal]);
+  }, [setActiveAccount, activeNetwork.networkId, setTransactionsQueue, openModal, signMessage]);
 
   const initSdk = useCallback(async () => {
     // Prevent re-initialization if already initialized
@@ -399,7 +566,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     setActiveAccount,
     setWalletInfo,
     addStaticAccount,
-    ensureLegacyInitializeContract,
   ]);
 
   const scanForAccounts = useCallback(async () => {
@@ -423,6 +589,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     setAccounts,
     getCurrentGeneration,
     addStaticAccount,
+    signMessage,
     setActiveNetwork,
     setTransactionsQueue,
     initSdk,
@@ -437,6 +604,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     getCurrentGeneration,
     initSdk,
     scanForAccounts,
+    signMessage,
     setActiveAccount,
     setAccounts,
     addStaticAccount,

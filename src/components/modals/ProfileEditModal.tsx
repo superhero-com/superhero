@@ -6,7 +6,9 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  getLinkedXUsername,
   ProfileAggregate,
+  SuperheroApi,
 } from '@/api/backend';
 import { CONFIG } from '@/config';
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -281,15 +283,9 @@ const ProfileEditModal = ({
       let username = '';
       let chainName = '';
       let chainNameExpiresAt: number | null = null;
-      let onChain: {
-        x_username?: string | null;
-        chain_name?: string | null;
-        chain_expires_at?: number | null;
-      } | null = null;
 
       try {
         const chain = await getProfileOnChain(targetAddress);
-        onChain = chain;
         if (chain) {
           fullname = String(chain.fullname ?? '');
           bio = String(chain.bio ?? '');
@@ -302,9 +298,16 @@ const ProfileEditModal = ({
         // ignore
       }
 
-      // Use API only to fill any missing fields and X verification state
-      let xVerified = !!(onChain?.x_username ?? '').trim();
-      let xName: string | null = (onChain?.x_username ?? '').trim() || null;
+      let xName: string | null = null;
+      let accountRecord: Awaited<ReturnType<typeof SuperheroApi.getAccount>> | null = null;
+      try {
+        accountRecord = await SuperheroApi.getAccount(targetAddress);
+        xName = getLinkedXUsername(accountRecord);
+      } catch {
+        // ignore account fetch errors; X section falls back to unlinked
+      }
+
+      // Use profile API only to fill any missing profile fields
       try {
         const acct = await getProfile(targetAddress);
         if (fullname === '' && (acct?.profile?.fullname ?? '') !== '') fullname = String(acct.profile.fullname);
@@ -316,11 +319,6 @@ const ProfileEditModal = ({
         if (chainName === '' && (acct?.profile?.chain_name ?? '') !== '') {
           chainName = normalizeChainName(acct.profile.chain_name);
         }
-        const apiX = (acct?.profile?.x_username ?? '').trim();
-        if (apiX) {
-          xVerified = true;
-          if (!xName) xName = apiX;
-        }
       } catch {
         if (bio === '' && initialBio) bio = String(initialBio);
       }
@@ -330,6 +328,9 @@ const ProfileEditModal = ({
         ownedChainNames = await loadOwnedChainNamesFromMdw(targetAddress);
       } catch {
         // ignore middleware loading errors and fallback to legacy account payload shape
+      }
+      if (!ownedChainNames.length && accountRecord) {
+        ownedChainNames = extractOwnedChainNames(accountRecord);
       }
       if (!ownedChainNames.length) {
         try {
@@ -347,7 +348,7 @@ const ProfileEditModal = ({
       }
       setAvailableChainNames(ownedChainNames);
 
-      setHasXVerified(xVerified);
+      setHasXVerified(Boolean(xName));
       setXUsername(xName);
       setForm({
         fullname,
@@ -403,7 +404,9 @@ const ProfileEditModal = ({
     const msg = error instanceof Error ? error.message : String(error || '');
     const lower = msg.toLowerCase();
     if (lower.includes('429') || lower.includes('rate limit') || lower.includes('too many')) return t('messages.tooManyRequests');
-    if (lower.includes('attestation')) return t('messages.failedXAttestation');
+    if (lower.includes('attestation') || lower.includes('address link') || lower.includes('verification_token')) {
+      return t('messages.failedXAttestation');
+    }
     if (lower.includes('profile_registry_contract_address')) return t('messages.profileContractNotConfigured');
     return msg || t('messages.failedToUpdateProfile');
   };
@@ -457,15 +460,20 @@ const ProfileEditModal = ({
       if (!updated) {
         throw new Error(t('messages.failedToRefreshProfile'));
       }
-      queryClient.setQueryData(['AccountsService.getAccount', targetAddress], (prev: any) => ({
-        ...prev,
-        bio: updated?.profile?.bio ?? prev?.bio,
-        fullname: updated?.profile?.fullname ?? prev?.fullname,
-        avatarurl: updated?.profile?.avatarurl ?? prev?.avatarurl,
-        username: updated?.profile?.username ?? prev?.username,
-        chain_name: updated?.profile?.chain_name ?? prev?.chain_name,
-        x_username: updated?.profile?.x_username ?? prev?.x_username,
-      }));
+      queryClient.setQueryData(['AccountsService.getAccount', targetAddress], (prev: any) => {
+        const linkedXUsername = getLinkedXUsername(updated) ?? getLinkedXUsername(prev);
+        return {
+          ...prev,
+          bio: updated?.profile?.bio ?? prev?.bio,
+          fullname: updated?.profile?.fullname ?? prev?.fullname,
+          avatarurl: updated?.profile?.avatarurl ?? prev?.avatarurl,
+          username: updated?.profile?.username ?? prev?.username,
+          chain_name: updated?.profile?.chain_name ?? prev?.chain_name,
+          x_username: linkedXUsername ?? prev?.x_username,
+          links: linkedXUsername ? { ...prev?.links, x: linkedXUsername } : prev?.links,
+          profile: updated?.profile ? { ...prev?.profile, ...updated.profile } : prev?.profile,
+        };
+      });
       push(<div>{t('messages.profileUpdated')}</div>);
       onClose(updated);
     } catch (e) {

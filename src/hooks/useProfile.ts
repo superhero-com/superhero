@@ -6,9 +6,10 @@ import {
 } from 'react';
 import {
   type ProfileAggregate,
-  type XAttestationResponse,
+  type XAddressLinkClaimResponse,
   SuperheroApi,
 } from '@/api/backend';
+import { signAndVerifyLinkMessage } from '@/utils/signLinkMessage';
 import {
   Encoded,
   Tag,
@@ -16,10 +17,11 @@ import {
   unpackTx,
 } from '@aeternity/aepp-sdk';
 import { CONFIG } from '@/config';
-import PROFILE_REGISTRY_ACI from '@/api/ProfileRegistryACI.json';
 import { initializeContractTyped } from '@/libs/initializeContractTyped';
 import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
+import ADDRESS_LINK_ACI from '@/api/AddressLinkACI.json';
 import { useAeSdk } from './useAeSdk';
+import { useWalletConnect } from './useWalletConnect';
 
 const normalizeName = (value: string) => value.trim().toLowerCase();
 const normalizeAddress = (value?: string | null) => (value || '').trim().toLowerCase();
@@ -38,15 +40,6 @@ const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
   if (!expectedAddress) return true;
   const target = normalizeAddress(expectedAddress);
   return addresses.some((addr) => normalizeAddress(addr) === target);
-};
-
-const hexToUint8Array = (hex: string): Uint8Array => {
-  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < clean.length; i += 2) {
-    bytes[i / 2] = parseInt(clean.slice(i, i + 2), 16);
-  }
-  return bytes;
 };
 
 const extractTxHash = (tx: any): string | undefined => tx?.hash
@@ -70,17 +63,27 @@ type SetProfileInput = {
 
 type ProfileRegistryContractApi = ContractMethodsBase & {
   _calldata: {
-    encode: (contractName: string, functionName: string, args: unknown[]) => Encoded.ContractBytearray;
+    encode: (
+      contractName: string,
+      functionName: string,
+      args: unknown[],
+    ) => Encoded.ContractBytearray;
   };
 };
 
 export function useProfile(targetAddress?: string) {
   const {
     activeAccount,
+    aeSdk,
     sdk,
     staticAeSdk,
     addStaticAccount,
+    signMessage,
   } = useAeSdk();
+  const {
+    connectWallet,
+    walletConnected,
+  } = useWalletConnect();
   const activeAccountRef = useRef<string | undefined>(activeAccount);
 
   useEffect(() => {
@@ -182,6 +185,39 @@ export function useProfile(targetAddress?: string) {
     [activeAccount, targetAddress],
   );
 
+  const ensureWalletReadyForMessageSigning = useCallback(async (expectedAddress: string) => {
+    if (!expectedAddress?.startsWith('ak_')) {
+      throw new Error('Missing address for wallet signature');
+    }
+
+    const matchesExpectedAddress = (candidate?: string | null) => (
+      normalizeAddress(candidate) === normalizeAddress(expectedAddress)
+    );
+    const hasExpectedSigner = () => (
+      sdkHasAccount(aeSdk, expectedAddress)
+      || sdkHasAccount(staticAeSdk, expectedAddress)
+      || sdkHasAccount(sdk, expectedAddress)
+      || matchesExpectedAddress(activeAccountRef.current)
+    );
+
+    if (hasExpectedSigner()) return;
+
+    if (!walletConnected || !sdkHasAccount(aeSdk, expectedAddress)) {
+      await connectWallet();
+    }
+
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < 10_000) {
+      if (hasExpectedSigner()) return;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, 250);
+      });
+    }
+
+    throw new Error('Connected wallet account does not match X verification address');
+  }, [aeSdk, connectWallet, sdk, staticAeSdk, walletConnected]);
+
   const getProfile = useCallback(async (address?: string): Promise<ProfileAggregate | null> => {
     try {
       const addr = (address || targetAddress || activeAccount) as string | undefined;
@@ -211,7 +247,7 @@ export function useProfile(targetAddress?: string) {
         if (staticAeSdk) {
           const contract = await initializeContractTyped<ProfileRegistryContractApi>(
             staticAeSdk,
-            { aci: PROFILE_REGISTRY_ACI, address: profileContractAddress },
+            { aci: ADDRESS_LINK_ACI, address: profileContractAddress },
           );
           return {
             contract,
@@ -262,7 +298,7 @@ export function useProfile(targetAddress?: string) {
     }
     const contract = await initializeContractTyped<ProfileRegistryContractApi>(
       signerSdk,
-      { aci: PROFILE_REGISTRY_ACI as any, address: profileContractAddress },
+      { aci: ADDRESS_LINK_ACI as any, address: profileContractAddress },
     );
     return {
       contract,
@@ -457,8 +493,6 @@ export function useProfile(targetAddress?: string) {
           toOption(normalizedUsername || null),
           toOption(normalizedChainName || null),
           toOption(hasValidChainExpiry ? nextChainExpiresAt : null),
-          // This display source is not used for now, but it is required by the contract.
-          { Custom: [] },
         ],
       );
       txHash = extractTxHash(fullResult) || txHash;
@@ -522,7 +556,50 @@ export function useProfile(targetAddress?: string) {
     waitForWalletReconnect,
   ]);
 
-  const verifyXAndSave = useCallback(async (params: { address?: string; accessToken: string }) => {
+  const submitXAddressLink = useCallback(async (
+    address: string,
+    claim: XAddressLinkClaimResponse,
+    signature: string,
+  ) => {
+    const res = await SuperheroApi.submitXAddressLink({
+      address,
+      value: claim.value,
+      nonce: claim.nonce,
+      signature,
+      verification_token: claim.verification_token,
+    });
+    return res.txHash;
+  }, []);
+
+  const completeXAddressLink = useCallback(async (claim: XAddressLinkClaimResponse) => {
+    if (!targetAddress) {
+      throw new Error('Missing address for X verification');
+    }
+    await addStaticAccount(targetAddress);
+    await ensureWalletReadyForMessageSigning(targetAddress);
+    const signature = await signAndVerifyLinkMessage(targetAddress, signMessage, claim.message, {
+      request: {
+        type: 'address-link-x-submit',
+        address: targetAddress,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
+    });
+    return submitXAddressLink(targetAddress, claim, signature);
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitXAddressLink,
+    targetAddress,
+  ]);
+
+  const linkXWithAccessToken = useCallback(async (params: {
+    address?: string;
+    accessToken: string;
+  }) => {
     const expectedAddress = params.address || targetAddress;
     let connectedAddress: string | undefined;
     try {
@@ -544,68 +621,52 @@ export function useProfile(targetAddress?: string) {
     if (!params.accessToken?.trim()) {
       throw new Error('Missing X OAuth token');
     }
-    const {
-      contract,
-      signerSdk,
-      profileContractAddress,
-    } = await initializeProfileContract(target, {
-      restoreSigner: true,
-      preferStaticSigner: true,
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const claim = await SuperheroApi.claimXAddressLink(target, params.accessToken.trim());
+    const signature = await signAndVerifyLinkMessage(target, signMessage, claim.message, {
+      request: {
+        type: 'address-link-x-submit',
+        address: target,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
     });
-    const attestation = await SuperheroApi.createXAttestation(target, params.accessToken.trim());
-    const res: any = await executeProfileWriteTx(
-      signerSdk,
-      target,
-      profileContractAddress,
-      contract,
-      'set_x_name_with_attestation',
-      [
-        attestation.x_username,
-        attestation.expiry,
-        attestation.nonce,
-        hexToUint8Array(attestation.signature_hex),
-      ],
-    );
-    return res?.hash || res?.transactionHash || res?.tx?.hash;
+    return submitXAddressLink(target, claim, signature);
   }, [
     addStaticAccount,
-    executeProfileWriteTx,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitXAddressLink,
     targetAddress,
-    initializeProfileContract,
     waitForWalletReconnect,
   ]);
 
-  /** Complete X verification using an attestation (e.g. from OAuth callback). */
-  const completeXWithAttestation = useCallback(async (attestation: XAttestationResponse) => {
-    if (!targetAddress) {
-      throw new Error('Missing address for X verification');
+  const unlinkXAccount = useCallback(async (address?: string) => {
+    const target = address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for X unlink');
     }
-    // In OAuth callback flow we already have the expected address from PKCE state.
-    // Restoring signer directly is enough and avoids transient reconnect races.
-    await addStaticAccount(targetAddress);
-    const {
-      contract,
-      signerSdk,
-      profileContractAddress,
-    } = await initializeProfileContract(targetAddress, {
-      restoreSigner: true,
-      preferStaticSigner: true,
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const unclaim = await SuperheroApi.unclaimXAddressLink(target);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, unclaim.message, {
+      request: {
+        type: 'address-link-x-unclaim',
+        address: target,
+        nonce: unclaim.nonce,
+        message: unclaim.message,
+      },
     });
-    const res: any = await executeProfileWriteTx(
-      signerSdk,
-      targetAddress,
-      profileContractAddress,
-      contract,
-      'set_x_name_with_attestation',
-      [
-        attestation.x_username,
-        attestation.expiry,
-        attestation.nonce,
-        hexToUint8Array(attestation.signature_hex),
-      ],
-    );
-    return res?.hash || res?.transactionHash || res?.tx?.hash;
-  }, [addStaticAccount, executeProfileWriteTx, initializeProfileContract, targetAddress]);
+    const res = await SuperheroApi.submitXAddressLinkUnclaim({
+      address: target,
+      nonce: unclaim.nonce,
+      signature,
+    });
+    return res.txHash;
+  }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
 
   return {
     canEdit,
@@ -613,7 +674,8 @@ export function useProfile(targetAddress?: string) {
     getProfile,
     getProfileOnChain,
     setProfile,
-    verifyXAndSave,
-    completeXWithAttestation,
+    linkXWithAccessToken,
+    completeXAddressLink,
+    unlinkXAccount,
   };
 }

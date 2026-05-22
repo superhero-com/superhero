@@ -4,7 +4,7 @@ import {
 } from 'vitest';
 import { useProfile } from '@/hooks/useProfile';
 
-const mockCreateXAttestation = vi.fn();
+const mockClaimXAddressLink = vi.fn();
 const mockGetProfile = vi.fn();
 const mockInitializeContractTyped = vi.fn();
 const mockPayForProfileTx = vi.fn();
@@ -29,7 +29,7 @@ vi.mock('@aeternity/aepp-sdk', async () => {
 
 vi.mock('@/api/backend', () => ({
   SuperheroApi: {
-    createXAttestation: (...args: any[]) => mockCreateXAttestation(...args),
+    claimXAddressLink: (...args: any[]) => mockClaimXAddressLink(...args),
     getProfile: (...args: any[]) => mockGetProfile(...args),
   },
 }));
@@ -77,6 +77,13 @@ vi.mock('@/hooks/useAeSdk', () => ({
       selectAccount: (...args: any[]) => mockSelectAccount(...args),
     },
     addStaticAccount: (...args: any[]) => mockAddStaticAccount(...args),
+  }),
+}));
+
+vi.mock('@/hooks/useWalletConnect', () => ({
+  useWalletConnect: () => ({
+    connectWallet: vi.fn(),
+    walletConnected: true,
   }),
 }));
 
@@ -154,7 +161,6 @@ describe('useProfile', () => {
         { None: [] },
         { None: [] },
         { None: [] },
-        { Custom: [] },
       ],
     );
     expect(mockPayForProfileTx).toHaveBeenCalledTimes(1);

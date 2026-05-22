@@ -52,20 +52,54 @@ export type ProfileAggregate = {
   public_name: string | null;
 };
 
-export type ProfileFeedResponse = {
-  items?: ProfileAggregate[];
-  data?: ProfileAggregate[];
-} | ProfileAggregate[];
+export type AccountLinks = {
+  x?: string | null;
+};
 
-export type XAttestationResponse = {
-  signer: string;
+export type AccountAggregate = {
   address: string;
-  x_username: string;
-  nonce: string;
-  expiry: number;
+  bio?: string | null;
+  chain_name?: string | null;
+  chain_name_updated_at?: string | null;
+  links?: AccountLinks | null;
+  profile?: ProfilePayload | null;
+  public_name?: string | null;
+  x_username?: string | null;
+};
+
+/** X link username from GET /api/accounts/:address (`links.x`, then profile fallback). */
+export function getLinkedXUsername(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'x_username'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.x ?? '').trim();
+  if (fromLinks) return fromLinks.replace(/^@/u, '');
+  const fromProfile = String(account?.profile?.x_username ?? '').trim();
+  if (fromProfile) return fromProfile.replace(/^@/u, '');
+  const legacy = String(account?.x_username ?? '').trim();
+  if (legacy) return legacy.replace(/^@/u, '');
+  return null;
+}
+
+export function isXLinked(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'x_username'> | null,
+): boolean {
+  return Boolean(getLinkedXUsername(account));
+}
+
+export type XAddressLinkClaimResponse = {
   message: string;
-  signature_hex: string;
-  signature_base64: string;
+  nonce: number;
+  value: string;
+  verification_token: string;
+};
+
+export type XAddressLinkSubmitResponse = {
+  txHash: string;
+};
+
+export type XAddressLinkUnclaimResponse = {
+  message: string;
+  nonce: number;
 };
 
 // Superhero API client
@@ -310,7 +344,9 @@ export const SuperheroApi = {
     if (params.page != null) qp.set('page', String(params.page));
     return this.fetchJson(`/api/accounts?${qp.toString()}`);
   },
-  getAccount(address: string) { return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`); },
+  getAccount(address: string) {
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`) as Promise<AccountAggregate>;
+  },
   // Invitations
   listInvitations(params: { orderBy?: 'amount'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {
     const qp = new URLSearchParams();
@@ -364,43 +400,74 @@ export const SuperheroApi = {
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     return this.fetchJson(`/api/profile?${qp.toString()}`) as Promise<ProfileAggregate[]>;
   },
-  getProfileFeed(limit = 500, offset = 0) {
-    const qp = new URLSearchParams();
-    qp.set('limit', String(limit));
-    qp.set('offset', String(offset));
-    return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
-  },
-  createXAttestation(address: string, accessToken: string) {
-    return this.fetchJson('/api/profile/x/attestation', {
+  claimXAddressLink(address: string, accessToken: string) {
+    return this.fetchJson('/api/address-links/x/claim', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         address,
-        accessToken,
+        x_access_token: accessToken,
       }),
-    }) as Promise<XAttestationResponse>;
+    }) as Promise<XAddressLinkClaimResponse>;
   },
-  /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
-  createXAttestationFromCode(
+  /** Exchange OAuth code (from X redirect) for an address-link claim challenge. */
+  claimXAddressLinkFromCode(
     address: string,
     code: string,
     codeVerifier: string,
     redirectUri: string,
   ) {
-    return this.fetchJson('/api/profile/x/attestation', {
+    return this.fetchJson('/api/address-links/x/claim', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         address,
-        code,
-        code_verifier: codeVerifier,
-        redirect_uri: redirectUri,
+        x_code: code,
+        x_code_verifier: codeVerifier,
+        x_redirect_uri: redirectUri,
       }),
-    }) as Promise<XAttestationResponse>;
+    }) as Promise<XAddressLinkClaimResponse>;
+  },
+  submitXAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/x/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XAddressLinkSubmitResponse>;
+  },
+  unclaimXAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/x/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<XAddressLinkUnclaimResponse>;
+  },
+  submitXAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/x/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XAddressLinkSubmitResponse>;
   },
   /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {

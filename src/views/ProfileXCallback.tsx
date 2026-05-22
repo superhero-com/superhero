@@ -1,33 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import type { XAddressLinkClaimResponse } from '@/api/backend';
 import { SuperheroApi } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
+import { useQueryClient } from '@tanstack/react-query';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
 
 const ConfirmWalletStep = ({
   address,
-  attestation,
+  claim,
   onDone,
   onError,
 }: {
   address: string;
-  attestation: any;
+  claim: XAddressLinkClaimResponse;
   onDone: () => void;
   onError: (msg: string) => void;
 }) => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const { completeXWithAttestation } = useProfile(address);
+  const { completeXAddressLink } = useProfile(address);
   const [submitting, setSubmitting] = useState(false);
   const hasCalledRef = useRef(false);
 
   useEffect(() => {
-    if (!attestation || !completeXWithAttestation || hasCalledRef.current) return;
+    if (!claim || !completeXAddressLink || hasCalledRef.current) return;
     hasCalledRef.current = true;
     setSubmitting(true);
-    completeXWithAttestation(attestation)
+    completeXAddressLink(claim)
       .then(() => onDone())
       .catch((err) => {
         // eslint-disable-next-line no-console
@@ -35,7 +37,7 @@ const ConfirmWalletStep = ({
         onError(err?.message || t('messages.failedToUpdateProfile'));
       })
       .finally(() => setSubmitting(false));
-  }, [attestation, completeXWithAttestation, onDone, onError, t]);
+  }, [claim, completeXAddressLink, onDone, onError, t]);
 
   return (
     <div className="space-y-3">
@@ -43,7 +45,7 @@ const ConfirmWalletStep = ({
         {submitting ? t('messages.xCallbackConfirmInWallet') : t('messages.xCallbackSuccess')}
       </p>
       {submitting && (
-        <p className="text-white/60 text-sm">{t('messages.savingProfile')}</p>
+        <p className="text-white/60 text-sm">{t('messages.linkingXAccount')}</p>
       )}
       <button
         type="button"
@@ -61,10 +63,11 @@ const ProfileXCallback = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { activeAccount, addStaticAccount } = useAeSdk();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<'loading' | 'confirm_wallet' | 'done' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [attestation, setAttestation] = useState<any>(null);
+  const [claim, setClaim] = useState<XAddressLinkClaimResponse | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -94,16 +97,15 @@ const ProfileXCallback = () => {
         if (!activeAccount || activeAccount !== stored.address) {
           await addStaticAccount(stored.address);
         }
-        const att = await SuperheroApi.createXAttestationFromCode(
+        const nextClaim = await SuperheroApi.claimXAddressLinkFromCode(
           stored.address,
           code,
           stored.codeVerifier,
           stored.redirectUri,
         );
-        setAttestation(att);
+        setClaim(nextClaim);
         setStatus('confirm_wallet');
       } catch (err: any) {
-        // Helps debug post-redirect failures when UI only shows a short message.
         // eslint-disable-next-line no-console
         console.error('[x-callback] failed before wallet confirm', err);
         setErrorMessage(err?.message || t('messages.failedXAttestation'));
@@ -119,11 +121,16 @@ const ProfileXCallback = () => {
       {status === 'loading' && (
         <p className="text-white/80">{t('messages.xCallbackExchanging')}</p>
       )}
-      {status === 'confirm_wallet' && address && attestation && (
+      {status === 'confirm_wallet' && address && claim && (
         <ConfirmWalletStep
           address={address}
-          attestation={attestation}
-          onDone={() => setStatus('done')}
+          claim={claim}
+          onDone={async () => {
+            await queryClient.invalidateQueries({
+              queryKey: ['AccountsService.getAccount', address],
+            });
+            setStatus('done');
+          }}
           onError={(msg) => {
             setErrorMessage(msg);
             setStatus('error');

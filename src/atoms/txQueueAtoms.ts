@@ -3,13 +3,30 @@ import { atom, SetStateAction } from 'jotai';
 
 export type TxQueueEntry = {
   status: string;
-  tx: Encoded.Transaction;
   signUrl: string;
+  tx?: Encoded.Transaction;
   transaction?: Encoded.Transaction;
+  message?: string;
+  signature?: string;
+};
+
+export type MessageSignRequest = {
+  type: 'address-link-x-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-x-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';
 export const TX_QUEUE_RESULT_PREFIX = 'txQueue:result:';
+export const TX_QUEUE_REQUEST_PREFIX = 'txQueue:request:';
 
 // atomWithBroadcast implementation for cross-tab communication
 function atomWithBroadcast<Value>(key: string, initialValue: Value) {

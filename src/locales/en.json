@@ -104,7 +104,8 @@
       "invalidUsername": "Username must contain only letters, numbers, and underscores (2-32 chars)",
       "invalidSolName": "Sol name must be between 1 and 255 characters",
       "connectWalletToEditProfile": "Connect your wallet to edit your profile",
-      "failedXAttestation": "Failed to verify X account. Please check your token and try again.",
+      "missingXToken": "X access token is required for X verification.",
+      "failedXAttestation": "Failed to link X account. Please try again.",
       "profileContractNotConfigured": "Profile contract is not configured in this environment.",
       "failedToRefreshProfile": "Profile transaction succeeded but refresh failed. Please reload the page.",
       "tooManyRequests": "Too many requests. Please wait and try again.",
@@ -115,8 +116,10 @@
       "connectingX": "Redirecting to X…",
       "xCallbackInvalidState": "Invalid or expired link. Please try connecting X again from Edit profile.",
       "xCallbackExchanging": "Verifying with X…",
-      "xCallbackConfirmInWallet": "Confirm the transaction in your wallet to save your X username.",
+      "xCallbackConfirmInWallet": "Sign the link message in your wallet to link your X account.",
+      "linkingXAccount": "Linking your X account…",
       "xCallbackSuccess": "X account linked successfully.",
+      "xCallbackUnlinkSuccess": "X account unlinked successfully.",
       "xCallbackGoToProfile": "Go to profile"
     },
     "portfolio": {

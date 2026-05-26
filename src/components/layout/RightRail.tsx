@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Gem } from 'lucide-react';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
 import FeedRailSearch from '@/components/layout/FeedRailSearch';
 import { useCurrencies } from '@/hooks/useCurrencies';
@@ -187,6 +188,34 @@ const RightRail = ({
         <BuyAeWidget embedded />
       </div>
       */}
+
+      {/* Buy AE promo */}
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+        <div className="flex items-center gap-2 mb-2">
+          <Gem className="h-[1.1rem] w-[1.1rem] text-cyan-300 shrink-0" aria-hidden />
+          <h4 className="m-0 text-white text-base font-bold">
+            {t('buyAeRail.title')}
+          </h4>
+        </div>
+        <p className="text-[11px] text-[var(--light-font-color)] mb-3">
+          {t('buyAeRail.description')}
+        </p>
+        <a
+          href="https://www.gate.io/trade/AE_USDT"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center"
+        >
+          {t('buyAeRail.gateButton')}
+        </a>
+        <button
+          type="button"
+          className="mt-2 w-full bg-transparent border-0 text-xs font-semibold text-cyan-200 cursor-pointer hover:text-white transition-colors"
+          onClick={() => navigate('/buy-ae')}
+        >
+          {t('buyAeRail.moreWays')}
+        </button>
+      </div>
 
       {/* Trading Leaderboard promo */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">

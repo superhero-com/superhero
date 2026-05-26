@@ -155,6 +155,12 @@
       "liveTrending": "Live Trending",
       "searchForTag": "Search for {{tag}} (Score: {{score}})"
     },
+    "buyAeRail": {
+      "title": "Buy AE",
+      "description": "Need AE for fees, tips, and trend tokens? Start with Gate.io or compare more ways.",
+      "gateButton": "Buy AE on Gate.io",
+      "moreWays": "Explore more ways"
+    },
     "tips": {
       "hardwareWallets": "Use hardware wallets for large amounts",
       "hardwareWalletsExpanded": "Hardware wallets like Ledger or Trezor provide the highest security for storing significant amounts of cryptocurrency.",
@@ -989,7 +995,40 @@
     "qGlossaryLi2": "Sale address: the contract that mints/burns tokens on the curve.",
     "qGlossaryLi3": "DAO: on‑chain treasury + governance for a token community.",
     "qGlossaryLi4": "Tx hash: the transaction ID; view in explorers to verify."
+  },
+  "buyAe": {
+    "pageTitle": "Buy AE – Superhero",
+    "pageDescription": "Learn what AE is and the main ways to get AE for Superhero.",
+    "eyebrow": "Get AE",
+    "heroTitle": "Buy or earn AE for Superhero",
+    "heroDescription": "AE is the native coin of the aeternity blockchain. You use it to pay network fees, tip, trade trend tokens, and participate in on-chain activity on Superhero.",
+    "badgeBuy": "Buy",
+    "badgeBridge": "Bridge",
+    "badgeEarn": "Earn",
+    "onThisPage": "On this page",
+    "tip": "Availability and pairs can change. Always confirm details with the provider before sending funds.",
+    "whatIsAeTitle": "What is AE?",
+    "whatIsAeDescription": "AE powers the aeternity blockchain. It is used for transaction fees, smart-contract interactions, tipping, and buying or selling community tokens on Superhero.",
+    "waysTitle": "Ways to get AE",
+    "gateTitle": "Swap or Buy on Gate.io",
+    "gateDescription": "Gate.io provides an AE/USDT market and is one of the main centralized exchange options for AE liquidity.",
+    "gateAction": "Open Gate.io AE/USDT",
+    "changellyTitle": "Swap or Buy on Changelly",
+    "changellyDescription": "Changelly provides many AE pairs and is one of the best options for AE liquidity.",
+    "changellyAction":"Open Changelly",
+    "bridgeTitle": "Bridge or swap from other assets",
+    "bridgeDescription": "If you already hold crypto, use available Superhero DeFi tools or supported bridges and swaps to move value toward AE when routes are available.",
+    "bridgeAction": "Open Superhero DeFi",
+    "referTitle": "Use Refer & Earn",
+    "referDescription": "Superhero invitations can help grow the network and unlock rewards when invitees become active. Use the invite page to create links and track rewards.",
+    "referAction": "Open Refer & Earn",
+    "xEarnTitle": "Earn by posting on X",
+    "xEarnDescription": "A future earning path will reward activity from posting on X (formerly Twitter). This option is coming soon.",
+    "comingSoon": "Coming soon",
+    "safetyTitle": "Before you buy",
+    "safetyLi1": "Confirm the token, network, deposit address, withdrawal fees, and minimum withdrawal amount.",
+    "safetyLi2": "Start with a small test transaction before moving larger amounts.",
+    "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases."
   }
 }
-
 

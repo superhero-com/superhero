@@ -54,6 +54,7 @@ export type ProfileAggregate = {
 
 export type AccountLinks = {
   x?: string | null;
+  bio?: string | null;
 };
 
 export type AccountAggregate = {
@@ -86,21 +87,146 @@ export function isXLinked(
   return Boolean(getLinkedXUsername(account));
 }
 
-export type XAddressLinkClaimResponse = {
+/** Bio link text from GET /api/accounts/:address (`links.bio`, then profile/account fallbacks). */
+export function getLinkedBio(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.bio ?? '').trim();
+  if (fromLinks) return fromLinks;
+  const fromProfile = String(account?.profile?.bio ?? '').trim();
+  if (fromProfile) return fromProfile;
+  const legacy = String(account?.bio ?? '').trim();
+  if (legacy) return legacy;
+  return null;
+}
+
+type ProfileSource = Pick<
+AccountAggregate,
+'address' | 'links' | 'profile' | 'bio' | 'public_name' | 'x_username' | 'chain_name'
+>;
+
+const emptyProfilePayload = (): ProfilePayload => ({
+  fullname: '',
+  bio: '',
+  avatarurl: '',
+  username: null,
+  x_username: null,
+  chain_name: null,
+  display_source: null,
+  chain_expires_at: null,
+});
+
+/** Merge account (links.bio) and profile API payloads into a single aggregate for UI cache. */
+export function profileAggregateFromSources(
+  source: ProfileSource,
+  fallback?: ProfileAggregate | ProfileSource | null,
+): ProfileAggregate {
+  const fallbackProfile = (
+    fallback && 'profile' in fallback ? fallback.profile : null
+  ) ?? ('profile' in (source || {}) ? source.profile : null);
+  const linkedBio = getLinkedBio(source);
+  return {
+    address: source.address,
+    public_name: source.public_name ?? (
+      fallback && 'public_name' in fallback ? fallback.public_name : null
+    ) ?? null,
+    profile: {
+      ...emptyProfilePayload(),
+      ...fallbackProfile,
+      ...source.profile,
+      bio: linkedBio ?? fallbackProfile?.bio ?? '',
+      x_username: source.profile?.x_username
+        ?? source.x_username
+        ?? fallbackProfile?.x_username
+        ?? null,
+      chain_name: source.profile?.chain_name
+        ?? source.chain_name
+        ?? fallbackProfile?.chain_name
+        ?? null,
+    },
+  };
+}
+
+/** Resolve linked bio for React Query account cache after a profile save. */
+export function resolveLinkedBioForCache(
+  opts: {
+    bioChanged: boolean;
+    formBio: string;
+    updated?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null;
+    previous?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null;
+  },
+): string | null {
+  if (opts.bioChanged) return opts.formBio.trim() || null;
+  return getLinkedBio(opts.updated) ?? getLinkedBio(opts.previous);
+}
+
+export function patchAccountCacheEntry(
+  prev: Record<string, unknown> | null | undefined,
+  opts: {
+    updatedProfile?: ProfileAggregate | null;
+    bioChanged: boolean;
+    formBio?: string;
+  },
+): Record<string, unknown> {
+  const linkedXUsername = getLinkedXUsername(opts.updatedProfile)
+    ?? getLinkedXUsername(prev as AccountAggregate | null);
+  const linkedBio = resolveLinkedBioForCache({
+    bioChanged: opts.bioChanged,
+    formBio: opts.formBio ?? '',
+    updated: opts.updatedProfile,
+    previous: prev as AccountAggregate | null,
+  });
+  let bioLinkPatch: Record<string, unknown> = {};
+  if (linkedBio != null) {
+    bioLinkPatch = { bio: linkedBio };
+  } else if (opts.bioChanged) {
+    bioLinkPatch = { bio: null };
+  }
+  const profileBio = opts.bioChanged
+    ? (linkedBio ?? '')
+    : (linkedBio ?? opts.updatedProfile?.profile?.bio);
+  return {
+    ...prev,
+    bio: opts.bioChanged ? linkedBio : (linkedBio ?? (prev as AccountAggregate)?.bio),
+    fullname: opts.updatedProfile?.profile?.fullname ?? (prev as AccountAggregate)?.fullname,
+    avatarurl: opts.updatedProfile?.profile?.avatarurl ?? (prev as AccountAggregate)?.avatarurl,
+    username: opts.updatedProfile?.profile?.username ?? (prev as AccountAggregate)?.username,
+    chain_name: opts.updatedProfile?.profile?.chain_name ?? (prev as AccountAggregate)?.chain_name,
+    x_username: linkedXUsername ?? (prev as AccountAggregate)?.x_username,
+    links: {
+      ...(prev as AccountAggregate)?.links,
+      ...(linkedXUsername ? { x: linkedXUsername } : {}),
+      ...bioLinkPatch,
+    },
+    profile: opts.updatedProfile?.profile
+      ? {
+        ...(prev as AccountAggregate)?.profile,
+        ...opts.updatedProfile.profile,
+        bio: profileBio ?? opts.updatedProfile.profile.bio,
+      }
+      : (prev as AccountAggregate)?.profile,
+  };
+}
+
+export type AddressLinkClaimResponse = {
   message: string;
   nonce: number;
   value: string;
   verification_token: string;
 };
 
-export type XAddressLinkSubmitResponse = {
+export type AddressLinkSubmitResponse = {
   txHash: string;
 };
 
-export type XAddressLinkUnclaimResponse = {
+export type AddressLinkUnclaimResponse = {
   message: string;
   nonce: number;
 };
+
+export type XAddressLinkClaimResponse = AddressLinkClaimResponse;
+export type XAddressLinkSubmitResponse = AddressLinkSubmitResponse;
+export type XAddressLinkUnclaimResponse = AddressLinkUnclaimResponse;
 
 // Superhero API client
 export const SuperheroApi = {
@@ -468,6 +594,52 @@ export const SuperheroApi = {
       },
       body: JSON.stringify(payload),
     }) as Promise<XAddressLinkSubmitResponse>;
+  },
+  claimBioAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/bio/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitBioAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/bio/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimBioAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/bio/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitBioAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/bio/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
   },
   /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {

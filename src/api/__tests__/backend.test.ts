@@ -1,9 +1,83 @@
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { SuperheroApi } from '../backend';
+import {
+  getLinkedBio,
+  patchAccountCacheEntry,
+  profileAggregateFromSources,
+  resolveLinkedBioForCache,
+  SuperheroApi,
+} from '../backend';
 
 const mockFetch = vi.fn();
+
+describe('getLinkedBio', () => {
+  it('prefers links.bio over profile and legacy fields', () => {
+    expect(getLinkedBio({
+      links: { bio: 'from links' },
+      profile: { bio: 'from profile' } as any,
+      bio: 'legacy',
+    })).toBe('from links');
+  });
+
+  it('returns null for empty values', () => {
+    expect(getLinkedBio({ links: { bio: '   ' }, profile: { bio: '' } as any })).toBeNull();
+  });
+});
+
+describe('profileAggregateFromSources', () => {
+  it('merges account links.bio into profile aggregate', () => {
+    const aggregate = profileAggregateFromSources(
+      {
+        address: 'ak_test',
+        links: { bio: 'linked bio' },
+        profile: { fullname: 'Name', bio: '', avatarurl: 'https://x.test/a.png' } as any,
+      },
+      null,
+    );
+    expect(aggregate.profile.bio).toBe('linked bio');
+    expect(aggregate.profile.fullname).toBe('Name');
+  });
+});
+
+describe('resolveLinkedBioForCache', () => {
+  it('uses form bio when bio changed', () => {
+    expect(resolveLinkedBioForCache({
+      bioChanged: true,
+      formBio: 'new',
+      updated: { links: { bio: 'stale' } },
+      previous: { links: { bio: 'old' } },
+    })).toBe('new');
+  });
+
+  it('clears bio when bio changed to empty', () => {
+    expect(resolveLinkedBioForCache({
+      bioChanged: true,
+      formBio: '',
+      previous: { links: { bio: 'old' } },
+    })).toBeNull();
+  });
+
+  it('falls back to previous only when bio did not change', () => {
+    expect(resolveLinkedBioForCache({
+      bioChanged: false,
+      formBio: '',
+      updated: null,
+      previous: { links: { bio: 'kept' } },
+    })).toBe('kept');
+  });
+});
+
+describe('patchAccountCacheEntry', () => {
+  it('clears links.bio on unlink', () => {
+    const next = patchAccountCacheEntry(
+      { links: { bio: 'old' }, bio: 'old', profile: { bio: 'old' } },
+      { updatedProfile: { address: 'ak_test', profile: { bio: '' } as any, public_name: null }, bioChanged: true, formBio: '' },
+    );
+    expect(next.links).toEqual({ bio: null });
+    expect(next.bio).toBeNull();
+  });
+});
 
 describe('SuperheroApi.fetchJson', () => {
   beforeEach(() => {

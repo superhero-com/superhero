@@ -6,7 +6,10 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  getLinkedBio,
   getLinkedXUsername,
+  patchAccountCacheEntry,
+  profileAggregateFromSources,
   ProfileAggregate,
   SuperheroApi,
 } from '@/api/backend';
@@ -275,6 +278,8 @@ const ProfileEditModal = ({
     getProfile,
     getProfileOnChain,
     setProfile,
+    linkBio,
+    unlinkBio,
     canEdit,
   } = useProfile(address);
   const [connectingX, setConnectingX] = useState(false);
@@ -321,15 +326,15 @@ const ProfileEditModal = ({
       let chainName = '';
       let chainNameExpiresAt: number | null = null;
 
+      let chainProfile: Awaited<ReturnType<typeof getProfileOnChain>> | null = null;
       try {
-        const chain = await getProfileOnChain(targetAddress);
-        if (chain) {
-          fullname = String(chain.fullname ?? '');
-          bio = String(chain.bio ?? '');
-          avatarurl = String(chain.avatarurl ?? '');
-          username = String(chain.username ?? '');
-          chainName = normalizeChainName(chain.chain_name ?? '');
-          chainNameExpiresAt = toExpiryNumber(chain.chain_expires_at);
+        chainProfile = await getProfileOnChain(targetAddress);
+        if (chainProfile) {
+          fullname = String(chainProfile.fullname ?? '');
+          avatarurl = String(chainProfile.avatarurl ?? '');
+          username = String(chainProfile.username ?? '');
+          chainName = normalizeChainName(chainProfile.chain_name ?? '');
+          chainNameExpiresAt = toExpiryNumber(chainProfile.chain_expires_at);
         }
       } catch {
         // ignore
@@ -340,6 +345,8 @@ const ProfileEditModal = ({
       try {
         accountRecord = await SuperheroApi.getAccount(targetAddress);
         xName = getLinkedXUsername(accountRecord);
+        const linkedBio = getLinkedBio(accountRecord);
+        if (linkedBio) bio = linkedBio;
       } catch {
         // ignore account fetch errors; X section falls back to unlinked
       }
@@ -348,7 +355,11 @@ const ProfileEditModal = ({
       try {
         const acct = await getProfile(targetAddress);
         if (fullname === '' && (acct?.profile?.fullname ?? '') !== '') fullname = String(acct.profile.fullname);
-        if (bio === '' && (acct?.profile?.bio ?? '') !== '') bio = String(acct.profile.bio ?? initialBio ?? '');
+        if (bio === '') {
+          const linkedBio = getLinkedBio(acct);
+          if (linkedBio) bio = linkedBio;
+          else if ((acct?.profile?.bio ?? '') !== '') bio = String(acct.profile.bio ?? initialBio ?? '');
+        }
         if (avatarurl === '' && (acct?.profile?.avatarurl ?? '') !== '') avatarurl = String(acct.profile.avatarurl);
         if (username === '' && (acct?.profile?.username ?? '') !== '') {
           username = String(acct.profile.username);
@@ -358,6 +369,10 @@ const ProfileEditModal = ({
         }
       } catch {
         if (bio === '' && initialBio) bio = String(initialBio);
+      }
+
+      if (bio === '' && chainProfile?.bio) {
+        bio = String(chainProfile.bio);
       }
 
       let ownedChainNames: OwnedChainNameOption[] = [];
@@ -420,7 +435,7 @@ const ProfileEditModal = ({
   }, [open, initialSection, xSectionReady, hasXVerified]);
 
   const validateForm = (): string | null => {
-    if (trimmedForm.bio.length > 280) return t('messages.invalidBioLength');
+    if (trimmedForm.bio.length > 200) return t('messages.invalidBioLength');
     if (trimmedForm.website) {
       if (trimmedForm.website.length > 500) return t('messages.invalidAvatarUrl');
       try {
@@ -451,7 +466,7 @@ const ProfileEditModal = ({
     const lower = msg.toLowerCase();
     if (lower.includes('429') || lower.includes('rate limit') || lower.includes('too many')) return t('messages.tooManyRequests');
     if (lower.includes('attestation') || lower.includes('address link') || lower.includes('verification_token')) {
-      return t('messages.failedXAttestation');
+      return t('messages.failedAddressLink');
     }
     if (lower.includes('profile_registry_contract_address')) return t('messages.profileContractNotConfigured');
     return msg || t('messages.failedToUpdateProfile');
@@ -479,12 +494,12 @@ const ProfileEditModal = ({
         push(<div style={{ color: '#ffb3b3' }}>{validationError}</div>);
         return;
       }
-      const hasChanges = (
-        trimmedForm.bio !== initialForm.bio.trim()
-        || trimmedForm.website !== initialForm.website.trim()
+      const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
+      const otherChanged = (
+        trimmedForm.website !== initialForm.website.trim()
         || trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
       );
-      if (!hasChanges) {
+      if (!bioChanged && !otherChanged) {
         const msg = t('messages.profileNothingToUpdate');
         setFormError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
@@ -492,33 +507,84 @@ const ProfileEditModal = ({
       }
       setLoading(true);
       setFormError(null);
-      await setProfile({
-        fullname: preservedProfile.fullname,
-        bio: trimmedForm.bio,
-        avatarurl: trimmedForm.website,
-        username: preservedProfile.username,
-        chainName: trimmedForm.chain_name,
-        chainExpiresAt: selectedChainOption?.expiresAt ?? null,
-      });
-      const updated = await getProfile(targetAddress);
-      if (!updated) {
+      if (bioChanged) {
+        if (trimmedForm.bio) {
+          await linkBio({ address: targetAddress, bio: trimmedForm.bio });
+        } else {
+          await unlinkBio(targetAddress);
+        }
+      }
+      if (otherChanged) {
+        await setProfile({
+          fullname: preservedProfile.fullname,
+          bio: '',
+          avatarurl: trimmedForm.website,
+          username: preservedProfile.username,
+          chainName: trimmedForm.chain_name,
+          chainExpiresAt: selectedChainOption?.expiresAt ?? null,
+        });
+      }
+      const prevProfile = queryClient.getQueryData<ProfileAggregate | null>(
+        ['SuperheroApi.getProfile', targetAddress],
+      );
+      const [profileResult, accountResult] = await Promise.allSettled([
+        SuperheroApi.getProfile(targetAddress),
+        SuperheroApi.getAccount(targetAddress),
+      ]);
+      const accountRecord = accountResult.status === 'fulfilled' ? accountResult.value : null;
+      const profileFromApi = profileResult.status === 'fulfilled' ? profileResult.value : null;
+
+      if (accountRecord) {
+        queryClient.setQueryData(['AccountsService.getAccount', targetAddress], accountRecord);
+      }
+
+      let updated: ProfileAggregate;
+      if (accountRecord) {
+        updated = profileAggregateFromSources(
+          { address: targetAddress, ...accountRecord },
+          profileFromApi ?? prevProfile,
+        );
+      } else if (profileFromApi) {
+        updated = profileFromApi;
+      } else if (prevProfile) {
+        updated = prevProfile;
+      } else {
+        updated = profileAggregateFromSources(
+          { address: targetAddress, links: { bio: trimmedForm.bio || null } },
+          null,
+        );
+      }
+
+      if (bioChanged) {
+        updated = {
+          ...updated,
+          profile: {
+            ...updated.profile,
+            bio: trimmedForm.bio,
+          },
+        };
+      }
+
+      if (!updated?.address) {
         throw new Error(t('messages.failedToRefreshProfile'));
       }
-      queryClient.setQueryData(['AccountsService.getAccount', targetAddress], (prev: any) => {
-        const linkedXUsername = getLinkedXUsername(updated) ?? getLinkedXUsername(prev);
-        return {
-          ...prev,
-          bio: updated?.profile?.bio ?? prev?.bio,
-          fullname: updated?.profile?.fullname ?? prev?.fullname,
-          avatarurl: updated?.profile?.avatarurl ?? prev?.avatarurl,
-          username: updated?.profile?.username ?? prev?.username,
-          chain_name: updated?.profile?.chain_name ?? prev?.chain_name,
-          x_username: linkedXUsername ?? prev?.x_username,
-          links: linkedXUsername ? { ...prev?.links, x: linkedXUsername } : prev?.links,
-          profile: updated?.profile ? { ...prev?.profile, ...updated.profile } : prev?.profile,
-        };
-      });
-      push(<div>{t('messages.profileUpdated')}</div>);
+
+      queryClient.setQueryData(['SuperheroApi.getProfile', targetAddress], updated);
+      queryClient.setQueryData(
+        ['AccountsService.getAccount', targetAddress],
+        (prev: Record<string, unknown> | undefined) => patchAccountCacheEntry(prev, {
+          updatedProfile: updated,
+          bioChanged,
+          formBio: trimmedForm.bio,
+        }),
+      );
+      let successMessage = t('messages.profileUpdated');
+      if (bioChanged && !otherChanged) {
+        successMessage = trimmedForm.bio
+          ? t('messages.bioLinkSuccess')
+          : t('messages.bioUnlinkSuccess');
+      }
+      push(<div>{successMessage}</div>);
       onClose(updated);
     } catch (e) {
       const msg = resolveErrorMessage(e);
@@ -697,11 +763,11 @@ const ProfileEditModal = ({
                   onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
                   placeholder="Tell the world about yourself…"
                   className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
-                  maxLength={280}
+                  maxLength={200}
                 />
                 <div className="mt-1 text-right text-[10px] text-white/35">
                   {form.bio.length}
-                  /280
+                  /200
                 </div>
               </div>
 

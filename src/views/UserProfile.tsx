@@ -27,7 +27,9 @@ import Shell from '../components/layout/Shell';
 
 import { PostsService } from '../api/generated';
 import type { PostDto } from '../api/generated';
-import { getLinkedXUsername, isXLinked, SuperheroApi } from '@/api/backend';
+import {
+  getLinkedBio, isXLinked, patchAccountCacheEntry, SuperheroApi,
+} from '@/api/backend';
 import { AccountsService } from '../api/generated/services/AccountsService';
 import { AccountTokensService } from '../api/generated/services/AccountTokensService';
 import { TokensService } from '../api/generated/services/TokensService';
@@ -186,9 +188,10 @@ export default function UserProfile({
   // Get posts from the query data
   const posts = data?.items || [];
 
-  const bioText = (profileInfo?.profile?.bio || '').trim()
-    || (accountInfo?.bio || '').trim()
-    || profile?.profile?.bio;
+  const bioText = getLinkedBio(accountInfo)
+    || getLinkedBio(profileInfo)
+    || (profile?.profile?.bio || '').trim()
+    || '';
   const displayName = (profileInfo?.public_name || chainName || '').trim()
     || formatAddress(effectiveAddress, 6, true);
   const isXVerified = isXLinked(accountInfo);
@@ -591,20 +594,12 @@ export default function UserProfile({
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
-              const xUsername = getLinkedXUsername(updatedProfile) ?? getLinkedXUsername(oldData);
-              return {
-                ...oldData,
-                bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-                fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-                avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-                username: updatedProfile?.profile?.username ?? oldData?.username,
-                chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-                x_username: xUsername ?? oldData?.x_username,
-                links: xUsername ? { ...oldData?.links, x: xUsername } : oldData?.links,
-                profile: updatedProfile?.profile
-                  ? { ...oldData?.profile, ...updatedProfile.profile }
-                  : oldData?.profile,
-              };
+              const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
+              return patchAccountCacheEntry(oldData, {
+                updatedProfile,
+                bioChanged,
+                formBio: updatedProfile?.profile?.bio ?? '',
+              });
             });
             setProfile(updatedProfile);
             refetchAccount();
@@ -627,20 +622,12 @@ export default function UserProfile({
           if (updatedProfile) {
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
-              const xUsername = getLinkedXUsername(updatedProfile) ?? getLinkedXUsername(oldData);
-              return {
-                ...oldData,
-                bio: updatedProfile?.profile?.bio ?? oldData?.bio,
-                fullname: updatedProfile?.profile?.fullname ?? oldData?.fullname,
-                avatarurl: updatedProfile?.profile?.avatarurl ?? oldData?.avatarurl,
-                username: updatedProfile?.profile?.username ?? oldData?.username,
-                chain_name: updatedProfile?.profile?.chain_name ?? oldData?.chain_name,
-                x_username: xUsername ?? oldData?.x_username,
-                links: xUsername ? { ...oldData?.links, x: xUsername } : oldData?.links,
-                profile: updatedProfile?.profile
-                  ? { ...oldData?.profile, ...updatedProfile.profile }
-                  : oldData?.profile,
-              };
+              const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
+              return patchAccountCacheEntry(oldData, {
+                updatedProfile,
+                bioChanged,
+                formBio: updatedProfile?.profile?.bio ?? '',
+              });
             });
             setProfile(updatedProfile);
             refetchAccount();

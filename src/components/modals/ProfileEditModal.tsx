@@ -21,7 +21,8 @@ import {
   storeXOAuthPKCE,
 } from '@/utils/xOAuth';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { Check, Globe } from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import {
@@ -33,12 +34,15 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { useToast } from '../ToastProvider';
 
-type ProfileFormState = {
-  fullname: string;
+type EditableFormState = {
   bio: string;
-  avatarurl: string;
-  username: string;
+  website: string;
   chain_name: string;
+};
+
+type PreservedProfileState = {
+  fullname: string;
+  username: string;
 };
 
 type OwnedChainNameOption = {
@@ -46,16 +50,48 @@ type OwnedChainNameOption = {
   expiresAt: number | null;
 };
 
-const EMPTY_FORM: ProfileFormState = {
-  fullname: '',
+const EMPTY_FORM: EditableFormState = {
   bio: '',
-  avatarurl: '',
-  username: '',
+  website: '',
   chain_name: '',
 };
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{2,32}$/;
+const EMPTY_PRESERVED: PreservedProfileState = {
+  fullname: '',
+  username: '',
+};
+
 const NONE_CHAIN_NAME_VALUE = '__none_chain_name__';
+
+const CHAIN_NAME_LABEL_CLASS = 'text-white/70 text-[11px] tracking-wider font-semibold';
+const FIELD_LABEL_CLASS = 'text-white/70 text-[11px] uppercase tracking-wider font-semibold';
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden>
+    <path
+      fill="currentColor"
+      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.734l7.73-8.835L1.254 2.25H8.08l4.264 5.634zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+    />
+  </svg>
+);
+
+const formatChainNameLabel = (name: string) => (
+  name.endsWith('.chain') ? name : `${name}.chain`
+);
+
+const GLASS_CARD_STYLE = {
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+  border: '1px solid rgba(255,255,255,0.14)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
+  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+} as const;
+
+const NEON_ACTION_BUTTON_STYLE = {
+  background: 'rgba(0,255,157,0.1)',
+  borderColor: 'rgba(0,255,157,0.35)',
+  color: 'var(--neon-teal)',
+} as const;
 
 const normalizeChainName = (value: unknown): string => String(value || '').trim().toLowerCase();
 const toExpiryNumber = (value: unknown): number | null => {
@@ -245,22 +281,23 @@ const ProfileEditModal = ({
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState<ProfileFormState>(EMPTY_FORM);
-  const [initialForm, setInitialForm] = useState<ProfileFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
+  const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
+  const [preservedProfile, setPreservedProfile] = useState<PreservedProfileState>(EMPTY_PRESERVED);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [hasXVerified, setHasXVerified] = useState(false);
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
+  const [chainPickerOpen, setChainPickerOpen] = useState(false);
+  const [pickerChainName, setPickerChainName] = useState(NONE_CHAIN_NAME_VALUE);
   const xSectionRef = useRef<HTMLDivElement | null>(null);
   const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const trimmedForm = useMemo(() => ({
-    fullname: form.fullname.trim(),
     bio: form.bio.trim(),
-    avatarurl: form.avatarurl.trim(),
-    username: form.username.trim(),
+    website: form.website.trim(),
     chain_name: form.chain_name.trim().toLowerCase(),
   }), [form]);
   const selectedChainOption = useMemo(
@@ -350,18 +387,15 @@ const ProfileEditModal = ({
 
       setHasXVerified(Boolean(xName));
       setXUsername(xName);
+      setPreservedProfile({ fullname, username });
       setForm({
-        fullname,
         bio,
-        avatarurl,
-        username,
+        website: avatarurl,
         chain_name: chainName,
       });
       setInitialForm({
-        fullname,
         bio,
-        avatarurl,
-        username,
+        website: avatarurl,
         chain_name: chainName,
       });
       if ((CONFIG as any).X_OAUTH_CLIENT_ID) setXSectionReady(true);
@@ -373,6 +407,7 @@ const ProfileEditModal = ({
     if (!open) {
       setLoading(false);
       setFormError(null);
+      setChainPickerOpen(false);
     }
   }, [open]);
 
@@ -385,19 +420,30 @@ const ProfileEditModal = ({
   }, [open, initialSection, xSectionReady, hasXVerified]);
 
   const validateForm = (): string | null => {
-    if (trimmedForm.fullname.length > 64) return t('messages.invalidFullname');
     if (trimmedForm.bio.length > 280) return t('messages.invalidBioLength');
-    if (trimmedForm.avatarurl) {
-      if (trimmedForm.avatarurl.length > 500) return t('messages.invalidAvatarUrl');
+    if (trimmedForm.website) {
+      if (trimmedForm.website.length > 500) return t('messages.invalidAvatarUrl');
       try {
         // eslint-disable-next-line no-new
-        new URL(trimmedForm.avatarurl);
+        new URL(trimmedForm.website);
       } catch {
         return t('messages.invalidAvatarUrl');
       }
     }
-    if (trimmedForm.username && !USERNAME_REGEX.test(trimmedForm.username)) return t('messages.invalidUsername');
     return null;
+  };
+
+  const openChainPicker = () => {
+    setPickerChainName(form.chain_name || NONE_CHAIN_NAME_VALUE);
+    setChainPickerOpen(true);
+  };
+
+  const applyChainPicker = () => {
+    setForm((prev) => ({
+      ...prev,
+      chain_name: pickerChainName === NONE_CHAIN_NAME_VALUE ? '' : pickerChainName,
+    }));
+    setChainPickerOpen(false);
   };
 
   const resolveErrorMessage = (error: unknown) => {
@@ -434,10 +480,8 @@ const ProfileEditModal = ({
         return;
       }
       const hasChanges = (
-        trimmedForm.fullname !== initialForm.fullname.trim()
-        || trimmedForm.bio !== initialForm.bio.trim()
-        || trimmedForm.avatarurl !== initialForm.avatarurl.trim()
-        || trimmedForm.username !== initialForm.username.trim()
+        trimmedForm.bio !== initialForm.bio.trim()
+        || trimmedForm.website !== initialForm.website.trim()
         || trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
       );
       if (!hasChanges) {
@@ -449,10 +493,10 @@ const ProfileEditModal = ({
       setLoading(true);
       setFormError(null);
       await setProfile({
-        fullname: trimmedForm.fullname,
+        fullname: preservedProfile.fullname,
         bio: trimmedForm.bio,
-        avatarurl: trimmedForm.avatarurl,
-        username: trimmedForm.username,
+        avatarurl: trimmedForm.website,
+        username: preservedProfile.username,
         chainName: trimmedForm.chain_name,
         chainExpiresAt: selectedChainOption?.expiresAt ?? null,
       });
@@ -489,162 +533,269 @@ const ProfileEditModal = ({
     }
   }
 
+  const targetAddress = (address as string) || (activeAccount as string);
+  const selectedChainLabel = trimmedForm.chain_name
+    ? formatChainNameLabel(trimmedForm.chain_name)
+    : null;
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] shadow-[var(--glass-shadow)]">
-        <DialogHeader>
-          <DialogTitle className="text-white">
-            {t('titles.editProfile')}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-white/80">{t('labels.username')}</Label>
-            <Input
-              value={form.username}
-              onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
-              placeholder={t('placeholders.username')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={32}
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          className={[
+            'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
+            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          ].join(' ')}
+        >
+          <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
+            <div
+              className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
             />
-          </div>
-          <div>
-            <Label className="text-white/80">{t('labels.chainName')}</Label>
-            <AppSelect
-              value={form.chain_name || NONE_CHAIN_NAME_VALUE}
-              onValueChange={(value) => setForm((prev) => ({
-                ...prev,
-                chain_name: value === NONE_CHAIN_NAME_VALUE ? '' : value,
-              }))}
-              triggerClassName="mt-1 w-full h-10 px-3 bg-white/7 border border-white/14 text-white rounded-xl focus:ring-0 focus:border-[var(--neon-teal)]"
-              contentClassName="z-[100] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
-              itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
-              placeholder={t('placeholders.selectChainName')}
-            >
-              <AppSelectItem value={NONE_CHAIN_NAME_VALUE}>{t('labels.none')}</AppSelectItem>
-              {availableChainNames.map((item) => (
-                <AppSelectItem key={item.name} value={item.name}>
-                  {item.name}
-                </AppSelectItem>
-              ))}
-            </AppSelect>
-            {!availableChainNames.length && (
-              <p className="mt-1 text-[11px] text-white/50">{t('messages.noChainNamesFound')}</p>
-            )}
-          </div>
-          {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
-            <div ref={xSectionRef}>
-              {xSectionReady && (
-                <Label className="text-white/80">
-                  {hasXVerified ? t('labels.xAccount') : t('labels.connectX')}
-                </Label>
-              )}
-              {!xSectionReady && (
-                <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/14 px-3 py-6">
-                  <Spinner className="w-5 h-5 text-white/60" />
-                  <span className="text-xs text-white/50">{t('messages.loading')}</span>
+            <div
+              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-20"
+              style={{ background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)', filter: 'blur(32px)' }}
+            />
+
+            <div className="flex items-center justify-between px-5 pt-5 pb-0">
+              <DialogHeader>
+                <DialogTitle className="text-white font-bold text-base tracking-tight">
+                  {t('titles.editSuperheroId')}
+                </DialogTitle>
+              </DialogHeader>
+            </div>
+
+            <div className="px-5 pb-5 pt-4 space-y-4">
+              {targetAddress ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 rounded-2xl opacity-60 blur-xl"
+                      style={{ background: 'var(--neon-teal)' }}
+                    />
+                    <AddressAvatarWithChainName
+                      address={targetAddress}
+                      size={72}
+                      showAddressAndChainName={false}
+                      className="relative"
+                    />
+                  </div>
                 </div>
-              )}
-              {xSectionReady && !hasXVerified && (
-                <>
-                  <p className="text-xs text-white/60 mt-0.5 mb-2">
-                    {t('messages.connectXHint')}
-                  </p>
-                  <Button
-                    ref={connectXButtonRef}
+              ) : null}
+
+              <div>
+                <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2 min-w-0">
+                    {selectedChainLabel ? (
+                      <>
+                        <span
+                          className="text-sm font-semibold truncate"
+                          style={{ color: 'var(--neon-teal)' }}
+                        >
+                          {selectedChainLabel}
+                        </span>
+                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--neon-teal)' }} />
+                      </>
+                    ) : (
+                      <span className="text-sm text-white/40 italic">SuperheroUser.chain</span>
+                    )}
+                  </div>
+                  <button
                     type="button"
-                    variant="outline"
-                    className="w-full border-white/20 text-white hover:bg-white/10"
-                    disabled={connectingX || !canEdit}
-                    onClick={async () => {
-                      const targetAddr = (address as string) || (activeAccount as string);
-                      if (!targetAddr) return;
-                      setConnectingX(true);
-                      try {
-                        const redirectUri = getXCallbackRedirectUri();
-                        const state = generateOAuthState();
-                        const codeVerifier = generateCodeVerifier();
-                        storeXOAuthPKCE({
-                          state,
-                          codeVerifier,
-                          address: targetAddr,
-                          redirectUri,
-                        });
-                        const url = await buildXAuthorizeUrl({
-                          clientId: (CONFIG as any).X_OAUTH_CLIENT_ID,
-                          redirectUri,
-                          state,
-                          codeVerifier,
-                        });
-                        window.location.href = url;
-                      } catch (e) {
-                        setFormError(resolveErrorMessage(e));
-                      } finally {
-                        setConnectingX(false);
-                      }
+                    onClick={openChainPicker}
+                    className="shrink-0 rounded-xl px-3 py-2 text-[12px] font-semibold border border-solid transition-colors whitespace-nowrap"
+                    style={NEON_ACTION_BUTTON_STYLE}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,157,0.18)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = NEON_ACTION_BUTTON_STYLE.background;
                     }}
                   >
-                    {connectingX ? t('messages.connectingX') : t('buttons.connectX')}
-                  </Button>
-                </>
-              )}
-              {xSectionReady && hasXVerified && xUsername && (
-                <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/14 px-3 py-2">
-                  <Check className="w-4 h-4 shrink-0 text-[var(--neon-teal)]" aria-hidden />
-                  <span className="text-sm text-white/90">
-                    {`@${xUsername.replace(/^@/u, '')}`}
-                  </span>
+                    {selectedChainLabel ? t('buttons.changeChainName') : t('buttons.buyChainName')}
+                  </button>
                 </div>
-              )}
+              </div>
+
+              {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
+                <div ref={xSectionRef}>
+                  <Label className={FIELD_LABEL_CLASS}>X (Twitter)</Label>
+                  {!xSectionReady && (
+                    <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
+                      <Spinner className="w-5 h-5 text-white/60" />
+                      <span className="text-xs text-white/50">{t('messages.loading')}</span>
+                    </div>
+                  )}
+                  {xSectionReady && !hasXVerified && (
+                    <button
+                      ref={connectXButtonRef}
+                      type="button"
+                      disabled={connectingX || !canEdit}
+                      className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-2.5 text-sm text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      onClick={async () => {
+                        const targetAddr = (address as string) || (activeAccount as string);
+                        if (!targetAddr) return;
+                        setConnectingX(true);
+                        try {
+                          const redirectUri = getXCallbackRedirectUri();
+                          const state = generateOAuthState();
+                          const codeVerifier = generateCodeVerifier();
+                          storeXOAuthPKCE({
+                            state,
+                            codeVerifier,
+                            address: targetAddr,
+                            redirectUri,
+                          });
+                          const url = await buildXAuthorizeUrl({
+                            clientId: (CONFIG as any).X_OAUTH_CLIENT_ID,
+                            redirectUri,
+                            state,
+                            codeVerifier,
+                          });
+                          window.location.href = url;
+                        } catch (e) {
+                          setFormError(resolveErrorMessage(e));
+                        } finally {
+                          setConnectingX(false);
+                        }
+                      }}
+                    >
+                      <XIcon className="w-4 h-4 fill-current" />
+                      {connectingX ? t('messages.connectingX') : 'Link account'}
+                    </button>
+                  )}
+                  {xSectionReady && hasXVerified && xUsername && (
+                    <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
+                      <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
+                      <span className="text-sm text-white/90">
+                        {`@${xUsername.replace(/^@/u, '')}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              <div>
+                <Label className={FIELD_LABEL_CLASS}>Website</Label>
+                <div className="relative mt-1.5">
+                  <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
+                  <Input
+                    value={form.website}
+                    onChange={(e) => setForm((prev) => ({ ...prev, website: e.target.value }))}
+                    placeholder="https://yoursite.com"
+                    className="pl-8 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
+                    maxLength={200}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className={FIELD_LABEL_CLASS}>Bio</Label>
+                <Textarea
+                  value={form.bio}
+                  onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell the world about yourself…"
+                  className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
+                  maxLength={280}
+                />
+                <div className="mt-1 text-right text-[10px] text-white/35">
+                  {form.bio.length}
+                  /280
+                </div>
+              </div>
+
+              {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
+
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="ghost"
+                  onClick={handleClose}
+                  disabled={loading}
+                  className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
+                >
+                  {t('buttons.cancel')}
+                </Button>
+                <Button
+                  onClick={onSave}
+                  disabled={loading || !canEdit}
+                  className="flex-1 rounded-xl font-semibold disabled:opacity-50"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
+                    color: '#0a0a0a',
+                  }}
+                >
+                  {loading ? t('messages.savingProfile') : t('buttons.save')}
+                </Button>
+              </div>
             </div>
-          ) : null}
-          <div>
-            <Label className="text-white/80">{t('labels.fullname')}</Label>
-            <Input
-              value={form.fullname}
-              onChange={(e) => setForm((prev) => ({ ...prev, fullname: e.target.value }))}
-              placeholder={t('placeholders.fullname')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={64}
-            />
           </div>
-          <div>
-            <Label className="text-white/80">{t('labels.bio')}</Label>
-            <Textarea
-              value={form.bio}
-              onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-              placeholder={t('placeholders.bio')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={280}
-            />
-            <div className="mt-1 text-white/50 text-xs text-right">
-              {form.bio.length}
-              /
-              280
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={chainPickerOpen} onOpenChange={setChainPickerOpen}>
+        <DialogContent
+          className={[
+            'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
+            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          ].join(' ')}
+        >
+          <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
+            <div className="px-5 py-5 space-y-4">
+              <DialogHeader>
+                <DialogTitle className="text-white font-bold text-base tracking-tight">
+                  {t('titles.selectChainName')}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div>
+                <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
+                <AppSelect
+                  value={pickerChainName}
+                  onValueChange={setPickerChainName}
+                  triggerClassName="mt-1.5 w-full h-10 px-3 bg-white/[0.06] border border-white/12 text-white rounded-xl focus:ring-0 focus:border-[var(--neon-teal)] text-sm"
+                  contentClassName="z-[110] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
+                  itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
+                  placeholder={t('placeholders.selectChainName')}
+                >
+                  <AppSelectItem value={NONE_CHAIN_NAME_VALUE}>{t('labels.none')}</AppSelectItem>
+                  {availableChainNames.map((item) => (
+                    <AppSelectItem key={item.name} value={item.name}>
+                      {item.name}
+                    </AppSelectItem>
+                  ))}
+                </AppSelect>
+                {!availableChainNames.length && (
+                  <p className="mt-2 text-[11px] text-white/50 leading-relaxed">
+                    {t('messages.noChainNamesFound')}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="ghost"
+                  onClick={() => setChainPickerOpen(false)}
+                  className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
+                >
+                  {t('buttons.cancel')}
+                </Button>
+                <Button
+                  onClick={applyChainPicker}
+                  className="flex-1 rounded-xl font-semibold"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
+                    color: '#0a0a0a',
+                  }}
+                >
+                  {t('buttons.apply')}
+                </Button>
+              </div>
             </div>
           </div>
-          <div>
-            <Label className="text-white/80">{t('labels.avatarurl')}</Label>
-            <Input
-              value={form.avatarurl}
-              onChange={(e) => setForm((prev) => ({ ...prev, avatarurl: e.target.value }))}
-              placeholder={t('placeholders.avatarurl')}
-              className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)]"
-              maxLength={500}
-            />
-          </div>
-          {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={handleClose} disabled={loading}>
-              {t('buttons.cancel')}
-            </Button>
-            <Button onClick={onSave} disabled={loading || !canEdit}>
-              {loading ? t('messages.savingProfile') : t('buttons.saveProfile')}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

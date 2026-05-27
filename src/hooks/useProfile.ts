@@ -5,6 +5,7 @@ import {
   useRef,
 } from 'react';
 import {
+  type AddressLinkClaimResponse,
   type ProfileAggregate,
   type XAddressLinkClaimResponse,
   SuperheroApi,
@@ -424,13 +425,13 @@ export function useProfile(targetAddress?: string) {
     });
     const current = await getProfileOnChain(target);
     const nextFullname = data.fullname || '';
-    const nextBio = data.bio || '';
+    /** Bio is linked off-chain; preserve the on-chain profile bio field when writing. */
+    const nextBio = current?.bio || '';
     const nextAvatar = data.avatarurl || '';
 
     let txHash: string | undefined;
     const shouldSetProfile = !current
       || current.fullname !== nextFullname
-      || current.bio !== nextBio
       || current.avatarurl !== nextAvatar;
 
     const normalizedUsername = normalizeName(data.username || '');
@@ -644,6 +645,79 @@ export function useProfile(targetAddress?: string) {
     waitForWalletReconnect,
   ]);
 
+  const submitBioAddressLink = useCallback(async (
+    address: string,
+    claim: AddressLinkClaimResponse,
+    signature: string,
+  ) => {
+    const res = await SuperheroApi.submitBioAddressLink({
+      address,
+      value: claim.value,
+      nonce: claim.nonce,
+      signature,
+      verification_token: claim.verification_token,
+    });
+    return res.txHash;
+  }, []);
+
+  const linkBio = useCallback(async (params: {
+    address?: string;
+    bio: string;
+  }) => {
+    const target = params.address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for bio link');
+    }
+    const value = params.bio.trim();
+    if (!value) {
+      throw new Error('Bio is required to link');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const claim = await SuperheroApi.claimBioAddressLink(target, value);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, claim.message, {
+      request: {
+        type: 'address-link-bio-submit',
+        address: target,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
+    });
+    return submitBioAddressLink(target, claim, signature);
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitBioAddressLink,
+    targetAddress,
+  ]);
+
+  const unlinkBio = useCallback(async (address?: string) => {
+    const target = address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for bio unlink');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const unclaim = await SuperheroApi.unclaimBioAddressLink(target);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, unclaim.message, {
+      request: {
+        type: 'address-link-bio-unclaim',
+        address: target,
+        nonce: unclaim.nonce,
+        message: unclaim.message,
+      },
+    });
+    const res = await SuperheroApi.submitBioAddressLinkUnclaim({
+      address: target,
+      nonce: unclaim.nonce,
+      signature,
+    });
+    return res.txHash;
+  }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
+
   const unlinkXAccount = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
@@ -677,5 +751,7 @@ export function useProfile(targetAddress?: string) {
     linkXWithAccessToken,
     completeXAddressLink,
     unlinkXAccount,
+    linkBio,
+    unlinkBio,
   };
 }

@@ -5,7 +5,12 @@ import {
 import { useProfile } from '@/hooks/useProfile';
 
 const mockClaimXAddressLink = vi.fn();
+const mockClaimBioAddressLink = vi.fn();
+const mockSubmitBioAddressLink = vi.fn();
+const mockUnclaimBioAddressLink = vi.fn();
+const mockSubmitBioAddressLinkUnclaim = vi.fn();
 const mockGetProfile = vi.fn();
+const mockSignAndVerifyLinkMessage = vi.fn();
 const mockInitializeContractTyped = vi.fn();
 const mockPayForProfileTx = vi.fn();
 const mockAddStaticAccount = vi.fn();
@@ -30,8 +35,16 @@ vi.mock('@aeternity/aepp-sdk', async () => {
 vi.mock('@/api/backend', () => ({
   SuperheroApi: {
     claimXAddressLink: (...args: any[]) => mockClaimXAddressLink(...args),
+    claimBioAddressLink: (...args: any[]) => mockClaimBioAddressLink(...args),
+    submitBioAddressLink: (...args: any[]) => mockSubmitBioAddressLink(...args),
+    unclaimBioAddressLink: (...args: any[]) => mockUnclaimBioAddressLink(...args),
+    submitBioAddressLinkUnclaim: (...args: any[]) => mockSubmitBioAddressLinkUnclaim(...args),
     getProfile: (...args: any[]) => mockGetProfile(...args),
   },
+}));
+
+vi.mock('@/utils/signLinkMessage', () => ({
+  signAndVerifyLinkMessage: (...args: any[]) => mockSignAndVerifyLinkMessage(...args),
 }));
 
 vi.mock('@/libs/initializeContractTyped', () => ({
@@ -77,6 +90,7 @@ vi.mock('@/hooks/useAeSdk', () => ({
       selectAccount: (...args: any[]) => mockSelectAccount(...args),
     },
     addStaticAccount: (...args: any[]) => mockAddStaticAccount(...args),
+    signMessage: vi.fn(),
   }),
 }));
 
@@ -133,6 +147,16 @@ describe('useProfile', () => {
     });
     mockSignTransaction.mockResolvedValue({ tx: 'tx_signed_profile' });
     mockPayForProfileTx.mockImplementation(async () => ({ hash: 'th_profile_write' }));
+    mockSignAndVerifyLinkMessage.mockResolvedValue('sig_bio_test');
+    mockClaimBioAddressLink.mockResolvedValue({
+      message: 'sign me',
+      nonce: 1,
+      value: 'my bio',
+      verification_token: 'token_bio',
+    });
+    mockSubmitBioAddressLink.mockResolvedValue({ txHash: 'th_bio_link' });
+    mockUnclaimBioAddressLink.mockResolvedValue({ message: 'unclaim me', nonce: 2 });
+    mockSubmitBioAddressLinkUnclaim.mockResolvedValue({ txHash: 'th_bio_unlink' });
   });
 
   afterEach(() => {
@@ -213,7 +237,7 @@ describe('useProfile', () => {
     expect(mockCalldataEncode).toHaveBeenCalledWith(
       'ProfileRegistry',
       'set_profile',
-      ['new full', 'new bio', 'new-avatar'],
+      ['new full', 'old bio', 'new-avatar'],
     );
     expect(mockCalldataEncode).not.toHaveBeenCalledWith(
       'ProfileRegistry',
@@ -277,6 +301,40 @@ describe('useProfile', () => {
 
     expect(mockCalldataEncode).not.toHaveBeenCalled();
     expect(mockPayForProfileTx).not.toHaveBeenCalled();
+  });
+
+  it('links bio via address-link claim and submit', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.linkBio({ bio: 'hello bio' });
+      expect(txHash).toBe('th_bio_link');
+    });
+
+    expect(mockClaimBioAddressLink).toHaveBeenCalledWith('ak_test_active', 'hello bio');
+    expect(mockSubmitBioAddressLink).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      value: 'my bio',
+      nonce: 1,
+      signature: 'sig_bio_test',
+      verification_token: 'token_bio',
+    });
+  });
+
+  it('unlinks bio via address-link unclaim flow', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.unlinkBio();
+      expect(txHash).toBe('th_bio_unlink');
+    });
+
+    expect(mockUnclaimBioAddressLink).toHaveBeenCalledWith('ak_test_active');
+    expect(mockSubmitBioAddressLinkUnclaim).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      nonce: 2,
+      signature: 'sig_bio_test',
+    });
   });
 
   it('does not auto-restore signer account for read-only getProfileOnChain', async () => {

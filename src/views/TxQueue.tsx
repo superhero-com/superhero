@@ -52,8 +52,14 @@ const parseMessageSignRequest = (raw: string | null): MessageSignRequest | null 
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as Partial<MessageSignRequest>;
+    const isAddressLinkType = (
+      parsed.type === 'address-link-x-submit'
+      || parsed.type === 'address-link-x-unclaim'
+      || parsed.type === 'address-link-bio-submit'
+      || parsed.type === 'address-link-bio-unclaim'
+    );
     if (
-      (parsed.type === 'address-link-x-submit' || parsed.type === 'address-link-x-unclaim')
+      isAddressLinkType
       && typeof parsed.address === 'string'
       && typeof parsed.message === 'string'
       && typeof parsed.nonce === 'number'
@@ -83,6 +89,26 @@ const submitMessageSignRequest = async (
       nonce: request.nonce,
       signature,
       verification_token: request.verification_token,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-bio-submit') {
+    await SuperheroApi.submitBioAddressLink({
+      address: request.address,
+      value: request.value,
+      nonce: request.nonce,
+      signature,
+      verification_token: request.verification_token,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-bio-unclaim') {
+    await SuperheroApi.submitBioAddressLinkUnclaim({
+      address: request.address,
+      nonce: request.nonce,
+      signature,
     });
     return;
   }
@@ -200,9 +226,12 @@ const TxQueue = () => {
           setMessageResult({
             status: 'success',
             address: request.address,
-            message: request.type === 'address-link-x-submit'
-              ? tCommon('messages.xCallbackSuccess')
-              : tCommon('messages.xCallbackUnlinkSuccess'),
+            message: (() => {
+              if (request.type === 'address-link-x-submit') return tCommon('messages.xCallbackSuccess');
+              if (request.type === 'address-link-x-unclaim') return tCommon('messages.xCallbackUnlinkSuccess');
+              if (request.type === 'address-link-bio-submit') return tCommon('messages.bioLinkSuccess');
+              return tCommon('messages.bioUnlinkSuccess');
+            })(),
           });
         } catch (error) {
           // eslint-disable-next-line no-console

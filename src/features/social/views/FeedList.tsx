@@ -792,11 +792,12 @@ const FeedList = ({
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
       const idStr = String(idOrSlug);
+      const feedUrl = `${location.pathname}${location.search}`;
       if (idStr.startsWith('token-created:')) {
         const parts = idStr.replace(/_v3$/, '').split(':');
         const tokenNameEnc = parts[1] || '';
         const tokenName = decodeURIComponent(tokenNameEnc);
-        navigate(`/trends/tokens/${tokenName}`);
+        navigate(`/trends/tokens/${tokenName}`, { state: { fromFeedUrl: feedUrl } });
         return;
       }
       // Save current feed scroll position before leaving only for post detail
@@ -805,9 +806,9 @@ const FeedList = ({
       } catch {
         // ignore
       }
-      navigate(`/post/${idStr.replace(/_v3$/, '')}`);
+      navigate(`/post/${idStr.replace(/_v3$/, '')}`, { state: { fromFeedUrl: feedUrl } });
     },
-    [navigate],
+    [navigate, location.pathname, location.search],
   );
 
   // Render helpers

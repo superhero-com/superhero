@@ -385,17 +385,28 @@ export default function UserProfile({
           {/* Action buttons */}
           <div className="flex flex-row flex-wrap gap-2 shrink-0 md:max-w-[40%] md:justify-end">
             {canEdit ? (
-              <AeButton
-                size="sm"
-                variant="ghost"
-                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
+              <button
+                type="button"
                 onClick={() => {
                   setEditInitialSection('profile');
                   setEditOpen(true);
                 }}
+                className={[
+                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-solid',
+                  'box-border whitespace-nowrap px-3 text-[12px] font-semibold leading-none',
+                  '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
+                  'hover:!shadow-none hover:!transform-none',
+                ].join(' ')}
+                style={{
+                  background: 'rgba(0,255,157,0.08)',
+                  borderColor: 'rgba(0,255,157,0.3)',
+                  color: 'var(--neon-teal)',
+                }}
               >
-                {t('buttons.editProfile')}
-              </AeButton>
+                ✦
+                {' '}
+                {t('buttons.editSuperheroId')}
+              </button>
             ) : null}
             {!canEdit ? (
               <AeButton
@@ -433,9 +444,25 @@ export default function UserProfile({
             setEditInitialSection('x');
             setEditOpen(true);
           }}
-          className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
+          className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid px-4 py-3 text-sm text-white/90 transition-colors focus:outline-none focus:ring-2"
+          style={{
+            borderColor: 'rgba(0,255,157,0.3)',
+            background: 'rgba(0,255,157,0.08)',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,157,0.12)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,157,0.08)';
+          }}
         >
-          Link your X account to show your X username on your profile.
+          <span style={{ color: 'var(--neon-teal)' }} className="font-semibold">
+            Link your X account
+          </span>
+          <span className="text-white/70">
+            {' '}
+            to show your X username on your profile.
+          </span>
         </button>
       )}
 

@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import {
+  useNavigate, useParams, Link, useLocation,
+} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -103,6 +105,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
   const { t } = useTranslation(['forms', 'social', 'common']);
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { activeNetwork } = useAeSdk();
 
@@ -301,7 +304,20 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
         />
       ) : null}
       <div className="mb-4">
-        <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
+        <AeButton
+          onClick={() => {
+            const fromFeedUrl = (location.state as { fromFeedUrl?: string })?.fromFeedUrl;
+            if (fromFeedUrl) {
+              navigate(fromFeedUrl);
+              return;
+            }
+            navigate('/');
+          }}
+          variant="ghost"
+          size="sm"
+          outlined
+          className="!border !border-solid !border-white/15 hover:!border-white/35"
+        >
           ←
           {' '}
           {t('common:labels.back')}

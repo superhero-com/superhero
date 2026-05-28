@@ -792,22 +792,34 @@ const FeedList = ({
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
       const idStr = String(idOrSlug);
+      const feedUrl = `${location.pathname}${location.search}`;
       if (idStr.startsWith('token-created:')) {
         const parts = idStr.replace(/_v3$/, '').split(':');
         const tokenNameEnc = parts[1] || '';
         const tokenName = decodeURIComponent(tokenNameEnc);
-        navigate(`/trends/tokens/${tokenName}`);
+        navigate(`/trends/tokens/${tokenName}`, { state: { fromFeedUrl: feedUrl } });
         return;
       }
       // Save current feed scroll position before leaving only for post detail
       try {
         sessionStorage.setItem('feedScrollY', String(window.scrollY || 0));
+        // Prefer storing an ID that matches an existing DOM element.
+        // The post DOM id uses the raw `item.id` which often includes a `_v3` suffix.
+        // `idStr` may be a slug or an id with the suffix stripped; check both
+        // and store the variant that exists in the current document so restore works.
+        let targetToStore = idStr;
+        // If an element exists for the given id, use it. Otherwise try the `_v3` variant.
+        if (!document.getElementById(`post-${targetToStore}`) && !targetToStore.endsWith('_v3')) {
+          const withV3 = `${targetToStore}_v3`;
+          if (document.getElementById(`post-${withV3}`)) targetToStore = withV3;
+        }
+        sessionStorage.setItem('feedScrollTargetId', targetToStore);
       } catch {
         // ignore
       }
-      navigate(`/post/${idStr.replace(/_v3$/, '')}`);
+      navigate(`/post/${idStr.replace(/_v3$/, '')}`, { state: { fromFeedUrl: feedUrl } });
     },
-    [navigate],
+    [navigate, location.pathname, location.search],
   );
 
   // Render helpers
@@ -1073,6 +1085,26 @@ const FeedList = ({
 
   // Restore scroll position when returning from detail pages
   useEffect(() => {
+    const targetId = sessionStorage.getItem('feedScrollTargetId');
+    if (targetId) {
+      requestAnimationFrame(() => {
+        // Try direct match, then try appending `_v3`, then try stripping `_v3`.
+        const el = document.getElementById(`post-${targetId}`)
+          || document.getElementById(`post-${targetId}_v3`)
+          || document.getElementById(`post-${String(targetId).replace(/_v3$/, '')}`);
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+        } else {
+          const saved = sessionStorage.getItem('feedScrollY');
+          const savedY = saved ? Number(saved) : 0;
+          if (!Number.isNaN(savedY) && savedY > 0) window.scrollTo(0, savedY);
+        }
+        sessionStorage.removeItem('feedScrollTargetId');
+        sessionStorage.removeItem('feedScrollY');
+      });
+      return;
+    }
+
     const saved = sessionStorage.getItem('feedScrollY');
     const savedY = saved ? Number(saved) : 0;
     if (!Number.isNaN(savedY) && savedY > 0) {

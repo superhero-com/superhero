@@ -258,6 +258,7 @@ const ReplyToFeedItem = memo(({
 
   return (
     <article
+      id={`post-${postId}`}
       ref={containerRef}
       className={cn(
         'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',

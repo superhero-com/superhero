@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { type ChainNameClaimStatusResponse } from '@/api/backend';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
+import { resolveClaimNotificationStep } from '@/utils/claimChainName';
 import { normalizeChainNameLabel } from '@/utils/chainNames';
 import {
   TxPayloadType,
@@ -168,23 +169,11 @@ const ClaimChainNameModal = ({
   const getClaimNotificationPayload = (
     name: string,
     claimStatus?: ChainNameClaimStatusResponse | null,
-  ) => {
-    const statusValue = String(claimStatus?.status || '').toLowerCase();
-    let step: 'wallet' | 'queued' | 'preclaim' | 'claim' | 'update' | 'transfer' = 'queued';
-    if (statusValue.includes('transfer')) step = 'transfer';
-    else if (statusValue.includes('update')) step = 'update';
-    else if (statusValue.includes('preclaim')) step = 'preclaim';
-    else if (statusValue.includes('claim')) step = 'claim';
-    else if (claimStatus?.transfer_tx_hash) step = 'transfer';
-    else if (claimStatus?.update_tx_hash) step = 'update';
-    else if (claimStatus?.claim_tx_hash) step = 'claim';
-    else if (claimStatus?.preclaim_tx_hash) step = 'preclaim';
-    return {
-      type: TxPayloadType.ClaimChainName,
-      name,
-      step,
-    };
-  };
+  ) => ({
+    type: TxPayloadType.ClaimChainName,
+    name,
+    step: resolveClaimNotificationStep(claimStatus),
+  });
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && !claiming) onClose();

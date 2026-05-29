@@ -68,6 +68,25 @@ describe('resolveClaimErrorMessage', () => {
     )).toBe(messages['messages.chainNameClaimUnavailable']);
   });
 
+  it('maps wallet mismatch and timeout copy', () => {
+    expect(resolveClaimErrorMessage(
+      new Error('Connect the wallet for this profile to claim a .chain name'),
+      t,
+    )).toBe(messages['messages.connectWalletToClaimChainName']);
+
+    expect(resolveClaimErrorMessage(
+      new Error('Timed out while waiting for .chain name claim to finish'),
+      t,
+    )).toBe(messages['messages.chainNameClaimTimedOut']);
+  });
+
+  it('maps user rejection without treating it as unavailable', () => {
+    expect(resolveClaimErrorMessage(
+      new Error('Rejected by user'),
+      t,
+    )).toBe(messages['messages.chainNameClaimFailed']);
+  });
+
   it('maps rate limits and unknown backend errors safely', () => {
     expect(resolveClaimErrorMessage(
       new Error('Superhero API error (429): Too many requests'),

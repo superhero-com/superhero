@@ -11,6 +11,11 @@ import {
   SuperheroApi,
 } from '@/api/backend';
 import { signAndVerifyLinkMessage } from '@/utils/signLinkMessage';
+import { normalizeName } from '@/utils/chainNames';
+import {
+  normalizeAddress,
+  sdkHasAccount,
+} from '@/utils/walletSdk';
 import {
   Encoded,
   Tag,
@@ -22,26 +27,13 @@ import { initializeContractTyped } from '@/libs/initializeContractTyped';
 import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
 import ADDRESS_LINK_ACI from '@/api/AddressLinkACI.json';
 import { useAeSdk } from './useAeSdk';
+import { useWalletReconnect } from './useWalletReconnect';
 import { useWalletConnect } from './useWalletConnect';
-
-const normalizeName = (value: string) => value.trim().toLowerCase();
-const normalizeAddress = (value?: string | null) => (value || '').trim().toLowerCase();
 
 type OptionVariant<T> = { Some: [T] } | { None: [] };
 const toOption = <T>(value: T | null | undefined): OptionVariant<T> => (
   value == null ? { None: [] } : { Some: [value] }
 );
-
-const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
-  // eslint-disable-next-line no-underscore-dangle
-  const current = candidate?._accounts?.current;
-  if (!current || typeof current !== 'object') return false;
-  const addresses = Object.keys(current);
-  if (!addresses.length) return false;
-  if (!expectedAddress) return true;
-  const target = normalizeAddress(expectedAddress);
-  return addresses.some((addr) => normalizeAddress(addr) === target);
-};
 
 const extractTxHash = (tx: any): string | undefined => tx?.hash
   || tx?.transactionHash
@@ -91,95 +83,14 @@ export function useProfile(targetAddress?: string) {
     activeAccountRef.current = activeAccount;
   }, [activeAccount]);
 
-  /**
-   * After OAuth redirects, wallet reconnection can be slightly delayed.
-   * Wait for an active account before write tx calls to avoid transient
-   * "wallet not connected" errors right after redirects.
-   */
-  const waitForWalletReconnect = useCallback(async (
-    expectedAddress?: string,
-    timeoutMs = 25_000,
-  ): Promise<string> => {
-    const knownAddress = expectedAddress || targetAddress;
-    const normalizedKnownAddress = knownAddress ? normalizeAddress(knownAddress) : '';
-    const matchesExpectedAddress = (account?: string) => {
-      if (!account) return false;
-      if (!knownAddress) return true;
-      return normalizeAddress(account) === normalizedKnownAddress;
-    };
-    const hasKnownSignerReady = () => (
-      Boolean(knownAddress)
-      && (
-        sdkHasAccount(staticAeSdk, knownAddress)
-        || sdkHasAccount(sdk, knownAddress)
-      )
-    );
-    const getReconnectAddress = (): string | null => {
-      const { current } = activeAccountRef;
-      if (knownAddress) {
-        if (hasKnownSignerReady()) {
-          return knownAddress as string;
-        }
-      } else if (matchesExpectedAddress(current)) {
-        return current as string;
-      }
-      if (!knownAddress && hasKnownSignerReady()) {
-        return knownAddress as string;
-      }
-      return null;
-    };
-
-    const immediate = getReconnectAddress();
-    if (immediate) {
-      // Ensure static signer is ready as a fallback on refresh/reconnect races.
-      if (knownAddress) {
-        try {
-          await addStaticAccount(knownAddress);
-        } catch {
-          // aepp signer may still be available; continue.
-        }
-      }
-      const rechecked = getReconnectAddress();
-      if (rechecked) return rechecked;
-    }
-
-    if (knownAddress) {
-      try {
-        await addStaticAccount(knownAddress);
-      } catch {
-        // Continue waiting; provider/init might not be ready yet.
-      }
-      if (matchesExpectedAddress(activeAccountRef.current)) {
-        return activeAccountRef.current as string;
-      }
-      if (hasKnownSignerReady()) {
-        return knownAddress as string;
-      }
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const startedAt = Date.now();
-      let restoreAttempted = false;
-      const interval = setInterval(() => {
-        const resolvedAddress = getReconnectAddress();
-        if (resolvedAddress) {
-          clearInterval(interval);
-          resolve(resolvedAddress);
-          return;
-        }
-        if (!restoreAttempted && knownAddress && Date.now() - startedAt > 3_000) {
-          restoreAttempted = true;
-          Promise.resolve(addStaticAccount(knownAddress) as any).catch(() => {
-            // Keep waiting until timeout.
-          });
-        }
-        if (Date.now() - startedAt >= timeoutMs) {
-          clearInterval(interval);
-          reject(new Error('You are not connected to Wallet'));
-        }
-      }, 300);
-    });
-  }, [addStaticAccount, sdk, staticAeSdk, targetAddress]);
+  const waitForWalletReconnect = useWalletReconnect({
+    activeAccount,
+    targetAddress,
+    signerSdks: [staticAeSdk, sdk],
+    walletConnected,
+    restoreAccount: addStaticAccount,
+    defaultTimeoutMs: 25_000,
+  });
 
   const canEdit = useMemo(
     () => !!activeAccount && (!targetAddress || targetAddress === activeAccount),

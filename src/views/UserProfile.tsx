@@ -591,87 +591,61 @@ export default function UserProfile({
     </div>
   );
 
-  return standalone ? (
-    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
-      {content}
+  const handleProfileEditClose = (updatedProfile?: any) => {
+    setEditOpen(false);
+    setEditInitialSection('profile');
+    if (updatedProfile) {
+      queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
+      queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
+        const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
+        const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
+          !== getLinkedPreferredAensName(oldData);
+        return patchAccountCacheEntry(oldData, {
+          updatedProfile,
+          bioChanged,
+          formBio: updatedProfile?.profile?.bio ?? '',
+          chainNameChanged,
+          formChainName: updatedProfile?.profile?.chain_name ?? '',
+        });
+      });
+      setProfile(updatedProfile);
+      refetchAccount();
+      refetchProfile();
+    }
+  };
+
+  const openClaimChainName = () => {
+    setEditOpen(false);
+    setClaimChainNameOpen(true);
+  };
+
+  const profileModals = (
+    <>
       <ProfileEditModal
         open={editOpen}
-        onClose={(updatedProfile) => {
-          setEditOpen(false);
-          setEditInitialSection('profile');
-          if (updatedProfile) {
-            queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
-              const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
-              const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
-                !== getLinkedPreferredAensName(oldData);
-              return patchAccountCacheEntry(oldData, {
-                updatedProfile,
-                bioChanged,
-                formBio: updatedProfile?.profile?.bio ?? '',
-                chainNameChanged,
-                formChainName: updatedProfile?.profile?.chain_name ?? '',
-              });
-            });
-            setProfile(updatedProfile);
-            refetchAccount();
-            refetchProfile();
-          }
-        }}
+        onClose={handleProfileEditClose}
         address={effectiveAddress}
         initialBio={bioText}
         initialSection={editInitialSection}
-        onBuyChainName={() => {
-          setEditOpen(false);
-          setClaimChainNameOpen(true);
-        }}
+        onBuyChainName={openClaimChainName}
       />
       <ClaimChainNameModal
         open={claimChainNameOpen}
         onClose={() => setClaimChainNameOpen(false)}
         address={effectiveAddress}
       />
+    </>
+  );
+
+  return standalone ? (
+    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
+      {content}
+      {profileModals}
     </Shell>
   ) : (
     <>
       {content}
-      <ProfileEditModal
-        open={editOpen}
-        onClose={(updatedProfile) => {
-          setEditOpen(false);
-          setEditInitialSection('profile');
-          if (updatedProfile) {
-            queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
-            queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
-              const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
-              const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
-                !== getLinkedPreferredAensName(oldData);
-              return patchAccountCacheEntry(oldData, {
-                updatedProfile,
-                bioChanged,
-                formBio: updatedProfile?.profile?.bio ?? '',
-                chainNameChanged,
-                formChainName: updatedProfile?.profile?.chain_name ?? '',
-              });
-            });
-            setProfile(updatedProfile);
-            refetchAccount();
-            refetchProfile();
-          }
-        }}
-        address={effectiveAddress}
-        initialBio={bioText}
-        initialSection={editInitialSection}
-        onBuyChainName={() => {
-          setEditOpen(false);
-          setClaimChainNameOpen(true);
-        }}
-      />
-      <ClaimChainNameModal
-        open={claimChainNameOpen}
-        onClose={() => setClaimChainNameOpen(false)}
-        address={effectiveAddress}
-      />
+      {profileModals}
     </>
   );
 }

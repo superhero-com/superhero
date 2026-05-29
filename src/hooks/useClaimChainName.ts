@@ -1,41 +1,24 @@
 import {
   useCallback,
-  useEffect,
-  useRef,
 } from 'react';
 import {
   type ChainNameClaimStatusResponse,
   SuperheroApi,
 } from '@/api/backend';
-import { decode } from '@aeternity/aepp-sdk';
-import { CONFIG } from '@/config';
+import {
+  fetchNameRecord,
+  isTransactionMined,
+} from '@/utils/apiRead';
+import { normalizeChainNameLabel, normalizeName } from '@/utils/chainNames';
+import { normalizeLinkSignature } from '@/utils/signLinkMessage';
+import {
+  getSdkAddress,
+  normalizeAddress,
+} from '@/utils/walletSdk';
 import { useAeSdk } from './useAeSdk';
+import { useWalletReconnect } from './useWalletReconnect';
 import { useWalletConnect } from './useWalletConnect';
 
-const normalizeName = (value: string) => value.trim().toLowerCase();
-const normalizeAddress = (value?: string | null) => (value || '').trim().toLowerCase();
-const readSdkString = (sdkRecord: Record<string, unknown>, key: string) => {
-  try {
-    const value = sdkRecord[key];
-    return typeof value === 'string' ? value : '';
-  } catch {
-    return '';
-  }
-};
-const getSdkAddresses = (candidate: any): string[] => {
-  // eslint-disable-next-line no-underscore-dangle, dot-notation
-  const current = candidate?.['_accounts']?.current;
-  if (current && typeof current === 'object') return Object.keys(current);
-  if (typeof candidate?.addresses === 'function') return candidate.addresses();
-  return [];
-};
-const sdkHasAccount = (candidate: any, expectedAddress?: string): boolean => {
-  const addresses = getSdkAddresses(candidate);
-  if (!addresses.length) return false;
-  if (!expectedAddress) return true;
-  const target = normalizeAddress(expectedAddress);
-  return addresses.some((address) => normalizeAddress(address) === target);
-};
 const isNameNotFoundError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error || '');
   return /404|not found|name not found|Name revoked/i.test(message);
@@ -57,58 +40,9 @@ const isUserRejectedSigningError = (error: unknown) => {
     || lower.includes('operation canceled'),
   );
 };
-const getSdkAddress = (sdk: unknown) => {
-  if (sdk && typeof sdk === 'object') {
-    const sdkRecord = sdk as Record<string, unknown>;
-    const directAddress = readSdkString(sdkRecord, 'address');
-    const selectedAddress = readSdkString(sdkRecord, 'selectedAddress');
-    if (typeof directAddress === 'string' && directAddress) return directAddress;
-
-    if (typeof selectedAddress === 'string' && selectedAddress) return selectedAddress;
-
-    // eslint-disable-next-line no-underscore-dangle, dot-notation
-    const accounts = sdkRecord['_accounts'];
-    const currentAccounts = accounts && typeof accounts === 'object'
-      ? (accounts as Record<string, unknown>).current
-      : null;
-    if (currentAccounts && typeof currentAccounts === 'object') {
-      const firstAddress = Object.keys(currentAccounts as Record<string, unknown>)[0];
-      if (firstAddress) return firstAddress;
-    }
-  }
-  return '';
-};
 const wait = (ms: number) => new Promise((resolve) => {
   window.setTimeout(resolve, ms);
 });
-const stripTrailingSlash = (value: string) => value.replace(/\/$/, '');
-
-const bytesToHex = (value: Uint8Array): string => Array.from(value)
-  .map((byte) => byte.toString(16).padStart(2, '0'))
-  .join('');
-
-const normalizeSignatureHex = (signature: unknown): string => {
-  if (typeof signature === 'string') {
-    if (signature.startsWith('sg_')) return bytesToHex(decode(signature));
-    const clean = signature.startsWith('0x') ? signature.slice(2) : signature;
-    if (/^[0-9a-f]+$/iu.test(clean) && clean.length % 2 === 0) return clean.toLowerCase();
-  }
-  if (signature instanceof Uint8Array) return bytesToHex(signature);
-  if (signature instanceof ArrayBuffer) return bytesToHex(new Uint8Array(signature));
-  if (ArrayBuffer.isView(signature)) {
-    return bytesToHex(
-      new Uint8Array(signature.buffer, signature.byteOffset, signature.byteLength),
-    );
-  }
-  if (Array.isArray(signature)) return bytesToHex(Uint8Array.from(signature));
-  if (signature && typeof signature === 'object') {
-    const nested = (signature as Record<string, unknown>).signature
-      ?? (signature as Record<string, unknown>).raw
-      ?? (signature as Record<string, unknown>).value;
-    if (nested != null) return normalizeSignatureHex(nested);
-  }
-  throw new Error('Wallet did not return a valid signature');
-};
 
 const extractChainNameExpiry = (status?: ChainNameClaimStatusResponse | null): number | null => {
   if (!status) return null;
@@ -128,56 +62,6 @@ const extractChainNameExpiry = (status?: ChainNameClaimStatusResponse | null): n
     }
     return null;
   }, null);
-};
-
-const readJson = async (url: string) => {
-  try {
-    const response = await fetch(url, { cache: 'no-cache' });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch {
-    return null;
-  }
-};
-
-const getApiBases = () => Array.from(
-  new Set(
-    [
-      CONFIG.NODE_URL,
-      CONFIG.MIDDLEWARE_URL,
-    ].filter(Boolean).map((value) => stripTrailingSlash(String(value))),
-  ),
-);
-
-const fetchTransactionRecord = async (txHash: string) => {
-  const bases = getApiBases();
-  const encodedHash = encodeURIComponent(txHash);
-  const tryRead = async (index: number): Promise<any> => {
-    if (index >= bases.length) return null;
-    const data = await readJson(`${bases[index]}/v3/transactions/${encodedHash}?int-as-string=false`);
-    if (data) return data;
-    return tryRead(index + 1);
-  };
-  return tryRead(0);
-};
-
-const isTransactionMined = async (txHash?: string | null) => {
-  if (!txHash) return false;
-  const record = await fetchTransactionRecord(txHash);
-  const blockHeight = Number(record?.block_height ?? record?.blockHeight ?? -1);
-  return Number.isFinite(blockHeight) && blockHeight > 0;
-};
-
-const fetchNameRecord = async (name: string) => {
-  const bases = getApiBases();
-  const encodedName = encodeURIComponent(name);
-  const tryRead = async (index: number): Promise<any> => {
-    if (index >= bases.length) return null;
-    const data = await readJson(`${bases[index]}/v3/names/${encodedName}`);
-    if (data) return data;
-    return tryRead(index + 1);
-  };
-  return tryRead(0);
 };
 
 const getAuthorizedWalletSigner = (
@@ -282,99 +166,21 @@ export function useClaimChainName(targetAddress?: string) {
     walletConnected,
     walletInfo,
   } = useWalletConnect();
-  const activeAccountRef = useRef<string | undefined>(activeAccount);
-  const walletConnectedRef = useRef(walletConnected);
-  const walletInfoRef = useRef(walletInfo);
-  const connectingWalletRef = useRef(connectingWallet);
-
-  useEffect(() => {
-    activeAccountRef.current = activeAccount;
-  }, [activeAccount]);
-
-  useEffect(() => {
-    walletConnectedRef.current = walletConnected;
-  }, [walletConnected]);
-
-  useEffect(() => {
-    walletInfoRef.current = walletInfo;
-  }, [walletInfo]);
-
-  useEffect(() => {
-    connectingWalletRef.current = connectingWallet;
-  }, [connectingWallet]);
-
   const connectedAddress = activeAccount || getSdkAddress(aeSdk) || getSdkAddress(sdk);
-
-  const waitForWalletReconnect = useCallback(async (
-    expectedAddress?: string,
-    timeoutMs = 20_000,
-  ): Promise<string> => {
-    const knownAddress = expectedAddress || targetAddress;
-    const normalizedKnownAddress = knownAddress ? normalizeAddress(knownAddress) : '';
-    const matchesExpectedAddress = (account?: string) => {
-      if (!account) return false;
-      if (!knownAddress) return true;
-      return normalizeAddress(account) === normalizedKnownAddress;
-    };
-    const hasKnownSignerReady = () => (
-      Boolean(knownAddress)
-      && walletConnectedRef.current
-      && sdkHasAccount(aeSdk, knownAddress)
-    );
-    const getReconnectAddress = (): string | null => {
-      const { current } = activeAccountRef;
-      if (knownAddress) {
-        if (hasKnownSignerReady()) return knownAddress as string;
-        if (walletConnectedRef.current && matchesExpectedAddress(current)) return current as string;
-      } else if (walletConnectedRef.current && matchesExpectedAddress(current)) {
-        return current as string;
-      }
-      return null;
-    };
-
-    const immediate = getReconnectAddress();
-    if (immediate) return immediate;
-
-    if (!walletConnectedRef.current && !walletInfoRef.current) {
-      throw new Error('You are not connected to Wallet');
-    }
-
-    if (!walletConnectedRef.current && walletInfoRef.current && !connectingWalletRef.current) {
-      try {
-        await connectWallet();
-      } catch {
-        // Continue waiting below in case wallet state is still propagating.
-      }
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const startedAt = Date.now();
-      let reconnectAttempted = walletConnectedRef.current
-        || !walletInfoRef.current
-        || connectingWalletRef.current;
-      const interval = window.setInterval(() => {
-        const resolvedAddress = getReconnectAddress();
-        if (resolvedAddress) {
-          window.clearInterval(interval);
-          resolve(resolvedAddress);
-          return;
-        }
-        if (!reconnectAttempted && Date.now() - startedAt > 3_000) {
-          reconnectAttempted = true;
-          Promise.resolve(connectWallet() as any).catch(() => {
-            // Keep waiting until timeout.
-          });
-        }
-        if (Date.now() - startedAt >= timeoutMs) {
-          window.clearInterval(interval);
-          reject(new Error('You are not connected to Wallet'));
-        }
-      }, 300);
-    });
-  }, [aeSdk, connectWallet, targetAddress]);
+  const claimAddress = targetAddress || connectedAddress;
+  const waitForWalletReconnect = useWalletReconnect({
+    activeAccount,
+    targetAddress,
+    signerSdks: [aeSdk],
+    walletConnected,
+    walletInfo,
+    connectingWallet,
+    connectWallet,
+    requireWalletConnectedForSigner: true,
+  });
 
   const checkNameAvailability = useCallback(async (name: string) => {
-    const normalizedName = normalizeName(name).replace(/\.chain$/u, '');
+    const normalizedName = normalizeChainNameLabel(name);
     const fullName = `${normalizedName}.chain` as `${string}.chain`;
     const readSdk = staticAeSdk || sdk;
     const lookups = [
@@ -426,14 +232,14 @@ export function useClaimChainName(targetAddress?: string) {
       throw new Error('Connect the wallet for this profile to claim a .chain name');
     }
 
-    const normalizedName = normalizeName(params.name).replace(/\.chain$/u, '');
+    const normalizedName = normalizeChainNameLabel(params.name);
     const challenge = await SuperheroApi.createChainNameChallenge(target);
     const signature = await signMessageWithSdk(aeSdk, target, challenge.message).catch((error) => {
       throw error instanceof Error
         ? error
         : new Error('Wallet message signing is not available');
     });
-    const signatureHex = normalizeSignatureHex(signature);
+    const signatureHex = normalizeLinkSignature(signature);
 
     const claimResponse = await SuperheroApi.claimChainName({
       address: target,
@@ -453,6 +259,14 @@ export function useClaimChainName(targetAddress?: string) {
     const fullName = `${normalizedName}.chain`;
     const pollIntervalMs = params.pollIntervalMs ?? 5_000;
     const maxAttempts = params.maxAttempts ?? 120;
+    const minedTxHashes = new Set<string>();
+    const isTxMinedOnce = async (txHash?: string | null) => {
+      if (!txHash) return false;
+      if (minedTxHashes.has(txHash)) return true;
+      const mined = await isTransactionMined(txHash);
+      if (mined) minedTxHashes.add(txHash);
+      return mined;
+    };
     const verifyClaimProgress = async (
       status: ChainNameClaimStatusResponse,
     ): Promise<ChainNameClaimStatusResponse> => {
@@ -463,16 +277,16 @@ export function useClaimChainName(targetAddress?: string) {
       const hasUpdate = Boolean(status.update_tx_hash);
       const hasTransfer = Boolean(status.transfer_tx_hash);
 
-      if (hasPreclaim && !(await isTransactionMined(status.preclaim_tx_hash))) {
+      if (hasPreclaim && !(await isTxMinedOnce(status.preclaim_tx_hash))) {
         return buildVerifiedStatus(fullName, status, { status: 'preclaim_pending' });
       }
-      if (hasClaim && !(await isTransactionMined(status.claim_tx_hash))) {
+      if (hasClaim && !(await isTxMinedOnce(status.claim_tx_hash))) {
         return buildVerifiedStatus(fullName, status, { status: 'claim_pending' });
       }
-      if (hasUpdate && !(await isTransactionMined(status.update_tx_hash))) {
+      if (hasUpdate && !(await isTxMinedOnce(status.update_tx_hash))) {
         return buildVerifiedStatus(fullName, status, { status: 'update_pending' });
       }
-      if (hasTransfer && !(await isTransactionMined(status.transfer_tx_hash))) {
+      if (hasTransfer && !(await isTxMinedOnce(status.transfer_tx_hash))) {
         return buildVerifiedStatus(fullName, status, { status: 'transfer_pending' });
       }
 
@@ -528,6 +342,8 @@ export function useClaimChainName(targetAddress?: string) {
         || normalizeAddress(targetAddress) === normalizeAddress(connectedAddress)
       ),
     ),
+    claimAddress,
+    connectedAddress,
     checkNameAvailability,
     claimSponsoredChainName,
   };

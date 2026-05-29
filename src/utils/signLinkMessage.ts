@@ -21,8 +21,9 @@ const normalizeSignatureHex = (signature: string): string => {
       .map((byte) => byte.toString(16).padStart(2, '0'))
       .join('');
   }
-  if (trimmed.startsWith('0x')) return trimmed.slice(2);
-  return trimmed;
+  const clean = trimmed.startsWith('0x') ? trimmed.slice(2) : trimmed;
+  if (/^[0-9a-f]+$/iu.test(clean) && clean.length % 2 === 0) return clean.toLowerCase();
+  return clean;
 };
 
 const hexToBytes = (hex: string): Uint8Array => {
@@ -39,6 +40,16 @@ const hexToBytes = (hex: string): Uint8Array => {
 
 export const normalizeLinkSignature = (signature: unknown): string => {
   if (typeof signature === 'string') return normalizeSignatureHex(signature);
+  if (signature instanceof ArrayBuffer) {
+    return Array.from(new Uint8Array(signature))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  if (ArrayBuffer.isView(signature)) {
+    return Array.from(new Uint8Array(signature.buffer, signature.byteOffset, signature.byteLength))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
   if (signature instanceof Uint8Array || Array.isArray(signature)) {
     return Array.from(signature)
       .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -52,6 +63,11 @@ export const normalizeLinkSignature = (signature: unknown): string => {
     return Array.from(nested)
       .map((byte) => byte.toString(16).padStart(2, '0'))
       .join('');
+  }
+  if (signature && typeof signature === 'object') {
+    const value = (signature as Record<string, unknown>).raw
+      ?? (signature as Record<string, unknown>).value;
+    if (value != null) return normalizeLinkSignature(value);
   }
   throw new Error('Wallet did not return a valid signature');
 };

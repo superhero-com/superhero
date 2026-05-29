@@ -9,8 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { type ChainNameClaimStatusResponse } from '@/api/backend';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
-import { useAeSdk } from '@/hooks/useAeSdk';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
+import { normalizeChainNameLabel } from '@/utils/chainNames';
 import {
   TxPayloadType,
   useTransactionNotification,
@@ -22,18 +22,9 @@ import {
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 
-const normalizeClaimChainName = (value: string) => value.trim().toLowerCase().replace(/\.chain$/u, '');
 const stripApiErrorPrefix = (value: string) => value.replace(/^superhero api error \(\d+\):\s*/iu, '').trim();
 const CLAIMABLE_CHAIN_NAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const AVAILABILITY_CHECK_DELAY_MS = 500;
-const getSafeSdkAddress = (sdk: unknown) => {
-  try {
-    const value = (sdk as any)?.address;
-    return typeof value === 'string' ? value : '';
-  } catch {
-    return '';
-  }
-};
 
 type NameAvailabilityStatus = 'idle' | 'checking' | 'available' | 'unavailable';
 
@@ -125,9 +116,9 @@ const ClaimChainNameModal = ({
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const { push } = useToast();
-  const { activeAccount, aeSdk } = useAeSdk();
   const {
     claimSponsoredChainName,
+    claimAddress,
     canClaim,
     checkNameAvailability,
   } = useClaimChainName(address);
@@ -163,7 +154,7 @@ const ClaimChainNameModal = ({
     }, 120);
   }, [open]);
 
-  const normalizedValue = useMemo(() => normalizeClaimChainName(value), [value]);
+  const normalizedValue = useMemo(() => normalizeChainNameLabel(value), [value]);
   const normalizedValueLength = normalizedValue.length;
   const validateClaimChainName = (name: string): string | null => {
     if (!name) return t('messages.chainNameClaimRequired');
@@ -182,8 +173,8 @@ const ClaimChainNameModal = ({
     let step: 'wallet' | 'queued' | 'preclaim' | 'claim' | 'update' | 'transfer' = 'queued';
     if (statusValue.includes('transfer')) step = 'transfer';
     else if (statusValue.includes('update')) step = 'update';
-    else if (statusValue.includes('claim')) step = 'claim';
     else if (statusValue.includes('preclaim')) step = 'preclaim';
+    else if (statusValue.includes('claim')) step = 'claim';
     else if (claimStatus?.transfer_tx_hash) step = 'transfer';
     else if (claimStatus?.update_tx_hash) step = 'update';
     else if (claimStatus?.claim_tx_hash) step = 'claim';
@@ -250,10 +241,8 @@ const ClaimChainNameModal = ({
 
   const onClaim = async () => {
     try {
-      const connectedAddress = activeAccount
-        || getSafeSdkAddress(aeSdk);
-      const targetAddress = (address as string) || connectedAddress;
-      if (!targetAddress || !connectedAddress) {
+      const targetAddress = claimAddress;
+      if (!targetAddress || !canClaim) {
         const msg = t('messages.connectWalletToClaimChainName');
         setError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
@@ -378,7 +367,7 @@ const ClaimChainNameModal = ({
                   value={value}
                   onChange={(e) => {
                     const nextValue = e.target.value;
-                    const nextNormalizedValue = normalizeClaimChainName(nextValue);
+                    const nextNormalizedValue = normalizeChainNameLabel(nextValue);
                     const nextValidationError = validateClaimChainName(nextNormalizedValue);
 
                     setValue(nextValue);

@@ -822,7 +822,6 @@ export const SuperheroApi = {
       body: JSON.stringify(payload),
     }) as Promise<AddressLinkSubmitResponse>;
   },
-  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/challenge`, {
       method: 'POST',
@@ -832,7 +831,6 @@ export const SuperheroApi = {
       body: JSON.stringify(payload),
     }) as Promise<ProfileChallengeResponse>;
   },
-  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   updateProfile(
     address: string,
     payload: ProfileEditablePayload & { challenge: string; signature: string },

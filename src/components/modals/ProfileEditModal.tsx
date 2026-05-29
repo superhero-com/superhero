@@ -318,7 +318,7 @@ const ProfileEditModal = ({
       const targetAddress = (address as string) || (activeAccount as string);
       if (!targetAddress) return;
 
-      // Prefill from on-chain first (source of truth for fullname, bio, avatarurl, username)
+      // Prefill from profile API first (fullname, bio, avatarurl, username)
       let fullname = '';
       let bio = '';
       let avatarurl = '';
@@ -486,7 +486,6 @@ const ProfileEditModal = ({
     if (lower.includes('attestation') || lower.includes('address link') || lower.includes('verification_token')) {
       return t('messages.failedAddressLink');
     }
-    if (lower.includes('profile_registry_contract_address')) return t('messages.profileContractNotConfigured');
     return msg || t('messages.failedToUpdateProfile');
   };
 

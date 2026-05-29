@@ -16,34 +16,9 @@ import {
   normalizeAddress,
   sdkHasAccount,
 } from '@/utils/walletSdk';
-import {
-  Encoded,
-  Tag,
-  type ContractMethodsBase,
-  unpackTx,
-} from '@aeternity/aepp-sdk';
-import { CONFIG } from '@/config';
-import { initializeContractTyped } from '@/libs/initializeContractTyped';
-import { encodeProfileCallData, payForProfileTx } from '@/services/payForProfileTx';
-import ADDRESS_LINK_ACI from '@/api/AddressLinkACI.json';
 import { useAeSdk } from './useAeSdk';
 import { useWalletReconnect } from './useWalletReconnect';
 import { useWalletConnect } from './useWalletConnect';
-
-type OptionVariant<T> = { Some: [T] } | { None: [] };
-const toOption = <T>(value: T | null | undefined): OptionVariant<T> => (
-  value == null ? { None: [] } : { Some: [value] }
-);
-
-const extractTxHash = (tx: any): string | undefined => tx?.hash
-  || tx?.transactionHash
-  || tx?.tx?.hash;
-const extractSignedTx = (value: any): Encoded.Transaction | undefined => {
-  if (typeof value === 'string' && value.startsWith('tx_')) return value as Encoded.Transaction;
-  const nested = value?.tx || value?.transaction || value?.signedTx;
-  if (typeof nested === 'string' && nested.startsWith('tx_')) return nested as Encoded.Transaction;
-  return undefined;
-};
 
 type SetProfileInput = {
   fullname: string;
@@ -52,16 +27,6 @@ type SetProfileInput = {
   username?: string;
   chainName?: string;
   chainExpiresAt?: number | null;
-};
-
-type ProfileRegistryContractApi = ContractMethodsBase & {
-  _calldata: {
-    encode: (
-      contractName: string,
-      functionName: string,
-      args: unknown[],
-    ) => Encoded.ContractBytearray;
-  };
 };
 
 export function useProfile(targetAddress?: string) {
@@ -140,158 +105,7 @@ export function useProfile(targetAddress?: string) {
     }
   }, [targetAddress, activeAccount]);
 
-  const initializeProfileContract = useCallback(async (
-    expectedAddress?: string,
-    options?: { restoreSigner?: boolean; preferStaticSigner?: boolean },
-  ) => {
-    const profileContractAddress = CONFIG.PROFILE_REGISTRY_CONTRACT_ADDRESS as `ct_${string}` | undefined;
-    if (!profileContractAddress?.trim()) {
-      throw new Error('PROFILE_REGISTRY_CONTRACT_ADDRESS is not configured');
-    }
-
-    const shouldRestoreSigner = Boolean(options?.restoreSigner);
-    const shouldPreferStaticSigner = Boolean(options?.preferStaticSigner);
-    if (shouldRestoreSigner && expectedAddress) {
-      try {
-        await addStaticAccount(expectedAddress);
-        // Restore/write flows use deep-link signer,
-        // independent from aeSdk reconnect state.
-        if (staticAeSdk) {
-          const contract = await initializeContractTyped<ProfileRegistryContractApi>(
-            staticAeSdk,
-            { aci: ADDRESS_LINK_ACI, address: profileContractAddress },
-          );
-          return {
-            contract,
-            signerSdk: staticAeSdk,
-            profileContractAddress,
-          };
-        }
-      } catch {
-        // Keep fallback logic below.
-      }
-    }
-
-    let staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
-    let sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
-    let signerSdk: any = shouldPreferStaticSigner && staticHasExpected
-      ? staticAeSdk
-      : undefined;
-
-    if (!signerSdk) {
-      if (sdkHasExpected) signerSdk = sdk;
-      else if (staticHasExpected) signerSdk = staticAeSdk;
-      else if (expectedAddress && shouldRestoreSigner) {
-        // Ensure we can always sign for the requested account via deep-link fallback.
-        try {
-          await addStaticAccount(expectedAddress);
-        } catch {
-          // Keep fallback below.
-        }
-        staticHasExpected = sdkHasAccount(staticAeSdk, expectedAddress);
-        sdkHasExpected = sdkHasAccount(sdk, expectedAddress);
-        if (staticHasExpected) signerSdk = staticAeSdk;
-        else if (sdkHasExpected) signerSdk = sdk;
-      }
-    }
-
-    // No expectedAddress (read-only flow): keep legacy behavior.
-    if (!signerSdk) {
-      if (expectedAddress && shouldRestoreSigner) {
-        // In write/restore flows, prefer deep-link signer even if account
-        // propagation is still catching up after refresh.
-        signerSdk = staticAeSdk || sdk;
-      } else {
-        signerSdk = sdk || staticAeSdk;
-      }
-    }
-    if (!signerSdk) {
-      throw new Error('SDK is not initialized');
-    }
-    const contract = await initializeContractTyped<ProfileRegistryContractApi>(
-      signerSdk,
-      { aci: ADDRESS_LINK_ACI as any, address: profileContractAddress },
-    );
-    return {
-      contract,
-      signerSdk,
-      profileContractAddress,
-    };
-  }, [sdk, staticAeSdk, addStaticAccount]);
-
-  const executeProfileWriteTx = useCallback(async (
-    signerSdk: any,
-    callerAddress: string,
-    profileContractAddress: Encoded.ContractAddress,
-    contract: any,
-    functionName: string,
-    args: unknown[],
-  ) => {
-    const FEE_SIGNING_BUFFER = 2_100_000_000_000n;
-    if (!callerAddress?.startsWith('ak_')) {
-      throw new Error('Invalid caller account for sponsored profile transaction');
-    }
-    if (!profileContractAddress?.startsWith('ct_')) {
-      throw new Error('Invalid profile contract address');
-    }
-    const callData = encodeProfileCallData(contract, functionName, args);
-    if (typeof signerSdk?.selectAccount === 'function') {
-      try {
-        signerSdk.selectAccount(callerAddress);
-      } catch {
-        // Continue; some sdk variants may not support explicit selection.
-      }
-    }
-    let callTx: Encoded.Transaction;
-    try {
-      const txParams = {
-        tag: Tag.ContractCallTx,
-        callerId: callerAddress,
-        contractId: profileContractAddress,
-        amount: 0,
-        gasLimit: 1_000_000,
-        gasPrice: 1_500_000_000,
-        ttl: (await signerSdk.getHeight({ cached: true })) + 3,
-        callData,
-      };
-      const estimatedTx = await signerSdk.buildTx(txParams);
-      const unpackedEstimated = unpackTx(
-        estimatedTx,
-        Tag.ContractCallTx,
-      ) as any;
-      const estimatedFee = BigInt(unpackedEstimated?.fee || 0);
-      callTx = await signerSdk.buildTx({
-        ...txParams,
-        // Wallet validation can require a small headroom over minimal fee.
-        fee: (estimatedFee + FEE_SIGNING_BUFFER).toString(),
-      });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      throw new Error(`Profile tx build failed (${functionName}): ${msg}`);
-    }
-    let signedTxRaw: unknown;
-    try {
-      signedTxRaw = await signerSdk.signTransaction(callTx, {
-        innerTx: true,
-        onAccount: callerAddress,
-      });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      throw new Error(`Profile tx signing failed (${functionName}): ${msg}`);
-    }
-    const signedTx = extractSignedTx(signedTxRaw);
-    if (!signedTx) {
-      throw new Error(`Wallet did not return a valid signed transaction (${functionName})`);
-    }
-    try {
-      return await payForProfileTx(signedTx, profileContractAddress);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      throw new Error(`Profile tx sponsorship failed (${functionName}): ${msg}`);
-    }
-  }, []);
-
-  /** Dry-run get_profile(owner) on the ProfileRegistry contract. Returns profile record or null. */
+  /** Profile fields from GET /api/profile (legacy name kept for callers). */
   const getProfileOnChain = useCallback(async (address?: string): Promise<{
     fullname: string;
     bio: string;
@@ -303,133 +117,71 @@ export function useProfile(targetAddress?: string) {
     chain_expires_at?: number | null;
   } | null> => {
     try {
-      const addr = (address || targetAddress || activeAccount) as string | undefined;
-      if (!addr) return null;
-      const { contract } = await initializeProfileContract(addr, { restoreSigner: false });
-      const tx: any = await (contract as any).get_profile(addr);
-      const raw = tx?.decodedResult ?? tx?.result?.decodedResult ?? tx;
-      if (raw == null) return null;
-      if (typeof raw === 'object' && 'None' in raw) return null;
-      let profile: unknown = raw;
-      if (typeof raw === 'object' && raw.Some != null) {
-        profile = Array.isArray(raw.Some) ? raw.Some[0] : raw.Some;
-      }
-      if (profile && typeof profile === 'object' && 'bio' in profile) {
-        return profile as any;
-      }
-      return null;
+      const aggregate = await getProfile(address);
+      const profile = aggregate?.profile;
+      if (!profile) return null;
+      const chainExpiresAt = profile.chain_expires_at != null
+        ? Number(profile.chain_expires_at)
+        : null;
+      return {
+        fullname: profile.fullname ?? '',
+        bio: profile.bio ?? '',
+        avatarurl: profile.avatarurl ?? '',
+        username: profile.username ?? null,
+        x_username: profile.x_username ?? null,
+        chain_name: profile.chain_name ?? null,
+        display_source: profile.display_source,
+        chain_expires_at: Number.isFinite(chainExpiresAt) && chainExpiresAt > 0
+          ? chainExpiresAt
+          : null,
+      };
     } catch {
       return null;
     }
-  }, [targetAddress, activeAccount, initializeProfileContract]);
+  }, [getProfile]);
 
   const setProfile = useCallback(async (data: SetProfileInput): Promise<string | undefined> => {
     const connectedAddress = await waitForWalletReconnect(targetAddress);
     const target = targetAddress || connectedAddress;
-    const {
-      contract,
-      signerSdk,
-      profileContractAddress,
-    } = await initializeProfileContract(target, {
-      restoreSigner: true,
-      preferStaticSigner: true,
-    });
+    await ensureWalletReadyForMessageSigning(target);
+
     const current = await getProfileOnChain(target);
-    const nextFullname = data.fullname || '';
-    /** Bio is linked off-chain; preserve the on-chain profile bio field when writing. */
-    const nextBio = current?.bio || '';
-    const nextAvatar = data.avatarurl || '';
-
-    let txHash: string | undefined;
-    const shouldSetProfile = !current
-      || current.fullname !== nextFullname
-      || current.avatarurl !== nextAvatar;
-
+    const payload: {
+      fullname?: string;
+      bio?: string;
+      avatarurl?: string;
+      username?: string;
+    } = {};
+    const nextFullname = data.fullname ?? '';
+    const nextAvatar = data.avatarurl ?? '';
     const normalizedUsername = normalizeName(data.username || '');
     const currentUsername = normalizeName(current?.username || '');
-    const shouldUpdateUsername = normalizedUsername !== currentUsername
-      && (normalizedUsername.length > 0 || currentUsername.length > 0);
 
-    /** Preferred .chain name is linked off-chain; preserve on-chain chain_name when writing. */
-    const shouldSetChainName = false;
-    const shouldClearChainName = false;
+    if (nextFullname !== (current?.fullname ?? '')) payload.fullname = nextFullname;
+    if (nextAvatar !== (current?.avatarurl ?? '')) payload.avatarurl = nextAvatar;
+    if (normalizedUsername !== currentUsername) payload.username = normalizedUsername;
+    /** Bio is linked via address-links; do not PATCH bio from this entrypoint. */
 
-    const shouldChangeChain = shouldSetChainName || shouldClearChainName;
-    const changeCount = Number(shouldSetProfile)
-      + Number(shouldUpdateUsername)
-      + Number(shouldChangeChain);
+    if (!Object.keys(payload).length) return undefined;
 
-    if (
-      shouldSetProfile
-      && !shouldUpdateUsername
-      && !shouldChangeChain
-    ) {
-      const setProfileResult: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'set_profile',
-        [nextFullname, nextBio, nextAvatar],
-      );
-      txHash = extractTxHash(setProfileResult) || txHash;
-      return txHash;
-    }
-
-    /**
-     * Use the full entrypoint only when there are multiple field changes in one submit.
-     * For single-field updates, keep using dedicated entrypoints to avoid resending
-     * unrelated profile fields.
-     */
-    if (changeCount > 1 && typeof (contract as any).set_profile_full === 'function') {
-      const fullResult: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'set_profile_full',
-        [
-          nextFullname,
-          nextBio,
-          nextAvatar,
-          toOption(normalizedUsername || null),
-          toOption(current?.chain_name ? normalizeName(current.chain_name) : null),
-          toOption(Number(current?.chain_expires_at || 0) > 0 ? Number(current.chain_expires_at) : null),
-        ],
-      );
-      txHash = extractTxHash(fullResult) || txHash;
-      return txHash;
-    }
-
-    if (shouldSetProfile) {
-      const setProfileResult: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'set_profile',
-        [nextFullname, nextBio, nextAvatar],
-      );
-      txHash = extractTxHash(setProfileResult);
-    }
-
-    if (shouldUpdateUsername) {
-      const tx: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'set_custom_name',
-        [normalizedUsername],
-      );
-      txHash = extractTxHash(tx) || txHash;
-    }
-
-    return txHash;
+    const { challenge } = await SuperheroApi.issueProfileChallenge(target, payload);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, challenge, {
+      request: {
+        type: 'profile-update',
+        address: target,
+        payload,
+      },
+    });
+    await SuperheroApi.updateProfile(target, {
+      ...payload,
+      challenge,
+      signature,
+    });
+    return undefined;
   }, [
-    executeProfileWriteTx,
+    ensureWalletReadyForMessageSigning,
     getProfileOnChain,
-    initializeProfileContract,
+    signMessage,
     targetAddress,
     waitForWalletReconnect,
   ]);
@@ -694,7 +446,7 @@ export function useProfile(targetAddress?: string) {
 
   return {
     canEdit,
-    isConfigured: Boolean(CONFIG.PROFILE_REGISTRY_CONTRACT_ADDRESS),
+    isConfigured: true,
     getProfile,
     getProfileOnChain,
     setProfile,

@@ -4,6 +4,9 @@ import {
 import {
   getLinkedBio,
   getLinkedPreferredAensName,
+  getLinkedSite,
+  getLinkedXUsername,
+  isXLinked,
   patchAccountCacheEntry,
   profileAggregateFromSources,
   resolveLinkedBioForCache,
@@ -76,6 +79,104 @@ describe('getLinkedPreferredAensName', () => {
       links: { prefaens: 'hero.chain' },
       profile: { chain_name: 'other.chain' } as any,
     })).toBe('hero.chain');
+  });
+
+  it('reads the prefered_aens_name link variant', () => {
+    expect(getLinkedPreferredAensName({
+      links: { prefered_aens_name: 'underscore.chain' },
+    })).toBe('underscore.chain');
+  });
+
+  it('reads the hyphenated prefered-aens-name link variant', () => {
+    expect(getLinkedPreferredAensName({
+      links: { 'prefered-aens-name': 'hyphen.chain' } as any,
+    })).toBe('hyphen.chain');
+  });
+
+  it('normalizes the resolved name (trim + lowercase)', () => {
+    expect(getLinkedPreferredAensName({
+      links: { prefaens: '  HeRo.Chain  ' },
+    })).toBe('hero.chain');
+  });
+
+  it('falls through empty/whitespace links to public_name when it looks like a name', () => {
+    expect(getLinkedPreferredAensName({
+      links: { prefaens: '   ' },
+      public_name: 'Public.chain',
+    })).toBe('public.chain');
+  });
+
+  it('ignores public_name without a dot and falls back to profile chain_name', () => {
+    expect(getLinkedPreferredAensName({
+      public_name: 'justaname',
+      profile: { chain_name: 'fromprofile.chain' } as any,
+    })).toBe('fromprofile.chain');
+  });
+
+  it('falls back to the legacy chain_name field last', () => {
+    expect(getLinkedPreferredAensName({
+      chain_name: 'Legacy.chain',
+    })).toBe('legacy.chain');
+  });
+
+  it('returns null when nothing resolves', () => {
+    expect(getLinkedPreferredAensName({
+      links: { prefaens: '' },
+      public_name: '   ',
+      profile: { chain_name: null } as any,
+      chain_name: null,
+    })).toBeNull();
+  });
+
+  it('handles null/undefined account', () => {
+    expect(getLinkedPreferredAensName(null)).toBeNull();
+    expect(getLinkedPreferredAensName(undefined)).toBeNull();
+  });
+});
+
+describe('getLinkedXUsername', () => {
+  it('prefers links.x and strips a leading @', () => {
+    expect(getLinkedXUsername({
+      links: { x: '@hero' },
+      profile: { x_username: 'profilehero' } as any,
+      x_username: 'legacyhero',
+    })).toBe('hero');
+  });
+
+  it('falls back to the profile x_username', () => {
+    expect(getLinkedXUsername({
+      links: { x: '   ' },
+      profile: { x_username: '@profilehero' } as any,
+    })).toBe('profilehero');
+  });
+
+  it('falls back to the legacy x_username', () => {
+    expect(getLinkedXUsername({ x_username: '@legacyhero' })).toBe('legacyhero');
+  });
+
+  it('returns null when no username is present', () => {
+    expect(getLinkedXUsername({ links: { x: '' }, x_username: '   ' })).toBeNull();
+    expect(getLinkedXUsername(null)).toBeNull();
+  });
+});
+
+describe('isXLinked', () => {
+  it('reflects whether an X username resolves', () => {
+    expect(isXLinked({ links: { x: '@hero' } })).toBe(true);
+    expect(isXLinked({ links: { x: '' } })).toBe(false);
+    expect(isXLinked(null)).toBe(false);
+  });
+});
+
+describe('getLinkedSite', () => {
+  it('returns the trimmed links.site value', () => {
+    expect(getLinkedSite({ links: { site: '  https://hero.test  ' } })).toBe('https://hero.test');
+  });
+
+  it('returns null when no site is linked', () => {
+    expect(getLinkedSite({ links: { site: '   ' } })).toBeNull();
+    expect(getLinkedSite({ links: {} })).toBeNull();
+    expect(getLinkedSite(null)).toBeNull();
   });
 });
 

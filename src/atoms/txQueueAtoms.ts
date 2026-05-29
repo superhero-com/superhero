@@ -46,6 +46,10 @@ export type MessageSignRequest = {
   address: string;
   nonce: number;
   message: string;
+} | {
+  type: 'profile-update';
+  address: string;
+  payload: Record<string, string>;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';

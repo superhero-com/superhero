@@ -3,6 +3,7 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
+import * as apiRead from '@/utils/apiRead';
 
 const mockCreateChainNameChallenge = vi.fn();
 const mockClaimChainName = vi.fn();
@@ -332,6 +333,298 @@ describe('useClaimChainName', () => {
     });
 
     expect(mockConnectWallet).toHaveBeenCalled();
+  });
+
+  it('disables claim when connected wallet does not match profile address', () => {
+    mockActiveAccount = 'ak_other_wallet';
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    expect(result.current.canClaim).toBe(false);
+    expect(result.current.claimAddress).toBe('ak_test_active');
+    expect(result.current.connectedAddress).toBe('ak_other_wallet');
+  });
+
+  it('rejects claim when wallet address mismatches target profile', async () => {
+    mockActiveAccount = 'ak_other_wallet';
+    mockWalletConnected = false;
+    mockWalletInfo = undefined;
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        pollIntervalMs: 0,
+      })).rejects.toThrow('Connect the wallet for this profile to claim a .chain name');
+    });
+
+    expect(mockCreateChainNameChallenge).not.toHaveBeenCalled();
+  });
+
+  it('normalizes .chain suffix and casing before submitting claim', async () => {
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'completed',
+      name: 'averylongchain.chain',
+      transfer_tx_hash: 'th_transfer',
+      expires_at: 999999,
+    });
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    await act(async () => {
+      await result.current.claimSponsoredChainName({
+        name: '  AveryLongChain.CHAIN  ',
+        pollIntervalMs: 0,
+      });
+    });
+
+    expect(mockClaimChainName).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'averylongchain',
+    }));
+  });
+
+  it('normalizes 0x-prefixed wallet signatures', async () => {
+    mockAeSdkSignMessage.mockResolvedValueOnce('0xAbCd');
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'completed',
+      name: 'averylongchain.chain',
+      transfer_tx_hash: 'th_transfer',
+      expires_at: 999999,
+    });
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    await act(async () => {
+      await result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        pollIntervalMs: 0,
+      });
+    });
+
+    expect(mockClaimChainName).toHaveBeenCalledWith(expect.objectContaining({
+      signature_hex: 'abcd',
+    }));
+  });
+
+  it('reads expiry from alternate backend field names', async () => {
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'completed',
+      name: 'averylongchain.chain',
+      transfer_tx_hash: 'th_transfer',
+      approximateExpireTime: 424242,
+    });
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    let response: any;
+    await act(async () => {
+      response = await result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        pollIntervalMs: 0,
+      });
+    });
+
+    expect(response.expiresAt).toBe(424242);
+  });
+
+  it('throws when availability cannot be verified', async () => {
+    mockGetName.mockResolvedValue(null);
+    mockGetNameEntryByName.mockResolvedValue(null);
+    const fetchNameRecordSpy = vi.spyOn(apiRead, 'fetchNameRecord')
+      .mockRejectedValue(new Error('upstream timeout'));
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    await expect(result.current.checkNameAvailability('averylongchain')).rejects.toThrow(
+      'Unable to verify chain name availability right now',
+    );
+    fetchNameRecordSpy.mockRestore();
+  });
+
+  it('treats silent node misses as available when sdk lookups are empty', async () => {
+    mockGetName.mockResolvedValue(null);
+    mockGetNameEntryByName.mockResolvedValue(null);
+    const fetchNameRecordSpy = vi.spyOn(apiRead, 'fetchNameRecord').mockResolvedValue(null);
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+
+    await expect(result.current.checkNameAvailability('averylongchain')).resolves.toBe(true);
+    fetchNameRecordSpy.mockRestore();
+  });
+
+  it('reports preclaim_pending while preclaim transaction is unmined', async () => {
+    const onStatusChange = vi.fn();
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'processing',
+      preclaim_tx_hash: 'th_pre',
+    });
+    mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v3/transactions/th_pre')) {
+        return { ok: true, json: async () => ({ block_height: -1 }) };
+      }
+      if (url.includes('/v3/transactions/th_')) {
+        return { ok: true, json: async () => ({ block_height: 123 }) };
+      }
+      if (url.includes('/v3/names/averylongchain.chain')) {
+        return {
+          ok: true,
+          json: async () => ({
+            ownership: { current: 'ak_test_active' },
+            pointers: { account_pubkey: 'ak_test_active' },
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        onStatusChange,
+        pollIntervalMs: 0,
+        maxAttempts: 1,
+      })).rejects.toThrow('Timed out while waiting for .chain name claim to finish');
+    });
+
+    expect(onStatusChange).toHaveBeenCalledWith(expect.objectContaining({ status: 'preclaim_pending' }));
+  });
+
+  it('caches mined transaction lookups across poll attempts', async () => {
+    const onStatusChange = vi.fn();
+    let preclaimFetchCount = 0;
+    const processingStatus = {
+      status: 'processing',
+      preclaim_tx_hash: 'th_pre',
+    };
+    mockGetChainNameClaimStatus
+      .mockResolvedValueOnce(processingStatus)
+      .mockResolvedValueOnce(processingStatus)
+      .mockResolvedValueOnce({
+        status: 'completed',
+        name: 'averylongchain.chain',
+        transfer_tx_hash: 'th_transfer',
+        expires_at: 999999,
+      });
+    mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v3/transactions/th_pre')) {
+        preclaimFetchCount += 1;
+        return { ok: true, json: async () => ({ block_height: 123 }) };
+      }
+      if (url.includes('/v3/transactions/th_transfer')) {
+        return { ok: true, json: async () => ({ block_height: 123 }) };
+      }
+      if (url.includes('/v3/names/averylongchain.chain')) {
+        return {
+          ok: true,
+          json: async () => ({
+            ownership: { current: 'ak_test_active' },
+            pointers: { account_pubkey: 'ak_test_active' },
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        onStatusChange,
+        pollIntervalMs: 0,
+        maxAttempts: 1,
+      })).rejects.toThrow('Timed out while waiting for .chain name claim to finish');
+    });
+
+    expect(preclaimFetchCount).toBe(1);
+  });
+
+  it('keeps claim in transfer_pending when middleware owner mismatches', async () => {
+    const onStatusChange = vi.fn();
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'completed',
+      name: 'averylongchain.chain',
+      transfer_tx_hash: 'th_transfer',
+    });
+    mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v3/transactions/th_transfer')) {
+        return { ok: true, json: async () => ({ block_height: 123 }) };
+      }
+      if (url.includes('/v3/names/averylongchain.chain')) {
+        return {
+          ok: true,
+          json: async () => ({
+            ownership: { current: 'ak_someone_else' },
+            pointers: { account_pubkey: 'ak_someone_else' },
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        onStatusChange,
+        pollIntervalMs: 0,
+        maxAttempts: 1,
+      })).rejects.toThrow('Timed out while waiting for .chain name claim to finish');
+    });
+
+    expect(onStatusChange).toHaveBeenCalledWith(expect.objectContaining({ status: 'transfer_pending' }));
+  });
+
+  it('keeps claim in transfer_pending when account pointer mismatches owner', async () => {
+    const onStatusChange = vi.fn();
+    mockGetChainNameClaimStatus.mockResolvedValueOnce({
+      status: 'completed',
+      name: 'averylongchain.chain',
+      transfer_tx_hash: 'th_transfer',
+    });
+    mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/v3/transactions/th_transfer')) {
+        return { ok: true, json: async () => ({ block_height: 123 }) };
+      }
+      if (url.includes('/v3/names/averylongchain.chain')) {
+        return {
+          ok: true,
+          json: async () => ({
+            ownership: { current: 'ak_test_active' },
+            pointers: [{ key: 'account_pubkey', id: 'ak_wrong_pointer' }],
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+
+    const { result } = renderHook(() => useClaimChainName('ak_test_active'));
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        onStatusChange,
+        pollIntervalMs: 0,
+        maxAttempts: 1,
+      })).rejects.toThrow('Timed out while waiting for .chain name claim to finish');
+    });
+
+    expect(onStatusChange).toHaveBeenCalledWith(expect.objectContaining({ status: 'transfer_pending' }));
+  });
+
+  it('rejects when no wallet is connected at all', async () => {
+    mockActiveAccount = undefined as any;
+    mockWalletConnected = false;
+    mockWalletInfo = undefined;
+    mockAeSdkState = {
+      addresses: () => [],
+      _resolveAccount: () => null,
+    };
+    const { result } = renderHook(() => useClaimChainName());
+
+    await act(async () => {
+      await expect(result.current.claimSponsoredChainName({
+        name: 'averylongchain',
+        pollIntervalMs: 0,
+      })).rejects.toThrow('Connect your wallet to claim a .chain name');
+    });
   });
 
   it('accepts final middleware ownership even when pointers are omitted', async () => {

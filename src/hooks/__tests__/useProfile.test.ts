@@ -9,6 +9,10 @@ const mockClaimBioAddressLink = vi.fn();
 const mockSubmitBioAddressLink = vi.fn();
 const mockUnclaimBioAddressLink = vi.fn();
 const mockSubmitBioAddressLinkUnclaim = vi.fn();
+const mockClaimPreferredAensNameAddressLink = vi.fn();
+const mockSubmitPreferredAensNameAddressLink = vi.fn();
+const mockUnclaimPreferredAensNameAddressLink = vi.fn();
+const mockSubmitPreferredAensNameAddressLinkUnclaim = vi.fn();
 const mockGetProfile = vi.fn();
 const mockSignAndVerifyLinkMessage = vi.fn();
 const mockInitializeContractTyped = vi.fn();
@@ -39,6 +43,10 @@ vi.mock('@/api/backend', () => ({
     submitBioAddressLink: (...args: any[]) => mockSubmitBioAddressLink(...args),
     unclaimBioAddressLink: (...args: any[]) => mockUnclaimBioAddressLink(...args),
     submitBioAddressLinkUnclaim: (...args: any[]) => mockSubmitBioAddressLinkUnclaim(...args),
+    claimPreferredAensNameAddressLink: (...args: any[]) => mockClaimPreferredAensNameAddressLink(...args),
+    submitPreferredAensNameAddressLink: (...args: any[]) => mockSubmitPreferredAensNameAddressLink(...args),
+    unclaimPreferredAensNameAddressLink: (...args: any[]) => mockUnclaimPreferredAensNameAddressLink(...args),
+    submitPreferredAensNameAddressLinkUnclaim: (...args: any[]) => mockSubmitPreferredAensNameAddressLinkUnclaim(...args),
     getProfile: (...args: any[]) => mockGetProfile(...args),
   },
 }));
@@ -157,6 +165,15 @@ describe('useProfile', () => {
     mockSubmitBioAddressLink.mockResolvedValue({ txHash: 'th_bio_link' });
     mockUnclaimBioAddressLink.mockResolvedValue({ message: 'unclaim me', nonce: 2 });
     mockSubmitBioAddressLinkUnclaim.mockResolvedValue({ txHash: 'th_bio_unlink' });
+    mockClaimPreferredAensNameAddressLink.mockResolvedValue({
+      message: 'sign preferred name',
+      nonce: 3,
+      value: 'hero.chain',
+      verification_token: 'token_pref',
+    });
+    mockSubmitPreferredAensNameAddressLink.mockResolvedValue({ txHash: 'th_pref_link' });
+    mockUnclaimPreferredAensNameAddressLink.mockResolvedValue({ message: 'unclaim pref', nonce: 4 });
+    mockSubmitPreferredAensNameAddressLinkUnclaim.mockResolvedValue({ txHash: 'th_pref_unlink' });
   });
 
   afterEach(() => {
@@ -333,6 +350,40 @@ describe('useProfile', () => {
     expect(mockSubmitBioAddressLinkUnclaim).toHaveBeenCalledWith({
       address: 'ak_test_active',
       nonce: 2,
+      signature: 'sig_bio_test',
+    });
+  });
+
+  it('links preferred aens name via address-link claim and submit', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.linkPreferredAensName({ chainName: 'hero.chain' });
+      expect(txHash).toBe('th_pref_link');
+    });
+
+    expect(mockClaimPreferredAensNameAddressLink).toHaveBeenCalledWith('ak_test_active', 'hero.chain');
+    expect(mockSubmitPreferredAensNameAddressLink).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      value: 'hero.chain',
+      nonce: 3,
+      signature: 'sig_bio_test',
+      verification_token: 'token_pref',
+    });
+  });
+
+  it('unlinks preferred aens name via address-link unclaim flow', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.unlinkPreferredAensName();
+      expect(txHash).toBe('th_pref_unlink');
+    });
+
+    expect(mockUnclaimPreferredAensNameAddressLink).toHaveBeenCalledWith('ak_test_active');
+    expect(mockSubmitPreferredAensNameAddressLinkUnclaim).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      nonce: 4,
       signature: 'sig_bio_test',
     });
   });

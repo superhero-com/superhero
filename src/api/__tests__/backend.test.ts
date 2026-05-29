@@ -3,9 +3,11 @@ import {
 } from 'vitest';
 import {
   getLinkedBio,
+  getLinkedPreferredAensName,
   patchAccountCacheEntry,
   profileAggregateFromSources,
   resolveLinkedBioForCache,
+  resolveLinkedPreferredAensNameForCache,
   SuperheroApi,
 } from '../backend';
 
@@ -68,6 +70,25 @@ describe('resolveLinkedBioForCache', () => {
   });
 });
 
+describe('getLinkedPreferredAensName', () => {
+  it('prefers links.prefaens over profile chain_name', () => {
+    expect(getLinkedPreferredAensName({
+      links: { prefaens: 'hero.chain' },
+      profile: { chain_name: 'other.chain' } as any,
+    })).toBe('hero.chain');
+  });
+});
+
+describe('resolveLinkedPreferredAensNameForCache', () => {
+  it('uses form value when chain name changed', () => {
+    expect(resolveLinkedPreferredAensNameForCache({
+      chainNameChanged: true,
+      formChainName: 'new.chain',
+      previous: { links: { prefaens: 'old.chain' } },
+    })).toBe('new.chain');
+  });
+});
+
 describe('patchAccountCacheEntry', () => {
   it('clears links.bio on unlink', () => {
     const next = patchAccountCacheEntry(
@@ -76,6 +97,19 @@ describe('patchAccountCacheEntry', () => {
     );
     expect(next.links).toEqual({ bio: null });
     expect(next.bio).toBeNull();
+  });
+
+  it('clears preferred name links on unlink', () => {
+    const next = patchAccountCacheEntry(
+      { links: { prefaens: 'hero.chain' }, chain_name: 'hero.chain' },
+      {
+        updatedProfile: { address: 'ak_test', profile: { chain_name: '' } as any, public_name: null },
+        chainNameChanged: true,
+        formChainName: '',
+      },
+    );
+    expect((next.links as { prefaens: null }).prefaens).toBeNull();
+    expect(next.chain_name).toBeNull();
   });
 });
 

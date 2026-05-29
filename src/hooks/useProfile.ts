@@ -439,16 +439,9 @@ export function useProfile(targetAddress?: string) {
     const shouldUpdateUsername = normalizedUsername !== currentUsername
       && (normalizedUsername.length > 0 || currentUsername.length > 0);
 
-    const normalizedChainName = normalizeName(data.chainName || '');
-    const currentChainName = normalizeName(current?.chain_name || '');
-    const currentChainExpiresAt = Number(current?.chain_expires_at || 0);
-    const nextChainExpiresAt = Number(data.chainExpiresAt || 0);
-    const hasValidChainExpiry = Number.isFinite(nextChainExpiresAt) && nextChainExpiresAt > 0;
-    const shouldSetChainName = normalizedChainName.length > 0 && (
-      normalizedChainName !== currentChainName
-      || (hasValidChainExpiry && currentChainExpiresAt !== nextChainExpiresAt)
-    );
-    const shouldClearChainName = !normalizedChainName && !!currentChainName;
+    /** Preferred .chain name is linked off-chain; preserve on-chain chain_name when writing. */
+    const shouldSetChainName = false;
+    const shouldClearChainName = false;
 
     const shouldChangeChain = shouldSetChainName || shouldClearChainName;
     const changeCount = Number(shouldSetProfile)
@@ -478,9 +471,6 @@ export function useProfile(targetAddress?: string) {
      * unrelated profile fields.
      */
     if (changeCount > 1 && typeof (contract as any).set_profile_full === 'function') {
-      if (normalizedChainName && !hasValidChainExpiry) {
-        throw new Error('Missing chain name expiration');
-      }
       const fullResult: any = await executeProfileWriteTx(
         signerSdk,
         target,
@@ -492,8 +482,8 @@ export function useProfile(targetAddress?: string) {
           nextBio,
           nextAvatar,
           toOption(normalizedUsername || null),
-          toOption(normalizedChainName || null),
-          toOption(hasValidChainExpiry ? nextChainExpiresAt : null),
+          toOption(current?.chain_name ? normalizeName(current.chain_name) : null),
+          toOption(Number(current?.chain_expires_at || 0) > 0 ? Number(current.chain_expires_at) : null),
         ],
       );
       txHash = extractTxHash(fullResult) || txHash;
@@ -524,30 +514,6 @@ export function useProfile(targetAddress?: string) {
       txHash = extractTxHash(tx) || txHash;
     }
 
-    if (shouldSetChainName) {
-      if (!Number.isFinite(nextChainExpiresAt) || nextChainExpiresAt <= 0) {
-        throw new Error('Missing chain name expiration');
-      }
-      const tx: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'set_chain_name',
-        [normalizedChainName, nextChainExpiresAt],
-      );
-      txHash = extractTxHash(tx) || txHash;
-    } else if (shouldClearChainName) {
-      const tx: any = await executeProfileWriteTx(
-        signerSdk,
-        target,
-        profileContractAddress,
-        contract,
-        'clear_chain_name',
-        [],
-      );
-      txHash = extractTxHash(tx) || txHash;
-    }
     return txHash;
   }, [
     executeProfileWriteTx,
@@ -694,6 +660,79 @@ export function useProfile(targetAddress?: string) {
     targetAddress,
   ]);
 
+  const submitPreferredAensNameAddressLink = useCallback(async (
+    address: string,
+    claim: AddressLinkClaimResponse,
+    signature: string,
+  ) => {
+    const res = await SuperheroApi.submitPreferredAensNameAddressLink({
+      address,
+      value: claim.value,
+      nonce: claim.nonce,
+      signature,
+      verification_token: claim.verification_token,
+    });
+    return res.txHash;
+  }, []);
+
+  const linkPreferredAensName = useCallback(async (params: {
+    address?: string;
+    chainName: string;
+  }) => {
+    const target = params.address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for preferred name link');
+    }
+    const value = normalizeName(params.chainName);
+    if (!value) {
+      throw new Error('Preferred name is required to link');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const claim = await SuperheroApi.claimPreferredAensNameAddressLink(target, value);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, claim.message, {
+      request: {
+        type: 'address-link-prefaens-submit',
+        address: target,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
+    });
+    return submitPreferredAensNameAddressLink(target, claim, signature);
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitPreferredAensNameAddressLink,
+    targetAddress,
+  ]);
+
+  const unlinkPreferredAensName = useCallback(async (address?: string) => {
+    const target = address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for preferred name unlink');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const unclaim = await SuperheroApi.unclaimPreferredAensNameAddressLink(target);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, unclaim.message, {
+      request: {
+        type: 'address-link-prefaens-unclaim',
+        address: target,
+        nonce: unclaim.nonce,
+        message: unclaim.message,
+      },
+    });
+    const res = await SuperheroApi.submitPreferredAensNameAddressLinkUnclaim({
+      address: target,
+      nonce: unclaim.nonce,
+      signature,
+    });
+    return res.txHash;
+  }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
+
   const unlinkBio = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
@@ -753,5 +792,7 @@ export function useProfile(targetAddress?: string) {
     unlinkXAccount,
     linkBio,
     unlinkBio,
+    linkPreferredAensName,
+    unlinkPreferredAensName,
   };
 }

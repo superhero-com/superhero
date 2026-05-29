@@ -55,6 +55,9 @@ export type ProfileAggregate = {
 export type AccountLinks = {
   x?: string | null;
   bio?: string | null;
+  /** Linked via POST /api/address-links/prefered-aens-name */
+  prefaens?: string | null;
+  prefered_aens_name?: string | null;
 };
 
 export type AccountAggregate = {
@@ -100,6 +103,36 @@ export function getLinkedBio(
   return null;
 }
 
+const normalizePreferredAensName = (value: string) => value.trim().toLowerCase();
+
+const readPreferredAensNameFromLinks = (
+  links?: AccountLinks | Record<string, unknown> | null,
+): string => {
+  if (!links || typeof links !== 'object') return '';
+  const record = links as Record<string, unknown>;
+  return String(
+    record.prefaens
+    ?? record.prefered_aens_name
+    ?? record['prefered-aens-name']
+    ?? '',
+  ).trim();
+};
+
+/** Preferred .chain name from account links (then profile/public_name/legacy fallbacks). */
+export function getLinkedPreferredAensName(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null,
+): string | null {
+  const fromLinks = readPreferredAensNameFromLinks(account?.links);
+  if (fromLinks) return normalizePreferredAensName(fromLinks);
+  const fromPublic = String(account?.public_name ?? '').trim();
+  if (fromPublic.includes('.')) return normalizePreferredAensName(fromPublic);
+  const fromProfile = String(account?.profile?.chain_name ?? '').trim();
+  if (fromProfile) return normalizePreferredAensName(fromProfile);
+  const legacy = String(account?.chain_name ?? '').trim();
+  if (legacy) return normalizePreferredAensName(legacy);
+  return null;
+}
+
 type ProfileSource = Pick<
 AccountAggregate,
 'address' | 'links' | 'profile' | 'bio' | 'public_name' | 'x_username' | 'chain_name'
@@ -125,11 +158,13 @@ export function profileAggregateFromSources(
     fallback && 'profile' in fallback ? fallback.profile : null
   ) ?? ('profile' in (source || {}) ? source.profile : null);
   const linkedBio = getLinkedBio(source);
+  const linkedPreferredAensName = getLinkedPreferredAensName(source);
   return {
     address: source.address,
-    public_name: source.public_name ?? (
-      fallback && 'public_name' in fallback ? fallback.public_name : null
-    ) ?? null,
+    public_name: linkedPreferredAensName
+      ?? source.public_name
+      ?? (fallback && 'public_name' in fallback ? fallback.public_name : null)
+      ?? null,
     profile: {
       ...emptyProfilePayload(),
       ...fallbackProfile,
@@ -139,7 +174,8 @@ export function profileAggregateFromSources(
         ?? source.x_username
         ?? fallbackProfile?.x_username
         ?? null,
-      chain_name: source.profile?.chain_name
+      chain_name: linkedPreferredAensName
+        ?? source.profile?.chain_name
         ?? source.chain_name
         ?? fallbackProfile?.chain_name
         ?? null,
@@ -160,49 +196,91 @@ export function resolveLinkedBioForCache(
   return getLinkedBio(opts.updated) ?? getLinkedBio(opts.previous);
 }
 
+/** Resolve linked preferred .chain name for React Query account cache after a profile save. */
+export function resolveLinkedPreferredAensNameForCache(
+  opts: {
+    chainNameChanged: boolean;
+    formChainName: string;
+    updated?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null;
+    previous?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null;
+  },
+): string | null {
+  if (opts.chainNameChanged) return opts.formChainName.trim() || null;
+  return getLinkedPreferredAensName(opts.updated) ?? getLinkedPreferredAensName(opts.previous);
+}
+
 export function patchAccountCacheEntry(
   prev: Record<string, unknown> | null | undefined,
   opts: {
     updatedProfile?: ProfileAggregate | null;
-    bioChanged: boolean;
+    bioChanged?: boolean;
     formBio?: string;
+    chainNameChanged?: boolean;
+    formChainName?: string;
   },
 ): Record<string, unknown> {
+  const bioChanged = Boolean(opts.bioChanged);
+  const chainNameChanged = Boolean(opts.chainNameChanged);
   const linkedXUsername = getLinkedXUsername(opts.updatedProfile)
     ?? getLinkedXUsername(prev as AccountAggregate | null);
   const linkedBio = resolveLinkedBioForCache({
-    bioChanged: opts.bioChanged,
+    bioChanged,
     formBio: opts.formBio ?? '',
+    updated: opts.updatedProfile,
+    previous: prev as AccountAggregate | null,
+  });
+  const linkedPreferredAensName = resolveLinkedPreferredAensNameForCache({
+    chainNameChanged,
+    formChainName: opts.formChainName ?? '',
     updated: opts.updatedProfile,
     previous: prev as AccountAggregate | null,
   });
   let bioLinkPatch: Record<string, unknown> = {};
   if (linkedBio != null) {
     bioLinkPatch = { bio: linkedBio };
-  } else if (opts.bioChanged) {
+  } else if (bioChanged) {
     bioLinkPatch = { bio: null };
   }
-  const profileBio = opts.bioChanged
+  let preferredNameLinkPatch: Record<string, unknown> = {};
+  if (linkedPreferredAensName != null) {
+    preferredNameLinkPatch = {
+      prefaens: linkedPreferredAensName,
+      prefered_aens_name: linkedPreferredAensName,
+    };
+  } else if (chainNameChanged) {
+    preferredNameLinkPatch = { prefaens: null, prefered_aens_name: null };
+  }
+  const profileBio = bioChanged
     ? (linkedBio ?? '')
     : (linkedBio ?? opts.updatedProfile?.profile?.bio);
+  const profileChainName = chainNameChanged
+    ? (linkedPreferredAensName ?? '')
+    : (linkedPreferredAensName ?? opts.updatedProfile?.profile?.chain_name);
   return {
     ...prev,
-    bio: opts.bioChanged ? linkedBio : (linkedBio ?? (prev as AccountAggregate)?.bio),
+    bio: bioChanged ? linkedBio : (linkedBio ?? (prev as AccountAggregate)?.bio),
     fullname: opts.updatedProfile?.profile?.fullname ?? (prev as AccountAggregate)?.fullname,
     avatarurl: opts.updatedProfile?.profile?.avatarurl ?? (prev as AccountAggregate)?.avatarurl,
     username: opts.updatedProfile?.profile?.username ?? (prev as AccountAggregate)?.username,
-    chain_name: opts.updatedProfile?.profile?.chain_name ?? (prev as AccountAggregate)?.chain_name,
+    chain_name: chainNameChanged
+      ? linkedPreferredAensName
+      : (linkedPreferredAensName ?? (prev as AccountAggregate)?.chain_name),
+    public_name: chainNameChanged
+      ? linkedPreferredAensName
+      : (linkedPreferredAensName ?? (prev as AccountAggregate)?.public_name),
     x_username: linkedXUsername ?? (prev as AccountAggregate)?.x_username,
     links: {
       ...(prev as AccountAggregate)?.links,
       ...(linkedXUsername ? { x: linkedXUsername } : {}),
       ...bioLinkPatch,
+      ...preferredNameLinkPatch,
     },
     profile: opts.updatedProfile?.profile
       ? {
         ...(prev as AccountAggregate)?.profile,
         ...opts.updatedProfile.profile,
         bio: profileBio ?? opts.updatedProfile.profile.bio,
+        chain_name: profileChainName ?? opts.updatedProfile.profile.chain_name,
       }
       : (prev as AccountAggregate)?.profile,
   };
@@ -634,6 +712,52 @@ export const SuperheroApi = {
     signature: string;
   }) {
     return this.fetchJson('/api/address-links/bio/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  claimPreferredAensNameAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitPreferredAensNameAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimPreferredAensNameAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitPreferredAensNameAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/unclaim/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

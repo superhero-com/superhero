@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import AddressAvatar from '@/components/AddressAvatar';
 import { AddressFormatted } from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
-import { SuperheroApi } from '@/api/backend';
+import { getLinkedPreferredAensName, SuperheroApi } from '@/api/backend';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
@@ -136,7 +136,13 @@ export const AddressAvatarWithChainName = memo(({
     return null;
   }
 
-  const preferredName = (cachedProfile?.public_name || cachedProfile?.profile?.chain_name || chainName || '').trim();
+  const preferredName = (
+    getLinkedPreferredAensName(cachedProfile)
+    || cachedProfile?.public_name
+    || cachedProfile?.profile?.chain_name
+    || chainName
+    || ''
+  ).trim();
   const avatarUrl = (cachedProfile?.profile?.avatarurl || '').trim() || null;
 
   const renderContent = () => (

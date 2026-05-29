@@ -28,7 +28,11 @@ import Shell from '../components/layout/Shell';
 import { PostsService } from '../api/generated';
 import type { PostDto } from '../api/generated';
 import {
-  getLinkedBio, isXLinked, patchAccountCacheEntry, SuperheroApi,
+  getLinkedBio,
+  getLinkedPreferredAensName,
+  isXLinked,
+  patchAccountCacheEntry,
+  SuperheroApi,
 } from '@/api/backend';
 import { AccountsService } from '../api/generated/services/AccountsService';
 import { AccountTokensService } from '../api/generated/services/AccountTokensService';
@@ -192,7 +196,9 @@ export default function UserProfile({
     || getLinkedBio(profileInfo)
     || (profile?.profile?.bio || '').trim()
     || '';
-  const displayName = (profileInfo?.public_name || chainName || '').trim()
+  const linkedPreferredName = getLinkedPreferredAensName(accountInfo)
+    || getLinkedPreferredAensName(profileInfo);
+  const displayName = (linkedPreferredName || profileInfo?.public_name || chainName || '').trim()
     || formatAddress(effectiveAddress, 6, true);
   const isXVerified = isXLinked(accountInfo);
 
@@ -595,10 +601,14 @@ export default function UserProfile({
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
               const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
+              const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
+                !== getLinkedPreferredAensName(oldData);
               return patchAccountCacheEntry(oldData, {
                 updatedProfile,
                 bioChanged,
                 formBio: updatedProfile?.profile?.bio ?? '',
+                chainNameChanged,
+                formChainName: updatedProfile?.profile?.chain_name ?? '',
               });
             });
             setProfile(updatedProfile);
@@ -623,10 +633,14 @@ export default function UserProfile({
             queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
             queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
               const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
+              const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
+                !== getLinkedPreferredAensName(oldData);
               return patchAccountCacheEntry(oldData, {
                 updatedProfile,
                 bioChanged,
                 formBio: updatedProfile?.profile?.bio ?? '',
+                chainNameChanged,
+                formChainName: updatedProfile?.profile?.chain_name ?? '',
               });
             });
             setProfile(updatedProfile);

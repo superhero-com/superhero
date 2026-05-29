@@ -34,6 +34,18 @@ export type MessageSignRequest = {
   address: string;
   nonce: number;
   message: string;
+} | {
+  type: 'address-link-prefaens-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-prefaens-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';

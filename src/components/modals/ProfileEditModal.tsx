@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import {
   getLinkedBio,
+  getLinkedPreferredAensName,
   getLinkedXUsername,
   patchAccountCacheEntry,
   profileAggregateFromSources,
@@ -280,6 +281,8 @@ const ProfileEditModal = ({
     setProfile,
     linkBio,
     unlinkBio,
+    linkPreferredAensName,
+    unlinkPreferredAensName,
     canEdit,
   } = useProfile(address);
   const [connectingX, setConnectingX] = useState(false);
@@ -305,11 +308,6 @@ const ProfileEditModal = ({
     website: form.website.trim(),
     chain_name: form.chain_name.trim().toLowerCase(),
   }), [form]);
-  const selectedChainOption = useMemo(
-    () => availableChainNames.find((item) => item.name === trimmedForm.chain_name) || null,
-    [availableChainNames, trimmedForm.chain_name],
-  );
-
   useEffect(() => {
     async function load() {
       if (!open) return;
@@ -347,6 +345,8 @@ const ProfileEditModal = ({
         xName = getLinkedXUsername(accountRecord);
         const linkedBio = getLinkedBio(accountRecord);
         if (linkedBio) bio = linkedBio;
+        const linkedPreferredName = getLinkedPreferredAensName(accountRecord);
+        if (linkedPreferredName) chainName = linkedPreferredName;
       } catch {
         // ignore account fetch errors; X section falls back to unlinked
       }
@@ -364,8 +364,12 @@ const ProfileEditModal = ({
         if (username === '' && (acct?.profile?.username ?? '') !== '') {
           username = String(acct.profile.username);
         }
-        if (chainName === '' && (acct?.profile?.chain_name ?? '') !== '') {
-          chainName = normalizeChainName(acct.profile.chain_name);
+        if (chainName === '') {
+          const linkedPreferredName = getLinkedPreferredAensName(acct);
+          if (linkedPreferredName) chainName = linkedPreferredName;
+          else if ((acct?.profile?.chain_name ?? '') !== '') {
+            chainName = normalizeChainName(acct.profile.chain_name);
+          }
         }
       } catch {
         if (bio === '' && initialBio) bio = String(initialBio);
@@ -373,6 +377,9 @@ const ProfileEditModal = ({
 
       if (bio === '' && chainProfile?.bio) {
         bio = String(chainProfile.bio);
+      }
+      if (chainName === '' && chainProfile?.chain_name) {
+        chainName = normalizeChainName(chainProfile.chain_name);
       }
 
       let ownedChainNames: OwnedChainNameOption[] = [];
@@ -495,11 +502,11 @@ const ProfileEditModal = ({
         return;
       }
       const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
-      const otherChanged = (
-        trimmedForm.website !== initialForm.website.trim()
-        || trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
+      const chainNameChanged = (
+        trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
       );
-      if (!bioChanged && !otherChanged) {
+      const websiteChanged = trimmedForm.website !== initialForm.website.trim();
+      if (!bioChanged && !chainNameChanged && !websiteChanged) {
         const msg = t('messages.profileNothingToUpdate');
         setFormError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
@@ -514,14 +521,28 @@ const ProfileEditModal = ({
           await unlinkBio(targetAddress);
         }
       }
-      if (otherChanged) {
+      if (chainNameChanged) {
+        if (trimmedForm.chain_name) {
+          const isOwned = availableChainNames.some(
+            (item) => item.name === trimmedForm.chain_name,
+          );
+          if (!isOwned) {
+            throw new Error(t('messages.preferredNameNotOwned'));
+          }
+          await linkPreferredAensName({
+            address: targetAddress,
+            chainName: trimmedForm.chain_name,
+          });
+        } else {
+          await unlinkPreferredAensName(targetAddress);
+        }
+      }
+      if (websiteChanged) {
         await setProfile({
           fullname: preservedProfile.fullname,
           bio: '',
           avatarurl: trimmedForm.website,
           username: preservedProfile.username,
-          chainName: trimmedForm.chain_name,
-          chainExpiresAt: selectedChainOption?.expiresAt ?? null,
         });
       }
       const prevProfile = queryClient.getQueryData<ProfileAggregate | null>(
@@ -564,6 +585,16 @@ const ProfileEditModal = ({
           },
         };
       }
+      if (chainNameChanged) {
+        updated = {
+          ...updated,
+          public_name: trimmedForm.chain_name || null,
+          profile: {
+            ...updated.profile,
+            chain_name: trimmedForm.chain_name || null,
+          },
+        };
+      }
 
       if (!updated?.address) {
         throw new Error(t('messages.failedToRefreshProfile'));
@@ -576,13 +607,21 @@ const ProfileEditModal = ({
           updatedProfile: updated,
           bioChanged,
           formBio: trimmedForm.bio,
+          chainNameChanged,
+          formChainName: trimmedForm.chain_name,
         }),
       );
       let successMessage = t('messages.profileUpdated');
-      if (bioChanged && !otherChanged) {
+      const onlyBio = bioChanged && !chainNameChanged && !websiteChanged;
+      const onlyChainName = chainNameChanged && !bioChanged && !websiteChanged;
+      if (onlyBio) {
         successMessage = trimmedForm.bio
           ? t('messages.bioLinkSuccess')
           : t('messages.bioUnlinkSuccess');
+      } else if (onlyChainName) {
+        successMessage = trimmedForm.chain_name
+          ? t('messages.preferredNameLinkSuccess')
+          : t('messages.preferredNameUnlinkSuccess');
       }
       push(<div>{successMessage}</div>);
       onClose(updated);

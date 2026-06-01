@@ -74,9 +74,11 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
+          api: 'modern-compiler',
+          loadPaths: [__dirname],
           additionalData: [
-            '@use "./src/styles/variables.scss" as *;',
-            '@use "./src/styles/mixins.scss" as *;',
+            '@use "src/styles/variables.scss" as *;',
+            '@use "src/styles/mixins.scss" as *;',
           ].join(' '),
         },
       },

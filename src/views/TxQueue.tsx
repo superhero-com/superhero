@@ -68,6 +68,15 @@ const parseMessageSignRequest = (raw: string | null): MessageSignRequest | null 
     ) {
       return parsed as MessageSignRequest;
     }
+    if (
+      parsed.type === 'profile-update'
+      && typeof parsed.address === 'string'
+      && typeof parsed.message === 'string'
+      && parsed.payload != null
+      && typeof parsed.payload === 'object'
+    ) {
+      return parsed as MessageSignRequest;
+    }
   } catch {
     // ignore malformed persisted queue data
   }
@@ -82,6 +91,15 @@ const submitMessageSignRequest = async (
   const isValid = verifyLinkMessageSignature(request.address, request.message, signature);
   if (!isValid) {
     throw new Error('Wallet signature verification failed locally');
+  }
+
+  if (request.type === 'profile-update') {
+    await SuperheroApi.updateProfile(request.address, {
+      ...request.payload,
+      challenge: request.message,
+      signature,
+    });
+    return;
   }
 
   if (request.type === 'address-link-x-submit') {
@@ -249,6 +267,7 @@ const TxQueue = () => {
             status: 'success',
             address: request.address,
             message: (() => {
+              if (request.type === 'profile-update') return tCommon('messages.profileUpdated');
               if (request.type === 'address-link-x-submit') return tCommon('messages.xCallbackSuccess');
               if (request.type === 'address-link-x-unclaim') return tCommon('messages.xCallbackUnlinkSuccess');
               if (request.type === 'address-link-bio-submit') return tCommon('messages.bioLinkSuccess');

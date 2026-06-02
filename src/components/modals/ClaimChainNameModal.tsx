@@ -7,7 +7,20 @@ import {
 import { useSetAtom } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { type ChainNameClaimStatusResponse } from '@/api/backend';
+import {
+  Tag,
+  buildTx,
+  commitmentHash,
+  getExecutionCost,
+  getMinimumNameFee,
+  unpackTx,
+} from '@aeternity/aepp-sdk';
+import BigNumber from 'bignumber.js';
+import {
+  type ChainNameClaimStatusResponse,
+  type ChainNameSponsorshipResponse,
+  SuperheroApi,
+} from '@/api/backend';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
 import { resolveClaimNotificationStep } from '@/utils/claimChainName';
@@ -26,8 +39,46 @@ import { Input } from '../ui/input';
 const stripApiErrorPrefix = (value: string) => value.replace(/^superhero api error \(\d+\):\s*/iu, '').trim();
 const CLAIMABLE_CHAIN_NAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const AVAILABILITY_CHECK_DELAY_MS = 500;
+const SPONSORSHIP_CHECK_DELAY_MS = 500;
+
+// Stub values used to build throwaway transactions purely for fee/cost estimation.
+const STUB_ADDRESS: `ak_${string}` = 'ak_11111111111111111111111111111111273Yts';
+const STUB_NONCE = 1;
+const STUB_NAME_SALT = 4204563566073083;
+const AE_COIN_PRECISION = 18;
 
 type NameAvailabilityStatus = 'idle' | 'checking' | 'available' | 'unavailable';
+type SponsorshipStatus = 'idle' | 'checking' | 'resolved';
+
+/**
+ * Total cost (in AE) the user pays to claim a name themselves: the preclaim transaction fee
+ * plus the claim execution cost (which includes the minimum name fee). Mirrors the Superhero
+ * Wallet's own claim screen so the displayed price matches what the wallet will charge.
+ */
+const computeSelfFundedClaimAe = (fullName: `${string}.chain`): BigNumber => BigNumber(
+  unpackTx(
+    buildTx({
+      tag: Tag.NamePreclaimTx,
+      accountId: STUB_ADDRESS,
+      nonce: STUB_NONCE,
+      commitmentId: commitmentHash(fullName, STUB_NAME_SALT),
+    }),
+    Tag.NamePreclaimTx,
+  ).fee,
+)
+  .plus(
+    getExecutionCost(
+      buildTx({
+        tag: Tag.NameClaimTx,
+        accountId: STUB_ADDRESS,
+        nonce: STUB_NONCE,
+        name: fullName,
+        nameSalt: 0,
+        nameFee: getMinimumNameFee(fullName),
+      }),
+    ).toString(),
+  )
+  .shiftedBy(-AE_COIN_PRECISION);
 
 export const resolveClaimErrorMessage = (
   claimError: unknown,
@@ -42,6 +93,13 @@ export const resolveClaimErrorMessage = (
     || lower.includes('rate limit')
     || lower.includes('too many')
   ) return t('messages.tooManyRequests');
+
+  if (
+    lower.includes('rejected')
+    || lower.includes('denied')
+    || lower.includes('cancelled')
+    || lower.includes('canceled')
+  ) return t('messages.chainNameClaimRejected');
 
   if (lower.includes('timed out')) return t('messages.chainNameClaimTimedOut');
 
@@ -119,6 +177,7 @@ const ClaimChainNameModal = ({
   const { push } = useToast();
   const {
     claimSponsoredChainName,
+    claimSelfFundedChainName,
     claimAddress,
     canClaim,
     checkNameAvailability,
@@ -133,12 +192,15 @@ const ClaimChainNameModal = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const submittedRef = useRef(false);
   const availabilityRequestIdRef = useRef(0);
+  const sponsorshipRequestIdRef = useRef(0);
 
   const [claiming, setClaiming] = useState(false);
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [availabilityStatus, setAvailabilityStatus] = useState<NameAvailabilityStatus>('idle');
   const [lastCheckedValue, setLastCheckedValue] = useState('');
+  const [sponsorship, setSponsorship] = useState<ChainNameSponsorshipResponse | null>(null);
+  const [sponsorshipStatus, setSponsorshipStatus] = useState<SponsorshipStatus>('idle');
 
   useEffect(() => {
     if (!open) {
@@ -147,6 +209,8 @@ const ClaimChainNameModal = ({
       setError(null);
       setAvailabilityStatus('idle');
       setLastCheckedValue('');
+      setSponsorship(null);
+      setSponsorshipStatus('idle');
       return;
     }
     submittedRef.current = false;
@@ -165,6 +229,16 @@ const ClaimChainNameModal = ({
   };
   const validationError = validateClaimChainName(normalizedValue);
   const isTooShort = Boolean(normalizedValue && normalizedValueLength <= 12);
+
+  // Price the user pays when claiming themselves (sponsor can't fund it), computed locally.
+  const selfFundedPriceAe = useMemo(() => {
+    if (!normalizedValue || validationError) return null;
+    try {
+      return computeSelfFundedClaimAe(`${normalizedValue}.chain`).toFixed(4);
+    } catch {
+      return null;
+    }
+  }, [normalizedValue, validationError]);
 
   const getClaimNotificationPayload = (
     name: string,
@@ -228,6 +302,41 @@ const ClaimChainNameModal = ({
     validationError,
   ]);
 
+  // Throttled check of whether the sponsor account can fund this name. Drives the
+  // "Free" / price hint and decides whether the claim is sponsored or self-funded.
+  useEffect(() => {
+    if (!open) return undefined;
+
+    sponsorshipRequestIdRef.current += 1;
+    const requestId = sponsorshipRequestIdRef.current;
+
+    if (!normalizedValue || validationError) {
+      setSponsorship(null);
+      setSponsorshipStatus('idle');
+      return undefined;
+    }
+
+    setSponsorshipStatus('checking');
+
+    const timeoutId = window.setTimeout(() => {
+      SuperheroApi.checkChainNameSponsorship(normalizedValue)
+        .then((result) => {
+          if (sponsorshipRequestIdRef.current !== requestId) return;
+          setSponsorship(result);
+          setSponsorshipStatus('resolved');
+        })
+        .catch(() => {
+          if (sponsorshipRequestIdRef.current !== requestId) return;
+          setSponsorship(null);
+          setSponsorshipStatus('idle');
+        });
+    }, SPONSORSHIP_CHECK_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [normalizedValue, open, validationError]);
+
   const onClaim = async () => {
     try {
       const targetAddress = claimAddress;
@@ -268,6 +377,77 @@ const ClaimChainNameModal = ({
         setClaiming(false);
         return;
       }
+
+      // Decide whether the backend sponsor can fund this name, or the user has to pay.
+      // Prefer the throttled result for the current value; otherwise fetch on demand.
+      let resolvedSponsorship = sponsorship && sponsorship.name === `${normalizedValue}.chain`
+        ? sponsorship
+        : null;
+      if (!resolvedSponsorship) {
+        try {
+          resolvedSponsorship = await SuperheroApi.checkChainNameSponsorship(normalizedValue);
+        } catch {
+          resolvedSponsorship = null;
+        }
+      }
+
+      // Require a definitive answer before choosing a path. If the check failed or returned
+      // nothing, abort with a clear error instead of silently starting the sponsored flow
+      // (which would either pay from a sponsor we couldn't verify, or fail mid-way).
+      if (!resolvedSponsorship || typeof resolvedSponsorship.sponsorable !== 'boolean') {
+        const msg = t('messages.chainNameSponsorCheckFailed');
+        setError(msg);
+        notifyError(msg);
+        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        setClaiming(false);
+        return;
+      }
+
+      if (!resolvedSponsorship.sponsorable) {
+        // Self-funded path: run the standard AENS flow straight from the wallet.
+        // Nothing is sent to the backend — the user pays the on-chain cost themselves.
+        try {
+          notifySubmitted({
+            type: TxPayloadType.ClaimChainName,
+            name: normalizedValue,
+            step: 'wallet',
+          });
+          const result = await claimSelfFundedChainName({
+            name: normalizedValue,
+            onSignatureRequest: () => notifySubmitted({
+              type: TxPayloadType.ClaimChainName,
+              name: normalizedValue,
+              step: 'wallet',
+            }),
+            onProcessing: () => notifyPending({
+              type: TxPayloadType.ClaimChainName,
+              name: normalizedValue,
+            }),
+          });
+          const claimedName = String(result.name || `${normalizedValue}.chain`).trim().toLowerCase();
+          setChainNames((prev) => ({
+            ...prev,
+            [targetAddress]: claimedName,
+          }));
+          queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', targetAddress] });
+          queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', targetAddress] });
+          notifyConfirmed({
+            type: TxPayloadType.ClaimChainName,
+            name: normalizedValue,
+          });
+          push(<div>{t('messages.chainNameClaimCompleted')}</div>);
+          onClose();
+        } catch (selfFundedError) {
+          const msg = resolveClaimErrorMessage(selfFundedError, t);
+          setError(msg);
+          notifyError(msg);
+          push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        } finally {
+          setClaiming(false);
+        }
+        return;
+      }
+
       notifySubmitted({
         type: TxPayloadType.ClaimChainName,
         name: normalizedValue,
@@ -338,6 +518,19 @@ const ClaimChainNameModal = ({
   if (claiming) claimButtonLabel = t('messages.chainNameClaimLoading');
   else if (isCheckingAvailability) claimButtonLabel = t('messages.chainNameClaimChecking');
 
+  const sponsorshipForCurrentName = sponsorshipStatus === 'resolved'
+    && sponsorship
+    && sponsorship.name === `${normalizedValue}.chain`
+    ? sponsorship
+    : null;
+  // Only surface the price/free hint once the name is confirmed available to claim.
+  const showSponsorshipHint = Boolean(
+    sponsorshipForCurrentName
+    && !validationError
+    && availabilityStatus === 'available'
+    && lastCheckedValue === normalizedValue,
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] shadow-[var(--glass-shadow)]">
@@ -364,6 +557,10 @@ const ClaimChainNameModal = ({
                       nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
                     );
                     setLastCheckedValue('');
+                    setSponsorship(null);
+                    setSponsorshipStatus(
+                      nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
+                    );
                     if (error) setError(null);
                   }}
                   placeholder={t('placeholders.claimChainName')}
@@ -394,6 +591,24 @@ const ClaimChainNameModal = ({
                 {normalizedValueLength}
                 /13 characters before `.chain`
               </p>
+            )}
+            {showSponsorshipHint && sponsorshipForCurrentName && (
+              sponsorshipForCurrentName.sponsorable ? (
+                <p className="mt-2 text-xs font-semibold text-green-400">
+                  {t('messages.chainNameSponsorFree')}
+                </p>
+              ) : (
+                <div className="mt-2">
+                  <p className="text-xs font-semibold text-amber-300">
+                    {t('messages.chainNameSponsorPrice', {
+                      amount: selfFundedPriceAe ?? '0',
+                    })}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-amber-300/70">
+                    {t('messages.chainNameSponsorPriceHint')}
+                  </p>
+                </div>
+              )
             )}
           </div>
           {error && (

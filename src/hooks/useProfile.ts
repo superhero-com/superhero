@@ -170,6 +170,7 @@ export function useProfile(targetAddress?: string) {
         type: 'profile-update',
         address: target,
         payload,
+        message: challenge,
       },
     });
     await SuperheroApi.updateProfile(target, {

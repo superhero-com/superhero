@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Shield, Smartphone, ArrowRight, ChevronDown, Sparkles, Globe,
-  Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon,
+  Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon, Monitor,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -22,7 +22,7 @@ function FloatingOrb({ className }: { className?: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Feature card component                                            */
+/*  Feature card — glass morphism style                               */
 /* ------------------------------------------------------------------ */
 function FeatureCard({
   icon: Icon,
@@ -36,12 +36,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-1">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/20">
-            <Icon className="w-5 h-5 text-orange-400" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+            <Icon className="w-5 h-5 text-blue-400" />
           </div>
           <span className="text-xs font-mono text-white/30 tracking-wider">{number}</span>
         </div>
@@ -53,12 +53,12 @@ function FeatureCard({
 }
 
 /* ------------------------------------------------------------------ */
-/*  FAQ Item                                                          */
+/*  FAQ Item — glass morphism                                         */
 /* ------------------------------------------------------------------ */
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-white/[0.12]">
+    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.05]">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -66,7 +66,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
       >
         <span className="text-[15px] font-medium text-white/80">{question}</span>
         {open ? (
-          <ChevronUp className="w-4 h-4 text-white/40 shrink-0" />
+          <ChevronUp className="w-4 h-4 text-blue-400/60 shrink-0" />
         ) : (
           <ChevronDown className="w-4 h-4 text-white/40 shrink-0" />
         )}
@@ -85,7 +85,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 /* ------------------------------------------------------------------ */
 function ChainBadge({ name }: { name: string }) {
   return (
-    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[12px] font-medium text-white/70">
+    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-sm border border-white/[0.08] text-[12px] font-medium text-white/70">
       {name}
     </span>
   );
@@ -96,7 +96,7 @@ function ChainBadge({ name }: { name: string }) {
 /* ------------------------------------------------------------------ */
 export default function Wallet() {
   return (
-    <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-orange-500/30">
+    <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-blue-500/30">
 
       {/* ============================================================ */}
       {/*  HERO                                                        */}
@@ -104,9 +104,9 @@ export default function Wallet() {
       <section className="relative min-h-screen flex items-center justify-center">
         {/* Background effects */}
         <div className="absolute inset-0">
-          <FloatingOrb className="w-[600px] h-[600px] bg-orange-600 -top-40 -left-40" />
-          <FloatingOrb className="w-[500px] h-[500px] bg-yellow-600 top-1/3 -right-32" />
-          <FloatingOrb className="w-[400px] h-[400px] bg-amber-600 bottom-0 left-1/3" />
+          <FloatingOrb className="w-[600px] h-[600px] bg-blue-600 -top-40 -left-40" />
+          <FloatingOrb className="w-[500px] h-[500px] bg-indigo-600 top-1/3 -right-32" />
+          <FloatingOrb className="w-[400px] h-[400px] bg-cyan-600 bottom-0 left-1/3" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#06060b_70%)]" />
           <div
             className="absolute inset-0 opacity-[0.03]"
@@ -119,8 +119,8 @@ export default function Wallet() {
 
         <div className="relative z-10 max-w-[1180px] mx-auto px-6 text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-8">
-            <WalletIcon className="w-3.5 h-3.5 text-orange-400" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
+            <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
               Multichain Wallet
             </span>
@@ -129,14 +129,14 @@ export default function Wallet() {
           {/* Headline */}
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6">
             <span className="block text-white/95">Superhero Wallet</span>
-            <span className="block bg-gradient-to-r from-orange-500 via-yellow-500 to-amber-500 bg-clip-text text-transparent pb-4">
+            <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent pb-4">
               One wallet, all chains
             </span>
           </h1>
 
           {/* Sub */}
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-8">
-            A multichain crypto wallet available on Android and as a Chrome extension.
+            A multichain crypto wallet available on Android, iOS, and as a Chrome extension.
             Manage ETH, Bitcoin, Dogecoin, BNB, and Aeternity — all in one place.
           </p>
 
@@ -150,22 +150,34 @@ export default function Wallet() {
           </div>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <a
-              href="https://play.google.com/store/apps/details?id=com.aspect.aspect"
+              href="https://play.google.com/store/apps/details?id=com.superhero.cordova&pli=1"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-orange-500/25 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-500/25 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
               Get on Google Play
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
+              href="https://apps.apple.com/bg/app/superhero-wallet/id1502786641"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-cyan-500/25 min-w-64 justify-center"
+            >
+              <Smartphone className="w-4 h-4" />
+              Download on App Store
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <a
               href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] backdrop-blur-sm border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Globe className="w-4 h-4" />
               Chrome Extension
@@ -187,7 +199,7 @@ export default function Wallet() {
         <div className="max-w-[1180px] mx-auto px-6">
           {/* Section header */}
           <div className="max-w-2xl mb-16">
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-orange-400/80 mb-3 block">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               Features
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
@@ -251,7 +263,7 @@ export default function Wallet() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left */}
             <div>
-              <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-orange-400/80 mb-3 block">
+              <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
                 Aeternity Chain
               </span>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-6">
@@ -274,8 +286,8 @@ export default function Wallet() {
                   { icon: Globe, label: 'Connect to Superhero.com communities' },
                 ].map(({ icon: I, label }) => (
                   <div key={label} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/10 flex items-center justify-center">
-                      <I className="w-4 h-4 text-orange-400/80" />
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
+                      <I className="w-4 h-4 text-blue-400/80" />
                     </div>
                     <span className="text-[14px] text-white/60">{label}</span>
                   </div>
@@ -285,16 +297,16 @@ export default function Wallet() {
 
             {/* Right — visual */}
             <div className="relative flex items-center justify-center">
-              <div className="w-full max-w-sm aspect-square rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm flex items-center justify-center">
+              <div className="w-full max-w-sm aspect-square rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl flex items-center justify-center shadow-xl shadow-blue-500/5">
                 <div className="text-center p-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/20 flex items-center justify-center">
-                    <Link2 className="w-10 h-10 text-orange-400" />
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
+                    <Link2 className="w-10 h-10 text-blue-400" />
                   </div>
                   <p className="text-[18px] font-semibold text-white/80 mb-2">yourname.chain</p>
                   <p className="text-[13px] text-white/40">Your identity on the blockchain</p>
                 </div>
               </div>
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-orange-500/5 via-transparent to-yellow-500/5 -z-10 blur-2xl" />
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 -z-10 blur-2xl" />
             </div>
           </div>
         </div>
@@ -304,11 +316,11 @@ export default function Wallet() {
       {/*  DOWNLOAD SECTION                                            */}
       {/* ============================================================ */}
       <section id="download" className="relative py-32 border-t border-white/[0.04]">
-        <FloatingOrb className="w-[400px] h-[400px] bg-orange-700 bottom-0 right-0" />
+        <FloatingOrb className="w-[400px] h-[400px] bg-blue-700 bottom-0 right-0" />
 
         <div className="max-w-[1180px] mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-orange-400/80 mb-3 block">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               Download
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
@@ -321,9 +333,9 @@ export default function Wallet() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {/* Desktop Web */}
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/20 flex items-center justify-center">
-                <Globe className="w-6 h-6 text-orange-400" />
+            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
+                <Monitor className="w-6 h-6 text-blue-400" />
               </div>
               <h3 className="text-[15px] font-semibold text-white/90 mb-2">Desktop Web</h3>
               <p className="text-[13px] text-white/50 leading-relaxed mb-4">
@@ -333,7 +345,7 @@ export default function Wallet() {
                 href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[13px] font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                className="inline-flex items-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
                 Get Chrome Extension
@@ -341,32 +353,43 @@ export default function Wallet() {
             </div>
 
             {/* Mobile Browser */}
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/20 flex items-center justify-center">
-                <Smartphone className="w-6 h-6 text-orange-400" />
+            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-blue-400" />
               </div>
               <h3 className="text-[15px] font-semibold text-white/90 mb-2">Mobile Browser</h3>
               <p className="text-[13px] text-white/50 leading-relaxed mb-4">
                 To use Superhero on a mobile browser, you need the Superhero Wallet app installed on your device to handle transaction signing.
               </p>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.aspect.aspect"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[13px] font-medium text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Get on Google Play
-              </a>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.superhero.cordova&pli=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Google Play
+                </a>
+                <a
+                  href="https://apps.apple.com/bg/app/superhero-wallet/id1502786641"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  App Store
+                </a>
+              </div>
             </div>
 
             {/* All-in-One */}
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6 text-center relative overflow-hidden">
-              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-yellow-500 text-[10px] font-bold uppercase tracking-wider">
+            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center relative overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-[10px] font-bold uppercase tracking-wider">
                 Recommended
               </div>
-              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 border border-orange-500/20 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-orange-400" />
+              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-blue-400" />
               </div>
               <h3 className="text-[15px] font-semibold text-white/90 mb-2">All-in-One App</h3>
               <p className="text-[13px] text-white/50 leading-relaxed mb-4">
@@ -374,7 +397,7 @@ export default function Wallet() {
               </p>
               <Link
                 to="/landing"
-                className="inline-flex items-center gap-2 text-[13px] font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                className="inline-flex items-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
                 Get the Superhero App
@@ -390,7 +413,7 @@ export default function Wallet() {
       <section id="faq" className="relative py-32 border-t border-white/[0.04]">
         <div className="max-w-[800px] mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-orange-400/80 mb-3 block">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               <HelpCircle className="w-4 h-4 inline-block mr-1 -mt-0.5" />
               FAQ
             </span>
@@ -418,7 +441,7 @@ export default function Wallet() {
             />
             <FaqItem
               question="Where can I download Superhero Wallet?"
-              answer="Superhero Wallet is available on Google Play for Android devices and as a Chrome extension for desktop browsers. Visit superherowallet.com for direct download links."
+              answer="Superhero Wallet is available on Google Play for Android, the App Store for iOS, and as a Chrome extension for desktop browsers. Visit superherowallet.com for direct download links."
             />
             <FaqItem
               question="Do I need the wallet to use Superhero.com?"
@@ -436,7 +459,7 @@ export default function Wallet() {
       {/*  BOTTOM CTA                                                  */}
       {/* ============================================================ */}
       <section className="relative py-20 border-t border-white/[0.04]">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-600/[0.03] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
             Take control of your crypto
@@ -446,27 +469,37 @@ export default function Wallet() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <a
-              href="https://play.google.com/store/apps/details?id=com.aspect.aspect"
+              href="https://play.google.com/store/apps/details?id=com.superhero.cordova&pli=1"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-orange-500/25 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-500/25 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
-              Get on Google Play
+              Google Play
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="https://apps.apple.com/bg/app/superhero-wallet/id1502786641"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-cyan-500/25 min-w-64 justify-center"
+            >
+              <Smartphone className="w-4 h-4" />
+              App Store
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
               href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] backdrop-blur-sm border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Globe className="w-4 h-4" />
               Chrome Extension
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
             <a
               href="https://superherowallet.com"
               target="_blank"

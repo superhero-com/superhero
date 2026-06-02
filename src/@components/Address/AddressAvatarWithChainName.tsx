@@ -62,6 +62,19 @@ export const AddressAvatarWithChainName = memo(({
     refetchOnWindowFocus: false,
   });
 
+  // The profile payload does not carry address-link data (e.g. links.prefaens), so a preferred
+  // name set only via address-links is invisible here. Fall back to the account API — which does
+  // carry links — but only when the profile alone yields no preferred name, to avoid an extra
+  // request per avatar in the common case.
+  const profilePreferredName = getLinkedPreferredAensName(cachedProfile);
+  const { data: cachedAccount } = useQuery({
+    queryKey: ['AccountsService.getAccount', address || ''],
+    queryFn: () => SuperheroApi.getAccount(address || ''),
+    enabled: !!address && !profilePreferredName,
+    staleTime: 20_000,
+    refetchOnWindowFocus: false,
+  });
+
   // Hover state management (same as UserBadge)
   const [hover, setHover] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -137,7 +150,8 @@ export const AddressAvatarWithChainName = memo(({
   }
 
   const preferredName = (
-    getLinkedPreferredAensName(cachedProfile)
+    profilePreferredName
+    || getLinkedPreferredAensName(cachedAccount)
     || cachedProfile?.public_name
     || cachedProfile?.profile?.chain_name
     || chainName

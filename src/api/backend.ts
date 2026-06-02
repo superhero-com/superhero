@@ -340,6 +340,17 @@ export type ChainNameClaimStatusResponse = {
   expireTime?: string | number | null;
 };
 
+export type ChainNameSponsorshipResponse = {
+  name: string;
+  /** true when the sponsor account can fund the claim (claim is free for the user) */
+  sponsorable: boolean;
+  sponsor_configured: boolean;
+  sponsor_balance_aettos: string | null;
+  /** total estimated on-chain cost (preclaim + claim + update + transfer), in aettos */
+  required_balance_aettos: string;
+  reason: string | null;
+};
+
 // Superhero API client
 export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
@@ -672,6 +683,12 @@ export const SuperheroApi = {
   },
   getChainNameClaimStatus(address: string) {
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/chain-name-claim`) as Promise<ChainNameClaimStatusResponse>;
+  },
+  /** Check whether the sponsor account can fund a chain name claim. `name` is the label without `.chain`. */
+  checkChainNameSponsorship(name: string) {
+    return this.fetchJson(
+      `/api/profile/chain-name/sponsorship/${encodeURIComponent(name)}`,
+    ) as Promise<ChainNameSponsorshipResponse>;
   },
   /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
   createXAttestationFromCode(

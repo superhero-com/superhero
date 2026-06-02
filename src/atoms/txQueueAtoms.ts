@@ -50,6 +50,9 @@ export type MessageSignRequest = {
   type: 'profile-update';
   address: string;
   payload: Record<string, string>;
+  // The signed challenge string. Required so the tx-queue callback can submit the PATCH
+  // itself when the wallet returns in a standalone tab with no opener polling.
+  message: string;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';

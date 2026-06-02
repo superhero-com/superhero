@@ -15,6 +15,7 @@ const messages: Record<string, string> = {
   'messages.chainNameClaimUnavailable': 'Sponsored .chain claiming is temporarily unavailable. Please try again later.',
   'messages.chainNameClaimRetry': 'We could not start the .chain claim. Please try again.',
   'messages.chainNameClaimFailed': 'Failed to claim .chain name.',
+  'messages.chainNameClaimRejected': 'You declined the request in your wallet. Please try again.',
 };
 
 const t = (key: string) => messages[key] || key;
@@ -80,11 +81,11 @@ describe('resolveClaimErrorMessage', () => {
     )).toBe(messages['messages.chainNameClaimTimedOut']);
   });
 
-  it('maps user rejection without treating it as unavailable', () => {
+  it('maps user rejection to dedicated copy, not the unavailable message', () => {
     expect(resolveClaimErrorMessage(
       new Error('Rejected by user'),
       t,
-    )).toBe(messages['messages.chainNameClaimFailed']);
+    )).toBe(messages['messages.chainNameClaimRejected']);
   });
 
   it('maps rate limits and unknown backend errors safely', () => {

@@ -1,6 +1,7 @@
 import {
   useCallback,
 } from 'react';
+import { Name } from '@aeternity/aepp-sdk';
 import {
   type ChainNameClaimStatusResponse,
   SuperheroApi,
@@ -334,6 +335,67 @@ export function useClaimChainName(targetAddress?: string) {
     };
   }, [aeSdk, connectedAddress, targetAddress, waitForWalletReconnect]);
 
+  /**
+   * Claim a .chain name paid for directly by the connected wallet (used when the sponsor
+   * account cannot fund the claim). This never touches the backend: it runs the standard AENS
+   * flow — preclaim, wait for at least one key block so the name can't be front-run, claim
+   * (reusing the preclaim salt), then point `account_pubkey` at the claimer's address.
+   */
+  const claimSelfFundedChainName = useCallback(async (params: {
+    name: string;
+    onSignatureRequest?: (step: 'preclaim' | 'claim' | 'update') => void;
+    onProcessing?: (step: 'preclaim' | 'claim' | 'update') => void;
+  }) => {
+    const target = targetAddress || connectedAddress;
+    if (!target) throw new Error('Connect your wallet to claim a .chain name');
+    if (connectedAddress && normalizeAddress(connectedAddress) !== normalizeAddress(target)) {
+      throw new Error('Connect the wallet for this profile to claim a .chain name');
+    }
+    // Use the resolved SDK so each transaction is signed through whatever wallet channel is
+    // active: the RPC session when connected, or the deep-link account added to the static
+    // SDK otherwise. This lets the whole preclaim/claim/update flow run via wallet deep links.
+    const signingSdk = sdk as any;
+    if (!signingSdk || typeof signingSdk.getContext !== 'function') {
+      throw new Error('Wallet is not available to sign transactions');
+    }
+
+    const normalizedName = normalizeChainNameLabel(params.name);
+    const fullName = `${normalizedName}.chain` as `${string}.chain`;
+    const name = new Name(fullName, signingSdk.getContext());
+
+    // 1. Preclaim: commit to the name (mined before exposing it in the claim tx).
+    params.onSignatureRequest?.('preclaim');
+    const preclaimResult = await name.preclaim();
+
+    // 2. Wait for at least one key block past the preclaim before claiming, so nobody can
+    //    front-run the claim once the name becomes visible on-chain.
+    params.onProcessing?.('preclaim');
+    const preclaimHeight = Number(
+      (preclaimResult as { blockHeight?: number }).blockHeight ?? await signingSdk.getHeight(),
+    );
+    if (Number.isFinite(preclaimHeight) && preclaimHeight > 0) {
+      await signingSdk.awaitHeight(preclaimHeight + 1);
+    }
+
+    // 3. Claim the name (reuses the salt stored on the Name instance by preclaim()).
+    params.onSignatureRequest?.('claim');
+    const claimResult = await name.claim();
+    params.onProcessing?.('claim');
+
+    // 4. Point the name at the claimer's account so it resolves on their profile.
+    params.onSignatureRequest?.('update');
+    const updateResult = await name.update({
+      account_pubkey: target as `ak_${string}`,
+    });
+
+    return {
+      name: fullName,
+      preclaim_tx_hash: preclaimResult.hash ?? null,
+      claim_tx_hash: claimResult.hash ?? null,
+      update_tx_hash: updateResult.hash ?? null,
+    };
+  }, [sdk, connectedAddress, targetAddress]);
+
   return {
     canClaim: Boolean(
       connectedAddress
@@ -346,5 +408,6 @@ export function useClaimChainName(targetAddress?: string) {
     connectedAddress,
     checkNameAvailability,
     claimSponsoredChainName,
+    claimSelfFundedChainName,
   };
 }

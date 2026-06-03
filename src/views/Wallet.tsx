@@ -3,12 +3,11 @@
   react/no-unescaped-entities,
   max-len
 */
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
 import {
   Shield, Smartphone, ArrowRight, ChevronDown, Sparkles, Globe,
   Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon, Monitor,
-  KeyRound, Users, Fingerprint, BookUser,
+  KeyRound, Users, Fingerprint, BookUser, QrCode,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -23,31 +22,389 @@ function FloatingOrb({ className }: { className?: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Feature card — glass morphism style                               */
+/*  Interactive 3D Hero Visual Mockup                                 */
 /* ------------------------------------------------------------------ */
-function FeatureCard({
-  icon: Icon,
-  number,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  number: string;
-  title: string;
-  description: string;
-}) {
+function InteractiveHeroVisual() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ae' | 'eth' | 'btc'>('ae');
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    const rotateX = -(y - yc) / (yc / 15);
+    const rotateY = (x - xc) / (xc / 15);
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setTilt({ x: 0, y: 0 });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
   return (
-    <div className="group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-            <Icon className="w-5 h-5 text-blue-400" />
+    <div
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative w-full max-w-[320px] aspect-[10/12] mx-auto lg:mx-0 rounded-[28px] border border-white/[0.08] bg-white/[0.02] backdrop-blur-3xl p-4 transition-all duration-300 ease-out cursor-pointer hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10"
+      style={{
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.02 : 1}, ${isHovered ? 1.02 : 1}, 1)`,
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <div
+        className="absolute w-[200px] h-[200px] rounded-full bg-blue-500/20 blur-[60px] pointer-events-none transition-all duration-500 ease-out -z-10"
+        style={{
+          transform: `translate3d(${tilt.y * 3}px, ${-tilt.x * 3}px, -20px)`,
+        }}
+      />
+
+      <div className="h-full flex flex-col justify-between relative z-10" style={{ transform: 'translateZ(30px)' }}>
+        <div className="flex items-center justify-between border-b border-white/[0.06] pb-3 mb-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-white/50">Superhero Wallet</span>
           </div>
-          <span className="text-xs font-mono text-white/30 tracking-wider">{number}</span>
+
         </div>
-        <h3 className="text-[15px] font-semibold text-white/90 mb-2 leading-snug">{title}</h3>
-        <p className="text-[13px] text-white/50 leading-relaxed">{description}</p>
+
+        <div className="flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-white/40 mb-0.5 font-mono">Current Balance</p>
+                <h3 className="text-3xl font-extrabold text-white/95 leading-none tracking-tight">$1,248.50</h3>
+                <p className="text-[11px] text-green-400/80 font-mono mt-1 font-semibold flex items-center gap-1">
+                  <span>▲</span>
+                  {' '}
+                  +2.84%
+                  {' '}
+                  <span className="text-white/30 font-normal">(24h)</span>
+                </p>
+              </div>
+              <div className="p-2 border border-white/[0.08] bg-white/[0.04] rounded-xl flex items-center justify-center">
+                <QrCode className="w-5 h-5 text-blue-400" />
+              </div>
+            </div>
+
+            <div className="h-20 w-full mb-6 relative">
+              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 50" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0 50 Q 15 25, 30 35 T 60 15 T 85 25 T 100 5 L 100 50 L 0 50 Z"
+                  fill="url(#chartGlow)"
+                />
+                <path
+                  d="M0 50 Q 15 25, 30 35 T 60 15 T 85 25 T 100 5"
+                  fill="none"
+                  stroke="#60a5fa"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="100" cy="5" r="2.5" fill="#ffffff" />
+              </svg>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 px-1 py-1 bg-white/[0.03] border border-white/[0.06] rounded-xl mb-4">
+              {(['ae', 'eth', 'btc'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-1 text-[11px] font-medium tracking-wide uppercase font-mono rounded-lg transition-all ${
+                    activeTab === tab
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-400/20 shadow'
+                      : 'text-white/40 hover:text-white/70 border border-transparent'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 min-h-[72px] flex items-center transition-all duration-300">
+              {activeTab === 'ae' && (
+                <div className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center font-bold text-purple-400 font-mono text-[12px]">
+                      Æ
+                    </div>
+                    <div>
+                      <h4 className="text-[12px] font-semibold text-white/90 font-mono leading-none mb-1">æternity</h4>
+                      <p className="text-[10px] text-white/40 font-mono leading-none">ak_super...42ae</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[12px] font-bold font-mono text-white/90">24,500.00 AE</p>
+                    <p className="text-[10px] text-white/40 font-mono font-semibold">$2,450.00</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'eth' && (
+                <div className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-bold text-indigo-400 font-mono text-[12px]">
+                      Ξ
+                    </div>
+                    <div>
+                      <h4 className="text-[12px] font-semibold text-white/90 font-mono leading-none mb-1">Ethereum</h4>
+                      <p className="text-[10px] text-white/40 font-mono leading-none">0x71C...a7E</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[12px] font-bold font-mono text-white/90">1.45 ETH</p>
+                    <p className="text-[10px] text-white/40 font-mono font-semibold">$4,785.00</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'btc' && (
+                <div className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center font-bold text-orange-400 font-mono text-[11px]">
+                      ₿
+                    </div>
+                    <div>
+                      <h4 className="text-[12px] font-semibold text-white/90 font-mono leading-none mb-1">Bitcoin</h4>
+                      <p className="text-[10px] text-white/40 font-mono leading-none">bc1q...x89</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[12px] font-bold font-mono text-white/90">0.052 BTC</p>
+                    <p className="text-[10px] text-white/40 font-mono font-semibold">$3,484.00</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Crypto & Token management interactive Widget                      */
+/* ------------------------------------------------------------------ */
+function CryptoManagementWidget() {
+  const [amount, setAmount] = useState('120.00');
+  const [address, setRecipient] = useState('super-dev.chain');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+
+  const handleSend = () => {
+    setStatus('sending');
+    setTimeout(() => {
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 4000);
+    }, 1500);
+  };
+
+  return (
+    <div className="space-y-2 select-none text-left">
+      <div className="flex justify-between items-center text-[10px] text-white/40">
+        <span>Available Balance: 24,500.00 AE</span>
+        <span className="text-blue-400">Tokens</span>
+      </div>
+      <div>
+        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Amount to send</span>
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 pl-3 pr-12 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
+          />
+          <span className="absolute right-3 text-white/40 text-[10px] font-bold">AE</span>
+        </div>
+      </div>
+      <div>
+        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Recipient identity</span>
+        <input
+          type="text"
+          value={address}
+          onChange={(e) => setRecipient(e.target.value)}
+          className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 px-3 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={handleSend}
+        disabled={status !== 'idle'}
+        className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/20 hover:from-blue-500/30 hover:to-indigo-500/30 hover:border-blue-400/40 text-blue-300 font-bold py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+      >
+        {status === 'idle' && (
+          <>
+            <WalletIcon className="w-3.5 h-3.5" />
+            <span>Send Assets</span>
+          </>
+        )}
+        {status === 'sending' && (
+          <>
+            <div className="w-3.5 h-3.5 rounded-full border border-dashed border-blue-400 animate-spin" />
+            <span>Broadcasting...</span>
+          </>
+        )}
+        {status === 'success' && (
+          <span>✓ Confirmed (ak_tx...e4)</span>
+        )}
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Multisig Vault dashboard interactive Widget                       */
+/* ------------------------------------------------------------------ */
+function MultisigWidget() {
+  const [complete, setComplete] = useState(false);
+
+  return (
+    <div className="space-y-2 select-none text-left">
+      <div className="flex justify-between items-center text-[10px]">
+        <span className="text-white/40">Vault ak_msig...82f</span>
+        <span className={complete ? 'text-green-400' : 'text-amber-400 animate-pulse font-semibold'}>
+          {complete ? '✓ Executed' : '● Awaiting Signature'}
+        </span>
+      </div>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-2 space-y-2">
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-white/50">Transfer request:</span>
+          <span className="text-white/90 font-bold font-mono">5,000.00 AE</span>
+        </div>
+        <div className="w-full bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
+          <div
+            className="bg-blue-400 h-full rounded-full transition-all duration-500 ease-out"
+            style={{ width: complete ? '100%' : '66.6%' }}
+          />
+        </div>
+        <div className="flex justify-between text-[9px] text-white/40">
+          <span>Threshold: 2 of 3</span>
+          <span>
+            {complete ? '3/3' : '2/3'}
+            {' '}
+            Signed
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1 font-mono text-[9px]">
+        <div className="flex items-center justify-between text-green-400">
+          <span>ak_rMh...72a (Admin)</span>
+          <span>Signed ✓</span>
+        </div>
+        <div className="flex items-center justify-between text-green-400">
+          <span>ak_pLd...44k (Finance)</span>
+          <span>Signed ✓</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-white/40">ak_tQx...10e (Backup)</span>
+          {complete ? (
+            <span className="text-green-400 font-bold">Signed ✓</span>
+          ) : (
+            <span className="text-amber-400 font-bold">Pending ⏳</span>
+          )}
+        </div>
+      </div>
+      {!complete && (
+        <button
+          type="button"
+          onClick={() => setComplete(true)}
+          className="w-full text-center text-[10px] uppercase tracking-wider py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded hover:bg-blue-500/20 transition-all font-bold"
+        >
+          Sign as Backup Key
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Address Book filterable search Widget                             */
+/* ------------------------------------------------------------------ */
+function AddressBookWidget() {
+  const [query, setQuery] = useState('');
+
+  const contacts = [
+    {
+      name: 'Alice Admin',
+      domain: 'alice.chain',
+      address: 'ak_r276...dfE3',
+      label: 'Core Team',
+    },
+    {
+      name: 'Bob Liquidity',
+      domain: 'bob.chain',
+      address: 'ak_m941...23p',
+      label: 'Liquidity Provider',
+    },
+    {
+      name: 'DAO Treasury',
+      domain: 'development.chain',
+      address: 'ak_tQ2b...86k',
+      label: 'Smart Contract',
+    },
+    {
+      name: 'Charlie Creator',
+      domain: 'charlie.chain',
+      address: 'ak_zW45...99n',
+      label: 'Creator',
+    },
+  ];
+
+  const filtered = contacts.filter((c) => (
+    c.name.toLowerCase().includes(query.toLowerCase())
+    || c.domain.toLowerCase().includes(query.toLowerCase())
+  ));
+
+  return (
+    <div className="space-y-3 select-none text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Address Directory</span>
+        <div className="relative max-w-[200px] w-full">
+          <input
+            type="text"
+            placeholder="Search contacts..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-md py-1 px-2.5 text-[10px] text-white/80 placeholder-white/20 outline-none focus:border-blue-500/20"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
+        {filtered.length > 0 ? (
+          filtered.map((contact) => (
+            <div key={contact.address} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex items-center justify-between hover:bg-white/[0.04] transition-all">
+              <div>
+                <h4 className="text-[11px] font-bold text-white/85 leading-none mb-0.5">{contact.name}</h4>
+                <p className="text-[9px] text-blue-400 font-medium leading-none mb-1 font-mono">{contact.domain}</p>
+                <span className="text-[8px] text-white/20 font-mono">{contact.address}</span>
+              </div>
+              <span className="text-[8px] bg-white/[0.04] px-1.5 py-0.5 rounded text-white/50 border border-white/[0.06] shrink-0 self-start">
+                {contact.label}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-2 text-center py-4 text-white/30 text-[10px]">
+            No contacts match your query
+          </div>
+        )}
       </div>
     </div>
   );
@@ -91,7 +448,7 @@ export default function Wallet() {
       {/* ============================================================ */}
       {/*  HERO                                                        */}
       {/* ============================================================ */}
-      <section className="relative min-h-screen flex items-center justify-center">
+      <section className="relative min-h-[95vh] lg:min-h-screen flex items-center py-20 lg:py-0 overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0">
           <FloatingOrb className="w-[600px] h-[600px] bg-blue-600 -top-40 -left-40" />
@@ -107,72 +464,80 @@ export default function Wallet() {
           />
         </div>
 
-        <div className="relative z-10 max-w-[1180px] mx-auto px-6 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
-            <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
-              Multichain Wallet
-            </span>
-          </div>
+        <div className="relative z-10 max-w-[1180px] mx-auto px-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Column: Title & CTAs */}
+            <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
+                <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
+                  Multichain Wallet
+                </span>
+              </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6">
-            <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent pb-4">
-              Superhero Wallet
-            </span>
-          </h1>
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[44px] xl:text-6xl font-extrabold leading-[1.05] tracking-tight mb-6">
+                <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent pb-3">
+                  Superhero Wallet
+                </span>
+              </h1>
 
-          {/* Sub */}
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-8">
-            <b>Superhero</b>
-            {' '}
-            - more than a wallet, it’s your
-            {' '}
-            <b>key</b>
-            {' '}
-            to the decentralized world! Access, create, and engage in the decentralized world. Superhero is the Key to DAOs, tokens, DeFi tools, and more.
-          </p>
+              {/* Sub */}
+              <p className="max-w-xl text-sm md:text-base lg:text-[15px] xl:text-base text-white/40 leading-relaxed mb-8">
+                <b>Superhero</b>
+                {' '}
+                - more than a wallet, it’s your
+                {' '}
+                <b>key</b>
+                {' '}
+                to the decentralized world! Access, create, and engage in the decentralized world. Superhero is the Key to DAOs, tokens, DeFi tools, and more.
+              </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-            <a
-              href="https://play.google.com/store/apps/details?id=com.superhero.cordova&pli=1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-500/25 min-w-64 justify-center"
-            >
-              <Smartphone className="w-4 h-4" />
-              Get on Google Play
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </a>
-            <a
-              href="https://apps.apple.com/bg/app/superhero-wallet/id1502786641"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-cyan-500/25 min-w-64 justify-center"
-            >
-              <Smartphone className="w-4 h-4" />
-              Download on App Store
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </a>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <a
-              href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] backdrop-blur-sm border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-0.5 min-w-64 justify-center"
-            >
-              <Globe className="w-4 h-4" />
-              Chrome Extension
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </a>
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full mb-8 lg:mb-0">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.superhero.cordova&pli=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-[13px] px-5 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/20 w-full sm:w-auto justify-center"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  Get on Google Play
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </a>
+                <a
+                  href="https://apps.apple.com/bg/app/superhero-wallet/id1502786641"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-[13px] px-5 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/20 w-full sm:w-auto justify-center"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  Download on App Store
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </a>
+                <a
+                  href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 bg-white/[0.05] backdrop-blur-sm border border-white/[0.1] text-white/80 font-semibold text-[13px] px-5 py-3 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-blue-400/20 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  Chrome Extension
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Visual Interactive 3D/Parallax Device */}
+            <div className="lg:col-span-5 flex justify-center items-center relative z-20">
+              <InteractiveHeroVisual />
+            </div>
           </div>
 
           {/* Scroll indicator */}
-          <div className="flex justify-center">
-            <ChevronDown className="w-10 h-10 text-white/20" />
+          <div className="flex justify-center mt-12 lg:mt-20">
+            <ChevronDown className="w-10 h-10 text-white/20 animate-bounce" />
           </div>
         </div>
       </section>
@@ -183,7 +548,7 @@ export default function Wallet() {
       <section id="features" className="relative py-32">
         <div className="max-w-[1180px] mx-auto px-6">
           {/* Section header */}
-          <div className="max-w-2xl mb-16">
+          <div className="max-w-2xl mb-16 text-left">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               Features
             </span>
@@ -198,125 +563,312 @@ export default function Wallet() {
             </p>
           </div>
 
-          {/* Feature grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FeatureCard
-              icon={Layers}
-              number="01"
-              title="Multichain support"
-              description="Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps."
-            />
-            <FeatureCard
-              icon={Shield}
-              number="02"
-              title="Secure & non-custodial"
-              description="Your keys, your control. Superhero ensures that your private keys and assets remain secure and completely under your ownership."
-            />
-            <FeatureCard
-              icon={Link2}
-              number="03"
-              title="Buy .chain names"
-              description="Simplify blockchain interactions with æternity Naming System (AENS), which lets you register and use human-readable names for wallet addresses."
-            />
-            <FeatureCard
-              icon={Sparkles}
-              number="04"
-              title="Cold Signing with AIRGAP Vault"
-              description="Enhance security by pairing Superhero with AIRGAP Vault for cold signing, ensuring your private keys never touch the internet."
-            />
-            <FeatureCard
-              icon={Globe}
-              number="05"
-              title="Advanced DApp integration"
-              description="Connect and interact with decentralized applications on both æternity and Ethereum blockchains, unlocking access to DeFi, DAOs, and more."
-            />
-            <FeatureCard
-              icon={WalletIcon}
-              number="06"
-              title="Crypto & Token management"
-              description="Store, send, and receive cryptocurrencies and tokens with an intuitive interface that makes asset management straightforward and efficient."
-            />
-            <FeatureCard
-              icon={KeyRound}
-              number="07"
-              title="Import Accounts with Ease:"
-              description="Effortlessly import existing accounts from other wallets using your private key, giving you instant access to your assets and transactions."
-            />
-            <FeatureCard
-              icon={Users}
-              number="08"
-              title="Multisig Support for Enhanced Security:"
-              description="Manage multisignature (multisig) vaults on the æternity blockchain, ideal for shared control or joint asset management."
-            />
-            <FeatureCard
-              icon={Fingerprint}
-              number="09"
-              title="Biometric Login for Mobile Devices:"
-              description="Access your wallet quickly and securely with biometric authentication, adding a layer of convenience and safety."
-            />
-            <FeatureCard
-              icon={BookUser}
-              number="10"
-              title="Convenient Address Book:"
-              description="Save frequently used addresses in your personal address book, making transactions faster and more organized."
-            />
-          </div>
-        </div>
-      </section>
+          {/* Premium Bento Grid Feature Map */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      {/* ============================================================ */}
-      {/*  æternity SECTION                                           */}
-      {/* ============================================================ */}
-      <section className="relative py-32 border-t border-white/[0.04]">
-        <div className="max-w-[1180px] mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left */}
-            <div>
-              <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-                æternity Chain
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-6">
-                .chain names &
-                <br />
-                <span className="text-white/40">social media trends</span>
-              </h2>
-              <p className="text-[15px] text-white/40 leading-relaxed mb-6">
-                On the æternity chain, Superhero Wallet lets you register .chain names — human-readable
-                identifiers that replace long wallet addresses. Share your name instead of a hash.
-              </p>
-              <p className="text-[15px] text-white/40 leading-relaxed mb-6">
-                Connect your wallet to Superhero.com to participate in on-chain social media trends,
-                trade attention tokens via bonding curves, and engage with decentralized communities.
-              </p>
-              <div className="space-y-4">
-                {[
-                  { icon: Link2, label: 'Register .chain names as your identity' },
-                  { icon: Sparkles, label: 'Trade social media trend tokens' },
-                  { icon: Globe, label: 'Connect to Superhero.com communities' },
-                ].map(({ icon: I, label }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
-                      <I className="w-4 h-4 text-blue-400/80" />
+            {/* Card 1: Multichain support (lg:col-span-2) */}
+            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full">
+                <div className="md:col-span-7 flex flex-col justify-center text-left">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Layers className="w-5 h-5 text-blue-400" />
                     </div>
-                    <span className="text-[14px] text-white/60">{label}</span>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">01</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — visual */}
-            <div className="relative flex items-center justify-center">
-              <div className="w-full max-w-sm aspect-square rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl flex items-center justify-center shadow-xl shadow-blue-500/5">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
-                    <Link2 className="w-10 h-10 text-blue-400" />
-                  </div>
-                  <p className="text-[18px] font-semibold text-white/80 mb-2">yourname.chain</p>
-                  <p className="text-[13px] text-white/40">Your identity on the blockchain</p>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Multichain support</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed">
+                    Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps.
+                  </p>
+                </div>
+                <div className="md:col-span-5 bg-black/40 border border-white/[0.04] rounded-xl p-3 space-y-1.5 font-mono select-none text-left w-full">
+                  {[
+                    {
+                      coin: 'AE',
+                      name: 'æternity',
+                      amount: '15,420.0',
+                      usd: '$1,542.0',
+                      color: 'bg-purple-500',
+                    },
+                    {
+                      coin: 'ETH',
+                      name: 'Ethereum',
+                      amount: '1.250',
+                      usd: '$4,125.0',
+                      color: 'bg-indigo-500',
+                    },
+                    {
+                      coin: 'BTC',
+                      name: 'Bitcoin',
+                      amount: '0.048',
+                      usd: '$3,240.2',
+                      color: 'bg-orange-500',
+                    },
+                    {
+                      coin: 'BNB',
+                      name: 'BNB Chain',
+                      amount: '0.850',
+                      usd: '$510.0',
+                      color: 'bg-yellow-500',
+                    },
+                    {
+                      coin: 'DOGE',
+                      name: 'Dogecoin',
+                      amount: '8,400.0',
+                      usd: '$1,176.0',
+                      color: 'bg-amber-400',
+                    },
+                  ].map((asset) => (
+                    <div key={asset.coin} className="flex items-center justify-between text-[11px] p-1.5 rounded hover:bg-white/[0.02] transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full ${asset.color}`} />
+                        <span className="text-white/80 font-bold">{asset.coin}</span>
+                        <span className="text-white/30 text-[10px] hidden sm:inline">{asset.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-white/75 block font-semibold leading-none">{asset.amount}</span>
+                        <span className="text-[9px] text-white/30 leading-none">{asset.usd}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 -z-10 blur-2xl" />
             </div>
+
+            {/* Card 2: Secure & non-custodial (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Shield className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">02</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Secure & non-custodial</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Your keys, your control. Superhero ensures that your private keys and assets remain secure and completely under your ownership.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Buy .chain names (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Link2 className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">03</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Buy .chain names</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Simplify blockchain interactions with æternity Naming System (AENS), which lets you register and use human-readable names for wallet addresses.
+                  </p>
+                </div>
+                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono space-y-2 mt-auto w-full">
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      readOnly
+                      value="yourname.chain"
+                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg py-1.5 pl-3 pr-20 text-[11px] text-blue-400 outline-none animate-[pulse_3s_infinite]"
+                    />
+                    <span className="absolute right-2 px-1.5 py-0.5 rounded bg-green-500/25 border border-green-500/30 text-green-400 font-bold text-[9px] uppercase">
+                      Available
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] text-white/40 px-1 pt-1 border-t border-white/[0.05]">
+                    <span>AENS</span>
+                    <span className="text-blue-400">Registered ✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Cold Signing with AIRGAP Vault (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Sparkles className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">04</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Cold Signing with AIRGAP Vault</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Enhance security by pairing Superhero with AIRGAP Vault for cold signing, ensuring your private keys never touch the internet.
+                  </p>
+                </div>
+                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex items-center justify-between font-mono text-[9px] mt-auto w-full">
+                  <div className="text-center w-[45%] bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                    <span className="block text-amber-400 font-bold mb-0.5">AIRGAP</span>
+                    <span className="text-white/20">Vault (Offline)</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center justify-center gap-0.5">
+                    <div className="w-4 h-4 rounded-full border border-dashed border-blue-500/40 animate-spin" />
+                  </div>
+                  <div className="text-center w-[45%] bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
+                    <span className="block text-green-400 font-bold mb-0.5">SUPERHERO</span>
+                    <span className="text-white/20">App (Online)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Advanced DApp integration (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Globe className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">05</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Advanced DApp integration</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Connect and interact with decentralized applications on both æternity and Ethereum blockchains, unlocking access to DeFi, DAOs, and more.
+                  </p>
+                </div>
+                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-2.5 space-y-1 text-[10px] font-mono mt-auto w-full">
+                  <div className="flex items-center justify-between bg-white/[0.01] p-1 border border-white/[0.05] rounded">
+                    <span className="text-white/60">🥞 Superhero.com</span>
+                    <span className="text-[8px] bg-green-500/20 text-green-400 px-1 py-0.5 rounded font-bold border border-green-500/30">Connected 🟢</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/[0.01] p-1 border border-white/[0.05] rounded">
+                    <span className="text-white/60">🏛️ Superhero DEX</span>
+                    <span className="text-[8px] bg-green-500/20 text-green-400 px-1 py-0.5 rounded font-bold border border-green-500/30">Active 🟢</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 6: Crypto & Token management (lg:col-span-2) */}
+            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
+                <div className="md:col-span-6 flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <WalletIcon className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">06</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Crypto & Token management</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
+                    Store, send, and receive cryptocurrencies and tokens with an intuitive interface that makes asset management straightforward and efficient.
+                  </p>
+                </div>
+                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
+                  <CryptoManagementWidget />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 7: Import Accounts with Ease: (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <KeyRound className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">07</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Import Accounts with Ease</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Effortlessly import existing accounts from other wallets using your private key, giving you instant access to your assets and transactions.
+                  </p>
+                </div>
+                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 mt-auto w-full">
+                  <div className="flex gap-1.5 border-b border-white/[0.05] pb-1.5">
+                    <span className="text-blue-400 font-bold border-b border-blue-400/50 pb-0.5">Private Key</span>
+                    <span className="text-white/20">Seed Phrase</span>
+                  </div>
+                  <div className="bg-white/[0.02] border border-white/[0.04] rounded py-1 px-1.5 text-white/30 truncate select-none">
+                    ••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+                  </div>
+                  <div className="text-[8px] text-white/30 flex items-center justify-between">
+                    <span>⚡ Standard format</span>
+                    <span className="text-green-400 font-semibold">Import secure ✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 8: Multisig Support for Enhanced Security: (lg:col-span-2) */}
+            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
+                <div className="md:col-span-6 flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Users className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">08</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Multisig Support for Enhanced Security</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
+                    Manage multisignature (multisig) vaults on the æternity blockchain, ideal for shared control or joint asset management.
+                  </p>
+                </div>
+                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full font-sans">
+                  <MultisigWidget />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 9: Biometric Login for Mobile Devices: (lg:col-span-1) */}
+            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="relative z-10 flex flex-col h-full justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <Fingerprint className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">09</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Biometric Login for Mobile Devices</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
+                    Access your wallet quickly and securely with biometric authentication, adding a layer of convenience and safety.
+                  </p>
+                </div>
+                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex flex-col items-center justify-center font-mono space-y-2 mt-auto w-full">
+                  <div className="relative w-10 h-10 flex items-center justify-center border border-blue-500/20 bg-blue-500/5 rounded-full ring-4 ring-blue-500/10 animate-pulse">
+                    <Fingerprint className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <span className="text-[9px] text-white/40 uppercase tracking-widest font-semibold">Touch ID / Face ID Active</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 10: Convenient Address Book: (lg:col-span-3) */}
+            <div className="lg:col-span-3 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full text-left">
+                <div className="lg:col-span-5 flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
+                      <BookUser className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-mono text-white/30 tracking-wider">10</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Convenient Address Book</h3>
+                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
+                    Save frequently used addresses in your personal address book, making transactions faster and more organized.
+                  </p>
+                </div>
+                <div className="lg:col-span-7 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
+                  <AddressBookWidget />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

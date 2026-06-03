@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import {
   Shield, Smartphone, ArrowRight, ChevronDown, Sparkles, Globe,
   Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon, Monitor,
+  KeyRound, Users, Fingerprint, BookUser,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -81,17 +82,6 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Supported chains pill                                             */
-/* ------------------------------------------------------------------ */
-function ChainBadge({ name }: { name: string }) {
-  return (
-    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/[0.05] backdrop-blur-sm border border-white/[0.08] text-[12px] font-medium text-white/70">
-      {name}
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Main Wallet Page                                                  */
 /* ------------------------------------------------------------------ */
 export default function Wallet() {
@@ -128,26 +118,21 @@ export default function Wallet() {
 
           {/* Headline */}
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6">
-            <span className="block text-white/95">Superhero Wallet</span>
             <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent pb-4">
-              One wallet, all chains
+              Superhero Wallet
             </span>
           </h1>
 
           {/* Sub */}
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-8">
-            A multichain crypto wallet available on Android, iOS, and as a Chrome extension.
-            Manage ETH, Bitcoin, Dogecoin, BNB, and æternity — all in one place.
+            <b>Superhero</b>
+            {' '}
+            - more than a wallet, it’s your
+            {' '}
+            <b>key</b>
+            {' '}
+            to the decentralized world! Access, create, and engage in the decentralized world. Superhero is the Key to DAOs, tokens, DeFi tools, and more.
           </p>
-
-          {/* Supported chains */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
-            <ChainBadge name="Ethereum" />
-            <ChainBadge name="Bitcoin" />
-            <ChainBadge name="Dogecoin" />
-            <ChainBadge name="BNB Chain" />
-            <ChainBadge name="æternity" />
-          </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
@@ -224,32 +209,56 @@ export default function Wallet() {
             <FeatureCard
               icon={Shield}
               number="02"
-              title="Secure & self-custodial"
-              description="Your keys, your crypto. Private keys never leave your device. No third party has access to your funds."
+              title="Secure & non-custodial"
+              description="Your keys, your control. Superhero ensures that your private keys and assets remain secure and completely under your ownership."
             />
             <FeatureCard
               icon={Link2}
               number="03"
               title="Buy .chain names"
-              description="On the æternity chain, register human-readable .chain names that replace your wallet address. Easy to share, impossible to forget."
+              description="Simplify blockchain interactions with æternity Naming System (AENS), which lets you register and use human-readable names for wallet addresses."
             />
             <FeatureCard
               icon={Sparkles}
               number="04"
-              title="Connect to Superhero.com"
-              description="Seamlessly connect to Superhero.com social media trends, trade attention tokens, and participate in on-chain communities."
+              title="Cold Signing with AIRGAP Vault"
+              description="Enhance security by pairing Superhero with AIRGAP Vault for cold signing, ensuring your private keys never touch the internet."
             />
             <FeatureCard
               icon={Globe}
               number="05"
-              title="DApp browser"
-              description="Access decentralized applications directly from the wallet. Interact with DeFi protocols, NFT marketplaces, and more."
+              title="Advanced DApp integration"
+              description="Connect and interact with decentralized applications on both æternity and Ethereum blockchains, unlocking access to DeFi, DAOs, and more."
             />
             <FeatureCard
               icon={WalletIcon}
               number="06"
-              title="Token management"
-              description="Send, receive, and swap tokens across supported chains. View real-time balances and transaction history at a glance."
+              title="Crypto & Token management"
+              description="Store, send, and receive cryptocurrencies and tokens with an intuitive interface that makes asset management straightforward and efficient."
+            />
+            <FeatureCard
+              icon={KeyRound}
+              number="07"
+              title="Import Accounts with Ease:"
+              description="Effortlessly import existing accounts from other wallets using your private key, giving you instant access to your assets and transactions."
+            />
+            <FeatureCard
+              icon={Users}
+              number="08"
+              title="Multisig Support for Enhanced Security:"
+              description="Manage multisignature (multisig) vaults on the æternity blockchain, ideal for shared control or joint asset management."
+            />
+            <FeatureCard
+              icon={Fingerprint}
+              number="09"
+              title="Biometric Login for Mobile Devices:"
+              description="Access your wallet quickly and securely with biometric authentication, adding a layer of convenience and safety."
+            />
+            <FeatureCard
+              icon={BookUser}
+              number="10"
+              title="Convenient Address Book:"
+              description="Save frequently used addresses in your personal address book, making transactions faster and more organized."
             />
           </div>
         </div>
@@ -331,7 +340,7 @@ export default function Wallet() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Desktop Web */}
             <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
@@ -383,26 +392,6 @@ export default function Wallet() {
               </div>
             </div>
 
-            {/* All-in-One */}
-            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center relative overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
-              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-[10px] font-bold uppercase tracking-wider">
-                Recommended
-              </div>
-              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-blue-400" />
-              </div>
-              <h3 className="text-[15px] font-semibold text-white/90 mb-2">All-in-One App</h3>
-              <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                For the most seamless experience, download the Superhero app which has a wallet built in — no extensions needed, everything in one place.
-              </p>
-              <Link
-                to="/landing"
-                className="inline-flex items-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Get the Superhero App
-              </Link>
-            </div>
           </div>
         </div>
       </section>

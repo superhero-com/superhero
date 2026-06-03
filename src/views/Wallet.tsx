@@ -416,13 +416,60 @@ function AddressBookWidget() {
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.05]">
+    <div className="bg-white/[0.02] border border-white/[0.05] rounded-lg overflow-hidden transition-all duration-200 hover:border-blue-400/20">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-4 text-left"
+        className="w-full flex items-center justify-between px-4 py-3 text-left gap-3"
       >
-        <span className="text-[15px] font-medium text-white/80">{question}</span>
+        <span className="text-[14px] font-medium text-white/75">{question}</span>
+        {open ? (
+          <ChevronUp className="w-3.5 h-3.5 text-blue-400/60 shrink-0" />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5 text-white/40 shrink-0" />
+        )}
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          <p
+            className="text-[13px] text-white/50 leading-relaxed whitespace-pre-line"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: answer.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white/70">$1</strong>') }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  FAQ Category — top-level expandable group                         */
+/* ------------------------------------------------------------------ */
+function FaqCategory({
+  index,
+  title,
+  items,
+  defaultOpen = false,
+}: {
+  index: number;
+  title: string;
+  items: { question: string; answer: string }[];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.04]">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-6 py-5 text-left gap-4"
+      >
+        <div className="flex items-center gap-4 min-w-0">
+          <span className="text-[11px] font-mono font-semibold text-blue-400/80 tabular-nums shrink-0">
+            {String(index).padStart(2, '0')}
+          </span>
+          <span className="text-[16px] font-semibold text-white/90 truncate">{title}</span>
+        </div>
         {open ? (
           <ChevronUp className="w-4 h-4 text-blue-400/60 shrink-0" />
         ) : (
@@ -430,13 +477,215 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         )}
       </button>
       {open && (
-        <div className="px-6 pb-5">
-          <p className="text-[14px] text-white/50 leading-relaxed">{answer}</p>
+        <div className="px-4 sm:px-6 pb-5 pt-1 space-y-2">
+          {items.map((item) => (
+            <FaqItem key={item.question} question={item.question} answer={item.answer} />
+          ))}
         </div>
       )}
     </div>
   );
 }
+
+const FAQ_CATEGORIES: { title: string; items: { question: string; answer: string }[] }[] = [
+  {
+    title: 'Getting Started with Superhero Wallet',
+    items: [
+      {
+        question: 'What is Superhero Wallet?',
+        answer: 'Superhero Wallet is a **non-custodial open-source wallet** that allows users to manage crypto assets securely across **multiple blockchains**, including Bitcoin, Ethereum, and æternity. Users maintain full control over their private keys and can interact with decentralized applications (dApps) and the Web3 ecosystem.',
+      },
+      {
+        question: 'How do I download and install the wallet?',
+        answer: 'You can download Superhero Wallet as a browser extension for Chrome and Firefox, or as a mobile app for Android and iOS. Simply visit the Superhero Wallet website and choose the version that suits your device.',
+      },
+      {
+        question: 'Which platforms support Superhero Wallet?',
+        answer: 'Superhero Wallet is available on desktop browsers (Chrome and Firefox extensions), as well as Android and iOS mobile devices. A web version is also accessible on desktop and mobile browsers.',
+      },
+      {
+        question: 'How do I set up a new wallet?',
+        answer: 'After installing the wallet, open the Superhero Wallet extension or app. Select “Create New Wallet,” and follow the prompts to set up a new wallet. Be sure to securely back up your seed phrase during this process.',
+      },
+      {
+        question: 'How do I import an existing wallet?',
+        answer: 'Open Superhero Wallet, select “Import Wallet,” and enter your seed phrase. This will restore your existing wallet, giving you access to previously stored assets.',
+      },
+      {
+        question: 'How do I back up my wallet?',
+        answer: 'When creating or importing a wallet, you’ll receive a seed phrase. Write this down and store it securely. The seed phrase is the only way to recover your wallet if you lose access.',
+      },
+    ],
+  },
+  {
+    title: 'Superhero Wallet Overview',
+    items: [
+      {
+        question: 'What is displayed on the Superhero Wallet?',
+        answer: 'The Dashboard is your main overview in Superhero Wallet. It shows your total crypto balance and how many tokens each account owns, individual account balances, quick action buttons (send, receive), and your recent transactions.',
+      },
+      {
+        question: 'How can I see my total balance in fiat currency?',
+        answer: 'Your total balance is displayed at the top of the Dashboard, reflecting the combined value of assets across all connected blockchains.',
+      },
+      {
+        question: 'How do I switch between accounts?',
+        answer: 'Scroll left or right on the active account card to view and switch between different accounts (e.g., Bitcoin, Ethereum, æternity). Each account displays its token balance and address.',
+      },
+      {
+        question: 'What are multisignature vaults, and how can I use them?',
+        answer: 'Multisignature (multisig) vaults require multiple accounts to approve transactions, offering enhanced security and control. You can toggle to view your multisig vaults on the Dashboard, currently available only on the æternity blockchain.',
+      },
+      {
+        question: 'How do I send and receive funds?',
+        answer: 'Use the “Send” button to transfer assets from your wallet to another address. The “Receive” button provides your wallet address and QR code to receive funds.',
+      },
+    ],
+  },
+  {
+    title: 'Account Management',
+    items: [
+      {
+        question: 'How do I view detailed information for each account?',
+        answer: 'Click on any account card on the Dashboard to access the account overview page. Here, you’ll find account balance, current fiat value, account address, and option to execute available actions like sending and receiving funds.',
+      },
+      {
+        question: 'What does the ‘Assets’ tab show?',
+        answer: 'The Assets tab lists all tokens stored in your account. Each token shows the quantity owned and, for assets with fiat value, the equivalent conversion.',
+      },
+      {
+        question: 'How do I check my transaction history?',
+        answer: 'The Transactions tab displays all past transactions for your selected account, including details like amount, transaction type, and time.',
+      },
+      {
+        question: 'What is the AENS (æternity Naming System)?',
+        answer: 'The AENS is a naming system on the æternity blockchain that allows users to register human-readable names for their wallet addresses, making interactions simpler.',
+      },
+      {
+        question: 'How do I share or copy my wallet address?',
+        answer: 'You can view a shortened version of your wallet address on the account overview page. Click the copy icon next to the address to easily share it with others.',
+      },
+    ],
+  },
+  {
+    title: 'Security and Privacy',
+    items: [
+      {
+        question: 'Is Superhero Wallet non-custodial?',
+        answer: 'Yes, Superhero Wallet is non-custodial, meaning only you have control over your private keys and assets. No third party, including Superhero, has access to your funds.',
+      },
+      {
+        question: 'How are my private keys each account holds its own managed?',
+        answer: 'Private keys are encrypted and stored securely on your device. User can display private keys and back them up. The Seed phrase is a wallet key that can be used to retrieve all your accounts (generated through seed phrase) with their private keys. Also we have optional password that is used for seed phrase encryption for web applications. For mobile apps seed phrase is stored in secure storage and have biometric login.',
+      },
+      {
+        question: 'What should I do if I forgot my seed phrase?',
+        answer: 'Unfortunately, without your seed phrase, you cannot recover your wallet. We recommend securely backing it up when setting up the wallet.',
+      },
+      {
+        question: 'How can I set up AIRGAP for extra security?',
+        answer: 'Superhero Wallet supports AIRGAP, an offline signing method, to enhance security. Download the AIRGAP app and link it to Superhero Wallet for secure, offline transactions.',
+      },
+      {
+        question: 'What is the seed phrase backup process?',
+        answer: 'Your seed phrase is provided during wallet setup and also in settings. Store this phrase securely, as it’s the only way to recover your wallet if you lose access.',
+      },
+    ],
+  },
+  {
+    title: 'dApps and Web3 Integration',
+    items: [
+      {
+        question: 'Which dApps can I connect to with Superhero Wallet?',
+        answer: 'Currently we support DApps integration for ETH (WalletConnect, also EVM about to be released) and AE blockchains.',
+      },
+      {
+        question: 'How do I connect Superhero Wallet to dApps using WalletConnect?',
+        answer: 'Select the WalletConnect option in Superhero Wallet and scan the dApp’s QR code. This enables connection to Ethereum dApps for a seamless Web3 experience.',
+      },
+      {
+        question: 'How do I use the in-app browser on mobile for dApps?',
+        answer: 'Open the Superhero Wallet mobile app and navigate to the In-App Browser section. Input the dApp URL, and connect directly to interact without leaving the app.',
+      },
+    ],
+  },
+  {
+    title: 'Using Gift Cards and Invite Links',
+    items: [
+      {
+        question: 'How do I create and send a gift card?',
+        answer: 'In Wallet Settings, access the “Gift Cards” feature (currently available for æternity accounts only). Enter the amount you want to load onto the gift card, generate it, and share the unique invite link.\n\nIn the gift card section, enter the amount, generate a gift card, and share the invite link with new users. They can use it to redeem the gift card balance.',
+      },
+      {
+        question: 'Can gift cards be customized?',
+        answer: 'At present, you can specify the amount, but customization features are limited to this function.',
+      },
+    ],
+  },
+  {
+    title: 'Troubleshooting Common Issues',
+    items: [
+      {
+        question: 'What should I do if I forgot my wallet password?',
+        answer: 'If you forget your password, the only way to access your wallet is by resetting it and using your seed phrase to restore your accounts. Ensure you’ve backed up your seed phrase and address book before resetting.',
+      },
+      {
+        question: 'How do I reset my wallet?',
+        answer: 'In Settings, select the “Reset Wallet” option. Note that this action will delete all local wallet data, so back up your seed phrase and address book beforehand.',
+      },
+      {
+        question: 'Why is my transaction delayed?',
+        answer: 'Delays can happen when the blockchain is congested. Transactions might not display immediately on the wallet but will appear once they’re processed and indexed.',
+      },
+      {
+        question: 'Why can’t I connect to a dApp?',
+        answer: 'Ensure that you’re using the latest version of Superhero Wallet. We are providing EVM Connectivity and Wallet Connect for ETH dapps and AE uses its own method for dapps integration.',
+      },
+      {
+        question: 'What can I do if my wallet isn’t syncing?',
+        answer: 'Try to upgrade the wallet to latest version, ensuring that you have internet connectivity.',
+      },
+    ],
+  },
+  {
+    title: 'Advanced Features and Settings',
+    items: [
+      {
+        question: 'How do I switch between mainnet and testnet?',
+        answer: 'Go to Settings, where you’ll see an option to toggle between mainnet, testnet, and custom networks. Select the network based on your needs.',
+      },
+      {
+        question: 'How do I manage multiple accounts?',
+        answer: 'You can create and manage multiple accounts within the same wallet by scrolling through the active account cards on the Dashboard.',
+      },
+      {
+        question: 'Can I export my address book?',
+        answer: 'Yes, you can export saved addresses in JSON format, which can then be imported into another Superhero Wallet.',
+      },
+      {
+        question: 'How do I customize notifications and settings?',
+        answer: 'Access the Settings menu to adjust notifications, customize profile preferences, and configure other wallet options.',
+      },
+    ],
+  },
+  {
+    title: 'Support and Resources',
+    items: [
+      {
+        question: 'Where can I find Superhero Wallet’s GitHub Repository?',
+        answer: 'Visit Superhero Wallet GitHub for the repository, where you can view the source code, report issues, and request new features.',
+      },
+      {
+        question: 'How do I report bugs or request features?',
+        answer: 'Submit bug reports or feature requests directly through GitHub.',
+      },
+      {
+        question: 'Who can I contact for support?',
+        answer: 'For support, visit the Help Center on our website or Submit bug reports directly through GitHub.',
+      },
+    ],
+  },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Main Wallet Page                                                  */
@@ -503,7 +752,7 @@ export default function Wallet() {
                   className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-[13px] px-5 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/20 w-full sm:w-auto justify-center"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  Get on Google Play
+                  Google Play
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </a>
                 <a
@@ -513,9 +762,10 @@ export default function Wallet() {
                   className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-[13px] px-5 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/20 w-full sm:w-auto justify-center"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  Download on App Store
+                  App Store
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </a>
+                <br />
                 <a
                   href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
                   target="_blank"
@@ -964,34 +1214,15 @@ export default function Wallet() {
           </div>
 
           <div className="space-y-3">
-            <FaqItem
-              question="What chains does Superhero Wallet support?"
-              answer="Superhero Wallet supports Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity. You can manage all your assets across these chains from a single wallet interface."
-            />
-            <FaqItem
-              question="Is Superhero Wallet self-custodial?"
-              answer="Yes. Superhero Wallet is fully self-custodial. Your private keys are stored only on your device and never shared with anyone. You have complete control over your funds."
-            />
-            <FaqItem
-              question="What are .chain names?"
-              answer=".chain names are human-readable identifiers on the æternity blockchain that replace long wallet addresses. Instead of sharing a cryptographic hash, you can share a simple name like 'yourname.chain'. You can register them directly from the wallet."
-            />
-            <FaqItem
-              question="How does the wallet connect to Superhero.com?"
-              answer="Superhero Wallet connects to Superhero.com to let you participate in on-chain social media trends, trade attention tokens, tip creators, and interact with decentralized communities — all signed securely from your wallet."
-            />
-            <FaqItem
-              question="Where can I download Superhero Wallet?"
-              answer="Superhero Wallet is available on Google Play for Android, the App Store for iOS, and as a Chrome extension for desktop browsers. Visit superherowallet.com for direct download links."
-            />
-            <FaqItem
-              question="Do I need the wallet to use Superhero.com?"
-              answer="On desktop, you need the Chrome extension to sign transactions. On mobile, you need the wallet app. Alternatively, you can download the all-in-one Superhero app from the /landing page which has a wallet built in for a seamless experience."
-            />
-            <FaqItem
-              question="Is Superhero Wallet free?"
-              answer="Yes, Superhero Wallet is completely free to download and use. You only pay network fees (gas) when making on-chain transactions, which go to the blockchain miners/validators — not to us."
-            />
+            {FAQ_CATEGORIES.map((cat, i) => (
+              <FaqCategory
+                key={cat.title}
+                index={i + 1}
+                title={cat.title}
+                items={cat.items}
+                defaultOpen={i === 0}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -1040,17 +1271,7 @@ export default function Wallet() {
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-            <a
-              href="https://superherowallet.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[14px] text-white/50 hover:text-white/80 transition-colors"
-            >
-              Visit superherowallet.com
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
+
         </div>
       </section>
     </div>

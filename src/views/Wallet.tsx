@@ -137,7 +137,7 @@ export default function Wallet() {
           {/* Sub */}
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-8">
             A multichain crypto wallet available on Android, iOS, and as a Chrome extension.
-            Manage ETH, Bitcoin, Dogecoin, BNB, and Aeternity — all in one place.
+            Manage ETH, Bitcoin, Dogecoin, BNB, and æternity — all in one place.
           </p>
 
           {/* Supported chains */}
@@ -146,7 +146,7 @@ export default function Wallet() {
             <ChainBadge name="Bitcoin" />
             <ChainBadge name="Dogecoin" />
             <ChainBadge name="BNB Chain" />
-            <ChainBadge name="Aeternity" />
+            <ChainBadge name="æternity" />
           </div>
 
           {/* CTAs */}
@@ -219,7 +219,7 @@ export default function Wallet() {
               icon={Layers}
               number="01"
               title="Multichain support"
-              description="Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and Aeternity assets from a single wallet. No switching between apps."
+              description="Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps."
             />
             <FeatureCard
               icon={Shield}
@@ -231,7 +231,7 @@ export default function Wallet() {
               icon={Link2}
               number="03"
               title="Buy .chain names"
-              description="On the Aeternity chain, register human-readable .chain names that replace your wallet address. Easy to share, impossible to forget."
+              description="On the æternity chain, register human-readable .chain names that replace your wallet address. Easy to share, impossible to forget."
             />
             <FeatureCard
               icon={Sparkles}
@@ -256,7 +256,7 @@ export default function Wallet() {
       </section>
 
       {/* ============================================================ */}
-      {/*  AETERNITY SECTION                                           */}
+      {/*  æternity SECTION                                           */}
       {/* ============================================================ */}
       <section className="relative py-32 border-t border-white/[0.04]">
         <div className="max-w-[1180px] mx-auto px-6">
@@ -264,7 +264,7 @@ export default function Wallet() {
             {/* Left */}
             <div>
               <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-                Aeternity Chain
+                æternity Chain
               </span>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-6">
                 .chain names &
@@ -272,7 +272,7 @@ export default function Wallet() {
                 <span className="text-white/40">social media trends</span>
               </h2>
               <p className="text-[15px] text-white/40 leading-relaxed mb-6">
-                On the Aeternity chain, Superhero Wallet lets you register .chain names — human-readable
+                On the æternity chain, Superhero Wallet lets you register .chain names — human-readable
                 identifiers that replace long wallet addresses. Share your name instead of a hash.
               </p>
               <p className="text-[15px] text-white/40 leading-relaxed mb-6">
@@ -425,7 +425,7 @@ export default function Wallet() {
           <div className="space-y-3">
             <FaqItem
               question="What chains does Superhero Wallet support?"
-              answer="Superhero Wallet supports Ethereum, Bitcoin, Dogecoin, BNB Chain, and Aeternity. You can manage all your assets across these chains from a single wallet interface."
+              answer="Superhero Wallet supports Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity. You can manage all your assets across these chains from a single wallet interface."
             />
             <FaqItem
               question="Is Superhero Wallet self-custodial?"
@@ -433,7 +433,7 @@ export default function Wallet() {
             />
             <FaqItem
               question="What are .chain names?"
-              answer=".chain names are human-readable identifiers on the Aeternity blockchain that replace long wallet addresses. Instead of sharing a cryptographic hash, you can share a simple name like 'yourname.chain'. You can register them directly from the wallet."
+              answer=".chain names are human-readable identifiers on the æternity blockchain that replace long wallet addresses. Instead of sharing a cryptographic hash, you can share a simple name like 'yourname.chain'. You can register them directly from the wallet."
             />
             <FaqItem
               question="How does the wallet connect to Superhero.com?"

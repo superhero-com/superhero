@@ -342,28 +342,28 @@ function AddressBookWidget() {
 
   const contacts = [
     {
-      name: 'Alice Admin',
+      name: 'Alice Smith',
       domain: 'alice.chain',
       address: 'ak_r276...dfE3',
-      label: 'Core Team',
+      label: '01',
     },
     {
-      name: 'Bob Liquidity',
+      name: 'Bob James',
       domain: 'bob.chain',
       address: 'ak_m941...23p',
-      label: 'Liquidity Provider',
+      label: '02',
     },
     {
-      name: 'DAO Treasury',
+      name: 'Dev Wallet',
       domain: 'development.chain',
       address: 'ak_tQ2b...86k',
-      label: 'Smart Contract',
+      label: '03',
     },
     {
       name: 'Charlie Creator',
       domain: 'charlie.chain',
       address: 'ak_zW45...99n',
-      label: 'Creator',
+      label: '04',
     },
   ];
 

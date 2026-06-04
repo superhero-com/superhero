@@ -47,6 +47,18 @@ export type MessageSignRequest = {
   nonce: number;
   message: string;
 } | {
+  type: 'address-link-site-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-site-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
   type: 'profile-update';
   address: string;
   payload: Record<string, string>;

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import {
   getLinkedBio,
   getLinkedPreferredAensName,
+  getLinkedSite,
   getLinkedXUsername,
   patchAccountCacheEntry,
   profileAggregateFromSources,
@@ -44,11 +45,6 @@ type EditableFormState = {
   chain_name: string;
 };
 
-type PreservedProfileState = {
-  fullname: string;
-  username: string;
-};
-
 type OwnedChainNameOption = {
   name: string;
   expiresAt: number | null;
@@ -58,11 +54,6 @@ const EMPTY_FORM: EditableFormState = {
   bio: '',
   website: '',
   chain_name: '',
-};
-
-const EMPTY_PRESERVED: PreservedProfileState = {
-  fullname: '',
-  username: '',
 };
 
 const NONE_CHAIN_NAME_VALUE = '__none_chain_name__';
@@ -280,9 +271,10 @@ const ProfileEditModal = ({
   const {
     getProfile,
     getProfileOnChain,
-    setProfile,
     linkBio,
     unlinkBio,
+    linkSite,
+    unlinkSite,
     linkPreferredAensName,
     unlinkPreferredAensName,
     canEdit,
@@ -293,7 +285,6 @@ const ProfileEditModal = ({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
-  const [preservedProfile, setPreservedProfile] = useState<PreservedProfileState>(EMPTY_PRESERVED);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [hasXVerified, setHasXVerified] = useState(false);
@@ -318,11 +309,9 @@ const ProfileEditModal = ({
       const targetAddress = (address as string) || (activeAccount as string);
       if (!targetAddress) return;
 
-      // Prefill from profile API first (fullname, bio, avatarurl, username)
-      let fullname = '';
+      // Prefill from profile API first (bio, website/site, chain name)
       let bio = '';
-      let avatarurl = '';
-      let username = '';
+      let site = '';
       let chainName = '';
       let chainNameExpiresAt: number | null = null;
 
@@ -330,9 +319,6 @@ const ProfileEditModal = ({
       try {
         chainProfile = await getProfileOnChain(targetAddress);
         if (chainProfile) {
-          fullname = String(chainProfile.fullname ?? '');
-          avatarurl = String(chainProfile.avatarurl ?? '');
-          username = String(chainProfile.username ?? '');
           chainName = normalizeChainName(chainProfile.chain_name ?? '');
           chainNameExpiresAt = toExpiryNumber(chainProfile.chain_expires_at);
         }
@@ -347,6 +333,8 @@ const ProfileEditModal = ({
         xName = getLinkedXUsername(accountRecord);
         const linkedBio = getLinkedBio(accountRecord);
         if (linkedBio) bio = linkedBio;
+        const linkedSite = getLinkedSite(accountRecord);
+        if (linkedSite) site = linkedSite;
         const linkedPreferredName = getLinkedPreferredAensName(accountRecord);
         if (linkedPreferredName) chainName = linkedPreferredName;
       } catch {
@@ -356,15 +344,10 @@ const ProfileEditModal = ({
       // Use profile API only to fill any missing profile fields
       try {
         const acct = await getProfile(targetAddress);
-        if (fullname === '' && (acct?.profile?.fullname ?? '') !== '') fullname = String(acct.profile.fullname);
         if (bio === '') {
           const linkedBio = getLinkedBio(acct);
           if (linkedBio) bio = linkedBio;
           else if ((acct?.profile?.bio ?? '') !== '') bio = String(acct.profile.bio ?? initialBio ?? '');
-        }
-        if (avatarurl === '' && (acct?.profile?.avatarurl ?? '') !== '') avatarurl = String(acct.profile.avatarurl);
-        if (username === '' && (acct?.profile?.username ?? '') !== '') {
-          username = String(acct.profile.username);
         }
         if (chainName === '') {
           const linkedPreferredName = getLinkedPreferredAensName(acct);
@@ -411,15 +394,14 @@ const ProfileEditModal = ({
 
       setHasXVerified(Boolean(xName));
       setXUsername(xName);
-      setPreservedProfile({ fullname, username });
       setForm({
         bio,
-        website: avatarurl,
+        website: site,
         chain_name: chainName,
       });
       setInitialForm({
         bio,
-        website: avatarurl,
+        website: site,
         chain_name: chainName,
       });
       if ((CONFIG as any).X_OAUTH_CLIENT_ID) setXSectionReady(true);
@@ -445,13 +427,16 @@ const ProfileEditModal = ({
 
   const validateForm = (): string | null => {
     if (trimmedForm.bio.length > 200) return t('messages.invalidBioLength');
-    if (trimmedForm.website) {
-      if (trimmedForm.website.length > 500) return t('messages.invalidAvatarUrl');
+    // Only validate the website when the user actually changed it. An unchanged value
+    // (e.g. an externally/legacy-set link) must not block unrelated edits like clearing the bio.
+    const websiteChanged = trimmedForm.website !== initialForm.website.trim();
+    if (websiteChanged && trimmedForm.website) {
+      if (trimmedForm.website.length > 500) return t('messages.invalidWebsiteUrl');
       try {
         // eslint-disable-next-line no-new
         new URL(trimmedForm.website);
       } catch {
-        return t('messages.invalidAvatarUrl');
+        return t('messages.invalidWebsiteUrl');
       }
     }
     return null;
@@ -548,12 +533,11 @@ const ProfileEditModal = ({
         }
       }
       if (websiteChanged) {
-        await setProfile({
-          fullname: preservedProfile.fullname,
-          bio: '',
-          avatarurl: trimmedForm.website,
-          username: preservedProfile.username,
-        });
+        if (trimmedForm.website) {
+          await linkSite({ address: targetAddress, site: trimmedForm.website });
+        } else {
+          await unlinkSite(targetAddress);
+        }
       }
       const prevProfile = queryClient.getQueryData<ProfileAggregate | null>(
         ['SuperheroApi.getProfile', targetAddress],
@@ -624,6 +608,7 @@ const ProfileEditModal = ({
       let successMessage = t('messages.profileUpdated');
       const onlyBio = bioChanged && !chainNameChanged && !websiteChanged;
       const onlyChainName = chainNameChanged && !bioChanged && !websiteChanged;
+      const onlySite = websiteChanged && !bioChanged && !chainNameChanged;
       if (onlyBio) {
         successMessage = trimmedForm.bio
           ? t('messages.bioLinkSuccess')
@@ -632,6 +617,10 @@ const ProfileEditModal = ({
         successMessage = trimmedForm.chain_name
           ? t('messages.preferredNameLinkSuccess')
           : t('messages.preferredNameUnlinkSuccess');
+      } else if (onlySite) {
+        successMessage = trimmedForm.website
+          ? t('messages.siteLinkSuccess')
+          : t('messages.siteUnlinkSuccess');
       }
       push(<div>{successMessage}</div>);
       onClose(updated);

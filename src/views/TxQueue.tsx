@@ -59,6 +59,8 @@ const parseMessageSignRequest = (raw: string | null): MessageSignRequest | null 
       || parsed.type === 'address-link-bio-unclaim'
       || parsed.type === 'address-link-prefaens-submit'
       || parsed.type === 'address-link-prefaens-unclaim'
+      || parsed.type === 'address-link-site-submit'
+      || parsed.type === 'address-link-site-unclaim'
     );
     if (
       isAddressLinkType
@@ -146,6 +148,26 @@ const submitMessageSignRequest = async (
 
   if (request.type === 'address-link-prefaens-unclaim') {
     await SuperheroApi.submitPreferredAensNameAddressLinkUnclaim({
+      address: request.address,
+      nonce: request.nonce,
+      signature,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-site-submit') {
+    await SuperheroApi.submitSiteAddressLink({
+      address: request.address,
+      value: request.value,
+      nonce: request.nonce,
+      signature,
+      verification_token: request.verification_token,
+    });
+    return;
+  }
+
+  if (request.type === 'address-link-site-unclaim') {
+    await SuperheroApi.submitSiteAddressLinkUnclaim({
       address: request.address,
       nonce: request.nonce,
       signature,
@@ -275,6 +297,8 @@ const TxQueue = () => {
               if (request.type === 'address-link-prefaens-submit') {
                 return tCommon('messages.preferredNameLinkSuccess');
               }
+              if (request.type === 'address-link-site-submit') return tCommon('messages.siteLinkSuccess');
+              if (request.type === 'address-link-site-unclaim') return tCommon('messages.siteUnlinkSuccess');
               return tCommon('messages.preferredNameUnlinkSuccess');
             })(),
           });

@@ -58,6 +58,8 @@ export type AccountLinks = {
   /** Linked via POST /api/address-links/prefered-aens-name */
   prefaens?: string | null;
   prefered_aens_name?: string | null;
+  /** Website/domain linked via POST /api/address-links/site */
+  site?: string | null;
 };
 
 export type AccountAggregate = {
@@ -100,6 +102,15 @@ export function getLinkedBio(
   if (fromProfile) return fromProfile;
   const legacy = String(account?.bio ?? '').trim();
   if (legacy) return legacy;
+  return null;
+}
+
+/** Linked website/domain from GET /api/accounts/:address (`links.site`). */
+export function getLinkedSite(
+  account?: Pick<AccountAggregate, 'links'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.site ?? '').trim();
+  if (fromLinks) return fromLinks;
   return null;
 }
 
@@ -832,6 +843,52 @@ export const SuperheroApi = {
     signature: string;
   }) {
     return this.fetchJson('/api/address-links/prefered-aens-name/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  claimSiteAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/site/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitSiteAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/site/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimSiteAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/site/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitSiteAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/site/unclaim/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

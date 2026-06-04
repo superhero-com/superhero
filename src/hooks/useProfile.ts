@@ -324,6 +324,55 @@ export function useProfile(targetAddress?: string) {
     targetAddress,
   ]);
 
+  const submitSiteAddressLink = useCallback(async (
+    address: string,
+    claim: AddressLinkClaimResponse,
+    signature: string,
+  ) => {
+    const res = await SuperheroApi.submitSiteAddressLink({
+      address,
+      value: claim.value,
+      nonce: claim.nonce,
+      signature,
+      verification_token: claim.verification_token,
+    });
+    return res.txHash;
+  }, []);
+
+  const linkSite = useCallback(async (params: {
+    address?: string;
+    site: string;
+  }) => {
+    const target = params.address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for site link');
+    }
+    const value = params.site.trim();
+    if (!value) {
+      throw new Error('Site is required to link');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const claim = await SuperheroApi.claimSiteAddressLink(target, value);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, claim.message, {
+      request: {
+        type: 'address-link-site-submit',
+        address: target,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
+    });
+    return submitSiteAddressLink(target, claim, signature);
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitSiteAddressLink,
+    targetAddress,
+  ]);
+
   const submitPreferredAensNameAddressLink = useCallback(async (
     address: string,
     claim: AddressLinkClaimResponse,
@@ -421,6 +470,30 @@ export function useProfile(targetAddress?: string) {
     return res.txHash;
   }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
 
+  const unlinkSite = useCallback(async (address?: string) => {
+    const target = address || targetAddress;
+    if (!target) {
+      throw new Error('Missing address for site unlink');
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const unclaim = await SuperheroApi.unclaimSiteAddressLink(target);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, unclaim.message, {
+      request: {
+        type: 'address-link-site-unclaim',
+        address: target,
+        nonce: unclaim.nonce,
+        message: unclaim.message,
+      },
+    });
+    const res = await SuperheroApi.submitSiteAddressLinkUnclaim({
+      address: target,
+      nonce: unclaim.nonce,
+      signature,
+    });
+    return res.txHash;
+  }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
+
   const unlinkXAccount = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
@@ -456,6 +529,8 @@ export function useProfile(targetAddress?: string) {
     unlinkXAccount,
     linkBio,
     unlinkBio,
+    linkSite,
+    unlinkSite,
     linkPreferredAensName,
     unlinkPreferredAensName,
   };

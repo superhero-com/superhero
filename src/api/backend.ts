@@ -690,8 +690,8 @@ export const SuperheroApi = {
       `/api/profile/chain-name/sponsorship/${encodeURIComponent(name)}`,
     ) as Promise<ChainNameSponsorshipResponse>;
   },
-  /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
-  createXAttestationFromCode(
+  /** Exchange OAuth code (from X redirect) for an X address-link claim; backend swaps the code for a token and creates the claim. */
+  claimXAddressLinkFromCode(
     address: string,
     code: string,
     codeVerifier: string,

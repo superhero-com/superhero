@@ -201,6 +201,216 @@ function InteractiveHeroVisual() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Crypto & Token management interactive Widget                      */
+/* ------------------------------------------------------------------ */
+function CryptoManagementWidget() {
+  const [amount, setAmount] = useState('120.00');
+  const [address, setRecipient] = useState('super-dev.chain');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+
+  const handleSend = () => {
+    setStatus('sending');
+    setTimeout(() => {
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 4000);
+    }, 1500);
+  };
+
+  return (
+    <div className="space-y-2 select-none text-left">
+      <div className="flex justify-between items-center text-[10px] text-white/40">
+        <span>Available Balance: 24,500.00 AE</span>
+        <span className="text-blue-400">Tokens</span>
+      </div>
+      <div>
+        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Amount to send</span>
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 pl-3 pr-12 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
+          />
+          <span className="absolute right-3 text-white/40 text-[10px] font-bold">AE</span>
+        </div>
+      </div>
+      <div>
+        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Recipient identity</span>
+        <input
+          type="text"
+          value={address}
+          onChange={(e) => setRecipient(e.target.value)}
+          className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 px-3 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={handleSend}
+        disabled={status !== 'idle'}
+        className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/20 hover:from-blue-500/30 hover:to-indigo-500/30 hover:border-blue-400/40 text-blue-300 font-bold py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+      >
+        {status === 'idle' && (
+          <>
+            <WalletIcon className="w-3.5 h-3.5" />
+            <span>Send Assets</span>
+          </>
+        )}
+        {status === 'sending' && (
+          <>
+            <div className="w-3.5 h-3.5 rounded-full border border-dashed border-blue-400 animate-spin" />
+            <span>Broadcasting...</span>
+          </>
+        )}
+        {status === 'success' && (
+          <span>✓ Confirmed (ak_tx...e4)</span>
+        )}
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Multisig Vault dashboard interactive Widget                       */
+/* ------------------------------------------------------------------ */
+function MultisigWidget() {
+  const [complete, setComplete] = useState(false);
+
+  return (
+    <div className="space-y-2 select-none text-left">
+      <div className="flex justify-between items-center text-[10px]">
+        <span className="text-white/40">Vault ak_msig...82f</span>
+        <span className={complete ? 'text-green-400' : 'text-amber-400 animate-pulse font-semibold'}>
+          {complete ? '✓ Executed' : '● Awaiting Signature'}
+        </span>
+      </div>
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-2 space-y-2">
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-white/50">Transfer request:</span>
+          <span className="text-white/90 font-bold font-mono">5,000.00 AE</span>
+        </div>
+        <div className="w-full bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
+          <div
+            className="bg-blue-400 h-full rounded-full transition-all duration-500 ease-out"
+            style={{ width: complete ? '100%' : '66.6%' }}
+          />
+        </div>
+        <div className="flex justify-between text-[9px] text-white/40">
+          <span>Threshold: 2 of 3</span>
+          <span>
+            {complete ? '3/3' : '2/3'}
+            {' '}
+            Signed
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1 font-mono text-[9px]">
+        <div className="flex items-center justify-between text-green-400">
+          <span>ak_rMh...72a (Admin)</span>
+          <span>Signed ✓</span>
+        </div>
+        <div className="flex items-center justify-between text-green-400">
+          <span>ak_pLd...44k (Finance)</span>
+          <span>Signed ✓</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-white/40">ak_tQx...10e (Backup)</span>
+          {complete ? (
+            <span className="text-green-400 font-bold">Signed ✓</span>
+          ) : (
+            <span className="text-amber-400 font-bold">Pending ⏳</span>
+          )}
+        </div>
+      </div>
+      {!complete && (
+        <button
+          type="button"
+          onClick={() => setComplete(true)}
+          className="w-full text-center text-[10px] uppercase tracking-wider py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded hover:bg-blue-500/20 transition-all font-bold"
+        >
+          Sign as Backup Key
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Address Book filterable search Widget                             */
+/* ------------------------------------------------------------------ */
+function AddressBookWidget() {
+  const [query, setQuery] = useState('');
+
+  const contacts = [
+    {
+      name: 'Alice Smith',
+      domain: 'alice.chain',
+      address: 'ak_r276...dfE3',
+      label: '01',
+    },
+    {
+      name: 'Bob James',
+      domain: 'bob.chain',
+      address: 'ak_m941...23p',
+      label: '02',
+    },
+    {
+      name: 'Dev Wallet',
+      domain: 'development.chain',
+      address: 'ak_tQ2b...86k',
+      label: '03',
+    },
+    {
+      name: 'Charlie Creator',
+      domain: 'charlie.chain',
+      address: 'ak_zW45...99n',
+      label: '04',
+    },
+  ];
+
+  const filtered = contacts.filter((c) => (
+    c.name.toLowerCase().includes(query.toLowerCase())
+    || c.domain.toLowerCase().includes(query.toLowerCase())
+  ));
+
+  return (
+    <div className="space-y-3 select-none text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Address Directory</span>
+        <div className="relative max-w-[200px] w-full">
+          <input
+            type="text"
+            placeholder="Search contacts..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-md py-1 px-2.5 text-[10px] text-white/80 placeholder-white/20 outline-none focus:border-blue-500/20"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
+        {filtered.length > 0 ? (
+          filtered.map((contact) => (
+            <div key={contact.address} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex items-center justify-between hover:bg-white/[0.04] transition-all">
+              <div>
+                <h4 className="text-[11px] font-bold text-white/85 leading-none mb-0.5">{contact.name}</h4>
+                <p className="text-[9px] text-blue-400 font-medium leading-none mb-1 font-mono">{contact.domain}</p>
+                <span className="text-[8px] text-white/20 font-mono">{contact.address}</span>
+              </div>
+              <span className="text-[8px] bg-white/[0.04] px-1.5 py-0.5 rounded text-white/50 border border-white/[0.06] shrink-0 self-start">
+                {contact.label}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-2 text-center py-4 text-white/30 text-[10px]">
+            No contacts match your query
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  FAQ Item — glass morphism                                         */
 /* ------------------------------------------------------------------ */
 function FaqItem({ question, answer }: { question: string; answer: string }) {
@@ -624,14 +834,17 @@ export default function Wallet() {
             {/* Token Management */}
             <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/[0.04] via-transparent to-cyan-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <WalletIcon className="w-7 h-7 text-blue-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white/90 mb-3">Token Management</h3>
-                <p className="text-sm text-white/50 leading-relaxed">
+                <p className="text-sm text-white/50 leading-relaxed mb-5">
                   Send, receive, and swap tokens with ease. Track balances and transaction history across all supported chains.
                 </p>
+                <div className="w-full">
+                  <CryptoManagementWidget />
+                </div>
               </div>
             </div>
           </div>
@@ -666,14 +879,17 @@ export default function Wallet() {
             {/* Multisig */}
             <div className="group relative min-h-[260px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Users className="w-7 h-7 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white/90 mb-3">Multisig Vaults</h3>
-                <p className="text-sm text-white/50 leading-relaxed">
+                <p className="text-sm text-white/50 leading-relaxed mb-5">
                   Require multiple signatures to authorize transactions. Perfect for teams and shared treasuries.
                 </p>
+                <div className="w-full">
+                  <MultisigWidget />
+                </div>
               </div>
             </div>
 
@@ -750,14 +966,17 @@ export default function Wallet() {
             {/* Address Book */}
             <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <BookUser className="w-7 h-7 text-blue-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white/90 mb-3">Address Book</h3>
-                <p className="text-sm text-white/50 leading-relaxed">
+                <p className="text-sm text-white/50 leading-relaxed mb-5">
                   Save and organize your frequently used addresses. Search, label, and manage contacts effortlessly.
                 </p>
+                <div className="w-full">
+                  <AddressBookWidget />
+                </div>
               </div>
             </div>
           </div>

@@ -201,216 +201,6 @@ function InteractiveHeroVisual() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Crypto & Token management interactive Widget                      */
-/* ------------------------------------------------------------------ */
-function CryptoManagementWidget() {
-  const [amount, setAmount] = useState('120.00');
-  const [address, setRecipient] = useState('super-dev.chain');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
-
-  const handleSend = () => {
-    setStatus('sending');
-    setTimeout(() => {
-      setStatus('success');
-      setTimeout(() => setStatus('idle'), 4000);
-    }, 1500);
-  };
-
-  return (
-    <div className="space-y-2 select-none text-left">
-      <div className="flex justify-between items-center text-[10px] text-white/40">
-        <span>Available Balance: 24,500.00 AE</span>
-        <span className="text-blue-400">Tokens</span>
-      </div>
-      <div>
-        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Amount to send</span>
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 pl-3 pr-12 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
-          />
-          <span className="absolute right-3 text-white/40 text-[10px] font-bold">AE</span>
-        </div>
-      </div>
-      <div>
-        <span className="block text-[9px] text-white/30 uppercase tracking-widest mb-1 font-semibold">Recipient identity</span>
-        <input
-          type="text"
-          value={address}
-          onChange={(e) => setRecipient(e.target.value)}
-          className="w-full bg-white/[0.03] border border-white/[0.08] lg:border-white/[0.12] rounded-lg py-1.5 px-3 text-[11px] text-white/80 outline-none focus:border-blue-500/30"
-        />
-      </div>
-      <button
-        type="button"
-        onClick={handleSend}
-        disabled={status !== 'idle'}
-        className="w-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-400/20 hover:from-blue-500/30 hover:to-indigo-500/30 hover:border-blue-400/40 text-blue-300 font-bold py-2 rounded-lg transition-all flex items-center justify-center gap-2"
-      >
-        {status === 'idle' && (
-          <>
-            <WalletIcon className="w-3.5 h-3.5" />
-            <span>Send Assets</span>
-          </>
-        )}
-        {status === 'sending' && (
-          <>
-            <div className="w-3.5 h-3.5 rounded-full border border-dashed border-blue-400 animate-spin" />
-            <span>Broadcasting...</span>
-          </>
-        )}
-        {status === 'success' && (
-          <span>✓ Confirmed (ak_tx...e4)</span>
-        )}
-      </button>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Multisig Vault dashboard interactive Widget                       */
-/* ------------------------------------------------------------------ */
-function MultisigWidget() {
-  const [complete, setComplete] = useState(false);
-
-  return (
-    <div className="space-y-2 select-none text-left">
-      <div className="flex justify-between items-center text-[10px]">
-        <span className="text-white/40">Vault ak_msig...82f</span>
-        <span className={complete ? 'text-green-400' : 'text-amber-400 animate-pulse font-semibold'}>
-          {complete ? '✓ Executed' : '● Awaiting Signature'}
-        </span>
-      </div>
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-2 space-y-2">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="text-white/50">Transfer request:</span>
-          <span className="text-white/90 font-bold font-mono">5,000.00 AE</span>
-        </div>
-        <div className="w-full bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
-          <div
-            className="bg-blue-400 h-full rounded-full transition-all duration-500 ease-out"
-            style={{ width: complete ? '100%' : '66.6%' }}
-          />
-        </div>
-        <div className="flex justify-between text-[9px] text-white/40">
-          <span>Threshold: 2 of 3</span>
-          <span>
-            {complete ? '3/3' : '2/3'}
-            {' '}
-            Signed
-          </span>
-        </div>
-      </div>
-      <div className="space-y-1 font-mono text-[9px]">
-        <div className="flex items-center justify-between text-green-400">
-          <span>ak_rMh...72a (Admin)</span>
-          <span>Signed ✓</span>
-        </div>
-        <div className="flex items-center justify-between text-green-400">
-          <span>ak_pLd...44k (Finance)</span>
-          <span>Signed ✓</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-white/40">ak_tQx...10e (Backup)</span>
-          {complete ? (
-            <span className="text-green-400 font-bold">Signed ✓</span>
-          ) : (
-            <span className="text-amber-400 font-bold">Pending ⏳</span>
-          )}
-        </div>
-      </div>
-      {!complete && (
-        <button
-          type="button"
-          onClick={() => setComplete(true)}
-          className="w-full text-center text-[10px] uppercase tracking-wider py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded hover:bg-blue-500/20 transition-all font-bold"
-        >
-          Sign as Backup Key
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Address Book filterable search Widget                             */
-/* ------------------------------------------------------------------ */
-function AddressBookWidget() {
-  const [query, setQuery] = useState('');
-
-  const contacts = [
-    {
-      name: 'Alice Smith',
-      domain: 'alice.chain',
-      address: 'ak_r276...dfE3',
-      label: '01',
-    },
-    {
-      name: 'Bob James',
-      domain: 'bob.chain',
-      address: 'ak_m941...23p',
-      label: '02',
-    },
-    {
-      name: 'Dev Wallet',
-      domain: 'development.chain',
-      address: 'ak_tQ2b...86k',
-      label: '03',
-    },
-    {
-      name: 'Charlie Creator',
-      domain: 'charlie.chain',
-      address: 'ak_zW45...99n',
-      label: '04',
-    },
-  ];
-
-  const filtered = contacts.filter((c) => (
-    c.name.toLowerCase().includes(query.toLowerCase())
-    || c.domain.toLowerCase().includes(query.toLowerCase())
-  ));
-
-  return (
-    <div className="space-y-3 select-none text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Address Directory</span>
-        <div className="relative max-w-[200px] w-full">
-          <input
-            type="text"
-            placeholder="Search contacts..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-md py-1 px-2.5 text-[10px] text-white/80 placeholder-white/20 outline-none focus:border-blue-500/20"
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
-        {filtered.length > 0 ? (
-          filtered.map((contact) => (
-            <div key={contact.address} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex items-center justify-between hover:bg-white/[0.04] transition-all">
-              <div>
-                <h4 className="text-[11px] font-bold text-white/85 leading-none mb-0.5">{contact.name}</h4>
-                <p className="text-[9px] text-blue-400 font-medium leading-none mb-1 font-mono">{contact.domain}</p>
-                <span className="text-[8px] text-white/20 font-mono">{contact.address}</span>
-              </div>
-              <span className="text-[8px] bg-white/[0.04] px-1.5 py-0.5 rounded text-white/50 border border-white/[0.06] shrink-0 self-start">
-                {contact.label}
-              </span>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-2 text-center py-4 text-white/30 text-[10px]">
-            No contacts match your query
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  FAQ Item — glass morphism                                         */
 /* ------------------------------------------------------------------ */
 function FaqItem({ question, answer }: { question: string; answer: string }) {
@@ -793,332 +583,153 @@ export default function Wallet() {
       </section>
 
       {/* ============================================================ */}
-      {/*  FEATURES                                                    */}
+      {/*  SECTION 1: CORE POWER                                       */}
       {/* ============================================================ */}
-      <section id="features" className="relative py-32">
-        <div className="max-w-[1180px] mx-auto px-6">
-          {/* Section header */}
-          <div className="max-w-2xl mb-16 text-left">
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-              Features
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              Everything you need
-              <br />
-              <span className="text-white/40">in a multichain wallet</span>
-            </h2>
-            <p className="text-[15px] text-white/40 leading-relaxed">
-              Superhero Wallet gives you full control of your assets across multiple blockchains
-              with a simple, secure interface.
-            </p>
+      <section className="relative py-40 border-t border-white/[0.04]">
+        <FloatingOrb className="w-[500px] h-[500px] bg-blue-800 -top-20 -right-40" />
+        <div className="max-w-[1280px] mx-auto px-6">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-20 text-center">
+            Core Power
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Multichain Support */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/[0.04] via-transparent to-cyan-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Layers className="w-7 h-7 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white/90">Multichain Support</h3>
+              </div>
+            </div>
+
+            {/* Secure & Non-Custodial */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/[0.04] via-transparent to-cyan-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Shield className="w-7 h-7 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white/90">Secure & Non-Custodial</h3>
+              </div>
+            </div>
+
+            {/* Token Management */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-400/[0.04] via-transparent to-cyan-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <WalletIcon className="w-7 h-7 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white/90">Token Management</h3>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* Premium Bento Grid Feature Map */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* ============================================================ */}
+      {/*  SECTION 2: ADVANCED SECURITY                                 */}
+      {/* ============================================================ */}
+      <section className="relative py-40 border-t border-white/[0.04]">
+        <FloatingOrb className="w-[400px] h-[400px] bg-indigo-700 bottom-0 left-0" />
+        <div className="max-w-[1280px] mx-auto px-6">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-20 text-center">
+            Vault-Grade Security
+          </h2>
 
-            {/* Card 1: Multichain support (lg:col-span-2) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full">
-                <div className="md:col-span-7 flex flex-col justify-center text-left">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Layers className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">01</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Multichain support</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed">
-                    Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps.
-                  </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Cold Signing */}
+            <div className="group relative min-h-[260px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Sparkles className="w-7 h-7 text-blue-400" />
                 </div>
-                <div className="md:col-span-5 bg-black/40 border border-white/[0.04] rounded-xl p-3 space-y-1.5 font-mono select-none text-left w-full">
-                  {[
-                    {
-                      coin: 'AE',
-                      name: 'æternity',
-                      amount: '15,420.0',
-                      usd: '$1,542.0',
-                      color: 'bg-purple-500',
-                    },
-                    {
-                      coin: 'ETH',
-                      name: 'Ethereum',
-                      amount: '1.250',
-                      usd: '$4,125.0',
-                      color: 'bg-indigo-500',
-                    },
-                    {
-                      coin: 'BTC',
-                      name: 'Bitcoin',
-                      amount: '0.048',
-                      usd: '$3,240.2',
-                      color: 'bg-orange-500',
-                    },
-                    {
-                      coin: 'BNB',
-                      name: 'BNB Chain',
-                      amount: '0.850',
-                      usd: '$510.0',
-                      color: 'bg-yellow-500',
-                    },
-                    {
-                      coin: 'DOGE',
-                      name: 'Dogecoin',
-                      amount: '8,400.0',
-                      usd: '$1,176.0',
-                      color: 'bg-amber-400',
-                    },
-                  ].map((asset) => (
-                    <div key={asset.coin} className="flex items-center justify-between text-[11px] p-1.5 rounded hover:bg-white/[0.02] transition-colors">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${asset.color}`} />
-                        <span className="text-white/80 font-bold">{asset.coin}</span>
-                        <span className="text-white/30 text-[10px] hidden sm:inline">{asset.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-white/75 block font-semibold leading-none">{asset.amount}</span>
-                        <span className="text-[9px] text-white/30 leading-none">{asset.usd}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-lg font-bold text-white/90">AIRGAP Cold Signing</h3>
               </div>
             </div>
 
-            {/* Card 2: Secure & non-custodial (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Shield className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">02</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Secure & non-custodial</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Your keys, your control. Superhero ensures that your private keys and assets remain secure and completely under your ownership.
-                  </p>
+            {/* Multisig */}
+            <div className="group relative min-h-[260px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Users className="w-7 h-7 text-blue-400" />
                 </div>
+                <h3 className="text-lg font-bold text-white/90">Multisig Vaults</h3>
               </div>
             </div>
 
-            {/* Card 3: Buy .chain names (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Link2 className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">03</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Buy .chain names</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Simplify blockchain interactions with æternity Naming System (AENS), which lets you register and use human-readable names for wallet addresses.
-                  </p>
+            {/* Biometric Login */}
+            <div className="group relative min-h-[260px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Fingerprint className="w-7 h-7 text-blue-400" />
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono space-y-2 mt-auto w-full">
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      readOnly
-                      value="yourname.chain"
-                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg py-1.5 pl-3 pr-20 text-[11px] text-blue-400 outline-none animate-[pulse_3s_infinite]"
-                    />
-                    <span className="absolute right-2 px-1.5 py-0.5 rounded bg-green-500/25 border border-green-500/30 text-green-400 font-bold text-[9px] uppercase">
-                      Available
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[9px] text-white/40 px-1 pt-1 border-t border-white/[0.05]">
-                    <span>AENS</span>
-                    <span className="text-blue-400">Registered ✓</span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-bold text-white/90">Biometric Login</h3>
               </div>
             </div>
 
-            {/* Card 4: Cold Signing with AIRGAP Vault (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Sparkles className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">04</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Cold Signing with AIRGAP Vault</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Enhance security by pairing Superhero with AIRGAP Vault for cold signing, ensuring your private keys never touch the internet.
-                  </p>
+            {/* Import Accounts */}
+            <div className="group relative min-h-[260px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <KeyRound className="w-7 h-7 text-blue-400" />
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex items-center justify-between font-mono text-[9px] mt-auto w-full">
-                  <div className="text-center w-[45%] bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                    <span className="block text-amber-400 font-bold mb-0.5">AIRGAP</span>
-                    <span className="text-white/20">Vault (Offline)</span>
-                  </div>
-                  <div className="flex-1 flex flex-col items-center justify-center gap-0.5">
-                    <div className="w-4 h-4 rounded-full border border-dashed border-blue-500/40 animate-spin" />
-                  </div>
-                  <div className="text-center w-[45%] bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
-                    <span className="block text-green-400 font-bold mb-0.5">SUPERHERO</span>
-                    <span className="text-white/20">App (Online)</span>
-                  </div>
+                <h3 className="text-lg font-bold text-white/90">Easy Account Import</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  SECTION 3: ECOSYSTEM & IDENTITY                              */}
+      {/* ============================================================ */}
+      <section className="relative py-40 border-t border-white/[0.04]">
+        <FloatingOrb className="w-[500px] h-[500px] bg-cyan-800 top-1/4 -left-32" />
+        <div className="max-w-[1280px] mx-auto px-6">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-20 text-center">
+            Your Identity, Your Ecosystem
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* .chain Names */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Link2 className="w-7 h-7 text-blue-400" />
                 </div>
+                <h3 className="text-xl font-bold text-white/90">Buy .chain Names</h3>
               </div>
             </div>
 
-            {/* Card 5: Advanced DApp integration (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Globe className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">05</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Advanced DApp integration</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Connect and interact with decentralized applications on both æternity and Ethereum blockchains, unlocking access to DeFi, DAOs, and more.
-                  </p>
+            {/* DApp Integration */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <Globe className="w-7 h-7 text-blue-400" />
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-2.5 space-y-1 text-[10px] font-mono mt-auto w-full">
-                  <div className="flex items-center justify-between bg-white/[0.01] p-1 border border-white/[0.05] rounded">
-                    <span className="text-white/60">🥞 Superhero.com</span>
-                    <span className="text-[8px] bg-green-500/20 text-green-400 px-1 py-0.5 rounded font-bold border border-green-500/30">Connected 🟢</span>
-                  </div>
-                  <div className="flex items-center justify-between bg-white/[0.01] p-1 border border-white/[0.05] rounded">
-                    <span className="text-white/60">🏛️ Superhero DEX</span>
-                    <span className="text-[8px] bg-green-500/20 text-green-400 px-1 py-0.5 rounded font-bold border border-green-500/30">Active 🟢</span>
-                  </div>
-                </div>
+                <h3 className="text-xl font-bold text-white/90">DApp Integration</h3>
               </div>
             </div>
 
-            {/* Card 6: Crypto & Token management (lg:col-span-2) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
-                <div className="md:col-span-6 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <WalletIcon className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">06</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Crypto & Token management</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Store, send, and receive cryptocurrencies and tokens with an intuitive interface that makes asset management straightforward and efficient.
-                  </p>
+            {/* Address Book */}
+            <div className="group relative min-h-[280px] rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-3xl border border-white/[0.10] hover:border-blue-400/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-cyan-400/[0.04] via-transparent to-blue-400/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
+                  <BookUser className="w-7 h-7 text-blue-400" />
                 </div>
-                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
-                  <CryptoManagementWidget />
-                </div>
+                <h3 className="text-xl font-bold text-white/90">Address Book</h3>
               </div>
             </div>
-
-            {/* Card 7: Import Accounts with Ease: (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <KeyRound className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">07</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Import Accounts with Ease</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Effortlessly import existing accounts from other wallets using your private key, giving you instant access to your assets and transactions.
-                  </p>
-                </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 mt-auto w-full">
-                  <div className="flex gap-1.5 border-b border-white/[0.05] pb-1.5">
-                    <span className="text-blue-400 font-bold border-b border-blue-400/50 pb-0.5">Private Key</span>
-                    <span className="text-white/20">Seed Phrase</span>
-                  </div>
-                  <div className="bg-white/[0.02] border border-white/[0.04] rounded py-1 px-1.5 text-white/30 truncate select-none">
-                    ••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-                  </div>
-                  <div className="text-[8px] text-white/30 flex items-center justify-between">
-                    <span>⚡ Standard format</span>
-                    <span className="text-green-400 font-semibold">Import secure ✓</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 8: Multisig Support for Enhanced Security: (lg:col-span-2) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
-                <div className="md:col-span-6 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Users className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">08</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Multisig Support for Enhanced Security</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Manage multisignature (multisig) vaults on the æternity blockchain, ideal for shared control or joint asset management.
-                  </p>
-                </div>
-                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full font-sans">
-                  <MultisigWidget />
-                </div>
-              </div>
-            </div>
-
-            {/* Card 9: Biometric Login for Mobile Devices: (lg:col-span-1) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="relative z-10 flex flex-col h-full justify-between text-left">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <Fingerprint className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">09</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Biometric Login for Mobile Devices</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Access your wallet quickly and securely with biometric authentication, adding a layer of convenience and safety.
-                  </p>
-                </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex flex-col items-center justify-center font-mono space-y-2 mt-auto w-full">
-                  <div className="relative w-10 h-10 flex items-center justify-center border border-blue-500/20 bg-blue-500/5 rounded-full ring-4 ring-blue-500/10 animate-pulse">
-                    <Fingerprint className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <span className="text-[9px] text-white/40 uppercase tracking-widest font-semibold">Touch ID / Face ID Active</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 10: Convenient Address Book: (lg:col-span-3) */}
-            <div className="lg:col-span-3 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full text-left">
-                <div className="lg:col-span-5 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20">
-                      <BookUser className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <span className="text-xs font-mono text-white/30 tracking-wider">10</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Convenient Address Book</h3>
-                  <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Save frequently used addresses in your personal address book, making transactions faster and more organized.
-                  </p>
-                </div>
-                <div className="lg:col-span-7 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
-                  <AddressBookWidget />
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </section>

@@ -600,7 +600,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Layers className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">Multichain Support</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">Multichain Support</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps.
+                </p>
               </div>
             </div>
 
@@ -611,7 +614,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Shield className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">Secure & Non-Custodial</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">Secure & Non-Custodial</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Your keys never leave your device. Full self-custody with encrypted local storage and no third-party access.
+                </p>
               </div>
             </div>
 
@@ -622,7 +628,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <WalletIcon className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">Token Management</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">Token Management</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Send, receive, and swap tokens with ease. Track balances and transaction history across all supported chains.
+                </p>
               </div>
             </div>
           </div>
@@ -647,7 +656,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Sparkles className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white/90">AIRGAP Cold Signing</h3>
+                <h3 className="text-lg font-bold text-white/90 mb-3">AIRGAP Cold Signing</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Sign transactions on an offline device via QR codes. Your private keys never touch the internet.
+                </p>
               </div>
             </div>
 
@@ -658,7 +670,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Users className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white/90">Multisig Vaults</h3>
+                <h3 className="text-lg font-bold text-white/90 mb-3">Multisig Vaults</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Require multiple signatures to authorize transactions. Perfect for teams and shared treasuries.
+                </p>
               </div>
             </div>
 
@@ -669,7 +684,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Fingerprint className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white/90">Biometric Login</h3>
+                <h3 className="text-lg font-bold text-white/90 mb-3">Biometric Login</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Unlock your wallet instantly with fingerprint or face recognition for quick, secure access.
+                </p>
               </div>
             </div>
 
@@ -680,7 +698,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <KeyRound className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white/90">Easy Account Import</h3>
+                <h3 className="text-lg font-bold text-white/90 mb-3">Easy Account Import</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Import existing accounts with seed phrases or private keys. Switch wallets without losing access.
+                </p>
               </div>
             </div>
           </div>
@@ -705,7 +726,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Link2 className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">Buy .chain Names</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">Buy .chain Names</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Register human-readable .chain names for your wallet addresses. Send and receive with easy-to-remember identities.
+                </p>
               </div>
             </div>
 
@@ -716,7 +740,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <Globe className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">DApp Integration</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">DApp Integration</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Connect seamlessly to decentralized applications. Browse, approve, and interact with the Web3 ecosystem.
+                </p>
               </div>
             </div>
 
@@ -727,7 +754,10 @@ export default function Wallet() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center mb-5">
                   <BookUser className="w-7 h-7 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white/90">Address Book</h3>
+                <h3 className="text-xl font-bold text-white/90 mb-3">Address Book</h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  Save and organize your frequently used addresses. Search, label, and manage contacts effortlessly.
+                </p>
               </div>
             </div>
           </div>

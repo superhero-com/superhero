@@ -1,0 +1,201 @@
+import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Smartphone } from 'lucide-react';
+import { AeButton } from '@/components/ui/ae-button';
+import { useWalletConnect } from '@/hooks';
+import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
+import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
+import Favicon from '@/svg/favicon.svg?react';
+
+type Props = { onClose: () => void };
+
+const ChromeIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <img src={chromeLogoUrl} className={className} alt="Chrome" />
+);
+const FirefoxIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <img src={firefoxLogoUrl} className={className} alt="Firefox" />
+);
+
+const APP_LINKS = {
+  appStore: 'https://apps.apple.com/us/app/superhero-web3-communities/id6758045846',
+  playStore: 'https://play.google.com/store/apps/details?id=com.superhero.apps',
+  walletIos: 'https://apps.apple.com/us/app/superhero-wallet/id1502786641',
+  walletAndroid: 'https://play.google.com/store/apps/details?id=com.superhero.cordova',
+} as const;
+
+function getDeviceInfo() {
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isMobile = isAndroid || isIOS || /Mobi/i.test(ua);
+  const isFirefox = /Firefox\//i.test(ua);
+  const isChromeFamily = (
+    /Chrome\//i.test(ua) || /Chromium\//i.test(ua)
+  ) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua);
+
+  return {
+    isAndroid, isIOS, isMobile, isFirefox, isChromeFamily,
+  };
+}
+
+// Mirror the connect-wallet flow: show only the detected browser's extension, but for unknown
+// desktop browsers (e.g. Safari) offer both Chrome and Firefox rather than a misleading
+// Chrome-only path.
+function getExtensionLinks(device: ReturnType<typeof getDeviceInfo>) {
+  const chrome = { label: 'Get extension for Chrome', href: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne', Icon: ChromeIcon };
+  const firefox = { label: 'Get extension for Firefox', href: 'https://addons.mozilla.org/en-US/firefox/addon/superhero-wallet/', Icon: FirefoxIcon };
+  if (device.isChromeFamily) return [chrome];
+  if (device.isFirefox) return [firefox];
+  return [chrome, firefox];
+}
+
+const OnboardingModal = ({ onClose }: Props) => {
+  const { connectWallet, connectingWallet } = useWalletConnect();
+  const device = useMemo(() => getDeviceInfo(), []);
+
+  async function handleConnect() {
+    await connectWallet();
+    onClose();
+  }
+
+  return (
+    <div className="text-foreground p-2 sm:p-0">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Favicon className="w-8 h-8" />
+          <h2 className="text-xl font-bold text-white/95">Edit Superhero ID</h2>
+        </div>
+        <p className="text-sm text-white/50">
+          Connect your wallet to create and manage your Superhero ID
+        </p>
+      </div>
+
+      {/* Step 1 - Extension/Wallet App */}
+      <div className="mb-5">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#1161FE]/20 text-[#1161FE] text-sm font-bold border border-[#1161FE]/30">
+            1
+          </span>
+          <span className="text-sm font-semibold text-white/80">
+            {device.isMobile ? 'Make sure you have the Superhero Wallet app' : 'Make sure you have the extension'}
+          </span>
+        </div>
+
+        {device.isMobile ? (
+          /* Mobile: show wallet app download */
+          <div className="ml-10">
+            <a
+              href={device.isIOS ? APP_LINKS.walletIos : APP_LINKS.walletAndroid}
+              target="_blank"
+              rel="noreferrer"
+              className="no-underline flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <Smartphone className="w-5 h-5 text-white/60 shrink-0" />
+              <span className="text-sm text-white/90 font-medium">
+                {device.isIOS ? 'Download from App Store' : 'Download from Google Play'}
+              </span>
+            </a>
+          </div>
+        ) : (
+          /* Desktop: show browser extension(s) */
+          <div className="ml-10">
+            {getExtensionLinks(device).map((ext) => (
+              <a
+                key={ext.href}
+                href={ext.href}
+                target="_blank"
+                rel="noreferrer"
+                className="no-underline flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                {ext.Icon && <ext.Icon className="w-6 h-6 shrink-0" />}
+                <span className="text-sm text-white/90 font-medium">{ext.label}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Step 2 - Connect Wallet */}
+      <div className="mb-5">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#1161FE]/20 text-[#1161FE] text-sm font-bold border border-[#1161FE]/30">
+            2
+          </span>
+          <span className="text-sm font-semibold text-white/80">
+            Connect Wallet
+          </span>
+        </div>
+        <div className="ml-10">
+          <AeButton
+            variant="default"
+            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full rounded-xl"
+            onClick={handleConnect}
+            loading={connectingWallet}
+            disabled={connectingWallet}
+          >
+            {connectingWallet ? 'Connecting…' : 'CONNECT WALLET'}
+          </AeButton>
+        </div>
+      </div>
+
+      {/* Divider with "or" */}
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs text-white/40 uppercase">or</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      {/* Download full app */}
+      <div className="text-center">
+        <p className="text-xs text-white/50 mb-3">
+          Download the all-in-one Superhero app with built-in wallet
+        </p>
+        <div className="flex flex-row items-center justify-center gap-3">
+          <a
+            href={APP_LINKS.appStore}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-2.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] no-underline"
+          >
+            <Smartphone className="w-4 h-4 text-white/60" />
+            <div className="text-left">
+              <span className="block text-[10px] text-white/40 leading-none">Download on</span>
+              <span className="block text-[12px] font-semibold text-white/90 leading-tight">App Store</span>
+            </div>
+          </a>
+          <a
+            href={APP_LINKS.playStore}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-2.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] no-underline"
+          >
+            <Smartphone className="w-4 h-4 text-white/60" />
+            <div className="text-left">
+              <span className="block text-[10px] text-white/40 leading-none">Get it on</span>
+              <span className="block text-[12px] font-semibold text-white/90 leading-tight">Google Play</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {/* Terms */}
+      <div className="mt-5 text-center text-[11px] text-white/40 leading-relaxed">
+        By connecting your wallet you agree to the
+        {' '}
+        <Link to="/terms" className="no-underline text-[var(--primary-color)] hover:opacity-90">
+          Terms of Use
+        </Link>
+        {' '}
+        and
+        {' '}
+        <Link to="/privacy" className="no-underline text-[var(--primary-color)] hover:opacity-90">
+          Privacy Policy
+        </Link>
+        .
+      </div>
+    </div>
+  );
+};
+
+export default OnboardingModal;

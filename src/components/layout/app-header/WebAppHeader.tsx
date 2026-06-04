@@ -26,7 +26,7 @@ const WebAppHeader = () => {
 
   const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);
 
-  const handleConnect = useCallback(() => openModal({ name: 'connect-wallet' }), [openModal]);
+  const handleConnect = useCallback(() => openModal({ name: 'onboarding' }), [openModal]);
 
   const activeNavPath = useMemo(
     () => getActiveNavigationPath(pathname, sidebarItems),

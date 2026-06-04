@@ -6,7 +6,7 @@ import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
 import {
-  useAeSdk, useAccount, useIsMobile, useWalletConnect,
+  useAeSdk, useAccount, useIsMobile, useModal, useWalletConnect,
 } from './hooks';
 import { useProfileFeed } from './hooks/useProfileFeed';
 import { routes } from './routes';
@@ -14,6 +14,7 @@ import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import { hasCompletedOnboarding } from './components/modals/WelcomeModal';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -34,6 +35,12 @@ const ConnectWalletModal = React.lazy(
 const TipModal = React.lazy(
   () => import('./components/modals/TipModal'),
 );
+const OnboardingModal = React.lazy(
+  () => import('./components/modals/OnboardingModal'),
+);
+const WelcomeModal = React.lazy(
+  () => import('./components/modals/WelcomeModal'),
+);
 
 const App = () => {
   const isMobile = useIsMobile();
@@ -41,10 +48,12 @@ const App = () => {
   const { initSdk, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { attemptReconnection } = useWalletConnect();
+  const { openModal } = useModal();
 
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
   const loadAccountDataRef = useRef(loadAccountData);
+  const welcomeShownRef = useRef(false);
 
   // Keep refs updated with latest functions
   useEffect(() => {
@@ -64,6 +73,19 @@ const App = () => {
 
     initialize();
   }, [attemptReconnection, initSdk]); // Run once per stable hook references
+
+  // Show welcome modal for first-time visitors (not logged in, onboarding not skipped)
+  useEffect(() => {
+    if (welcomeShownRef.current) return undefined;
+    if (activeAccount) return undefined; // Already logged in, skip
+    if (hasCompletedOnboarding()) return undefined; // Already seen
+    welcomeShownRef.current = true;
+    // Small delay to let the app render first
+    const timer = setTimeout(() => {
+      openModal({ name: 'welcome' });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [activeAccount, openModal]);
 
   // Setup interval for periodic data refresh when account is active
   useEffect(() => {
@@ -100,6 +122,8 @@ const App = () => {
             'transaction-confirm': TransactionConfirmModal,
             'connect-wallet': ConnectWalletModal,
             tip: TipModal,
+            onboarding: OnboardingModal,
+            welcome: WelcomeModal,
           }}
         />
       </Suspense>

@@ -144,7 +144,7 @@ const MobileAppFooter = () => {
               isActive={isActive}
               className={itemClassName}
               style={{ textDecoration: 'none' }}
-              onConnect={() => openModal({ name: 'connect-wallet' })}
+              onConnect={() => openModal({ name: 'onboarding' })}
             >
               {content}
             </AppNavigationItemAction>

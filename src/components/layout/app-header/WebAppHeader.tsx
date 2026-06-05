@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSetAtom } from 'jotai';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
-import { useModal } from '../../../hooks';
+import { profileEditModalOpenAtom } from '../../../atoms/profileEditModalAtom';
 
 const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const { activeAccount } = useAeSdk();
-  const { openModal } = useModal();
+  const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
 
   useEffect(() => {
     // force theme to be dark
@@ -26,7 +27,7 @@ const WebAppHeader = () => {
 
   const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);
 
-  const handleConnect = useCallback(() => openModal({ name: 'onboarding' }), [openModal]);
+  const handleConnect = useCallback(() => setProfileEditOpen(true), [setProfileEditOpen]);
 
   const activeNavPath = useMemo(
     () => getActiveNavigationPath(pathname, sidebarItems),

@@ -2,6 +2,7 @@ import React, {
   Suspense, useEffect, useRef,
 } from 'react';
 import { useRoutes } from 'react-router-dom';
+import { useAtom } from 'jotai';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
@@ -14,6 +15,8 @@ import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
 import { hasCompletedOnboarding } from './components/modals/WelcomeModal';
+import { profileEditModalOpenAtom } from './atoms/profileEditModalAtom';
+import ProfileEditModal from './components/modals/ProfileEditModal';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -64,6 +67,7 @@ const App = () => {
   const { loadAccountData } = useAccount();
   const { attemptReconnection, connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
+  const [profileEditOpen, setProfileEditOpen] = useAtom(profileEditModalOpenAtom);
 
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
@@ -155,6 +159,10 @@ const App = () => {
           }}
         />
       </Suspense>
+      <ProfileEditModal
+        open={profileEditOpen}
+        onClose={() => setProfileEditOpen(false)}
+      />
       <Suspense fallback={<div className="loading-fallback" />}>
         <div className="app-routes-container">{useRoutes(routes as any)}</div>
       </Suspense>

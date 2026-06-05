@@ -1,8 +1,9 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
+import { useSetAtom } from 'jotai';
 import { AeButton } from '@/components/ui/ae-button';
-import { useModal } from '@/hooks';
 import Favicon from '@/svg/favicon.svg?react';
+import { profileEditModalOpenAtom } from '@/atoms/profileEditModalAtom';
 
 type Props = { onClose: () => void };
 
@@ -25,13 +26,13 @@ export function markOnboardingComplete(): void {
 }
 
 const WelcomeModal = ({ onClose }: Props) => {
-  const { openModal } = useModal();
+  const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
 
   function handleGetStarted() {
     markOnboardingComplete();
     onClose();
-    // Open the onboarding modal (same as clicking "Superhero ID" in side menu)
-    openModal({ name: 'onboarding' });
+    // Open the profile edit modal (same as clicking "Superhero ID" in side menu)
+    setProfileEditOpen(true);
   }
 
   function handleContinueAsGuest() {

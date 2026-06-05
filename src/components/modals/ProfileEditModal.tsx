@@ -22,6 +22,7 @@ import {
 import { CONFIG } from '@/config';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useModal } from '@/hooks/useModal';
 import { useProfile } from '@/hooks/useProfile';
 import { useClaimChainName } from '@/hooks/useClaimChainName';
 import {
@@ -338,6 +339,7 @@ const ProfileEditModal = ({
   const [rewardNote, setRewardNote] = useState<string | null>(null);
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
+  const { openModal } = useModal();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
@@ -672,6 +674,11 @@ const ProfileEditModal = ({
 
   const onClaim = async () => {
     try {
+      // Not logged in: don't block with an error — guide the visitor into onboarding.
+      if (!activeAccount) {
+        openModal({ name: 'onboarding' });
+        return;
+      }
       const targetClaimAddress = claimAddress;
       if (!targetClaimAddress || !canClaim) {
         const msg = t('messages.connectWalletToClaimChainName');
@@ -858,9 +865,7 @@ const ProfileEditModal = ({
     try {
       const targetAddress = (address as string) || (activeAccount as string);
       if (!targetAddress || !activeAccount) {
-        const msg = t('messages.connectWalletToEditProfile');
-        setFormError(msg);
-        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        openModal({ name: 'onboarding' });
         return;
       }
       const validationError = validateForm();
@@ -1012,6 +1017,9 @@ const ProfileEditModal = ({
 
   const targetAddress = (address as string) || (activeAccount as string);
   const hasOwnedChainNames = availableChainNames.length > 0;
+  // Guest: no wallet connected. The modal stays usable but every primary action funnels the
+  // visitor into onboarding instead of attempting a real edit/link.
+  const isGuest = !activeAccount;
 
   const isCheckingAvailability = availabilityStatus === 'checking';
   const isCheckingSponsorship = sponsorshipStatus === 'checking';
@@ -1194,19 +1202,24 @@ const ProfileEditModal = ({
             {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
               <div ref={xSectionRef}>
                 <Label className={FIELD_LABEL_CLASS}>X (Twitter)</Label>
-                {!xSectionReady && (
+                {!xSectionReady && !isGuest && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
                   <Spinner className="w-5 h-5 text-white/60" />
                   <span className="text-xs text-white/50">{t('messages.loading')}</span>
                 </div>
                 )}
-                {xSectionReady && !hasXVerified && (
+                {(isGuest || (xSectionReady && !hasXVerified)) && (
                 <button
                   ref={connectXButtonRef}
                   type="button"
-                  disabled={connectingX || !canEdit}
+                  disabled={connectingX || (!isGuest && !canEdit)}
                   className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-2.5 text-sm text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all disabled:opacity-50 disabled:pointer-events-none"
                   onClick={async () => {
+                    // Guest: route to onboarding, the same destination as Save in this mode.
+                    if (isGuest) {
+                      openModal({ name: 'onboarding' });
+                      return;
+                    }
                     const targetAddr = (address as string) || (activeAccount as string);
                     if (!targetAddr) return;
                     setConnectingX(true);

@@ -3,8 +3,8 @@ import {
 } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import { useSetAtom } from 'jotai';
 import AddressAvatar from '../../AddressAvatar';
-import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import {
@@ -12,11 +12,12 @@ import {
   getMobileFooterNavigationItems,
   getMobileMoreNavigationItems,
 } from './navigationItems';
+import { profileEditModalOpenAtom } from '../../../atoms/profileEditModalAtom';
 
 const MobileAppFooter = () => {
   const { pathname } = useLocation();
   const { activeAccount } = useAeSdk();
-  const { openModal } = useModal();
+  const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
   const navigationItems = useMemo(
     () => getMobileFooterNavigationItems(activeAccount),
     [activeAccount],
@@ -144,7 +145,7 @@ const MobileAppFooter = () => {
               isActive={isActive}
               className={itemClassName}
               style={{ textDecoration: 'none' }}
-              onConnect={() => openModal({ name: 'onboarding' })}
+              onConnect={() => setProfileEditOpen(true)}
             >
               {content}
             </AppNavigationItemAction>

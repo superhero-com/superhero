@@ -42,18 +42,43 @@ const WelcomeModal = React.lazy(
   () => import('./components/modals/WelcomeModal'),
 );
 
+/**
+ * Whether a wallet session was persisted before this app load. Returning users have one;
+ * wallet reconnection transiently clears the in-memory activeAccount/walletInfo, so we read
+ * the raw persisted keys to tell a returning user apart from a genuine first-time visitor.
+ */
+function hasPersistedWalletSession(): boolean {
+  try {
+    const isSet = (value: string | null) => (
+      value !== null && value !== 'null' && value !== 'undefined' && value !== '""'
+    );
+    return isSet(localStorage.getItem('account:activeAccount'))
+      || isSet(localStorage.getItem('wallet:walletInfo'));
+  } catch {
+    return false;
+  }
+}
+
 const App = () => {
   const isMobile = useIsMobile();
   useProfileFeed({ refetchIntervalMs: 20_000 });
   const { initSdk, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
-  const { attemptReconnection } = useWalletConnect();
+  const { attemptReconnection, connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
 
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
   const loadAccountDataRef = useRef(loadAccountData);
-  const welcomeShownRef = useRef(false);
+
+  // Capture the persisted-session state on the first render, before reconnection runs and
+  // clears activeAccount/walletInfo. Used to keep the first-visit welcome from popping over a
+  // returning user mid-reconnect.
+  const hadPersistedWalletSessionRef = useRef<boolean | null>(null);
+  if (hadPersistedWalletSessionRef.current === null) {
+    hadPersistedWalletSessionRef.current = hasPersistedWalletSession();
+  }
+  const welcomeOpenedRef = useRef(false);
 
   // Keep refs updated with latest functions
   useEffect(() => {
@@ -74,18 +99,23 @@ const App = () => {
     initialize();
   }, [attemptReconnection, initSdk]); // Run once per stable hook references
 
-  // Show welcome modal for first-time visitors (not logged in, onboarding not skipped)
+  // Show welcome modal for first-time visitors only. Skip it for returning users — including
+  // the window while wallet reconnection is in progress, during which connectWallet() has
+  // transiently cleared activeAccount/walletInfo before the connection completes.
   useEffect(() => {
-    if (welcomeShownRef.current) return undefined;
-    if (activeAccount) return undefined; // Already logged in, skip
+    if (welcomeOpenedRef.current) return undefined; // Already opened once this session
     if (hasCompletedOnboarding()) return undefined; // Already seen
-    welcomeShownRef.current = true;
+    // Returning user, possibly mid-reconnect
+    if (hadPersistedWalletSessionRef.current) return undefined;
+    if (activeAccount) return undefined; // Already logged in
+    if (connectingWallet) return undefined; // Connection/reconnection in progress
     // Small delay to let the app render first
     const timer = setTimeout(() => {
+      welcomeOpenedRef.current = true;
       openModal({ name: 'welcome' });
     }, 500);
     return () => clearTimeout(timer);
-  }, [activeAccount, openModal]);
+  }, [activeAccount, connectingWallet, openModal]);
 
   // Setup interval for periodic data refresh when account is active
   useEffect(() => {

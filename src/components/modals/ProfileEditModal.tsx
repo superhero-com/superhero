@@ -1349,7 +1349,9 @@ const ProfileEditModal = ({
               </Button>
               <Button
                 onClick={onSave}
-                disabled={loading || !canEdit}
+                // Keep Save active when logged out so the click can trigger onboarding;
+                // only gate on edit permission once an account is actually connected.
+                disabled={loading || (!!activeAccount && !canEdit)}
                 className="flex-1 rounded-xl font-semibold disabled:opacity-50"
                 style={{
                   background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',

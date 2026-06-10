@@ -362,6 +362,35 @@ export type ChainNameSponsorshipResponse = {
   reason: string | null;
 };
 
+/** Challenge bound to an address; the wallet signs `message` to prove ownership. */
+export type XPostingRewardChallengeResponse = {
+  nonce: string;
+  expires_at: string | number;
+  message: string;
+};
+
+export type XPostingRewardOnboardingStatus =
+  | 'not_started'
+  | 'pending'
+  | 'paid'
+  | 'failed';
+
+/** Read-only reward status (GET) and the body returned by a successful recheck. */
+export type XPostingRewardStatus = {
+  onboarding_status: XPostingRewardOnboardingStatus | string;
+  qualified_posts_count?: number;
+  tx_hash?: string | null;
+  next_check_allowed_at?: string | number | null;
+};
+
+/**
+ * Result of a recheck submit. On the 24h-cap (HTTP 429) the scan is skipped and
+ * `nextAllowedAt` carries when the next check is permitted.
+ */
+export type XPostingRewardRecheckResult =
+  | { rateLimited: false; status: XPostingRewardStatus }
+  | { rateLimited: true; nextAllowedAt: string | number | null };
+
 // Superhero API client
 export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
@@ -694,6 +723,56 @@ export const SuperheroApi = {
   },
   getChainNameClaimStatus(address: string) {
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/chain-name-claim`) as Promise<ChainNameClaimStatusResponse>;
+  },
+  /** Ask for a signature challenge bound to `address` for the X-posting reward recheck. */
+  createXPostingRewardRecheckChallenge(address: string) {
+    return this.fetchJson('/api/profile/x-posting-reward/recheck-challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<XPostingRewardChallengeResponse>;
+  },
+  /** Read the reward status without triggering a scan (no signature, no X-API cost). */
+  getXPostingRewardStatus(address: string) {
+    return this.fetchJson(
+      `/api/profile/${encodeURIComponent(address)}/x-posting-reward`,
+    ) as Promise<XPostingRewardStatus>;
+  },
+  /**
+   * Submit the signed challenge to run the (once-per-24h) capped X scan.
+   * Returns the reward status, or `{ rateLimited: true }` when the daily cap is hit (HTTP 429).
+   */
+  async recheckXPostingReward(payload: {
+    address: string;
+    challenge_nonce: string;
+    challenge_expires_at: string;
+    signature_hex: string;
+  }): Promise<XPostingRewardRecheckResult> {
+    const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
+    if (!base) throw new Error('SUPERHERO_API_URL not configured');
+    const { address, ...body } = payload;
+    const res = await fetch(
+      `${base}/api/profile/${encodeURIComponent(address)}/x-posting-reward/recheck`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (res.status === 429) {
+      const capBody = await res.json().catch(() => ({} as Record<string, unknown>));
+      return {
+        rateLimited: true,
+        nextAllowedAt: (capBody.nextAllowedAt as string | number | null) ?? null,
+      };
+    }
+    if (!res.ok) {
+      throw new Error(`Reward check failed with status ${res.status}`);
+    }
+    const status = (await res.json()) as XPostingRewardStatus;
+    return { rateLimited: false, status };
   },
   /** Check whether the sponsor account can fund a chain name claim. `name` is the label without `.chain`. */
   checkChainNameSponsorship(name: string) {

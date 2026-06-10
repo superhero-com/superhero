@@ -38,28 +38,10 @@ const BRAND_COLORS = [
     desc: 'Fresh corporate balance. Used for sub-headings, secondary buttons, and informative components.',
   },
   {
-    name: 'Neon Yellow',
-    hex: '#ffd93d',
-    rgb: '255, 217, 61',
-    desc: 'Alert and attention-grabber. Used for warning states, secondary highlights, and ratings.',
-  },
-  {
-    name: 'Neon Purple',
-    hex: '#a855f7',
-    rgb: '168, 85, 247',
-    desc: 'Premium accent. Utilized for special notifications, elite users, and custom highlights.',
-  },
-  {
-    name: 'Ultra Dark Canvas',
+    name: 'Background',
     hex: '#0a0a0f',
     rgb: '10, 10, 15',
     desc: 'Our deep dark-mode backdrop, optimized for high contrast with radiant cyberpunk neon hues.',
-  },
-  {
-    name: 'Container Secondary',
-    hex: '#1a1a2e',
-    rgb: '26, 26, 46',
-    desc: 'Used as standard container background for cards, popups, inputs, and list rows.',
   },
 ];
 
@@ -68,10 +50,6 @@ const CUSTOM_ICONS = [
   { Component: IconWallet, name: 'Wallet', id: 'svg-icon-wallet' },
   { Component: IconHashtag, name: 'Hashtag', id: 'svg-icon-hashtag' },
   { Component: IconFeed, name: 'Feed', id: 'svg-icon-feed' },
-  { Component: IconComment, name: 'Comment', id: 'svg-icon-comment' },
-  { Component: IconShare, name: 'Share', id: 'svg-icon-share' },
-  { Component: IconPlus, name: 'Plus', id: 'svg-icon-plus' },
-  { Component: IconUser, name: 'User', id: 'svg-icon-user' },
 ];
 
 const Branding = () => {
@@ -203,7 +181,7 @@ const Branding = () => {
             Brand Identity Guidelines
           </h1>
           <p className="text-[15px] md:text-lg opacity-80 max-w-[800px] leading-relaxed">
-            Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you construct stunning material. Learn about our core identity and download assets in scalable vector and raster formats.
+            Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you construct material.
           </p>
         </div>
 
@@ -215,10 +193,6 @@ const Branding = () => {
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-white">Brand Color Palette</h2>
           </div>
-
-          <p className="text-sm text-white/70 mb-5 max-w-[800px]">
-            Our palette reflects the electric vibe of the Superhero ecosystem: bright, modern cyberpunk neon accents set against highly-stabilized deep dark canvas values.
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {BRAND_COLORS.map((color) => (
@@ -260,10 +234,6 @@ const Branding = () => {
             <h2 className="text-2xl font-bold tracking-tight text-white">Typography System</h2>
           </div>
 
-          <p className="text-sm text-white/70 mb-5 max-w-[800px]">
-            Superhero employs a highly clean, neutral geometric sans-serif typeface to bridge tech, cryptocurrency, and casual user experiences effortlessly.
-          </p>
-
           <div className="p-6 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
@@ -281,11 +251,11 @@ const Branding = () => {
                 <div className="space-y-4">
                   <div>
                     <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">Heading Style</span>
-                    <span className="text-2xl font-extrabold text-white">The Heroic Protocol</span>
+                    <span className="text-2xl font-extrabold text-white">Attention Markets</span>
                   </div>
                   <div>
                     <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">Body Text</span>
-                    <span className="text-sm text-white/70">Connecting worldwide creators via micropayments on on-chain smart contracts.</span>
+                    <span className="text-sm text-white/70">Follow Trends on-chain on a decentralized network.</span>
                   </div>
                   <div className="flex gap-2">
                     <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-semibold">Regular</span>
@@ -307,10 +277,6 @@ const Branding = () => {
             <h2 className="text-2xl font-bold tracking-tight text-white">Logos and Iconography</h2>
           </div>
 
-          <p className="text-sm text-white/70 mb-5 max-w-[800px]">
-            Below you will find the official full text logo, small shield favicon, and square brand logos. Each is available for preview and quick download.
-          </p>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Full Logo Card */}
             <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
@@ -325,7 +291,7 @@ const Branding = () => {
               <div className="p-4 flex-1 flex flex-col">
                 <h3 className="font-bold text-lg mb-1">Full Logo (SVG)</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  Our main combination logo featuring the Superhero brand name alongside the signature blue power shield icon. Perfect for light and dark backgrounds.
+                  Our main combination logo featuring the Superhero brand name alongside the signature blue power shield icon.
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/full-logo.svg', 'superhero-full-logo.svg')}
@@ -409,10 +375,6 @@ const Branding = () => {
             <h2 className="text-2xl font-bold tracking-tight text-white">Digital Banners & Assets</h2>
           </div>
 
-          <p className="text-sm text-white/70 mb-5 max-w-[800px]">
-            Download high-quality social previews and custom pre-designed vector banners matching the sleek aesthetic of the Superhero application.
-          </p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* OG Social Banner */}
             <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
@@ -432,7 +394,7 @@ const Branding = () => {
               <div className="p-4 flex-1 flex flex-col">
                 <h3 className="font-bold text-lg mb-1">Standard OG Social Banner</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  The default sharing metadata card. Ensures a striking presence on platforms like Twitter, Telegram, Discord, or Facebook.
+                  The default sharing metadata card for Twitter, Telegram, Discord, or Facebook.
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/og-default.png', 'superhero-og-banner.png')}
@@ -460,9 +422,9 @@ const Branding = () => {
                 <div className="absolute bottom-2 left-4 text-xs text-white/50 uppercase tracking-widest font-mono">Vector SVG Template</div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Sleek Vector Brand Banner</h3>
+                <h3 className="font-bold text-lg mb-1">Vector Brand Banner</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  A gorgeous, pre-composed landscape branding banner generated dynamically as a fully-scalable vector file (.svg). Excellent for custom headers.
+                  Scalable banner vector file (.svg) for headers.
                 </p>
                 <AeButton
                   onClick={() => downloadPredefinedBanner('landscape')}
@@ -495,7 +457,7 @@ const Branding = () => {
               <div className="p-4 flex-1 flex flex-col">
                 <h3 className="font-bold text-lg mb-1">App Showcase Screenshot</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  Official high-resolution screenshot highlighting the gorgeous, modern interface layout, trending topics, feeds, and cryptocurrency components.
+                  App screenshot highlighting interface layout, trending topics, feeds, and cryptocurrency components.
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/screen-1.png', 'superhero-interface-screenshot.png')}
@@ -518,13 +480,13 @@ const Branding = () => {
                   <FaviconIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="text-lg font-black tracking-widest text-white">SUPERHERO</div>
-                <div className="text-[8px] text-neon-teal font-semibold tracking-wider uppercase mt-1">THE APP FOR HEROES</div>
+                <div className="text-[8px] text-neon-teal font-semibold tracking-wider uppercase mt-1">Follow Trends</div>
                 <div className="absolute bottom-2 left-4 text-xs text-white/50 uppercase tracking-widest font-mono">Vector SVG Template (Tall)</div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
                 <h3 className="font-bold text-lg mb-1">Tall Vector Mobile Banner</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  A gorgeous, pre-composed vertical layout banner generated dynamically as a fully-scalable vector file (.svg). Built for smartphone screens.
+                  Vertical banner vector file (.svg) for smartphone screens.
                 </p>
                 <AeButton
                   onClick={() => downloadPredefinedBanner('vertical')}
@@ -547,12 +509,8 @@ const Branding = () => {
             <div className="p-2 bg-neon-pink/10 rounded-lg border border-neon-pink/20">
               <Award className="w-5 h-5 text-neon-pink" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Interface Custom Icon Set</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Custom Icons</h2>
           </div>
-
-          <p className="text-sm text-white/70 mb-5 max-w-[800px]">
-            We deploy custom geometric line-art iconography throughout the platform interface. Feel free to preview and download individual scalable SVGs below.
-          </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
             {CUSTOM_ICONS.map(({ Component, name, id }) => (

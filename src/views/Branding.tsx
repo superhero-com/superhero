@@ -11,10 +11,6 @@ import IconDiamond from '@/svg/iconDiamond.svg?react';
 import IconWallet from '@/svg/iconWallet.svg?react';
 import IconHashtag from '@/svg/iconHashtag.svg?react';
 import IconFeed from '@/svg/iconFeed.svg?react';
-import IconComment from '@/svg/iconComment.svg?react';
-import IconShare from '@/svg/iconShare.svg?react';
-import IconPlus from '@/svg/iconPlus.svg?react';
-import IconUser from '@/svg/iconUser.svg?react';
 import FaviconIcon from '@/svg/favicon.svg?react';
 import FooterSection from '../components/layout/FooterSection';
 
@@ -33,8 +29,8 @@ const BRAND_COLORS = [
   },
   {
     name: 'Neon Blue',
-    hex: '#45b7d1',
-    rgb: '69, 183, 209',
+    hex: '#0f61fe',
+    rgb: '15, 97, 254',
     desc: 'Fresh corporate balance. Used for sub-headings, secondary buttons, and informative components.',
   },
   {
@@ -118,7 +114,7 @@ const Branding = () => {
     <path fill-rule="evenodd" clip-rule="evenodd" d="M0.105957 10.1933L11.0668 0.294678H30.5399L41.5008 10.1933L20.8617 29.6529L0.105957 10.1933ZM12.2912 3.33174H18.2381L30.948 15.8737L20.8034 25.4348L4.65355 10.2495L12.2912 3.33174Z" fill="#1161FE"/>
   </g>
   <text x="600" y="420" font-family="'Inter', sans-serif" font-size="64" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">SUPERHERO</text>
-  <text x="600" y="465" font-family="'Inter', sans-serif" font-size="20" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="8">THE SOCIAL + CRYPTO PROTOCOL</text>
+  <text x="600" y="465" font-family="'Inter', sans-serif" font-size="20" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="8">DECENTRALIZED SOCIAL PROTOCOL</text>
 </svg>`;
     } else {
       svgContent = `<svg width="400" height="800" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -135,7 +131,7 @@ const Branding = () => {
     <path fill-rule="evenodd" clip-rule="evenodd" d="M0.105957 10.1933L11.0668 0.294678H30.5399L41.5008 10.1933L20.8617 29.6529L0.105957 10.1933ZM12.2912 3.33174H18.2381L30.948 15.8737L20.8034 25.4348L4.65355 10.2495L12.2912 3.33174Z" fill="#1161FE"/>
   </g>
   <text x="200" y="480" font-family="'Inter', sans-serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">SUPERHERO</text>
-  <text x="200" y="520" font-family="'Inter', sans-serif" font-size="14" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="4">THE APP FOR HEROES</text>
+  <text x="200" y="520" font-family="'Inter', sans-serif" font-size="14" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="4">Web3 Attention Market</text>
 </svg>`;
     }
 

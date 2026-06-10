@@ -518,6 +518,39 @@ export function useProfile(targetAddress?: string) {
     return res.txHash;
   }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
 
+  /** Read the X-posting reward status without triggering a scan (no signature, no API cost). */
+  const getXPostingRewardStatus = useCallback(async (address?: string) => {
+    const target = address || targetAddress || activeAccount;
+    if (!target) throw new Error('Missing address for reward status');
+    return SuperheroApi.getXPostingRewardStatus(target);
+  }, [targetAddress, activeAccount]);
+
+  /**
+   * Path-1 reward check: fetch a challenge, sign it to prove address ownership,
+   * then submit to run the capped X scan. Returns the reward status (or a
+   * rate-limited result when the 24h cap is hit).
+   */
+  const checkXPostingReward = useCallback(async (address?: string) => {
+    const target = address || targetAddress || activeAccount;
+    if (!target) throw new Error('Missing address for reward check');
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const challenge = await SuperheroApi.createXPostingRewardRecheckChallenge(target);
+    const signatureHex = await signAndVerifyLinkMessage(target, signMessage, challenge.message);
+    return SuperheroApi.recheckXPostingReward({
+      address: target,
+      challenge_nonce: challenge.nonce,
+      challenge_expires_at: String(challenge.expires_at),
+      signature_hex: signatureHex,
+    });
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    targetAddress,
+    activeAccount,
+  ]);
+
   return {
     canEdit,
     isConfigured: true,
@@ -533,5 +566,7 @@ export function useProfile(targetAddress?: string) {
     unlinkSite,
     linkPreferredAensName,
     unlinkPreferredAensName,
+    getXPostingRewardStatus,
+    checkXPostingReward,
   };
 }

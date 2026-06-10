@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSetAtom } from 'jotai';
 import {
   getLinkedBio,
   getLinkedPreferredAensName,
@@ -13,11 +14,27 @@ import {
   patchAccountCacheEntry,
   profileAggregateFromSources,
   ProfileAggregate,
+  type ChainNameClaimStatusResponse,
+  type ChainNameSponsorshipResponse,
   SuperheroApi,
+  type XPostingRewardStatus,
 } from '@/api/backend';
 import { CONFIG } from '@/config';
+import { chainNamesAtom } from '@/atoms/walletAtoms';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
+import { useClaimChainName } from '@/hooks/useClaimChainName';
+import {
+  CLAIMABLE_CHAIN_NAME_LABEL_REGEX,
+  computeSelfFundedClaimAe,
+  resolveClaimErrorMessage,
+  resolveClaimNotificationStep,
+} from '@/utils/claimChainName';
+import { normalizeChainNameLabel } from '@/utils/chainNames';
+import {
+  TxPayloadType,
+  useTransactionNotification,
+} from '@/features/transaction-notification';
 import {
   buildXAuthorizeUrl,
   generateCodeVerifier,
@@ -27,7 +44,9 @@ import {
 } from '@/utils/xOAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
-import { Check, Globe } from 'lucide-react';
+import {
+  Check, Globe, Gift, RefreshCw,
+} from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import {
@@ -58,8 +77,35 @@ const EMPTY_FORM: EditableFormState = {
 
 const NONE_CHAIN_NAME_VALUE = '__none_chain_name__';
 
+const AVAILABILITY_CHECK_DELAY_MS = 500;
+const SPONSORSHIP_CHECK_DELAY_MS = 500;
+
+type NameAvailabilityStatus = 'idle' | 'checking' | 'available' | 'unavailable';
+type SponsorshipStatus = 'idle' | 'checking' | 'resolved';
+
 const CHAIN_NAME_LABEL_CLASS = 'text-white/70 text-[11px] tracking-wider font-semibold';
 const FIELD_LABEL_CLASS = 'text-white/70 text-[11px] uppercase tracking-wider font-semibold';
+
+const REWARD_STATUS_LABELS: Record<string, string> = {
+  not_started: 'Not started — post a tweet linking superhero.com, then check.',
+  pending: 'Pending — qualifying post found, reward is being sent.',
+  paid: 'Paid — the AE reward has been sent. 🎉',
+  failed: 'Failed — the reward could not be sent.',
+};
+
+const formatRewardLabel = (status: string) => (
+  REWARD_STATUS_LABELS[status] ?? `Status: ${status}`
+);
+
+/** Best-effort human time from an ISO string or epoch (seconds or ms). */
+const formatRewardTime = (value: string | number | null | undefined): string => {
+  if (value == null || value === '') return 'later';
+  const num = Number(value);
+  const date = Number.isFinite(num)
+    ? new Date(num < 1e12 ? num * 1000 : num)
+    : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+};
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -80,12 +126,6 @@ const GLASS_CARD_STYLE = {
   backdropFilter: 'blur(32px)',
   WebkitBackdropFilter: 'blur(32px)',
   boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
-} as const;
-
-const NEON_ACTION_BUTTON_STYLE = {
-  background: 'rgba(0,255,157,0.1)',
-  borderColor: 'rgba(0,255,157,0.35)',
-  color: 'var(--neon-teal)',
 } as const;
 
 const normalizeChainName = (value: unknown): string => String(value || '').trim().toLowerCase();
@@ -258,14 +298,12 @@ const ProfileEditModal = ({
   address,
   initialBio,
   initialSection = 'profile',
-  onBuyChainName,
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
   address?: string;
   initialBio?: string;
   initialSection?: 'profile' | 'x';
-  onBuyChainName?: () => void;
 }) => {
   const { t } = useTranslation('common');
   const {
@@ -277,9 +315,27 @@ const ProfileEditModal = ({
     unlinkSite,
     linkPreferredAensName,
     unlinkPreferredAensName,
+    checkXPostingReward,
     canEdit,
   } = useProfile(address);
+  const {
+    claimSponsoredChainName,
+    claimSelfFundedChainName,
+    claimAddress,
+    canClaim,
+    checkNameAvailability,
+  } = useClaimChainName(address);
+  const {
+    notifySubmitted,
+    notifyPending,
+    notifyConfirmed,
+    notifyError,
+  } = useTransactionNotification();
+  const setChainNames = useSetAtom(chainNamesAtom);
   const [connectingX, setConnectingX] = useState(false);
+  const [rewardChecking, setRewardChecking] = useState(false);
+  const [rewardStatus, setRewardStatus] = useState<XPostingRewardStatus | null>(null);
+  const [rewardNote, setRewardNote] = useState<string | null>(null);
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
   const queryClient = useQueryClient();
@@ -291,10 +347,18 @@ const ProfileEditModal = ({
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
-  const [chainPickerOpen, setChainPickerOpen] = useState(false);
-  const [pickerChainName, setPickerChainName] = useState(NONE_CHAIN_NAME_VALUE);
+  const [claiming, setClaiming] = useState(false);
+  const [claimValue, setClaimValue] = useState('');
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [availabilityStatus, setAvailabilityStatus] = useState<NameAvailabilityStatus>('idle');
+  const [lastCheckedValue, setLastCheckedValue] = useState('');
+  const [sponsorship, setSponsorship] = useState<ChainNameSponsorshipResponse | null>(null);
+  const [sponsorshipStatus, setSponsorshipStatus] = useState<SponsorshipStatus>('idle');
   const xSectionRef = useRef<HTMLDivElement | null>(null);
   const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
+  const submittedRef = useRef(false);
+  const availabilityRequestIdRef = useRef(0);
+  const sponsorshipRequestIdRef = useRef(0);
 
   const trimmedForm = useMemo(() => ({
     bio: form.bio.trim(),
@@ -413,7 +477,13 @@ const ProfileEditModal = ({
     if (!open) {
       setLoading(false);
       setFormError(null);
-      setChainPickerOpen(false);
+      setClaiming(false);
+      setClaimValue('');
+      setClaimError(null);
+      setAvailabilityStatus('idle');
+      setLastCheckedValue('');
+      setSponsorship(null);
+      setSponsorshipStatus('idle');
     }
   }, [open]);
 
@@ -442,26 +512,329 @@ const ProfileEditModal = ({
     return null;
   };
 
-  const openChainPicker = () => {
-    setPickerChainName(form.chain_name || NONE_CHAIN_NAME_VALUE);
-    setChainPickerOpen(true);
-  };
-
-  const handleChainNameAction = () => {
-    const hasChainName = Boolean(trimmedForm.chain_name);
-    if (hasChainName || availableChainNames.length > 0) {
-      openChainPicker();
-      return;
-    }
-    onBuyChainName?.();
-  };
-
-  const applyChainPicker = () => {
+  // When the user already owns names, they pick the preferred one from a dropdown.
+  const handleChainNameSelect = (value: string) => {
     setForm((prev) => ({
       ...prev,
-      chain_name: pickerChainName === NONE_CHAIN_NAME_VALUE ? '' : pickerChainName,
+      chain_name: value === NONE_CHAIN_NAME_VALUE ? '' : value,
     }));
-    setChainPickerOpen(false);
+  };
+
+  // When the user owns no names, they type one to claim it. Mirrors the standalone claim flow.
+  const normalizedClaimValue = useMemo(() => normalizeChainNameLabel(claimValue), [claimValue]);
+  const normalizedClaimValueLength = normalizedClaimValue.length;
+  const validateClaimChainName = (name: string): string | null => {
+    if (!name) return t('messages.chainNameClaimRequired');
+    if (!CLAIMABLE_CHAIN_NAME_LABEL_REGEX.test(name)) return t('messages.chainNameClaimInvalidChars');
+    if (name.length <= 12) return t('messages.chainNameClaimTooShort');
+    return null;
+  };
+  const claimValidationError = validateClaimChainName(normalizedClaimValue);
+  const isClaimTooShort = Boolean(normalizedClaimValue && normalizedClaimValueLength <= 12);
+
+  // Price the user pays when claiming themselves (sponsor can't fund it), computed locally.
+  const selfFundedPriceAe = useMemo(() => {
+    if (!normalizedClaimValue || claimValidationError) return null;
+    try {
+      return computeSelfFundedClaimAe(`${normalizedClaimValue}.chain`).toFixed(4);
+    } catch {
+      return null;
+    }
+  }, [normalizedClaimValue, claimValidationError]);
+
+  // Throttled availability check for the typed name (only relevant while claiming a new name).
+  useEffect(() => {
+    if (!open || availableChainNames.length > 0) return undefined;
+
+    availabilityRequestIdRef.current += 1;
+    const requestId = availabilityRequestIdRef.current;
+
+    if (!normalizedClaimValue || claimValidationError) {
+      setAvailabilityStatus('idle');
+      setLastCheckedValue('');
+      return undefined;
+    }
+
+    setAvailabilityStatus('checking');
+
+    const timeoutId = window.setTimeout(() => {
+      checkNameAvailability(normalizedClaimValue)
+        .then((isAvailable) => {
+          if (availabilityRequestIdRef.current !== requestId) return;
+          setLastCheckedValue(normalizedClaimValue);
+          setAvailabilityStatus(isAvailable ? 'available' : 'unavailable');
+          if (isAvailable) {
+            setClaimError((currentError) => (
+              currentError === t('messages.chainNameClaimNameTaken') ? null : currentError
+            ));
+            return;
+          }
+          setClaimError(t('messages.chainNameClaimNameTaken'));
+        })
+        .catch(() => {
+          if (availabilityRequestIdRef.current !== requestId) return;
+          setLastCheckedValue(normalizedClaimValue);
+          setAvailabilityStatus('idle');
+          setClaimError((currentError) => (
+            currentError === t('messages.chainNameClaimNameTaken') ? null : currentError
+          ));
+        });
+    }, AVAILABILITY_CHECK_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    availableChainNames.length,
+    checkNameAvailability,
+    normalizedClaimValue,
+    open,
+    t,
+    claimValidationError,
+  ]);
+
+  // Throttled check of whether the sponsor account can fund this name. Drives the
+  // "Free" / price hint and decides whether the claim is sponsored or self-funded.
+  useEffect(() => {
+    if (!open || availableChainNames.length > 0) return undefined;
+
+    sponsorshipRequestIdRef.current += 1;
+    const requestId = sponsorshipRequestIdRef.current;
+
+    if (!normalizedClaimValue || claimValidationError) {
+      setSponsorship(null);
+      setSponsorshipStatus('idle');
+      return undefined;
+    }
+
+    setSponsorshipStatus('checking');
+
+    const timeoutId = window.setTimeout(() => {
+      SuperheroApi.checkChainNameSponsorship(normalizedClaimValue)
+        .then((result) => {
+          if (sponsorshipRequestIdRef.current !== requestId) return;
+          setSponsorship(result);
+          setSponsorshipStatus('resolved');
+        })
+        .catch(() => {
+          if (sponsorshipRequestIdRef.current !== requestId) return;
+          setSponsorship(null);
+          setSponsorshipStatus('idle');
+        });
+    }, SPONSORSHIP_CHECK_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [availableChainNames.length, normalizedClaimValue, open, claimValidationError]);
+
+  const getClaimNotificationPayload = (
+    name: string,
+    claimStatus?: ChainNameClaimStatusResponse | null,
+  ) => ({
+    type: TxPayloadType.ClaimChainName,
+    name,
+    step: resolveClaimNotificationStep(claimStatus),
+  });
+
+  // Once a name is claimed (or its sponsored claim is submitted), surface it locally so the
+  // section switches to the dropdown and the name is pre-selected as the preferred one to save.
+  const applyClaimedName = (claimedNameLike: string) => {
+    const claimedName = normalizeChainName(claimedNameLike);
+    if (!claimedName) return;
+    setAvailableChainNames((prev) => (
+      prev.some((item) => item.name === claimedName)
+        ? prev
+        : [{ name: claimedName, expiresAt: null }, ...prev]
+          .sort((a, b) => a.name.localeCompare(b.name))
+    ));
+    setForm((prev) => ({ ...prev, chain_name: claimedName }));
+    setClaimValue('');
+    setClaimError(null);
+    setAvailabilityStatus('idle');
+    setLastCheckedValue('');
+    setSponsorship(null);
+    setSponsorshipStatus('idle');
+  };
+
+  // Undo an optimistic applyClaimedName when the sponsored claim ultimately fails, so the UI
+  // never lists or pre-selects a name the user does not actually own.
+  const revertClaimedName = (claimedNameLike: string) => {
+    const claimedName = normalizeChainName(claimedNameLike);
+    if (!claimedName) return;
+    setAvailableChainNames((prev) => prev.filter((item) => item.name !== claimedName));
+    setForm((prev) => (
+      prev.chain_name === claimedName
+        ? { ...prev, chain_name: initialForm.chain_name }
+        : prev
+    ));
+  };
+
+  const onClaim = async () => {
+    try {
+      const targetClaimAddress = claimAddress;
+      if (!targetClaimAddress || !canClaim) {
+        const msg = t('messages.connectWalletToClaimChainName');
+        setClaimError(msg);
+        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        return;
+      }
+
+      if (claimValidationError) {
+        setClaimError(claimValidationError);
+        push(<div style={{ color: '#ffb3b3' }}>{claimValidationError}</div>);
+        return;
+      }
+
+      submittedRef.current = false;
+      setClaiming(true);
+      setClaimError(null);
+      let isNameAvailable = availabilityStatus === 'available'
+        && lastCheckedValue === normalizedClaimValue;
+      if (!isNameAvailable) {
+        try {
+          isNameAvailable = await checkNameAvailability(normalizedClaimValue);
+        } catch (availabilityError) {
+          const msg = resolveClaimErrorMessage(availabilityError, t);
+          setClaimError(msg);
+          notifyError(msg);
+          push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+          setClaiming(false);
+          return;
+        }
+      }
+      if (!isNameAvailable) {
+        const msg = t('messages.chainNameClaimNameTaken');
+        setClaimError(msg);
+        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        setClaiming(false);
+        return;
+      }
+
+      // Decide whether the backend sponsor can fund this name, or the user has to pay.
+      // Prefer the throttled result for the current value; otherwise fetch on demand.
+      let resolvedSponsorship = sponsorship && sponsorship.name === `${normalizedClaimValue}.chain`
+        ? sponsorship
+        : null;
+      if (!resolvedSponsorship) {
+        try {
+          resolvedSponsorship = await SuperheroApi.checkChainNameSponsorship(normalizedClaimValue);
+        } catch {
+          resolvedSponsorship = null;
+        }
+      }
+
+      // Require a definitive answer before choosing a path. If the check failed or returned
+      // nothing, abort with a clear error instead of silently starting the sponsored flow.
+      if (!resolvedSponsorship || typeof resolvedSponsorship.sponsorable !== 'boolean') {
+        const msg = t('messages.chainNameSponsorCheckFailed');
+        setClaimError(msg);
+        notifyError(msg);
+        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        setClaiming(false);
+        return;
+      }
+
+      if (!resolvedSponsorship.sponsorable) {
+        // Self-funded path: run the standard AENS flow straight from the wallet.
+        try {
+          notifySubmitted({
+            type: TxPayloadType.ClaimChainName,
+            name: normalizedClaimValue,
+            step: 'wallet',
+          });
+          const result = await claimSelfFundedChainName({
+            name: normalizedClaimValue,
+            onSignatureRequest: () => notifySubmitted({
+              type: TxPayloadType.ClaimChainName,
+              name: normalizedClaimValue,
+              step: 'wallet',
+            }),
+            onProcessing: () => notifyPending({
+              type: TxPayloadType.ClaimChainName,
+              name: normalizedClaimValue,
+            }),
+          });
+          const claimedName = String(result.name || `${normalizedClaimValue}.chain`).trim().toLowerCase();
+          setChainNames((prev) => ({
+            ...prev,
+            [targetClaimAddress]: claimedName,
+          }));
+          queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', targetClaimAddress] });
+          queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', targetClaimAddress] });
+          notifyConfirmed({
+            type: TxPayloadType.ClaimChainName,
+            name: normalizedClaimValue,
+          });
+          push(<div>{t('messages.chainNameClaimCompleted')}</div>);
+          applyClaimedName(claimedName);
+        } catch (selfFundedError) {
+          const msg = resolveClaimErrorMessage(selfFundedError, t);
+          setClaimError(msg);
+          notifyError(msg);
+          push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+        } finally {
+          setClaiming(false);
+        }
+        return;
+      }
+
+      notifySubmitted({
+        type: TxPayloadType.ClaimChainName,
+        name: normalizedClaimValue,
+        step: 'wallet',
+      });
+
+      const claimPromise = claimSponsoredChainName({
+        name: normalizedClaimValue,
+        onSubmitted: (claimStatus) => {
+          submittedRef.current = true;
+          setClaiming(false);
+          notifyPending(getClaimNotificationPayload(normalizedClaimValue, claimStatus));
+          // Optimistically surface the name; the background poll confirms it on-chain.
+          applyClaimedName(`${normalizedClaimValue}.chain`);
+        },
+        onStatusChange: (claimStatus) => {
+          notifyPending(getClaimNotificationPayload(normalizedClaimValue, claimStatus));
+        },
+      });
+
+      claimPromise.then((finalStatus) => {
+        const claimedName = String(finalStatus.name || `${normalizedClaimValue}.chain`).trim().toLowerCase();
+        setChainNames((prev) => ({
+          ...prev,
+          [targetClaimAddress]: claimedName,
+        }));
+        queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', targetClaimAddress] });
+        queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', targetClaimAddress] });
+        notifyConfirmed({
+          type: TxPayloadType.ClaimChainName,
+          name: normalizedClaimValue,
+        });
+        push(<div>{t('messages.chainNameClaimCompleted')}</div>);
+      }).catch((claimError2) => {
+        const msg = resolveClaimErrorMessage(claimError2, t);
+        if (submittedRef.current) {
+          // The claim was optimistically surfaced in onSubmitted but never confirmed on-chain.
+          // Roll it back so the user can't save a name they do not own.
+          revertClaimedName(`${normalizedClaimValue}.chain`);
+          notifyError(msg);
+          push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+          return;
+        }
+        setClaimError(msg);
+        notifyError(msg);
+        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+      }).finally(() => {
+        if (!submittedRef.current) setClaiming(false);
+      });
+    } catch (claimError3) {
+      const msg = resolveClaimErrorMessage(claimError3, t);
+      setClaimError(msg);
+      notifyError(msg);
+      push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+      setClaiming(false);
+    }
   };
 
   const resolveErrorMessage = (error: unknown) => {
@@ -638,226 +1011,93 @@ const ProfileEditModal = ({
   }
 
   const targetAddress = (address as string) || (activeAccount as string);
-  const selectedChainLabel = trimmedForm.chain_name
-    ? formatChainNameLabel(trimmedForm.chain_name)
+  const hasOwnedChainNames = availableChainNames.length > 0;
+
+  const isCheckingAvailability = availabilityStatus === 'checking';
+  const isCheckingSponsorship = sponsorshipStatus === 'checking';
+  // Resolving either availability or sponsorship blocks the claim: we can't decide the
+  // claim path (sponsored vs self-funded) until both checks settle.
+  const isCheckingStatus = isCheckingAvailability || isCheckingSponsorship;
+  const isCurrentNameUnavailable = Boolean(
+    availabilityStatus === 'unavailable'
+    && lastCheckedValue === normalizedClaimValue,
+  );
+  const isClaimDisabled = Boolean(
+    claiming
+    || isCheckingStatus
+    || !canClaim
+    || claimValidationError
+    || isCurrentNameUnavailable,
+  );
+  const isClaimLoading = claiming || isCheckingStatus;
+  let claimButtonLabel = t('buttons.claimChainName');
+  if (claiming) claimButtonLabel = t('messages.chainNameClaimLoading');
+  else if (isCheckingStatus) claimButtonLabel = t('messages.chainNameClaimChecking');
+
+  const sponsorshipForCurrentName = sponsorshipStatus === 'resolved'
+    && sponsorship
+    && sponsorship.name === `${normalizedClaimValue}.chain`
+    ? sponsorship
     : null;
-  const canChooseChainName = Boolean(trimmedForm.chain_name) || availableChainNames.length > 0;
+  // Only surface the price/free hint once the name is confirmed available to claim.
+  const showSponsorshipHint = Boolean(
+    sponsorshipForCurrentName
+    && !claimValidationError
+    && availabilityStatus === 'available'
+    && lastCheckedValue === normalizedClaimValue,
+  );
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent
-          className={[
-            'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
-            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-          ].join(' ')}
-        >
-          <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
-            <div
-              className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
-            />
-            <div
-              className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-20"
-              style={{ background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)', filter: 'blur(32px)' }}
-            />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className={[
+          'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
+          'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+        ].join(' ')}
+      >
+        <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
+          <div
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
+          />
+          <div
+            className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)', filter: 'blur(32px)' }}
+          />
 
-            <div className="flex items-center justify-between px-5 pt-5 pb-0">
-              <DialogHeader>
-                <DialogTitle className="text-white font-bold text-base tracking-tight">
-                  {t('titles.editSuperheroId')}
-                </DialogTitle>
-              </DialogHeader>
-            </div>
+          <div className="flex items-center justify-between px-5 pt-5 pb-0">
+            <DialogHeader>
+              <DialogTitle className="text-white font-bold text-base tracking-tight">
+                {t('titles.editSuperheroId')}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
 
-            <div className="px-5 pb-5 pt-4 space-y-4">
-              {targetAddress ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="relative">
-                    <div
-                      className="absolute inset-0 rounded-2xl opacity-60 blur-xl"
-                      style={{ background: 'var(--neon-teal)' }}
-                    />
-                    <AddressAvatarWithChainName
-                      address={targetAddress}
-                      size={72}
-                      showAddressAndChainName={false}
-                      className="relative"
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              <div>
-                <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <div className="flex-1 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2 min-w-0">
-                    {selectedChainLabel ? (
-                      <>
-                        <span
-                          className="text-sm font-semibold truncate"
-                          style={{ color: 'var(--neon-teal)' }}
-                        >
-                          {selectedChainLabel}
-                        </span>
-                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--neon-teal)' }} />
-                      </>
-                    ) : (
-                      <span className="text-sm text-white/40 italic">SuperheroUser.chain</span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleChainNameAction}
-                    className="shrink-0 rounded-xl px-3 py-2 text-[12px] font-semibold border border-solid transition-colors whitespace-nowrap"
-                    style={NEON_ACTION_BUTTON_STYLE}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,157,0.18)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = NEON_ACTION_BUTTON_STYLE.background;
-                    }}
-                  >
-                    {canChooseChainName ? t('buttons.chooseChainName') : t('buttons.buyChainName')}
-                  </button>
-                </div>
-              </div>
-
-              {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
-                <div ref={xSectionRef}>
-                  <Label className={FIELD_LABEL_CLASS}>X (Twitter)</Label>
-                  {!xSectionReady && (
-                    <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
-                      <Spinner className="w-5 h-5 text-white/60" />
-                      <span className="text-xs text-white/50">{t('messages.loading')}</span>
-                    </div>
-                  )}
-                  {xSectionReady && !hasXVerified && (
-                    <button
-                      ref={connectXButtonRef}
-                      type="button"
-                      disabled={connectingX || !canEdit}
-                      className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-2.5 text-sm text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all disabled:opacity-50 disabled:pointer-events-none"
-                      onClick={async () => {
-                        const targetAddr = (address as string) || (activeAccount as string);
-                        if (!targetAddr) return;
-                        setConnectingX(true);
-                        try {
-                          const redirectUri = getXCallbackRedirectUri();
-                          const state = generateOAuthState();
-                          const codeVerifier = generateCodeVerifier();
-                          storeXOAuthPKCE({
-                            state,
-                            codeVerifier,
-                            address: targetAddr,
-                            redirectUri,
-                          });
-                          const url = await buildXAuthorizeUrl({
-                            clientId: (CONFIG as any).X_OAUTH_CLIENT_ID,
-                            redirectUri,
-                            state,
-                            codeVerifier,
-                          });
-                          window.location.href = url;
-                        } catch (e) {
-                          setFormError(resolveErrorMessage(e));
-                        } finally {
-                          setConnectingX(false);
-                        }
-                      }}
-                    >
-                      <XIcon className="w-4 h-4 fill-current" />
-                      {connectingX ? t('messages.connectingX') : 'Link account'}
-                    </button>
-                  )}
-                  {xSectionReady && hasXVerified && xUsername && (
-                    <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
-                      <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
-                      <span className="text-sm text-white/90">
-                        {`@${xUsername.replace(/^@/u, '')}`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              <div>
-                <Label className={FIELD_LABEL_CLASS}>Website</Label>
-                <div className="relative mt-1.5">
-                  <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
-                  <Input
-                    value={form.website}
-                    onChange={(e) => setForm((prev) => ({ ...prev, website: e.target.value }))}
-                    placeholder="https://yoursite.com"
-                    className="pl-8 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
-                    maxLength={200}
+          <div className="px-5 pb-5 pt-4 space-y-4">
+            {targetAddress ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="relative">
+                  <div
+                    className="absolute inset-0 rounded-2xl opacity-60 blur-xl"
+                    style={{ background: 'var(--neon-teal)' }}
+                  />
+                  <AddressAvatarWithChainName
+                    address={targetAddress}
+                    size={72}
+                    showAddressAndChainName={false}
+                    className="relative"
                   />
                 </div>
               </div>
+            ) : null}
 
-              <div>
-                <Label className={FIELD_LABEL_CLASS}>Bio</Label>
-                <Textarea
-                  value={form.bio}
-                  onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Tell the world about yourself…"
-                  className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
-                  maxLength={200}
-                />
-                <div className="mt-1 text-right text-[10px] text-white/35">
-                  {form.bio.length}
-                  /200
-                </div>
-              </div>
-
-              {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
-
-              <div className="flex gap-2 pt-1">
-                <Button
-                  variant="ghost"
-                  onClick={handleClose}
-                  disabled={loading}
-                  className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
-                >
-                  {t('buttons.cancel')}
-                </Button>
-                <Button
-                  onClick={onSave}
-                  disabled={loading || !canEdit}
-                  className="flex-1 rounded-xl font-semibold disabled:opacity-50"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
-                    color: '#0a0a0a',
-                  }}
-                >
-                  {loading ? t('messages.savingProfile') : t('buttons.save')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={chainPickerOpen} onOpenChange={setChainPickerOpen}>
-        <DialogContent
-          className={[
-            'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
-            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-          ].join(' ')}
-        >
-          <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
-            <div className="px-5 py-5 space-y-4">
-              <DialogHeader>
-                <DialogTitle className="text-white font-bold text-base tracking-tight">
-                  {t('titles.selectChainName')}
-                </DialogTitle>
-              </DialogHeader>
-
-              <div>
-                <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
+            <div>
+              <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
+              {hasOwnedChainNames ? (
+              // The user already owns one or more names — let them pick the preferred one.
                 <AppSelect
-                  value={pickerChainName}
-                  onValueChange={setPickerChainName}
+                  value={trimmedForm.chain_name || NONE_CHAIN_NAME_VALUE}
+                  onValueChange={handleChainNameSelect}
                   triggerClassName="mt-1.5 w-full h-10 px-3 bg-white/[0.06] border border-white/12 text-white rounded-xl focus:ring-0 focus:border-[var(--neon-teal)] text-sm"
                   contentClassName="z-[110] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
                   itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
@@ -866,41 +1106,250 @@ const ProfileEditModal = ({
                   <AppSelectItem value={NONE_CHAIN_NAME_VALUE}>{t('labels.none')}</AppSelectItem>
                   {availableChainNames.map((item) => (
                     <AppSelectItem key={item.name} value={item.name}>
-                      {item.name}
+                      {formatChainNameLabel(item.name)}
                     </AppSelectItem>
                   ))}
                 </AppSelect>
-                {!availableChainNames.length && (
-                  <p className="mt-2 text-[11px] text-white/50 leading-relaxed">
-                    {t('messages.noChainNamesFound')}
-                  </p>
-                )}
-              </div>
+              ) : (
+              // The user owns no names — let them type one to claim it directly.
+                <>
+                  <p className="mt-1.5 text-xs text-white/60">{t('messages.chainNameClaimHint')}</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        value={claimValue}
+                        onChange={(e) => {
+                          const nextValue = e.target.value;
+                          const nextNormalizedValue = normalizeChainNameLabel(nextValue);
+                          const nextValidationError = validateClaimChainName(nextNormalizedValue);
 
-              <div className="flex gap-2 pt-1">
-                <Button
-                  variant="ghost"
-                  onClick={() => setChainPickerOpen(false)}
-                  className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
-                >
-                  {t('buttons.cancel')}
-                </Button>
-                <Button
-                  onClick={applyChainPicker}
-                  className="flex-1 rounded-xl font-semibold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
-                    color: '#0a0a0a',
+                          setClaimValue(nextValue);
+                          setAvailabilityStatus(
+                            nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
+                          );
+                          setLastCheckedValue('');
+                          setSponsorship(null);
+                          setSponsorshipStatus(
+                            nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
+                          );
+                          if (claimError) setClaimError(null);
+                        }}
+                        placeholder={t('placeholders.claimChainName')}
+                        className={[
+                          'pr-16 bg-white/[0.06] text-white rounded-xl focus-visible:ring-0',
+                          isClaimTooShort
+                            ? 'border border-amber-400/70 focus:border-amber-300'
+                            : 'border border-white/12 focus:border-[var(--neon-teal)]',
+                        ].join(' ')}
+                        maxLength={64}
+                        disabled={claiming}
+                      />
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-white/45">
+                        .chain
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={onClaim}
+                      disabled={isClaimDisabled}
+                      className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold whitespace-nowrap disabled:opacity-50"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
+                        color: '#0a0a0a',
+                      }}
+                    >
+                      {isClaimLoading && <Spinner className="w-3.5 h-3.5" />}
+                      {claimButtonLabel}
+                    </Button>
+                  </div>
+                  {isClaimTooShort && (
+                  <p className="mt-2 text-xs text-amber-300">
+                    {normalizedClaimValueLength}
+                    /13 characters before `.chain`
+                  </p>
+                  )}
+                  {showSponsorshipHint && sponsorshipForCurrentName && (
+                    sponsorshipForCurrentName.sponsorable ? (
+                      <p className="mt-2 text-xs font-semibold text-green-400">
+                        {t('messages.chainNameSponsorFree')}
+                      </p>
+                    ) : (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-amber-300">
+                          {t('messages.chainNameSponsorPrice', {
+                            amount: selfFundedPriceAe ?? '0',
+                          })}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-amber-300/70">
+                          {t('messages.chainNameSponsorPriceHint')}
+                        </p>
+                      </div>
+                    )
+                  )}
+                  {claimError && <p className="mt-2 text-xs text-red-300">{claimError}</p>}
+                </>
+              )}
+            </div>
+
+            {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
+              <div ref={xSectionRef}>
+                <Label className={FIELD_LABEL_CLASS}>X (Twitter)</Label>
+                {!xSectionReady && (
+                <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
+                  <Spinner className="w-5 h-5 text-white/60" />
+                  <span className="text-xs text-white/50">{t('messages.loading')}</span>
+                </div>
+                )}
+                {xSectionReady && !hasXVerified && (
+                <button
+                  ref={connectXButtonRef}
+                  type="button"
+                  disabled={connectingX || !canEdit}
+                  className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-2.5 text-sm text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                  onClick={async () => {
+                    const targetAddr = (address as string) || (activeAccount as string);
+                    if (!targetAddr) return;
+                    setConnectingX(true);
+                    try {
+                      const redirectUri = getXCallbackRedirectUri();
+                      const state = generateOAuthState();
+                      const codeVerifier = generateCodeVerifier();
+                      storeXOAuthPKCE({
+                        state,
+                        codeVerifier,
+                        address: targetAddr,
+                        redirectUri,
+                      });
+                      const url = await buildXAuthorizeUrl({
+                        clientId: (CONFIG as any).X_OAUTH_CLIENT_ID,
+                        redirectUri,
+                        state,
+                        codeVerifier,
+                      });
+                      window.location.href = url;
+                    } catch (e) {
+                      setFormError(resolveErrorMessage(e));
+                    } finally {
+                      setConnectingX(false);
+                    }
                   }}
                 >
-                  {t('buttons.apply')}
-                </Button>
+                  <XIcon className="w-4 h-4 fill-current" />
+                  {connectingX ? t('messages.connectingX') : 'Link account'}
+                </button>
+                )}
+                {xSectionReady && hasXVerified && xUsername && (
+                <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
+                  <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
+                  <span className="text-sm text-white/90">
+                    {`@${xUsername.replace(/^@/u, '')}`}
+                  </span>
+                </div>
+                )}
+                {xSectionReady && hasXVerified && (
+                <div className="mt-2 space-y-1.5">
+                  <button
+                    type="button"
+                    disabled={rewardChecking || !canEdit}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] py-2 text-sm text-white/80 hover:text-white hover:border-white/30 hover:bg-white/[0.07] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    onClick={async () => {
+                      const targetAddr = (address as string) || (activeAccount as string);
+                      if (!targetAddr) return;
+                      setRewardChecking(true);
+                      setRewardNote(null);
+                      try {
+                        const result = await checkXPostingReward(targetAddr);
+                        if ('status' in result) {
+                          setRewardStatus(result.status);
+                        } else {
+                          setRewardNote(
+                            `Already checked today. Next check allowed ${formatRewardTime(result.nextAllowedAt)}.`,
+                          );
+                        }
+                      } catch (e) {
+                        setRewardNote(resolveErrorMessage(e));
+                      } finally {
+                        setRewardChecking(false);
+                      }
+                    }}
+                  >
+                    {rewardChecking
+                      ? <Spinner className="w-4 h-4" />
+                      : <Gift className="w-4 h-4" />}
+                    {rewardChecking ? 'Checking reward…' : 'Check posting reward'}
+                  </button>
+                  {rewardStatus && (
+                  <p className="text-xs text-white/70 flex items-start gap-1.5">
+                    {rewardStatus.onboarding_status === 'paid'
+                      ? <Check className="w-3.5 h-3.5 shrink-0 mt-px" style={{ color: 'var(--neon-teal)' }} aria-hidden />
+                      : <RefreshCw className="w-3.5 h-3.5 shrink-0 mt-px text-white/40" aria-hidden />}
+                    <span>{formatRewardLabel(rewardStatus.onboarding_status)}</span>
+                  </p>
+                  )}
+                  {rewardNote && (
+                  <p className="text-xs text-amber-300/90">{rewardNote}</p>
+                  )}
+                </div>
+                )}
+              </div>
+            ) : null}
+
+            <div>
+              <Label className={FIELD_LABEL_CLASS}>Website</Label>
+              <div className="relative mt-1.5">
+                <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
+                <Input
+                  value={form.website}
+                  onChange={(e) => setForm((prev) => ({ ...prev, website: e.target.value }))}
+                  placeholder="https://yoursite.com"
+                  className="pl-8 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
+                  maxLength={200}
+                />
               </div>
             </div>
+
+            <div>
+              <Label className={FIELD_LABEL_CLASS}>Bio</Label>
+              <Textarea
+                value={form.bio}
+                onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+                placeholder="Tell the world about yourself…"
+                className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
+                maxLength={200}
+              />
+              <div className="mt-1 text-right text-[10px] text-white/35">
+                {form.bio.length}
+                /200
+              </div>
+            </div>
+
+            {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="ghost"
+                onClick={handleClose}
+                disabled={loading}
+                className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
+              >
+                {t('buttons.cancel')}
+              </Button>
+              <Button
+                onClick={onSave}
+                disabled={loading || !canEdit}
+                className="flex-1 rounded-xl font-semibold disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
+                  color: '#0a0a0a',
+                }}
+              >
+                {loading ? t('messages.savingProfile') : t('buttons.save')}
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

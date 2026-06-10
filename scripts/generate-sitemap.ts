@@ -37,6 +37,7 @@ async function main() {
   urls.push(`${ORIGIN}/terms`);
   urls.push(`${ORIGIN}/privacy`);
   urls.push(`${ORIGIN}/faq`);
+  urls.push(`${ORIGIN}/branding`);
 
   // Note: For dynamic routes (posts, users, tokens), ideally fetch a recent list from the API.
   // Keep static minimal sitemap to avoid slow builds.

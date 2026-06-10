@@ -17,6 +17,7 @@ const FOOTER_LINKS: FooterLink[] = [
 
   { kind: 'internal', to: '/whitepaper', labelKey: 'layout.whitepaper' },
   { kind: 'internal', to: '/landing', labelKey: 'layout.landing' },
+  { kind: 'internal', to: '/branding', labelKey: 'layout.branding' },
   { kind: 'internal', to: '/faq', labelKey: 'layout.faq' },
   { kind: 'external', href: 'https://github.com/superhero-com/superhero', labelKey: 'layout.contributeOnGitHub' },
 ];

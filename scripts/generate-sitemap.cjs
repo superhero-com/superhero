@@ -16,6 +16,7 @@ function main() {
   urls.push(`${ORIGIN}/defi/swap`);
   urls.push(`${ORIGIN}/terms`);
   urls.push(`${ORIGIN}/privacy`);
+  urls.push(`${ORIGIN}/branding`);
 
   const xml = buildSitemap(urls);
   const outDir = path.resolve(process.cwd(), 'public');

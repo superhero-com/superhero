@@ -61,6 +61,22 @@ const METHOD_DEFS: MethodDef[] = [
     href: 'https://changelly.com/',
   },
   {
+    id: 'swapzone',
+    Icon: ArrowLeftRight,
+    titleKey: 'swapzoneTitle',
+    descriptionKey: 'swapzoneDescription',
+    actionKey: 'swapzoneAction',
+    href: 'https://swapzone.io/exchange/eth/ae',
+  },
+  {
+    id: 'swapspace',
+    Icon: ArrowLeftRight,
+    titleKey: 'swapspaceTitle',
+    descriptionKey: 'swapspaceDescription',
+    actionKey: 'swapspaceAction',
+    href: 'https://swapspace.co/?direction=direct&from=eth&fromNetwork=ETH&to=ae&toNetwork=AE',
+  },
+  {
     id: 'refer',
     Icon: Handshake,
     titleKey: 'referTitle',
@@ -86,7 +102,7 @@ export default function BuyAe() {
       <Head
         title={t('pageTitle')}
         description={t('pageDescription')}
-        canonicalPath="/buy-ae"
+        canonicalPath="/get-ae"
       />
 
       <div className="rounded-2xl p-7 bg-gradient-to-b from-white/6 to-white/3 text-white mb-4 border border-white/10 backdrop-blur-md">

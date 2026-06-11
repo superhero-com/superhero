@@ -13,7 +13,7 @@ env:
   ENV: "stg"
   APP: "superhero"
 
-concurrency: ${{ github.workflow }}-${{ github.ref_name }}
+concurrency: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
 
 jobs:
   main:
@@ -85,7 +85,7 @@ jobs:
           timeout: 10
 
       - name: Staging deploy
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || steps.status.outputs.status_code != '200'
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || (github.event.action == 'synchronize' && steps.status.outputs.status_code != '200')
         uses: aeternity/ae-github-actions/argocd-deploy@v7.4.0
         with:
           url-prefix: pr-${{ env.PR_NUMBER }}
@@ -93,10 +93,10 @@ jobs:
           app: ${{ env.APP }}
 
       - name: Staging PR Sync
-        if: github.event.action == 'synchronize'
+        if: github.event.action == 'synchronize' && steps.status.outputs.status_code == '200'
         uses: aeternity/ae-github-actions/argocd-pr-sync@v7.4.0
         with:
-          git-sha: ${{ github.sha }}
+          git-sha: ${{ github.event.pull_request.head.sha }}
           url-prefix: pr-${{ env.PR_NUMBER }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
@@ -108,13 +108,6 @@ jobs:
           github_token: ${{ secrets.NPM_GITHUB_TOKEN }}
           branch: stg
 
-      - name: Wait for the deployment to go live
-        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
-        with:
-          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
-          timeout: 300
-          interval: 5
-
       - name: Print PR url
         uses: peter-evans/create-or-update-comment@v5
         if: github.event.action == 'opened'
@@ -123,6 +116,14 @@ jobs:
           body: |
             ## 🧪 Preview Links 🔎️
             https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+
+      - name: Wait for the deployment to go live
+        continue-on-error: true
+        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
+        with:
+          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          timeout: 300
+          interval: 5
 
   stg_undeploy:
     runs-on: ubuntu-latest

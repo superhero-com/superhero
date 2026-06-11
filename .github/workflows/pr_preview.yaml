@@ -163,7 +163,7 @@ jobs:
           sudo chmod +x /usr/local/bin/yq
 
       - name: Staging undeploy
-        if: (startsWith(github.head_ref, 'release') != true) && ((github.event_name == 'pull_request') || (github.event_name == 'delete' && steps.extract-pr.outputs.PR_NUMBER != ''))
+        if: github.event_name == 'pull_request' || steps.extract-pr.outputs.PR_NUMBER != ''
         uses: aeternity/ae-github-actions/argocd-undeploy@v7.4.0
         with:
           url-prefix: pr-${{ github.event_name == 'delete' && steps.extract-pr.outputs.PR_NUMBER || env.PR_NUMBER }}

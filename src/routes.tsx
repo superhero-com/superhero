@@ -262,7 +262,8 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '/branding', element: <Branding /> },
-  { path: '/buy-ae', element: <BuyAe /> },
+  { path: '/get-ae', element: <BuyAe /> },
+  { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },
   {
     path: '*',

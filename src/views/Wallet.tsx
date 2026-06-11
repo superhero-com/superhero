@@ -1088,9 +1088,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">09</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Import Accounts with Ease</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">Import Accounts From Cold Wallet Or Ledger</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed">
-                    Effortlessly import existing accounts from other wallets using your private key, giving you instant access to your assets and transactions.
+                    Effortlessly import existing accounts from other wallets using your private key or ledger, giving you instant access to your assets and transactions.
                   </p>
                 </div>
                 <div className="md:col-span-5 bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 w-full">

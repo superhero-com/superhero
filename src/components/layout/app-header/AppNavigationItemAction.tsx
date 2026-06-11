@@ -4,7 +4,6 @@ import { NavigationItem } from './navigationItems';
 
 interface AppNavigationItemActionProps {
   item: NavigationItem;
-  activeAccount?: string | null;
   isActive?: boolean;
   className: string;
   style?: CSSProperties;
@@ -16,7 +15,6 @@ interface AppNavigationItemActionProps {
 
 const AppNavigationItemAction = ({
   item,
-  activeAccount,
   isActive = false,
   className,
   style,
@@ -41,7 +39,7 @@ const AppNavigationItemAction = ({
     );
   }
 
-  if (item.id === 'account' && !activeAccount) {
+  if (item.id === 'account' && !item.path) {
     return (
       <button
         type="button"
@@ -50,6 +48,7 @@ const AppNavigationItemAction = ({
         onClick={onConnect}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        aria-current={isActive ? 'page' : undefined}
       >
         {children}
       </button>

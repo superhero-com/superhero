@@ -1,13 +1,18 @@
-import React, { useMemo } from 'react';
+import React, {
+  useCallback, useEffect, useMemo, useRef,
+} from 'react';
 import { Link } from 'react-router-dom';
 import { Smartphone } from 'lucide-react';
 import { AeButton } from '@/components/ui/ae-button';
-import { useWalletConnect } from '@/hooks';
+import { useAeSdk, useWalletConnect } from '@/hooks';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
 
-type Props = { onClose: () => void };
+type Props = {
+  onClose: () => void;
+  onConnected?: (address: string) => void;
+};
 
 const ChromeIcon: React.FC<{ className?: string }> = ({ className }) => (
   <img src={chromeLogoUrl} className={className} alt="Chrome" />
@@ -49,13 +54,32 @@ function getExtensionLinks(device: ReturnType<typeof getDeviceInfo>) {
   return [chrome, firefox];
 }
 
-const OnboardingModal = ({ onClose }: Props) => {
+const OnboardingModal = ({ onClose, onConnected }: Props) => {
   const { connectWallet, connectingWallet } = useWalletConnect();
+  const { activeAccount } = useAeSdk();
   const device = useMemo(() => getDeviceInfo(), []);
+  const connectRequestedRef = useRef(false);
+  const didAdvanceRef = useRef(false);
+
+  const advanceAfterConnect = useCallback((account: string) => {
+    if (didAdvanceRef.current) return;
+    didAdvanceRef.current = true;
+    connectRequestedRef.current = false;
+    onClose();
+    onConnected?.(account);
+  }, [onClose, onConnected]);
+
+  useEffect(() => {
+    if (!connectRequestedRef.current || !activeAccount) return;
+    advanceAfterConnect(activeAccount);
+  }, [activeAccount, advanceAfterConnect]);
 
   async function handleConnect() {
-    await connectWallet();
-    onClose();
+    connectRequestedRef.current = true;
+    didAdvanceRef.current = false;
+    const connectedAccount = await connectWallet();
+    if (!connectedAccount) return;
+    advanceAfterConnect(connectedAccount);
   }
 
   return (
@@ -64,10 +88,10 @@ const OnboardingModal = ({ onClose }: Props) => {
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Favicon className="w-8 h-8" />
-          <h2 className="text-xl font-bold text-white/95">Edit Superhero ID</h2>
+          <h2 className="text-xl font-bold text-white/95">Edit SuperheroID</h2>
         </div>
         <p className="text-sm text-white/50">
-          Connect your wallet to create and manage your Superhero ID
+          Connect your wallet to create and manage your SuperheroID
         </p>
       </div>
 

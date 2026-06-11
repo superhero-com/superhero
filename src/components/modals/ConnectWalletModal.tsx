@@ -1,12 +1,17 @@
-import React, { useMemo } from 'react';
+import React, {
+  useCallback, useEffect, useMemo, useRef,
+} from 'react';
 import { Link } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
-import { useWalletConnect } from '@/hooks';
+import { useAeSdk, useWalletConnect } from '@/hooks';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
 
-type Props = { onClose: () => void };
+type Props = {
+  onClose: () => void;
+  onConnected?: (address: string) => void;
+};
 
 const ChromeIcon: React.FC<{ className?: string }> = ({ className }) => (
   <img src={chromeLogoUrl} className={className} alt="Chrome" />
@@ -57,14 +62,33 @@ function getInstallItems() {
   };
 }
 
-const ConnectWalletModal = ({ onClose }: Props) => {
+const ConnectWalletModal = ({ onClose, onConnected }: Props) => {
   const { connectWallet, connectingWallet } = useWalletConnect();
+  const { activeAccount } = useAeSdk();
 
   const install = useMemo(() => getInstallItems(), []);
+  const connectRequestedRef = useRef(false);
+  const didAdvanceRef = useRef(false);
+
+  const advanceAfterConnect = useCallback((account: string) => {
+    if (didAdvanceRef.current) return;
+    didAdvanceRef.current = true;
+    connectRequestedRef.current = false;
+    onClose();
+    onConnected?.(account);
+  }, [onClose, onConnected]);
+
+  useEffect(() => {
+    if (!connectRequestedRef.current || !activeAccount) return;
+    advanceAfterConnect(activeAccount);
+  }, [activeAccount, advanceAfterConnect]);
 
   async function handleConnect() {
-    await connectWallet();
-    onClose();
+    connectRequestedRef.current = true;
+    didAdvanceRef.current = false;
+    const connectedAccount = await connectWallet();
+    if (!connectedAccount) return;
+    advanceAfterConnect(connectedAccount);
   }
 
   return (

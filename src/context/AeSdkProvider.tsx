@@ -53,7 +53,7 @@ export const AeSdkContext = createContext<{
   setActiveNetwork: (network: INetwork) => void,
   setTransactionsQueue: (queue: Record<string, TxQueueEntry>) => void,
   initSdk: () => void,
-  scanForAccounts: () => void,
+  scanForAccounts: () => Promise<string | undefined>,
   nodes: { instance: Node; name: string }[],
     }>(null);
 
@@ -573,8 +573,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
     const currentAddress = Object.keys(accountsCurrent)[0] as any;
 
-    setAccounts([currentAddress]);
+    setAccounts(currentAddress ? [currentAddress] : []);
     setActiveAccount(currentAddress);
+    return currentAddress as string | undefined;
   }, [setAccounts, setActiveAccount]);
 
   const contextValue = useMemo(() => ({

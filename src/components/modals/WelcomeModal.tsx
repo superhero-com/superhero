@@ -31,7 +31,7 @@ const WelcomeModal = ({ onClose }: Props) => {
   function handleGetStarted() {
     markOnboardingComplete();
     onClose();
-    // Open the profile edit modal (same as clicking "Superhero ID" in side menu)
+    // Open the profile edit modal (same as clicking "SuperheroID" in side menu)
     setProfileEditOpen(true);
   }
 

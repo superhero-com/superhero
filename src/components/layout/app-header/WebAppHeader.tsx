@@ -7,13 +7,21 @@ import HeaderWalletButton from './HeaderWalletButton';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
-import { profileEditModalOpenAtom } from '../../../atoms/profileEditModalAtom';
+import { useModal } from '../../../hooks/useModal';
+import {
+  profileEditModalFlowAtom,
+  profileEditModalOpenAtom,
+  profileEditModalPendingAfterConnectAtom,
+} from '../../../atoms/profileEditModalAtom';
 
 const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const { activeAccount } = useAeSdk();
+  const { openModal } = useModal();
   const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
+  const setProfileEditFlow = useSetAtom(profileEditModalFlowAtom);
+  const setProfileEditPendingAfterConnect = useSetAtom(profileEditModalPendingAfterConnectAtom);
 
   useEffect(() => {
     // force theme to be dark
@@ -27,7 +35,30 @@ const WebAppHeader = () => {
 
   const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);
 
-  const handleConnect = useCallback(() => setProfileEditOpen(true), [setProfileEditOpen]);
+  const handleConnect = useCallback(() => {
+    if (activeAccount) {
+      setProfileEditOpen(true);
+      return;
+    }
+    openModal({
+      name: 'onboarding',
+      props: {
+        onConnected: () => {
+          setProfileEditFlow({
+            redirectToProfileOnClose: true,
+            showSkip: true,
+          });
+          setProfileEditPendingAfterConnect(true);
+        },
+      },
+    });
+  }, [
+    activeAccount,
+    openModal,
+    setProfileEditFlow,
+    setProfileEditOpen,
+    setProfileEditPendingAfterConnect,
+  ]);
 
   const activeNavPath = useMemo(
     () => getActiveNavigationPath(pathname, sidebarItems),
@@ -80,7 +111,6 @@ const WebAppHeader = () => {
               <AppNavigationItemAction
                 key={item.id}
                 item={item}
-                activeAccount={activeAccount}
                 isActive={isActive}
                 className={isDisconnectedAccount ? `${commonClass} text-left` : commonClass}
                 style={itemStyles}

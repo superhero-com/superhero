@@ -1,4 +1,5 @@
 import {
+  type ReactNode,
   useEffect,
   useMemo,
   useRef,
@@ -45,8 +46,9 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
-  Check, Globe,
+  Check, Globe, HelpCircle, Link2,
 } from 'lucide-react';
+import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import {
@@ -85,6 +87,7 @@ type SponsorshipStatus = 'idle' | 'checking' | 'resolved';
 
 const CHAIN_NAME_LABEL_CLASS = 'text-white/70 text-[11px] tracking-wider font-semibold';
 const FIELD_LABEL_CLASS = 'text-white/70 text-[11px] uppercase tracking-wider font-semibold';
+const OPTIONAL_BADGE_CLASS = 'rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/35';
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -100,12 +103,52 @@ const formatChainNameLabel = (name: string) => (
 );
 
 const GLASS_CARD_STYLE = {
-  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+  background: 'linear-gradient(135deg, rgba(16,19,26,0.96) 0%, rgba(8,10,16,0.94) 100%)',
   border: '1px solid rgba(255,255,255,0.14)',
   backdropFilter: 'blur(32px)',
   WebkitBackdropFilter: 'blur(32px)',
-  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10)',
 } as const;
+
+const FieldHeading = ({
+  label,
+  helpLabel,
+  helpOpen,
+  onHelpClick,
+}: {
+  label: string;
+  helpLabel?: string;
+  helpOpen?: boolean;
+  onHelpClick?: () => void;
+}) => (
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2 min-w-0">
+      <Label className={label === '.chain name' ? CHAIN_NAME_LABEL_CLASS : FIELD_LABEL_CLASS}>{label}</Label>
+      {helpLabel && onHelpClick ? (
+        <button
+          type="button"
+          aria-label={helpLabel}
+          aria-expanded={helpOpen}
+          onClick={onHelpClick}
+          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
+        >
+          <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
+    <span className={OPTIONAL_BADGE_CLASS}>Optional</span>
+  </div>
+);
+
+const HelpPanel = ({
+  children,
+}: {
+  children: ReactNode;
+}) => (
+  <div className="mt-2 rounded-xl border border-white/[0.08] bg-black/25 p-3 text-[12px] leading-relaxed text-white/55">
+    {children}
+  </div>
+);
 
 const normalizeChainName = (value: unknown): string => String(value || '').trim().toLowerCase();
 const toExpiryNumber = (value: unknown): number | null => {
@@ -274,15 +317,21 @@ async function loadOwnedChainNamesFromMdw(address: string): Promise<OwnedChainNa
 const ProfileEditModal = ({
   open,
   onClose,
+  onSkip,
+  onClaimSuccess,
   address,
   initialBio,
   initialSection = 'profile',
+  showSkip = false,
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
+  onSkip?: () => void;
+  onClaimSuccess?: () => void;
   address?: string;
   initialBio?: string;
   initialSection?: 'profile' | 'x';
+  showSkip?: boolean;
 }) => {
   const { t } = useTranslation('common');
   const {
@@ -319,6 +368,8 @@ const ProfileEditModal = ({
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showSuperheroIdInfo, setShowSuperheroIdInfo] = useState(false);
+  const [showChainNameInfo, setShowChainNameInfo] = useState(false);
   const [hasXVerified, setHasXVerified] = useState(false);
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
@@ -387,13 +438,13 @@ const ProfileEditModal = ({
         if (bio === '') {
           const linkedBio = getLinkedBio(acct);
           if (linkedBio) bio = linkedBio;
-          else if ((acct?.profile?.bio ?? '') !== '') bio = String(acct.profile.bio ?? initialBio ?? '');
+          else if ((acct?.profile?.bio ?? '') !== '') bio = String(acct?.profile?.bio ?? initialBio ?? '');
         }
         if (chainName === '') {
           const linkedPreferredName = getLinkedPreferredAensName(acct);
           if (linkedPreferredName) chainName = linkedPreferredName;
           else if ((acct?.profile?.chain_name ?? '') !== '') {
-            chainName = normalizeChainName(acct.profile.chain_name);
+            chainName = normalizeChainName(acct?.profile?.chain_name);
           }
         }
       } catch {
@@ -460,6 +511,8 @@ const ProfileEditModal = ({
       setLastCheckedValue('');
       setSponsorship(null);
       setSponsorshipStatus('idle');
+      setShowSuperheroIdInfo(false);
+      setShowChainNameInfo(false);
     }
   }, [open]);
 
@@ -736,6 +789,7 @@ const ProfileEditModal = ({
           });
           push(<div>{t('messages.chainNameClaimCompleted')}</div>);
           applyClaimedName(claimedName);
+          onClaimSuccess?.();
         } catch (selfFundedError) {
           const msg = resolveClaimErrorMessage(selfFundedError, t);
           setClaimError(msg);
@@ -779,6 +833,7 @@ const ProfileEditModal = ({
         });
         push(<div>{t('messages.chainNameClaimCompleted')}</div>);
         applyClaimedName(claimedName);
+        onClaimSuccess?.();
       }).catch((claimError2) => {
         const msg = resolveClaimErrorMessage(claimError2, t);
         setClaimError(msg);
@@ -807,6 +862,11 @@ const ProfileEditModal = ({
   };
 
   const handleClose = () => onClose();
+  const handleSkip = () => {
+    if (loading) return;
+    if (onSkip) onSkip();
+    else handleClose();
+  };
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       handleClose();
@@ -886,7 +946,7 @@ const ProfileEditModal = ({
       let updated: ProfileAggregate;
       if (accountRecord) {
         updated = profileAggregateFromSources(
-          { address: targetAddress, ...accountRecord },
+          { ...accountRecord, address: targetAddress },
           profileFromApi ?? prevProfile,
         );
       } else if (profileFromApi) {
@@ -1011,116 +1071,159 @@ const ProfileEditModal = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={[
-          'w-[95vw] max-w-sm mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
+          'w-[95vw] max-w-md mx-auto p-0 overflow-hidden border-0 bg-transparent shadow-none',
           'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
         ].join(' ')}
       >
-        <div className="relative rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]" style={GLASS_CARD_STYLE}>
+        <div className="relative rounded-2xl overflow-hidden flex flex-col max-h-[90dvh]" style={GLASS_CARD_STYLE}>
           <div
             className="absolute top-0 left-0 right-0 h-px"
             style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
           />
-          <div
-            className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)', filter: 'blur(32px)' }}
-          />
 
-          <div className="flex items-center justify-between px-5 pt-5 pb-0 shrink-0">
+          <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-0 shrink-0">
             <DialogHeader>
-              <DialogTitle className="text-white font-bold text-base tracking-tight">
-                {t('titles.editSuperheroId')}
-              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-white font-bold text-lg tracking-tight">
+                  {t('titles.editSuperheroId')}
+                </DialogTitle>
+                <button
+                  type="button"
+                  aria-label={t('messages.superheroIdHelpLabel')}
+                  aria-expanded={showSuperheroIdInfo}
+                  onClick={() => setShowSuperheroIdInfo((value) => !value)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
+                >
+                  <HelpCircle className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
             </DialogHeader>
           </div>
 
           <div className="px-5 pt-4 pb-3 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
-            {targetAddress ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="relative">
-                  <div
-                    className="absolute inset-0 rounded-2xl opacity-60 blur-xl"
-                    style={{ background: 'var(--neon-teal)' }}
-                  />
-                  <AddressAvatarWithChainName
-                    address={targetAddress}
-                    size={72}
-                    showAddressAndChainName={false}
-                    className="relative"
-                  />
+            {showSuperheroIdInfo ? (
+              <HelpPanel>
+                <div className="flex gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--neon-teal)]/25 bg-[var(--neon-teal)]/10">
+                    <IconDiamond className="h-4 w-4 text-[var(--neon-teal)]" aria-hidden="true" />
+                  </div>
+                  <p>{t('messages.superheroIdHelp')}</p>
                 </div>
+              </HelpPanel>
+            ) : null}
+
+            {targetAddress ? (
+              <div className="flex items-center justify-center gap-3 p-3">
+
+                <AddressAvatarWithChainName
+                  address={targetAddress}
+                  size={72}
+                  showAddressAndChainName={false}
+                  className="relative"
+                />
               </div>
             ) : null}
 
             <div>
-              <Label className={CHAIN_NAME_LABEL_CLASS}>.chain name</Label>
+              <FieldHeading
+                label=".chain name"
+                helpLabel={t('messages.chainNameHelpLabel')}
+                helpOpen={showChainNameInfo}
+                onHelpClick={() => setShowChainNameInfo((value) => !value)}
+              />
+              {showChainNameInfo ? (
+                <HelpPanel>
+                  <div className="flex gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-500/10">
+                      <Link2 className="h-4 w-4 text-blue-400" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p>{t('messages.chainNameHelp')}</p>
+                    </div>
+                  </div>
+                </HelpPanel>
+              ) : null}
               {hasOwnedChainNames ? (
               // The user already owns one or more names — let them pick the preferred one.
-                <AppSelect
-                  value={trimmedForm.chain_name || NONE_CHAIN_NAME_VALUE}
-                  onValueChange={handleChainNameSelect}
-                  triggerClassName="mt-1.5 w-full h-10 px-3 bg-white/[0.06] border border-white/12 text-white rounded-xl focus:ring-0 focus:border-[var(--neon-teal)] text-sm"
-                  contentClassName="z-[110] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
-                  itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
-                  placeholder={t('placeholders.selectChainName')}
-                >
-                  <AppSelectItem value={NONE_CHAIN_NAME_VALUE}>{t('labels.none')}</AppSelectItem>
-                  {availableChainNames.map((item) => (
-                    <AppSelectItem key={item.name} value={item.name}>
-                      {formatChainNameLabel(item.name)}
-                    </AppSelectItem>
-                  ))}
-                </AppSelect>
+                <div className="mt-1.5 rounded-xl border border-white/[0.08] bg-black/35 p-2 font-mono">
+                  <AppSelect
+                    value={trimmedForm.chain_name || NONE_CHAIN_NAME_VALUE}
+                    onValueChange={handleChainNameSelect}
+                    triggerClassName="w-full h-10 px-3 bg-white/[0.03] border border-white/[0.08] text-blue-300 rounded-lg focus:ring-0 focus:border-[var(--neon-teal)] text-sm"
+                    contentClassName="z-[110] bg-[#10131a] border border-white/20 text-white shadow-2xl backdrop-blur-none"
+                    itemClassName="text-white focus:bg-white/10 data-[state=checked]:bg-white/10"
+                    placeholder={t('placeholders.selectChainName')}
+                  >
+                    <AppSelectItem value={NONE_CHAIN_NAME_VALUE}>{t('labels.none')}</AppSelectItem>
+                    {availableChainNames.map((item) => (
+                      <AppSelectItem key={item.name} value={item.name}>
+                        {formatChainNameLabel(item.name)}
+                      </AppSelectItem>
+                    ))}
+                  </AppSelect>
+                  <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
+                    <span>AENS</span>
+                    <span className="text-blue-400">Preferred name</span>
+                  </div>
+                </div>
               ) : (
               // The user owns no names — let them type one to claim it directly.
                 <>
-                  <p className="mt-1.5 text-xs text-white/60">{t('messages.chainNameClaimHint')}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        value={claimValue}
-                        onChange={(e) => {
-                          const nextValue = e.target.value;
-                          const nextNormalizedValue = normalizeChainNameLabel(nextValue);
-                          const nextValidationError = validateClaimChainName(nextNormalizedValue);
+                  <div className="mt-2 rounded-xl border border-white/[0.08] bg-black/35 p-2 font-mono">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          value={claimValue}
+                          onChange={(e) => {
+                            const nextValue = e.target.value;
+                            const nextNormalizedValue = normalizeChainNameLabel(nextValue);
+                            const nextValidationError = validateClaimChainName(nextNormalizedValue);
 
-                          setClaimValue(nextValue);
-                          setAvailabilityStatus(
-                            nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
-                          );
-                          setLastCheckedValue('');
-                          setSponsorship(null);
-                          setSponsorshipStatus(
-                            nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
-                          );
-                          if (claimError) setClaimError(null);
+                            setClaimValue(nextValue);
+                            setAvailabilityStatus(
+                              nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
+                            );
+                            setLastCheckedValue('');
+                            setSponsorship(null);
+                            setSponsorshipStatus(
+                              nextNormalizedValue && !nextValidationError ? 'checking' : 'idle',
+                            );
+                            if (claimError) setClaimError(null);
+                          }}
+                          placeholder={t('placeholders.claimChainName')}
+                          className={[
+                            'pr-16 bg-white/[0.03] text-blue-300 rounded-lg focus-visible:ring-0',
+                            isClaimTooShort
+                              ? 'border border-amber-400/70 focus:border-amber-300'
+                              : 'border border-white/[0.08] focus:border-[var(--neon-teal)]',
+                          ].join(' ')}
+                          maxLength={64}
+                          disabled={claiming}
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-white/45">
+                          .chain
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={onClaim}
+                        disabled={isClaimDisabled}
+                        className="shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold whitespace-nowrap disabled:opacity-50"
+                        style={{
+                          background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
+                          color: '#0a0a0a',
                         }}
-                        placeholder={t('placeholders.claimChainName')}
-                        className={[
-                          'pr-16 bg-white/[0.06] text-white rounded-xl focus-visible:ring-0',
-                          isClaimTooShort
-                            ? 'border border-amber-400/70 focus:border-amber-300'
-                            : 'border border-white/12 focus:border-[var(--neon-teal)]',
-                        ].join(' ')}
-                        maxLength={64}
-                        disabled={claiming}
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-white/45">
-                        .chain
+                      >
+                        {isClaimLoading && <Spinner className="w-3.5 h-3.5" />}
+                        {claimButtonLabel}
+                      </Button>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
+                      <span>{t('messages.chainNameClaimHint')}</span>
+                      <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
+                        {availabilityStatus === 'available' ? 'Available' : ''}
                       </span>
                     </div>
-                    <Button
-                      type="button"
-                      onClick={onClaim}
-                      disabled={isClaimDisabled}
-                      className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold whitespace-nowrap disabled:opacity-50"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
-                        color: '#0a0a0a',
-                      }}
-                    >
-                      {isClaimLoading && <Spinner className="w-3.5 h-3.5" />}
-                      {claimButtonLabel}
-                    </Button>
                   </div>
                   {isClaimTooShort && (
                   <p className="mt-2 text-xs text-amber-300">
@@ -1153,7 +1256,7 @@ const ProfileEditModal = ({
 
             {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
               <div ref={xSectionRef}>
-                <Label className={FIELD_LABEL_CLASS}>X (Twitter)</Label>
+                <FieldHeading label="X (Twitter)" />
                 {!xSectionReady && !isGuest && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
                   <Spinner className="w-5 h-5 text-white/60" />
@@ -1215,21 +1318,7 @@ const ProfileEditModal = ({
             ) : null}
 
             <div>
-              <Label className={FIELD_LABEL_CLASS}>Website</Label>
-              <div className="relative mt-1.5">
-                <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
-                <Input
-                  value={form.website}
-                  onChange={(e) => setForm((prev) => ({ ...prev, website: e.target.value }))}
-                  placeholder="https://yoursite.com"
-                  className="pl-8 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
-                  maxLength={200}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className={FIELD_LABEL_CLASS}>Bio</Label>
+              <FieldHeading label="Bio" />
               <Textarea
                 value={form.bio}
                 onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
@@ -1243,10 +1332,34 @@ const ProfileEditModal = ({
               </div>
             </div>
 
+            <div>
+              <FieldHeading label="Website" />
+              <div className="relative mt-1.5">
+                <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
+                <Input
+                  value={form.website}
+                  onChange={(e) => setForm((prev) => ({ ...prev, website: e.target.value }))}
+                  placeholder="https://yoursite.com"
+                  className="pl-8 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
+                  maxLength={200}
+                />
+              </div>
+            </div>
+
             {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
           </div>
 
           <div className="px-5 pb-5 pt-2 shrink-0 border-t border-white/[0.06]">
+            {showSkip ? (
+              <button
+                type="button"
+                onClick={handleSkip}
+                disabled={loading}
+                className="mb-3 w-full border-0 bg-transparent text-xs font-semibold text-white/45 transition-colors hover:text-white disabled:opacity-50"
+              >
+                {t('buttons.skipForNow')}
+              </button>
+            ) : null}
             <div className="flex gap-2">
               <Button
                 variant="ghost"

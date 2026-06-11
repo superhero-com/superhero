@@ -1,6 +1,6 @@
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote,
+  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -46,6 +46,13 @@ const REFER_EARN_ITEM: NavigationItem = {
   icon: Gift,
 };
 
+const GET_AE_ITEM: NavigationItem = {
+  id: 'get-ae',
+  label: 'Get AE',
+  path: '/get-ae',
+  icon: Landmark,
+};
+
 export const getNavigationItems = (): NavigationItem[] => [
   HOME_ITEM,
   TRENDING_ENABLED && EXPLORE_ITEM,
@@ -88,6 +95,7 @@ export const getMobileFooterNavigationItems = (
 export const getMobileMoreNavigationItems = (): NavigationItem[] => [
   DEFI_ITEM,
   ...(TRENDING_ENABLED ? [DAO_ITEM] : []),
+  GET_AE_ITEM,
 ];
 
 export const getActiveNavigationPath = (

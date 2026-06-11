@@ -211,7 +211,7 @@ const RightRail = ({
         <button
           type="button"
           className="mt-2 w-full bg-transparent border-0 text-xs font-semibold text-cyan-200 cursor-pointer hover:text-white transition-colors"
-          onClick={() => navigate('/buy-ae')}
+          onClick={() => navigate('/get-ae')}
         >
           {t('buyAeRail.moreWays')}
         </button>

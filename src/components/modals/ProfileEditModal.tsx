@@ -17,7 +17,6 @@ import {
   type ChainNameClaimStatusResponse,
   type ChainNameSponsorshipResponse,
   SuperheroApi,
-  type XPostingRewardStatus,
 } from '@/api/backend';
 import { CONFIG } from '@/config';
 import { chainNamesAtom } from '@/atoms/walletAtoms';
@@ -46,7 +45,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
-  Check, Globe, Gift, RefreshCw,
+  Check, Globe,
 } from 'lucide-react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
@@ -86,27 +85,6 @@ type SponsorshipStatus = 'idle' | 'checking' | 'resolved';
 
 const CHAIN_NAME_LABEL_CLASS = 'text-white/70 text-[11px] tracking-wider font-semibold';
 const FIELD_LABEL_CLASS = 'text-white/70 text-[11px] uppercase tracking-wider font-semibold';
-
-const REWARD_STATUS_LABELS: Record<string, string> = {
-  not_started: 'Not started — post a tweet linking superhero.com, then check.',
-  pending: 'Pending — qualifying post found, reward is being sent.',
-  paid: 'Paid — the AE reward has been sent. 🎉',
-  failed: 'Failed — the reward could not be sent.',
-};
-
-const formatRewardLabel = (status: string) => (
-  REWARD_STATUS_LABELS[status] ?? `Status: ${status}`
-);
-
-/** Best-effort human time from an ISO string or epoch (seconds or ms). */
-const formatRewardTime = (value: string | number | null | undefined): string => {
-  if (value == null || value === '') return 'later';
-  const num = Number(value);
-  const date = Number.isFinite(num)
-    ? new Date(num < 1e12 ? num * 1000 : num)
-    : new Date(String(value));
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
-};
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -316,7 +294,6 @@ const ProfileEditModal = ({
     unlinkSite,
     linkPreferredAensName,
     unlinkPreferredAensName,
-    checkXPostingReward,
     canEdit,
   } = useProfile(address);
   const {
@@ -334,9 +311,6 @@ const ProfileEditModal = ({
   } = useTransactionNotification();
   const setChainNames = useSetAtom(chainNamesAtom);
   const [connectingX, setConnectingX] = useState(false);
-  const [rewardChecking, setRewardChecking] = useState(false);
-  const [rewardStatus, setRewardStatus] = useState<XPostingRewardStatus | null>(null);
-  const [rewardNote, setRewardNote] = useState<string | null>(null);
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
@@ -1041,7 +1015,7 @@ const ProfileEditModal = ({
           'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
         ].join(' ')}
       >
-        <div className="relative rounded-3xl overflow-hidden" style={GLASS_CARD_STYLE}>
+        <div className="relative rounded-3xl overflow-hidden flex flex-col max-h-[90dvh]" style={GLASS_CARD_STYLE}>
           <div
             className="absolute top-0 left-0 right-0 h-px"
             style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
@@ -1051,7 +1025,7 @@ const ProfileEditModal = ({
             style={{ background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)', filter: 'blur(32px)' }}
           />
 
-          <div className="flex items-center justify-between px-5 pt-5 pb-0">
+          <div className="flex items-center justify-between px-5 pt-5 pb-0 shrink-0">
             <DialogHeader>
               <DialogTitle className="text-white font-bold text-base tracking-tight">
                 {t('titles.editSuperheroId')}
@@ -1059,7 +1033,7 @@ const ProfileEditModal = ({
             </DialogHeader>
           </div>
 
-          <div className="px-5 pb-5 pt-4 space-y-4">
+          <div className="px-5 pt-4 pb-3 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
             {targetAddress ? (
               <div className="flex flex-col items-center gap-2">
                 <div className="relative">
@@ -1237,51 +1211,6 @@ const ProfileEditModal = ({
                   </span>
                 </div>
                 )}
-                {xSectionReady && hasXVerified && (
-                <div className="mt-2 space-y-1.5">
-                  <button
-                    type="button"
-                    disabled={rewardChecking || !canEdit}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] py-2 text-sm text-white/80 hover:text-white hover:border-white/30 hover:bg-white/[0.07] transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    onClick={async () => {
-                      const targetAddr = (address as string) || (activeAccount as string);
-                      if (!targetAddr) return;
-                      setRewardChecking(true);
-                      setRewardNote(null);
-                      try {
-                        const result = await checkXPostingReward(targetAddr);
-                        if ('status' in result) {
-                          setRewardStatus(result.status);
-                        } else {
-                          setRewardNote(
-                            `Already checked today. Next check allowed ${formatRewardTime(result.nextAllowedAt)}.`,
-                          );
-                        }
-                      } catch (e) {
-                        setRewardNote(resolveErrorMessage(e));
-                      } finally {
-                        setRewardChecking(false);
-                      }
-                    }}
-                  >
-                    {rewardChecking
-                      ? <Spinner className="w-4 h-4" />
-                      : <Gift className="w-4 h-4" />}
-                    {rewardChecking ? 'Checking reward…' : 'Check posting reward'}
-                  </button>
-                  {rewardStatus && (
-                  <p className="text-xs text-white/70 flex items-start gap-1.5">
-                    {rewardStatus.onboarding_status === 'paid'
-                      ? <Check className="w-3.5 h-3.5 shrink-0 mt-px" style={{ color: 'var(--neon-teal)' }} aria-hidden />
-                      : <RefreshCw className="w-3.5 h-3.5 shrink-0 mt-px text-white/40" aria-hidden />}
-                    <span>{formatRewardLabel(rewardStatus.onboarding_status)}</span>
-                  </p>
-                  )}
-                  {rewardNote && (
-                  <p className="text-xs text-amber-300/90">{rewardNote}</p>
-                  )}
-                </div>
-                )}
               </div>
             ) : null}
 
@@ -1315,8 +1244,10 @@ const ProfileEditModal = ({
             </div>
 
             {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
+          </div>
 
-            <div className="flex gap-2 pt-1">
+          <div className="px-5 pb-5 pt-2 shrink-0 border-t border-white/[0.06]">
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 onClick={handleClose}

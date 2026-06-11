@@ -405,36 +405,6 @@ const Branding = () => {
               </div>
             </div>
 
-            {/* Custom Pre-Designed Landscape Banner */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
-              <div className="relative aspect-[16/9] bg-[#0a0a0f] border-b border-white/10 overflow-hidden flex flex-col justify-center items-center p-4">
-                {/* Simulated CSS Gradient & Logo Pattern */}
-                <div className="absolute inset-0 bg-gradient-to-br from-neon-pink/10 via-neon-teal/10 to-neon-blue/10 pointer-events-none" />
-                <div className="w-10 h-10 mb-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                  <FaviconIcon className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="text-xl font-black tracking-widest text-white">SUPERHERO</div>
-                <div className="text-[10px] text-neon-teal font-semibold tracking-wider uppercase mt-1">THE SOCIAL + CRYPTO PROTOCOL</div>
-                <div className="absolute bottom-2 left-4 text-xs text-white/50 uppercase tracking-widest font-mono">Vector SVG Template</div>
-              </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Vector Brand Banner</h3>
-                <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  Scalable banner vector file (.svg) for headers.
-                </p>
-                <AeButton
-                  onClick={() => downloadPredefinedBanner('landscape')}
-                  className="w-full justify-center"
-                  variant="success"
-                  size="sm"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {' '}
-                  Download Scalable SVG
-                </AeButton>
-              </div>
-            </div>
-
             {/* Interface Screenshot Showcase */}
             <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
@@ -468,34 +438,6 @@ const Branding = () => {
               </div>
             </div>
 
-            {/* Custom Pre-Designed Vertical Banner */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
-              <div className="relative aspect-[16/9] bg-[#0a0a0f] border-b border-white/10 overflow-hidden flex flex-col justify-center items-center p-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-neon-pink/10 to-neon-teal/10 pointer-events-none" />
-                <div className="w-8 h-8 mb-1 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                  <FaviconIcon className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="text-lg font-black tracking-widest text-white">SUPERHERO</div>
-                <div className="text-[8px] text-neon-teal font-semibold tracking-wider uppercase mt-1">Follow Trends</div>
-                <div className="absolute bottom-2 left-4 text-xs text-white/50 uppercase tracking-widest font-mono">Vector SVG Template (Tall)</div>
-              </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Tall Vector Mobile Banner</h3>
-                <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  Vertical banner vector file (.svg) for smartphone screens.
-                </p>
-                <AeButton
-                  onClick={() => downloadPredefinedBanner('vertical')}
-                  className="w-full justify-center"
-                  variant="success"
-                  size="sm"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {' '}
-                  Download Scalable SVG
-                </AeButton>
-              </div>
-            </div>
           </div>
         </section>
 

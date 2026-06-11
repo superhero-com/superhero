@@ -11,7 +11,7 @@ import {
   isTransactionMined,
 } from '@/utils/apiRead';
 import { normalizeChainNameLabel, normalizeName } from '@/utils/chainNames';
-import { normalizeLinkSignature } from '@/utils/signLinkMessage';
+import { signLinkMessage } from '@/utils/signLinkMessage';
 import {
   getSdkAddress,
   normalizeAddress,
@@ -23,23 +23,6 @@ import { useWalletConnect } from './useWalletConnect';
 const isNameNotFoundError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error || '');
   return /404|not found|name not found|Name revoked/i.test(message);
-};
-const isUserRejectedSigningError = (error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error || '');
-  const lower = message.toLowerCase();
-  const code = (error as any)?.code;
-  return Boolean(
-    code === 'ACTION_REJECTED'
-    || code === 4001
-    || lower.includes('rejected by user')
-    || lower.includes('user rejected')
-    || lower.includes('user denied')
-    || lower.includes('denied by user')
-    || lower.includes('cancelled by user')
-    || lower.includes('canceled by user')
-    || lower.includes('operation cancelled')
-    || lower.includes('operation canceled'),
-  );
 };
 const wait = (ms: number) => new Promise((resolve) => {
   window.setTimeout(resolve, ms);
@@ -63,56 +46,6 @@ const extractChainNameExpiry = (status?: ChainNameClaimStatusResponse | null): n
     }
     return null;
   }, null);
-};
-
-const getAuthorizedWalletSigner = (
-  walletSdk: unknown,
-  targetAddress: string,
-) => {
-  if (!walletSdk || typeof walletSdk !== 'object') return null;
-  const walletRecord = walletSdk as Record<string, unknown>;
-  // eslint-disable-next-line no-underscore-dangle, dot-notation
-  const resolver = walletRecord['_resolveAccount'];
-  if (typeof resolver === 'function') {
-    try {
-      return resolver.call(walletSdk, targetAddress) as {
-        signMessage?: (message: string) => Promise<unknown>;
-      };
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-
-const signMessageWithSdk = async (
-  signerSdk: unknown,
-  address: string,
-  message: string,
-) => {
-  if (!signerSdk || typeof signerSdk !== 'object') {
-    throw new Error('Wallet message signing is not available');
-  }
-  if (typeof (signerSdk as any).selectAccount === 'function') {
-    try {
-      (signerSdk as any).selectAccount(address);
-    } catch {
-      // Continue; some sdk variants may not support explicit selection.
-    }
-  }
-  if (typeof (signerSdk as any).signMessage === 'function') {
-    try {
-      return await (signerSdk as any).signMessage(message, { onAccount: address });
-    } catch (error) {
-      if (isUserRejectedSigningError(error)) throw error;
-      // Fall through to account-level signer resolution below.
-    }
-  }
-  const walletSigner = getAuthorizedWalletSigner(signerSdk, address);
-  if (walletSigner && typeof walletSigner.signMessage === 'function') {
-    return walletSigner.signMessage(message);
-  }
-  throw new Error('Wallet message signing is not available');
 };
 
 const extractAccountPointer = (pointers: unknown) => {
@@ -160,6 +93,8 @@ export function useClaimChainName(targetAddress?: string) {
     aeSdk,
     sdk,
     staticAeSdk,
+    addStaticAccount,
+    signMessage,
   } = useAeSdk();
   const {
     connectWallet,
@@ -234,13 +169,28 @@ export function useClaimChainName(targetAddress?: string) {
     }
 
     const normalizedName = normalizeChainNameLabel(params.name);
+    // Make sure the claimer's account is registered on the static SDK so the wallet deep-link
+    // signer is available on mobile (where there is no RPC session to sign through).
+    try {
+      await addStaticAccount(target);
+    } catch {
+      // Non-fatal: signing can still go through the active wallet session.
+    }
     const challenge = await SuperheroApi.createChainNameChallenge(target);
-    const signature = await signMessageWithSdk(aeSdk, target, challenge.message).catch((error) => {
-      throw error instanceof Error
-        ? error
-        : new Error('Wallet message signing is not available');
+    // Sign via the shared wallet signMessage channel: the connected extension signs through its
+    // RPC session, while mobile falls back to the wallet deep link. The previous SDK-only signer
+    // never reached the deep link, which is why mobile claims failed with
+    // "Wallet message signing is not available".
+    const signatureHex = await signLinkMessage(signMessage, challenge.message, {
+      request: {
+        type: 'profile-chain-name-claim',
+        address: target,
+        name: normalizedName,
+        challenge_nonce: challenge.nonce,
+        challenge_expires_at: String(challenge.expires_at),
+        message: challenge.message,
+      },
     });
-    const signatureHex = normalizeLinkSignature(signature);
 
     const claimResponse = await SuperheroApi.claimChainName({
       address: target,
@@ -333,7 +283,13 @@ export function useClaimChainName(targetAddress?: string) {
       name: latestStatus.name || `${normalizedName}.chain`,
       expiresAt: extractChainNameExpiry(latestStatus),
     };
-  }, [aeSdk, connectedAddress, targetAddress, waitForWalletReconnect]);
+  }, [
+    addStaticAccount,
+    connectedAddress,
+    signMessage,
+    targetAddress,
+    waitForWalletReconnect,
+  ]);
 
   /**
    * Claim a .chain name paid for directly by the connected wallet (used when the sponsor

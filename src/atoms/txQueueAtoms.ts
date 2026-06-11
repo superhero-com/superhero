@@ -65,6 +65,15 @@ export type MessageSignRequest = {
   // The signed challenge string. Required so the tx-queue callback can submit the PATCH
   // itself when the wallet returns in a standalone tab with no opener polling.
   message: string;
+} | {
+  type: 'profile-chain-name-claim';
+  address: string;
+  name: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  // The signed challenge string, so the tx-queue callback can submit the sponsored claim
+  // itself when the wallet returns in a standalone tab with no opener polling.
+  message: string;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';

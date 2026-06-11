@@ -659,19 +659,6 @@ const ProfileEditModal = ({
     setSponsorshipStatus('idle');
   };
 
-  // Undo an optimistic applyClaimedName when the sponsored claim ultimately fails, so the UI
-  // never lists or pre-selects a name the user does not actually own.
-  const revertClaimedName = (claimedNameLike: string) => {
-    const claimedName = normalizeChainName(claimedNameLike);
-    if (!claimedName) return;
-    setAvailableChainNames((prev) => prev.filter((item) => item.name !== claimedName));
-    setForm((prev) => (
-      prev.chain_name === claimedName
-        ? { ...prev, chain_name: initialForm.chain_name }
-        : prev
-    ));
-  };
-
   const onClaim = async () => {
     try {
       // Not logged in: don't block with an error — guide the visitor into onboarding.
@@ -798,8 +785,6 @@ const ProfileEditModal = ({
           submittedRef.current = true;
           setClaiming(false);
           notifyPending(getClaimNotificationPayload(normalizedClaimValue, claimStatus));
-          // Optimistically surface the name; the background poll confirms it on-chain.
-          applyClaimedName(`${normalizedClaimValue}.chain`);
         },
         onStatusChange: (claimStatus) => {
           notifyPending(getClaimNotificationPayload(normalizedClaimValue, claimStatus));
@@ -819,16 +804,9 @@ const ProfileEditModal = ({
           name: normalizedClaimValue,
         });
         push(<div>{t('messages.chainNameClaimCompleted')}</div>);
+        applyClaimedName(claimedName);
       }).catch((claimError2) => {
         const msg = resolveClaimErrorMessage(claimError2, t);
-        if (submittedRef.current) {
-          // The claim was optimistically surfaced in onSubmitted but never confirmed on-chain.
-          // Roll it back so the user can't save a name they do not own.
-          revertClaimedName(`${normalizedClaimValue}.chain`);
-          notifyError(msg);
-          push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
-          return;
-        }
         setClaimError(msg);
         notifyError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);

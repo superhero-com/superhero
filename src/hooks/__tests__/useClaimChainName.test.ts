@@ -9,11 +9,9 @@ const mockCreateChainNameChallenge = vi.fn();
 const mockClaimChainName = vi.fn();
 const mockGetChainNameClaimStatus = vi.fn();
 const mockSignMessage = vi.fn();
-const mockAeSdkSignMessage = vi.fn();
-const mockSelectAccount = vi.fn();
+const mockAddStaticAccount = vi.fn();
 const mockGetName = vi.fn();
 const mockGetNameEntryByName = vi.fn();
-const mockResolveAccount = vi.fn();
 const mockConnectWallet = vi.fn();
 let mockWalletConnected = true;
 let mockWalletInfo: Record<string, unknown> | undefined = { id: 'wallet' };
@@ -42,6 +40,8 @@ vi.mock('@/hooks/useAeSdk', () => ({
     },
     staticAeSdk: null,
     aeSdk: mockAeSdkState,
+    addStaticAccount: (...args: any[]) => mockAddStaticAccount(...args),
+    signMessage: (...args: any[]) => mockSignMessage(...args),
   }),
 }));
 
@@ -67,16 +67,10 @@ describe('useClaimChainName', () => {
     vi.stubGlobal('fetch', mockFetch);
     mockActiveAccount = 'ak_test_active';
     mockAeSdkState = {
-      signMessage: (...args: any[]) => mockAeSdkSignMessage(...args),
-      selectAccount: (...args: any[]) => mockSelectAccount(...args),
       addresses: () => [mockActiveAccount],
-      _resolveAccount: (...args: any[]) => mockResolveAccount(...args),
     };
     mockSignMessage.mockResolvedValue(new Uint8Array([0xab, 0xcd]));
-    mockAeSdkSignMessage.mockResolvedValue(new Uint8Array([0xab, 0xcd]));
-    mockResolveAccount.mockReturnValue({
-      signMessage: (...args: any[]) => mockSignMessage(...args),
-    });
+    mockAddStaticAccount.mockResolvedValue(undefined);
     mockConnectWallet.mockResolvedValue(undefined);
     mockWalletConnected = true;
     mockWalletInfo = { id: 'wallet' };
@@ -166,10 +160,18 @@ describe('useClaimChainName', () => {
     });
 
     expect(mockCreateChainNameChallenge).toHaveBeenCalledWith('ak_test_active');
-    expect(mockSelectAccount).toHaveBeenCalledWith('ak_test_active');
-    expect(mockAeSdkSignMessage).toHaveBeenCalledWith(
+    expect(mockAddStaticAccount).toHaveBeenCalledWith('ak_test_active');
+    expect(mockSignMessage).toHaveBeenCalledWith(
       'profile_chain_name_claim:ak_test_active:nonce-1:123456',
-      { onAccount: 'ak_test_active' },
+      expect.objectContaining({
+        request: expect.objectContaining({
+          type: 'profile-chain-name-claim',
+          address: 'ak_test_active',
+          name: 'averylongchain',
+          challenge_nonce: 'nonce-1',
+          challenge_expires_at: '123456',
+        }),
+      }),
     );
     expect(mockClaimChainName).toHaveBeenCalledWith({
       address: 'ak_test_active',
@@ -235,9 +237,8 @@ describe('useClaimChainName', () => {
     await expect(result.current.checkNameAvailability('available-name')).resolves.toBe(true);
   });
 
-  it('rejects claims when the wallet signer account is unavailable', async () => {
-    mockAeSdkSignMessage.mockRejectedValueOnce(new Error('Wallet message signing is not available'));
-    mockResolveAccount.mockReturnValueOnce(null);
+  it('rejects claims when wallet message signing is unavailable', async () => {
+    mockSignMessage.mockRejectedValueOnce(new Error('Wallet message signing is not available'));
     const { result } = renderHook(() => useClaimChainName('ak_test_active'));
 
     await act(async () => {
@@ -246,10 +247,12 @@ describe('useClaimChainName', () => {
         pollIntervalMs: 0,
       })).rejects.toThrow('Wallet message signing is not available');
     });
+
+    expect(mockClaimChainName).not.toHaveBeenCalled();
   });
 
-  it('does not retry signing through the fallback signer after user rejection', async () => {
-    mockAeSdkSignMessage.mockRejectedValueOnce(new Error('Rejected by user'));
+  it('propagates a wallet signing rejection without submitting the claim', async () => {
+    mockSignMessage.mockRejectedValueOnce(new Error('Rejected by user'));
     const { result } = renderHook(() => useClaimChainName('ak_test_active'));
 
     await act(async () => {
@@ -259,12 +262,11 @@ describe('useClaimChainName', () => {
       })).rejects.toThrow('Rejected by user');
     });
 
-    expect(mockResolveAccount).not.toHaveBeenCalled();
-    expect(mockSignMessage).not.toHaveBeenCalled();
+    expect(mockSignMessage).toHaveBeenCalledTimes(1);
+    expect(mockClaimChainName).not.toHaveBeenCalled();
   });
 
-  it('falls back to an authorized wallet signer when direct sdk signing is unavailable', async () => {
-    mockAeSdkSignMessage.mockRejectedValueOnce(new Error('sdk sign failed'));
+  it('signs the claim challenge through the shared wallet signMessage channel', async () => {
     mockGetChainNameClaimStatus.mockResolvedValueOnce({
       status: 'completed',
       name: 'averylongchain.chain',
@@ -283,8 +285,12 @@ describe('useClaimChainName', () => {
       });
     });
 
-    expect(mockResolveAccount).toHaveBeenCalledWith('ak_test_active');
-    expect(mockSignMessage).toHaveBeenCalledWith('profile_chain_name_claim:ak_test_active:nonce-1:123456');
+    expect(mockSignMessage).toHaveBeenCalledWith(
+      'profile_chain_name_claim:ak_test_active:nonce-1:123456',
+      expect.objectContaining({
+        request: expect.objectContaining({ type: 'profile-chain-name-claim' }),
+      }),
+    );
   });
 
   it('keeps claiming enabled for the connected profile address', () => {
@@ -295,10 +301,7 @@ describe('useClaimChainName', () => {
   it('does not crash when aeSdk.address throws before wallet reconnect', () => {
     mockActiveAccount = undefined as any;
     mockAeSdkState = {
-      signMessage: (...args: any[]) => mockAeSdkSignMessage(...args),
-      selectAccount: (...args: any[]) => mockSelectAccount(...args),
       addresses: () => [],
-      _resolveAccount: (...args: any[]) => mockResolveAccount(...args),
     };
     Object.defineProperty(mockAeSdkState, 'address', {
       get() {
@@ -382,7 +385,7 @@ describe('useClaimChainName', () => {
   });
 
   it('normalizes 0x-prefixed wallet signatures', async () => {
-    mockAeSdkSignMessage.mockResolvedValueOnce('0xAbCd');
+    mockSignMessage.mockResolvedValueOnce('0xAbCd');
     mockGetChainNameClaimStatus.mockResolvedValueOnce({
       status: 'completed',
       name: 'averylongchain.chain',
@@ -615,7 +618,6 @@ describe('useClaimChainName', () => {
     mockWalletInfo = undefined;
     mockAeSdkState = {
       addresses: () => [],
-      _resolveAccount: () => null,
     };
     const { result } = renderHook(() => useClaimChainName());
 

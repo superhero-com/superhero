@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAtom } from 'jotai';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   TX_QUEUE_ACK_CHANNEL,
   TX_QUEUE_REQUEST_PREFIX,
@@ -79,6 +80,16 @@ const parseMessageSignRequest = (raw: string | null): MessageSignRequest | null 
     ) {
       return parsed as MessageSignRequest;
     }
+    if (
+      parsed.type === 'profile-chain-name-claim'
+      && typeof parsed.address === 'string'
+      && typeof parsed.message === 'string'
+      && typeof parsed.name === 'string'
+      && typeof parsed.challenge_nonce === 'string'
+      && typeof parsed.challenge_expires_at === 'string'
+    ) {
+      return parsed as MessageSignRequest;
+    }
   } catch {
     // ignore malformed persisted queue data
   }
@@ -100,6 +111,17 @@ const submitMessageSignRequest = async (
       ...request.payload,
       challenge: request.message,
       signature,
+    });
+    return;
+  }
+
+  if (request.type === 'profile-chain-name-claim') {
+    await SuperheroApi.claimChainName({
+      address: request.address,
+      name: request.name,
+      challenge_nonce: request.challenge_nonce,
+      challenge_expires_at: request.challenge_expires_at,
+      signature_hex: signature,
     });
     return;
   }
@@ -186,6 +208,7 @@ const TxQueue = () => {
   const { t } = useTranslation('transactions');
   const { t: tCommon } = useTranslation('common');
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
   const [, setTransactionsQueue] = useAtom(transactionsQueueAtom);
@@ -285,11 +308,20 @@ const TxQueue = () => {
           await submitMessageSignRequest(request, signature);
           safeLocalStringStorage.removeItem(storedRequestKey);
           safeLocalStringStorage.removeItem(`${TX_QUEUE_RESULT_PREFIX}${id}`);
+          // The request was completed here (standalone tab, no opener polling), so the
+          // account/profile caches that drive the profile page are stale. Invalidate them
+          // before the user navigates back so links (X, bio, site, .chain) show up without
+          // a manual refresh.
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', request.address] }),
+            queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', request.address] }),
+          ]);
           setMessageResult({
             status: 'success',
             address: request.address,
             message: (() => {
               if (request.type === 'profile-update') return tCommon('messages.profileUpdated');
+              if (request.type === 'profile-chain-name-claim') return tCommon('messages.chainNameClaimStarted');
               if (request.type === 'address-link-x-submit') return tCommon('messages.xCallbackSuccess');
               if (request.type === 'address-link-x-unclaim') return tCommon('messages.xCallbackUnlinkSuccess');
               if (request.type === 'address-link-bio-submit') return tCommon('messages.bioLinkSuccess');
@@ -327,6 +359,7 @@ const TxQueue = () => {
     status,
     setTransactionsQueue,
     tCommon,
+    queryClient,
   ]);
 
   if (messageResult) {

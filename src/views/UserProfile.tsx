@@ -607,9 +607,12 @@ export default function UserProfile({
         });
       });
       setProfile(updatedProfile);
-      refetchAccount();
-      refetchProfile();
     }
+    // Always refetch on close — X linking (and other link flows) can complete out-of-band
+    // via the OAuth redirect / wallet deep link, so the cached account that drives the
+    // "Link your X account" prompt may be stale even when no in-modal save happened.
+    refetchAccount();
+    refetchProfile();
   };
 
   const profileModals = (

@@ -94,58 +94,6 @@ const Branding = () => {
     URL.revokeObjectURL(svgUrl);
   };
 
-  const downloadPredefinedBanner = (type: 'landscape' | 'vertical') => {
-    let svgContent = '';
-    const filename = `superhero-brand-banner-${type}.svg`;
-
-    if (type === 'landscape') {
-      svgContent = `<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#0a0a0f"/>
-  <circle cx="250" cy="150" r="300" fill="#ff6b6b" opacity="0.2" filter="blur(100px)"/>
-  <circle cx="950" cy="480" r="300" fill="#00ff9d" opacity="0.18" filter="blur(100px)"/>
-  <circle cx="600" cy="315" r="200" fill="#45b7d1" opacity="0.12" filter="blur(80px)"/>
-  <path d="M0 100 L1200 100" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M0 315 L1200 315" stroke="rgba(255,255,255,0.05)" stroke-width="1.5"/>
-  <path d="M0 530 L1200 530" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M300 0 L300 630" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M600 0 L600 630" stroke="rgba(255,255,255,0.05)" stroke-width="1.5"/>
-  <path d="M900 0 L900 630" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <g transform="translate(520, 160) scale(4)">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.105957 10.1933L11.0668 0.294678H30.5399L41.5008 10.1933L20.8617 29.6529L0.105957 10.1933ZM12.2912 3.33174H18.2381L30.948 15.8737L20.8034 25.4348L4.65355 10.2495L12.2912 3.33174Z" fill="#1161FE"/>
-  </g>
-  <text x="600" y="420" font-family="'Inter', sans-serif" font-size="64" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">SUPERHERO</text>
-  <text x="600" y="465" font-family="'Inter', sans-serif" font-size="20" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="8">DECENTRALIZED SOCIAL PROTOCOL</text>
-</svg>`;
-    } else {
-      svgContent = `<svg width="400" height="800" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="800" fill="#0a0a0f"/>
-  <circle cx="200" cy="150" r="200" fill="#ff6b6b" opacity="0.2" filter="blur(80px)"/>
-  <circle cx="200" cy="650" r="200" fill="#00ff9d" opacity="0.18" filter="blur(80px)"/>
-  <path d="M0 200 L400 200" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M0 400 L400 400" stroke="rgba(255,255,255,0.05)" stroke-width="1.5"/>
-  <path d="M0 600 L400 600" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M100 0 L100 800" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <path d="M200 0 L200 800" stroke="rgba(255,255,255,0.05)" stroke-width="1.5"/>
-  <path d="M300 0 L300 800" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-  <g transform="translate(136, 260) scale(3)">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.105957 10.1933L11.0668 0.294678H30.5399L41.5008 10.1933L20.8617 29.6529L0.105957 10.1933ZM12.2912 3.33174H18.2381L30.948 15.8737L20.8034 25.4348L4.65355 10.2495L12.2912 3.33174Z" fill="#1161FE"/>
-  </g>
-  <text x="200" y="480" font-family="'Inter', sans-serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">SUPERHERO</text>
-  <text x="200" y="520" font-family="'Inter', sans-serif" font-size="14" font-weight="500" fill="#00ff9d" text-anchor="middle" letter-spacing="4">Web3 Attention Market</text>
-</svg>`;
-    }
-
-    const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const link = document.createElement('a');
-    link.href = svgUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(svgUrl);
-  };
-
   return (
     <>
       <div className="max-w-[1200px] mx-auto p-4 md:p-6 text-white">

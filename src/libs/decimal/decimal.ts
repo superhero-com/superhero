@@ -1,7 +1,11 @@
 /* eslint-disable */
-import assert from 'assert';
-
 import { BigNumber } from '@ethersproject/bignumber';
+
+function assert(condition: unknown, message = 'Assertion failed'): asserts condition {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
 
 const MAX_UINT_256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 const PRECISION = 18;

@@ -35,6 +35,7 @@ const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
 const Privacy = lazy(() => import('./views/Privacy'));
 const FAQ = lazy(() => import('./views/FAQ'));
+const Branding = lazy(() => import('./views/Branding'));
 const BuyAe = lazy(() => import('./views/BuyAe'));
 const Whitepaper = lazy(() => import('./views/Whitepaper'));
 const TxQueue = lazy(() => import('./views/TxQueue'));
@@ -260,6 +261,7 @@ export const routes: RouteObject[] = [
   { path: '/terms', element: <Terms /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
+  { path: '/branding', element: <Branding /> },
   { path: '/buy-ae', element: <BuyAe /> },
   { path: '/whitepaper', element: <Whitepaper /> },
   {

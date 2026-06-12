@@ -19,6 +19,9 @@ jobs:
   main:
     runs-on: ubuntu-latest
     name: build
+    concurrency:
+      group: build-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
     steps:
       - uses: actions/checkout@v6
@@ -65,6 +68,9 @@ jobs:
   stg_deploy:
     runs-on: ubuntu-latest
     name: PR deploy
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     needs: main
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
     steps:
@@ -128,6 +134,9 @@ jobs:
   stg_undeploy:
     runs-on: ubuntu-latest
     name: PR undeploy on close or branch delete
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
+      cancel-in-progress: false
     if: (github.event_name == 'pull_request' && github.event.action == 'closed') || (github.event_name == 'delete' && github.event.ref_type == 'branch')
     steps:
       - name: Extract PR number from branch on delete

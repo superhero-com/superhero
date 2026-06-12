@@ -1,0 +1,188 @@
+name: Preview PR
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [ opened, synchronize, reopened, closed ]
+  delete:
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  ENV: "stg"
+  APP: "superhero"
+
+concurrency: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    name: build
+    concurrency:
+      group: build-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata for docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_REPO }}
+          tags: |
+            type=ref,event=pr
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
+          build-args: |
+            VITE_WALLET_CONNECT_PROJECT_ID=${{ secrets.VITE_WALLET_CONNECT_PROJECT_ID }}
+            VITE_X_OAUTH_CLIENT_ID=${{ secrets.VITE_X_OAUTH_CLIENT_ID }}
+            VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS=${{ secrets.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS }}
+
+  stg_deploy:
+    runs-on: ubuntu-latest
+    name: PR deploy
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    needs: main
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: aeternity/gitops-apps-superhero
+          ref: stg
+          token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check the initial PR deployment status
+        continue-on-error: true
+        id: status
+        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
+        with:
+          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          timeout: 10
+
+      - name: Staging deploy
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || (github.event.action == 'synchronize' && steps.status.outputs.status_code != '200')
+        uses: aeternity/ae-github-actions/argocd-deploy@v7.4.0
+        with:
+          url-prefix: pr-${{ env.PR_NUMBER }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+
+      - name: Staging PR Sync
+        if: github.event.action == 'synchronize' && steps.status.outputs.status_code == '200'
+        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.4.0
+        with:
+          git-sha: ${{ github.event.pull_request.head.sha }}
+          url-prefix: pr-${{ env.PR_NUMBER }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v1
+        with:
+          repository: aeternity/gitops-apps-superhero
+          github_token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          branch: stg
+
+      - name: Print PR url
+        uses: peter-evans/create-or-update-comment@v5
+        if: github.event.action == 'opened'
+        with:
+          issue-number: ${{ env.PR_NUMBER }}
+          body: |
+            ## 🧪 Preview Links 🔎️
+            https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+
+      - name: Wait for the deployment to go live
+        continue-on-error: true
+        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
+        with:
+          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          timeout: 300
+          interval: 5
+
+  stg_undeploy:
+    runs-on: ubuntu-latest
+    name: PR undeploy on close or branch delete
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
+      cancel-in-progress: false
+    if: (github.event_name == 'pull_request' && github.event.action == 'closed') || (github.event_name == 'delete' && github.event.ref_type == 'branch')
+    steps:
+      - name: Extract PR number from branch on delete
+        if: github.event_name == 'delete'
+        id: extract-pr
+        shell: bash
+        run: |
+          BRANCH_NAME="${{ github.event.ref }}"
+          echo "Deleted branch: $BRANCH_NAME"
+          PR_NUMBER=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&state=all" \
+            | jq -r '.[0].number // empty')
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            echo "Found PR number: $PR_NUMBER"
+            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "No PR number found for branch $BRANCH_NAME"
+            echo "PR_NUMBER=" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@v6
+        with:
+          repository: aeternity/gitops-apps-superhero
+          ref: stg
+          token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Staging undeploy
+        if: github.event_name == 'pull_request' || steps.extract-pr.outputs.PR_NUMBER != ''
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7.4.0
+        with:
+          url-prefix: pr-${{ github.event_name == 'delete' && steps.extract-pr.outputs.PR_NUMBER || env.PR_NUMBER }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v1
+        with:
+          repository: aeternity/gitops-apps-superhero
+          github_token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          branch: stg

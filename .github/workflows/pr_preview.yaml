@@ -79,40 +79,38 @@ jobs:
           repository: aeternity/gitops-apps-superhero
           ref: stg
           token: ${{ secrets.NPM_GITHUB_TOKEN }}
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Check the initial PR deployment status
         continue-on-error: true
         id: status
-        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
+        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
         with:
           url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 10
 
       - name: Staging deploy
         if: github.event.action == 'opened' || github.event.action == 'reopened' || (github.event.action == 'synchronize' && steps.status.outputs.status_code != '200')
-        uses: aeternity/ae-github-actions/argocd-deploy@v7.4.0
+        uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
         with:
           url-prefix: pr-${{ env.PR_NUMBER }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
+          domain: service.aepps.com
 
       - name: Staging PR Sync
         if: github.event.action == 'synchronize' && steps.status.outputs.status_code == '200'
-        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.4.0
+        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
         with:
           git-sha: ${{ github.event.pull_request.head.sha }}
           url-prefix: pr-${{ env.PR_NUMBER }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
+          domain: service.aepps.com
 
       - name: Push changes
-        uses: ad-m/github-push-action@v1
-        with:
-          repository: aeternity/gitops-apps-superhero
-          github_token: ${{ secrets.NPM_GITHUB_TOKEN }}
-          branch: stg
+        run: git pull --rebase origin stg && git push origin stg
 
       - name: Print PR url
         uses: peter-evans/create-or-update-comment@v5
@@ -125,7 +123,7 @@ jobs:
 
       - name: Wait for the deployment to go live
         continue-on-error: true
-        uses: aeternity/ae-github-actions/deploy-status@v7.4.0
+        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
         with:
           url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 300
@@ -164,25 +162,19 @@ jobs:
           repository: aeternity/gitops-apps-superhero
           ref: stg
           token: ${{ secrets.NPM_GITHUB_TOKEN }}
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 0
 
-      - name: Install yq
-        run: |
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-
       - name: Staging undeploy
+        id: undeploy
         if: github.event_name == 'pull_request' || steps.extract-pr.outputs.PR_NUMBER != ''
-        uses: aeternity/ae-github-actions/argocd-undeploy@v7.4.0
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
         with:
           url-prefix: pr-${{ github.event_name == 'delete' && steps.extract-pr.outputs.PR_NUMBER || env.PR_NUMBER }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
+          domain: service.aepps.com
 
       - name: Push changes
-        uses: ad-m/github-push-action@v1
-        with:
-          repository: aeternity/gitops-apps-superhero
-          github_token: ${{ secrets.NPM_GITHUB_TOKEN }}
-          branch: stg
+        if: steps.undeploy.conclusion == 'success'
+        run: git pull --rebase origin stg && git push origin stg

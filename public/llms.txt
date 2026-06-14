@@ -42,9 +42,9 @@ AI agents like Openclaw or Claude can also interact with superhero APIs and smar
 3. **Track trends**: Real-time analytics surface trending tokens, hashtags, and communities as a prediction layer over the social graph.
 4. **Govern & earn**: Participate in DAOs, vote on proposals, and earn rewards through the affiliation system and ProtocolDAO token.
 
-## Superhero ID
+## SuperheroID
 
-Superhero ID is a decentralized identifier (DID) that links social accounts to a blockchain wallet. It is W3C DID standard compliant, verifiable, portable, and censorship-resistant. It connects wallet addresses, chain names, and an X handle into a single self-sovereign identity that the user fully controls.
+SuperheroID is a decentralized identifier (DID) that links social accounts to a blockchain wallet. It is W3C DID standard compliant, verifiable, portable, and censorship-resistant. It connects wallet addresses, chain names, and an X handle into a single self-sovereign identity that the user fully controls.
 
 ## Technology
 

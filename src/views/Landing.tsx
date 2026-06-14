@@ -233,7 +233,7 @@ export default function Landing() {
       </section>
 
       {/* ============================================================ */}
-      {/*  SUPERHERO ID                                                */}
+      {/*  SuperheroID                                                */}
       {/* ============================================================ */}
       <section id="identity" className="relative py-32 border-t border-white/[0.04]">
         <div className="max-w-[1180px] mx-auto px-6">
@@ -241,7 +241,7 @@ export default function Landing() {
             {/* Left */}
             <div>
               <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-                Superhero ID
+                SuperheroID
               </span>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-6">
                 Decentralized identity,
@@ -284,7 +284,7 @@ export default function Landing() {
             <div className="relative">
               <img
                 src="/did-image.png"
-                alt="Superhero ID visual mockup"
+                alt="SuperheroID visual mockup"
                 className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm hue-rotate-60"
               />
               {/* Decorative glow */}

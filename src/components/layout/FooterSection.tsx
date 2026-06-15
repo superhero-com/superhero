@@ -3,9 +3,11 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Globe } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { currencyRatesAtom, currencyRatesLastErrorAtAtom, currencyRatesUpdatedAtAtom } from '@/atoms/currencyAtoms';
+import AppSelect from '@/components/inputs/AppSelect';
+import { changeLanguage, SUPPORTED_LANGUAGES, type LanguageCode } from '@/i18n';
 
 type FooterLink =
   | { kind: 'internal'; to: string; labelKey: string }
@@ -32,7 +34,7 @@ const handleLinkMouseLeave = (e: MouseEvent<HTMLAnchorElement>) => {
 };
 
 const FooterSection = ({ compact = false }: { compact?: boolean }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
@@ -147,6 +149,24 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
               {`${statusEmoji(apiStatus.backend)} ${t('layout.backend')}`}
             </span>
           </div>
+        </div>
+      </div>
+      {/* Language switcher */}
+      <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-4 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
+        <div className="inline-flex items-center gap-2">
+          <Globe className="w-4 h-4 shrink-0" style={{ color: 'var(--light-font-color)' }} aria-hidden="true" />
+          <AppSelect
+            value={i18n.resolvedLanguage || i18n.language}
+            onValueChange={(v) => changeLanguage(v as LanguageCode)}
+            side="top"
+            align={compact ? 'center' : 'end'}
+            options={SUPPORTED_LANGUAGES.map((l) => ({
+              value: l.code,
+              label: `${l.flag}  ${l.label}`,
+            }))}
+            triggerClassName="min-w-[150px] bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-[var(--light-font-color)] hover:bg-white/[0.05] focus:outline-none"
+            contentClassName="bg-gray-900 border border-white/10 text-white"
+          />
         </div>
       </div>
       {/* Send Feedback button (very bottom) */}

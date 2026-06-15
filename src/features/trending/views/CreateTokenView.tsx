@@ -15,7 +15,6 @@ import {
   type TxPayload,
 } from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
@@ -235,15 +234,35 @@ const CreateTokenView = () => {
     return `Only characters in the range "${chars}" are allowed.`;
   }, [selectedCollection?.allowed_name_chars]);
 
+  const normalizeTokenName = useCallback((value: string): string => {
+    if (!selectedCollection?.allowed_name_chars) return value;
+    const regex = convertRulesToRegex(selectedCollection.allowed_name_chars);
+    // Global flag so ALL disallowed chars are stripped, not just the first.
+    const stripRegex = new RegExp(regex.source, 'g');
+    return value.toUpperCase().replace(/ /g, '-').replace(stripRegex, '');
+  }, [selectedCollection?.allowed_name_chars]);
+
+  // While an IME composition is active (e.g. typing Chinese via pinyin), do NOT
+  // transform the value — uppercasing / stripping mid-composition feeds a changed
+  // value back into the controlled input and aborts the composition, so only the
+  // Latin pinyin survives. We normalize once the composition commits instead.
+  const isComposingName = useRef(false);
+
   const onNameUpdate = (value: string) => {
-    if (!selectedCollection?.allowed_name_chars) {
+    if (isComposingName.current) {
       setTokenName(value);
       return;
     }
+    setTokenName(normalizeTokenName(value));
+  };
 
-    const regex = convertRulesToRegex(selectedCollection.allowed_name_chars);
-    const processedValue = value.toUpperCase().replace(/ /g, '-').replace(regex, '');
-    setTokenName(processedValue);
+  const onNameCompositionStart = () => {
+    isComposingName.current = true;
+  };
+
+  const onNameCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposingName.current = false;
+    setTokenName(normalizeTokenName(e.currentTarget.value));
   };
 
   // Debounced name availability check
@@ -581,18 +600,48 @@ const CreateTokenView = () => {
                         <div className="block text-sm font-medium text-white/80 mb-2">
                           Collection
                         </div>
-                        <AppSelect
-                          value={collectionModel || ''}
-                          onValueChange={(v) => setCollectionModel(v as CollectionId)}
-                          triggerClassName="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none transition-all duration-200 autofill:bg-transparent"
-                          contentClassName="bg-gray-900 border-gray-600/50"
+                        <div
+                          role="radiogroup"
+                          aria-label="Collection"
+                          className="grid grid-cols-2 gap-2"
                         >
-                          {activeFactoryCollectionsArr.map((collection: any) => (
-                            <AppSelectItem key={collection.id} value={collection.id}>
-                              {collection.name}
-                            </AppSelectItem>
-                          ))}
-                        </AppSelect>
+                          {activeFactoryCollectionsArr.map((collection: any) => {
+                            const selected = collectionModel === collection.id;
+                            return (
+                              <button
+                                key={collection.id}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                onClick={() => setCollectionModel(collection.id as CollectionId)}
+                                className={`group relative flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 ${
+                                  selected
+                                    ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_0_1px_rgba(16,185,129,0.25)]'
+                                    : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07]'
+                                }`}
+                              >
+                                <span
+                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                                    selected
+                                      ? 'border-emerald-400'
+                                      : 'border-white/30 group-hover:border-white/50'
+                                  }`}
+                                >
+                                  {selected && (
+                                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                  )}
+                                </span>
+                                <span
+                                  className={`min-w-0 truncate text-sm font-semibold ${
+                                    selected ? 'text-white' : 'text-white/90'
+                                  }`}
+                                >
+                                  {collection.name}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
@@ -612,6 +661,8 @@ const CreateTokenView = () => {
                           ref={nameInputRef}
                           value={tokenName}
                           onChange={(e) => onNameUpdate(e.target.value)}
+                          onCompositionStart={onNameCompositionStart}
+                          onCompositionEnd={onNameCompositionEnd}
                           placeholder="TREND"
                           maxLength={20}
                           required

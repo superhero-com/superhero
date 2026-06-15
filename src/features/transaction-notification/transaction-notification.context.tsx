@@ -1,7 +1,7 @@
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
-import { CONFIG } from '@/config';
+import { isTransactionMined } from '@/utils/apiRead';
 
 // ─── Payload types (web equivalent of mobile's SignPayload) ─────────────────
 
@@ -12,6 +12,7 @@ export const TxPayloadType = {
   CreateToken: 'create_token',
   CreatePost: 'create_post',
   CreateComment: 'create_comment',
+  ClaimChainName: 'claim_chain_name',
   SwapToken: 'swap_token',
   WrapToken: 'wrap_ae',
   UnwrapToken: 'unwrap_wae',
@@ -26,6 +27,7 @@ export type TxPayload =
   | { type: typeof TxPayloadType.CreateToken; tokenName: string }
   | { type: typeof TxPayloadType.CreatePost; content: string }
   | { type: typeof TxPayloadType.CreateComment; postId: string }
+  | { type: typeof TxPayloadType.ClaimChainName; name: string; step?: 'wallet' | 'queued' | 'preclaim' | 'claim' | 'update' | 'transfer' }
   | { type: typeof TxPayloadType.SwapToken; tokenInSymbol: string; tokenOutSymbol: string; amountIn: string; amountOut: string }
   | { type: typeof TxPayloadType.WrapToken; amount: string }
   | { type: typeof TxPayloadType.UnwrapToken; amount: string }
@@ -44,6 +46,7 @@ export type NotificationState =
 type TransactionNotificationContextValue = {
   notificationState: NotificationState;
   notifySubmitted: (payload: TxPayload) => void;
+  notifyPending: (payload: TxPayload) => void;
   notifyPendingTx: (payload: TxPayload, txHash: string) => void;
   notifyConfirmed: (payload: TxPayload) => void;
   notifyError: (message: string) => void;
@@ -56,23 +59,6 @@ const TransactionNotificationContext = createContext<
 const AUTO_DISMISS_MS = 6_000;
 const ERROR_DISMISS_MS = 5_000;
 const POLL_INTERVAL_MS = 5_000;
-
-/**
- * Poll the node until the transaction is mined (block_height !== -1).
- * Same logic as TokenSaleDetails.
- * */
-async function checkTxMined(txHash: string): Promise<boolean> {
-  try {
-    const res = await fetch(
-      `${CONFIG.NODE_URL}/v3/transactions/${txHash}?int-as-string=false`,
-    );
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data.block_height !== undefined && data.block_height !== -1;
-  } catch {
-    return false;
-  }
-}
 
 export const TransactionNotificationProvider: React.FC<{
   children: React.ReactNode
@@ -121,6 +107,12 @@ export const TransactionNotificationProvider: React.FC<{
     setNotificationState({ status: 'submitted', payload });
   }, []);
 
+  const notifyPending = useCallback((payload: TxPayload) => {
+    clearDismissTimer();
+    clearPollInterval();
+    setNotificationState({ status: 'pending', payload, txHash: '' });
+  }, []);
+
   const notifyConfirmed = useCallback((payload: TxPayload) => {
     clearDismissTimer();
     clearPollInterval();
@@ -138,7 +130,7 @@ export const TransactionNotificationProvider: React.FC<{
       setNotificationState({ status: 'pending', payload, txHash });
 
       const tryConfirm = async () => {
-        const mined = await checkTxMined(txHash);
+        const mined = await isTransactionMined(txHash);
         // Discard the result if a newer notification superseded this poll cycle.
         if (gen !== pollGeneration.current) return;
         if (mined) {
@@ -167,6 +159,7 @@ export const TransactionNotificationProvider: React.FC<{
   const contextValue = useMemo(() => ({
     notificationState,
     notifySubmitted,
+    notifyPending,
     notifyPendingTx,
     notifyConfirmed,
     notifyError,
@@ -174,6 +167,7 @@ export const TransactionNotificationProvider: React.FC<{
   }), [
     notificationState,
     notifySubmitted,
+    notifyPending,
     notifyPendingTx,
     notifyConfirmed,
     notifyError,

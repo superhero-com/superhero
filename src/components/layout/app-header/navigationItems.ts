@@ -65,7 +65,7 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
   ...getNavigationItems(),
   {
     id: 'account',
-    label: 'Superhero ID',
+    label: 'SuperheroID',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },
@@ -83,7 +83,7 @@ export const getMobileFooterNavigationItems = (
   ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
   {
     id: 'account',
-    label: 'Account',
+    label: 'SuperheroID',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },

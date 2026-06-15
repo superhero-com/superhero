@@ -1,19 +1,25 @@
 import React, {
   Suspense, useEffect, useRef,
 } from 'react';
-import { useRoutes } from 'react-router-dom';
+import { useNavigate, useRoutes } from 'react-router-dom';
+import { useAtom } from 'jotai';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
 import {
   useAeSdk, useAccount, useIsMobile, useWalletConnect,
 } from './hooks';
-import { useProfileFeed } from './hooks/useProfileFeed';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import {
+  profileEditModalFlowAtom,
+  profileEditModalOpenAtom,
+  profileEditModalPendingAfterConnectAtom,
+} from './atoms/profileEditModalAtom';
+import ProfileEditModal from './components/modals/ProfileEditModal';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -34,13 +40,21 @@ const ConnectWalletModal = React.lazy(
 const TipModal = React.lazy(
   () => import('./components/modals/TipModal'),
 );
+const OnboardingModal = React.lazy(
+  () => import('./components/modals/OnboardingModal'),
+);
 
 const App = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  useProfileFeed({ refetchIntervalMs: 20_000 });
   const { initSdk, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { attemptReconnection } = useWalletConnect();
+  const [profileEditOpen, setProfileEditOpen] = useAtom(profileEditModalOpenAtom);
+  const [profileEditFlow, setProfileEditFlow] = useAtom(profileEditModalFlowAtom);
+  const [profileEditPendingAfterConnect, setProfileEditPendingAfterConnect] = useAtom(
+    profileEditModalPendingAfterConnectAtom,
+  );
 
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
@@ -82,6 +96,35 @@ const App = () => {
     };
   }, [activeAccount]);
 
+  useEffect(() => {
+    if (!profileEditPendingAfterConnect || !activeAccount) return;
+    setProfileEditPendingAfterConnect(false);
+    setProfileEditOpen(true);
+  }, [
+    activeAccount,
+    profileEditPendingAfterConnect,
+    setProfileEditOpen,
+    setProfileEditPendingAfterConnect,
+  ]);
+
+  const resetProfileEditFlow = () => setProfileEditFlow({
+    redirectToProfileOnClose: false,
+    showSkip: false,
+  });
+
+  const handleProfileEditSuccess = () => {
+    setProfileEditOpen(false);
+    if (profileEditFlow.redirectToProfileOnClose && activeAccount) {
+      navigate(`/users/${encodeURIComponent(activeAccount)}`);
+    }
+    resetProfileEditFlow();
+  };
+
+  const handleProfileEditDismiss = () => {
+    setProfileEditOpen(false);
+    resetProfileEditFlow();
+  };
+
   return (
     <div className="app-container">
 
@@ -100,9 +143,22 @@ const App = () => {
             'transaction-confirm': TransactionConfirmModal,
             'connect-wallet': ConnectWalletModal,
             tip: TipModal,
+            onboarding: OnboardingModal,
           }}
         />
       </Suspense>
+      <ProfileEditModal
+        open={profileEditOpen}
+        onClose={(updatedProfile) => {
+          if (updatedProfile) handleProfileEditSuccess();
+          else handleProfileEditDismiss();
+        }}
+        showSkip={profileEditFlow.showSkip}
+        onSkip={handleProfileEditDismiss}
+        onClaimSuccess={
+          profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
+        }
+      />
       <Suspense fallback={<div className="loading-fallback" />}>
         <div className="app-routes-container">{useRoutes(routes as any)}</div>
       </Suspense>

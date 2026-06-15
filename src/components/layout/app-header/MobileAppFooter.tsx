@@ -3,20 +3,29 @@ import {
 } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import { useSetAtom } from 'jotai';
 import AddressAvatar from '../../AddressAvatar';
-import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useModal } from '../../../hooks/useModal';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import {
   getActiveNavigationPath,
   getMobileFooterNavigationItems,
   getMobileMoreNavigationItems,
 } from './navigationItems';
+import {
+  profileEditModalFlowAtom,
+  profileEditModalOpenAtom,
+  profileEditModalPendingAfterConnectAtom,
+} from '../../../atoms/profileEditModalAtom';
 
 const MobileAppFooter = () => {
   const { pathname } = useLocation();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
+  const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
+  const setProfileEditFlow = useSetAtom(profileEditModalFlowAtom);
+  const setProfileEditPendingAfterConnect = useSetAtom(profileEditModalPendingAfterConnectAtom);
   const navigationItems = useMemo(
     () => getMobileFooterNavigationItems(activeAccount),
     [activeAccount],
@@ -103,6 +112,25 @@ const MobileAppFooter = () => {
     ? 'bg-white/10 text-[var(--standard-font-color)]'
     : 'text-[var(--light-font-color)] hover:bg-white/5 hover:text-[var(--standard-font-color)]');
 
+  const handleSuperheroIdClick = () => {
+    if (activeAccount) {
+      setProfileEditOpen(true);
+      return;
+    }
+    openModal({
+      name: 'onboarding',
+      props: {
+        onConnected: () => {
+          setProfileEditFlow({
+            redirectToProfileOnClose: true,
+            showSkip: true,
+          });
+          setProfileEditPendingAfterConnect(true);
+        },
+      },
+    });
+  };
+
   return (
     <div
       ref={footerRef}
@@ -140,11 +168,10 @@ const MobileAppFooter = () => {
             <AppNavigationItemAction
               key={item.id}
               item={item}
-              activeAccount={activeAccount}
               isActive={isActive}
               className={itemClassName}
               style={{ textDecoration: 'none' }}
-              onConnect={() => openModal({ name: 'connect-wallet' })}
+              onConnect={handleSuperheroIdClick}
             >
               {content}
             </AppNavigationItemAction>

@@ -30,6 +30,11 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
       return { title: 'Publishing post', subtitle: 'Sign in your wallet to continue' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Sign in your wallet to continue' };
+    case TxPayloadType.ClaimChainName:
+      return {
+        title: 'Confirm in your wallet',
+        subtitle: `Sign the claim request for ${payload.name}.chain`,
+      };
     case TxPayloadType.SwapToken:
       return {
         title: 'Confirm in your wallet',
@@ -68,6 +73,39 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
       return { title: 'Publishing post', subtitle: 'Confirming on blockchain…' };
     case TxPayloadType.CreateComment:
       return { title: 'Publishing reply', subtitle: 'Confirming on blockchain…' };
+    case TxPayloadType.ClaimChainName:
+      switch (payload.step) {
+        case 'preclaim':
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Step 1 of 4 - reserving the name on-chain',
+          };
+        case 'claim':
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Step 2 of 4 - submitting the sponsored claim',
+          };
+        case 'update':
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Step 3 of 4 - updating the name pointers',
+          };
+        case 'transfer':
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Step 4 of 4 - transferring the name to your wallet',
+          };
+        case 'queued':
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Preparing the sponsored transactions. This can take a couple of minutes.',
+          };
+        default:
+          return {
+            title: `Claiming ${payload.name}.chain`,
+            subtitle: 'Processing in the background. You can continue using the app.',
+          };
+      }
     case TxPayloadType.SwapToken:
       return { title: 'Swap in progress', subtitle: 'Usually confirms in a few seconds' };
     case TxPayloadType.WrapToken:
@@ -155,6 +193,11 @@ function getConfirmedMeta(payload: TxPayload): {
       return { title: 'Post published', line: null };
     case TxPayloadType.CreateComment:
       return { title: 'Reply published', line: null };
+    case TxPayloadType.ClaimChainName:
+      return {
+        title: 'Name claimed',
+        line: { leftLabel: `${payload.name}.chain`, leftColor: '#4ade80' },
+      };
     case TxPayloadType.AddLiquidity:
       return {
         title: 'Liquidity added',

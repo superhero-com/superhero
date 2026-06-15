@@ -4,58 +4,43 @@ import {
 } from 'vitest';
 import { useProfile } from '@/hooks/useProfile';
 
-const mockCreateXAttestation = vi.fn();
+const mockClaimXAddressLink = vi.fn();
+const mockClaimBioAddressLink = vi.fn();
+const mockSubmitBioAddressLink = vi.fn();
+const mockUnclaimBioAddressLink = vi.fn();
+const mockSubmitBioAddressLinkUnclaim = vi.fn();
+const mockClaimPreferredAensNameAddressLink = vi.fn();
+const mockSubmitPreferredAensNameAddressLink = vi.fn();
+const mockUnclaimPreferredAensNameAddressLink = vi.fn();
+const mockSubmitPreferredAensNameAddressLinkUnclaim = vi.fn();
 const mockGetProfile = vi.fn();
-const mockInitializeContractTyped = vi.fn();
-const mockPayForProfileTx = vi.fn();
+const mockIssueProfileChallenge = vi.fn();
+const mockUpdateProfile = vi.fn();
+const mockSignAndVerifyLinkMessage = vi.fn();
 const mockAddStaticAccount = vi.fn();
-const mockBuildTx = vi.fn();
-const mockGetHeight = vi.fn();
-const mockSelectAccount = vi.fn();
-const mockSignTransaction = vi.fn();
-const mockCalldataEncode = vi.fn();
-const mockGetProfileOnChain = vi.fn();
 
 let mockActiveAccount = 'ak_test_active';
-let mockContract: any;
-
-vi.mock('@aeternity/aepp-sdk', async () => {
-  const actual = await vi.importActual<any>('@aeternity/aepp-sdk');
-  return {
-    ...actual,
-    unpackTx: vi.fn(() => ({ fee: '1000' })),
-  };
-});
 
 vi.mock('@/api/backend', () => ({
   SuperheroApi: {
-    createXAttestation: (...args: any[]) => mockCreateXAttestation(...args),
+    claimXAddressLink: (...args: any[]) => mockClaimXAddressLink(...args),
+    claimBioAddressLink: (...args: any[]) => mockClaimBioAddressLink(...args),
+    submitBioAddressLink: (...args: any[]) => mockSubmitBioAddressLink(...args),
+    unclaimBioAddressLink: (...args: any[]) => mockUnclaimBioAddressLink(...args),
+    submitBioAddressLinkUnclaim: (...args: any[]) => mockSubmitBioAddressLinkUnclaim(...args),
+    claimPreferredAensNameAddressLink: (...args: any[]) => mockClaimPreferredAensNameAddressLink(...args),
+    submitPreferredAensNameAddressLink: (...args: any[]) => mockSubmitPreferredAensNameAddressLink(...args),
+    unclaimPreferredAensNameAddressLink: (...args: any[]) => mockUnclaimPreferredAensNameAddressLink(...args),
+    submitPreferredAensNameAddressLinkUnclaim: (...args: any[]) => mockSubmitPreferredAensNameAddressLinkUnclaim(...args),
     getProfile: (...args: any[]) => mockGetProfile(...args),
+    issueProfileChallenge: (...args: any[]) => mockIssueProfileChallenge(...args),
+    updateProfile: (...args: any[]) => mockUpdateProfile(...args),
   },
 }));
 
-vi.mock('@/libs/initializeContractTyped', () => ({
-  initializeContractTyped: (...args: any[]) => mockInitializeContractTyped(...args),
+vi.mock('@/utils/signLinkMessage', () => ({
+  signAndVerifyLinkMessage: (...args: any[]) => mockSignAndVerifyLinkMessage(...args),
 }));
-
-vi.mock('@/config', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@/config')>();
-  return {
-    ...mod,
-    CONFIG: {
-      ...mod.CONFIG,
-      PROFILE_REGISTRY_CONTRACT_ADDRESS: 'ct_test_profile_registry',
-    },
-  };
-});
-
-vi.mock('@/services/payForProfileTx', async () => {
-  const actual = await vi.importActual<any>('@/services/payForProfileTx');
-  return {
-    ...actual,
-    payForProfileTx: (...args: any[]) => mockPayForProfileTx(...args),
-  };
-});
 
 vi.mock('@/hooks/useAeSdk', () => ({
   useAeSdk: () => ({
@@ -63,104 +48,123 @@ vi.mock('@/hooks/useAeSdk', () => ({
     sdk: {
       _accounts: { current: { [mockActiveAccount]: {} } },
       getContext: () => ({}),
-      getHeight: (...args: any[]) => mockGetHeight(...args),
-      buildTx: (...args: any[]) => mockBuildTx(...args),
-      signTransaction: (...args: any[]) => mockSignTransaction(...args),
-      selectAccount: (...args: any[]) => mockSelectAccount(...args),
     },
     staticAeSdk: {
       _accounts: { current: { [mockActiveAccount]: {} } },
       getContext: () => ({}),
-      getHeight: (...args: any[]) => mockGetHeight(...args),
-      buildTx: (...args: any[]) => mockBuildTx(...args),
-      signTransaction: (...args: any[]) => mockSignTransaction(...args),
-      selectAccount: (...args: any[]) => mockSelectAccount(...args),
     },
     addStaticAccount: (...args: any[]) => mockAddStaticAccount(...args),
+    signMessage: vi.fn(),
   }),
 }));
 
-describe('useProfile', () => {
-  let buildTxCall = 0;
+vi.mock('@/hooks/useWalletConnect', () => ({
+  useWalletConnect: () => ({
+    connectWallet: vi.fn(),
+    walletConnected: true,
+  }),
+}));
 
+const emptyProfileAggregate = () => ({
+  address: 'ak_test_active',
+  public_name: null,
+  profile: {
+    fullname: '',
+    bio: '',
+    avatarurl: '',
+    username: null,
+    x_username: null,
+    chain_name: null,
+    display_source: null,
+    chain_expires_at: null,
+  },
+});
+
+describe('useProfile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockActiveAccount = 'ak_test_active';
-    buildTxCall = 0;
-
-    mockContract = {
-      _calldata: {
-        encode: (...args: any[]) => mockCalldataEncode(...args),
-      },
-      get_profile: (...args: any[]) => mockGetProfileOnChain(...args),
-      set_profile: vi.fn(),
-      set_profile_full: vi.fn(),
-      set_custom_name: vi.fn(),
-      set_chain_name: vi.fn(),
-      clear_chain_name: vi.fn(),
-      set_x_name_with_attestation: vi.fn(),
-    };
-
-    mockInitializeContractTyped.mockResolvedValue(mockContract);
-    mockCalldataEncode.mockImplementation((_contractName: string, functionName: string) => (
-      `cb_${functionName}` as any
-    ));
-
-    mockGetProfileOnChain.mockResolvedValue({
-      decodedResult: {
-        Some: [{
-          fullname: '',
-          bio: '',
-          avatarurl: '',
-          username: 'old_name',
-          display_source: { Custom: [] },
-        }],
-      },
+    mockGetProfile.mockResolvedValue(emptyProfileAggregate());
+    mockIssueProfileChallenge.mockResolvedValue({
+      challenge: 'profile-challenge',
+      payload_hash: 'hash',
+      expires_at: '2099-01-01T00:00:00Z',
+      ttl_seconds: 300,
     });
-
+    mockUpdateProfile.mockResolvedValue({ address: 'ak_test_active' });
     mockAddStaticAccount.mockResolvedValue(undefined);
-    mockGetHeight.mockResolvedValue(100);
-    mockBuildTx.mockImplementation(async (params: Record<string, unknown>) => {
-      buildTxCall += 1;
-      return `tx_built_${buildTxCall}_${String(params.callData ?? 'unknown')}`;
+    mockSignAndVerifyLinkMessage.mockResolvedValue('sig_profile_test');
+    mockClaimBioAddressLink.mockResolvedValue({
+      message: 'sign me',
+      nonce: 1,
+      value: 'my bio',
+      verification_token: 'token_bio',
     });
-    mockSignTransaction.mockResolvedValue({ tx: 'tx_signed_profile' });
-    mockPayForProfileTx.mockImplementation(async () => ({ hash: 'th_profile_write' }));
+    mockSubmitBioAddressLink.mockResolvedValue({ txHash: 'th_bio_link' });
+    mockUnclaimBioAddressLink.mockResolvedValue({ message: 'unclaim me', nonce: 2 });
+    mockSubmitBioAddressLinkUnclaim.mockResolvedValue({ txHash: 'th_bio_unlink' });
+    mockClaimPreferredAensNameAddressLink.mockResolvedValue({
+      message: 'sign preferred name',
+      nonce: 3,
+      value: 'hero.chain',
+      verification_token: 'token_pref',
+    });
+    mockSubmitPreferredAensNameAddressLink.mockResolvedValue({ txHash: 'th_pref_link' });
+    mockUnclaimPreferredAensNameAddressLink.mockResolvedValue({ message: 'unclaim pref', nonce: 4 });
+    mockSubmitPreferredAensNameAddressLinkUnclaim.mockResolvedValue({ txHash: 'th_pref_unlink' });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('uses set_profile_full when multiple fields change together', async () => {
+  it('updates profile via signed PATCH when avatar changes', async () => {
+    mockGetProfile.mockResolvedValue({
+      ...emptyProfileAggregate(),
+      profile: {
+        ...emptyProfileAggregate().profile,
+        fullname: 'Name',
+        avatarurl: 'https://old.test/a.png',
+        username: 'old_name',
+      },
+    });
+
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await act(async () => {
       await result.current.setProfile({
-        fullname: 'new full',
+        fullname: 'Name',
         bio: '',
-        avatarurl: '',
-        username: '',
+        avatarurl: 'https://new.test/a.png',
+        username: 'old_name',
       });
     });
 
-    expect(mockCalldataEncode).toHaveBeenCalledWith(
-      'ProfileRegistry',
-      'set_profile_full',
-      [
-        'new full',
-        '',
-        '',
-        { None: [] },
-        { None: [] },
-        { None: [] },
-        { Custom: [] },
-      ],
+    expect(mockIssueProfileChallenge).toHaveBeenCalledWith('ak_test_active', {
+      avatarurl: 'https://new.test/a.png',
+    });
+    expect(mockSignAndVerifyLinkMessage).toHaveBeenCalledWith(
+      'ak_test_active',
+      expect.any(Function),
+      'profile-challenge',
+      expect.objectContaining({ request: expect.objectContaining({ type: 'profile-update' }) }),
     );
-    expect(mockPayForProfileTx).toHaveBeenCalledTimes(1);
+    expect(mockUpdateProfile).toHaveBeenCalledWith('ak_test_active', {
+      avatarurl: 'https://new.test/a.png',
+      challenge: 'profile-challenge',
+      signature: 'sig_profile_test',
+    });
   });
 
-  it('uses dedicated entrypoint when only username changes', async () => {
+  it('updates username via signed PATCH when only username changes', async () => {
+    mockGetProfile.mockResolvedValue({
+      ...emptyProfileAggregate(),
+      profile: {
+        ...emptyProfileAggregate().profile,
+        username: 'old_name',
+      },
+    });
+
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await act(async () => {
@@ -172,92 +176,13 @@ describe('useProfile', () => {
       });
     });
 
-    expect(mockCalldataEncode).toHaveBeenCalledWith(
-      'ProfileRegistry',
-      'set_custom_name',
-      ['new_name'],
-    );
-    expect(mockPayForProfileTx).toHaveBeenCalledTimes(1);
+    expect(mockIssueProfileChallenge).toHaveBeenCalledWith('ak_test_active', {
+      username: 'new_name',
+    });
+    expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
   });
 
-  it('uses set_profile only when changing base profile fields', async () => {
-    mockGetProfileOnChain.mockResolvedValueOnce({
-      decodedResult: {
-        Some: [{
-          fullname: 'old full',
-          bio: 'old bio',
-          avatarurl: 'old-avatar',
-          username: 'old_name',
-          display_source: { Custom: [] },
-        }],
-      },
-    });
-
-    const { result } = renderHook(() => useProfile('ak_test_active'));
-
-    await act(async () => {
-      await result.current.setProfile({
-        fullname: 'new full',
-        bio: 'new bio',
-        avatarurl: 'new-avatar',
-        username: 'old_name',
-      });
-    });
-
-    expect(mockCalldataEncode).toHaveBeenCalledWith(
-      'ProfileRegistry',
-      'set_profile',
-      ['new full', 'new bio', 'new-avatar'],
-    );
-    expect(mockCalldataEncode).not.toHaveBeenCalledWith(
-      'ProfileRegistry',
-      'set_profile_full',
-      expect.any(Array),
-    );
-  });
-
-  it('falls back to dedicated entrypoints when set_profile_full is unavailable', async () => {
-    delete mockContract.set_profile_full;
-
-    const { result } = renderHook(() => useProfile('ak_test_active'));
-
-    await act(async () => {
-      await result.current.setProfile({
-        fullname: 'new full',
-        bio: '',
-        avatarurl: '',
-        username: 'new_name',
-      });
-    });
-
-    expect(mockCalldataEncode).toHaveBeenNthCalledWith(
-      1,
-      'ProfileRegistry',
-      'set_profile',
-      ['new full', '', ''],
-    );
-    expect(mockCalldataEncode).toHaveBeenNthCalledWith(
-      2,
-      'ProfileRegistry',
-      'set_custom_name',
-      ['new_name'],
-    );
-    expect(mockPayForProfileTx).toHaveBeenCalledTimes(2);
-  });
-
-  it('does not submit a tx when nothing changed', async () => {
-    mockGetProfileOnChain.mockResolvedValueOnce({
-      decodedResult: {
-        Some: [{
-          fullname: '',
-          bio: '',
-          avatarurl: '',
-          username: '',
-          display_source: { Custom: [] },
-        }],
-      },
-    });
-
+  it('does not call profile PATCH when nothing changed', async () => {
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await act(async () => {
@@ -269,17 +194,108 @@ describe('useProfile', () => {
       })).resolves.toBeUndefined();
     });
 
-    expect(mockCalldataEncode).not.toHaveBeenCalled();
-    expect(mockPayForProfileTx).not.toHaveBeenCalled();
+    expect(mockIssueProfileChallenge).not.toHaveBeenCalled();
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
 
-  it('does not auto-restore signer account for read-only getProfileOnChain', async () => {
+  it('links bio via address-link claim and submit', async () => {
     const { result } = renderHook(() => useProfile('ak_test_active'));
 
     await act(async () => {
-      await result.current.getProfileOnChain('ak_test_active');
+      const txHash = await result.current.linkBio({ bio: 'hello bio' });
+      expect(txHash).toBe('th_bio_link');
     });
 
+    expect(mockClaimBioAddressLink).toHaveBeenCalledWith('ak_test_active', 'hello bio');
+    expect(mockSubmitBioAddressLink).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      value: 'my bio',
+      nonce: 1,
+      signature: 'sig_profile_test',
+      verification_token: 'token_bio',
+    });
+  });
+
+  it('unlinks bio via address-link unclaim flow', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.unlinkBio();
+      expect(txHash).toBe('th_bio_unlink');
+    });
+
+    expect(mockUnclaimBioAddressLink).toHaveBeenCalledWith('ak_test_active');
+    expect(mockSubmitBioAddressLinkUnclaim).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      nonce: 2,
+      signature: 'sig_profile_test',
+    });
+  });
+
+  it('links preferred aens name via address-link claim and submit', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.linkPreferredAensName({ chainName: 'hero.chain' });
+      expect(txHash).toBe('th_pref_link');
+    });
+
+    expect(mockClaimPreferredAensNameAddressLink).toHaveBeenCalledWith('ak_test_active', 'hero.chain');
+    expect(mockSubmitPreferredAensNameAddressLink).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      value: 'hero.chain',
+      nonce: 3,
+      signature: 'sig_profile_test',
+      verification_token: 'token_pref',
+    });
+  });
+
+  it('unlinks preferred aens name via address-link unclaim flow', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      const txHash = await result.current.unlinkPreferredAensName();
+      expect(txHash).toBe('th_pref_unlink');
+    });
+
+    expect(mockUnclaimPreferredAensNameAddressLink).toHaveBeenCalledWith('ak_test_active');
+    expect(mockSubmitPreferredAensNameAddressLinkUnclaim).toHaveBeenCalledWith({
+      address: 'ak_test_active',
+      nonce: 4,
+      signature: 'sig_profile_test',
+    });
+  });
+
+  it('loads profile fields from API for getProfileOnChain', async () => {
+    mockGetProfile.mockResolvedValue({
+      address: 'ak_test_active',
+      public_name: null,
+      profile: {
+        fullname: 'On API',
+        bio: 'bio text',
+        avatarurl: 'https://avatar.test/x.png',
+        username: 'user1',
+        x_username: null,
+        chain_name: null,
+        display_source: null,
+        chain_expires_at: null,
+      },
+    });
+
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    let profile: Awaited<ReturnType<typeof result.current.getProfileOnChain>> | undefined;
+    await act(async () => {
+      profile = await result.current.getProfileOnChain('ak_test_active');
+    });
+
+    expect(mockGetProfile).toHaveBeenCalledWith('ak_test_active');
     expect(mockAddStaticAccount).not.toHaveBeenCalled();
+    expect(profile).toMatchObject({
+      fullname: 'On API',
+      bio: 'bio text',
+      avatarurl: 'https://avatar.test/x.png',
+      username: 'user1',
+    });
   });
 });

@@ -375,6 +375,10 @@ const ProfileEditModal = ({
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
   const [claiming, setClaiming] = useState(false);
+  // Stays true for the whole claim operation, including the background polling that runs after
+  // `claiming` is turned off in onSubmitted. Used to keep the claim button disabled so a second
+  // claim can't be triggered while the first is still being processed.
+  const [claimInFlight, setClaimInFlight] = useState(false);
   const [claimValue, setClaimValue] = useState('');
   const [claimError, setClaimError] = useState<string | null>(null);
   const [availabilityStatus, setAvailabilityStatus] = useState<NameAvailabilityStatus>('idle');
@@ -505,6 +509,7 @@ const ProfileEditModal = ({
       setLoading(false);
       setFormError(null);
       setClaiming(false);
+      setClaimInFlight(false);
       setClaimValue('');
       setClaimError(null);
       setAvailabilityStatus('idle');
@@ -709,6 +714,7 @@ const ProfileEditModal = ({
 
       submittedRef.current = false;
       setClaiming(true);
+      setClaimInFlight(true);
       setClaimError(null);
       let isNameAvailable = availabilityStatus === 'available'
         && lastCheckedValue === normalizedClaimValue;
@@ -721,6 +727,7 @@ const ProfileEditModal = ({
           notifyError(msg);
           push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
           setClaiming(false);
+          setClaimInFlight(false);
           return;
         }
       }
@@ -729,6 +736,7 @@ const ProfileEditModal = ({
         setClaimError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
         setClaiming(false);
+        setClaimInFlight(false);
         return;
       }
 
@@ -753,6 +761,7 @@ const ProfileEditModal = ({
         notifyError(msg);
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
         setClaiming(false);
+        setClaimInFlight(false);
         return;
       }
 
@@ -797,6 +806,7 @@ const ProfileEditModal = ({
           push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
         } finally {
           setClaiming(false);
+          setClaimInFlight(false);
         }
         return;
       }
@@ -841,6 +851,7 @@ const ProfileEditModal = ({
         push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
       }).finally(() => {
         if (!submittedRef.current) setClaiming(false);
+        setClaimInFlight(false);
       });
     } catch (claimError3) {
       const msg = resolveClaimErrorMessage(claimError3, t);
@@ -848,6 +859,7 @@ const ProfileEditModal = ({
       notifyError(msg);
       push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
       setClaiming(false);
+      setClaimInFlight(false);
     }
   };
 
@@ -1044,6 +1056,7 @@ const ProfileEditModal = ({
   );
   const isClaimDisabled = Boolean(
     claiming
+    || claimInFlight
     || isCheckingStatus
     || !canClaim
     || claimValidationError

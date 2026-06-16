@@ -1001,8 +1001,8 @@
     "pageTitle": "Buy AE – Superhero",
     "pageDescription": "Learn what AE is and the main ways to get AE for Superhero.",
     "eyebrow": "Get AE",
-    "heroTitle": "Buy or earn AE for Superhero",
-    "heroDescription": "AE is the native coin of the aeternity blockchain. You use it to pay network fees, tip, trade trend tokens, and participate in on-chain activity on Superhero.",
+    "heroTitle": "Earn AE first, or buy it from external providers",
+    "heroDescription": "AE is the native coin of the aeternity blockchain. Use it to pay network fees, tip, trade trend tokens, and participate in on-chain activity on Superhero.",
     "badgeBuy": "Buy",
     "badgeBridge": "Bridge",
     "badgeEarn": "Earn",
@@ -1011,6 +1011,10 @@
     "whatIsAeTitle": "What is AE?",
     "whatIsAeDescription": "AE powers the aeternity blockchain. It is used for transaction fees, smart-contract interactions, tipping, and buying or selling community tokens on Superhero.",
     "waysTitle": "Ways to get AE",
+    "earnSectionTitle": "Earn AE",
+    "earnSectionDescription": "Start with Superhero-native ways to earn AE by growing the community and joining reward programs.",
+    "buySectionTitle": "Buy from external third parties",
+    "buySectionDescription": "Use third-party exchanges and swap providers when you prefer to purchase AE directly outside Superhero.",
     "gateTitle": "Swap or Buy on Gate.io",
     "gateDescription": "Gate.io provides an AE/USDT market and is one of the main centralized exchange options for AE liquidity.",
     "gateAction": "Open Gate.io AE/USDT",
@@ -1038,4 +1042,3 @@
     "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases."
   }
 }
-

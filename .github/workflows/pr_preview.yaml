@@ -97,6 +97,7 @@ jobs:
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
           domain: service.aepps.com
+          git-sha: ${{ github.event.pull_request.head.sha }}
 
       - name: Staging PR Sync
         if: github.event.action == 'synchronize' && steps.status.outputs.status_code == '200'

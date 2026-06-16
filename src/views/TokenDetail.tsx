@@ -94,13 +94,13 @@ export default function TokenDetail() {
       setError(null);
 
       try {
-        const [t, metaData] = await Promise.all([
+        const [tokenResult, metaData] = await Promise.all([
           getTokenWithUsd(tokenAddress),
           getPairsByTokenUsd(tokenAddress),
           getTokenMetaData(tokenAddress),
         ]);
 
-        setToken(t);
+        setToken(tokenResult);
         setTokenMetaData(metaData);
       } catch (e: any) {
         setError(e.message || t('common.views.tokenDetail.failedToLoad'));

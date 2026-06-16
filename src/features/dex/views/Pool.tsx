@@ -109,7 +109,10 @@ const PoolContent = () => {
                           {t('dex.pool.refreshing')}
                         </>
                       ) : (
-                        <>🔄 {t('dex.pool.refresh')}</>
+                        <>
+                          🔄
+                          {t('dex.pool.refresh')}
+                        </>
                       )}
                     </button>
                   )}

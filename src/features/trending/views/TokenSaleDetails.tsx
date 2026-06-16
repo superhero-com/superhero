@@ -335,9 +335,9 @@ const TokenSaleDetails = () => {
     const target = tokenSaleAddress || tokenAddressValue;
     if (!target) return false;
 
-    return ownedTokens.some((t: any) => {
-      const addr = String(t?.address || '').toLowerCase();
-      const sale = String(t?.sale_address || '').toLowerCase();
+    return ownedTokens.some((owned: any) => {
+      const addr = String(owned?.address || '').toLowerCase();
+      const sale = String(owned?.sale_address || '').toLowerCase();
       return addr === target || sale === target;
     });
   }, [token, ownedTokens]);

@@ -309,7 +309,9 @@ const DexExplorePools = () => {
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
                       >
-                        🔄 {t('explore.swap')}
+                        🔄
+                        {' '}
+                        {t('explore.swap')}
                       </button>
                       <button
                         type="button"
@@ -321,7 +323,9 @@ const DexExplorePools = () => {
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
                       >
-                        ➕ {t('dex.activity.addLiquidity')}
+                        ➕
+                        {' '}
+                        {t('dex.activity.addLiquidity')}
                       </button>
                     </div>
                   </div>
@@ -477,7 +481,9 @@ const DexExplorePools = () => {
                     }`}
                     title={t('explore.firstPage')}
                   >
-                    ⇤ {t('explore.first')}
+                    ⇤
+                    {' '}
+                    {t('explore.first')}
                   </button>
 
                   {/* Previous Page Button */}
@@ -491,7 +497,9 @@ const DexExplorePools = () => {
                     }`}
                     title={t('explore.previousPage')}
                   >
-                    ← {t('explore.prev')}
+                    ←
+                    {' '}
+                    {t('explore.prev')}
                   </button>
 
                   {/* Page Number Display */}
@@ -515,7 +523,9 @@ const DexExplorePools = () => {
                     }`}
                     title={t('explore.nextPage')}
                   >
-                    {t('explore.next')} →
+                    {t('explore.next')}
+                    {' '}
+                    →
                   </button>
 
                   {/* Last Page Button - Desktop Only */}
@@ -529,7 +539,9 @@ const DexExplorePools = () => {
                     }`}
                     title={t('explore.lastPage')}
                   >
-                    {t('explore.last')} ⇥
+                    {t('explore.last')}
+                    {' '}
+                    ⇥
                   </button>
                 </div>
               </div>

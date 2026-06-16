@@ -1047,7 +1047,7 @@ const FeedList = ({
       }
     }
     return nodes;
-  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup]);
+  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup, t]);
 
   const renderHotFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];

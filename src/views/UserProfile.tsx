@@ -367,7 +367,9 @@ export default function UserProfile({
           outlined
           className="!border !border-solid !border-white/15 hover:!border-white/35"
         >
-          ← {t('labels.back')}
+          ←
+          {' '}
+          {t('labels.back')}
         </AeButton>
       </div>
 

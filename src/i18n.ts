@@ -6,7 +6,9 @@ import fr from './locales/fr.json';
 import de from './locales/de.json';
 import ar from './locales/ar.json';
 
-const LOCALES = { en, zh, fr, de, ar } as const;
+const LOCALES = {
+  en, zh, fr, de, ar,
+} as const;
 
 export type LanguageCode = keyof typeof LOCALES;
 

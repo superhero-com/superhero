@@ -54,7 +54,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
         // Invalid amount format, ignore
       }
     }
-  }, [currentAmount, currentBalance, mode]);
+  }, [currentAmount, currentBalance, mode, t]);
 
   const handleAmountChange = (value: string) => {
     const raw = value.replace(/,/g, '.');

@@ -15,18 +15,18 @@ const CommentForm: React.FC<CommentFormProps> = ({
 }) => {
   const { t } = useTranslation('forms');
   return (
-  <PostForm
-    isPost={false}
-    postId={postId}
-    onCommentAdded={onCommentAdded}
-    placeholder={placeholder ?? t('writeReply')}
-    showMediaFeatures
-    showEmojiPicker
-    showGifInput
-    characterLimit={280}
-    minHeight="60px"
-    className="mt-4"
-  />
+    <PostForm
+      isPost={false}
+      postId={postId}
+      onCommentAdded={onCommentAdded}
+      placeholder={placeholder ?? t('writeReply')}
+      showMediaFeatures
+      showEmojiPicker
+      showGifInput
+      characterLimit={280}
+      minHeight="60px"
+      className="mt-4"
+    />
   );
 };
 

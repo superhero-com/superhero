@@ -234,7 +234,7 @@ const CreateTokenView = () => {
 
     const chars = errorMessages.join(', ');
     return t('trending.createToken.errors.allowedCharsRange', { chars });
-  }, [selectedCollection?.allowed_name_chars]);
+  }, [selectedCollection?.allowed_name_chars, t]);
 
   const normalizeTokenName = useCallback((value: string): string => {
     if (!selectedCollection?.allowed_name_chars) return value;
@@ -292,7 +292,7 @@ const CreateTokenView = () => {
         const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
         const items: any[] = res?.items || [];
-        const exact = items.find((t: any) => t?.name === trimmed);
+        const exact = items.find((item: any) => item?.name === trimmed);
         if (exact && exact.address) {
           setFoundToken({
             address: exact.address,

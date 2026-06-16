@@ -26,7 +26,9 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
       {/* Total Volume Card */}
       <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-400/10 to-white/5 border border-blue-400/20 backdrop-blur-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-          📈 {t('poolStats.totalVolume')}
+          📈
+          {' '}
+          {t('poolStats.totalVolume')}
         </div>
         <div className="text-2xl font-extrabold text-blue-400 mb-1 font-mono">
           <PriceDataFormatter priceData={pairSummary?.total_volume} bignumber />
@@ -39,7 +41,10 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
       {/* Volume Card with Dropdown */}
       <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
-          <span className="flex items-center gap-1.5">📊 {t('poolStats.volume')}</span>
+          <span className="flex items-center gap-1.5">
+            📊
+            {t('poolStats.volume')}
+          </span>
           <AppSelect
             value={selectedPeriod}
             onValueChange={(v) => setSelectedPeriod(v as Period)}
@@ -82,7 +87,10 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
         }`}
       >
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
-          <span className="flex items-center gap-1.5">📊 {t('poolStats.priceChange')}</span>
+          <span className="flex items-center gap-1.5">
+            📊
+            {t('poolStats.priceChange')}
+          </span>
           <AppSelect
             value={selectedPeriod}
             onValueChange={(v) => setSelectedPeriod(v as Period)}

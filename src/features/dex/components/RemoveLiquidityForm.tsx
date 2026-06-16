@@ -468,7 +468,9 @@ const RemoveLiquidityForm = () => {
           : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
-        💧 {t('removeLiquidity.removeButton', {
+        💧
+        {' '}
+        {t('removeLiquidity.removeButton', {
           pct: useCustomAmount
             ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
             : `${percentage}%`,

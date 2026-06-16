@@ -85,7 +85,7 @@ export const LeaderboardCard = ({
     paddingY = 4,
   ): { line: string; area: string } => {
     if (!data.length) return { line: '', area: '' };
-    const xs = data.map(([t]) => t);
+    const xs = data.map(([tx]) => tx);
     const ys = data.map(([, v]) => v);
     const minX = Math.min(...xs);
     const maxX = Math.max(...xs);
@@ -94,9 +94,9 @@ export const LeaderboardCard = ({
     const spanX = maxX - minX || 1;
     const spanY = maxY - minY || 1;
 
-    const points = data.map(([t, v]) => {
+    const points = data.map(([tx, v]) => {
       const x = paddingX
-        + ((t - minX) / spanX) * (width - paddingX * 2);
+        + ((tx - minX) / spanX) * (width - paddingX * 2);
       const y = height
         - (paddingY
           + ((v - minY) / spanY) * (height - paddingY * 2));

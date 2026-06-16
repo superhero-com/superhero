@@ -132,7 +132,7 @@ const BuyAeWidgetContent = ({
     } finally {
       setFetchingBalance(false);
     }
-  }, [walletProvider, ethAddress, activeAccount]);
+  }, [walletProvider, ethAddress, activeAccount, t]);
 
   // Fetch ETH balance when wallet is connected
   useEffect(() => {
@@ -167,7 +167,7 @@ const BuyAeWidgetContent = ({
     if (sdk) {
       loadTokens();
     }
-  }, [sdk]);
+  }, [sdk, t]);
 
   // Handle Ethereum wallet disconnection
   const handleEthDisconnected = useCallback(() => {

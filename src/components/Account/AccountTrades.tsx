@@ -151,11 +151,11 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
                   <div
                     className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${chipStyles.textColor} ${chipStyles.chipBg} border ${chipStyles.borderColor}`}
                   >
-                    {transaction?.tx_type === TX_FUNCTIONS.create_community
-                      ? t('account.txTypeCreated')
-                      : (transaction?.tx_type
-                        ? transaction.tx_type.toString().toUpperCase()
-                        : t('account.txTypeTrade'))}
+                    {(() => {
+                      if (transaction?.tx_type === TX_FUNCTIONS.create_community) return t('account.txTypeCreated');
+                      if (transaction?.tx_type) return transaction.tx_type.toString().toUpperCase();
+                      return t('account.txTypeTrade');
+                    })()}
                   </div>
                 </div>
 

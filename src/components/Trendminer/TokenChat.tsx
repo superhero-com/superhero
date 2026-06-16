@@ -321,7 +321,7 @@ const TokenChat = ({ token, mode = 'full' }: Props) => {
         });
       }
     }
-  }, []);
+  }, [t]);
 
   // Expose latest loadMessages to retry scheduler via ref
   loadMessagesRef.current = loadMessages;

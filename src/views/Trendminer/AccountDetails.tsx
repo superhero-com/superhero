@@ -121,37 +121,37 @@ export default function AccountDetails() {
 const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: string }) => {
   const { t } = useTranslation('explore');
   return (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-    {items.map((it) => (
-      <Link
-        key={it.address}
-        to={`/trending/tokens/${encodeURIComponent(it.name || it.address)}`}
-        className="no-underline text-inherit"
-      >
-        <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
-          <div className="font-bold text-white">
-            {it.name}
-            {' '}
-            <span className="opacity-70 text-white/70">
-              (
-              {it.symbol}
-              )
-            </span>
-          </div>
-          <div className="flex justify-between mt-2 text-sm opacity-85 text-white/85">
-            <div>
-              {t('mcLabel')}
-              {Number(it.market_cap ?? 0).toLocaleString()}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {items.map((it) => (
+        <Link
+          key={it.address}
+          to={`/trending/tokens/${encodeURIComponent(it.name || it.address)}`}
+          className="no-underline text-inherit"
+        >
+          <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
+            <div className="font-bold text-white">
+              {it.name}
+              {' '}
+              <span className="opacity-70 text-white/70">
+                (
+                {it.symbol}
+                )
+              </span>
             </div>
-            <div>
-              {t('holdersLabel')}
-              {it.holders_count ?? 0}
+            <div className="flex justify-between mt-2 text-sm opacity-85 text-white/85">
+              <div>
+                {t('mcLabel')}
+                {Number(it.market_cap ?? 0).toLocaleString()}
+              </div>
+              <div>
+                {t('holdersLabel')}
+                {it.holders_count ?? 0}
+              </div>
             </div>
           </div>
-        </div>
-      </Link>
-    ))}
-    {!items.length && <div className="opacity-70 text-white/70 text-center py-8">{emptyMessage}</div>}
-  </div>
+        </Link>
+      ))}
+      {!items.length && <div className="opacity-70 text-white/70 text-center py-8">{emptyMessage}</div>}
+    </div>
   );
 };

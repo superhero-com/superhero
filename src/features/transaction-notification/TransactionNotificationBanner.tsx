@@ -221,16 +221,16 @@ const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success
 const NotificationError = ({ message }: { message: string }) => {
   const { t } = useTranslation();
   return (
-  <div className={`${cardBase} bg-red-950/90`}>
-    <NotificationIcon variant="error" />
-    <div className="flex-1 min-w-0 space-y-0.5">
-      <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{t('common.messages.transactionFailed')}</p>
-      <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
+    <div className={`${cardBase} bg-red-950/90`}>
+      <NotificationIcon variant="error" />
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{t('common.messages.transactionFailed')}</p>
+        <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
+      </div>
+      <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
+        <span className="text-red-400 text-sm font-bold">✕</span>
+      </div>
     </div>
-    <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
-      <span className="text-red-400 text-sm font-bold">✕</span>
-    </div>
-  </div>
   );
 };
 

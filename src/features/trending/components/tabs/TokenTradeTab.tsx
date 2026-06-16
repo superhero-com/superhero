@@ -64,7 +64,7 @@ export const TokenTradeTab = ({
       isDown,
       changePercent,
     };
-  })), [token]);
+  })), [token, t]);
 
   if (!token) {
     return (

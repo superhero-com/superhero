@@ -25,7 +25,9 @@ const Privacy = () => {
             outlined
             className="!border !border-solid !border-white/15 hover:!border-white/35"
           >
-            ← {t('common.labels.back')}
+            ←
+            {' '}
+            {t('common.labels.back')}
           </AeButton>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">{t('common.views.privacy.title')}</h2>

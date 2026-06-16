@@ -283,7 +283,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
       }
     }
     return nodes;
-  }, [combinedList, expandedGroups, navigate, toggleGroup]);
+  }, [combinedList, expandedGroups, navigate, toggleGroup, t]);
 
   return (
     <div className="w-full">

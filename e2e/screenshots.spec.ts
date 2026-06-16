@@ -1,11 +1,9 @@
 import { test, expect } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 /**
  * Screenshot capture suite.
- * No assertions — tests never fail due to visual differences.
- * Screenshots are saved to e2e-screenshots/ and uploaded as CI artifacts.
+ * Screenshots are attached to the Playwright test so the HTML report embeds them.
+ * Tests only fail on HTTP errors, not visual differences.
  */
 
 const VIEWPORTS = [
@@ -21,8 +19,6 @@ const PAGES = [
   { name: 'trends-invite', path: '/trends/invite' },
 ];
 
-const OUTPUT_DIR = path.join(process.cwd(), 'e2e-screenshots');
-
 test.describe('page screenshots', () => {
   test.beforeEach(async ({ page }) => {
     // Prevent the first-visit welcome modal from appearing.
@@ -33,17 +29,17 @@ test.describe('page screenshots', () => {
 
   VIEWPORTS.forEach((viewport) => {
     PAGES.forEach((pageConfig) => {
-      test(`${pageConfig.name} @ ${viewport.name} (${viewport.width}×${viewport.height})`, async ({ page }) => {
+      test(`${pageConfig.name} @ ${viewport.name} (${viewport.width}×${viewport.height})`, async ({ page }, testInfo) => {
         await page.setViewportSize({ width: viewport.width, height: viewport.height });
         const response = await page.goto(pageConfig.path);
         expect(response?.status(), `${pageConfig.path} should return HTTP 200`).toBe(200);
         await page.locator('#root').waitFor({ state: 'visible' });
         await page.waitForLoadState('load');
 
-        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-        await page.screenshot({
-          path: path.join(OUTPUT_DIR, `${pageConfig.name}--${viewport.name}.png`),
-          fullPage: true,
+        const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 80 });
+        await testInfo.attach(`${pageConfig.name}--${viewport.name}.jpg`, {
+          body: screenshot,
+          contentType: 'image/jpeg',
         });
       });
     });

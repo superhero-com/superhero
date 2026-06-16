@@ -157,10 +157,10 @@
       "searchForTag": "Search for {{tag}} (Score: {{score}})"
     },
     "buyAeRail": {
-      "title": "Buy AE",
-      "description": "Need AE for fees, tips, and trend tokens? Start with Gate.io or compare more ways.",
+      "title": "Get AE",
+      "description": "Need AE for fees, tips, and trend tokens? Explore many options to earn or buy AE.",
       "gateButton": "Buy AE on Gate.io",
-      "moreWays": "Explore more ways"
+      "moreWays": "Buy or Earn AE"
     },
     "tips": {
       "hardwareWallets": "Use hardware wallets for large amounts",

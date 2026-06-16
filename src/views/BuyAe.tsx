@@ -120,8 +120,8 @@ export default function BuyAe() {
         canonicalPath="/get-ae"
       />
 
-      <div className="overflow-hidden rounded-3xl p-7 bg-gradient-to-br from-cyan-500/20 via-white/8 to-fuchsia-500/15 text-white mb-5 border border-white/10 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="overflow-hidden rounded-3xl p-7 bg-gradient-to-br from-cyan-500/20 via-white/8 to-purple-500/15 text-white mb-5 border border-white/10 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+        <div className="flex flex-col">
           <div className="max-w-2xl">
             <div className="text-sm opacity-90">{t('eyebrow')}</div>
             <div className="text-[34px] font-extrabold leading-tight">{t('heroTitle')}</div>
@@ -129,10 +129,7 @@ export default function BuyAe() {
               {t('heroDescription')}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 min-w-[260px]">
-            <HeroStat Icon={Gift} label={t('earnSectionTitle')} />
-            <HeroStat Icon={Store} label={t('buySectionTitle')} />
-          </div>
+
         </div>
         <div className="flex gap-2.5 mt-5 flex-wrap">
           <Badge label={t('badgeBuy')} />
@@ -141,33 +138,9 @@ export default function BuyAe() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
-        <Card>
-          <div className="font-extrabold mb-2">{t('onThisPage')}</div>
-          <div className="grid gap-1.5">
-            <a href="#what-is-ae" className="no-underline text-white text-sm opacity-90">
-              {t('whatIsAeTitle')}
-            </a>
-            <a href="#earn-ae" className="no-underline text-white text-sm opacity-90">
-              {t('earnSectionTitle')}
-            </a>
-            <a href="#buy-ae" className="no-underline text-white text-sm opacity-90">
-              {t('buySectionTitle')}
-            </a>
-            <a href="#before-you-buy" className="no-underline text-white text-sm opacity-90">
-              {t('safetyTitle')}
-            </a>
-          </div>
-          <div className="mt-4 text-xs opacity-75">{t('tip')}</div>
-        </Card>
+      <div>
 
         <div className="grid gap-4">
-          <Card id="what-is-ae">
-            <div className="font-extrabold mb-2">{t('whatIsAeTitle')}</div>
-            <p className="text-[15px] opacity-90 leading-relaxed m-0">
-              {t('whatIsAeDescription')}
-            </p>
-          </Card>
 
           <MethodSectionCard
             id="earn-ae"
@@ -218,19 +191,10 @@ const Badge = ({ label }: { label: string }) => (
   </span>
 );
 
-const HeroStat = ({ Icon, label }: { Icon: LucideIcon; label: string }) => (
-  <div className="rounded-2xl border border-white/15 bg-black/20 p-4">
-    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/12 mb-3">
-      <Icon className="w-5 h-5 text-cyan-300" />
-    </div>
-    <div className="text-sm font-bold">{label}</div>
-  </div>
-);
-
 const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <section
     id={id}
-    className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    className="p-4 border border-cyan-200/20 rounded-xl backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
   >
     {children}
   </section>
@@ -298,10 +262,10 @@ const MethodCard = ({ method }: { method: MethodDef }) => {
 const MethodAction = ({ method, label }: { method: MethodDef; label: string }) => {
   const className = [
     'inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs',
-    'font-semibold no-underline transition-colors gap-1.5',
+    'font-semibold no-underline transition-colors gap-1.5 no-underline text-center',
     method.disabled
       ? 'bg-white/10 text-white/45 cursor-not-allowed'
-      : 'bg-white text-black hover:bg-white/85',
+      : 'bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5',
   ].join(' ');
 
   if (method.disabled) {

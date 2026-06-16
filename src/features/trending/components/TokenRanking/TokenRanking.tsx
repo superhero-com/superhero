@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { toAe } from '@aeternity/aepp-sdk';
 import { SuperheroApi } from '../../../../api/backend';
@@ -34,6 +35,7 @@ interface RankingData {
 const LIST_SIZE = 5;
 
 const TokenRanking = ({ token }: TokenRankingProps) => {
+  const { t } = useTranslation();
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -186,31 +188,35 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
     <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
       {/* Header */}
       <h3 className="text-xl font-bold text-white m-0 mb-6 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-        Ranking Race
+        {t('trending.ranking.title')}
       </h3>
 
       {/* Level Up Info */}
       <div className="mb-6 text-sm font-medium text-white/70 leading-relaxed">
         {tokenRank > 1 ? (
           <div>
-            Buy
-            {' '}
-            <strong className="text-[#4ecdc4]">{tokensAhead === '0' ? 'any amount' : tokensAhead}</strong>
-            {' '}
-            more
-            {' '}
-            <span className="font-bold text-white">{token.name}</span>
-            {' '}
-            to level up!
+            <Trans
+              i18nKey="trending.ranking.levelUp"
+              values={{
+                amount: tokensAhead === '0' ? t('trending.ranking.anyAmount') : tokensAhead,
+                name: token.name,
+              }}
+              components={{
+                amount: <strong className="text-[#4ecdc4]" />,
+                name: <span className="font-bold text-white" />,
+              }}
+            />
           </div>
         ) : (
           <div>
-            Highest ranked token!
+            {t('trending.ranking.highestRanked')}
             {closestChaser && (
               <div className="mt-1">
-                <strong className="text-[#4ecdc4]">{tokensBehind}</strong>
-                {' '}
-                tokens ahead of the next token.
+                <Trans
+                  i18nKey="trending.ranking.tokensAhead"
+                  values={{ amount: tokensBehind }}
+                  components={{ amount: <strong className="text-[#4ecdc4]" /> }}
+                />
               </div>
             )}
           </div>
@@ -220,7 +226,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
       {/* List Header */}
       <div className="flex justify-between items-center mb-4 text-xs font-semibold text-white/60 uppercase tracking-wide">
         <div className="flex items-center gap-1">
-          <span>MC Rank</span>
+          <span>{t('trending.ranking.mcRank')}</span>
           <div className="relative group">
             <button
               type="button"
@@ -229,11 +235,11 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
               !
             </button>
             <div className="absolute bottom-6 left-0 bg-white/10 border border-white/20 rounded-lg p-2 text-xs text-white/80 backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              Market Cap Ranking Information
+              {t('trending.ranking.mcRankInfo')}
             </div>
           </div>
         </div>
-        <div>Total Supply</div>
+        <div>{t('trending.ranking.totalSupply')}</div>
       </div>
 
       {/* Ranking List */}
@@ -284,7 +290,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
 
       {rankingTokens.length === 0 && !loading && (
         <div className="text-center py-8 text-white/60">
-          No ranking data available
+          {t('trending.ranking.noData')}
         </div>
       )}
     </div>

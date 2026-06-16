@@ -908,7 +908,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       }
     } catch (error: any) {
       // TODO: add sentry capture
-      notifyError(error?.message || (isPost ? 'Failed to publish post' : 'Failed to publish reply'));
+      notifyError(error?.message || (isPost ? ts('failedToPublishPost') : ts('failedToPublishReply')));
     } finally {
       setIsSubmitting(false);
     }
@@ -1062,7 +1062,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     <button
                       type="button"
                       className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1"
-                      title="Image"
+                      title={ts('image')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1095,7 +1095,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           ? 'bg-primary-100/20 border-primary-400/50 outline-primary-400/50 text-primary-400'
                           : 'bg-transparent border-white/10 outline-white/10 text-white/80 hover:border-white/20'
                       }`}
-                      title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
+                      title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1180,7 +1180,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       <button
                         type="button"
                         className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title="Image"
+                        title={ts('image')}
                         onClick={() => {
                           setShowImage((s) => !s);
                           setShowGif(false);
@@ -1188,7 +1188,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         }}
                       >
                         <IconImage className="w-4 h-4" />
-                        <span>Image</span>
+                        <span>{ts('image')}</span>
                       </button>
                     )}
 
@@ -1200,7 +1200,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                             ? 'bg-primary-100 border-primary-300 text-primary-600'
                             : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
                         }`}
-                        title={linkPreviewDismissedForCurrent ? 'Restore link preview' : 'Dismiss link preview'}
+                        title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
                         onClick={() => {
                           if (linkPreviewDismissedForCurrent) {
                             setDismissedLinkUrl(null);
@@ -1210,7 +1210,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         }}
                       >
                         <IconLink className="w-4 h-4" />
-                        <span>Link</span>
+                        <span>{ts('link')}</span>
                       </button>
                     )}
 
@@ -1323,7 +1323,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       ) : (
                         <img
                           src={url}
-                          alt={t('aria.media')}
+                          alt={t('common.aria.media')}
                           className="w-full h-[200px] md:h-[180px] object-cover block"
                         />
                       )}

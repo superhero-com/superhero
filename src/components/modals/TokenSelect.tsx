@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -12,6 +13,7 @@ interface TokenSelectProps {
 }
 
 const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
+  const { t } = useTranslation();
   const { tokenInfo } = useWallet();
   const tokens = Object.entries(tokenInfo || {});
 
@@ -24,7 +26,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
         <DialogHeader>
-          <DialogTitle className="text-white">Select Token</DialogTitle>
+          <DialogTitle className="text-white">{t('common.modals.tokenSelect.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3 py-4 max-h-96 overflow-y-auto">
@@ -39,7 +41,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
               </div>
               <div>
                 <div className="font-medium">#AE</div>
-                <div className="text-xs text-gray-400">Native Token</div>
+                <div className="text-xs text-gray-400">{t('common.modals.tokenSelect.nativeToken')}</div>
               </div>
             </div>
           </Button>
@@ -58,7 +60,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">
                     #
-                    {info?.symbol || 'Unknown'}
+                    {info?.symbol || t('common.modals.tokenSelect.unknown')}
                   </div>
                   <div className="text-xs text-gray-400 truncate">{address}</div>
                 </div>

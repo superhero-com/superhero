@@ -166,12 +166,12 @@ export default function GovernanceVote({
                             </div>
                             <div>
                               <p className="text-base md:text-lg font-semibold text-white mb-1">{lbl}</p>
-                              <p className="text-sm text-slate-400">Click to vote for this option</p>
+                              <p className="text-sm text-slate-400">{t('vote.clickToVoteOption')}</p>
                             </div>
                           </div>
                           {isSelected && (
                             <div className="flex items-center gap-2 text-sm font-medium">
-                              <span>Selected</span>
+                              <span>{t('vote.selected')}</span>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
@@ -193,7 +193,7 @@ export default function GovernanceVote({
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      Revoke Vote
+                      {t('vote.revokeVote')}
                     </span>
                   </AeButton>
                 </div>
@@ -215,7 +215,7 @@ export default function GovernanceVote({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white">Live Results</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.liveResults')}</h2>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-lg">
                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -224,7 +224,7 @@ export default function GovernanceVote({
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-400 font-medium">Total Votes</p>
+                      <p className="text-sm text-slate-400 font-medium">{t('vote.totalVotes')}</p>
                       <p className="text-lg font-bold text-white">{results.totalVotes || 0}</p>
                     </div>
                   </div>
@@ -268,7 +268,7 @@ export default function GovernanceVote({
                             <div>
                               <h3 className="text-lg font-semibold text-white mb-1">{lbl}</h3>
                               <p className="text-sm text-slate-400">
-                                {isWinning ? 'Leading option' : 'Vote option'}
+                                {isWinning ? t('vote.leadingOption') : t('vote.voteOption')}
                               </p>
                             </div>
                           </div>
@@ -280,7 +280,7 @@ export default function GovernanceVote({
                             <p className="text-sm text-slate-400">
                               {votes}
                               {' '}
-                              votes
+                              {t('polls.votes')}
                             </p>
                           </div>
                         </div>
@@ -329,7 +329,7 @@ export default function GovernanceVote({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">Your Governance Power</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.yourGovernancePower')}</h2>
                 </div>
 
                 {decimalBalance && (
@@ -342,13 +342,13 @@ export default function GovernanceVote({
                           </svg>
                         </div>
                         <div>
-                          <p className="text-sm text-slate-400 font-medium mb-1">Account Balance</p>
+                          <p className="text-sm text-slate-400 font-medium mb-1">{t('vote.accountBalance')}</p>
                           <p className="text-2xl font-bold text-white">
                             {decimalBalance.prettify()}
                             {' '}
                             AE
                           </p>
-                          <p className="text-xs text-slate-500">Available for voting</p>
+                          <p className="text-xs text-slate-500">{t('vote.availableForVoting')}</p>
                         </div>
                       </div>
                     </div>
@@ -362,9 +362,9 @@ export default function GovernanceVote({
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm text-slate-400 font-medium mb-1">Delegators</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">{t('account.yourDelegators')}</p>
                             <p className="text-2xl font-bold text-white">{delegators.length}</p>
-                            <p className="text-xs text-slate-500">Trusting your vote</p>
+                            <p className="text-xs text-slate-500">{t('vote.trustingYourVote')}</p>
                           </div>
                         </div>
                       </div>
@@ -377,7 +377,7 @@ export default function GovernanceVote({
                     <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Delegation Status
+                    {t('vote.delegationStatus')}
                   </h3>
 
                   {delegation ? (
@@ -388,12 +388,12 @@ export default function GovernanceVote({
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-300 font-medium mb-2">Votes are being delegated to:</p>
+                        <p className="text-sm text-slate-300 font-medium mb-2">{t('vote.votesDelegatedTo')}</p>
                         <p className="text-white font-mono text-sm break-all bg-black/20 px-3 py-2 rounded-lg border border-white/10">
                           {delegation}
                         </p>
                         <p className="text-xs text-slate-500 mt-2">
-                          Your voting power is being used by this delegate
+                          {t('vote.votingPowerUsedByDelegate')}
                         </p>
                       </div>
                     </div>
@@ -405,9 +405,9 @@ export default function GovernanceVote({
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-300 font-medium mb-2">No delegation set</p>
+                        <p className="text-sm text-slate-300 font-medium mb-2">{t('vote.noDelegationSet')}</p>
                         <p className="text-xs text-slate-500">
-                          You are voting directly with your own tokens. Consider delegating to a trusted community member to increase your voting power.
+                          {t('vote.noDelegationHint')}
                         </p>
                       </div>
                     </div>

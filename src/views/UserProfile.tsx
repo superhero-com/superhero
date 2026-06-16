@@ -367,7 +367,7 @@ export default function UserProfile({
           outlined
           className="!border !border-solid !border-white/15 hover:!border-white/35"
         >
-          ← Back
+          ← {t('labels.back')}
         </AeButton>
       </div>
 
@@ -433,7 +433,7 @@ export default function UserProfile({
                 title={t('titles.sendATip')}
               >
                 <IconDiamond className="w-4 h-4 text-white" />
-                Tip
+                {t('buttons.tip')}
               </AeButton>
             ) : null}
             <AeButton
@@ -462,7 +462,7 @@ export default function UserProfile({
           }}
           className="mb-4 md:mb-4 w-full text-left rounded-xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 py-3 text-sm text-white/90 hover:bg-[#1161FE]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1161FE]/50"
         >
-          Claim 100 AE by verifying your X account.
+          {t('account.claimAeVerifyX')}
         </button>
       )}
 
@@ -477,7 +477,7 @@ export default function UserProfile({
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
           <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              AE Balance
+              {t('account.aeBalance')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {decimalBalance ? (() => {
@@ -497,7 +497,7 @@ export default function UserProfile({
                   // Fallback to prettify if conversion fails
                   return `${decimalBalance.prettify()} AE`;
                 }
-              })() : 'Loading...'}
+              })() : t('messages.loading')}
             </div>
           </div>
           <button

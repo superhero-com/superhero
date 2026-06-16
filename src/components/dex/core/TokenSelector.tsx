@@ -2,6 +2,7 @@
 import { toAe } from '@aeternity/aepp-sdk';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
@@ -33,6 +34,7 @@ export default function TokenSelector({
   onSearchChange,
   tokens,
 }: TokenSelectorProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [customAddress, setCustomAddress] = useState('');
   const { aex9Balances, balance } = useAccount();
@@ -124,7 +126,7 @@ export default function TokenSelector({
                 <Spinner className="w-3.5 h-3.5" />
               ) : (
                 <>
-                  {selected ? `${selected.symbol}` : 'Select Token'}
+                  {selected ? `${selected.symbol}` : t('dex.bridge.selectToken')}
                   <span className="opacity-70">▼</span>
                 </>
               )}
@@ -139,7 +141,7 @@ export default function TokenSelector({
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
             <Dialog.Title className="font-bold text-lg sm:text-xl m-0">
-              Select a token
+              {t('dex.bridge.selectAToken')}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110">
@@ -151,7 +153,7 @@ export default function TokenSelector({
           {/* Search Input */}
           <div className="relative mb-4 sm:mb-5">
             <input
-              placeholder="Search by token or paste address"
+              placeholder={t('dex.tokenSelector.searchPlaceholder')}
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
               autoFocus
@@ -179,7 +181,7 @@ export default function TokenSelector({
               marginBottom: 8,
             }}
             >
-              Add Custom Token
+              {t('dex.tokenSelector.addCustomToken')}
             </div>
             <div style={{
               fontSize: 12,
@@ -187,7 +189,7 @@ export default function TokenSelector({
               marginBottom: 12,
             }}
             >
-              Address:
+              {t('dex.tokenSelector.addressLabel')}
               {' '}
               {searchValue}
             </div>
@@ -224,7 +226,7 @@ export default function TokenSelector({
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              Add Token
+              {t('dex.tokenSelector.addToken')}
             </button>
           </div>
           )}
@@ -247,7 +249,7 @@ export default function TokenSelector({
               letterSpacing: '0.5px',
             }}
             >
-              Token
+              {t('dex.bridge.token')}
             </span>
             <span style={{
               fontSize: 14,
@@ -257,7 +259,7 @@ export default function TokenSelector({
               letterSpacing: '0.5px',
             }}
             >
-              Balance/Address
+              {t('dex.tokenSelector.balanceAddress')}
             </span>
           </div>
 
@@ -315,7 +317,7 @@ export default function TokenSelector({
                     opacity: 0.8,
                   }}
                   >
-                    {token.is_ae ? 'Native Token' : 'Token'}
+                    {token.is_ae ? t('dex.tokenSelector.nativeToken') : t('dex.bridge.token')}
                   </div>
                 </div>
 
@@ -361,8 +363,8 @@ export default function TokenSelector({
             }}
             >
               <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🪙</div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens available</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>Try adding a custom token by address</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('dex.tokenSelector.noTokensAvailable')}</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{t('dex.tokenSelector.tryAddingCustomToken')}</div>
             </div>
             )}
 
@@ -375,9 +377,9 @@ export default function TokenSelector({
             }}
             >
               <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens found</div>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('dex.noTokensFound')}</div>
               <div style={{ fontSize: 12, opacity: 0.8 }}>
-                Can't find the token you're looking for? Try entering the mint address or check token list settings below.
+                {t('dex.tokenSelector.tokenNotFoundHint')}
               </div>
             </div>
             )}

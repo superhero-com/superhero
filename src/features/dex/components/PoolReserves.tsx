@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { PairDto } from '@/api/generated';
 import { Decimal } from '@/libs/decimal';
 
@@ -5,8 +6,11 @@ interface PoolReservesProps {
   pairData?: PairDto;
 }
 
-export const PoolReserves = ({ pairData }: PoolReservesProps) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+export const PoolReserves = ({ pairData }: PoolReservesProps) => {
+  const { t } = useTranslation('dex');
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {/* Token 0 Reserve */}
     <div
       style={{
@@ -20,9 +24,9 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => (
       <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
         🪙
         {' '}
-        {pairData?.token0?.symbol || 'Token'}
+        {pairData?.token0?.symbol || t('tokenFallback')}
         {' '}
-        Reserve
+        {t('poolReserves.reserve')}
       </div>
       <div className="text-lg font-bold text-white mb-0.5">
         {Decimal.fromBigNumberString(pairData?.reserve0?.toString() || '0').prettify()}
@@ -42,9 +46,9 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => (
       <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
         🪙
         {' '}
-        {pairData?.token1?.symbol || 'Token'}
+        {pairData?.token1?.symbol || t('tokenFallback')}
         {' '}
-        Reserve
+        {t('poolReserves.reserve')}
       </div>
       <div className="text-lg font-bold text-white mb-0.5">
         {Decimal.fromBigNumberString(pairData?.reserve1?.toString() || '0').prettify()}
@@ -74,7 +78,7 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => (
           gap: 4,
         }}
       >
-        🎫 LP Token Supply
+        🎫 {t('poolReserves.lpTokenSupply')}
       </div>
       <div
         style={{
@@ -93,8 +97,9 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => (
           fontWeight: 500,
         }}
       >
-        LP tokens in circulation
+        {t('poolReserves.lpTokensInCirculation')}
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
+};

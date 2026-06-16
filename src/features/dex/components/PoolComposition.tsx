@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { PairDto } from '@/api/generated';
 import { TokenChip } from '@/components/TokenChip';
 import { Decimal } from '@/libs/decimal';
@@ -7,6 +8,7 @@ interface PoolCompositionProps {
 }
 
 export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
+  const { t } = useTranslation('dex');
   // Calculate ratios from reserves
   const ratio1 = pairData?.reserve1 && pairData?.reserve0 && Decimal.from(pairData.reserve0).gt(0)
     ? Decimal.from(pairData.reserve1).div(pairData.reserve0)
@@ -19,7 +21,7 @@ export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
   return (
     <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
       <h3 className="text-lg font-semibold text-white m-0 mb-4">
-        Pool Composition
+        {t('poolComposition.title')}
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
@@ -51,7 +53,7 @@ export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
             {Decimal.fromBigNumberString(pairData?.reserve0?.toString() || '0').prettify()}
             <span className="text-xs text-white/60">
               {' '}
-              {pairData?.token0?.symbol || 'Token'}
+              {pairData?.token0?.symbol || t('tokenFallback')}
             </span>
           </div>
         </div>
@@ -85,22 +87,22 @@ export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
             >
               1
               {' '}
-              {pairData?.token0?.symbol || 'Token'}
+              {pairData?.token0?.symbol || t('tokenFallback')}
               {' '}
               =
               {' '}
               {ratio1.prettify()}
               {' '}
-              {pairData?.token1?.symbol || 'Token'}
+              {pairData?.token1?.symbol || t('tokenFallback')}
               <br />
               1
-              {pairData?.token1?.symbol || 'Token'}
+              {pairData?.token1?.symbol || t('tokenFallback')}
               {' '}
               =
               {' '}
               {ratio0.prettify()}
               {' '}
-              {pairData?.token0?.symbol || 'Token'}
+              {pairData?.token0?.symbol || t('tokenFallback')}
             </div>
           )}
         </div>
@@ -133,7 +135,7 @@ export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
             {Decimal.fromBigNumberString(pairData?.reserve1?.toString() || '0').prettify()}
             <span className="text-xs text-white/60">
               {' '}
-              {pairData?.token1?.symbol || 'Token'}
+              {pairData?.token1?.symbol || t('tokenFallback')}
             </span>
           </div>
         </div>

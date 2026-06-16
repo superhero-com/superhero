@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { VoteState } from 'bctsl-sdk';
 import { Decimal } from '@/libs/decimal';
 import { AddressChip } from '@/components/AddressChip';
@@ -15,6 +16,7 @@ interface VoterItem {
 }
 
 const VotersTable = ({ voteState, token }: VotersTableProps) => {
+  const { t } = useTranslation();
   const items = useMemo((): VoterItem[] => {
     const voterItems: VoterItem[] = [];
 
@@ -34,9 +36,9 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
   if (!items.length) {
     return (
       <div className="border border-white/10 rounded-xl p-3 sm:p-4 bg-black/20 backdrop-blur-lg text-white">
-        <div className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Voters</div>
+        <div className="text-base sm:text-lg font-bold mb-3 sm:mb-4">{t('dao.voters.title')}</div>
         <div className="text-xs sm:text-sm text-white/80">
-          No voters found for this proposal.
+          {t('dao.voters.noVotersFound')}
         </div>
       </div>
     );
@@ -45,7 +47,7 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
   return (
     <div className="border border-white/10 rounded-xl bg-black/20 backdrop-blur-lg text-white">
       <div className="p-3 sm:p-4 border-b border-white/10">
-        <div className="text-base sm:text-lg font-bold">Voters</div>
+        <div className="text-base sm:text-lg font-bold">{t('dao.voters.title')}</div>
       </div>
 
       {/* Mobile Card Layout */}
@@ -56,14 +58,14 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
               <div className="space-y-2">
                 {/* Voter Address */}
                 <div>
-                  <div className="text-xs text-white/60 mb-1">Voter</div>
+                  <div className="text-xs text-white/60 mb-1">{t('dao.voters.voter')}</div>
                   <AddressChip address={item.address} linkToExplorer />
                 </div>
 
                 {/* Choice and Voting Power Row */}
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="text-xs text-white/60 mb-1">Choice</div>
+                    <div className="text-xs text-white/60 mb-1">{t('dao.voters.choice')}</div>
                     <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${item.choice
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -73,13 +75,13 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
                         {item.choice ? '✓' : '○'}
                       </span>
                       <span>
-                        {item.choice ? 'Yes' : 'No'}
+                        {item.choice ? t('dao.voters.yes') : t('dao.voters.no')}
                       </span>
                     </span>
                   </div>
 
                   <div className="flex-1 text-right">
-                    <div className="text-xs text-white/60 mb-1">Voting Power</div>
+                    <div className="text-xs text-white/60 mb-1">{t('dao.voters.votingPower')}</div>
                     <div className="text-sm font-medium">
                       {Decimal.fromBigNumberString(item.amount.toString()).prettify()}
                     </div>
@@ -99,9 +101,9 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">Voter</th>
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">Choice</th>
-              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">Voting Power</th>
+              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.voter')}</th>
+              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.choice')}</th>
+              <th className="text-left p-3 lg:p-4 text-xs lg:text-sm font-medium text-white/80">{t('dao.voters.votingPower')}</th>
             </tr>
           </thead>
           <tbody>
@@ -120,7 +122,7 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
                       {item.choice ? '✓' : '○'}
                     </span>
                     <span>
-                      {item.choice ? 'Yes' : 'No'}
+                      {item.choice ? t('dao.voters.yes') : t('dao.voters.no')}
                     </span>
                   </span>
                 </td>

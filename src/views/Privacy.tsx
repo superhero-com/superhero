@@ -1,11 +1,13 @@
 /* eslint-disable max-len, react/no-unescaped-entities */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AeButton } from '@/components/ui/ae-button';
 import { useNavigate } from 'react-router-dom';
 import FooterSection from '../components/layout/FooterSection';
 
 const Privacy = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <>
       <div className="max-w-[980px] mx-auto p-4">
@@ -23,31 +25,24 @@ const Privacy = () => {
             outlined
             className="!border !border-solid !border-white/15 hover:!border-white/35"
           >
-            ← Back
+            ← {t('common.labels.back')}
           </AeButton>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">PRIVACY POLICY</h2>
-        <p className="text-white/70 mb-6">The present Privacy Policy was last updated on 29th of September 2025.</p>
+        <h2 className="text-2xl font-bold text-white mb-2">{t('common.views.privacy.title')}</h2>
+        <p className="text-white/70 mb-6">{t('common.views.privacy.lastUpdated')}</p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">I. Introduction</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.introHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
-          Superhero.com is an open-source, decentralised protocol deployed on æternity blockchain. The protocol operates
-          in a distributed manner, and no single party controls or operates the underlying smart contracts. Users
-          interact with the protocol directly, at their own discretion and risk.
+          {t('common.views.privacy.introP1')}
         </p>
         <p className="text-white/80 mb-4 leading-relaxed">
-          Superhero.com LVC, with address Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein ("the Company") provides and
-          maintains this website and related interfaces (the "Interface") to facilitate access to the protocol.
+          {t('common.views.privacy.introP2')}
         </p>
         <p className="text-white/80 mb-4 leading-relaxed">
-          This Privacy Policy explains how Superhero.com handles information in connection with your use of the Platform
-          and its website/interface. If you have any questions regarding this Policy, please contact us at
-          superherowallet@protonmail.com. If you do not agree to the terms of this Policy, please do not use the Website.
-          Each time you use the Website, the current version of this Policy will apply. The new version of the Privacy
-          Policy becomes effective from the day it is announced publicly on the Website unless stated otherwise.
+          {t('common.views.privacy.introP3')}
         </p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">II. Definitions</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.definitionsHeading')}</h3>
         <ul className="text-white/80 mb-4 leading-relaxed list-disc pl-6">
           <li>
             <span className="font-semibold">Data Controller</span>
@@ -82,116 +77,78 @@ const Privacy = () => {
           </li>
         </ul>
 
-        <h3 className="text-xl font-semibold text-white mb-2">III. Personal data collection</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.collectionHeading')}</h3>
         <p className="text-white/80 mb-2 leading-relaxed">
-          The Platform is designed to operate in a decentralized
-          manner. All user interactions with the application occur directly on the blockchain. As a result:
+          {t('common.views.privacy.collectionIntro')}
         </p>
         <ul className="text-white/80 mb-4 leading-relaxed list-disc pl-6">
-          <li>We do not collect, store, or process any personal data in connection with on-chain transactions.</li>
+          <li>{t('common.views.privacy.collectionLi1')}</li>
           <li>
-            Wallet addresses and transaction information recorded on the blockchain are not under our control and
-            cannot be amended, deleted, or altered.
+            {t('common.views.privacy.collectionLi2')}
           </li>
           <li>
-            We do not track, log, or otherwise collect off-chain identifiers such as IP addresses, cookies, or
-            analytics, unless explicitly stated elsewhere in this Privacy Policy.
+            {t('common.views.privacy.collectionLi3')}
           </li>
         </ul>
 
-        <h3 className="text-xl font-semibold text-white mb-2">Implications for Users</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.implicationsHeading')}</h3>
         <ul className="text-white/80 mb-4 leading-relaxed list-disc pl-6">
           <li>
-            Your activity on the blockchain is pseudonymous, but may be considered personal data under GDPR if it can
-            be linked to an identifiable individual.
+            {t('common.views.privacy.implicationsLi1')}
           </li>
           <li>
-            Since we do not control the blockchain, we cannot modify or erase on-chain data, and we do not act as a
-            data controller for such information.
+            {t('common.views.privacy.implicationsLi2')}
           </li>
           <li>
-            Any off-chain data voluntarily submitted (for example, support requests) will be processed in accordance
-            with GDPR and relevant data protection laws.
+            {t('common.views.privacy.implicationsLi3')}
           </li>
         </ul>
 
-        <h3 className="text-xl font-semibold text-white mb-2">Personal data in relation to User support and communication</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.supportHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
-          During the use of our Website, users may decide to contact the team in relation to website support, troubleshoot
-          problems, questions, etc. The collection of personal data is initiated by Users, and they decide what type of
-          personal data to include in the communication. Therefore, the legal basis for processing is that the User has
-          given consent to the processing of their personal data for one or more specific purposes, specifically Article
-          6(1) of the General Data Protection Regulation (Regulation (EU) 2016/679). The retention period is until the
-          questions have been answered, assistance from the team has been provided, the problems have been solved, or in
-          any other case, until withdrawal of consent. Superhero.com may retain personal information for an additional
-          period of time if it is required by law or for crime/breach/infringement prevention and safety.
+          {t('common.views.privacy.supportP1')}
         </p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">IV. Your rights</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.rightsHeading')}</h3>
         <p className="text-white/80 mb-2 leading-relaxed">
-          With regard to the information stored off-chain, if any, YOU
-          have the right to:
+          {t('common.views.privacy.rightsIntro')}
         </p>
         <ul className="text-white/80 mb-4 leading-relaxed list-disc pl-6">
-          <li>Request from Superhero.com access to the personal data that we hold about You in a portable format.</li>
+          <li>{t('common.views.privacy.rightsLi1')}</li>
           <li>
-            Request from Superhero.com the correction of any collected personal data. The information may include only
-            your personal data collection.
+            {t('common.views.privacy.rightsLi2')}
           </li>
-          <li>Receive a copy of your personal data in electronic format.</li>
+          <li>{t('common.views.privacy.rightsLi3')}</li>
           <li>
-            “The right to be forgotten” – You have the right to request the deletion of your personal data at any time
-            where the retention of such data infringes relevant legislation.
+            {t('common.views.privacy.rightsLi4')}
           </li>
           <li>
-            Receive information from Us about Our activities in connection to your personal data, including the
-            purposes of collection and storage, the period of time for storage, the methods of collecting, and the
-            presence of automated processing.
+            {t('common.views.privacy.rightsLi5')}
           </li>
-          <li>Receive your data and transfer it to another controller.</li>
+          <li>{t('common.views.privacy.rightsLi6')}</li>
           <li>
-            You have the right to lodge a complaint with a supervisory authority, in particular in the Member State of
-            your habitual residence, place of work or place of the alleged infringement if You consider that there is a
-            personal data breach.
+            {t('common.views.privacy.rightsLi7')}
           </li>
         </ul>
 
-        <h3 className="text-xl font-semibold text-white mb-2">V. Sharing of Personal Information with Third Parties – Recipients</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.sharingHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
-          We may disclose USERS' identifiable personal information to third parties under special circumstances: (i) to
-          comply with a legal requirement, judicial proceeding, court order, or legal process served on Superhero.com or
-          its affiliates; (ii) to investigate a possible crime, such as fraud or identity theft; (iii) to Public
-          Authorities in accordance with their legal obligation for the exercise of their official mission, such as tax
-          and customs authorities, financial investigation units, independent administrative authorities, or financial
-          market authorities responsible for supervision of securities markets; (iv) in connection with the sale,
-          purchase, business transition under any form, merger, dissolution, reorganization, liquidation of Superhero.com
-          (we may have to disclose the information You have given us to the successor who is part of the transition);
-          (v) when We believe it is necessary to protect the rights, property, or safety of Superhero.com or other
-          persons; or (vi) as otherwise required or permitted by law, including any contractual obligations of
-          Superhero.com.
+          {t('common.views.privacy.sharingP1')}
         </p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">VI. Children and Privacy</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.childrenHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
-          Superhero.com does not process information of persons under the age of obtaining full legal capacity (in most
-          countries 18 years old) due to the character of the Website and the Wallet. Superhero.com will immediately
-          delete any personal data referring to persons under the age of full legal capacity. We are not liable in any way
-          if YOU provide false information about your age or use the Website before YOU have turned the above-mentioned
-          age.
+          {t('common.views.privacy.childrenP1')}
         </p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">VII. Breach measures</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.breachHeading')}</h3>
         <p className="text-white/80 mb-4 leading-relaxed">
-          In case of breach, We will undertake every possible action according to the applicable legislation in an
-          appropriate and timely manner, to avoid any material or non-material damage to Users and to protect the personal
-          data of Users.
+          {t('common.views.privacy.breachP1')}
         </p>
 
-        <h3 className="text-xl font-semibold text-white mb-2">VIII. How do I contact Superhero.com?</h3>
+        <h3 className="text-xl font-semibold text-white mb-2">{t('common.views.privacy.contactHeading')}</h3>
         <p className="text-white/80 leading-relaxed">
-          To contact us with your questions or comments regarding this Policy or the information collection and
-          dissemination practices of Superhero.com relevant to your use of the Website, please email us at
-          superherowallet@protonmail.com.
+          {t('common.views.privacy.contactP1')}
         </p>
       </div>
       <div className="mt-8">

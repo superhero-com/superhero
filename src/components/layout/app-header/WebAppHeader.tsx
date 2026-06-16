@@ -100,7 +100,7 @@ const WebAppHeader = () => {
                 <span className="w-6 flex items-center justify-center">
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(item.labelKey, { ns: 'common' })}</span>
               </AppNavigationItemAction>
             );
           })}

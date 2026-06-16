@@ -126,7 +126,7 @@ const BuyAeWidgetContent = ({
         }
       }
     } catch {
-      setEthBridgeError('Failed to fetch ETH balance');
+      setEthBridgeError(t('buyAeWidget.failedToFetchEthBalance', { ns: 'buyAe' }));
       setEthBalance(null);
       setEthSpendable(null);
     } finally {
@@ -160,7 +160,7 @@ const BuyAeWidgetContent = ({
           ...ae, is_ae: true, address: 'AE', symbol: 'AE',
         });
       } catch {
-        setEthBridgeError('Failed to load token data');
+        setEthBridgeError(t('buyAeWidget.failedToLoadTokenData', { ns: 'buyAe' }));
       }
     };
 
@@ -303,7 +303,7 @@ const BuyAeWidgetContent = ({
               React.createElement(
                 'div',
                 {},
-                'ETH→AE bridge completed successfully!',
+                t('buyAeWidget.bridgeCompleted', { ns: 'buyAe' }),
               ),
               ethTxUrl
               && React.createElement(
@@ -318,7 +318,7 @@ const BuyAeWidgetContent = ({
                     display: 'block',
                   },
                 },
-                'View ETH transaction',
+                t('buyAeWidget.viewEthTransaction', { ns: 'buyAe' }),
               ),
               aeTxUrl
               && React.createElement(
@@ -333,7 +333,7 @@ const BuyAeWidgetContent = ({
                     display: 'block',
                   },
                 },
-                'View AE swap transaction',
+                t('buyAeWidget.viewAeSwapTransaction', { ns: 'buyAe' }),
               ),
             ),
           );
@@ -345,7 +345,7 @@ const BuyAeWidgetContent = ({
         setEthBridgeIn('');
         setEthBridgeOutAe('');
       } else {
-        throw new Error(result.error || 'Bridge operation failed');
+        throw new Error(result.error || t('buyAeWidget.bridgeOperationFailed', { ns: 'buyAe' }));
       }
     } catch (e: any) {
       setEthBridgeError(
@@ -408,37 +408,36 @@ const BuyAeWidgetContent = ({
         {embedded ? (
           <h2 className="m-0 text-base font-bold min-w-0 flex-shrink flex items-center gap-2">
             <span className="text-base">💎</span>
-            <span>Buy AE with ETH</span>
+            <span>{t('titles.buyAeWithEth')}</span>
           </h2>
         ) : (
           <h2 className="text-lg sm:text-xl font-bold m-0 min-w-0 flex-shrink">
-            Buy AE with ETH
+            {t('titles.buyAeWithEth')}
           </h2>
         )}
 
         <div
           className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}
         >
-          Cross-chain
+          {t('buyAeWidget.crossChain', { ns: 'buyAe' })}
         </div>
       </div>
 
       {/* Description */}
       <p className="m-0 mb-4 sm:mb-5 text-sm text-white/60 leading-relaxed">
-        Bridge native ETH from Ethereum to æternity as æETH, then automatically
-        swap to AE tokens.
+        {t('buyAeWidget.description', { ns: 'buyAe' })}
       </p>
 
       <FromTo
         embedded={embedded}
-        fromLabel="From"
-        toLabel="To (Estimated)"
+        fromLabel={t('dex:swap.from')}
+        toLabel={t('buyAeWidget.toEstimated', { ns: 'buyAe' })}
         fromAmount={ethBridgeIn}
         onChangeFromAmount={setEthBridgeIn}
         fromBalanceText={
           ethBalance && !fetchingBalance
-            ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH${ethSpendable ? ` (max: ${Decimal.from(ethSpendable).prettify(6)})` : ''}`
-            : 'Ethereum'
+            ? `${t('buyAeWidget.balanceLabel', { ns: 'buyAe' })}: ${Decimal.from(ethBalance ?? '0').prettify()} ETH${ethSpendable ? ` (${t('buyAeWidget.maxLabel', { ns: 'buyAe' })}: ${Decimal.from(ethSpendable).prettify(6)})` : ''}`
+            : t('buyAeWidget.ethereum', { ns: 'buyAe' })
         }
         onMaxClick={handleMaxClick}
         maxDisabled={fetchingBalance}
@@ -468,7 +467,7 @@ const BuyAeWidgetContent = ({
 
       {hasInsufficientEthBalance && (
         <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5">
-          Insufficient balance. Available:
+          {t('buyAeWidget.insufficientBalanceAvailable', { ns: 'buyAe' })}
           {' '}
           {Decimal.from(balanceForValidation ?? '0').prettify(6)}
           {' '}
@@ -480,7 +479,7 @@ const BuyAeWidgetContent = ({
       {ethBridgeStep !== 'idle' && (
         <div className={`${sectionBase} ${sectionBg} ${sectionSpacingLarge}`}>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-white/60">Bridge Status</span>
+            <span className="text-sm text-white/60">{t('buyAeWidget.bridgeStatus', { ns: 'buyAe' })}</span>
             <span
               className={`text-sm font-semibold ${(() => {
                 switch (ethBridgeStep) {
@@ -494,13 +493,13 @@ const BuyAeWidgetContent = ({
               })()}`}
             >
               {{
-                connecting: 'Connecting to wallets',
-                bridging: 'Bridging ETH → æETH',
-                waiting: 'Waiting for æETH deposit',
-                swapping: 'Swapping æETH → AE',
-                completed: 'Completed successfully',
-                failed: 'Failed',
-              }[ethBridgeStep] ?? 'Processing'}
+                connecting: t('buyAeWidget.status.connecting', { ns: 'buyAe' }),
+                bridging: t('buyAeWidget.status.bridging', { ns: 'buyAe' }),
+                waiting: t('buyAeWidget.status.waiting', { ns: 'buyAe' }),
+                swapping: t('buyAeWidget.status.swapping', { ns: 'buyAe' }),
+                completed: t('buyAeWidget.status.completed', { ns: 'buyAe' }),
+                failed: t('buyAeWidget.status.failed', { ns: 'buyAe' }),
+              }[ethBridgeStep] ?? t('buyAeWidget.status.processing', { ns: 'buyAe' })}
             </span>
           </div>
 
@@ -515,14 +514,15 @@ const BuyAeWidgetContent = ({
       {/* Liquidity Warning */}
       {liquidityExceeded && maxAvailable && (
         <div className="text-yellow-400 text-sm py-3 px-3 sm:px-4 bg-yellow-400/10 border border-yellow-400/20 rounded-xl mb-4 sm:mb-5">
-          <div className="font-semibold mb-1">Insufficient Liquidity</div>
+          <div className="font-semibold mb-1">{t('buyAeWidget.insufficientLiquidity', { ns: 'buyAe' })}</div>
           <div className="text-white/80">
-            The requested amount exceeds available liquidity. Maximum available:
+            {t('buyAeWidget.exceedsLiquidityPrefix', { ns: 'buyAe' })}
             {' '}
             {Decimal.from(maxAvailable).prettify()}
             {' '}
             æETH.
-            Please reduce the amount or add liquidity to the pool.
+            {' '}
+            {t('buyAeWidget.exceedsLiquiditySuffix', { ns: 'buyAe' })}
           </div>
         </div>
       )}
@@ -545,7 +545,7 @@ const BuyAeWidgetContent = ({
       ) : (
         <>
           <ConnectEthereumWallet
-            label="Connect Ethereum Wallet"
+            label={t('dex:bridge.connectEthereumWallet')}
             showConnectedState
             onDisconnected={handleEthDisconnected}
           />
@@ -567,20 +567,20 @@ const BuyAeWidgetContent = ({
                   {(() => {
                     switch (ethBridgeStep) {
                       case 'connecting':
-                        return 'Connecting…';
+                        return t('buttons.connecting');
                       case 'bridging':
-                        return 'Bridging…';
+                        return t('buyAeWidget.bridgingShort', { ns: 'buyAe' });
                       case 'waiting':
-                        return 'Waiting for æETH…';
+                        return t('buyAeWidget.waitingForAeeth', { ns: 'buyAe' });
                       case 'swapping':
-                        return 'Swapping…';
+                        return t('buyAeWidget.swappingShort', { ns: 'buyAe' });
                       default:
-                        return 'Processing…';
+                        return t('buyAeWidget.processingShort', { ns: 'buyAe' });
                     }
                   })()}
                 </div>
               ) : (
-                'Buy AE with ETH'
+                t('titles.buyAeWithEth')
               )}
             </button>
           )}

@@ -2,6 +2,7 @@ import React, {
   useMemo, useState, useRef, useEffect, useId,
 } from 'react';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { useTranslation } from 'react-i18next';
 import { encode, Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ const TipModal = ({
   onClose: () => void;
   payload?: string;
 }) => {
+  const { t } = useTranslation();
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
   const { chainName } = useChainName(toAddress);
@@ -239,7 +241,7 @@ const TipModal = ({
         timeoutRefs.current.add(successResetTimeoutId);
       }
     } catch (e: any) {
-      setError(e?.message || 'Failed to send tip.');
+      setError(e?.message || t('common.modals.tip.failedToSend'));
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
         const errorResetTimeoutId = setTimeout(() => {
@@ -280,7 +282,7 @@ const TipModal = ({
             <IconDiamond className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white text-lg font-semibold leading-tight">Send a tip</div>
+            <div className="text-white text-lg font-semibold leading-tight">{t('common.titles.sendATip')}</div>
             <div className="flex items-center gap-3 mt-2">
               <AddressAvatarWithChainName
                 address={toAddress}
@@ -302,9 +304,9 @@ const TipModal = ({
       {/* Success state */}
       {txHash && (
         <div className="mb-4 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
-          Tip sent successfully.
+          {t('common.modals.tip.tipSentSuccessfully')}
           {explorerTxUrl && (
-            <a href={explorerTxUrl} target="_blank" rel="noreferrer" className="underline ml-1">View on explorer</a>
+            <a href={explorerTxUrl} target="_blank" rel="noreferrer" className="underline ml-1">{t('common.modals.tip.viewOnExplorer')}</a>
           )}
         </div>
       )}
@@ -319,7 +321,7 @@ const TipModal = ({
       {/* Form card */}
       <div className="rounded-2xl p-4 border border-white/10 bg-white/[0.03] backdrop-blur-lg">
         <div className="flex items-center justify-between text-xs text-white/70 mb-2">
-          <span>Balance</span>
+          <span>{t('common.labels.balance')}</span>
           <span>
             {aeBalanceAe.prettify()}
             {' '}
@@ -329,7 +331,7 @@ const TipModal = ({
 
         <div className="grid gap-2">
           <label htmlFor={amountInputId} className="grid gap-1">
-            <span className="text-xs text-white/70">Amount (AE)</span>
+            <span className="text-xs text-white/70">{t('common.modals.tip.amountAe')}</span>
             <div className="flex items-center gap-2">
               <input
                 id={amountInputId}
@@ -375,7 +377,7 @@ const TipModal = ({
           </div>
 
           {insufficient && (
-            <div className="text-xs text-red-400">Insufficient balance.</div>
+            <div className="text-xs text-red-400">{t('common.modals.tip.insufficientBalance')}</div>
           )}
         </div>
       </div>
@@ -383,10 +385,10 @@ const TipModal = ({
       {/* Actions */}
       <div className="flex items-center gap-2 mt-4">
         <AeButton onClick={handleSend} disabled={disabled} loading={sending}>
-          {txHash ? 'Send again' : 'Send tip'}
+          {txHash ? t('common.modals.tip.sendAgain') : t('common.modals.tip.sendTip')}
         </AeButton>
         <AeButton variant="ghost" onClick={onClose}>
-          {txHash ? 'Close' : 'Cancel'}
+          {txHash ? t('common.buttons.close') : t('common.buttons.cancel')}
         </AeButton>
       </div>
     </div>

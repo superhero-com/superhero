@@ -71,7 +71,7 @@ export default function AccountDetails() {
             onClick={() => { navigator.clipboard.writeText(address || ''); }}
             variant="utility"
           >
-            Copy Address
+            {t('copyAddress')}
           </AeButton>
         </div>
       </div>
@@ -82,21 +82,21 @@ export default function AccountDetails() {
           variant="tab"
           active={tab === 'owned'}
         >
-          Tokens Owned
+          {t('tokensOwned')}
         </AeButton>
         <AeButton
           onClick={() => setTab('created')}
           variant="tab"
           active={tab === 'created'}
         >
-          Tokens Created
+          {t('tokensCreated')}
         </AeButton>
         <AeButton
           onClick={() => setTab('transactions')}
           variant="tab"
           active={tab === 'transactions'}
         >
-          Transactions
+          {t('transactions')}
         </AeButton>
       </div>
 
@@ -111,14 +111,16 @@ export default function AccountDetails() {
       )}
       {!loading && !error && tab === 'transactions' && (
         <div className="text-white/60">
-          Transactions view will be added once backend endpoint is exposed.
+          {t('transactionsViewComingSoon')}
         </div>
       )}
     </div>
   );
 }
 
-const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: string }) => (
+const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: string }) => {
+  const { t } = useTranslation('explore');
+  return (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
     {items.map((it) => (
       <Link
@@ -138,11 +140,11 @@ const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: 
           </div>
           <div className="flex justify-between mt-2 text-sm opacity-85 text-white/85">
             <div>
-              MC:
+              {t('mcLabel')}
               {Number(it.market_cap ?? 0).toLocaleString()}
             </div>
             <div>
-              Holders:
+              {t('holdersLabel')}
               {it.holders_count ?? 0}
             </div>
           </div>
@@ -151,4 +153,5 @@ const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: 
     ))}
     {!items.length && <div className="opacity-70 text-white/70 text-center py-8">{emptyMessage}</div>}
   </div>
-);
+  );
+};

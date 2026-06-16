@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
 import ReplyToFeedItem from './ReplyToFeedItem';
 import PostSkeleton from './PostSkeleton';
@@ -53,6 +54,7 @@ const TokenTopicFeed = ({
   holdersOnly = true,
   onAutoDisableHoldersOnly,
 }: TokenTopicFeedProps) => {
+  const { t } = useTranslation('social');
   const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
@@ -227,12 +229,10 @@ const TokenTopicFeed = ({
       <div className="grid gap-2">
         <div className="flex items-center justify-between mb-1 px-1 md:px-0">
           <h4 className="m-0 text-white/80 text-sm md:text-[15px] font-medium">
-            Loading posts for
-            {' '}
-            {displayTag || `#${baseName.toUpperCase()}`}
+            {t('tokenTopicFeed.loadingPostsFor', { tag: displayTag || `#${baseName.toUpperCase()}` })}
           </h4>
           <div className="text-[11px] text-white/55 hidden md:block">
-            Fetching latest posts...
+            {t('tokenTopicFeed.fetchingLatestPosts')}
           </div>
         </div>
         {['skeleton-1', 'skeleton-2'].map((key) => (
@@ -248,12 +248,9 @@ const TokenTopicFeed = ({
     if (!isNotFound) {
       return (
         <div className="text-white/80">
-          Failed to load posts for
+          {t('tokenTopicFeed.failedToLoadPostsFor', { tag: lookup.toUpperCase() })}
           {' '}
-          {lookup.toUpperCase()}
-          .
-          {' '}
-          <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">Retry</AeButton>
+          <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">{t('retry')}</AeButton>
         </div>
       );
     }
@@ -265,14 +262,11 @@ const TokenTopicFeed = ({
       {showHeader && (
         <div className="flex items-center justify-between mb-1">
           <h4 className="m-0 text-white/90 font-semibold">
-            Posts for
-            {displayTag}
+            {t('tokenTopicFeed.postsFor', { tag: displayTag })}
           </h4>
           {postCount != null && (
             <div className="text-xs text-white/60">
-              {postCount}
-              {' '}
-              total
+              {t('tokenTopicFeed.totalCount', { count: postCount })}
             </div>
           )}
         </div>
@@ -284,16 +278,16 @@ const TokenTopicFeed = ({
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">
             <div className="font-semibold text-emerald-100">
-              No posts from token holders yet.
+              {t('tokenTopicFeed.noHolderPostsYet')}
             </div>
             <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
-              If you hold this token, create a post with
+              {t('tokenTopicFeed.ifYouHoldCreatePostPrefix')}
               {' '}
               <span className="font-semibold text-emerald-100 underline decoration-emerald-300/60 decoration-dashed underline-offset-2">
                 {displayTag}
               </span>
               {' '}
-              to appear here.
+              {t('tokenTopicFeed.ifYouHoldCreatePostSuffix')}
             </div>
           </div>
         </div>
@@ -305,16 +299,16 @@ const TokenTopicFeed = ({
           <span className="text-[14px] pt-0.5" aria-hidden="true">ℹ️</span>
           <div className="text-left">
             <div className="font-semibold text-emerald-100">
-              No posts from token holders yet.
+              {t('tokenTopicFeed.noHolderPostsYet')}
             </div>
             <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
-              Showing all posts for
+              {t('tokenTopicFeed.showingAllPostsForPrefix')}
               {' '}
               <span className="font-semibold text-emerald-100">
                 {displayTag}
               </span>
               {' '}
-              while we wait for holders to join the conversation.
+              {t('tokenTopicFeed.showingAllPostsForSuffix')}
             </div>
           </div>
         </div>
@@ -325,16 +319,14 @@ const TokenTopicFeed = ({
         <div className="mt-1 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-5 text-center">
           <div className="text-2xl mb-1" aria-hidden="true">🗯️</div>
           <div className="font-semibold text-white/85 mb-1 text-sm md:text-[15px]">
-            No posts for
-            {' '}
-            {displayTag}
+            {t('tokenTopicFeed.noPostsFor', { tag: displayTag })}
           </div>
           <div className="text-xs text-white/60 max-w-md mx-auto">
-            Be the first to start a conversation — create a post that includes
+            {t('tokenTopicFeed.beFirstPrefix')}
             {' '}
             <span className="font-medium text-white/80">{displayTag}</span>
             {' '}
-            in the text.
+            {t('tokenTopicFeed.beFirstSuffix')}
           </div>
         </div>
       )}
@@ -398,7 +390,7 @@ const TokenTopicFeed = ({
           size="medium"
           className="min-w-24"
         >
-          {(isFetching || isFetchingOriginal || isFetchingReplies) ? 'Loading…' : 'Refresh'}
+          {(isFetching || isFetchingOriginal || isFetchingReplies) ? t('loading') : t('tokenTopicFeed.refresh')}
         </AeButton>
       </div>
     </div>

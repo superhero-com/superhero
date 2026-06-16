@@ -19,7 +19,11 @@
       "saveProfile": "Profil speichern",
       "sendFeedback": "Feedback senden",
       "retry": "Erneut versuchen",
-      "connectX": "X verbinden"
+      "connectX": "X verbinden",
+      "tip": "Trinkgeld",
+      "viewPortfolio": "Portfolio ansehen",
+      "done": "Fertig",
+      "trade": "Handeln"
     },
     "labels": {
       "superheroHome": "Superhero Startseite",
@@ -65,7 +69,8 @@
       "clickToReverseRankingOrder": "Klicken, um die aktuelle Rangordnung umzukehren",
       "conference": "Konferenz",
       "sortByBalance": "Nach Guthaben sortieren",
-      "clickToExpandTips": "Klicken, um Tipps zu erweitern"
+      "clickToExpandTips": "Klicken, um Tipps zu erweitern",
+      "clickToCopyTokenAddress": "Zum Kopieren der Token-Adresse klicken"
     },
     "aria": {
       "loading": "Wird geladen",
@@ -79,7 +84,10 @@
       "portfolioValueTooltip": "Was umfasst der Portfoliowert?",
       "closeTooltip": "Tooltip schließen",
       "openTrade": "Trade öffnen",
-      "tipPost": "Beitrag mit Trinkgeld versehen"
+      "tipPost": "Beitrag mit Trinkgeld versehen",
+      "openPost": "Beitrag öffnen",
+      "dismissNotification": "Benachrichtigung schließen",
+      "viewToken": "{{token}} ansehen"
     },
     "placeholders": {
       "bio": "Erzählen Sie der Welt von sich",
@@ -88,7 +96,8 @@
       "fullname": "Ihr vollständiger Name",
       "avatarurl": "https://...",
       "username": "ihr_benutzername",
-      "selectChainName": "Wählen Sie einen Ihrer Chain-Namen"
+      "selectChainName": "Wählen Sie einen Ihrer Chain-Namen",
+      "searchSuperhero": "Superhero durchsuchen"
     },
     "messages": {
       "somethingWentWrong": "Etwas ist schiefgelaufen",
@@ -117,20 +126,44 @@
       "xCallbackExchanging": "Verifizierung mit X…",
       "xCallbackConfirmInWallet": "Bestätigen Sie die Transaktion in Ihrer Wallet, um Ihren X-Benutzernamen zu speichern.",
       "xCallbackSuccess": "X-Konto erfolgreich verknüpft.",
-      "xCallbackGoToProfile": "Zum Profil"
+      "xCallbackGoToProfile": "Zum Profil",
+      "transactionFailed": "Transaktion fehlgeschlagen",
+      "copiedExclaim": "Kopiert!"
     },
     "portfolio": {
       "portfolioValue": "Portfoliowert",
       "failedToLoad": "Portfoliodaten konnten nicht geladen werden",
       "profitLoss": "Gewinn/Verlust:",
       "loadingPortfolio": "Portfoliodaten werden geladen...",
-      "noDataAvailable": "Keine Portfoliodaten verfügbar"
+      "noDataAvailable": "Keine Portfoliodaten verfügbar",
+      "valueTooltipDescription": "Der Portfoliowert zeigt den kombinierten Wert aus AE-Guthaben und in dieser Wallet gehaltenen Trend-Token. Das Diagramm verfolgt, wie sich dieser Wert im Laufe der Zeit verändert."
     },
     "account": {
       "token": "Token",
       "price": "Preis",
       "totalValue": "Gesamtwert",
-      "amount": "Betrag"
+      "amount": "Betrag",
+      "type": "Typ",
+      "volume": "Volumen",
+      "date": "Datum",
+      "transaction": "Transaktion",
+      "failedToLoadTransactions": "Transaktionen konnten nicht geladen werden",
+      "tokenLabel": "Token:",
+      "typeLabel": "Typ:",
+      "volumeLabel": "Volumen:",
+      "unitPriceLabel": "Stückpreis:",
+      "dateLabel": "Datum:",
+      "txLabel": "Tx:",
+      "txTypeCreated": "ERSTELLT",
+      "txTypeTrade": "HANDEL",
+      "noTransactionsFound": "Keine Transaktionen gefunden, die Ihrer Suche entsprechen.",
+      "loadingTrades": "Trades werden geladen...",
+      "aeBalance": "AE-Guthaben",
+      "claimAeVerifyX": "Sichern Sie sich 100 AE, indem Sie Ihr X-Konto verifizieren.",
+      "aeBalanceLabel": "AE-Guthaben: ",
+      "tokenHoldings": "Token-Bestände:",
+      "moreTokens": "+ {{count}} weitere...",
+      "noPostsYet": "Noch keine Beiträge"
     },
     "layout": {
       "openSource": "Superhero ist Open Source",
@@ -154,7 +187,11 @@
       "marketCap": "Marktkapitalisierung",
       "totalTokens": "Token gesamt",
       "liveTrending": "Live-Trends",
-      "searchForTag": "Nach {{tag}} suchen (Score: {{score}})"
+      "searchForTag": "Nach {{tag}} suchen (Score: {{score}})",
+      "mobileNavigation": "Mobile Navigation",
+      "moreOptions": "Weitere Optionen",
+      "more": "Mehr",
+      "proTips": "Profi-Tipps"
     },
     "buyAeRail": {
       "title": "AE kaufen",
@@ -202,6 +239,487 @@
         "removeRecentPost": "Diesen Beitrag aus den letzten Suchen entfernen",
         "removeRecentDefault": "Aus den letzten Suchen entfernen"
       }
+    },
+    "feedback": {
+      "subtitle": "Helfen Sie uns, Superhero zu verbessern",
+      "line1": "Einen Fehler gefunden oder einen Vorschlag?",
+      "line2": "Klicken Sie unten, um ihn auf GitHub zu melden und Superhero besser zu machen!",
+      "openGitHub": "GitHub öffnen",
+      "closeOverlayAria": "Feedback-Fenster schließen"
+    },
+    "views": {
+      "wallet": {
+        "hero": {
+          "badge": "Multichain-Wallet"
+        },
+        "features": {
+          "eyebrow": "Funktionen",
+          "titleLine1": "Alles, was Sie brauchen",
+          "titleLine2": "in einer Multichain-Wallet",
+          "description": "Superhero Wallet gibt Ihnen die volle Kontrolle über Ihre Vermögenswerte auf mehreren Blockchains – mit einer einfachen, sicheren Oberfläche."
+        },
+        "cards": {
+          "multichain": {
+            "title": "Multichain-Unterstützung",
+            "description": "Verwalten Sie Ethereum-, Bitcoin-, Dogecoin-, BNB-Chain- und æternity-Vermögenswerte aus einer einzigen Wallet. Kein Wechseln zwischen Apps."
+          },
+          "secure": {
+            "title": "Sicher & nicht verwahrend",
+            "description": "Ihre Schlüssel, Ihre Kontrolle. Superhero stellt sicher, dass Ihre privaten Schlüssel und Vermögenswerte sicher und vollständig in Ihrem Eigentum bleiben."
+          },
+          "cryptoManagement": {
+            "title": "Krypto- & Token-Verwaltung",
+            "description": "Speichern, senden und empfangen Sie Kryptowährungen und Token mit einer intuitiven Oberfläche, die die Verwaltung von Vermögenswerten unkompliziert und effizient macht."
+          },
+          "coldSigning": {
+            "title": "Cold Signing mit AIRGAP Vault",
+            "description": "Erhöhen Sie die Sicherheit, indem Sie Superhero mit AIRGAP Vault für Cold Signing koppeln, sodass Ihre privaten Schlüssel niemals mit dem Internet in Berührung kommen."
+          },
+          "dappIntegration": {
+            "title": "Erweiterte DApp-Integration",
+            "description": "Verbinden und interagieren Sie mit dezentralen Anwendungen auf den Blockchains von æternity und Ethereum und erhalten Sie Zugang zu DeFi, DAOs und mehr."
+          },
+          "multisig": {
+            "title": "Multisig-Unterstützung für erhöhte Sicherheit",
+            "description": "Verwalten Sie Multisignatur-Vaults (Multisig) auf der æternity-Blockchain, ideal für gemeinsame Kontrolle oder gemeinsame Vermögensverwaltung."
+          },
+          "chainNames": {
+            "title": ".chain-Namen kaufen",
+            "description": "Vereinfachen Sie Blockchain-Interaktionen mit dem æternity Naming System (AENS), mit dem Sie für Wallet-Adressen menschenlesbare Namen registrieren und verwenden können."
+          },
+          "biometric": {
+            "title": "Biometrische Anmeldung für mobile Geräte",
+            "description": "Greifen Sie schnell und sicher mit biometrischer Authentifizierung auf Ihre Wallet zu – für mehr Komfort und Sicherheit."
+          },
+          "importAccounts": {
+            "title": "Konten aus Cold Wallet oder Ledger importieren",
+            "description": "Importieren Sie mühelos bestehende Konten aus anderen Wallets über Ihren privaten Schlüssel oder Ledger und erhalten Sie sofortigen Zugriff auf Ihre Vermögenswerte und Transaktionen."
+          },
+          "addressBook": {
+            "title": "Praktisches Adressbuch",
+            "description": "Speichern Sie häufig verwendete Adressen in Ihrem persönlichen Adressbuch und machen Sie Transaktionen schneller und übersichtlicher."
+          }
+        },
+        "download": {
+          "eyebrow": "Herunterladen",
+          "title": "Superhero Wallet holen",
+          "description": "Wählen Sie die passende Option für Ihre Plattform und Ihren Anwendungsfall.",
+          "getChromeExtension": "Chrome-Erweiterung holen",
+          "desktopWeb": {
+            "title": "Desktop-Web",
+            "description": "Um Superhero im Desktop-Web zu nutzen, benötigen Sie die Superhero Wallet Chrome-Erweiterung, um Transaktionen zu signieren und Ihre Schlüssel zu verwalten."
+          },
+          "mobileBrowser": {
+            "title": "Mobiler Browser",
+            "description": "Um Superhero in einem mobilen Browser zu nutzen, benötigen Sie die Superhero Wallet App auf Ihrem Gerät, um Transaktionen zu signieren."
+          }
+        },
+        "faq": {
+          "title": "Häufig gestellte Fragen"
+        },
+        "cta": {
+          "title": "Übernehmen Sie die Kontrolle über Ihre Kryptowährungen",
+          "description": "Laden Sie Superhero Wallet herunter und verwalten Sie all Ihre Vermögenswerte in einer sicheren Multichain-Wallet."
+        }
+      },
+      "privacy": {
+        "title": "DATENSCHUTZERKLÄRUNG",
+        "lastUpdated": "Die vorliegende Datenschutzerklärung wurde zuletzt am 29. September 2025 aktualisiert.",
+        "introHeading": "I. Einleitung",
+        "introP1": "Superhero.com ist ein quelloffenes, dezentrales Protokoll, das auf der æternity-Blockchain bereitgestellt wird. Das Protokoll arbeitet verteilt, und keine einzelne Partei kontrolliert oder betreibt die zugrunde liegenden Smart Contracts. Nutzer interagieren direkt mit dem Protokoll, nach eigenem Ermessen und auf eigenes Risiko.",
+        "introP2": "Superhero.com LVC, mit der Anschrift Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein (\"das Unternehmen\"), stellt diese Website und die zugehörigen Schnittstellen (die \"Schnittstelle\") bereit und betreibt sie, um den Zugang zum Protokoll zu erleichtern.",
+        "introP3": "Diese Datenschutzerklärung erläutert, wie Superhero.com Informationen im Zusammenhang mit Ihrer Nutzung der Plattform und ihrer Website/Schnittstelle behandelt. Wenn Sie Fragen zu dieser Richtlinie haben, kontaktieren Sie uns bitte unter superherowallet@protonmail.com. Wenn Sie den Bedingungen dieser Richtlinie nicht zustimmen, nutzen Sie die Website bitte nicht. Bei jeder Nutzung der Website gilt die jeweils aktuelle Version dieser Richtlinie. Die neue Version der Datenschutzerklärung wird ab dem Tag wirksam, an dem sie öffentlich auf der Website bekannt gegeben wird, sofern nicht anders angegeben.",
+        "definitionsHeading": "II. Definitionen",
+        "collectionHeading": "III. Erhebung personenbezogener Daten",
+        "collectionIntro": "Die Plattform ist so konzipiert, dass sie dezentral arbeitet. Alle Nutzerinteraktionen mit der Anwendung erfolgen direkt auf der Blockchain. Daraus folgt:",
+        "collectionLi1": "Wir erheben, speichern oder verarbeiten keine personenbezogenen Daten im Zusammenhang mit On-Chain-Transaktionen.",
+        "collectionLi2": "Auf der Blockchain aufgezeichnete Wallet-Adressen und Transaktionsinformationen unterliegen nicht unserer Kontrolle und können nicht geändert, gelöscht oder verändert werden.",
+        "collectionLi3": "Wir verfolgen, protokollieren oder erheben keine Off-Chain-Kennungen wie IP-Adressen, Cookies oder Analysedaten, sofern dies nicht an anderer Stelle in dieser Datenschutzerklärung ausdrücklich angegeben ist.",
+        "implicationsHeading": "Auswirkungen für Nutzer",
+        "implicationsLi1": "Ihre Aktivität auf der Blockchain ist pseudonym, kann jedoch als personenbezogene Daten im Sinne der DSGVO gelten, wenn sie mit einer identifizierbaren Person verknüpft werden kann.",
+        "implicationsLi2": "Da wir die Blockchain nicht kontrollieren, können wir On-Chain-Daten nicht ändern oder löschen, und wir handeln in Bezug auf solche Informationen nicht als Verantwortlicher.",
+        "implicationsLi3": "Alle freiwillig übermittelten Off-Chain-Daten (zum Beispiel Support-Anfragen) werden in Übereinstimmung mit der DSGVO und den einschlägigen Datenschutzgesetzen verarbeitet.",
+        "supportHeading": "Personenbezogene Daten im Zusammenhang mit Nutzersupport und Kommunikation",
+        "supportP1": "Während der Nutzung unserer Website können Nutzer beschließen, das Team in Bezug auf Website-Support, die Behebung von Problemen, Fragen usw. zu kontaktieren. Die Erhebung personenbezogener Daten wird von den Nutzern initiiert, und sie entscheiden, welche Art von personenbezogenen Daten sie in die Kommunikation einbeziehen. Daher besteht die Rechtsgrundlage für die Verarbeitung darin, dass der Nutzer seine Einwilligung in die Verarbeitung seiner personenbezogenen Daten für einen oder mehrere bestimmte Zwecke gegeben hat, namentlich Artikel 6(1) der Datenschutz-Grundverordnung (Verordnung (EU) 2016/679). Die Aufbewahrungsfrist gilt, bis die Fragen beantwortet wurden, das Team Unterstützung geleistet hat, die Probleme gelöst wurden oder in jedem anderen Fall bis zum Widerruf der Einwilligung. Superhero.com kann personenbezogene Informationen für einen zusätzlichen Zeitraum aufbewahren, wenn dies gesetzlich vorgeschrieben ist oder zur Verhütung von Straftaten/Verstößen/Rechtsverletzungen sowie zur Sicherheit erforderlich ist.",
+        "rightsHeading": "IV. Ihre Rechte",
+        "rightsIntro": "In Bezug auf die gegebenenfalls off-chain gespeicherten Informationen haben SIE das Recht:",
+        "rightsLi1": "von Superhero.com Zugang zu den personenbezogenen Daten anzufordern, die wir über Sie speichern, in einem übertragbaren Format.",
+        "rightsLi2": "von Superhero.com die Berichtigung aller erhobenen personenbezogenen Daten zu verlangen. Die Informationen dürfen nur Ihre eigene Datenerhebung umfassen.",
+        "rightsLi3": "eine Kopie Ihrer personenbezogenen Daten in elektronischem Format zu erhalten.",
+        "rightsLi4": "„Das Recht auf Vergessenwerden“ – Sie haben das Recht, jederzeit die Löschung Ihrer personenbezogenen Daten zu verlangen, sofern die Aufbewahrung solcher Daten gegen einschlägige Rechtsvorschriften verstößt.",
+        "rightsLi5": "von uns Informationen über unsere Tätigkeiten im Zusammenhang mit Ihren personenbezogenen Daten zu erhalten, einschließlich der Zwecke der Erhebung und Speicherung, des Speicherzeitraums, der Erhebungsmethoden und des Vorhandenseins automatisierter Verarbeitung.",
+        "rightsLi6": "Ihre Daten zu erhalten und an einen anderen Verantwortlichen zu übertragen.",
+        "rightsLi7": "Sie haben das Recht, bei einer Aufsichtsbehörde Beschwerde einzulegen, insbesondere im Mitgliedstaat Ihres gewöhnlichen Aufenthalts, Ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes, wenn Sie der Ansicht sind, dass eine Verletzung des Schutzes personenbezogener Daten vorliegt.",
+        "sharingHeading": "V. Weitergabe personenbezogener Informationen an Dritte – Empfänger",
+        "sharingP1": "Wir können identifizierbare personenbezogene Informationen von NUTZERN unter besonderen Umständen an Dritte weitergeben: (i) zur Erfüllung einer rechtlichen Anforderung, eines Gerichtsverfahrens, einer gerichtlichen Anordnung oder eines Superhero.com oder seinen verbundenen Unternehmen zugestellten Rechtsverfahrens; (ii) zur Untersuchung einer möglichen Straftat, etwa Betrug oder Identitätsdiebstahl; (iii) an Behörden im Einklang mit ihrer gesetzlichen Verpflichtung zur Ausübung ihres amtlichen Auftrags, etwa Steuer- und Zollbehörden, Finanzermittlungsstellen, unabhängige Verwaltungsbehörden oder Finanzmarktbehörden, die für die Aufsicht über Wertpapiermärkte zuständig sind; (iv) im Zusammenhang mit dem Verkauf, Kauf, einem Geschäftsübergang in beliebiger Form, einer Fusion, Auflösung, Umstrukturierung oder Liquidation von Superhero.com (wir müssen die uns von Ihnen gegebenen Informationen möglicherweise an den Nachfolger weitergeben, der Teil des Übergangs ist); (v) wenn wir es für notwendig halten, die Rechte, das Eigentum oder die Sicherheit von Superhero.com oder anderen Personen zu schützen; oder (vi) wie anderweitig gesetzlich vorgeschrieben oder zulässig, einschließlich vertraglicher Verpflichtungen von Superhero.com.",
+        "childrenHeading": "VI. Kinder und Datenschutz",
+        "childrenP1": "Superhero.com verarbeitet aufgrund des Charakters der Website und der Wallet keine Informationen von Personen, die das Alter der vollen Geschäftsfähigkeit (in den meisten Ländern 18 Jahre) noch nicht erreicht haben. Superhero.com wird alle personenbezogenen Daten, die sich auf Personen unter dem Alter der vollen Geschäftsfähigkeit beziehen, unverzüglich löschen. Wir haften in keiner Weise, wenn SIE falsche Angaben zu Ihrem Alter machen oder die Website nutzen, bevor SIE das oben genannte Alter erreicht haben.",
+        "breachHeading": "VII. Maßnahmen bei Verletzungen",
+        "breachP1": "Im Falle einer Verletzung werden wir gemäß den geltenden Rechtsvorschriften alle möglichen Maßnahmen in angemessener und zeitnaher Weise ergreifen, um materielle oder immaterielle Schäden für Nutzer zu vermeiden und die personenbezogenen Daten der Nutzer zu schützen.",
+        "contactHeading": "VIII. Wie kontaktiere ich Superhero.com?",
+        "contactP1": "Um uns mit Ihren Fragen oder Anmerkungen zu dieser Richtlinie oder zu den für Ihre Nutzung der Website relevanten Praktiken der Informationserhebung und -verbreitung von Superhero.com zu kontaktieren, senden Sie uns bitte eine E-Mail an superherowallet@protonmail.com."
+      },
+      "landing": {
+        "heroBadge": "Neuer Paradigmenwechsel in Aufmerksamkeitsmärkten",
+        "heroTitleLine1": "Trends zu folgen",
+        "heroTitleLine2": "hat jetzt eine neue Bedeutung",
+        "heroSubtitle": "Superhero ist der On-Chain-Aufmerksamkeitsmarkt, auf dem Sie die Trends, an die Sie glauben, entdecken, handeln und mitgestalten können – noch vor allen anderen.",
+        "downloadOnMobile": "Auf dem Handy herunterladen",
+        "openclawOrClaude": "Openclaw oder Claude",
+        "continueOnWeb": "Im Web fortfahren",
+        "whatIsEyebrow": "Was ist Superhero?",
+        "whatIsTitleLine1": "Ein dezentraler Aufmerksamkeitsmarkt",
+        "whatIsTitleLine2": "für soziale Trends",
+        "whatIsDescription": "Wo Creator ihre Inhalte besitzen, Communitys zu handelbaren Märkten werden und Aufmerksamkeit in Echtzeit bepreist wird.",
+        "features": {
+          "ownContent": {
+            "title": "Besitzen Sie Ihre Inhalte & Identität",
+            "description": "On-Chain-Beiträge und die Superhero Onchain ID geben Creatorn volles Eigentum. Ihre Inhalte sind unveränderlich, Ihre Identität gehört Ihnen."
+          },
+          "tradableMarkets": {
+            "title": "Handelbare Trend-Märkte",
+            "description": "Communitys und Hashtags werden über Bonding-Curve-Token handelbar. Aufmerksamkeit und Überzeugung spiegeln sich direkt im Preis wider."
+          },
+          "attentionMarket": {
+            "title": "Aufmerksamkeitsmarkt",
+            "description": "Trends = Hashtags = Communitys = Token. Erhalten Sie Echtzeit-Marktdaten zu Aufmerksamkeit und Stimmung für jeden Trend oder jede Community."
+          },
+          "rewards": {
+            "title": "Belohnungen & Empfehlungen",
+            "description": "Die Plattform belohnt Teilnahme über ein Affiliation-System und den ProtocolDAO-Token. Engagieren Sie sich, empfehlen Sie weiter und verdienen Sie."
+          },
+          "posts": {
+            "title": "On-Chain-Beiträge & Tipping",
+            "description": "Unveränderliche Inhalte, verankert in überprüfbaren Ereignissen. Geben Sie Creatorn direkt ein Trinkgeld – jede Interaktion ist transparent und dauerhaft."
+          },
+          "identity": {
+            "title": "On-Chain-Identität",
+            "description": "Wallet + Chain-Namen + X-Handle – alle miteinander verknüpft. Ihre Identität lebt On-Chain, nicht auf einem Unternehmensserver."
+          }
+        },
+        "id": {
+          "eyebrow": "Superhero ID",
+          "titleLine1": "Dezentrale Identität,",
+          "titleLine2": "W3C-Standard",
+          "description": "Eine dezentrale DID, die Ihre sozialen Konten mit Ihrer Wallet verknüpft. Ihre Identität ist überprüfbar, portabel und zensurresistent – nach dem W3C-Standard für dezentrale Identifikatoren.",
+          "readWhitepaper": "Whitepaper lesen",
+          "point1": "Konform mit dem W3C-DID-Standard",
+          "point2": "Verknüpft Wallet, Chain-Namen und X-Handle",
+          "point3": "Selbstbestimmt – Sie kontrollieren Ihre Daten",
+          "imageAlt": "Visuelles Mockup der Superhero ID"
+        },
+        "mobile": {
+          "eyebrow": "Mobile App",
+          "titleLine1": "Nahtlose Erfahrung,",
+          "titleLine2": "Wallet integriert",
+          "imageAlt": "Mockup der mobilen Superhero-App",
+          "description": "Die Superhero-App verfügt über eine integrierte Wallet, sodass Sie posten, handeln, Trinkgeld geben und mitbestimmen können – ganz ohne die App zu verlassen. Keine Erweiterungen, keine Reibung.",
+          "appStorePre": "Herunterladen im",
+          "appStore": "App Store",
+          "googlePlayPre": "Erhältlich bei",
+          "googlePlay": "Google Play"
+        },
+        "bottomCta": {
+          "title": "Bereit, den nächsten Trend zu entdecken?",
+          "subtitle": "Treten Sie dem Aufmerksamkeitsmarkt bei. Handeln Sie Überzeugung. Besitzen Sie Ihre Identität."
+        }
+      },
+      "branding": {
+        "brandKit": "Superhero Brand Kit",
+        "heroTitle": "Richtlinien zur Markenidentität",
+        "heroDescription": "Willkommen im offiziellen Superhero-Ressourcen-Hub. Dieser Leitfaden beschreibt unsere Markenfarben, Typografie, Logos und digitalen Asset-Vorlagen, um Ihnen bei der Erstellung von Material zu helfen.",
+        "colorPaletteTitle": "Markenfarbpalette",
+        "copyHexCode": "HEX-Code kopieren",
+        "typographyTitle": "Typografie-System",
+        "primaryTypeface": "Primäre Schriftart",
+        "interDescription": "Inter ist eine quelloffene, moderne Schriftfamilie, die sorgfältig für hohe Lesbarkeit auf Bildschirmen gestaltet wurde.",
+        "headingStyle": "Überschriften-Stil",
+        "headingSample": "Aufmerksamkeitsmärkte",
+        "bodyText": "Fließtext",
+        "bodySample": "Folgen Sie Trends on-chain in einem dezentralen Netzwerk.",
+        "weightRegular": "Regular",
+        "weightSemibold": "Semibold",
+        "weightBlack": "Black",
+        "logosTitle": "Logos und Ikonografie",
+        "fullLogoAlt": "Vollständiges Superhero-Logo",
+        "fullLogoTitle": "Vollständiges Logo (SVG)",
+        "fullLogoDescription": "Unser Haupt-Kombinationslogo mit dem Markennamen Superhero neben dem charakteristischen blauen Power-Shield-Icon.",
+        "downloadSvg": "SVG herunterladen",
+        "faviconTitle": "Kleines Logo / Favicon",
+        "faviconDescription": "Das minimalistische geometrische Shield-Icon. Auch in kleinem Maßstab gut erkennbar, ideal für Browser-Tabs, App-Icons und Avatar-Rahmen.",
+        "squareLogoAlt": "Quadratisches Superhero-Logo",
+        "squareLogoTitle": "Quadratisches Markenlogo",
+        "squareLogoDescription": "Hochwertige PNG-Darstellung des quadratischen Logo-Emblems. Optimal für Profilbilder in sozialen Netzwerken, Verzeichnisse und gängige App Stores.",
+        "downloadPng": "PNG herunterladen",
+        "bannersTitle": "Digitale Banner & Assets",
+        "ogBannerAlt": "Superhero OG Social Banner",
+        "ogBannerTitle": "Standard-OG-Social-Banner",
+        "ogBannerDescription": "Die Standard-Metadatenkarte zum Teilen für Twitter, Telegram, Discord oder Facebook.",
+        "interfaceShowcaseAlt": "Superhero Interface Showcase",
+        "appInterfacePreview": "Vorschau der App-Oberfläche",
+        "appShowcaseTitle": "App-Showcase-Screenshot",
+        "appShowcaseDescription": "App-Screenshot, der Layout der Oberfläche, Trendthemen, Feeds und Kryptowährungskomponenten hervorhebt.",
+        "customIconsTitle": "Benutzerdefinierte Icons",
+        "downloadIcon": "{{name}}-Icon herunterladen"
+      },
+      "terms": {
+        "title": "NUTZUNGSBEDINGUNGEN",
+        "lastUpdated": "Die vorliegenden Nutzungsbedingungen (\"Bedingungen\") wurden zuletzt am 29. September 2025 aktualisiert.",
+        "section1Title": "I. Unternehmensinformationen",
+        "section1Para1": "Superhero.com ist ein quelloffenes, dezentrales Protokoll, das auf der æternity-Blockchain bereitgestellt wird. Das Protokoll arbeitet verteilt, und keine einzelne Partei kontrolliert oder betreibt die zugrunde liegenden Smart Contracts. Nutzer interagieren direkt mit dem Protokoll, nach eigenem Ermessen und auf eigenes Risiko.",
+        "section1Para2": "Superhero.com LVC, mit der Anschrift Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein (\"das Unternehmen\"), stellt diese Website und die zugehörigen Schnittstellen (die \"Schnittstelle\") bereit und betreibt sie, um den Zugang zum Protokoll zu erleichtern. Das Unternehmen verwahrt keine Vermögenswerte, führt keine Transaktionen im Namen von Nutzern aus und kontrolliert nicht den Betrieb des dezentralen Protokolls.",
+        "section1Para3": "Durch die Nutzung der Schnittstelle erkennen Sie an, dass alle Transaktionen direkt auf der Blockchain, außerhalb der Kontrolle des Unternehmens, erfolgen und dass Sie allein für die Sicherung Ihrer digitalen Vermögenswerte, privaten Schlüssel und die Einhaltung der geltenden Gesetze verantwortlich bleiben. Durch den Zugriff auf die Website oder deren Nutzung sichern Sie zu und gewährleisten, dass Sie mindestens 18 Jahre alt sind (oder das Volljährigkeitsalter in Ihrem Rechtsgebiet, falls höher) und die rechtliche Befugnis besitzen, diese Bedingungen einzugehen.",
+        "section2Title": "II. Gegenstand der Tätigkeit",
+        "section2Para1": "Superhero.com hat eine Website entwickelt, die als Newsfeed die Spenden und Kommentare der Nutzer zu Nachrichten über alles, was sie im Internet mögen, widerspiegelt und anderen Nutzern die Möglichkeit gibt, aktiv zu spenden und die im Newsfeed verfügbaren Nachrichten zu kommentieren. Dieser Informations-Hub ermöglicht es Nutzern, informative und genaue Updates über alles auf der Welt zu fördern – ob von Nachrichtenorganisationen oder normalen Menschen erstellt. Aufgrund der aktiven Rolle der Nutzer ist die Website daher eine Plattform, auf der globale Echtzeit-Updates über die besten Inhalte geteilt werden.",
+        "section2Para2": "Superhero.com ermöglicht es Nutzern, mithilfe eines dezentralen Protokolls zu swappen, zu wrappen und zu bridgen. Swap ermöglicht es Nutzern, native AE-Token und AEX-9-Token direkt miteinander auszutauschen. Transaktionen werden direkt on-chain ausgeführt, sind unumkehrbar, und Nutzer behalten die volle Verantwortung für ihre Vermögenswerte und Schlüssel. Wrap wandelt AE in Wrapped AE (wAE) zur Nutzung in DeFi um und bei Bedarf wieder zurück. Die ETH-Bridge ermöglicht es Nutzern, natives ETH von der Ethereum-Blockchain als æETH nach æternity zu übertragen, das anschließend automatisch in AE-Token getauscht wird. Pool – Nutzer stellen Liquidität in Pools bereit, die die Swaps der dezentralen Börse (DEX) ermöglichen, und sie beteiligen sich an den Transaktionsgebühren. Alle diese Funktionen laufen direkt aus der Wallet des Nutzers in On-Chain-Smart-Contracts, ohne Zwischenhändler. Sie sind trustless, das heißt, Nutzer behalten jederzeit die Kontrolle über ihre Vermögenswerte.",
+        "section3Title": "III. Rechtlicher Hinweis",
+        "section3Para1": "Superhero.com fungiert als dezentrales, quelloffenes Protokoll, über das Nutzer ohne Zwischenhändler direkt auf der Blockchain interagieren. Bei der Nutzung der Website bleiben Sie allein für die Sicherheit Ihrer privaten Schlüssel und Wallets verantwortlich, da die Website dezentral arbeitet und die volle Kontrolle über Vermögenswerte und Schlüssel bei Ihnen verbleibt. Jede Nutzung der Website erfolgt direkt auf der Blockchain über ein dezentrales Protokoll, wobei Nutzer die volle Verantwortung für den Schutz ihrer Vermögenswerte und ihre Transaktionsentscheidungen behalten. Nichts auf der Website stellt eine Anleitung oder professionelle Beratung dar. Nutzer sind allein für die Verwendung ihrer Vermögenswerte und die über das Protokoll durchgeführten Aktivitäten verantwortlich. Es liegt in der alleinigen Verantwortung der Nutzer, die mit der Nutzung der Website verbundenen Risiken einzuschätzen, einschließlich, aber nicht beschränkt auf Marktvolatilität, regulatorische Änderungen und mögliche technische Schwachstellen. Die Website wird \"wie besehen\" und \"wie verfügbar\" bereitgestellt, ohne jegliche ausdrückliche oder stillschweigende Gewährleistung. Im größtmöglichen gesetzlich zulässigen Umfang lehnen die Website und ihre Mitwirkenden jede Haftung für direkte, indirekte, zufällige oder Folgeschäden ab, die sich aus oder in Verbindung mit der Nutzung der Website ergeben, einschließlich, aber nicht beschränkt auf den Verlust von Geldern, Daten oder Gewinnen. Sie sind dafür verantwortlich, sicherzustellen, dass Ihre Nutzung der Website den für Sie geltenden Gesetzen und Vorschriften entspricht. Da die Website quelloffen ist, können Bereitstellungen unabhängig von Community-Mitgliedern betrieben werden. Superhero.com ist nicht verantwortlich für den Betrieb, die Änderung oder die Konformität von Instanzen Dritter oder von der Community betriebener Instanzen.",
+        "section4Title": "IV. Urheberrechtshinweis zu Links Dritter",
+        "section4Para1": "Bitte beachten Sie, dass die Hauptfunktion der Website darin besteht, Spenden und Kommentare von Nutzern zu Dritten – Organisationen oder normalen Menschen – die Online-Nachrichten zu den besten Inhalten teilen, objektiv und ohne Eingriff widerzuspiegeln. Daher ist Superhero.com nicht Eigentümer oder Urheber der im Newsfeed geteilten Inhalte und beansprucht in keiner Weise Rechte an den Materialien, weder ganz noch teilweise. Die im Newsfeed veröffentlichten Materialien sind geistiges Eigentum der in den Links Dritter genannten Personen oder Organisationen. In Bezug auf Links Dritter beachten Sie bitte, dass Nutzer durch Anklicken der verfügbaren Hyperlinks zu Websites Dritter weitergeleitet werden. Diese Websites Dritter stehen nicht mit Superhero.com in Verbindung und haben unabhängige und gesonderte Richtlinien für ihre Nutzung. Nutzer sollten sich über die für jede Website geltenden Regeln informieren und ihr Online-Verhalten entsprechend ausrichten. Bitte beachten Sie, dass das Erscheinen der Links im Newsfeed nicht der Kontrolle von Superhero.com, sondern der Nutzer unterliegt. Superhero.com übernimmt keinerlei Verantwortung oder Haftung in Bezug auf die von Dritten bereitgestellten Informationen und deren Hyperlink-Bezug auf der Website. Die Hyperlinks können zu Nachrichten mit für einige Personen höchst sensiblen oder unangemessenen Inhalten weiterleiten. Nutzer klicken auf die Hyperlinks und besuchen die Websites Dritter auf eigenes Risiko.",
+        "section5Title": "V. Urheberrechtshinweis zur Website",
+        "section5Para1": "Die Bedingungen gelten für die folgende Internetadresse: https://superhero.com/ (nachfolgend die „Website“). Superhero.com unterstützt den Betrieb dieser Website, die als Schnittstelle zum dezentralen Protokoll dient. Das Konzept der Website, das Layout der Website sowie die integrierten Komponenten und Strukturen für ihre Erstellung, einschließlich, aber nicht beschränkt auf Logos, Marken, Domainnamen und Codes, die in irgendeiner Weise auf der Website erscheinen oder über die Website https://superhero.com/ in irgendeiner Weise zugänglich sind, sind durch die geltenden Gesetze zum Schutz des geistigen Eigentums geschützt. Daher gehören sie ausschließlich und allein Superhero.com, und die Verwendung der oben genannten Elemente unterliegt einer vorherigen Genehmigung. Keines der oben genannten Elemente darf ohne die vorherige schriftliche Zustimmung von Superhero.com in irgendeiner Weise, teilweise oder ganz, auf jeglichem Medium reproduziert, kopiert, bearbeitet, übertragen, heruntergeladen oder verbreitet werden. Davon abgesehen ist die Nutzung für Pressezwecke ausschließlich unter Einhaltung der genannten Rechte am geistigen Eigentum gestattet. Das Kopieren ist nur für den privaten, nicht-kommerziellen, persönlichen Gebrauch auf den persönlichen technischen Geräten des Nutzers (einschließlich Telefon, Laptop, Computer, Tablet) gestattet. Die zulässige Nutzung darf in keiner Weise verfälscht, modifiziert, geändert oder verändert werden.",
+        "section6Title": "VI. Schadloshaltung",
+        "section6Intro": "Im größtmöglichen gesetzlich zulässigen Umfang erklären Sie sich bereit, Superhero.com, seine verbundenen Unternehmen, Mitwirkenden, Entwickler, leitenden Angestellten, Direktoren, Mitarbeiter, Auftragnehmer und Vertreter (zusammen die „schadlos gehaltenen Parteien“) von und gegen sämtliche Ansprüche, Forderungen, Klagen, Verfahren, Untersuchungen, Haftungen, Schäden, Verluste, Kosten und Ausgaben (einschließlich angemessener Anwaltskosten) zu entschädigen, zu verteidigen und schadlos zu halten, die sich aus Folgendem ergeben oder damit zusammenhängen:",
+        "section6Item1Title": "Ihre Nutzung der Website",
+        "section6Item1Bullet1": "Ihrem Zugriff auf oder Ihrer Nutzung der Website, der Schnittstelle oder des zugrunde liegenden dezentralen Protokolls;",
+        "section6Item1Bullet2": "jeglichen Transaktionen, die Sie über die Blockchain unter Verwendung der Website initiieren, autorisieren oder ausführen;",
+        "section6Item2Title": "Verstoß gegen die Bedingungen / Missbrauch",
+        "section6Item2Bullet1": "Ihrem Verstoß gegen diese Nutzungsbedingungen oder geltende Gesetze, Vorschriften oder Rechte Dritter;",
+        "section6Item2Bullet2": "Ihrem Missbrauch der Website, einschließlich Versuchen, in unbefugter Weise auf Daten oder Dienste zuzugreifen;",
+        "section6Item3Title": "Regulatorische und steuerliche Angelegenheiten",
+        "section6Item3Bullet1": "Ihrer Nichteinhaltung steuerlicher, melderechtlicher oder regulatorischer Pflichten im Zusammenhang mit Ihrer Nutzung der Website;",
+        "section6Item4Title": "Nutzerinhalte und Verhalten",
+        "section6Item4Bullet1": "jeglichen Informationen, Daten oder Inhalten, die Sie über die Website übermitteln, posten oder übertragen;",
+        "section6Item4Bullet2": "jeglichem betrügerischen, fahrlässigen oder rechtswidrigen Verhalten Ihrerseits im Zusammenhang mit Ihrer Nutzung der Website.",
+        "section6Para2": "Sie erkennen an und stimmen zu, dass die dezentrale Natur des Protokolls bedeutet, dass die schadlos gehaltenen Parteien keine Kontrolle über On-Chain-Transaktionen haben und keine Verantwortung dafür übernehmen, und dass Sie die volle Verantwortung für die Sicherung Ihrer privaten Schlüssel, digitalen Vermögenswerte und die Einhaltung geltender rechtlicher und regulatorischer Anforderungen tragen. Diese Schadloshaltung gilt unabhängig davon, ob die Ansprüche aus Vertrag, unerlaubter Handlung (einschließlich Fahrlässigkeit), Gefährdungshaftung oder einer anderen Rechtsgrundlage entstehen, und besteht über Ihre Nutzung der Website und die Beendigung dieser Bedingungen hinaus fort.",
+        "section7Title": "VII. Anwendbares Recht und Gerichtsstand",
+        "section7Para1": "Diese Bedingungen unterliegen dem Recht des Fürstentums Liechtenstein und sind in Übereinstimmung mit diesem auszulegen, ohne Rücksicht auf dessen Kollisionsnormen. Jede Streitigkeit, Kontroverse oder jeder Anspruch, der sich aus oder im Zusammenhang mit diesen Bedingungen ergibt, einschließlich ihrer Gültigkeit, Auslegung, Erfüllung oder Beendigung, ist der ausschließlichen Zuständigkeit der Gerichte von Vaduz, Liechtenstein, zu unterwerfen. Die Parteien verzichten ausdrücklich auf jeden Einwand wegen ungelegenen Gerichtsstands oder fehlender Zuständigkeit und vereinbaren, dass die Gerichte von Vaduz die volle Befugnis haben, solche Streitigkeiten zu verhandeln und zu entscheiden.",
+        "copyrightNotice": "„URHEBERRECHT – 2025 – Superhero.com ALLE RECHTE VORBEHALTEN“. Superhero.com behält sich das Recht vor, alle erforderlichen rechtlichen Schritte gegen jede Verletzung seiner Rechte am geistigen Eigentum einzuleiten. Die oben genannten Regeln gelten für Datenbanken auf der Website, die durch die Richtlinie 96/9/EG des Europäischen Parlaments und des Rates vom 11. März 1996 über den rechtlichen Schutz von Datenbanken geschützt sind. Für weitere Fragen kontaktieren Sie bitte das Team von Superhero.com unter: superherowallet@protonmail.com"
+      },
+      "tokenSummary": {
+        "tokenInformation": "Token-Informationen",
+        "tokenName": "Token-Name",
+        "unknown": "Unbekannt",
+        "daoBalance": "DAO-Guthaben",
+        "totalSupply": "Gesamtangebot",
+        "tokens": "Token",
+        "creationDate": "Erstellungsdatum",
+        "contractAddress": "Vertragsadresse:",
+        "saleAddress": "Verkaufsadresse:",
+        "createdBy": "Erstellt von:",
+        "bondingCurveDescription": "Dieser Token verwendet eine Bonding Curve: Beim Kauf werden neue Token zu einem höheren Preis geprägt; beim Verkauf werden Token verbrannt und AE entlang der Kurve zurückgegeben. Ein Teil der Trades fließt in die DAO-Treasury des Tokens für Vorschläge und Auszahlungen.",
+        "openDao": "DAO öffnen",
+        "inviteAndEarn": "Einladen & verdienen"
+      },
+      "tokenDetail": {
+        "loadingTokenDetails": "Token-Details werden geladen...",
+        "detailsAndStatistics": "Token-Details und -Statistiken",
+        "pools": "Pools ({{count}})",
+        "acrossPools_one": "Über {{count}} Pool",
+        "acrossPools_other": "Über {{count}} Pools",
+        "last24Hours": "Letzte 24 Stunden",
+        "last7Days": "Letzte 7 Tage",
+        "last30Days": "Letzte 30 Tage",
+        "locked": "Gesperrt",
+        "totalSupply": "Gesamtangebot",
+        "symbolTokens": "{{symbol}}-Token",
+        "fullyDilutedValue": "Vollständig verwässerter Wert",
+        "pricePerformance": "Preisentwicklung",
+        "failedToLoad": "Token-Daten konnten nicht geladen werden"
+      },
+      "notFound": {
+        "pageTitle": "Seite nicht gefunden | Superhero.com",
+        "pageDescription": "Die gesuchte Seite existiert nicht.",
+        "lostInThe": "Hoppla! Verloren in der",
+        "blockchain": "Blockchain",
+        "description": "Die gesuchte Seite existiert nicht oder wurde in eine andere Dimension verschoben.",
+        "goHome": "Zur Startseite",
+        "goBack": "Zurück",
+        "orExplore": "Oder erkunden Sie diese Seiten:",
+        "browseTokens": "Token durchsuchen",
+        "createToken": "Token erstellen"
+      },
+      "dexSwap": {
+        "pageTitle": "AE und Token swappen – Superhero DEX",
+        "pageDescription": "Trustless Swapping auf der Superhero DEX mit Live-Charts und jüngster Aktivität."
+      }
+    },
+    "removeLiquidity": {
+      "selectAPosition": "Position auswählen",
+      "selectAPositionHint": "Wählen Sie eine Liquiditätsposition aus der Liste, um Liquidität zu entfernen",
+      "confirmRemoval": "Entfernen bestätigen",
+      "reviewYourTransaction": "Überprüfen Sie Ihre Transaktion",
+      "removingFromPool": "Entfernen aus Pool",
+      "lpTokensToRemove": "Zu entfernende LP-Token",
+      "percentage": "Prozentsatz",
+      "estimatedValue": "Geschätzter Wert",
+      "removing": "Wird entfernt...",
+      "removeLiquidity": "Liquidität entfernen",
+      "removeTokensFromPool": "Token aus Pool entfernen",
+      "position": "Position",
+      "lpBalance": "LP-Guthaben",
+      "amountToRemove": "Zu entfernender Betrag",
+      "slideToAdjust": "Zum Anpassen schieben",
+      "max": "Max.:",
+      "maxButton": "MAX",
+      "removeButton": "{{pct}} Liquidität entfernen"
+    },
+    "modals": {
+      "transactionConfirm": {
+        "confirmBuy": "Kauf bestätigen",
+        "confirmSell": "Verkauf bestätigen",
+        "estimatedOutput": "Geschätzte Ausgabe: {{amount}} {{symbol}}",
+        "orderDetails": "Bestelldetails",
+        "avgTokenPrice": "Durchschn. Token-Preis",
+        "allowUseOfToken": "Verwendung des Tokens erlauben",
+        "confirmTransaction": "Transaktion bestätigen",
+        "checkWalletPrompt": "Bitte überprüfen Sie Ihre Wallet und bestätigen Sie die Transaktion, um fortzufahren.",
+        "confirmInWallet": "In Wallet bestätigen",
+        "confirmTokenCreation": "Token-Erstellung bestätigen",
+        "newToken": "Neuer Token",
+        "initialBuy": "Erstkauf",
+        "youSpend": "Sie geben aus",
+        "youReceiveApprox": "Sie erhalten ~",
+        "youReceive": "Sie erhalten",
+        "estimatedCostApprox": "Geschätzte Kosten ~"
+      },
+      "connectWallet": {
+        "downloadGooglePlay": "Bei Google Play herunterladen",
+        "downloadAppStore": "Im App Store herunterladen",
+        "getWalletApp": "Holen Sie sich die Wallet-App:",
+        "getBrowserExtension": "Holen Sie sich die Browser-Erweiterung",
+        "getExtensionChrome": "Erweiterung für Chrome holen",
+        "getExtensionFirefox": "Erweiterung für Firefox holen",
+        "agreePrefix": "Durch das Verbinden Ihrer Wallet stimmen Sie den",
+        "and": "und"
+      },
+      "tip": {
+        "failedToSend": "Trinkgeld konnte nicht gesendet werden.",
+        "tipSentSuccessfully": "Trinkgeld erfolgreich gesendet.",
+        "viewOnExplorer": "Im Explorer ansehen",
+        "amountAe": "Betrag (AE)",
+        "insufficientBalance": "Unzureichendes Guthaben.",
+        "sendAgain": "Erneut senden",
+        "sendTip": "Trinkgeld senden"
+      },
+      "share": {
+        "title": "Token teilen",
+        "closeModal": "Modal schließen",
+        "shareWithOthers": "Teilen Sie diesen Token mit anderen:",
+        "shareOnSocialMedia": "In sozialen Medien teilen:",
+        "checkOutToken": "Schauen Sie sich diesen Token an!",
+        "twitter": "🐦 Twitter",
+        "telegram": "✈️ Telegram"
+      },
+      "cookies": {
+        "title": "Cookies",
+        "description": "Wir verwenden lokalen Speicher für Einstellungen. Erlauben?",
+        "allow": "Erlauben"
+      },
+      "tokenSelect": {
+        "title": "Token auswählen",
+        "nativeToken": "Nativer Token",
+        "unknown": "Unbekannt"
+      },
+      "titleSuffix": "{{name}}-Modal"
+    },
+    "wallet": {
+      "aePrice": "AE-Preis",
+      "nodeConnection": "Node-Verbindung",
+      "block": "Block",
+      "yourWallet": "Ihre Wallet",
+      "viewProfile": "PROFIL ANSEHEN",
+      "collapseWallet": "Wallet einklappen",
+      "expandWallet": "Wallet ausklappen",
+      "connected": "Verbunden",
+      "offline": "Offline",
+      "copyAddress": "Adresse kopieren",
+      "openOnAescan": "Auf aeScan öffnen",
+      "noHoldings": "Keine Bestände gefunden. Erkunden Sie Trend-Token, um loszulegen.",
+      "showMore": "Mehr anzeigen"
+    },
+    "dataTable": {
+      "loading": "Wird geladen...",
+      "loadingPage": "Seite wird geladen...",
+      "errorLoadingData": "Fehler beim Laden der Daten",
+      "unknownError": "Ein unbekannter Fehler ist aufgetreten",
+      "tryAgain": "Erneut versuchen",
+      "noDataFound": "Keine Daten gefunden",
+      "rowsPerPage": "Zeilen pro Seite",
+      "pageOf": "Seite {{current}} von {{total}}",
+      "showingResults": "Zeige {{start}} bis {{end}} von {{total}} Ergebnissen",
+      "goToFirstPage": "Zur ersten Seite",
+      "goToPreviousPage": "Zur vorherigen Seite",
+      "goToNextPage": "Zur nächsten Seite",
+      "goToLastPage": "Zur letzten Seite"
+    },
+    "newAccountEducation": {
+      "title": "Neu bei æternity? ✨",
+      "subtitle": "Ihr Konto ist frisch und bereit zum Erkunden! 🌟",
+      "quickStartGuide": "Schnellstart-Anleitung:",
+      "step1Bold": "ETH swappen",
+      "step1Text": "von Ethereum, um AE-Token zu erhalten",
+      "step2Bold": "DEX besuchen",
+      "step2Text": "um mit dem Handel zu beginnen",
+      "step3Bold": "Erkunden",
+      "step3Text": "Sie das æternity-Ökosystem! 🎉",
+      "goToDex": "🎯 Zur DEX",
+      "later": "Später"
+    },
+    "candlestickChart": {
+      "on": "am",
+      "vol": "Vol.",
+      "mcap": "MCap"
+    },
+    "rightRail": {
+      "aePrice": "AE-Preis",
+      "volume24h": "24h-Volumen",
+      "topTraders": "Top-Trader",
+      "topTradersDescription": "Sehen Sie, welche Wallets die Märkte nach PnL, ROI und AUM in der Handels-Bestenliste anführen.",
+      "viewTradingLeaderboard": "Handels-Bestenliste ansehen",
+      "quickActions": "Schnellaktionen",
+      "exploreTrends": "🔍 Trends erkunden",
+      "tokenizeATrend": "🚀 Einen Trend tokenisieren",
+      "swapTokens": "🔄 Token swappen",
+      "wrapAe": "📦 AE wrappen",
+      "chat": "💬 Chat",
+      "provideLiquidity": "💧 Liquidität bereitstellen"
+    },
+    "trendminer": {
+      "latestTransactions": {
+        "loadingTokenName": "Token-Name wird geladen...",
+        "loadingBadge": "LÄDT"
+      }
+    },
+    "heroBanner": {
+      "bannerAria": "Superhero-Banner",
+      "dismissAria": "Banner schließen",
+      "previousSlide": "Vorherige Folie",
+      "nextSlide": "Nächste Folie",
+      "goToSlide": "Zu Folie {{number}} gehen"
+    },
+    "errorBoundary": {
+      "title": "Etwas ist schiefgelaufen.",
+      "reloading": "Neuladen in 2 Sekunden…",
+      "reloadNow": "Jetzt neu laden"
+    },
+    "addressChip": {
+      "clickToCopyAddress": "Zum Kopieren der Adresse klicken",
+      "clickToViewInExplorer": "Zum Ansehen im Explorer klicken",
+      "copied": "Kopiert!"
+    },
+    "imageGallery": {
+      "images": "Bilder"
+    },
+    "nav": {
+      "home": "Startseite",
+      "explore": "Entdecken",
+      "defi": "DeFi",
+      "dao": "DAO",
+      "earnRewards": "Prämien verdienen",
+      "getAe": "AE erhalten",
+      "superheroId": "Superhero ID",
+      "account": "Konto"
     }
   },
   "dex": {
@@ -318,7 +836,9 @@
       "placeholderAddressEth": "0x...",
       "close": "Schließen",
       "addTokenToWalletIntro": "Wenn Sie die Token nicht sehen, können Sie",
-      "addTokenToWalletLink": "{{symbol}} zu Ihrer Wallet hinzufügen"
+      "addTokenToWalletLink": "{{symbol}} zu Ihrer Wallet hinzufügen",
+      "noEthereumAccountConnected": "Kein Ethereum-Konto verbunden",
+      "insufficientBalanceAvailable": "Unzureichendes Guthaben. Verfügbar: {{balance}} {{symbol}}"
     },
     "transactions": {
       "swapExactTokensForTokens": {
@@ -355,7 +875,8 @@
       "pairMint": "Paar-Mint",
       "type": "Typ",
       "amount": "Betrag",
-      "openInExplorer": "Im Explorer öffnen"
+      "openInExplorer": "Im Explorer öffnen",
+      "genericDescription": "Transaktion"
     },
     "viewPair": "Paar ansehen:",
     "searchTokenPlaceholder": "Nach Name, Symbol oder Adresse suchen",
@@ -425,6 +946,218 @@
       "addLiquidityButton": "Liquidität hinzufügen",
       "insufficientBalanceBoth": "Unzureichendes Guthaben für sowohl {{symbolA}} als auch {{symbolB}}",
       "insufficientBalanceNeed": "Unzureichendes {{symbol}}-Guthaben. Sie benötigen {{needed}}, haben aber nur {{have}}"
+    },
+    "candlestickChart": {
+      "failedToLoadChartData": "Diagrammdaten konnten nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "flipTradingPair": "Handelspaar umdrehen",
+      "loadingChartData": "Diagrammdaten werden geladen..."
+    },
+    "tokenSelector": {
+      "searchPlaceholder": "Nach Token suchen oder Adresse einfügen",
+      "addCustomToken": "Benutzerdefinierten Token hinzufügen",
+      "addressLabel": "Adresse:",
+      "addToken": "Token hinzufügen",
+      "balanceAddress": "Guthaben/Adresse",
+      "nativeToken": "Nativer Token",
+      "noTokensAvailable": "Keine Token verfügbar",
+      "tryAddingCustomToken": "Versuchen Sie, einen benutzerdefinierten Token per Adresse hinzuzufügen",
+      "tokenNotFoundHint": "Sie finden den gesuchten Token nicht? Geben Sie die Mint-Adresse ein oder überprüfen Sie die Token-Listen-Einstellungen unten."
+    },
+    "exploreTransactions": {
+      "txTypes": {
+        "all": "Alle Typen",
+        "swapExactTokensForTokens": "Token-zu-Token-Swap (Exakt)",
+        "swapTokensForExactTokens": "Token-zu-Token-Swap (Für Exakt)",
+        "swapExactAeForTokens": "AE-zu-Token-Swap (Exakt)",
+        "swapExactTokensForAe": "Token-zu-AE-Swap (Exakt)",
+        "swapTokensForExactAe": "Token-zu-AE-Swap (Für Exakt)",
+        "swapAeForExactTokens": "AE-zu-Token-Swap (Für Exakt)",
+        "addLiquidity": "Liquidität hinzufügen (Token-Paare)",
+        "addLiquidityAe": "Liquidität hinzufügen (AE-Paare)",
+        "removeLiquidity": "Liquidität entfernen (Token-Paare)",
+        "removeLiquidityAe": "Liquidität entfernen (AE-Paare)"
+      },
+      "title": "Erweiterter Transaktions-Explorer",
+      "description": "Filtern und erkunden Sie DEX-Transaktionen mit erweiterten Steuerungen.",
+      "advancedFilters": "Erweiterte Filter",
+      "refineSearch": "Verfeinern Sie Ihre Transaktionssuche",
+      "transactionType": "Transaktionstyp",
+      "selectTransactionType": "Transaktionstyp auswählen",
+      "pairAddress": "Paar-Adresse",
+      "enterPairAddress": "Vertragsadresse des Paars eingeben",
+      "accountAddress": "Kontoadresse",
+      "enterAccountAddress": "Kontoadresse eingeben",
+      "noTransactionsMatching": "Keine Transaktionen gefunden, die Ihren Kriterien entsprechen."
+    },
+    "pool": {
+      "yourLiquidityPositions": "Ihre Liquiditätspositionen",
+      "manageDescription": "Verwalten Sie Ihre Liquiditätspositionen und verfolgen Sie Erträge",
+      "positions": "Positionen",
+      "feesEarned": "Verdiente Gebühren",
+      "activePositions": "Aktive Positionen",
+      "refreshing": "Wird aktualisiert...",
+      "refresh": "Aktualisieren",
+      "loadingPositions": "Ihre Positionen werden geladen...",
+      "noPositionsFound": "Keine Liquiditätspositionen gefunden",
+      "noPositionsHint": "Beginnen Sie, Gebühren zu verdienen, indem Sie Handelspaaren Liquidität bereitstellen"
+    },
+    "swapConfirmation": {
+      "confirmSwap": "Swap bestätigen",
+      "rate": "Kurs",
+      "inverse": "Umgekehrt",
+      "minReceived": "Min. erhalten",
+      "maxSold": "Max. verkauft",
+      "slippage": "Slippage",
+      "deadline": "Frist",
+      "minutesShort": "{{count}} Min.",
+      "highPriceImpactWarning": "Hohe Preisauswirkung. Erwägen Sie, den Betrag zu reduzieren oder eine andere Route zu wählen.",
+      "swapStep": "{{label}}... ({{current}}/{{total}})",
+      "swapping": "Wird geswappt...",
+      "confirmOnWallet": "In Wallet bestätigen"
+    },
+    "liquidityConfirmation": {
+      "confirmAddLiquidity": "Liquidität hinzufügen bestätigen",
+      "youWillDeposit": "Sie zahlen ein",
+      "poolDetails": "Pool-Details",
+      "exchangeRate": "Wechselkurs",
+      "yourPoolShare": "Ihr Pool-Anteil",
+      "lpTokensToReceive": "Zu erhaltende LP-Token",
+      "minutes": "Minuten"
+    },
+    "exploreTokens": {
+      "title": "Token erkunden",
+      "description": "Durchsuchen Sie alle verfügbaren Token im æternity-Ökosystem und interagieren Sie mit ihnen.",
+      "showingRange": "Zeige {{from}}-{{to}} von {{total}} Token",
+      "prev": "← Zurück",
+      "next": "Weiter →",
+      "previousPage": "Vorherige Seite",
+      "nextPage": "Nächste Seite",
+      "ofPages": "von {{pages}}",
+      "tryAdjustingSearch": "Versuchen Sie, Ihre Suchkriterien anzupassen"
+    },
+    "wrapFailedShort": "Token konnten nicht gewrappt werden",
+    "unwrapFailedShort": "Token konnten nicht entwrappt werden",
+    "wrapUnwrap": {
+      "title": "AE (ent)wrappen",
+      "wrap": "Wrappen",
+      "unwrap": "Entwrappen",
+      "description": "Wrappen Sie AE in WAE (und entwrappen Sie) zur Kompatibilität mit DeFi-Protokollen.",
+      "aeBalance": "AE-Guthaben",
+      "waeBalance": "WAE-Guthaben",
+      "amountTo": "Betrag zum {{action}}",
+      "balanceLabel": "Guthaben:"
+    },
+    "liquidityPreview": {
+      "ratioWarning": "⚠️ Verhältnis-Warnung",
+      "poolPreview": "Pool-Vorschau",
+      "newPool": "NEUER POOL",
+      "rate": "Kurs",
+      "poolShare": "Pool-Anteil",
+      "lpTokens": "LP-Token",
+      "suggestedOptimalAmounts": "💡 Vorgeschlagene optimale Beträge",
+      "use": "{{amount}} {{symbol}} verwenden"
+    },
+    "tradeToken": "Token handeln",
+    "buy": "Kaufen",
+    "sell": "Verkaufen",
+    "settingsTitle": "Einstellungen",
+    "slippageTolerancePercent": "Slippage-Toleranz (%)",
+    "done": "Fertig",
+    "poolHeader": {
+      "detailsAndStatistics": "Details und Statistiken zum Liquiditätspool",
+      "viewToken": "{{symbol}} ansehen"
+    },
+    "noLiquidity": {
+      "insufficientTitle": "Unzureichende Liquidität",
+      "insufficientDescription": "Der angeforderte Betrag übersteigt die im Pool verfügbare Liquidität. Maximal verfügbar:",
+      "reduceAmount": "• Reduzieren Sie Ihren Eingabebetrag auf {{amount}} {{symbol}} oder weniger",
+      "noLiquidityTitle": "Keine Liquidität verfügbar",
+      "noLiquidityForPair": "Keine Liquidität gefunden für das",
+      "pairCannotComplete": "-Paar. Dieser Swap kann derzeit nicht abgeschlossen werden.",
+      "tryDifferentPair": "• Versuchen Sie ein anderes Token-Paar",
+      "addLiquidity": "Liquidität hinzufügen"
+    },
+    "tokenInput": {
+      "balanceLabel": "Guthaben:"
+    },
+    "liquidityPositionCard": {
+      "lpTokens": "LP-Token",
+      "poolShare": "Pool-Anteil",
+      "add": "+ Hinzufügen",
+      "remove": "Entfernen"
+    },
+    "tokenPricePerformance": {
+      "selectChartType": "Diagrammtyp auswählen",
+      "loading": "Wird geladen...",
+      "noData": "Keine Daten"
+    },
+    "dexLayout": {
+      "exploreHeading": "Erkunden",
+      "closeExploreMenu": "Erkunden-Menü schließen",
+      "close": "Schließen",
+      "swap": {
+        "label": "SWAP",
+        "description": "Handeln Sie alle unterstützten AEX-9-Token"
+      },
+      "pool": {
+        "label": "POOL",
+        "description": "Liquiditätspositionen verwalten"
+      },
+      "wrap": {
+        "label": "WRAP",
+        "description": "AE ↔ WAE umwandeln"
+      },
+      "tokens": {
+        "label": "Token",
+        "description": "Alle verfügbaren Token durchsuchen"
+      },
+      "pools": {
+        "label": "Pools",
+        "description": "Liquiditätspools erkunden"
+      },
+      "transactions": {
+        "label": "Transaktionen",
+        "description": "Jüngste Aktivität verfolgen"
+      },
+      "explore": {
+        "label": "Erkunden",
+        "description": "Token, Pools und Transaktionen erkunden"
+      }
+    },
+    "minimumReceived": "Mindestens erhalten",
+    "swapRouteInfo": {
+      "route": "Route:",
+      "poolReserves": "Pool-Reserven:",
+      "notAvailable": "N/V"
+    },
+    "tabs": {
+      "defi": "DeFi",
+      "pool": "Pool",
+      "explore": "Erkunden",
+      "addTokens": "Token hinzufügen"
+    },
+    "tokenFallback": "Token",
+    "poolComposition": {
+      "title": "Pool-Zusammensetzung"
+    },
+    "poolReserves": {
+      "reserve": "Reserve",
+      "lpTokenSupply": "LP-Token-Angebot",
+      "lpTokensInCirculation": "LP-Token im Umlauf"
+    },
+    "poolStats": {
+      "totalVolume": "Gesamtvolumen",
+      "allTimeTradingVolume": "Gesamtes Handelsvolumen",
+      "volume": "Volumen",
+      "priceChange": "Preisänderung",
+      "last24Hours": "Letzte 24 Stunden",
+      "last7Days": "Letzte 7 Tage",
+      "last30Days": "Letzte 30 Tage"
+    },
+    "poolTransactions": {
+      "recentTransactions": "Jüngste Transaktionen",
+      "emptyMessage": "Keine Transaktionen für diesen Pool gefunden. Handelsaktivität wird hier angezeigt."
     }
   },
   "social": {
@@ -466,7 +1199,123 @@
     "errorLoadingPost": "Fehler beim Laden des Beitrags.",
     "parent": "Übergeordnet",
     "parentUnavailable": "Übergeordneter Beitrag nicht verfügbar/nicht sichtbar",
-    "viewPostDefaultDescription": "Beitrag auf Superhero ansehen, dem sozialen Krypto-Netzwerk."
+    "viewPostDefaultDescription": "Beitrag auf Superhero ansehen, dem sozialen Krypto-Netzwerk.",
+    "blockchainInfo": {
+      "label": "Blockchain-Infos",
+      "onChain": "on-chain",
+      "storedOnChain": "Beitrag auf der æternity-Blockchain gespeichert",
+      "mined": "Geschürft",
+      "conf": "Best.",
+      "timestamp": "Zeitstempel",
+      "txHash": "Tx-Hash",
+      "sender": "Absender",
+      "contract": "Vertrag",
+      "postId": "Beitrags-ID",
+      "viewOnAescan": "Auf æScan ansehen"
+    },
+    "sortControls": {
+      "latestFeed": "Neuester Feed",
+      "latest": "Neueste",
+      "popular": "Beliebt",
+      "customizeFeed": "Feed anpassen",
+      "reset": "Zurücksetzen",
+      "weightsLabel": "Gewichtungen",
+      "feedSortOptions": "Feed-Sortieroptionen",
+      "customizePopularFeed": "Beliebten Feed anpassen",
+      "tunePopularFeed": "Passen Sie das Ranking des beliebten Feeds an.",
+      "closeCustomizationPanel": "Anpassungsbereich schließen",
+      "popularFeedSettings": "Einstellungen für beliebten Feed",
+      "done": "Fertig",
+      "weights": {
+        "comments": "Kommentare",
+        "tipsAmountAE": "Trinkgeld-Betrag",
+        "tipsCount": "Anzahl Trinkgelder",
+        "uniqueTippers": "Einzelne Tipgeber",
+        "trendingBoost": "Trend-Boost",
+        "contentQuality": "Inhaltsqualität",
+        "reads": "Aufrufe",
+        "interactionsPerHour": "Aktivitätsrate"
+      },
+      "customizePopularFeedAria": "Beliebten Feed anpassen"
+    },
+    "showMore": "{{count}} mehr anzeigen",
+    "showLess": "Weniger anzeigen",
+    "loadMore": "Mehr laden",
+    "feedAnnouncement": {
+      "new": "Neu",
+      "text": "Superhero ist jetzt auf iOS, Android & für KI-Agenten über Openclaw oder Claude verfügbar – das neue On-Chain-Zuhause für KI-Agenten, um durch automatisierten Handel mit Trendthemen echten Wert zu verdienen, fälschungssichere Inhalte zu posten und sofort eine selbstverwahrte Wallet zu erhalten.",
+      "installNow": "Jetzt installieren →"
+    },
+    "retry": "Erneut versuchen",
+    "tokenTopicFeed": {
+      "loadingPostsFor": "Beiträge für {{tag}} werden geladen",
+      "fetchingLatestPosts": "Neueste Beiträge werden abgerufen...",
+      "failedToLoadPostsFor": "Beiträge für {{tag}} konnten nicht geladen werden.",
+      "postsFor": "Beiträge für {{tag}}",
+      "totalCount": "{{count}} insgesamt",
+      "noHolderPostsYet": "Noch keine Beiträge von Token-Inhabern.",
+      "ifYouHoldCreatePostPrefix": "Wenn Sie diesen Token halten, erstellen Sie einen Beitrag mit",
+      "ifYouHoldCreatePostSuffix": "um hier zu erscheinen.",
+      "showingAllPostsForPrefix": "Es werden alle Beiträge angezeigt für",
+      "showingAllPostsForSuffix": "während wir darauf warten, dass Inhaber an der Unterhaltung teilnehmen.",
+      "noPostsFor": "Keine Beiträge für {{tag}}",
+      "beFirstPrefix": "Seien Sie der Erste, der eine Unterhaltung beginnt – erstellen Sie einen Beitrag, der",
+      "beFirstSuffix": "im Text enthält.",
+      "refresh": "Aktualisieren"
+    },
+    "image": "Bild",
+    "link": "Link",
+    "restoreLinkPreview": "Link-Vorschau wiederherstellen",
+    "dismissLinkPreview": "Link-Vorschau ausblenden",
+    "failedToPublishPost": "Beitrag konnte nicht veröffentlicht werden",
+    "failedToPublishReply": "Antwort konnte nicht veröffentlicht werden",
+    "holder": "Inhaber",
+    "gifSelector": {
+      "results": "{{formattedCount}} Ergebnisse",
+      "addAGif": "Ein GIF hinzufügen",
+      "searchForAGif": "Nach einem GIF suchen",
+      "mediaAlt": "Medium",
+      "error": "Fehler: {{message}}",
+      "gifPreviewAlt": "GIF-Vorschau",
+      "confirm": "Bestätigen"
+    },
+    "imageSelector": {
+      "title": "Ein Bild hinzufügen",
+      "searchPlaceholder": "Nach einem Bild suchen…",
+      "trendingOpenverse": "Im Trend · Openverse (CC)",
+      "resultsOpenverse": "{{total}} Ergebnisse · Openverse (CC)",
+      "selectedAlt": "ausgewählt",
+      "photoAlt": "Foto",
+      "errorPrefix": "Fehler:",
+      "confirm": "Bestätigen"
+    },
+    "tokenCreatedActivity": {
+      "openTrendNamed": "Trend {{tokenName}} öffnen",
+      "openTrend": "Trend öffnen"
+    },
+    "viewTip": "Ansehen",
+    "showingLatestTips": "Zeige die neuesten {{count}} Trinkgelder.",
+    "dismiss": "Schließen",
+    "dismissPreview": "Vorschau ausblenden",
+    "linkPreviewAlt": "Link-Vorschau",
+    "trendingAssets": "Trend-Assets",
+    "viewAll": "Alle ansehen",
+    "embed": {
+      "dismissSpotify": "Einbettung ausblenden",
+      "spotifyTitle": "Spotify-Einbettung",
+      "dismissVideo": "Video ausblenden",
+      "youtubeTitle": "YouTube-Video"
+    },
+    "copiedAddress": "Adresse kopiert",
+    "emptyState": {
+      "failedToLoadPosts": "Beiträge konnten nicht geladen werden",
+      "errorFetchingPosts": "Beim Abrufen der Beiträge ist ein Fehler aufgetreten",
+      "noPostsMatchingSearch": "Keine Beiträge gefunden, die Ihrer Suche entsprechen.",
+      "noPostsFound": "Keine Beiträge gefunden.",
+      "tryAdjustingSearch": "Versuchen Sie, Ihre Suchbegriffe oder Filter anzupassen.",
+      "loadingPosts": "Beiträge werden geladen..."
+    },
+    "trade": "Handeln"
   },
   "governance": {
     "tabs": {
@@ -480,7 +1329,23 @@
       "defaultPollDescription": "Geben Sie Ihre Stimme ab und verschaffen Sie sich Gehör in der Community-Governance",
       "byLabel": "Von:",
       "backToPolls": "Zurück zu den Abstimmungen",
-      "castYourVote": "Geben Sie Ihre Stimme ab"
+      "castYourVote": "Geben Sie Ihre Stimme ab",
+      "clickToVoteOption": "Klicken Sie, um für diese Option zu stimmen",
+      "selected": "Ausgewählt",
+      "revokeVote": "Stimme widerrufen",
+      "liveResults": "Live-Ergebnisse",
+      "totalVotes": "Stimmen gesamt",
+      "leadingOption": "Führende Option",
+      "voteOption": "Abstimmungsoption",
+      "yourGovernancePower": "Ihre Governance-Macht",
+      "accountBalance": "Kontoguthaben",
+      "availableForVoting": "Verfügbar zum Abstimmen",
+      "trustingYourVote": "Vertrauen in Ihre Stimme",
+      "delegationStatus": "Delegationsstatus",
+      "votesDelegatedTo": "Stimmen werden delegiert an:",
+      "votingPowerUsedByDelegate": "Ihre Stimmkraft wird von diesem Delegierten genutzt",
+      "noDelegationSet": "Keine Delegation festgelegt",
+      "noDelegationHint": "Sie stimmen direkt mit Ihren eigenen Token ab. Erwägen Sie, an ein vertrauenswürdiges Community-Mitglied zu delegieren, um Ihre Stimmkraft zu erhöhen."
     },
     "polls": {
       "loading": "Wird geladen…",
@@ -561,7 +1426,12 @@
       "revokingDelegation": "Delegation wird widerrufen...",
       "revokeDelegation": "❌ Delegation widerrufen",
       "transactionFailed": "Transaktion fehlgeschlagen",
-      "transactionFailedDesc": "Bitte versuchen Sie es erneut oder überprüfen Sie Ihre Verbindung."
+      "transactionFailedDesc": "Bitte versuchen Sie es erneut oder überprüfen Sie Ihre Verbindung.",
+      "title": "Governance-Konto",
+      "subtitle": "Verwalten Sie Ihre Stimmkraft, delegieren Sie an vertrauenswürdige Adressen und beteiligen Sie sich an Governance-Entscheidungen der Community.",
+      "delegationHint": "💡 Durch Delegation kann eine andere Adresse in Governance-Abstimmungen in Ihrem Namen abstimmen. Wählen Sie jemanden, dem Sie vertrauen, um Ihre Interessen zu vertreten.",
+      "peopleTrustYouWithVotes": "{{count}} Personen vertrauen Ihnen ihre Stimmen an",
+      "delegatorNumber": "Delegierender #{{number}}"
     }
   },
   "trending": {
@@ -586,7 +1456,59 @@
       "invitationWasClaimed": "Einladung wurde eingelöst",
       "revoking": "Wird widerrufen...",
       "revoke": "Widerrufen",
-      "revokedOn": "Widerrufen am"
+      "revokedOn": "Widerrufen am",
+      "noOneClaimed": "Niemand hat diese Einladung eingelöst",
+      "shareLinkToInvite": "Teilen Sie den Link, um jemanden einzuladen",
+      "createdOn": "Erstellt am",
+      "loadingInvitations": "Einladungen werden geladen...",
+      "noInvitationsYet": "Noch keine Einladungen.",
+      "notClaimed": "Nicht eingelöst",
+      "shareLink": "Link teilen",
+      "collect": {
+        "title": "Sichern Sie sich Ihre {{appName}}-Einladungsbelohnung",
+        "viewInvitation": "Einladung ansehen",
+        "description1": "Erstellen und verwalten Sie ganz einfach Token-Verkäufe mit einer Bonding Curve, die faire Preise gewährleistet. Nehmen Sie an fairen Token-Launches teil, beteiligen Sie sich über integrierte DAOs an der Community-Governance und maximieren Sie Belohnungen mit einem robusten Empfehlungssystem.",
+        "description2": "Bauen Sie lebendige token-gebundene Communitys für Unternehmen, Projekte, DAOs oder sogar Meme-Coins auf. Treten Sie ein in die Zukunft des dezentralen Token-Managements!",
+        "canRevokeRewardOf": "Sie können die Einladungsbelohnung widerrufen von:",
+        "canClaimRewardOf": "Sie können die Einladungsbelohnung einlösen von:",
+        "hasInvitedYou": "hat Sie eingeladen, {{appName}} beizutreten",
+        "revokeInvitation": "Einladung widerrufen",
+        "claimReward": "Belohnung einlösen",
+        "dismiss": "Schließen",
+        "alreadyClaimed": "Diese Einladung wurde bereits eingelöst.",
+        "switchNetwork": "Bitte wechseln Sie zum richtigen Netzwerk.",
+        "failedToLoad": "Einladungsdetails konnten nicht geladen werden.",
+        "revokedSuccess": "Die Einladungsbelohnung wurde erfolgreich widerrufen.",
+        "claimedSuccess": "Die Einladungsbelohnung wurde erfolgreich eingelöst!",
+        "accountAlreadyClaimed": "Dieses Konto hat bereits eine Einladungsbelohnung eingelöst.",
+        "unsupportedSecretKey": "Dieser Einladungslink verwendet ein nicht unterstütztes oder beschädigtes Format des geheimen Schlüssels.",
+        "failedToRevoke": "Belohnung konnte nicht widerrufen werden. {{message}}",
+        "failedToClaim": "Belohnung konnte nicht eingelöst werden. {{message}}",
+        "unknownError": "Unbekannter Fehler"
+      },
+      "rewards": {
+        "title": "Sichern Sie sich Ihre Belohnungen",
+        "descriptionPart1": "Belohnungen sammeln sich an, während Ihre direkten Eingeladenen an Token-Verkäufen teilnehmen. Sie können abheben, sobald",
+        "descriptionPart2": "jeweils mindestens",
+        "descriptionPart3": "(kumulativ) ausgegeben haben.",
+        "directInvitees": "{{count}} direkte Eingeladene",
+        "note": "Hinweis: Berechtigung und Belohnungen hängen von der On-Chain-Aktivität ab und sind nicht garantiert.",
+        "progressToRewards": "Fortschritt zu Belohnungen",
+        "reachedCount": "{{reached}}/{{total}} erreicht",
+        "eligibleToWithdraw": "🎉 Berechtigt zum Abheben",
+        "moreInviteesNeeded": "{{count}} weitere Eingeladene müssen {{minSpent}} AE erreichen",
+        "stillAccumulating_one": "{{count}} Eingeladener sammelt noch an",
+        "stillAccumulating_other": "{{count}} Eingeladene sammeln noch an",
+        "reached": "Erreicht",
+        "andMore": "+{{count}} weitere",
+        "availableRewards": "Verfügbare Belohnungen",
+        "withdrawing": "Wird abgehoben...",
+        "notEligibleYet": "Noch nicht berechtigt",
+        "noRewardsYet": "Noch keine Belohnungen",
+        "collectRewards": "Belohnungen einsammeln",
+        "notEligibleDetail": "Noch nicht berechtigt: Sie benötigen {{minInvitees}} direkte Eingeladene, die jeweils mindestens {{minSpent}} AE bei Token-Verkäufen ausgegeben haben.",
+        "collectError": "Beim Einsammeln der Belohnungen ist ein Fehler aufgetreten."
+      }
     },
     "tokenName": "Token-Name",
     "marketCap": "Marktkapitalisierung",
@@ -646,6 +1568,289 @@
       "popularPostsTitle": "Beliebte Beiträge",
       "popularPostsSubtitle": "Worüber die Community am meisten spricht.",
       "noPopularPosts": "Derzeit sind keine beliebten Beiträge verfügbar."
+    },
+    "createToken": {
+      "oops": "Hoppla!",
+      "collection": "Sammlung",
+      "trendTokenName": "Trend-Token-Name",
+      "charactersCount": "{{count}}/{{max}} Zeichen",
+      "invalidCharacters": "Ungültige Zeichen",
+      "allowedCharsHint": "Erlaubt: A–Z, 0–9 und -",
+      "tradingLive": "Handel live",
+      "token": "Token",
+      "price": "Preis",
+      "holders": "Inhaber",
+      "buyToken": "TOKEN KAUFEN",
+      "amountToSpend": "Auszugebender Betrag (AE)",
+      "tokensToBuy": "Zu kaufende Token",
+      "prebuyTooltipAe": "Dies ist der Betrag in AE, den Sie ausgeben, um Token vorab zu kaufen, bevor die Bonding Curve öffentlich verfügbar ist – zum niedrigstmöglichen Preis. Sie können so viel oder so wenig kaufen, wie Sie möchten!",
+      "prebuyTooltipTokens": "Dies ist die Anzahl der Token, die Sie vorab kaufen, bevor die Bonding Curve öffentlich verfügbar ist – zum niedrigstmöglichen Preis. Sie können so viel oder so wenig kaufen, wie Sie möchten!",
+      "switchTo": "Zu {{target}} wechseln",
+      "tokensUnit": "Token",
+      "tokensUnitUpper": "TOKEN",
+      "estimatedTokensReceive": "Geschätzte Token, die Sie erhalten:",
+      "estimatedCost": "Geschätzte Kosten:",
+      "inclFees": "(inkl. Gebühren)",
+      "note": {
+        "tradingAvailable": "Nach der Erstellung steht Ihr Token auf der Plattform zum Handel zur Verfügung. Der Bonding-Curve-Mechanismus sorgt für eine faire Preisfindung auf Basis von Angebot und Nachfrage.",
+        "deployFromWallet": "Sie deployen den Token-Vertrag direkt aus Ihrer eigenen Wallet. Superhero erleichtert lediglich den Erstellungsprozess."
+      },
+      "hero": {
+        "line1": "Erstellen Sie Ihren Token.",
+        "line2": "Bauen Sie Ihre Community auf.",
+        "line3": "Besitzen Sie den Trend.",
+        "subtitle": "Tokenisierte Trends sind Community-Token, die auf einer Bonding Curve gestartet werden. Der Preis bewegt sich mit Käufen/Verkäufen, ohne Orderbücher. Jeder Token erzeugt eine DAO-Treasury, die Initiativen über On-Chain-Abstimmungen finanzieren kann."
+      },
+      "submit": {
+        "connectWalletToCreate": "Wallet verbinden, um Token zu erstellen",
+        "connectWalletHint": "Sie müssen Ihre Wallet verbinden, um einen Token zu erstellen.",
+        "getSuperheroWallet": "Superhero Wallet holen ↗",
+        "waitingForConfirmation": "Warten auf Wallet-Bestätigung...",
+        "reviewAndSign": "Bitte prüfen und signieren Sie die Transaktion in Ihrer Wallet, um mit der Erstellung Ihres Tokens zu beginnen.",
+        "createToken": "Token erstellen"
+      },
+      "explainer": {
+        "title": "So funktionieren Bonding Curves",
+        "priceDiscoveryTitle": "Preisfindungsmechanismus",
+        "priceDiscoveryBody": "Anders als bei klassischen Börsen mit Orderbüchern verwenden Bonding Curves eine mathematische Formel zur Bestimmung der Token-Preise. Der Preis steigt, je mehr Token gekauft werden, und sinkt, wenn Token verkauft werden. Dadurch entsteht eine automatische Preisfindung auf Basis von Angebot und Nachfrage.",
+        "mathTitle": "Die Mathematik dahinter",
+        "formulaIntro": "Die Bonding Curve folgt einer quadratischen Formel:",
+        "whereLabel": "Wobei",
+        "constantAnd": "eine Konstante ist und",
+        "supplyDescription": "die Gesamtzahl der im Umlauf befindlichen Token ist.",
+        "thisMeans": "Das bedeutet:",
+        "bullet1": "Frühe Käufer erhalten Token zu niedrigeren Preisen",
+        "bullet2": "Jeder Kauf erhöht den Preis für den nächsten Käufer",
+        "bullet3": "Der Verkauf von Token reduziert das Angebot und senkt den Preis",
+        "bullet4": "Die Kurve sorgt für Liquidität – Sie können jederzeit kaufen oder verkaufen",
+        "daoTreasuryTitle": "DAO-Treasury",
+        "daoTreasuryBody": "Ein Teil jeder Transaktion fließt in eine DAO-Treasury, die von den Token-Inhabern kontrolliert wird. Diese Treasury kann Community-Initiativen über On-Chain-Governance-Abstimmungen finanzieren, sodass die Community gemeinsam entscheiden kann, wie der Token wachsen und sich entwickeln soll.",
+        "feesTitle": "Gebühren & Affiliations",
+        "feesBody": "Beim Erstellen eines Tokens können Sie einen anfänglichen Kaufbetrag festlegen. Eine kleine Protokollgebühr (5 %) wird erhoben, um die Plattform und die Protokoll-Token-Belohnungen zu unterstützen. Der Rest fließt in die Bonding Curve und sorgt von Anfang an für eine faire Preisfindung."
+      },
+      "errors": {
+        "allowedCharsRange": "Es sind nur Zeichen im Bereich \"{{chars}}\" erlaubt.",
+        "unknownError": "Unbekannter Fehler",
+        "somethingWentWrong": "Hoppla, etwas ist schiefgelaufen. \n{{message}}"
+      }
+    },
+    "tokenSale": {
+      "tabFeed": "Feed",
+      "tabTrade": "Handel",
+      "tabInfo": "Info",
+      "tabTransactions": "Transaktionen",
+      "tabHolders": "Inhaber",
+      "tabPosts": "Beiträge",
+      "createTokenToUnlock": "Erstellen Sie den Token, um diese Funktion freizuschalten",
+      "tokenDeployedSuccessfully": "Token erfolgreich bereitgestellt!",
+      "tokenNowLive": "Ihr Token ist jetzt live auf der Blockchain.",
+      "badgeNotCreated": "NICHT ERSTELLT",
+      "badgeRank": "RANG #{{rank}}",
+      "badgeOwned": "IM BESITZ",
+      "showLess": "Weniger anzeigen",
+      "showMore": "Mehr anzeigen",
+      "tokenNotCreatedHeaderHint": "Dieser Token wurde noch nicht erstellt. Sie können der Erste sein, der ihn erstellt und teilt, worum es geht!",
+      "tokenNotCreatedYet": "Token noch nicht erstellt",
+      "tokenNotCreatedYetHint": "Dieser Token existiert noch nicht. Seien Sie der Erste, der ihn erstellt und eine Community aufbaut!",
+      "createThisToken": "Diesen Token erstellen",
+      "tradingNotAvailable": "Handel nicht verfügbar",
+      "tradingNotAvailableHint": "Erstellen Sie zuerst den Token, um den Handel zu ermöglichen.",
+      "noTransactionsYet": "Noch keine Transaktionen",
+      "noTransactionsYetHint": "Erstellen Sie zuerst den Token, um Transaktionen zu sehen.",
+      "noHoldersYet": "Noch keine Inhaber",
+      "noHoldersYetHint": "Erstellen Sie zuerst den Token, um Inhaber zu sehen.",
+      "createToken": "Token erstellen",
+      "createTokenSidebarHint": "Dieser Token existiert noch nicht. Seien Sie der Erste, der ihn erstellt!",
+      "addNewPost": "Neuen Beitrag hinzufügen"
+    },
+    "tokenChat": {
+      "noMessages": "Noch keine öffentlichen Chat-Nachrichten",
+      "beFirst": "Seien Sie der Erste, der seine Gedanken teilt!",
+      "chatForHolders": "Chat für #{{name}}-Inhaber",
+      "thisToken": "diesen Token",
+      "buyToJoin": "Kaufen Sie diesen Token, um den exklusiven Chaträumen beizutreten. Ihre Wallet weist den Besitz nach; der Zugang ist token-gebunden.",
+      "openPublicChatTitle": "Öffnen Sie den öffentlichen Chat auf Quali.chat",
+      "publicChat": "Öffentlicher Chat",
+      "publicChatDesc": "Lesen für alle • Schreiben nur für Inhaber",
+      "openPrivateChatTitle": "Öffnen Sie den privaten Chat auf Quali.chat (nur für Inhaber)",
+      "privateChat": "Privater Chat",
+      "privateChatDesc": "Lesen und Schreiben nur für Inhaber",
+      "serviceProvidedBy": "Dienst bereitgestellt von",
+      "failedAfterAttempts": "Kommentare konnten nach mehreren Versuchen nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "retryingInSeconds": "Nachrichten konnten nicht geladen werden. Erneuter Versuch in 5 Sekunden... ({{current}}/{{max}})",
+      "unableAfterAttempts": "Nachrichten konnten nach mehreren Versuchen nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "loading": "Wird geladen…",
+      "loadMore": "Mehr laden"
+    },
+    "tokenTrades": {
+      "justNow": "gerade eben",
+      "buy": "Kauf",
+      "sell": "Verkauf",
+      "price": "Preis",
+      "amount": "Menge",
+      "total": "Gesamt",
+      "account": "Konto",
+      "type": "Typ",
+      "volume": "Volumen",
+      "unitPrice": "Stückpreis",
+      "totalPrice": "Gesamtpreis",
+      "date": "Datum",
+      "transaction": "Transaktion",
+      "badge": {
+        "create": "ERSTELLEN",
+        "buy": "KAUF",
+        "sell": "VERKAUF",
+        "transfer": "ÜBERTRAGEN",
+        "mint": "PRÄGEN",
+        "burn": "VERBRENNEN",
+        "trade": "HANDEL"
+      },
+      "noTransactionsYet": "Noch keine Transaktionen",
+      "tradesWillAppear": "Trades werden hier angezeigt, sobald der Token gehandelt wird",
+      "failedToLoad": "Transaktionen konnten nicht geladen werden",
+      "show": "Anzeigen",
+      "itemsPerPage": "Einträge pro Seite",
+      "showingRange": "Zeige {{from}} bis {{to}} von {{total}} Transaktionen",
+      "previous": "Zurück",
+      "next": "Weiter"
+    },
+    "tokenHolders": {
+      "accountLabel": "Konto:",
+      "balanceLabel": "Guthaben:",
+      "account": "Konto",
+      "balance": "Guthaben",
+      "noHoldersFound": "Keine Inhaber gefunden",
+      "noHoldersDescription": "Token-Inhaber werden hier angezeigt, sobald Token verteilt sind",
+      "failedToLoadHolders": "Inhaber konnten nicht geladen werden",
+      "retry": "Erneut versuchen",
+      "show": "Anzeigen:",
+      "itemsPerPage": "Einträge pro Seite",
+      "showingRange": "Zeige {{from}} bis {{to}} von {{total}} Inhabern",
+      "previous": "Zurück",
+      "next": "Weiter"
+    },
+    "inviteView": {
+      "title": "Einladen & verdienen",
+      "subtitle": "Bauen Sie Ihr Netzwerk auf, verdienen Sie Belohnungen",
+      "dismiss": "Schließen",
+      "howItWorks": "So funktioniert es",
+      "step1": "Erstellen Sie Einladungslinks, indem Sie eine einmalige AE-Belohnung pro Einladung finanzieren",
+      "step2": "Teilen Sie Links mit Freunden und der Community",
+      "step3": "Nachdem 4 einzelne Eingeladene Token gekauft haben, können Sie angesammelte Belohnungen abheben",
+      "step4": "Heben Sie Belohnungen jederzeit nach Erreichen der Berechtigung ab"
+    },
+    "leaderboardHeading": "Handels-Bestenliste",
+    "leaderboardHeadingDescription": "Entdecken Sie die aktivsten Superhero-Trader, sortiert nach On-Chain-Performance. Steigern Sie Ihr Handelsvolumen, Ihre Konsistenz und Ihren Trendbesitz, um in der Liste aufzusteigen und Ihre Wallet in eine öffentliche On-Chain-Erfolgsbilanz zu verwandeln.",
+    "leaderboardCustomTimeframe": "Benutzerdefiniert",
+    "leaderboardInvalidDateFormat": "Verwenden Sie gültige Daten und Zeiten im Format TT/MM/JJJJ hh:mm.",
+    "leaderboardStartBeforeEnd": "Das Startdatum muss vor dem Enddatum liegen.",
+    "leaderboardEnterBothDates": "Geben Sie sowohl Start- als auch Enddatum ein, um einen benutzerdefinierten Bestenlisten-Zeitraum anzuwenden.",
+    "leaderboardPage": "Seite",
+    "leaderboardOf": "von",
+    "leaderboardPrevious": "Zurück",
+    "leaderboardNext": "Weiter",
+    "inviteAndEarn": {
+      "generateInvites": "Einladungen generieren",
+      "description1": "Erstellen Sie Einladungslinks, indem Sie eine einmalige AE-Belohnung pro Einladung finanzieren. Jeder Link enthält einen geheimen Code; wenn jemand den Link öffnet und einlöst, erhält er die finanzierte Belohnung und die Einladung wird als verwendet markiert.",
+      "description2": "Sie können mehrere Links auf einmal generieren und mit Freunden oder Ihrer Community teilen. Sie können eine Einladung auch widerrufen, bevor sie eingelöst wird.",
+      "description3": "Wichtig: Speichern Sie Ihre Links, bevor Sie das Popup schließen. Der geheime Code wird Ihnen nur zum Zeitpunkt der Erstellung angezeigt.",
+      "amountPerInvite": "Betrag pro Einladung (AE)",
+      "amountHint": "Dieser Betrag kann vom Empfänger eingelöst werden, der den Link einlöst.",
+      "confirmCopiedHint": "Bitte bestätigen Sie, dass Sie die Links kopiert haben, um das Schließen dieses Dialogs zu ermöglichen."
+    },
+    "creationBanner": {
+      "statusInProgress": "Token-Erstellung läuft",
+      "statusConfirmed": "Transaktion bestätigt!",
+      "statusWaiting": "Warten auf Bestätigung…",
+      "stepBroadcast": "Übertragen",
+      "stepConfirm": "Bestätigen",
+      "stepLive": "Live!",
+      "loadingData": "<token>#{{tokenName}}</token>-Daten werden aus der Chain geladen…",
+      "waitingConfirmation": "Ihre <token>#{{tokenName}}</token>-Transaktion wartet auf Bestätigung. Dauert in der Regel 10–60 s.",
+      "beingConfirmed": "Ihr Token <token>#{{tokenName}}</token> wird auf der Blockchain bestätigt.",
+      "dismissAria": "Benachrichtigung schließen"
+    },
+    "ranking": {
+      "title": "Ranking-Rennen",
+      "levelUp": "Kaufen Sie <amount>{{amount}}</amount> mehr <name>{{name}}</name>, um aufzusteigen!",
+      "anyAmount": "beliebigen Betrag",
+      "highestRanked": "Höchstplatzierter Token!",
+      "tokensAhead": "<amount>{{amount}}</amount> Token vor dem nächsten Token.",
+      "mcRank": "MC-Rang",
+      "mcRankInfo": "Informationen zum Market-Cap-Ranking",
+      "totalSupply": "Gesamtangebot",
+      "noData": "Keine Ranking-Daten verfügbar"
+    },
+    "tokenListTable": {
+      "name": "Name",
+      "price": "Preis",
+      "price30d": "Preis (30d)",
+      "change24h": "24h %",
+      "change7d": "7d %",
+      "change30d": "30d %",
+      "marketCap": "Market Cap",
+      "volume30d": "Volumen (30d)",
+      "circSupply": "Umlauf-Angebot",
+      "allTime": "Gesamt"
+    },
+    "leaderboardCard": {
+      "pnlUsd": "{{timeframe}} PnL (USD)",
+      "roi": "{{timeframe}} ROI {{value}}",
+      "latestPortfolioValue": "Letzter Portfoliowert",
+      "aum": "AUM",
+      "mdd": "{{timeframe}} MDD",
+      "ownedTrends": "Besessene Trends",
+      "buys": "Käufe:",
+      "sells": "Verkäufe:",
+      "created": "Erstellt:",
+      "viewProfile": "Profil ansehen"
+    },
+    "leaderboardFilters": {
+      "chooseFromCalendar": "{{label}} aus dem Kalender wählen",
+      "dateInputFormat": "{{label}} im Format TT/MM/JJJJ hh:mm",
+      "timeframe": "Zeitraum",
+      "customRange": "Benutzerdefinierter Bereich",
+      "dateFormatHint": "TT/MM/JJJJ hh:mm",
+      "startDateLabel": "Startdatum und -zeit der Bestenliste",
+      "startPlaceholder": "Start: TT/MM/JJJJ hh:mm",
+      "endDateLabel": "Enddatum und -zeit der Bestenliste",
+      "endPlaceholder": "Ende: TT/MM/JJJJ hh:mm",
+      "sortBy": "Sortieren nach",
+      "metricPlaceholder": "Metrik"
+    },
+    "tradeTab": {
+      "today": "Heute",
+      "7days": "7 Tage",
+      "30days": "30 Tage",
+      "allTime": "Gesamt",
+      "noTokenSelected": "Kein Token ausgewählt.",
+      "price": "Preis",
+      "high24h": "24h-Hoch",
+      "allTimeHigh": "Allzeithoch",
+      "low24h": "24h-Tief",
+      "allTimeLow": "Allzeittief",
+      "buy": "Kaufen",
+      "sell": "Verkaufen"
+    },
+    "feedTab": {
+      "popular": "Beliebt",
+      "latest": "Neueste",
+      "postsForHashtag": "Beiträge für #{{name}}",
+      "hideGraphs": "Diagramme ausblenden",
+      "trade": "Handel",
+      "holdersOnly": "Nur Inhaber",
+      "allPosts": "Alle Beiträge"
+    },
+    "assetInput": {
+      "balanceLabel": "Guthaben:",
+      "max": "Max"
+    },
+    "newBadge": "NEU",
+    "performanceTimeframe": {
+      "closeMenu": "Zeitraum-Menü schließen"
+    },
+    "tokenLineChart": {
+      "alt": "Token-Liniendiagramm"
     }
   },
   "errors": {
@@ -814,22 +2019,94 @@
     "descriptionLabel": "Beschreibung:",
     "processing": "Wird verarbeitet...",
     "closes": "Schließt:",
-    "closed": "Geschlossen:"
+    "closed": "Geschlossen:",
+    "daosTitle": "DAOs",
+    "listIntro": "DAOs halten Protokollgebühren, die aus Trades erhoben werden. Jede Karte zeigt das Treasury-Guthaben für diesen Token zusammen mit grundlegenden Statistiken.",
+    "owned": "Im Besitz",
+    "openDao": "DAO öffnen",
+    "created": "Erstellt",
+    "trending": "Im Trend",
+    "sale": "Verkauf",
+    "viewToken": "Token ansehen",
+    "aescanLink": "æScan ↗",
+    "noDaosFound": "Keine DAOs gefunden.",
+    "voteStatus": {
+      "closed": "Geschlossen",
+      "passing": "Wird angenommen",
+      "open": "Offen"
+    },
+    "errorLoadingToken": "Fehler beim Laden des Tokens:",
+    "backToTreasury": "← Zurück zur Treasury",
+    "voteNumber": "Abstimmung #{{voteId}}",
+    "linkLabel": "Link:",
+    "viewProposal": "Vorschlag ansehen",
+    "needTokensToVote": "Sie benötigen {{symbol}}-Token, um an dieser Abstimmung teilzunehmen",
+    "getTokensToVote": "Holen Sie sich {{symbol}}-Token, um über diesen Vorschlag abzustimmen",
+    "getTokensButton": "{{symbol}}-Token holen",
+    "voteYes": "Mit Ja stimmen",
+    "voteNo": "Mit Nein stimmen",
+    "revokeVote": "Stimme widerrufen",
+    "withdraw": "Abheben",
+    "apply": "Anwenden",
+    "voters": {
+      "title": "Abstimmende",
+      "noVotersFound": "Keine Abstimmenden für diesen Vorschlag gefunden.",
+      "voter": "Abstimmender",
+      "choice": "Wahl",
+      "votingPower": "Stimmkraft",
+      "yes": "Ja",
+      "no": "Nein"
+    },
+    "byLabel": "Von:",
+    "viewDetails": "Details ansehen",
+    "timeRemaining": {
+      "daysHours": "Noch {{days}} T {{hours}} Std",
+      "hoursMinutes": "Noch {{hours}} Std {{minutes}} Min",
+      "minutes": "Noch {{minutes}} Min"
+    },
+    "voteSubject": {
+      "to": "an",
+      "payoutTreasuryBalance": "Treasury-Guthaben auszahlen",
+      "votePayoutAmount": "Auszahlungsbetrag abstimmen",
+      "changeDao": "DAO ändern",
+      "changeMetaInfo": "Meta-Informationen ändern",
+      "changeMinimumTokenThreshold": "Mindest-Token-Schwelle ändern",
+      "addModerator": "Moderator hinzufügen",
+      "deleteModerator": "Moderator löschen",
+      "unknownVoteType": "Unbekannter Abstimmungstyp"
+    }
   },
   "banners": {
     "bannerA": {
       "title": "On‑chain posten. Sofort Trinkgeld geben.",
       "description": "Teilen Sie Beiträge, die on‑chain abgewickelt werden. Leser geben inline Trinkgeld; Ersteller erhalten automatisch Belege.",
-      "chips": ["Inline-Trinkgeld", "On‑chain-Belege"],
+      "chips": [
+        "Inline-Trinkgeld",
+        "On‑chain-Belege"
+      ],
       "primaryButton": "Mit dem Posten beginnen",
       "secondaryButton": "So funktioniert's"
     },
     "bannerC": {
       "title": "Vom Signal → zum Treasury: Purpose‑DAOs.",
       "description": "Kaufgebühren auf #trends säen automatisch DAOs, damit die besten Ideen Budgets und Meilensteine erhalten.",
-      "chips": ["Gebühren → Treasury", "Ersteller-Auszahlungen"],
+      "chips": [
+        "Gebühren → Treasury",
+        "Ersteller-Auszahlungen"
+      ],
       "primaryButton": "Eine Purpose‑DAO starten",
       "secondaryButton": "DAOs ansehen"
+    },
+    "keyFeatures": "Hauptfunktionen",
+    "bannerB": {
+      "title": "#Trends tokenisieren. Das Signal handeln.",
+      "description": "#Trends sind Märkte. Setzen Sie auf Kultur und lassen Sie Preise sichtbar machen, was zählt.",
+      "chips": [
+        "Popularitätssignale",
+        "Bonding Curve"
+      ],
+      "primaryButton": "Einen #Trend starten",
+      "secondaryButton": "#Trends erkunden"
     }
   },
   "addTokens": {
@@ -915,7 +2192,92 @@
     "window7d": "7t",
     "amountIn": "Betrag ein",
     "amountOut": "Betrag aus",
-    "transaction": "Transaktion"
+    "transaction": "Transaktion",
+    "explorePools": "Pools erkunden",
+    "explorePoolsDescription": "Erkunden Sie Handelspaare und deren Leistungskennzahlen über die DEX hinweg.",
+    "createdAt": "Erstellt am",
+    "show": "Anzeigen:",
+    "searchPoolsPlaceholder": "Pools suchen...",
+    "poolsCount_one": "{{count}} Pool",
+    "poolsCount_other": "{{count}} Pools",
+    "tvlShort": "TVL",
+    "chart": "Chart",
+    "showingPoolsRange": "Zeige {{from}}-{{to}} von {{total}} Pools",
+    "first": "Erste",
+    "firstPage": "Erste Seite",
+    "prev": "Zurück",
+    "previousPage": "Vorherige Seite",
+    "ofPages": "von {{total}}",
+    "next": "Weiter",
+    "nextPage": "Nächste Seite",
+    "last": "Letzte",
+    "lastPage": "Letzte Seite",
+    "tokenListTable": {
+      "loadingTokens": "Token werden geladen...",
+      "filterAndSort": "Filtern & Sortieren",
+      "tvl": "TVL",
+      "change24h": "24h-Änderung",
+      "volume24h": "24h-Volumen",
+      "change7d": "7d-Änderung",
+      "volume7d": "7d-Volumen",
+      "change30d": "30d-Änderung",
+      "volume30d": "30d-Volumen",
+      "createdAt": "Erstellt am",
+      "sortAscending": "Aufsteigend sortieren",
+      "sortDescending": "Absteigend sortieren",
+      "searchTokens": "Token suchen...",
+      "clearSearch": "Suche löschen",
+      "tokenCount_one": "{{count}} Token",
+      "tokenCount_other": "{{count}} Token",
+      "activeLabel": "Aktiv:",
+      "searchLabel": "Suche:",
+      "sortLabel": "Sortierung:",
+      "name": "Name",
+      "noTokensFound": "Keine Token gefunden",
+      "tryAdjustingSearch": "Versuchen Sie, Ihre Suchkriterien anzupassen"
+    },
+    "tokenListCards": {
+      "loadingTokens": "Token werden geladen...",
+      "sort": {
+        "name": "Name",
+        "symbol": "Symbol",
+        "createdAt": "Erstellt am",
+        "tvl": "TVL",
+        "change24h": "24h-Änderung",
+        "volume24h": "24h-Volumen",
+        "change7d": "7d-Änderung",
+        "volume7d": "7d-Volumen",
+        "change30d": "30d-Änderung",
+        "volume30d": "30d-Volumen"
+      },
+      "sortAscending": "Aufsteigend sortieren",
+      "sortDescending": "Absteigend sortieren",
+      "active": "Aktiv:",
+      "searchFilter": "Suche: \"{{value}}\"",
+      "sortLabel": "Sortierung:",
+      "tokenCount_one": "{{count}} Token",
+      "tokenCount_other": "{{count}} Token",
+      "changeWithTimeframe": "{{timeframe}}-Änderung",
+      "volumeWithTimeframe": "{{timeframe}}-Volumen",
+      "swap": "Swap",
+      "addLiquidity": "Liquidität hinzufügen",
+      "noTokensFound": "Keine Token gefunden",
+      "tryAdjustingSearch": "Versuchen Sie, Ihre Suchkriterien anzupassen"
+    },
+    "copyAddress": "Adresse kopieren",
+    "tokensOwned": "Besessene Token",
+    "tokensCreated": "Erstellte Token",
+    "transactionsViewComingSoon": "Die Transaktionsansicht wird hinzugefügt, sobald der Backend-Endpunkt verfügbar ist.",
+    "mcLabel": "MC:",
+    "holdersLabel": "Inhaber:",
+    "descending": "Absteigend",
+    "ascending": "Aufsteigend",
+    "volLabel": "Vol.:",
+    "txLabel": "Tx:",
+    "tokensLabel": "Token:",
+    "loadMore": "Mehr laden",
+    "switchToDefault": "Zur Standardansicht wechseln",
+    "poweredByVisxWordcloud": "Bereitgestellt von visx wordcloud:"
   },
   "faq": {
     "welcome": "Willkommen",
@@ -1035,6 +2397,47 @@
     "safetyTitle": "Bevor Sie kaufen",
     "safetyLi1": "Bestätigen Sie das Token, das Netzwerk, die Einzahlungsadresse, die Auszahlungsgebühren und den Mindestauszahlungsbetrag.",
     "safetyLi2": "Beginnen Sie mit einer kleinen Testtransaktion, bevor Sie größere Beträge bewegen.",
-    "safetyLi3": "Behalten Sie die Verwahrung nach Möglichkeit in Ihrer eigenen Wallet und geben Sie niemals private Schlüssel oder Seed-Phrasen weiter."
+    "safetyLi3": "Behalten Sie die Verwahrung nach Möglichkeit in Ihrer eigenen Wallet und geben Sie niemals private Schlüssel oder Seed-Phrasen weiter.",
+    "buyAeWidget": {
+      "crossChain": "Cross-Chain",
+      "description": "Bridgen Sie natives ETH von Ethereum als æETH nach æternity und tauschen Sie es dann automatisch in AE-Token.",
+      "toEstimated": "Nach (Geschätzt)",
+      "balanceLabel": "Guthaben",
+      "maxLabel": "max.",
+      "ethereum": "Ethereum",
+      "insufficientBalanceAvailable": "Unzureichendes Guthaben. Verfügbar:",
+      "bridgeStatus": "Bridge-Status",
+      "insufficientLiquidity": "Unzureichende Liquidität",
+      "exceedsLiquidityPrefix": "Der angeforderte Betrag übersteigt die verfügbare Liquidität. Maximal verfügbar:",
+      "exceedsLiquiditySuffix": "Bitte reduzieren Sie den Betrag oder fügen Sie dem Pool Liquidität hinzu.",
+      "bridgingShort": "Wird gebridgt…",
+      "waitingForAeeth": "Warten auf æETH…",
+      "swappingShort": "Wird geswappt…",
+      "processingShort": "Wird verarbeitet…",
+      "failedToFetchEthBalance": "ETH-Guthaben konnte nicht abgerufen werden",
+      "failedToLoadTokenData": "Token-Daten konnten nicht geladen werden",
+      "bridgeCompleted": "ETH→AE-Bridge erfolgreich abgeschlossen!",
+      "viewEthTransaction": "ETH-Transaktion ansehen",
+      "viewAeSwapTransaction": "AE-Swap-Transaktion ansehen",
+      "bridgeOperationFailed": "Bridge-Vorgang fehlgeschlagen",
+      "status": {
+        "connecting": "Verbindung zu Wallets wird hergestellt",
+        "bridging": "ETH → æETH wird gebridgt",
+        "waiting": "Warten auf æETH-Einzahlung",
+        "swapping": "æETH → AE wird geswappt",
+        "completed": "Erfolgreich abgeschlossen",
+        "failed": "Fehlgeschlagen",
+        "processing": "Wird verarbeitet"
+      }
+    },
+    "connectEthWallet": {
+      "failedToConnect": "Wallet konnte nicht verbunden werden",
+      "failedToDisconnect": "Wallet konnte nicht getrennt werden",
+      "ethereumWallet": "Ethereum-Wallet",
+      "connected": "Verbunden",
+      "switch": "Wechseln",
+      "disconnect": "Trennen",
+      "connectEthereumWallet": "Ethereum-Wallet verbinden"
+    }
   }
 }

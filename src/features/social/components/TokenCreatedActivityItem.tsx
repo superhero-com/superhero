@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
@@ -43,6 +44,7 @@ const TokenCreatedActivityItem = memo(({
   mobileTightTop = false,
   mobileTightBottom = false,
 }: TokenCreatedActivityItemProps) => {
+  const { t } = useTranslation('social');
   const navigate = useNavigate();
   const { chainNames, profileDisplayNames } = useWallet();
   const creator = item.sender_address;
@@ -63,7 +65,7 @@ const TokenCreatedActivityItem = memo(({
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
       className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding && 'pt-0'} ${((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding && 'pb-0'} ${((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
-      aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
+      aria-label={tokenName ? t('tokenCreatedActivity.openTrendNamed', { tokenName }) : t('tokenCreatedActivity.openTrend')}
     >
       <div className="flex items-center justify-between gap-3 md:min-h-8">
         <div className="flex items-center gap-1 min-w-0 py-[1px]">
@@ -77,7 +79,7 @@ const TokenCreatedActivityItem = memo(({
             >
               {creatorLabel}
             </a>
-            <span className="text-white/70 shrink-0">created</span>
+            <span className="text-white/70 shrink-0">{t('created')}</span>
             {tokenName && (
               <span className="truncate max-w-[24ch] text-white/90">
                 {linkify(`#${tokenName}`, { hashtagVariant: 'post-inline' })}
@@ -93,10 +95,10 @@ const TokenCreatedActivityItem = memo(({
               type="button"
               onClick={(e) => { e.stopPropagation(); navigate(tokenLink); }}
               className="inline-flex items-center gap-1.5 text-[12px] px-2 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors"
-              title="Buy"
+              title={t('buy')}
             >
-              <span className="hidden md:inline">Buy</span>
-              <span className="md:hidden">Buy</span>
+              <span className="hidden md:inline">{t('buy')}</span>
+              <span className="md:hidden">{t('buy')}</span>
             </button>
           )}
         </div>

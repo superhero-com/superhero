@@ -1,4 +1,5 @@
 import { Clock } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface TokenCreationBannerProps {
   txHash: string | null;
@@ -14,19 +15,24 @@ function step3CircleClass(hasSaleAddress: boolean, txConfirmed: boolean): string
   return 'bg-white/10 text-white/30';
 }
 
-function statusMessage(txHash: string | null, txConfirmed: boolean): string {
-  if (!txHash) return 'Token creation in progress';
-  return txConfirmed ? 'Transaction confirmed!' : 'Waiting for confirmation…';
-}
-
 const TokenCreationBanner = ({
   txHash,
   txConfirmed,
   tokenName,
   hasSaleAddress,
   onDismiss,
-}: TokenCreationBannerProps) => (
-  <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-6 right-4 md:right-6 left-4 md:left-auto z-[9999] md:max-w-sm w-auto">
+}: TokenCreationBannerProps) => {
+  const { t } = useTranslation();
+
+  const statusMessage = () => {
+    if (!txHash) return t('trending.creationBanner.statusInProgress');
+    return txConfirmed
+      ? t('trending.creationBanner.statusConfirmed')
+      : t('trending.creationBanner.statusWaiting');
+  };
+
+  return (
+    <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-6 right-4 md:right-6 left-4 md:left-auto z-[9999] md:max-w-sm w-auto">
     <div className="bg-[#0d1f1e] border border-[#4ecdc4]/40 rounded-2xl p-4 shadow-[0_8px_40px_rgba(78,205,196,0.18)] backdrop-blur-xl animate-in slide-in-from-top duration-400">
 
       {/* Step progress */}
@@ -38,7 +44,7 @@ const TokenCreationBanner = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="text-[9px] text-white/50 font-medium">Broadcast</span>
+          <span className="text-[9px] text-white/50 font-medium">{t('trending.creationBanner.stepBroadcast')}</span>
         </div>
 
         <div className={`flex-1 h-px mx-1.5 mb-3.5 transition-all duration-700 ${txConfirmed ? 'bg-[#4ecdc4]' : 'bg-white/15'}`} />
@@ -57,7 +63,7 @@ const TokenCreationBanner = ({
               </svg>
             ) : '2'}
           </div>
-          <span className="text-[9px] text-white/50 font-medium">Confirm</span>
+          <span className="text-[9px] text-white/50 font-medium">{t('trending.creationBanner.stepConfirm')}</span>
         </div>
 
         <div className={`flex-1 h-px mx-1.5 mb-3.5 transition-all duration-700 ${hasSaleAddress ? 'bg-[#4ecdc4]' : 'bg-white/15'}`} />
@@ -71,7 +77,7 @@ const TokenCreationBanner = ({
               </svg>
             ) : '🚀'}
           </div>
-          <span className="text-[9px] text-white/50 font-medium">Live!</span>
+          <span className="text-[9px] text-white/50 font-medium">{t('trending.creationBanner.stepLive')}</span>
         </div>
       </div>
 
@@ -95,46 +101,34 @@ const TokenCreationBanner = ({
         {/* Text */}
         <div className="flex-1 min-w-0 space-y-1">
           <p className="text-sm font-bold text-white leading-snug">
-            {statusMessage(txHash, txConfirmed)}
+            {statusMessage()}
           </p>
           <p className="text-xs text-white/60 leading-relaxed">
             {(() => {
               if (txHash && txConfirmed) {
                 return (
-                  <>
-                    Loading
-                    <span className="text-[#4ecdc4] font-semibold">
-                      #
-                      {tokenName}
-                    </span>
-                    {' '}
-                    data from the chain…
-                  </>
+                  <Trans
+                    i18nKey="trending.creationBanner.loadingData"
+                    values={{ tokenName }}
+                    components={{ token: <span className="text-[#4ecdc4] font-semibold" /> }}
+                  />
                 );
               }
               if (txHash) {
                 return (
-                  <>
-                    Your
-                    <span className="px-1 text-[#4ecdc4] font-semibold">
-                      #
-                      {tokenName}
-                    </span>
-                    {' '}
-                    transaction is waiting for confirmation. Usually takes 10–60 s.
-                  </>
+                  <Trans
+                    i18nKey="trending.creationBanner.waitingConfirmation"
+                    values={{ tokenName }}
+                    components={{ token: <span className="px-1 text-[#4ecdc4] font-semibold" /> }}
+                  />
                 );
               }
               return (
-                <>
-                  Your token
-                  <span className="px-1 text-[#4ecdc4] font-semibold">
-                    #
-                    {tokenName}
-                  </span>
-                  {' '}
-                  is being confirmed on the blockchain.
-                </>
+                <Trans
+                  i18nKey="trending.creationBanner.beingConfirmed"
+                  values={{ tokenName }}
+                  components={{ token: <span className="px-1 text-[#4ecdc4] font-semibold" /> }}
+                />
               );
             })()}
           </p>
@@ -153,15 +147,16 @@ const TokenCreationBanner = ({
           type="button"
           onClick={onDismiss}
           className="flex-shrink-0 text-white/30 hover:text-white/80 transition-colors mt-0.5"
-          aria-label="Dismiss notification"
+          aria-label={t('trending.creationBanner.dismissAria')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default TokenCreationBanner;

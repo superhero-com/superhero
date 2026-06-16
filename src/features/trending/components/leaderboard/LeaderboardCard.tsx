@@ -2,6 +2,7 @@ import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarW
 import AeButton from '@/components/AeButton';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatNumber } from '../../../../utils/number';
 import type { LeaderboardItem } from '../../api/leaderboard';
 
@@ -16,6 +17,7 @@ export const LeaderboardCard = ({
   item,
   timeframeLabel,
 }: LeaderboardCardProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const pnlUsd = Number(item.pnl_usd || 0);
@@ -142,9 +144,7 @@ export const LeaderboardCard = ({
       <div className="flex items-stretch gap-3 sm:gap-4">
         <div className="flex flex-col gap-1.5 sm:gap-1">
           <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-white/50">
-            {timeframeLabel}
-            {' '}
-            PnL (USD)
+            {t('trending.leaderboardCard.pnlUsd', { timeframe: timeframeLabel })}
           </span>
           <span
             className={`text-xl sm:text-2xl font-semibold ${pnlClassName}`}
@@ -158,11 +158,7 @@ export const LeaderboardCard = ({
           <span
             className={`text-[10px] sm:text-[11px] ${roiClassName}`}
           >
-            {timeframeLabel}
-            {' '}
-            ROI
-            {' '}
-            {roiDisplay}
+            {t('trending.leaderboardCard.roi', { timeframe: timeframeLabel, value: roiDisplay })}
           </span>
         </div>
         {/* Portfolio value sparkline */}
@@ -230,7 +226,7 @@ export const LeaderboardCard = ({
                   {formatNumber(latestPoint.value, 2)}
                 </div>
                 <div className="text-[9px] text-white/60">
-                  Latest portfolio value
+                  {t('trending.leaderboardCard.latestPortfolioValue')}
                 </div>
               </div>
             )}
@@ -241,7 +237,7 @@ export const LeaderboardCard = ({
       {/* Secondary stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-[10px] sm:text-[11px] text-white/60 mt-1 sm:mt-0">
         <div className="flex flex-col gap-1">
-          <span className="uppercase tracking-wide">AUM</span>
+          <span className="uppercase tracking-wide">{t('trending.leaderboardCard.aum')}</span>
           <span className="text-xs font-mono text-white">
             $
             {formatNumber(aumUsd, 2)}
@@ -249,16 +245,14 @@ export const LeaderboardCard = ({
         </div>
         <div className="flex flex-col gap-1">
           <span className="uppercase tracking-wide">
-            {timeframeLabel}
-            {' '}
-            MDD
+            {t('trending.leaderboardCard.mdd', { timeframe: timeframeLabel })}
           </span>
           <span className="text-xs font-mono text-white">
             {mddIsNaN ? '--' : `${mddPct.toFixed(2)}%`}
           </span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="uppercase tracking-wide">Owned Trends</span>
+          <span className="uppercase tracking-wide">{t('trending.leaderboardCard.ownedTrends')}</span>
           <span className="text-xs font-mono text-white">
             {formatNumber(ownedTrends, 0)}
           </span>
@@ -268,21 +262,21 @@ export const LeaderboardCard = ({
       {/* Additional breakdown */}
       <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-white/55 mt-1">
         <span>
-          Buys:
+          {t('trending.leaderboardCard.buys')}
           {' '}
           <span className="text-emerald-300 font-mono">
             {formatNumber(buyTrades, 0)}
           </span>
         </span>
         <span>
-          Sells:
+          {t('trending.leaderboardCard.sells')}
           {' '}
           <span className="text-red-300 font-mono">
             {formatNumber(sellTrades, 0)}
           </span>
         </span>
         <span>
-          Created:
+          {t('trending.leaderboardCard.created')}
           {' '}
           <span className="text-white font-mono">
             {formatNumber(createdTokens, 0)}
@@ -297,7 +291,7 @@ export const LeaderboardCard = ({
           className="w-full h-10 text-sm font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:from-yellow-300 hover:to-yellow-400"
           onClick={() => navigate(`/users/${item.address}`)}
         >
-          View profile
+          {t('trending.leaderboardCard.viewProfile')}
         </AeButton>
       </div>
     </div>

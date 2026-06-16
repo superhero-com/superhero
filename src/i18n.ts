@@ -19,7 +19,9 @@ export const SUPPORTED_LANGUAGES: {
   { code: 'zh', label: '中文', flag: '🇨🇳' },
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  // Arabic is translated and registered, but hidden from the switcher for now.
+  // Re-enable by uncommenting (RTL handling is already wired via RTL_LANGUAGES).
+  // { code: 'ar', label: 'العربية', flag: '🇸🇦' },
 ];
 
 // Languages that should render right-to-left.

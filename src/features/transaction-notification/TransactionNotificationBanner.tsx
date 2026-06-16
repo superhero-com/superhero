@@ -3,6 +3,7 @@ import Spinner from '@/components/Spinner';
 import { Decimal } from '@/libs/decimal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
@@ -217,18 +218,21 @@ const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success
   );
 };
 
-const NotificationError = ({ message }: { message: string }) => (
+const NotificationError = ({ message }: { message: string }) => {
+  const { t } = useTranslation();
+  return (
   <div className={`${cardBase} bg-red-950/90`}>
     <NotificationIcon variant="error" />
     <div className="flex-1 min-w-0 space-y-0.5">
-      <p className="text-red-400 font-bold text-sm leading-[18px] m-0">Transaction failed</p>
+      <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{t('common.messages.transactionFailed')}</p>
       <p className="text-gray-400 text-[13px] leading-[17px] m-0 truncate">{message}</p>
     </div>
     <div className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center flex-shrink-0">
       <span className="text-red-400 text-sm font-bold">✕</span>
     </div>
   </div>
-);
+  );
+};
 
 const NotificationWaiting = ({
   payload,
@@ -259,6 +263,7 @@ const NotificationConfirmed = ({
   payload: TxPayload;
   activeAccount: string | undefined;
 }) => {
+  const { t } = useTranslation();
   const meta = getConfirmedMeta(payload);
   const portfolioHref = activeAccount
     ? `/users/${encodeURIComponent(activeAccount)}`
@@ -290,11 +295,11 @@ const NotificationConfirmed = ({
             window.location.href = portfolioHref;
           }}
         >
-          <span className="text-[#0a0a0a] font-bold text-[13px]">View Portfolio</span>
+          <span className="text-[#0a0a0a] font-bold text-[13px]">{t('common.buttons.viewPortfolio')}</span>
         </button>
       ) : (
         <div className="bg-green-400 rounded-full px-4 py-2 flex-shrink-0">
-          <span className="text-[#0a0a0a] font-bold text-[13px]">Done</span>
+          <span className="text-[#0a0a0a] font-bold text-[13px]">{t('common.buttons.done')}</span>
         </div>
       )}
     </div>
@@ -304,6 +309,7 @@ const NotificationConfirmed = ({
 // ─── Main banner ─────────────────────────────────────────────────────────────
 
 export const TransactionNotificationBanner = () => {
+  const { t } = useTranslation();
   const { notificationState, dismissNotification } = useTransactionNotification();
   const activeAccount = useAtomValue(activeAccountAtom);
   const [visible, setVisible] = useState(false);
@@ -350,7 +356,7 @@ export const TransactionNotificationBanner = () => {
       ref={bannerRef}
       role="button"
       tabIndex={0}
-      aria-label="Dismiss notification"
+      aria-label={t('common.aria.dismissNotification')}
       onClick={dismissNotification}
       onKeyDown={handleKeyDown}
       className={`

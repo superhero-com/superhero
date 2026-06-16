@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { DexService } from '@/api/generated';
 import { DataTable, DataTableResponse } from '@/features/shared/components/DataTable/DataTable';
 import { TransactionCard } from './TransactionCard';
@@ -34,24 +35,28 @@ const fetchTransactions = async (
   return response as unknown as DataTableResponse<any>;
 };
 
-export const PoolTransactions = ({ poolAddress }: PoolTransactionsProps) => (
-  <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
-    <h3 className="text-lg font-semibold text-white m-0 mb-6">
-      Recent Transactions
-    </h3>
-    <DataTable
-      queryFn={(params) => fetchTransactions(params, poolAddress)}
-      renderRow={({ item, index }) => (
-        <TransactionCard key={item.tx_hash || index} transaction={item} />
-      )}
-      initialParams={{
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
-        pairAddress: poolAddress,
-      }}
-      itemsPerPage={10}
-      emptyMessage="No transactions found for this pool. Trading activity will appear here."
-      className="space-y-4"
-    />
-  </div>
-);
+export const PoolTransactions = ({ poolAddress }: PoolTransactionsProps) => {
+  const { t } = useTranslation('dex');
+
+  return (
+    <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
+      <h3 className="text-lg font-semibold text-white m-0 mb-6">
+        {t('poolTransactions.recentTransactions')}
+      </h3>
+      <DataTable
+        queryFn={(params) => fetchTransactions(params, poolAddress)}
+        renderRow={({ item, index }) => (
+          <TransactionCard key={item.tx_hash || index} transaction={item} />
+        )}
+        initialParams={{
+          orderBy: 'created_at',
+          orderDirection: 'DESC',
+          pairAddress: poolAddress,
+        }}
+        itemsPerPage={10}
+        emptyMessage={t('poolTransactions.emptyMessage')}
+        className="space-y-4"
+      />
+    </div>
+  );
+};

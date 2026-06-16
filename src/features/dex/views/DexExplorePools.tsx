@@ -4,6 +4,7 @@ import PerformanceTimeframeSelector from '@/features/trending/components/Perform
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { DexPairService, PairDto } from '../../../api/generated';
@@ -21,6 +22,7 @@ interface PaginatedResponse<T> {
 }
 
 const DexExplorePools = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tokenAddress = searchParams.get('tokenAddress');
@@ -71,10 +73,10 @@ const DexExplorePools = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3">
-            Explore Pools
+            {t('explore.explorePools')}
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
-            Explore trading pairs and their performance metrics across the DEX.
+            {t('explore.explorePoolsDescription')}
           </p>
         </div>
 
@@ -89,7 +91,7 @@ const DexExplorePools = () => {
                 <div className="hidden md:flex items-center gap-1.5">
                   <div className="w-0.5 h-4 bg-gradient-to-b from-[var(--primary-color)] to-[var(--accent-color)] rounded-sm" />
                   <span className="text-sm font-semibold text-[var(--standard-font-color)] bg-gradient-to-r from-[var(--primary-color)] to-[var(--accent-color)] bg-clip-text text-transparent">
-                    Filter & Sort
+                    {t('explore.tokenListTable.filterAndSort')}
                   </span>
                 </div>
 
@@ -102,8 +104,8 @@ const DexExplorePools = () => {
                       onValueChange={(v) => setSort(v as any)}
                       triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                     >
-                      <AppSelectItem value="transactions_count">Tx count</AppSelectItem>
-                      <AppSelectItem value="created_at">Created at</AppSelectItem>
+                      <AppSelectItem value="transactions_count">{t('explore.txCount')}</AppSelectItem>
+                      <AppSelectItem value="created_at">{t('explore.createdAt')}</AppSelectItem>
                     </AppSelect>
                   </div>
 
@@ -117,8 +119,8 @@ const DexExplorePools = () => {
                     }`}
                     title={
                       sortDirection === 'ASC'
-                        ? 'Sort Ascending'
-                        : 'Sort Descending'
+                        ? t('explore.tokenListTable.sortAscending')
+                        : t('explore.tokenListTable.sortDescending')
                     }
                   >
                     {sortDirection === 'ASC' ? '↑' : '↓'}
@@ -127,7 +129,7 @@ const DexExplorePools = () => {
                   {/* Items per page - Mobile */}
                   <div className="flex md:hidden items-center gap-1.5">
                     <span className="text-[13px] text-[var(--light-font-color)] font-medium">
-                      Show:
+                      {t('explore.show')}
                     </span>
                     <div className="relative">
                       <AppSelect
@@ -158,7 +160,7 @@ const DexExplorePools = () => {
                     🔍
                   </div>
                   <input
-                    placeholder="Search pools..."
+                    placeholder={t('explore.searchPoolsPlaceholder')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full py-2 pl-8 pr-3 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-normal transition-all duration-300 outline-none focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)] focus:bg-white/[0.08]"
@@ -168,7 +170,7 @@ const DexExplorePools = () => {
                       type="button"
                       onClick={() => setSearch('')}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-white/10 border-0 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-[var(--light-font-color)] text-[10px] transition-all duration-300 outline-none hover:bg-red-500/20 hover:text-red-400 hover:scale-110 active:scale-95"
-                      title="Clear search"
+                      title={t('explore.tokenListTable.clearSearch')}
                     >
                       ✕
                     </button>
@@ -179,7 +181,7 @@ const DexExplorePools = () => {
                 <div className="hidden md:flex items-center gap-4">
                   <div className="flex items-center gap-4">
                     <span className="text-[13px] text-[var(--light-font-color)] font-medium">
-                      Show:
+                      {t('explore.show')}
                     </span>
                     <div className="relative">
                       <AppSelect
@@ -201,9 +203,7 @@ const DexExplorePools = () => {
                   <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                     <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                      {data?.meta.totalItems}
-                      {' '}
-                      {data?.meta.totalItems === 1 ? 'pool' : 'pools'}
+                      {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
                     </span>
                   </div>
                 </div>
@@ -215,9 +215,7 @@ const DexExplorePools = () => {
               <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                 <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                  {data?.meta.totalItems}
-                  {' '}
-                  {data?.meta.totalItems === 1 ? 'pool' : 'pools'}
+                  {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
                 </span>
               </div>
             </div>
@@ -273,7 +271,7 @@ const DexExplorePools = () => {
                         <span className="text-xs text-[var(--accent-color)] font-semibold">
                           {pair.transactions_count || 0}
                           {' '}
-                          Tx
+                          {t('explore.txShort')}
                         </span>
                       </div>
                     </div>
@@ -282,7 +280,7 @@ const DexExplorePools = () => {
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                         <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
-                          TVL (USD)
+                          {t('explore.tvlUsd')}
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
                           <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
@@ -290,7 +288,7 @@ const DexExplorePools = () => {
                       </div>
                       <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                         <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
-                          Volume
+                          {t('explore.volume')}
                           {' '}
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
@@ -311,7 +309,7 @@ const DexExplorePools = () => {
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
                       >
-                        🔄 Swap
+                        🔄 {t('explore.swap')}
                       </button>
                       <button
                         type="button"
@@ -323,7 +321,7 @@ const DexExplorePools = () => {
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
                       >
-                        ➕ Add Liquidity
+                        ➕ {t('dex.activity.addLiquidity')}
                       </button>
                     </div>
                   </div>
@@ -336,27 +334,27 @@ const DexExplorePools = () => {
                   <thead>
                     <tr className="bg-white/5 border-b border-[var(--glass-border)]">
                       <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        Pair
+                        {t('explore.pair')}
                       </th>
                       <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        Tx
+                        {t('explore.txShort')}
                       </th>
 
                       <th className="text-right py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
                         <div className="flex items-center gap-1.5">
-                          Volume
+                          {t('explore.volume')}
                           {' '}
                           <PerformanceTimeframeSelector />
                         </div>
                       </th>
                       <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        TVL
+                        {t('explore.tvlShort')}
                       </th>
                       <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        Chart
+                        {t('explore.chart')}
                       </th>
                       <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        Actions
+                        {t('explore.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -429,7 +427,7 @@ const DexExplorePools = () => {
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
                             >
-                              Swap
+                              {t('explore.swap')}
                             </button>
                             <button
                               type="button"
@@ -441,7 +439,7 @@ const DexExplorePools = () => {
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
                             >
-                              Add
+                              {t('explore.add')}
                             </button>
                           </div>
                         </td>
@@ -458,17 +456,11 @@ const DexExplorePools = () => {
                 {/* Pagination Info */}
                 <div className="flex items-center gap-2 order-2 md:order-1">
                   <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                    Showing
-                    {' '}
-                    {(page - 1) * limit + 1}
-                    -
-                    {Math.min(page * limit, data.meta.totalItems)}
-                    {' '}
-                    of
-                    {' '}
-                    {data.meta.totalItems}
-                    {' '}
-                    pools
+                    {t('explore.showingPoolsRange', {
+                      from: (page - 1) * limit + 1,
+                      to: Math.min(page * limit, data.meta.totalItems),
+                      total: data.meta.totalItems,
+                    })}
                   </span>
                 </div>
 
@@ -483,9 +475,9 @@ const DexExplorePools = () => {
                       ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                       : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
                     }`}
-                    title="First page"
+                    title={t('explore.firstPage')}
                   >
-                    ⇤ First
+                    ⇤ {t('explore.first')}
                   </button>
 
                   {/* Previous Page Button */}
@@ -497,9 +489,9 @@ const DexExplorePools = () => {
                       ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                       : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
                     }`}
-                    title="Previous page"
+                    title={t('explore.previousPage')}
                   >
-                    ← Prev
+                    ← {t('explore.prev')}
                   </button>
 
                   {/* Page Number Display */}
@@ -508,9 +500,7 @@ const DexExplorePools = () => {
                       {page}
                     </span>
                     <span className="text-sm text-[var(--light-font-color)]">
-                      of
-                      {' '}
-                      {Math.ceil(data.meta.totalItems / limit)}
+                      {t('explore.ofPages', { total: Math.ceil(data.meta.totalItems / limit) })}
                     </span>
                   </div>
 
@@ -523,9 +513,9 @@ const DexExplorePools = () => {
                       ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                       : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
                     }`}
-                    title="Next page"
+                    title={t('explore.nextPage')}
                   >
-                    Next →
+                    {t('explore.next')} →
                   </button>
 
                   {/* Last Page Button - Desktop Only */}
@@ -537,9 +527,9 @@ const DexExplorePools = () => {
                       ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                       : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
                     }`}
-                    title="Last page"
+                    title={t('explore.lastPage')}
                   >
-                    Last ⇥
+                    {t('explore.last')} ⇥
                   </button>
                 </div>
               </div>
@@ -549,10 +539,10 @@ const DexExplorePools = () => {
             {data?.items.length === 0 && !isLoading && (
               <div className="text-center py-15 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] mt-5">
                 <div className="text-[var(--light-font-color)] text-base font-medium mb-2">
-                  No pools found
+                  {t('explore.noPoolsFound')}
                 </div>
                 <div className="text-[var(--light-font-color)] text-sm opacity-70">
-                  Try adjusting your search criteria
+                  {t('explore.tokenListTable.tryAdjustingSearch')}
                 </div>
               </div>
             )}

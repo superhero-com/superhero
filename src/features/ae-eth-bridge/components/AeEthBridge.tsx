@@ -1033,7 +1033,7 @@ export const AeEthBridge = () => {
                 )
               ) : (
                 <div className="bg-white/[0.05] border border-white/10 rounded-xl h-10 flex items-center px-4 text-white/40 text-sm">
-                  No Ethereum account connected
+                  {t('bridge.noEthereumAccountConnected')}
                 </div>
               )}
             </div>
@@ -1101,11 +1101,7 @@ export const AeEthBridge = () => {
 
             {hasInsufficientBalance && (
             <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5">
-              Insufficient balance. Available:
-              {' '}
-              {Decimal.from(tokenBalance || '0').prettify(6)}
-              {' '}
-              {asset?.symbol}
+              {t('bridge.insufficientBalanceAvailable', { balance: Decimal.from(tokenBalance || '0').prettify(6), symbol: asset?.symbol })}
             </div>
             )}
 

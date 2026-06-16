@@ -5,7 +5,7 @@ import {
 
 export interface NavigationItem {
   id: string;
-  label: string;
+  labelKey: string;
   path?: string;
   icon: LucideIcon;
   isExternal?: boolean;
@@ -13,42 +13,42 @@ export interface NavigationItem {
 
 const HOME_ITEM: NavigationItem = {
   id: 'home',
-  label: 'Home',
+  labelKey: 'nav.home',
   path: '/',
   icon: Home,
 };
 
 const EXPLORE_ITEM: NavigationItem = {
   id: 'explore',
-  label: 'Explore',
+  labelKey: 'nav.explore',
   path: '/trends/tokens',
   icon: Search,
 };
 
 const DEFI_ITEM: NavigationItem = {
   id: 'dex',
-  label: 'DeFi',
+  labelKey: 'nav.defi',
   path: '/defi',
   icon: ArrowLeftRight,
 };
 
 const DAO_ITEM: NavigationItem = {
   id: 'dao',
-  label: 'DAO',
+  labelKey: 'nav.dao',
   path: '/trends/daos',
   icon: Vote,
 };
 
 const REFER_EARN_ITEM: NavigationItem = {
   id: 'refer-earn',
-  label: 'Earn Rewards',
+  labelKey: 'nav.earnRewards',
   path: '/trends/invite',
   icon: Gift,
 };
 
 const GET_AE_ITEM: NavigationItem = {
   id: 'get-ae',
-  label: 'Get AE',
+  labelKey: 'nav.getAe',
   path: '/get-ae',
   icon: Landmark,
 };
@@ -65,7 +65,7 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
   ...getNavigationItems(),
   {
     id: 'account',
-    label: 'Superhero ID',
+    labelKey: 'nav.superheroId',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },
@@ -83,7 +83,7 @@ export const getMobileFooterNavigationItems = (
   ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
   {
     id: 'account',
-    label: 'Account',
+    labelKey: 'nav.account',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },

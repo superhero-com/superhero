@@ -2,6 +2,7 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Decimal } from '../../../libs/decimal';
 import { TokenLineChart } from './TokenLineChart';
@@ -42,6 +43,7 @@ const TokenListTableRow = ({
   useCollectionRank = false,
   rank,
 }: TokenListTableRowProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const tokenAddress = useMemo(() => token.address, [token.address]);
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
@@ -106,7 +108,7 @@ const TokenListTableRow = ({
         onKeyDown={handleRowKeyDown}
         tabIndex={0}
         role="link"
-        aria-label={`View ${tokenLabel}`}
+        aria-label={t('common.aria.viewToken', { token: tokenLabel })}
       >
         {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />
@@ -167,7 +169,7 @@ const TokenListTableRow = ({
         onKeyDown={handleRowKeyDown}
         tabIndex={0}
         role="link"
-        aria-label={`View ${tokenLabel}`}
+        aria-label={t('common.aria.viewToken', { token: tokenLabel })}
       >
         {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />

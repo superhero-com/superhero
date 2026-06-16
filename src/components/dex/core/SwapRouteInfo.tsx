@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { DexTokenDto } from '../../../api/generated';
 import { CONFIG } from '../../../config';
@@ -17,6 +18,7 @@ interface SwapRouteInfoProps {
 export default function SwapRouteInfo({
   routeInfo, tokens, tokenIn, tokenOut, className,
 }: SwapRouteInfoProps) {
+  const { t } = useTranslation('dex');
   function routeLabel(addr: string): string {
     if (addr === CONFIG.DEX_WAE) return 'WAE';
     if (tokenIn?.address === addr) return tokenIn.symbol;
@@ -64,7 +66,7 @@ export default function SwapRouteInfo({
       <AeCardContent className="p-3">
         <div className="text-xs text-muted-foreground space-y-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">Route:</span>
+            <span className="font-semibold text-foreground">{t('swapRouteInfo.route')}</span>
             <Badge variant="secondary" className="font-mono text-xs bg-muted/30 px-2 py-1">
               {buildRouteDisplay()}
             </Badge>
@@ -72,7 +74,7 @@ export default function SwapRouteInfo({
 
           {routeInfo.reserves && routeInfo.reserves.length > 0 && (
             <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground">Pool Reserves:</div>
+              <div className="text-xs font-semibold text-muted-foreground">{t('swapRouteInfo.poolReserves')}</div>
               {routeInfo.reserves.map((pair: any, idx: number) => {
                 const t0 = String(pair.token0);
                 const t1 = String(pair.token1);
@@ -92,7 +94,7 @@ export default function SwapRouteInfo({
                       {routeLabel(t1)}
                     </Badge>
                     <span className="text-muted-foreground font-mono">
-                      {hr0 && hr1 ? `${hr0} / ${hr1}` : 'N/A'}
+                      {hr0 && hr1 ? `${hr0} / ${hr1}` : t('swapRouteInfo.notAvailable')}
                     </span>
                   </div>
                 );

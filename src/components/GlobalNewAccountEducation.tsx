@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWallet } from '../hooks';
 
 const GlobalNewAccountEducation = () => {
+  const { t } = useTranslation('common');
   const {
     address, isNewAccount, setIsNewAccount,
   } = useWallet();
@@ -88,7 +90,7 @@ const GlobalNewAccountEducation = () => {
                 letterSpacing: '-0.5px',
               }}
               >
-                New to æternity? ✨
+                {t('newAccountEducation.title')}
               </h4>
             </div>
           </div>
@@ -132,7 +134,7 @@ const GlobalNewAccountEducation = () => {
             fontWeight: 400,
           }}
           >
-            Your account is fresh and ready to explore! 🌟
+            {t('newAccountEducation.subtitle')}
           </p>
 
           <div style={{
@@ -148,26 +150,26 @@ const GlobalNewAccountEducation = () => {
             }}
             >
               <span style={{ fontSize: 16 }}>💡</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#4ecdc4' }}>Quick Start Guide:</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#4ecdc4' }}>{t('newAccountEducation.quickStartGuide')}</span>
             </div>
             <div style={{ fontSize: 12, color: '#b8c5d6', lineHeight: 1.4 }}>
               1.
               {' '}
-              <strong>Swap ETH</strong>
+              <strong>{t('newAccountEducation.step1Bold')}</strong>
               {' '}
-              from Ethereum to get AE tokens
+              {t('newAccountEducation.step1Text')}
               <br />
               2.
               {' '}
-              <strong>Visit the DEX</strong>
+              <strong>{t('newAccountEducation.step2Bold')}</strong>
               {' '}
-              to start trading
+              {t('newAccountEducation.step2Text')}
               <br />
               3.
               {' '}
-              <strong>Explore</strong>
+              <strong>{t('newAccountEducation.step3Bold')}</strong>
               {' '}
-              the æternity ecosystem! 🎉
+              {t('newAccountEducation.step3Text')}
             </div>
           </div>
         </div>
@@ -201,7 +203,7 @@ const GlobalNewAccountEducation = () => {
               e.currentTarget.style.boxShadow = '0 4px 12px rgba(78,205,196,0.3)';
             }}
           >
-            🎯 Go to DEX
+            {t('newAccountEducation.goToDex')}
           </button>
           <button
             type="button"
@@ -226,7 +228,7 @@ const GlobalNewAccountEducation = () => {
               e.currentTarget.style.color = '#b8c5d6';
             }}
           >
-            Later
+            {t('newAccountEducation.later')}
           </button>
         </div>
       </div>

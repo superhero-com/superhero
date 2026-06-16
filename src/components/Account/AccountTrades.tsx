@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { TX_FUNCTIONS } from '@/utils/constants';
 import { formatLongDate, formatVolume } from '@/utils/common';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
@@ -15,16 +16,20 @@ interface AccountTradesProps {
   tab: string;
 }
 
-const ErrorComponent = () => (
-  <div className="text-center py-12">
-    <div className="text-red-400 text-lg mb-2">⚠️</div>
-    <div className="text-red-400 text-sm">
-      Failed to load transactions
+const ErrorComponent = () => {
+  const { t } = useTranslation('common');
+  return (
+    <div className="text-center py-12">
+      <div className="text-red-400 text-lg mb-2">⚠️</div>
+      <div className="text-red-400 text-sm">
+        {t('account.failedToLoadTransactions')}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AccountTrades = ({ address, tab }: AccountTradesProps) => {
+  const { t } = useTranslation('common');
   const isChainName = address?.endsWith('.chain');
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined,
@@ -44,13 +49,13 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
       <div
         className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1.5fr_1fr_2fr] gap-2 px-4 py-2 border border-white/10 rounded-2xl bg-white/[0.02] text-[10px] font-semibold text-white/60 uppercase tracking-wide"
       >
-        <div>Token</div>
-        <div>Type</div>
-        <div>Volume</div>
-        <div>Price</div>
+        <div>{t('account.token')}</div>
+        <div>{t('account.type')}</div>
+        <div>{t('account.volume')}</div>
+        <div>{t('account.price')}</div>
         {/* <div>Total Price</div> */}
-        <div>Date</div>
-        <div>Transaction</div>
+        <div>{t('account.date')}</div>
+        <div>{t('account.transaction')}</div>
       </div>
 
       {/* Rows */}
@@ -105,7 +110,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
             })();
 
             const token = transaction?.token;
-            const tokenName = token?.name || transaction?.token_name || 'Token';
+            const tokenName = token?.name || transaction?.token_name || t('account.token');
             const tokenHref = token?.name || token?.address
               ? `/trends/tokens/${encodeURIComponent(
                 token?.name || token?.address,
@@ -119,7 +124,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
               >
                 <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Token:
+                    {t('account.tokenLabel')}
                   </div>
                   {tokenHref ? (
                     <a
@@ -141,22 +146,22 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
 
                 <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Type:
+                    {t('account.typeLabel')}
                   </div>
                   <div
                     className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${chipStyles.textColor} ${chipStyles.chipBg} border ${chipStyles.borderColor}`}
                   >
                     {transaction?.tx_type === TX_FUNCTIONS.create_community
-                      ? 'CREATED'
-                      : (transaction?.tx_type || 'TRADE')
-                        .toString()
-                        .toUpperCase()}
+                      ? t('account.txTypeCreated')
+                      : (transaction?.tx_type
+                        ? transaction.tx_type.toString().toUpperCase()
+                        : t('account.txTypeTrade'))}
                   </div>
                 </div>
 
                 <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Volume:
+                    {t('account.volumeLabel')}
                   </div>
                   <div className="text-white font-medium text-xs">
                     {formatVolume(transaction?.volume)}
@@ -165,7 +170,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
 
                 <div className="flex items-center text-xs">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Unit Price:
+                    {t('account.unitPriceLabel')}
                   </div>
                   <div className="flex md:flex-col flex-row  ga-4">
                     <PriceDataFormatter
@@ -186,7 +191,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
 
                 <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Date:
+                    {t('account.dateLabel')}
                   </div>
                   <div className="text-white/70 text-xs">
                     {formatLongDate(transaction?.created_at)}
@@ -195,7 +200,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
 
                 <div className="flex items-center text-xs">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Tx:
+                    {t('account.txLabel')}
                   </div>
                   <AddressChip address={transaction?.tx_hash} linkToExplorer />
                 </div>
@@ -210,7 +215,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
             staleTime: 30_000,
             refetchInterval: 60_000,
           }}
-          emptyMessage="No transactions found matching your."
+          emptyMessage={t('account.noTransactionsFound')}
           className="space-y-4 mb-4"
           errorComponent={ErrorComponent}
           loadingComponent={(
@@ -221,7 +226,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
           fetchingOverlayComponent={(
             <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm">
               <Spinner className="w-4 h-4" />
-              <span>Loading trades...</span>
+              <span>{t('account.loadingTrades')}</span>
             </div>
           )}
         />

@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
@@ -20,6 +21,7 @@ export default function NoLiquidityWarning({
   maxAvailable,
   pairAddress,
 }: NoLiquidityWarningProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   if (!show || !tokenIn || !tokenOut) {
@@ -58,11 +60,10 @@ export default function NoLiquidityWarning({
           {/* Warning Content */}
           <div className="flex-1">
             <h3 className="text-yellow-400 font-semibold text-sm mb-2">
-              Insufficient Liquidity
+              {t('dex.noLiquidity.insufficientTitle')}
             </h3>
             <p className="text-yellow-300/90 text-sm leading-relaxed mb-3">
-              The requested amount exceeds the available liquidity in the pool.
-              Maximum available:
+              {t('dex.noLiquidity.insufficientDescription')}
               {' '}
               <span className="font-semibold">
                 {Decimal.from(maxAvailable).prettify()}
@@ -74,12 +75,10 @@ export default function NoLiquidityWarning({
 
               <div className="text-xs text-yellow-300/70 flex items-center">
                 <span>
-                  • Reduce your input amount to
-                  {Decimal.from(maxAvailable).prettify()}
-                  {' '}
-                  {tokenIn.symbol}
-                  {' '}
-                  or less
+                  {t('dex.noLiquidity.reduceAmount', {
+                    amount: Decimal.from(maxAvailable).prettify(),
+                    symbol: tokenIn.symbol,
+                  })}
                 </span>
               </div>
             </div>
@@ -90,7 +89,7 @@ export default function NoLiquidityWarning({
           onClick={handleAddLiquidity}
           className="mx-auto mt-4 px-4 py-2 rounded-xl border border-yellow-400/30 bg-yellow-400/10 text-yellow-400 text-sm font-semibold hover:bg-yellow-400/20 transition-all duration-300 cursor-pointer"
         >
-          ➕ Add Liquidity
+          ➕ {t('dex.noLiquidity.addLiquidity')}
         </button>
       </div>
     );
@@ -122,10 +121,10 @@ export default function NoLiquidityWarning({
         {/* Warning Content */}
         <div className="flex-1">
           <h3 className="text-red-400 font-semibold text-sm mb-2">
-            No Liquidity Available
+            {t('dex.noLiquidity.noLiquidityTitle')}
           </h3>
           <p className="text-red-300/90 text-sm leading-relaxed mb-3">
-            No liquidity found for the
+            {t('dex.noLiquidity.noLiquidityForPair')}
             {' '}
             <span className="font-semibold">{tokenIn.symbol}</span>
             {' '}
@@ -133,8 +132,7 @@ export default function NoLiquidityWarning({
             {' '}
             <span className="font-semibold">{tokenOut.symbol}</span>
             {' '}
-            pair.
-            This swap cannot be completed at this time.
+            {t('dex.noLiquidity.pairCannotComplete')}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 mt-3">
             <button
@@ -144,7 +142,7 @@ export default function NoLiquidityWarning({
               ➕ Add Liquidity
             </button>
             <div className="text-xs text-red-300/70 flex items-center">
-              <span>• Try a different token pair</span>
+              <span>{t('dex.noLiquidity.tryDifferentPair')}</span>
             </div>
           </div>
         </div>

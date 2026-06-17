@@ -314,7 +314,7 @@ const TokenTopicFeed = ({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        <div className="flex items-center justify-between mb-1 px-1 md:px-0">
+        <div className="flex flex-col items-center text-center gap-0.5 mb-1 px-1 md:flex-row md:items-center md:justify-between md:text-left md:px-0">
           <h4 className="m-0 text-white/80 text-sm md:text-[15px] font-medium">
             Loading posts for
             {' '}

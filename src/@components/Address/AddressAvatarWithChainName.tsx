@@ -3,11 +3,9 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import AddressAvatar from '@/components/AddressAvatar';
 import { AddressFormatted } from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
-import { SuperheroApi } from '@/api/backend';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
@@ -54,13 +52,6 @@ export const AddressAvatarWithChainName = memo(({
     { enabled: showBalance },
   );
   const { chainName } = useChainName(address || '');
-  const { data: cachedProfile } = useQuery({
-    queryKey: ['SuperheroApi.getProfile', address || ''],
-    queryFn: () => SuperheroApi.getProfile(address || ''),
-    enabled: !!address,
-    staleTime: 20_000,
-    refetchOnWindowFocus: false,
-  });
 
   // Hover state management (same as UserBadge)
   const [hover, setHover] = useState(false);
@@ -136,8 +127,7 @@ export const AddressAvatarWithChainName = memo(({
     return null;
   }
 
-  const preferredName = (cachedProfile?.public_name || cachedProfile?.profile?.chain_name || chainName || '').trim();
-  const avatarUrl = (cachedProfile?.profile?.avatarurl || '').trim() || null;
+  const preferredName = (chainName || '').trim();
 
   const renderContent = () => (
     <>
@@ -146,7 +136,6 @@ export const AddressAvatarWithChainName = memo(({
           <div className="rounded-full overflow-hidden shadow-md">
             <AddressAvatar
               address={address}
-              imageUrl={avatarUrl}
               size={size}
               borderRadius="50%"
             />

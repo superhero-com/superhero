@@ -41,10 +41,25 @@ interface TokenHoldersProps {
 interface TokenHolderCardProps {
   holder: TokenHolderDto;
   token: TokenDto;
-  percentage: Decimal;
 }
 
-function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
+function getHolderPercentage(balance: string, totalSupply?: string): Decimal {
+  if (!balance || !totalSupply || totalSupply === '0') {
+    return Decimal.ZERO;
+  }
+  try {
+    return Decimal.from(balance).div(totalSupply).mul(100);
+  } catch {
+    return Decimal.ZERO;
+  }
+}
+
+const TokenHolderCard = React.memo(({ holder, token }: TokenHolderCardProps) => {
+  const percentage = useMemo(
+    () => getHolderPercentage(holder.balance, token.total_supply),
+    [holder.balance, token.total_supply],
+  );
+
   return (
     <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#222222] md:border-0 bg-[#141414]/50 md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
       {/* Account */}
@@ -106,7 +121,9 @@ function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
       </div>
     </div>
   );
-}
+});
+
+TokenHolderCard.displayName = 'TokenHolderCard';
 
 export default function TokenHolders({ token }: TokenHoldersProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -181,18 +198,6 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
     [token.name],
   );
 
-  // Helper function to calculate percentage
-  const getPercentage = (balance: string): Decimal => {
-    if (!balance || !token.total_supply || token.total_supply === '0') {
-      return Decimal.ZERO;
-    }
-    try {
-      return Decimal.from(balance).div(token.total_supply).mul(100);
-    } catch {
-      return Decimal.ZERO;
-    }
-  };
-
   // Handle page updates
   const updatePage = (page: number) => {
     setCurrentPage(page);
@@ -225,18 +230,13 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
 
         {/* Table Body */}
         <div className="md:divide-y md:divide-white/5">
-          {holders.map((holder) => {
-            const percentage = getPercentage(holder.balance);
-
-            return (
-              <TokenHolderCard
-                key={holder.id}
-                holder={holder}
-                token={token}
-                percentage={percentage}
-              />
-            );
-          })}
+          {holders.map((holder) => (
+            <TokenHolderCard
+              key={holder.id}
+              holder={holder}
+              token={token}
+            />
+          ))}
         </div>
 
         {/* Loading State */}

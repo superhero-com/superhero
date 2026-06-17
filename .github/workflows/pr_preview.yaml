@@ -21,6 +21,9 @@ jobs:
       group: build-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
       cancel-in-progress: true
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
+    outputs:
+      branch_slug: ${{ steps.slug.outputs.branch_slug }}
+      pr_number: ${{ steps.slug.outputs.pr_number }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,23 +31,31 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Resolve slug (PR number if available, else branch name)
+        id: slug
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          SLUG=""
+          PR_NUM=""
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "BRANCH_SLUG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            PR_NUM="${{ github.event.pull_request.number }}"
+            SLUG="pr-${PR_NUM}"
           elif [ "${{ github.event_name }}" = "push" ]; then
-            echo "BRANCH_SLUG=$(echo '${{ github.ref_name }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+            SLUG="$(echo '${{ github.ref_name }}' | sed 's|/|-|g')"
           else
-            PR=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq '.[0].number // ""')
-            if [ -n "$PR" ]; then
-              echo "BRANCH_SLUG=pr-${PR}" >> $GITHUB_ENV
-              echo "PR_NUMBER=$PR" >> $GITHUB_ENV
+            PR_NUM="$(gh pr list --repo ${{ github.repository }} --head '${{ github.ref_name }}' --state open --json number --jq '.[0].number // ""' || true)"
+            if [ -n "$PR_NUM" ]; then
+              SLUG="pr-${PR_NUM}"
             else
-              echo "BRANCH_SLUG=$(echo '${{ github.ref_name }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+              SLUG="$(echo '${{ github.ref_name }}' | sed 's|/|-|g')"
             fi
           fi
+          if [ -z "$SLUG" ]; then
+            echo "::error::Could not resolve a non-empty branch slug for event '${{ github.event_name }}' ref '${{ github.ref_name }}'"
+            exit 1
+          fi
+          echo "branch_slug=${SLUG}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUM}" >> $GITHUB_OUTPUT
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
@@ -64,7 +75,7 @@ jobs:
           images: |
             ${{ secrets.DOCKERHUB_REPO }}
           tags: |
-            type=raw,value=${{ env.BRANCH_SLUG }}
+            type=raw,value=${{ steps.slug.outputs.branch_slug }}
 
       - name: Build and push docker image
         uses: docker/build-push-action@v7
@@ -86,10 +97,13 @@ jobs:
     runs-on: ubuntu-latest
     name: PR deploy
     concurrency:
-      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
+      group: preview-deploy-${{ github.event.pull_request.head.ref || github.ref_name }}
       cancel-in-progress: false
     needs: main
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    env:
+      BRANCH_SLUG: ${{ needs.main.outputs.branch_slug }}
+      PR_NUMBER: ${{ needs.main.outputs.pr_number }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -108,26 +122,29 @@ jobs:
           timeout: 10
 
       - name: Staging deploy
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || (github.event.action == 'synchronize' && steps.status.outputs.status_code != '200')
+        id: deploy
+        if: steps.status.outputs.status_code != '200'
         uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
         with:
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
           domain: service.aepps.com
-          git-sha: ${{ github.event.pull_request.head.sha }}
+          git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Staging PR Sync
-        if: github.event.action == 'synchronize' && steps.status.outputs.status_code == '200'
+        id: sync
+        if: steps.status.outputs.status_code == '200'
         uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
         with:
-          git-sha: ${{ github.event.pull_request.head.sha }}
+          git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
           domain: service.aepps.com
 
       - name: Push changes
+        if: steps.deploy.outcome == 'success' || steps.sync.outcome == 'success'
         run: git pull --rebase origin stg && git push origin stg
 
       - name: Print PR url

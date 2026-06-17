@@ -15,17 +15,31 @@ jobs:
     name: PR undeploy on close or branch delete
     if: github.event_name == 'pull_request' || (github.event_name == 'delete' && github.event.ref_type == 'branch')
     concurrency:
-      group: deploy-preview-${{ github.event.pull_request.head.ref || github.event.ref }}
+      group: preview-deploy-${{ github.event.pull_request.head.ref || github.event.ref }}
       cancel-in-progress: false
+    env:
+      BRANCH_SLUG: ""
 
     steps:
       - name: Compute branch slug
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "BRANCH_SLUG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            SLUG="pr-${{ github.event.pull_request.number }}"
           else
-            echo "BRANCH_SLUG=$(echo '${{ github.event.ref }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+            PR="$(gh pr list --repo ${{ github.repository }} --head '${{ github.event.ref }}' --state all --json number --jq '.[0].number // ""' || true)"
+            if [ -n "$PR" ]; then
+              SLUG="pr-${PR}"
+            else
+              SLUG="$(echo '${{ github.event.ref }}' | sed 's|/|-|g')"
+            fi
           fi
+          if [ -z "$SLUG" ]; then
+            echo "::error::Could not resolve a non-empty branch slug for event '${{ github.event_name }}'"
+            exit 1
+          fi
+          echo "BRANCH_SLUG=${SLUG}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v6
         with:

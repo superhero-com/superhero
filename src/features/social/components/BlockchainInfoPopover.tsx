@@ -13,7 +13,6 @@ import { ShieldCheck, X } from 'lucide-react';
 import { CONFIG } from '@/config';
 import { cn } from '@/lib/utils';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
-import { TransactionsService } from '@/api/generated';
 
 type BlockchainInfoPopoverProps = {
   txHash: string;
@@ -39,27 +38,13 @@ export const BlockchainInfoPopover = ({
   triggerClassName,
 }: BlockchainInfoPopoverProps) => {
   const [open, setOpen] = useState(false);
-  const [extraLoading, setExtraLoading] = useState(false);
-  const [extraError, setExtraError] = useState<string | null>(null);
-  const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
-
-  // Optional: fetch additional tx details from API when opened (non-blocking)
-  const handleOpenChange = useCallback(async (next: boolean) => {
-    setOpen(next);
-    if (next) {
-      try {
-        setExtraError(null);
-        setExtraLoading(true);
-        // Fire-and-forget; not all fields are required here
-        await TransactionsService.getTransactionByHash({ txHash });
-      } catch (e: any) {
-        // ignore; popover still works with base data
-        setExtraError(e?.message || '');
-      } finally {
-        setExtraLoading(false);
-      }
-    }
-  }, [txHash]);
+  // Only fetch the on-chain status while the popover is open — the status is
+  // only shown inside the dropdown, so fetching on mount would flood the feed
+  // with one transaction request per visible post.
+  const { status, loading, error } = useTransactionStatus(txHash, {
+    enabled: !!txHash && open,
+    refetchInterval: 8000,
+  });
 
   const explorerBase = useMemo(() => (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, ''), []);
   const txUrl = useMemo(() => `${explorerBase}/transactions/${txHash}`, [explorerBase, txHash]);
@@ -79,7 +64,7 @@ export const BlockchainInfoPopover = ({
   }, []);
 
   return (
-    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -114,8 +99,8 @@ export const BlockchainInfoPopover = ({
         <div className="px-1 pb-2 flex items-center justify-between gap-2">
           <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">Post stored on the æternity blockchain</DropdownMenuLabel>
           <div className="ml-auto min-w-[48px] text-right">
-            {extraLoading && <span className="text-[11px] text-white/70">Loading…</span>}
-            {extraError && <span className="text-[11px] text-red-300/90">!</span>}
+            {loading && <span className="text-[11px] text-white/70">Loading…</span>}
+            {error && <span className="text-[11px] text-red-300/90">!</span>}
           </div>
         </div>
         <div className="px-1 pb-2 flex items-center gap-2">

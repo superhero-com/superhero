@@ -9,6 +9,13 @@ type AccountTokensResponse = {
 
 type OwnedTokenLike = Record<string, any>;
 
+/**
+ * Shared query key for the "Owned Trends" list. Exported so flows that change
+ * a user's holdings (e.g. token trades) can invalidate it for an immediate
+ * refresh instead of relying on background polling.
+ */
+export const OWNED_TOKENS_QUERY_KEY = ['AccountTokensService.listTokenHolders', 'ownedTokens'] as const;
+
 function extractTokenLike(item: unknown): OwnedTokenLike | null {
   if (!item || typeof item !== 'object') return null;
 
@@ -41,7 +48,7 @@ export function useOwnedTokens() {
   const { activeAccount } = useAeSdk();
 
   const { data: ownedTokens = [], isFetching, error } = useQuery<OwnedTokenLike[]>({
-    queryKey: ['AccountTokensService.listTokenHolders', 'ownedTokens', activeAccount],
+    queryKey: [...OWNED_TOKENS_QUERY_KEY, activeAccount],
     queryFn: async (): Promise<OwnedTokenLike[]> => {
       if (!activeAccount) return [];
 
@@ -57,11 +64,13 @@ export function useOwnedTokens() {
       return items.map(extractTokenLike).filter(Boolean) as OwnedTokenLike[];
     },
     enabled: !!activeAccount,
-    // While this hook is mounted/used, refetch every 8s. React Query will
-    // automatically stop interval refetching once the hook is unmounted.
-    refetchInterval: 8_000,
+    // Treat the list as fresh for 30s so remounts/focus changes reuse the
+    // cache instead of refetching. Trades invalidate OWNED_TOKENS_QUERY_KEY
+    // for an immediate update, and a gentle 30s interval keeps it current
+    // for changes that happen outside this client.
+    staleTime: 30_000,
+    refetchInterval: 30_000,
     refetchIntervalInBackground: false,
-    staleTime: 0,
   });
 
   return {

@@ -24,6 +24,7 @@ import {
   setupContractInstance,
 } from '../libs/tokenTradeContract';
 import { useTokenTradeStore } from './useTokenTradeStore';
+import { OWNED_TOKENS_QUERY_KEY } from '../../../hooks/useOwnedTokens';
 
 interface UseTokenTradeProps {
   token: TokenDto;
@@ -271,6 +272,9 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     queryClient.invalidateQueries({
       queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
     });
+    // The user's holdings changed — refresh "Owned Trends" immediately
+    // instead of waiting for the background poll.
+    queryClient.invalidateQueries({ queryKey: OWNED_TOKENS_QUERY_KEY });
 
     // Refetch user balance
     const saleInstance = getTokenSaleInstance();

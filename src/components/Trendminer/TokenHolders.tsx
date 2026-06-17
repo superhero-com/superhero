@@ -276,8 +276,8 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
       {totalPages > 1 && (
         <div className="space-y-4 pb-8">
           {/* Items per page selector */}
-          <div className="flex items-center flex-col md:flex-row justify-between text-sm text-white/60">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-white/60">
+            <div className="flex items-center gap-2 whitespace-nowrap">
               <span>Show:</span>
               <AppSelect
                 value={String(itemsPerPage)}
@@ -285,7 +285,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                   setItemsPerPage(Number(v));
                   setCurrentPage(1);
                 }}
-                triggerClassName="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none transition-colors"
+                triggerClassName="!w-auto gap-1 px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none transition-colors"
                 contentClassName="bg-gray-800 border-white/10"
               >
                 {[10, 20, 50, 100].map((option) => (
@@ -296,7 +296,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               </AppSelect>
               <span>items per page</span>
             </div>
-            <div>
+            <div className="whitespace-nowrap">
               Showing
               {' '}
               {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
@@ -306,6 +306,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               {Math.min(currentPage * itemsPerPage, totalItems)}
               {' '}
               of
+              {' '}
               {totalItems}
               {' '}
               holders
@@ -313,7 +314,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
           </div>
 
           {/* Page navigation */}
-          <div className="flex items-center flex-col md:flex-row justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               onClick={() => updatePage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}

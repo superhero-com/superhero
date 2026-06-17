@@ -35,6 +35,7 @@ test.describe('page screenshots', () => {
         expect(response?.status(), `${pageConfig.path} should return HTTP 200`).toBe(200);
         await page.locator('#root').waitFor({ state: 'visible' });
         await page.waitForLoadState('load');
+        await page.waitForTimeout(3000);
 
         const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 80 });
         await testInfo.attach(`${pageConfig.name}--${viewport.name}.jpg`, {

@@ -1,0 +1,49 @@
+name: Preview PR Cleanup on Close
+
+on:
+  pull_request:
+    types: [closed]
+  delete:
+
+env:
+  ENV: "stg"
+  APP: "superhero"
+
+jobs:
+  stg_undeploy:
+    runs-on: ubuntu-latest
+    name: PR undeploy on close or branch delete
+    if: github.event_name == 'pull_request' || (github.event_name == 'delete' && github.event.ref_type == 'branch')
+    concurrency:
+      group: deploy-preview-${{ github.event.pull_request.head.ref || github.event.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Compute branch slug
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BRANCH_SLUG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_SLUG=$(echo '${{ github.event.ref }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+          fi
+
+      - uses: actions/checkout@v6
+        with:
+          repository: aeternity/gitops-apps-superhero
+          ref: stg
+          token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Staging undeploy
+        id: undeploy
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
+        with:
+          url-prefix: ${{ env.BRANCH_SLUG }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+          domain: service.aepps.com
+
+      - name: Push changes
+        if: steps.undeploy.conclusion == 'success'
+        run: git pull --rebase origin stg && git push origin stg

@@ -2,34 +2,49 @@ name: Preview PR
 
 on:
   workflow_dispatch:
+  push:
+    branches: [develop]
   pull_request:
-    branches:
-      - develop
-      - main
     types: [ opened, synchronize, reopened, closed ]
-  delete:
 
 env:
-  PR_NUMBER: ${{ github.event.pull_request.number }}
   ENV: "stg"
   APP: "superhero"
 
-concurrency: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
+concurrency: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
 
 jobs:
   main:
     runs-on: ubuntu-latest
     name: build
     concurrency:
-      group: build-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      group: build-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
       cancel-in-progress: true
-    if: github.event_name == 'workflow_dispatch' || github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Resolve slug (PR number if available, else branch name)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BRANCH_SLUG=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "BRANCH_SLUG=$(echo '${{ github.ref_name }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+          else
+            PR=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq '.[0].number // ""')
+            if [ -n "$PR" ]; then
+              echo "BRANCH_SLUG=pr-${PR}" >> $GITHUB_ENV
+              echo "PR_NUMBER=$PR" >> $GITHUB_ENV
+            else
+              echo "BRANCH_SLUG=$(echo '${{ github.ref_name }}' | sed 's|/|-|g')" >> $GITHUB_ENV
+            fi
+          fi
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
@@ -49,7 +64,7 @@ jobs:
           images: |
             ${{ secrets.DOCKERHUB_REPO }}
           tags: |
-            type=ref,event=pr
+            type=raw,value=${{ env.BRANCH_SLUG }}
 
       - name: Build and push docker image
         uses: docker/build-push-action@v7
@@ -57,7 +72,7 @@ jobs:
           context: .
           push: true
           provenance: false
-          no-cache: ${{ github.run_attempt > 1 }}
+          no-cache: ${{ github.event_name == 'workflow_dispatch' || github.run_attempt > 1 }}
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -71,10 +86,10 @@ jobs:
     runs-on: ubuntu-latest
     name: PR deploy
     concurrency:
-      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number }}
+      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
       cancel-in-progress: false
     needs: main
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     steps:
       - uses: actions/checkout@v6
         with:
@@ -89,14 +104,14 @@ jobs:
         id: status
         uses: aeternity/ae-github-actions/deploy-status@v7.5.0
         with:
-          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 10
 
       - name: Staging deploy
         if: github.event.action == 'opened' || github.event.action == 'reopened' || (github.event.action == 'synchronize' && steps.status.outputs.status_code != '200')
         uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
         with:
-          url-prefix: pr-${{ env.PR_NUMBER }}
+          url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
           domain: service.aepps.com
@@ -107,7 +122,7 @@ jobs:
         uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
         with:
           git-sha: ${{ github.event.pull_request.head.sha }}
-          url-prefix: pr-${{ env.PR_NUMBER }}
+          url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
           app: ${{ env.APP }}
           domain: service.aepps.com
@@ -122,62 +137,12 @@ jobs:
           issue-number: ${{ env.PR_NUMBER }}
           body: |
             ## 🧪 Preview Links 🔎️
-            https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+            https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
 
       - name: Wait for the deployment to go live
         continue-on-error: true
         uses: aeternity/ae-github-actions/deploy-status@v7.5.0
         with:
-          url: https://pr-${{ env.PR_NUMBER }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 300
           interval: 5
-
-  stg_undeploy:
-    runs-on: ubuntu-latest
-    name: PR undeploy on close or branch delete
-    concurrency:
-      group: deploy-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.ref }}
-      cancel-in-progress: false
-    if: (github.event_name == 'pull_request' && github.event.action == 'closed') || (github.event_name == 'delete' && github.event.ref_type == 'branch')
-    steps:
-      - name: Extract PR number from branch on delete
-        if: github.event_name == 'delete'
-        id: extract-pr
-        shell: bash
-        run: |
-          BRANCH_NAME="${{ github.event.ref }}"
-          echo "Deleted branch: $BRANCH_NAME"
-          PR_NUMBER=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&state=all" \
-            | jq -r '.[0].number // empty')
-          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-            echo "Found PR number: $PR_NUMBER"
-            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
-          else
-            echo "No PR number found for branch $BRANCH_NAME"
-            echo "PR_NUMBER=" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: actions/checkout@v6
-        with:
-          repository: aeternity/gitops-apps-superhero
-          ref: stg
-          token: ${{ secrets.NPM_GITHUB_TOKEN }}
-          persist-credentials: true
-          fetch-depth: 0
-
-      - name: Staging undeploy
-        id: undeploy
-        if: github.event_name == 'pull_request' || steps.extract-pr.outputs.PR_NUMBER != ''
-        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
-        with:
-          url-prefix: pr-${{ github.event_name == 'delete' && steps.extract-pr.outputs.PR_NUMBER || env.PR_NUMBER }}
-          env: ${{ env.ENV }}
-          app: ${{ env.APP }}
-          domain: service.aepps.com
-
-      - name: Push changes
-        if: steps.undeploy.conclusion == 'success'
-        run: git pull --rebase origin stg && git push origin stg

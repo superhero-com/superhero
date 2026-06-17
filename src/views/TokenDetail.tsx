@@ -83,6 +83,21 @@ export default function TokenDetail() {
   const isPositive = useMemo(() => Number(tokenDetails?.summary?.change?.[selectedPeriod]
     ?.percentage) >= 0, [selectedPeriod, tokenDetails?.summary?.change]);
 
+  // Circulating supply comes from the separate middleware aex9 query, which can
+  // still be pending after the page leaves its loading state. Until both
+  // event_supply and decimals are present, the division would produce a bogus
+  // value, so treat it as not-yet-available and render a placeholder instead.
+  const circulatingSupply = useMemo(() => {
+    const supply = aex9Data?.event_supply;
+    const decimals = aex9Data?.decimals;
+    if (supply == null || decimals == null) return null;
+    try {
+      return Decimal.from(supply).div(10 ** Number(decimals));
+    } catch {
+      return null;
+    }
+  }, [aex9Data]);
+
   if (loading) {
     return (
       <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
@@ -413,9 +428,7 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {
-                    Decimal.from(aex9Data?.event_supply).div(10 ** aex9Data?.decimals).prettify()
-                  }
+                  {circulatingSupply ? circulatingSupply.prettify() : '—'}
                 </div>
                 <div
                   style={{
@@ -463,15 +476,13 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {
-                    Decimal
-                      .from(aex9Data?.event_supply)
-                      .div(10 ** aex9Data?.decimals)
-                      .mul(Decimal.from(tokenDetails?.price?.ae || 0))
-                      .shorten()
-                  }
-                  {' '}
-                  AE
+                  {circulatingSupply ? (
+                    <>
+                      {circulatingSupply.mul(Decimal.from(tokenDetails?.price?.ae || 0)).shorten()}
+                      {' '}
+                      AE
+                    </>
+                  ) : '—'}
                 </div>
                 <div
                   style={{

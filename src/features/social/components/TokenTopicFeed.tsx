@@ -114,10 +114,16 @@ const TokenTopicFeed = ({
       const PAGE_SIZE = 100;
       const MAX_PAGES = 5; // up to 500 holders
       const items: TokenHolderDto[] = [];
-      // `complete` reflects whether the holder set is authoritative: it stays
-      // true when we reach the natural end (a short page) or the MAX_PAGES cap,
-      // and becomes false only when a page fails mid-pagination, leaving us with
-      // a partial set. Consumers must not treat a partial set as the full list.
+      // `complete` means the holder set is authoritative enough to filter
+      // against — not that every last holder is included. The API returns
+      // holders by balance descending, so two outcomes are authoritative: we
+      // reach the natural end (a page shorter than PAGE_SIZE), or we exhaust the
+      // MAX_PAGES cap with full pages and hold the canonical top-N holders. A
+      // popular token with more than MAX_PAGES * PAGE_SIZE holders must still be
+      // filtered — otherwise "Holders only" silently shows every post. `complete`
+      // becomes false only when a page fails mid-pagination, leaving an arbitrary
+      // partial set; consumers then fall back to showing all posts rather than
+      // filter against an untrustworthy map.
       let complete = true;
       for (let page = 1; page <= MAX_PAGES; page += 1) {
         let response: { items?: TokenHolderDto[] } | TokenHolderDto[];
@@ -136,6 +142,8 @@ const TokenTopicFeed = ({
           // we have nothing at all, so the caller can tell "unknown" (error)
           // apart from "no holders" (successful empty result).
           if (items.length === 0) throw err;
+          // A mid-pagination failure truncates the set at an arbitrary point —
+          // mark it non-authoritative so we don't hide posts based on it.
           complete = false;
           break;
         }
@@ -146,6 +154,8 @@ const TokenTopicFeed = ({
           pageItems = response as TokenHolderDto[];
         }
         items.push(...pageItems);
+        // A short page means we've reached the last holder — stop early.
+        // `complete` is already true (the default for a clean run).
         if (pageItems.length < PAGE_SIZE) break;
       }
       return { items, complete };
@@ -166,11 +176,11 @@ const TokenTopicFeed = ({
     return map;
   }, [holdersResponse]);
 
-  // Whether the fetched holder set is authoritative (all pages succeeded).
+  // Whether the fetched holder set is authoritative enough to filter against:
+  // the query succeeded and pagination either reached the natural end or filled
+  // the MAX_PAGES cap (the top-N holders by balance). Only a mid-pagination
+  // failure leaves it false, so we never hide posts against a broken map.
   const holdersComplete = holdersLoaded && Boolean((holdersResponse as any)?.complete);
-  // Loaded, but a page failed mid-pagination — the map is partial and must not
-  // be used to hide posts or decide that there are no holder posts.
-  const holdersIncomplete = holdersLoaded && !holdersComplete;
 
   // Check if any posts match the hashtag filter (not just if posts exist)
   const hasFilteredPosts = useMemo(() => posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))), [posts, hashtagRegex]);
@@ -241,15 +251,15 @@ const TokenTopicFeed = ({
 
   // Final list based on holders filter
   const displayPosts: any[] = useMemo(() => {
-    if (holdersOnly && tokenSaleAddress) {
-      // Don't hide posts when the holder map isn't authoritative: a partial set
-      // (a page failed) or a failed fetch (no map at all) could be missing real
-      // holder authors. Fall back to all posts until a complete set is available.
-      if (holdersIncomplete || holdersFailed) return allPosts;
+    // Only hide non-holder posts once we have a complete, authoritative holder
+    // set. While the holder query is still loading, or after a partial/failed
+    // fetch, the map may be missing real holder authors — fall back to all posts
+    // so the feed isn't empty and genuine holder posts aren't hidden.
+    if (holdersOnly && tokenSaleAddress && holdersComplete) {
       return holderPosts;
     }
     return allPosts;
-  }, [holdersOnly, tokenSaleAddress, holderPosts, allPosts, holdersIncomplete, holdersFailed]);
+  }, [holdersOnly, tokenSaleAddress, holdersComplete, holderPosts, allPosts]);
 
   // Only mount the first `visibleCount` posts to keep per-post requests bounded.
   const visiblePosts = useMemo(() => displayPosts.slice(0, visibleCount), [displayPosts, visibleCount]);
@@ -367,8 +377,10 @@ const TokenTopicFeed = ({
         </div>
       )}
 
-      {/* Info banner when user explicitly selects "Holders only" but there are no holder posts */}
-      {holdersOnly && tokenSaleAddress && allPosts.length > 0 && holderPosts.length === 0 && (
+      {/* Info banner when user explicitly selects "Holders only" but there are no holder posts.
+          Only when the holder set is complete/authoritative — for a partial or failed fetch we
+          fall back to showing all posts, so claiming "no holder posts" would contradict the feed. */}
+      {holdersOnly && tokenSaleAddress && holdersComplete && allPosts.length > 0 && holderPosts.length === 0 && (
         <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">

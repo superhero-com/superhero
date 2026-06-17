@@ -97,17 +97,23 @@ const TokenTopicFeed = ({
       if (!tokenSaleAddress) {
         return { items: [] as TokenHolderDto[] };
       }
-      const response = await TokensService.listTokenHolders({
-        address: tokenSaleAddress,
-        // Large page size to cover most holders, but still bounded
-        limit: 500,
-        page: 1,
-      }) as unknown as { items: TokenHolderDto[] };
-      if (Array.isArray((response as any)?.items)) return response;
-      if (Array.isArray(response as any)) {
-        return { items: response as any as TokenHolderDto[] };
+      // The API caps `limit` at 100, so paginate to cover most holders while staying bounded.
+      const PAGE_SIZE = 100;
+      const MAX_PAGES = 5; // up to 500 holders
+      const items: TokenHolderDto[] = [];
+      for (let page = 1; page <= MAX_PAGES; page += 1) {
+        const response = await TokensService.listTokenHolders({
+          address: tokenSaleAddress,
+          limit: PAGE_SIZE,
+          page,
+        }) as unknown as { items?: TokenHolderDto[] } | TokenHolderDto[];
+        const pageItems: TokenHolderDto[] = Array.isArray((response as any)?.items)
+          ? (response as any).items
+          : (Array.isArray(response) ? response as TokenHolderDto[] : []);
+        items.push(...pageItems);
+        if (pageItems.length < PAGE_SIZE) break;
       }
-      return { items: [] as TokenHolderDto[] };
+      return { items };
     },
     staleTime: 60 * 1000,
     refetchInterval: 2 * 60 * 1000,

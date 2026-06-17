@@ -22,7 +22,10 @@ export const TokenFeedTab = ({
   showTradePanels,
   setShowTradePanels,
 }: TokenFeedTabProps) => {
-  const holdersOnly = useMemo(() => (_holdersOnly && token.sale_address), [_holdersOnly, token.sale_address]);
+  const holdersOnly = useMemo(
+    () => _holdersOnly && !!token.sale_address,
+    [_holdersOnly, token.sale_address],
+  );
 
   return (
     <div className="grid">

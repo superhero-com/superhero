@@ -527,7 +527,7 @@ export const SuperheroApi = {
     return this.fetchJson(`/api/topics/name/${encoded}`);
   },
   // GET /api/tokens?order_by=market_cap&order_direction=DESC
-  listTokens(params: { orderBy?: 'name'|'price'|'market_cap'|'created_at'|'holders_count'|'trending_score'; orderDirection?: 'ASC'|'DESC'; collection?: 'all'|'word'|'number'; limit?: number; page?: number; search?: string; ownerAddress?: string; creatorAddress?: string; factoryAddress?: string } = {}) {
+  listTokens(params: { orderBy?: 'name'|'price'|'market_cap'|'created_at'|'holders_count'|'trending_score'; orderDirection?: 'ASC'|'DESC'; collection?: string; limit?: number; page?: number; search?: string; ownerAddress?: string; creatorAddress?: string; factoryAddress?: string } = {}) {
     const qp = new URLSearchParams();
     if (params.orderBy) qp.set('order_by', params.orderBy);
     if (params.orderDirection) qp.set('order_direction', params.orderDirection);

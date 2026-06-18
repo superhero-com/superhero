@@ -64,13 +64,12 @@ function getInstallItems(t: TFunction) {
   };
 }
 
-const ConnectWalletModal = ({ onClose }: Props) => {
-const { t } = useTranslation();
 const ConnectWalletModal = ({ onClose, onConnected }: Props) => {
+  const { t } = useTranslation();
   const { connectWallet, connectingWallet } = useWalletConnect();
   const { activeAccount } = useAeSdk();
 
-  const install = useMemo(() => getInstallItems(), []);
+  const install = useMemo(() => getInstallItems(t), [t]);
   const connectRequestedRef = useRef(false);
   const didAdvanceRef = useRef(false);
 

@@ -186,8 +186,7 @@
       "xCallbackGoToProfile": "Go to profile",
       "transactionFailed": "Transaction failed",
       "copiedExclaim": "Copied!",
-      "xCallbackUnlinkSuccess": "X account unlinked successfully.",
-      "xCallbackGoToProfile": "Go to profile"
+      "xCallbackUnlinkSuccess": "X account unlinked successfully."
     },
     "portfolio": {
       "portfolioValue": "Portfolio Value",
@@ -1664,7 +1663,8 @@
       "noLeaderboard": "No leaderboard data is available right now.",
       "popularPostsTitle": "Popular Posts",
       "popularPostsSubtitle": "What the community is talking about the most.",
-      "noPopularPosts": "No popular posts are available right now."
+      "noPopularPosts": "No popular posts are available right now.",
+      "collectionAll": "All"
     },
     "createToken": {
       "oops": "Oops!",

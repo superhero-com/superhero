@@ -15,6 +15,7 @@ import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { collectionLabel } from '@/utils/collection';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -477,6 +478,14 @@ const TokenSaleDetails = () => {
                     </h1>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      {collectionLabel((token as any)?.collection) && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-white/10 text-white/70 text-xs font-medium px-2.5 py-1 rounded-full border-0"
+                        >
+                          {collectionLabel((token as any)?.collection)}
+                        </Badge>
+                      )}
                       {tokenDoesNotExist ? (
                         <Badge
                           variant="secondary"

@@ -1,6 +1,7 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
+import { collectionLabel } from '@/utils/collection';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -120,9 +121,16 @@ const TokenListTableRow = ({
 
         {/* Name + Market Cap */}
         <td className="cell cell-name py-3 pl-2 pr-1 align-middle">
-          <div className="text-[13px] font-bold text-white truncate">
-            <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-            {token.symbol || token.name}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="text-[13px] font-bold text-white truncate">
+              <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+              {token.symbol || token.name}
+            </div>
+            {collectionLabel(token.collection) && (
+              <span className="shrink-0 inline-flex items-center rounded-full bg-white/10 px-1.5 py-[1px] text-[9px] font-semibold leading-none text-white/50">
+                {collectionLabel(token.collection)}
+              </span>
+            )}
           </div>
           <div className="text-[11px] text-white/40 mt-0.5 tabular-nums">
             <PriceDataFormatter
@@ -183,9 +191,16 @@ const TokenListTableRow = ({
         <td className="cell cell-name px-3">
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 flex-1">
-              <div className="token-name text-sm font-bold text-white truncate">
-                <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-                {token.symbol || token.name}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="token-name text-sm font-bold text-white truncate">
+                  <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+                  {token.symbol || token.name}
+                </div>
+                {collectionLabel(token.collection) && (
+                  <span className="shrink-0 inline-flex items-center rounded-full bg-white/10 px-1.5 py-[1px] text-[9px] font-semibold leading-none text-white/50">
+                    {collectionLabel(token.collection)}
+                  </span>
+                )}
               </div>
               {token.name && token.symbol && token.name !== token.symbol && (
                 <div className="text-[11px] text-white/40 truncate leading-3 mt-0.5">

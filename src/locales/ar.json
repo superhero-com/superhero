@@ -1567,7 +1567,8 @@
       "noLeaderboard": "لا تتوفر بيانات لوحة الصدارة في الوقت الحالي.",
       "popularPostsTitle": "المنشورات الشائعة",
       "popularPostsSubtitle": "ما يتحدث عنه المجتمع أكثر من غيره.",
-      "noPopularPosts": "لا تتوفر منشورات شائعة في الوقت الحالي."
+      "noPopularPosts": "لا تتوفر منشورات شائعة في الوقت الحالي.",
+      "collectionAll": "الكل"
     },
     "createToken": {
       "oops": "عذرًا!",

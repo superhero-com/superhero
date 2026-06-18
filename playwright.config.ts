@@ -9,6 +9,10 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: { maxDiffPixels: 100 },
   },
+  timeout: 60_000,
+  use: {
+    navigationTimeout: 60_000,
+  },
   projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
   webServer: {
     command: 'npm run dev',

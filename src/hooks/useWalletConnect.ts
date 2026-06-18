@@ -91,7 +91,7 @@ export function useWalletConnect() {
   const walletInfoRef = useRef(walletInfo);
   const walletConnectedRef = useRef(walletConnected);
   const connectingWalletRef = useRef(connectingWallet);
-  const connectWalletRef = useRef<(() => Promise<void | null>) | null>(null);
+  const connectWalletRef = useRef<(() => Promise<string | null>) | null>(null);
 
   // Use only the current build network (mainnet or testnet; VITE_NETWORK)
   const availableNetworks = [CURRENT_NETWORK];
@@ -192,9 +192,9 @@ export function useWalletConnect() {
             'subscribe' as any,
             'connected',
           );
-          await scanForAccounts();
+          const connectedAccount = await scanForAccounts();
 
-          resolve(true);
+          resolve(connectedAccount);
         } catch (error) {
           reject(error);
         } finally {
@@ -215,7 +215,7 @@ export function useWalletConnect() {
   }
 
   // eslint-disable-next-line consistent-return
-  async function connectWallet() {
+  async function connectWallet(): Promise<string | null> {
     // when trying to connect to the wallet all states should be reset
     // and sdk should be disconnected
     setWalletConnected(false);
@@ -234,19 +234,24 @@ export function useWalletConnect() {
 
     if (!wallet.current) {
       setConnectingWallet(false);
-      return !IS_FRAMED_AEPP ? deepLinkWalletConnect() : null;
+      if (!IS_FRAMED_AEPP) await deepLinkWalletConnect();
+      return null;
     }
 
     try {
       const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
       setWalletInfo(newWalletInfo);
 
-      await subscribeAddress();
+      const connectedAccount = await subscribeAddress();
+      if (!connectedAccount) throw new Error('No wallet account connected');
       setWalletConnected(true);
+      return connectedAccount;
     } catch {
       disconnectWallet();
+      return null;
+    } finally {
+      setConnectingWallet(false);
     }
-    setConnectingWallet(false);
   }
   connectWalletRef.current = connectWallet;
 

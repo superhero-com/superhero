@@ -105,7 +105,11 @@ const TokenSaleDetails = () => {
     const normalized = showTradeParam.toLowerCase();
     return !(normalized === '0' || normalized === 'false' || normalized === 'off');
   });
-  const { ownedTokens } = useOwnedTokens();
+  // We only need to know whether the user holds *this* token, so narrow the
+  // account-tokens query by the trend name server-side instead of pulling the
+  // whole portfolio. The address match in `ownsThisToken` keeps it precise even
+  // if `search` matches fuzzily.
+  const { ownedTokens } = useOwnedTokens({ search: tokenName });
   const [holdersOnly, setHoldersOnly] = useState(true);
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);

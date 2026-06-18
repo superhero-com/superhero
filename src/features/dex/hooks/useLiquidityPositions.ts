@@ -45,7 +45,11 @@ export function useLiquidityPositions(): PoolListState & {
     if (!accountAddress) return {};
 
     const accountAex9Balances = await loadAccountAex9Balances();
-    const listAllPairs: any = await DexPairService.listAllPairs({ limit: 1000, page: 1 });
+    // The endpoint caps `limit` at 100. There are well under 100 pairs today
+    // (~39), so a single page covers them all. If the pair count ever exceeds
+    // 100 this must paginate — otherwise LP positions in pairs beyond the first
+    // page would silently disappear from the user's view.
+    const listAllPairs: any = await DexPairService.listAllPairs({ limit: 100, page: 1 });
     // const pairs = await getPairs(false);
     const pairs: PairDto[] = listAllPairs.items;
 

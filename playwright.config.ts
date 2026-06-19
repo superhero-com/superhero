@@ -4,8 +4,13 @@ export default defineConfig({
   testDir: './e2e',
   forbidOnly: !!process.env.CI,
   timeout: 60_000,
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
   use: {
     navigationTimeout: 60_000,
+    screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
   webServer: {

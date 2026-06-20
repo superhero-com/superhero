@@ -9,14 +9,14 @@ import { DexPairService, DexService } from '@/api/generated';
 import { PriceDataFormatter } from '@/features/shared/components';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AeButton from '../components/AeButton';
 import { TokenPricePerformance } from '../features/dex/components';
 import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
 import Spinner from '../components/Spinner';
-import { getPairsByTokenUsd, getTokenWithUsd } from '../libs/dexBackend';
+import { getTokenWithUsd } from '../libs/dexBackend';
 
 interface TokenData {
   address: string;
@@ -47,10 +47,6 @@ export default function TokenDetail() {
   const { activeNetwork } = useAeSdk();
   const { tokenAddress } = useParams();
   const navigate = useNavigate();
-  const [token, setToken] = useState<TokenData | null>(null);
-  const [tokenMetaData, setTokenMetaData] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'24h' | '7d' | '30d'>(
     '24h',
   );
@@ -60,6 +56,17 @@ export default function TokenDetail() {
     queryFn: () => DexService.getDexTokenByAddress({ address: tokenAddress }),
     enabled: !!tokenAddress,
   });
+
+  const {
+    data: token = null,
+    isLoading: loading,
+    error: tokenError,
+  } = useQuery<TokenData | null>({
+    queryKey: ['DexBackend.getTokenWithUsd', tokenAddress],
+    queryFn: () => getTokenWithUsd(tokenAddress as string),
+    enabled: !!tokenAddress,
+  });
+  const error = tokenError ? (tokenError as Error).message || 'Failed to load token data' : null;
 
   const { data: aex9Data } = useQuery({
     queryKey: ['Mdw.aex9', tokenAddress],
@@ -76,44 +83,20 @@ export default function TokenDetail() {
   const isPositive = useMemo(() => Number(tokenDetails?.summary?.change?.[selectedPeriod]
     ?.percentage) >= 0, [selectedPeriod, tokenDetails?.summary?.change]);
 
-  async function getTokenMetaData(_tokenAddress: string) {
-    const result = await fetch(
-      `${activeNetwork.middlewareUrl}/v3/aex9/${_tokenAddress}`,
-    );
-    const data = await result.json();
-    return data;
-  }
-
-  // TODO: remvoe
-  useEffect(() => {
-    (async () => {
-      if (!tokenAddress) return;
-      setLoading(true);
-      setError(null);
-
-      try {
-        const [t, metaData] = await Promise.all([
-          getTokenWithUsd(tokenAddress),
-          getPairsByTokenUsd(tokenAddress),
-          getTokenMetaData(tokenAddress),
-        ]);
-
-        setToken(t);
-        setTokenMetaData(metaData);
-      } catch (e: any) {
-        setError(e.message || 'Failed to load token data');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [tokenAddress]);
-
-  const totalSupply = useMemo(() => {
-    if (!tokenMetaData) return Decimal.ZERO;
-    return Decimal.from(tokenMetaData?.event_supply).div(
-      10 ** tokenMetaData?.decimals,
-    );
-  }, [tokenMetaData]);
+  // Circulating supply comes from the separate middleware aex9 query, which can
+  // still be pending after the page leaves its loading state. Until both
+  // event_supply and decimals are present, the division would produce a bogus
+  // value, so treat it as not-yet-available and render a placeholder instead.
+  const circulatingSupply = useMemo(() => {
+    const supply = aex9Data?.event_supply;
+    const decimals = aex9Data?.decimals;
+    if (supply == null || decimals == null) return null;
+    try {
+      return Decimal.from(supply).div(10 ** Number(decimals));
+    } catch {
+      return null;
+    }
+  }, [aex9Data]);
 
   if (loading) {
     return (
@@ -445,9 +428,7 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {
-                    Decimal.from(aex9Data?.event_supply).div(10 ** aex9Data?.decimals).prettify()
-                  }
+                  {circulatingSupply ? circulatingSupply.prettify() : '—'}
                 </div>
                 <div
                   style={{
@@ -495,15 +476,13 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {
-                    Decimal
-                      .from(aex9Data?.event_supply)
-                      .div(10 ** aex9Data?.decimals)
-                      .mul(Decimal.from(tokenDetails?.price?.ae || 0))
-                      .shorten()
-                  }
-                  {' '}
-                  AE
+                  {circulatingSupply ? (
+                    <>
+                      {circulatingSupply.mul(Decimal.from(tokenDetails?.price?.ae || 0)).shorten()}
+                      {' '}
+                      AE
+                    </>
+                  ) : '—'}
                 </div>
                 <div
                   style={{

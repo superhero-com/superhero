@@ -24,7 +24,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
       setError(null);
       try {
         const resp = await SuperheroApi.listTrendingTags({
-          orderBy: 'score', orderDirection: 'DESC', limit: 250, page: 1,
+          orderBy: 'score', orderDirection: 'DESC', limit: 100, page: 1,
         });
         const items = Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp) ? resp : []);
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));

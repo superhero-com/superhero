@@ -4,7 +4,7 @@ import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 const ITEM_LIMIT = 4;
@@ -13,7 +13,7 @@ function getTokenAddress(token: TokenDto) {
   return token.sale_address || token.address || '';
 }
 
-const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
+const TrendingTokenCard = memo(({ token }: { token: TokenDto }) => {
   const tokenLabel = token.symbol || token.name || 'Unknown';
   const tokenAddress = getTokenAddress(token);
   const tokenHref = `/trends/tokens/${encodeURIComponent(
@@ -60,7 +60,9 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
       </div>
     </Link>
   );
-};
+});
+
+TrendingTokenCard.displayName = 'TrendingTokenCard';
 
 const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
   const orderBy = useMemo(() => {

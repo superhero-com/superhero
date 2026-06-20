@@ -227,17 +227,17 @@
       .skeleton-avatar {
         width: 20px;
         height: 20px;
-        background: rgba(156, 163, 175, 0.2);
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%); background-size: 200% 100%;
         border-radius: 50%;
-        animation: skeleton-pulse 1.5s ease-in-out infinite;
+        animation: skeleton-shimmer 2.5s linear infinite;
       }
       
       .skeleton-address {
         font-size: 12px;
         color: transparent;
-        background: rgba(156, 163, 175, 0.2);
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%); background-size: 200% 100%;
         border-radius: 4px;
-        animation: skeleton-pulse 1.5s ease-in-out infinite;
+        animation: skeleton-shimmer 2.5s linear infinite;
       }
     }
   }
@@ -246,9 +246,9 @@
     margin-bottom: 8px;
     font-size: 16px;
     color: transparent;
-    background: rgba(156, 163, 175, 0.2);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%); background-size: 200% 100%;
     border-radius: 4px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: skeleton-shimmer 2.5s linear infinite;
     
     @include mobile {
       font-size: 15px;
@@ -266,18 +266,18 @@
     .skeleton-volume {
       font-size: 13px;
       color: transparent;
-      background: rgba(156, 163, 175, 0.2);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%); background-size: 200% 100%;
       border-radius: 4px;
-      animation: skeleton-pulse 1.5s ease-in-out infinite;
+      animation: skeleton-shimmer 2.5s linear infinite;
     }
     
     .skeleton-badge {
       padding: 4px 10px;
-      background: rgba(156, 163, 175, 0.2);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.08) 75%); background-size: 200% 100%;
       border-radius: 6px;
       font-size: 9px;
       color: transparent;
-      animation: skeleton-pulse 1.5s ease-in-out infinite;
+      animation: skeleton-shimmer 2.5s linear infinite;
       
       @include mobile {
         padding: 3px 8px;
@@ -288,9 +288,9 @@
   }
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 // Reduced motion support
@@ -318,6 +318,18 @@
   .transactions-carousel-track {
     // Faster animation for mobile
     animation-duration: 30s !important;
+  }
+
+  // Pin the skeleton shimmer speed so mobile matches the post skeleton.
+  .transaction-skeleton {
+    .skeleton-avatar,
+    .skeleton-address,
+    .skeleton-token-name,
+    .skeleton-volume,
+    .skeleton-badge {
+      animation-duration: 2.5s !important;
+      animation-timing-function: linear !important;
+    }
   }
   
   // Add touch scrolling support

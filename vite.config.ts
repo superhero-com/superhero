@@ -69,6 +69,52 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(__dirname, 'index.html'),
         },
+        output: {
+          // Split heavy, self-contained vendor libraries into their own
+          // chunks so they can be cached independently and kept out of the
+          // main bundle. Only leaf libraries are grouped here (they depend on
+          // React but nothing in the synchronous entry depends on them), which
+          // avoids module init-order issues from splitting React's own graph.
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) return undefined;
+
+            if (
+              id.includes('lightweight-charts')
+              || id.includes('recharts')
+              || id.includes('@visx')
+              || id.includes('/d3-')
+            ) {
+              return 'charts';
+            }
+
+            if (
+              id.includes('katex')
+              || id.includes('react-markdown')
+              || id.includes('remark')
+              || id.includes('rehype')
+              || id.includes('micromark')
+              || id.includes('mdast')
+              || id.includes('hast')
+            ) {
+              return 'markdown';
+            }
+
+            if (
+              id.includes('@reown')
+              || id.includes('@walletconnect')
+              || id.includes('@ethersproject')
+              || id.includes('/ethers/')
+            ) {
+              return 'web3';
+            }
+
+            if (id.includes('@aeternity')) {
+              return 'aeternity';
+            }
+
+            return undefined;
+          },
+        },
       },
     },
     css: {

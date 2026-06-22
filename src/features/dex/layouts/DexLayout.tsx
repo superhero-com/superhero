@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeftRight,
   Droplet,
@@ -26,24 +27,24 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     id: 'swap',
-    label: 'SWAP',
+    label: 'dexLayout.swap.label',
     icon: ArrowLeftRight,
     path: '/defi/swap',
-    description: 'Trade any supported AEX-9 tokens',
+    description: 'dexLayout.swap.description',
   },
   {
     id: 'pool',
-    label: 'POOL',
+    label: 'dexLayout.pool.label',
     icon: Droplet,
     path: '/defi/pool',
-    description: 'Manage liquidity positions',
+    description: 'dexLayout.pool.description',
   },
   {
     id: 'wrap',
-    label: 'WRAP',
+    label: 'dexLayout.wrap.label',
     icon: Package,
     path: '/defi/wrap',
-    description: 'Convert AE ↔ WAE',
+    description: 'dexLayout.wrap.description',
   },
   // {
   //   id: 'bridge',
@@ -64,24 +65,24 @@ const navigationItems: NavigationItem[] = [
 const exploreItems: NavigationItem[] = [
   {
     id: 'tokens',
-    label: 'Tokens',
+    label: 'dexLayout.tokens.label',
     icon: Coins,
     path: '/defi/explore/tokens',
-    description: 'Browse all available tokens',
+    description: 'dexLayout.tokens.description',
   },
   {
     id: 'pools',
-    label: 'Pools',
+    label: 'dexLayout.pools.label',
     icon: Waves,
     path: '/defi/explore/pools',
-    description: 'Explore liquidity pools',
+    description: 'dexLayout.pools.description',
   },
   {
     id: 'transactions',
-    label: 'Transactions',
+    label: 'dexLayout.transactions.label',
     icon: ClipboardList,
     path: '/defi/explore/transactions',
-    description: 'Track recent activity',
+    description: 'dexLayout.transactions.description',
   },
 ];
 
@@ -90,6 +91,7 @@ interface DexLayoutProps {
 }
 
 const DexLayout = ({ children }: DexLayoutProps) => {
+  const { t } = useTranslation('dex');
   const location = useLocation();
   const navigate = useNavigate();
   const [isExploreExpanded, setIsExploreExpanded] = useState(false);
@@ -119,10 +121,10 @@ const DexLayout = ({ children }: DexLayoutProps) => {
     ...navigationItems,
     {
       id: 'explore',
-      label: 'Explore',
+      label: 'dexLayout.explore.label',
       icon: Search,
       path: '/defi/explore',
-      description: 'Explore tokens, pools, and transactions',
+      description: 'dexLayout.explore.description',
     },
   ];
 
@@ -139,12 +141,12 @@ const DexLayout = ({ children }: DexLayoutProps) => {
             ? 'border-b-2 border-[#4ecdc4]'
             : 'border-b-2 border-transparent'
         }`}
-        title={item.description}
+        title={t(item.description)}
       >
         <span className="flex flex-col items-center gap-1">
           <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
           <span className={`text-[11px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
-            {item.label}
+            {t(item.label)}
           </span>
         </span>
       </button>
@@ -167,8 +169,8 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       key={item.id}
                       type="button"
                       onClick={() => handleNavigation(item.path)}
-                      aria-label={item.label}
-                      title={item.description}
+                      aria-label={t(item.label)}
+                      title={t(item.description)}
                       className={`
                       flex items-center gap-2 px-3.5 py-2.5 rounded-full
                       border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
@@ -180,7 +182,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                     `}
                     >
                       <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <span>{t(item.label)}</span>
                     </button>
                   );
                 })}
@@ -189,7 +191,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
               {/* Explore group */}
               <div className="flex items-center gap-2 shrink-0 ml-6">
                 <span className="text-xs opacity-70 pl-1.5 pr-1">
-                  Explore
+                  {t('dexLayout.exploreHeading')}
                 </span>
                 {exploreItems.map((item) => {
                   const Icon = item.icon;
@@ -199,8 +201,8 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       key={item.id}
                       type="button"
                       onClick={() => handleNavigation(item.path)}
-                      aria-label={item.label}
-                      title={item.description}
+                      aria-label={t(item.label)}
+                      title={t(item.description)}
                       className={`
                           flex items-center gap-1.5 px-3 py-2 rounded-full
                           border-[1.5px] text-xs font-semibold
@@ -212,7 +214,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                         `}
                     >
                       <Icon className="w-3.5 h-3.5" />
-                      {item.label}
+                      {t(item.label)}
                     </button>
                   );
                 })}
@@ -247,12 +249,12 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                             ? 'border-b-2 border-[#4ecdc4]'
                             : 'border-b-2 border-transparent'
                         }`}
-                        title={item.description}
+                        title={t(item.description)}
                       >
                         <span className="flex flex-col items-center gap-1">
                           <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
                           <span className={`text-[14px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
-                            {item.label}
+                            {t(item.label)}
                           </span>
                         </span>
                       </button>
@@ -267,11 +269,11 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                     type="button"
                     onClick={handleCloseExplore}
                     className="pb-1 transition-colors border-b-2 border-transparent flex-1"
-                    title="Close explore menu"
+                    title={t('dexLayout.closeExploreMenu')}
                   >
                     <span className="flex flex-col items-center gap-1">
                       <X className="h-5 w-5 text-destructive" />
-                      <span className="text-[11px] leading-tight text-destructive">Close</span>
+                      <span className="text-[11px] leading-tight text-destructive">{t('dexLayout.close')}</span>
                     </span>
                   </button>
                 </>

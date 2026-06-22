@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AddressChip } from '@/components/AddressChip';
 import { PriceDto } from '@/api/generated';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
@@ -17,6 +18,7 @@ const TokenSummary = ({
   token,
   className = '',
 }: TokenSummaryProps) => {
+  const { t } = useTranslation();
   const getShortenValue = (value: string | number): string => Decimal.from(toAe(value)).shorten();
 
   const formatLongDate = (dateString: string): string => new Date(dateString).toLocaleDateString('en-US', {
@@ -32,7 +34,7 @@ const TokenSummary = ({
       {/* Header */}
       <div className="mb-6 hidden sm:block">
         <h3 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-          Token Information
+          {t('common.views.tokenSummary.tokenInformation')}
         </h3>
       </div>
 
@@ -40,10 +42,10 @@ const TokenSummary = ({
       <div className="mb-6">
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
           <div className="text-xs text-white/60 font-medium mb-2">
-            Token Name
+            {t('common.views.tokenSummary.tokenName')}
           </div>
           <div className="text-lg font-bold text-white font-mono tracking-tight">
-            {token.symbol || token.name || 'Unknown'}
+            {token.symbol || token.name || t('common.views.tokenSummary.unknown')}
           </div>
         </div>
       </div>
@@ -51,7 +53,7 @@ const TokenSummary = ({
       {/* Price and Market Cap */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
-          <div className="text-xs text-white/60 font-medium mb-2">Price</div>
+          <div className="text-xs text-white/60 font-medium mb-2">{t('common.account.price')}</div>
           <PriceDataFormatter
             className="text-xs sm:text-base"
             watchPrice={!!token.sale_address}
@@ -60,7 +62,7 @@ const TokenSummary = ({
         </div>
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">
-            Market Cap
+            {t('explore.marketCapLabel')}
           </div>
           <PriceDataFormatter
             watchKey={token.sale_address}
@@ -76,7 +78,7 @@ const TokenSummary = ({
         {token.dao_balance && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
-              DAO Balance
+              {t('common.views.tokenSummary.daoBalance')}
             </div>
             <LivePriceFormatter
               aePrice={Decimal.from(toAe(token.dao_balance))}
@@ -88,12 +90,12 @@ const TokenSummary = ({
         {token.total_supply && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
-              Total Supply
+              {t('common.views.tokenSummary.totalSupply')}
             </div>
             <div className="text-lg font-bold text-white text-center">
               {getShortenValue(token.total_supply)}
             </div>
-            <div className="text-sm text-white/60 text-center mt-1">tokens</div>
+            <div className="text-sm text-white/60 text-center mt-1">{t('common.views.tokenSummary.tokens')}</div>
           </div>
         )}
       </div>
@@ -103,7 +105,7 @@ const TokenSummary = ({
         <div className="mb-6">
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
             <div className="text-xs text-white/60 font-medium mb-2">
-              Creation Date
+              {t('common.views.tokenSummary.creationDate')}
             </div>
             <div className="text-lg font-bold text-white">
               {formatLongDate(token.created_at)}
@@ -117,7 +119,7 @@ const TokenSummary = ({
         {(token.address || token.creator_address) && (
           <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
-              Contract Address:
+              {t('common.views.tokenSummary.contractAddress')}
             </div>
             <AddressChip address={token.address} linkToExplorer />
           </div>
@@ -125,7 +127,7 @@ const TokenSummary = ({
         {token.sale_address && (
           <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
-              Sale Address:
+              {t('common.views.tokenSummary.saleAddress')}
             </div>
             <AddressChip address={token.sale_address} linkToExplorer />
           </div>
@@ -133,7 +135,7 @@ const TokenSummary = ({
         {token.creator_address && (
           <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
-              Created By:
+              {t('common.views.tokenSummary.createdBy')}
             </div>
             <AddressAvatarWithChainName address={token.creator_address} />
           </div>
@@ -142,9 +144,7 @@ const TokenSummary = ({
 
       {/* Description */}
       <div className="text-sm text-white/60 leading-relaxed mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
-        This token uses a bonding curve: buying mints new tokens at a higher
-        price; selling burns tokens and returns AE along the curve. A portion of
-        trades feeds the token&apos;s DAO treasury for proposals and payouts.
+        {t('common.views.tokenSummary.bondingCurveDescription')}
       </div>
 
       {/* Action Buttons */}
@@ -154,7 +154,7 @@ const TokenSummary = ({
             href={`/trends/dao/${encodeURIComponent(token.sale_address)}`}
             className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 active:translate-y-0"
           >
-            Open DAO
+            {t('common.views.tokenSummary.openDao')}
           </a>
         )}
         <div className="flex gap-3 ">
@@ -162,7 +162,7 @@ const TokenSummary = ({
             href="/trends/invite"
             className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
           >
-            Invite & Earn
+            {t('common.views.tokenSummary.inviteAndEarn')}
           </a>
           <a
             href={`https://aescan.io/contracts/${encodeURIComponent(
@@ -172,7 +172,7 @@ const TokenSummary = ({
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
           >
-            View on æScan ↗
+            {t('dao.viewOnAescan')}
           </a>
         </div>
       </div>

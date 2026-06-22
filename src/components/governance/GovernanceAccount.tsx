@@ -59,10 +59,10 @@ export default function GovernanceAccount() {
             <IconGovernance className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent mb-4 leading-tight">
-            Governance Account
+            {t('account.title')}
           </h1>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Manage your voting power, delegate to trusted addresses, and participate in community governance decisions.
+            {t('account.subtitle')}
           </p>
         </div>
 
@@ -213,8 +213,7 @@ export default function GovernanceAccount() {
                 />
 
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  💡 Delegating allows another address to vote on your behalf in governance polls.
-                  Choose someone you trust to represent your interests.
+                  {t('account.delegationHint')}
                 </p>
               </div>
 
@@ -258,9 +257,7 @@ export default function GovernanceAccount() {
                   <div>
                     <h3 className="text-lg font-bold text-white">{t('account.yourDelegators')}</h3>
                     <p className="text-sm text-slate-400">
-                      {delegators.length}
-                      {' '}
-                      people trust you with their votes
+                      {t('account.peopleTrustYouWithVotes', { count: delegators.length })}
                     </p>
                   </div>
                 </div>
@@ -283,8 +280,7 @@ export default function GovernanceAccount() {
                               {delegator.delegator}
                             </p>
                             <p className="text-xs text-slate-400">
-                              Delegator #
-                              {idx + 1}
+                              {t('account.delegatorNumber', { number: idx + 1 })}
                             </p>
                           </div>
                         </div>

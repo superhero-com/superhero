@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAccount } from '../hooks';
@@ -37,6 +38,7 @@ export const AddressChip = ({
   style = {},
   onClick,
 }: AddressChipProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeAccount } = useAccount();
   const [textCopied, setTextCopied] = useState(false);
@@ -45,9 +47,9 @@ export const AddressChip = ({
   const isAccount = isAccountAddress(address);
   let titleText = address;
   if (copyable) {
-    titleText = 'Click to copy address';
+    titleText = t('common.addressChip.clickToCopyAddress');
   } else if (linkToExplorer) {
-    titleText = 'Click to view in explorer';
+    titleText = t('common.addressChip.clickToViewInExplorer');
   }
   const addressTextClass = (() => {
     if (!isAccount) return large ? 'text-sm font-semibold' : 'text-xs font-semibold';
@@ -122,7 +124,7 @@ export const AddressChip = ({
       {/* Copied feedback */}
       {textCopied && (
         <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
-          Copied!
+          {t('common.addressChip.copied')}
         </div>
       )}
     </Badge>

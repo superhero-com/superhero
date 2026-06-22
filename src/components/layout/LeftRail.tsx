@@ -400,7 +400,7 @@ const LeftRail = () => {
           <h4
             style={{ margin: 0, color: 'var(--neon-purple)', fontSize: '16px' }}
           >
-            Pro Tips
+            {t('layout.proTips')}
           </h4>
           <span
             style={{

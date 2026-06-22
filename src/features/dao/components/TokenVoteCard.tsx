@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Encoded } from '@aeternity/aepp-sdk';
 import { useDaoVote } from '@/features/dao/hooks/useDaoVote';
 import { useAeSdk } from '@/hooks';
@@ -25,6 +26,7 @@ const TokenVoteCard = ({
   saleAddress,
 }: TokenVoteCardProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentBlockHeight } = useAeSdk();
 
   const { voteState, voteYesPercentage } = useDaoVote({
@@ -40,7 +42,7 @@ const TokenVoteCard = ({
         <CardContent className="p-4">
           <div className="flex items-center justify-center py-4">
             <Spinner className="w-6 h-6" />
-            <span className="ml-3 text-slate-400">Loading...</span>
+            <span className="ml-3 text-slate-400">{t('dao.loading')}</span>
           </div>
         </CardContent>
       </Card>
@@ -56,11 +58,11 @@ const TokenVoteCard = ({
     const daysRemaining = Math.floor(hoursRemaining / 24);
 
     if (daysRemaining > 0) {
-      return `${daysRemaining}d ${hoursRemaining % 24}h remaining`;
+      return t('dao.timeRemaining.daysHours', { days: daysRemaining, hours: hoursRemaining % 24 });
     } if (hoursRemaining > 0) {
-      return `${hoursRemaining}h ${minutesRemaining % 60}m remaining`;
+      return t('dao.timeRemaining.hoursMinutes', { hours: hoursRemaining, minutes: minutesRemaining % 60 });
     }
-    return `${minutesRemaining}m remaining`;
+    return t('dao.timeRemaining.minutes', { minutes: minutesRemaining });
   };
 
   const getVoteStatusColor = () => {
@@ -70,9 +72,9 @@ const TokenVoteCard = ({
   };
 
   const getVoteStatusText = () => {
-    if (!isOpen) return 'Closed';
-    if (voteYesPercentage && voteYesPercentage > 0.5) return 'Passing';
-    return 'Open';
+    if (!isOpen) return t('dao.voteStatus.closed');
+    if (voteYesPercentage && voteYesPercentage > 0.5) return t('dao.voteStatus.passing');
+    return t('dao.voteStatus.open');
   };
 
   return (
@@ -88,7 +90,11 @@ const TokenVoteCard = ({
         <div className="flex items-center justify-between text-sm flex-wrap gap-4">
           <div className="flex items-center gap-4 text-white/60 flex-wrap">
             <div className="flex items-center gap-4">
-              <span className="text-white/80"> By: </span>
+              <span className="text-white/80">
+                {' '}
+                {t('dao.byLabel')}
+                {' '}
+              </span>
               {' '}
               <AddressAvatarWithChainName address={voteState.author} variant="feed" />
             </div>
@@ -109,7 +115,7 @@ const TokenVoteCard = ({
               );
             }}
           >
-            View Details
+            {t('dao.viewDetails')}
           </Button>
         </div>
       </CardContent>

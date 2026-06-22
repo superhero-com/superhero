@@ -95,7 +95,7 @@ const LeaderboardView = () => {
   const timeframeOption = LEADERBOARD_TIMEFRAME_OPTIONS.find(
     (option) => option.value === timeframe,
   );
-  const timeframeLabel = customDateRange ? 'Custom' : timeframeOption?.label ?? '7D';
+  const timeframeLabel = customDateRange ? t('leaderboardCustomTimeframe') : timeframeOption?.label ?? '7D';
   const {
     data,
     isLoading,
@@ -158,12 +158,10 @@ const LeaderboardView = () => {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              Trading Leaderboard
+              {t('leaderboardHeading')}
             </h1>
             <p className="mt-2 text-sm md:text-base leading-relaxed text-white/70 max-w-2xl">
-              Discover the most active Superhero traders ranked by on-chain performance.
-              Increase your trading volume, consistency, and trend ownership to climb the
-              board and turn your wallet into a public on-chain track record.
+              {t('leaderboardHeadingDescription')}
             </p>
           </div>
 
@@ -183,14 +181,14 @@ const LeaderboardView = () => {
         {isDateRangeInvalid && (
           <div className="bg-amber-500/10 border border-amber-500/40 text-amber-100 text-sm rounded-2xl px-4 py-3">
             {hasInvalidDateFormat
-              ? 'Use valid dates and times in dd/mm/yyyy hh:mm format.'
-              : 'Start date must be before end date.'}
+              ? t('leaderboardInvalidDateFormat')
+              : t('leaderboardStartBeforeEnd')}
           </div>
         )}
 
         {hasCustomDateInput && !isCustomDateRangeComplete && !isDateRangeInvalid && (
           <div className="bg-white/[0.03] border border-white/10 text-white/60 text-sm rounded-2xl px-4 py-3">
-            Enter both start and end dates to apply a custom leaderboard range.
+            {t('leaderboardEnterBothDates')}
           </div>
         )}
 
@@ -269,13 +267,13 @@ const LeaderboardView = () => {
                 {/* Pagination */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
                   <div className="text-xs text-white/60">
-                    Page
+                    {t('leaderboardPage')}
                     {' '}
                     <span className="font-semibold text-white">
                       {currentPage}
                     </span>
                     {' '}
-                    of
+                    {t('leaderboardOf')}
                     {' '}
                     <span className="font-semibold text-white">
                       {totalPages}
@@ -292,7 +290,7 @@ const LeaderboardView = () => {
                           : 'bg-white/5 text-white/80 hover:bg-white/10'
                       }`}
                     >
-                      Previous
+                      {t('leaderboardPrevious')}
                     </button>
                     <button
                       type="button"
@@ -304,7 +302,7 @@ const LeaderboardView = () => {
                           : 'bg-white/5 text-white/80 hover:bg-white/10'
                       }`}
                     >
-                      Next
+                      {t('leaderboardNext')}
                     </button>
                   </div>
                 </div>

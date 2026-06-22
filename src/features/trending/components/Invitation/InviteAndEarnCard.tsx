@@ -131,25 +131,20 @@ const InviteAndEarnCard = ({
           🎯
         </div>
         <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Generate Invites
+          {t('inviteAndEarn.generateInvites', { ns: 'trending' })}
         </h3>
       </div>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Create invite links by funding a one-time AE reward per invite. Each
-            link contains a secret code; when someone opens the link and claims
-            it, they receive the funded reward and the invitation is marked as
-            used.
+            {t('inviteAndEarn.description1', { ns: 'trending' })}
           </p>
           <p>
-            You can generate multiple links at once and share them with friends
-            or your community. You can also revoke an invite before it’s claimed.
+            {t('inviteAndEarn.description2', { ns: 'trending' })}
           </p>
           <p className="text-xs opacity-60">
-            Important: save your links before closing the popup. The secret code
-            is only shown to you at creation time.
+            {t('inviteAndEarn.description3', { ns: 'trending' })}
           </p>
         </div>
 
@@ -163,7 +158,7 @@ const InviteAndEarnCard = ({
                   htmlFor="amount"
                   className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
                 >
-                  Amount per invite (AE)
+                  {t('inviteAndEarn.amountPerInvite', { ns: 'trending' })}
                 </Label>
                 <Input
                   id="amount"
@@ -178,7 +173,7 @@ const InviteAndEarnCard = ({
                   className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
                 />
                 <div className="text-xs text-slate-400/80">
-                  This amount will be claimable by the recipient who redeems the link.
+                  {t('inviteAndEarn.amountHint', { ns: 'trending' })}
                 </div>
               </div>
 
@@ -323,7 +318,7 @@ const InviteAndEarnCard = ({
 
             {!linkHasBeenCopied && (
               <div className="text-center text-xs text-white/60">
-                Please confirm you copied the links to enable closing this dialog.
+                {t('inviteAndEarn.confirmCopiedHint', { ns: 'trending' })}
               </div>
             )}
 

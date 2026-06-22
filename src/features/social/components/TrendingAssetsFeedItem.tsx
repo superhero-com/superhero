@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ITEM_LIMIT = 4;
 
@@ -63,6 +64,7 @@ const TrendingTokenCard = ({ token }: { token: TokenDto }) => {
 };
 
 const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
+  const { t } = useTranslation();
   const orderBy = useMemo(() => {
     if (page <= 1) {
       return 'trending_score';
@@ -114,14 +116,14 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] md:text-[16px] font-semibold text-white m-0 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-300" />
-            Trending assets
+            {t('social.trendingAssets')}
           </h3>
           <Link
             to="/trends/tokens"
             className="text-[12px] md:text-[13px] font-semibold text-[#4ecdc4] hover:text-[#6be4da] transition-colors no-underline"
             onClick={(event) => event.stopPropagation()}
           >
-            View all
+            {t('social.viewAll')}
           </Link>
         </div>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">

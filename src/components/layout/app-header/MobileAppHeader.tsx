@@ -119,9 +119,9 @@ const MobileAppHeader = () => {
                     params.set('openTrade', '1');
                     navigate({ pathname, search: params.toString() });
                   }}
-                  aria-label="Open trade"
+                  aria-label={t('aria.openTrade')}
                 >
-                  Trade
+                  {t('buttons.trade')}
                 </button>
               )}
             </div>

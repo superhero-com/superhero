@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useAccount } from '@/hooks';
 import TokenSelector from './TokenSelector';
@@ -51,6 +52,7 @@ export default function TokenInput({
   onFocus,
   onBlur,
 }: TokenInputProps) {
+  const { t } = useTranslation();
   const { activeAccount: address } = useAccount();
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,7 +91,7 @@ export default function TokenInput({
           {balance && (
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                Balance:
+                {t('dex.tokenInput.balanceLabel')}
                 <span className="font-semibold text-foreground">
                   {Decimal.from(balance).prettify()}
                 </span>
@@ -168,17 +170,13 @@ export default function TokenInput({
         {/* Insufficient Balance Warning */}
         {hasInsufficientBalance && address && balance && amount && Number(amount) > 0 && (
           <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
-            ⚠️ Insufficient
+            ⚠️
             {' '}
-            {token?.symbol}
-            {' '}
-            balance. You need
-            {' '}
-            {Decimal.from(amount || '0').prettify()}
-            {' '}
-            but only have
-            {' '}
-            {Decimal.from(balance).prettify()}
+            {t('dex.swap.insufficientBalance', {
+              symbol: token?.symbol,
+              needed: Decimal.from(amount || '0').prettify(),
+              have: Decimal.from(balance).prettify(),
+            })}
           </div>
         )}
       </AeCardContent>

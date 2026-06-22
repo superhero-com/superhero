@@ -122,7 +122,7 @@ const RightRail = ({
               📈
             </span>
             <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">
-              AE Price
+              {t('rightRail.aePrice')}
             </h4>
             <div className="flex gap-1">
               {(['usd', 'eur', 'cny'] as const).map((currency) => (
@@ -162,7 +162,7 @@ const RightRail = ({
             <div className="grid gap-2">
               <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
                 <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-                  Market Cap
+                  {t('layout.marketCap')}
                 </span>
                 <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
                   -
@@ -170,7 +170,7 @@ const RightRail = ({
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
                 <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-                  24h Volume
+                  {t('rightRail.volume24h')}
                 </span>
                 <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
                   -
@@ -222,18 +222,18 @@ const RightRail = ({
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🏆</span>
           <h4 className="m-0 text-white text-base font-bold">
-            Top Traders
+            {t('rightRail.topTraders')}
           </h4>
         </div>
         <p className="text-[11px] text-[var(--light-font-color)] mb-3">
-          See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.
+          {t('rightRail.topTradersDescription')}
         </p>
         <button
           type="button"
           className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
           onClick={() => navigate('/trends/leaderboard')}
         >
-          View Trading Leaderboard
+          {t('rightRail.viewTradingLeaderboard')}
         </button>
       </div>
 
@@ -242,7 +242,7 @@ const RightRail = ({
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h4 className="m-0 text-white text-base font-bold">
-            Quick Actions
+            {t('rightRail.quickActions')}
           </h4>
         </div>
 
@@ -253,7 +253,7 @@ const RightRail = ({
             onClick={() => navigate('/trends/tokens')}
             title={t('titles.exploreTrends')}
           >
-            🔍 Explore Trends
+            {t('rightRail.exploreTrends')}
           </button>
           <button
             type="button"
@@ -261,7 +261,7 @@ const RightRail = ({
             onClick={() => navigate('/trends/create')}
             title={t('titles.tokenizeATrend')}
           >
-            🚀 Tokenize a Trend
+            {t('rightRail.tokenizeATrend')}
           </button>
           <button
             type="button"
@@ -269,7 +269,7 @@ const RightRail = ({
             onClick={() => navigate('/defi/swap')}
             title={t('titles.swapTokensOnDex')}
           >
-            🔄 Swap Tokens
+            {t('rightRail.swapTokens')}
           </button>
           <button
             type="button"
@@ -277,7 +277,7 @@ const RightRail = ({
             onClick={() => navigate('/defi/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
-            📦 Wrap AE
+            {t('rightRail.wrapAe')}
           </button>
           <a
             href="https://quali.chat"
@@ -286,7 +286,7 @@ const RightRail = ({
             className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             title={t('titles.openChat')}
           >
-            💬 Chat
+            {t('rightRail.chat')}
           </a>
           {/* Buy AE with ETH quick action (disabled)
           <button
@@ -304,7 +304,7 @@ const RightRail = ({
             onClick={() => navigate('/defi/pool')}
             title={t('titles.provideLiquidityToPools')}
           >
-            💧 Provide Liquidity
+            {t('rightRail.provideLiquidity')}
           </button>
         </div>
       </div>

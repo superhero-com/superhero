@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { toOptionalFiniteNumber } from '@/utils/number';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import TokenCandlestickChartSkeleton from '../Skeletons/TokenCandlestickChartSkeleton';
 
 type TokenTradeTabProps = {
@@ -42,11 +43,12 @@ export const TokenTradeTab = ({
   onBuy,
   onSell,
 }: TokenTradeTabProps) => {
+  const { t } = useTranslation('trending');
   const performanceStatus = React.useMemo(() => ([
-    { id: 'past_24h' as const, name: 'Today' },
-    { id: 'past_7d' as const, name: '7 Days' },
-    { id: 'past_30d' as const, name: '30 Days' },
-    { id: 'all_time' as const, name: 'All-Time' },
+    { id: 'past_24h' as const, name: t('tradeTab.today') },
+    { id: 'past_7d' as const, name: t('tradeTab.7days') },
+    { id: 'past_30d' as const, name: t('tradeTab.30days') },
+    { id: 'all_time' as const, name: t('tradeTab.allTime') },
   ].map((range) => {
     const p = token?.performance?.[range.id];
     const direction = String(p?.current_change_direction || '');
@@ -62,12 +64,12 @@ export const TokenTradeTab = ({
       isDown,
       changePercent,
     };
-  })), [token]);
+  })), [token, t]);
 
   if (!token) {
     return (
       <div className="px-4 py-8 text-center text-white/60">
-        No token selected.
+        {t('tradeTab.noTokenSelected')}
       </div>
     );
   }
@@ -79,7 +81,7 @@ export const TokenTradeTab = ({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <div className="text-xs text-white/60">Price</div>
+              <div className="text-xs text-white/60">{t('tradeTab.price')}</div>
               <ChangePill token={token} />
             </div>
             {token?.price_data ? (
@@ -97,7 +99,7 @@ export const TokenTradeTab = ({
           {/* Stats */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-right">
             <div>
-              <div className="text-[10px] text-white/60">24h High</div>
+              <div className="text-[10px] text-white/60">{t('tradeTab.high24h')}</div>
               {token?.performance?.past_24h?.high ? (
                 <PriceDataFormatter
                   priceData={token?.performance?.past_24h?.high}
@@ -110,7 +112,7 @@ export const TokenTradeTab = ({
               )}
             </div>
             <div>
-              <div className="text-[10px] text-white/60">All‑Time High</div>
+              <div className="text-[10px] text-white/60">{t('tradeTab.allTimeHigh')}</div>
               {token?.performance?.all_time?.high ? (
                 <PriceDataFormatter
                   priceData={token?.performance?.all_time?.high}
@@ -123,7 +125,7 @@ export const TokenTradeTab = ({
               )}
             </div>
             <div>
-              <div className="text-[10px] text-white/60">24h Low</div>
+              <div className="text-[10px] text-white/60">{t('tradeTab.low24h')}</div>
               {token?.performance?.past_24h?.low ? (
                 <PriceDataFormatter
                   priceData={token?.performance?.past_24h?.low}
@@ -136,7 +138,7 @@ export const TokenTradeTab = ({
               )}
             </div>
             <div>
-              <div className="text-[10px] text-white/60">All‑Time Low</div>
+              <div className="text-[10px] text-white/60">{t('tradeTab.allTimeLow')}</div>
               {token?.performance?.all_time?.low ? (
                 <PriceDataFormatter
                   priceData={token?.performance?.all_time?.low}
@@ -193,14 +195,14 @@ export const TokenTradeTab = ({
               onClick={onBuy}
               className="w-full rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-semibold py-3"
             >
-              Buy
+              {t('tradeTab.buy')}
             </button>
             <button
               type="button"
               onClick={onSell}
               className="w-full rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold py-3"
             >
-              Sell
+              {t('tradeTab.sell')}
             </button>
           </div>
         </div>

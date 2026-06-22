@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import PostForm from './PostForm';
 
 interface CommentFormProps {
@@ -10,21 +11,24 @@ interface CommentFormProps {
 const CommentForm: React.FC<CommentFormProps> = ({
   postId,
   onCommentAdded,
-  placeholder = 'Write a reply...',
-}) => (
-  <PostForm
-    isPost={false}
-    postId={postId}
-    onCommentAdded={onCommentAdded}
-    placeholder={placeholder}
-    showMediaFeatures
-    showEmojiPicker
-    showGifInput
-    characterLimit={280}
-    minHeight="60px"
-    className="mt-4"
-  />
-);
+  placeholder,
+}) => {
+  const { t } = useTranslation('forms');
+  return (
+    <PostForm
+      isPost={false}
+      postId={postId}
+      onCommentAdded={onCommentAdded}
+      placeholder={placeholder ?? t('writeReply')}
+      showMediaFeatures
+      showEmojiPicker
+      showGifInput
+      characterLimit={280}
+      minHeight="60px"
+      className="mt-4"
+    />
+  );
+};
 
 export default CommentForm;
 export type { CommentFormProps };

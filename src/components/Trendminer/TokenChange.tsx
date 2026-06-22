@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { cn } from '@/lib/utils';
 import { DEFAULT_PAST_TIMEFRAME, PRICE_MOVEMENT_TIMEFRAME_DEFAULT, PRICE_MOVEMENT_TIMEFRAME_TEXT } from '@/utils/constants';
@@ -11,6 +12,7 @@ const TokenChange = ({
   token,
   hideNewBadge = false,
 }: TokenChangeProps) => {
+  const { t } = useTranslation('trending');
   // Check if token is new (created less than 24 hours ago)
   const isNewToken = () => {
     const createdDate = new Date(token.created_at);
@@ -37,7 +39,7 @@ const TokenChange = ({
     <div className="flex items-center gap-2" data-token-address={token?.address || token?.sale_address}>
       {!hideNewBadge && isNewToken() && (
         <span className="px-1 py-1 rounded text-xs font-semibold text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] uppercase tracking-wide">
-          NEW
+          {t('newBadge')}
         </span>
       )}
 

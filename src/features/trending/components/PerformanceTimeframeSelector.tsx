@@ -1,9 +1,11 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PRICE_MOVEMENT_TIMEFRAMES } from '@/utils/constants';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
 
 const PerformanceTimeframeSelector = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useAtom(performanceChartTimeframeAtom);
 
@@ -62,7 +64,7 @@ const PerformanceTimeframeSelector = () => {
               type="button"
               className="fixed inset-0 z-10"
               onClick={() => setIsOpen(false)}
-              aria-label="Close timeframe menu"
+              aria-label={t('trending.performanceTimeframe.closeMenu')}
             />
 
             {/* Menu */}

@@ -4,6 +4,7 @@ import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
@@ -27,6 +28,7 @@ interface CollectInvitationLinkCardProps {
 const CollectInvitationLinkCard = ({
   className,
 }: CollectInvitationLinkCardProps) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const {
     sdk, staticAeSdk, activeAccount, activeNetwork, nodes,
@@ -93,20 +95,20 @@ const CollectInvitationLinkCard = ({
         setInvitationClaimed(invitation[2]);
 
         if (invitation[2]) {
-          setErrorMessage('This invitation has already been claimed.');
+          setErrorMessage(t('trending.invitations.collect.alreadyClaimed'));
         }
       }
     } catch (error: any) {
       console.error('Failed to get invitation reward amount:', error);
       if (error?.message?.includes('Trying to call undefined function')) {
-        setErrorMessage('Please switch to the correct network.');
+        setErrorMessage(t('trending.invitations.collect.switchNetwork'));
       } else {
-        setErrorMessage(error?.message || 'Failed to load invitation details.');
+        setErrorMessage(error?.message || t('trending.invitations.collect.failedToLoad'));
       }
     } finally {
       setLoadingInvitation(false);
     }
-  }, [invitationCode, getAffiliationTreasury, activeNetwork.name, nodes]);
+  }, [invitationCode, getAffiliationTreasury, activeNetwork.name, nodes, t]);
 
   /**
    * Claims or revokes the invitation reward
@@ -130,7 +132,7 @@ const CollectInvitationLinkCard = ({
 
         const affiliationTreasury = await getAffiliationTreasury(sdk);
         await affiliationTreasury.revokeInvitationCode(account.address);
-        setSuccessMessage('Invitation reward has been revoked successfully.');
+        setSuccessMessage(t('trending.invitations.collect.revokedSuccess'));
       } else {
         // Claim invitation
         if (!staticAeSdk) throw new Error('SDK not available');
@@ -145,7 +147,7 @@ const CollectInvitationLinkCard = ({
             onAccount: account,
           },
         );
-        setSuccessMessage('Invitation reward has been claimed successfully!');
+        setSuccessMessage(t('trending.invitations.collect.claimedSuccess'));
       }
 
       setInvitationClaimed(true);
@@ -154,17 +156,17 @@ const CollectInvitationLinkCard = ({
 
       if (error?.message?.includes('INVITEE_ALREADY_REGISTERED')) {
         setErrorMessage(
-          'This account has already claimed an invitation reward.',
+          t('trending.invitations.collect.accountAlreadyClaimed'),
         );
       } else if (error?.message?.includes('Secret key')) {
-        setErrorMessage('This invite link uses an unsupported or corrupted secret key format.');
+        setErrorMessage(t('trending.invitations.collect.unsupportedSecretKey'));
       } else if (error?.message?.includes('ALREADY_REDEEMED')) {
-        setErrorMessage('This invitation has already been claimed.');
+        setErrorMessage(t('trending.invitations.collect.alreadyClaimed'));
       } else {
         setErrorMessage(
-          `Failed to ${isRevoking ? 'revoke' : 'claim'} reward. ${
-            error?.message || 'Unknown error'
-          }`,
+          isRevoking
+            ? t('trending.invitations.collect.failedToRevoke', { message: error?.message || t('trending.invitations.collect.unknownError') })
+            : t('trending.invitations.collect.failedToClaim', { message: error?.message || t('trending.invitations.collect.unknownError') }),
         );
       }
     } finally {
@@ -177,6 +179,7 @@ const CollectInvitationLinkCard = ({
     sdk,
     staticAeSdk,
     getAffiliationTreasury,
+    t,
   ]);
 
   // Load invitation data when invitation code changes
@@ -247,14 +250,10 @@ const CollectInvitationLinkCard = ({
         >
           <CardContent className="p-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-primary">
-              Collect your
-              {' '}
-              {appName}
-              {' '}
-              invitation reward
+              {t('trending.invitations.collect.title', { appName })}
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="hidden sm:inline">View invitation</span>
+              <span className="hidden sm:inline">{t('trending.invitations.collect.viewInvitation')}</span>
               <button type="button" className="p-4 rounded-full hover:bg-accent transition-colors">
                 <ChevronDown className="w-4 h-4" />
               </button>
@@ -278,22 +277,13 @@ const CollectInvitationLinkCard = ({
               {/* Left column - Text content */}
               <div className="pr-0 md:pr-10">
                 <h2 className="text-2xl md:text-3xl font-bold text-primary pb-4">
-                  Collect your
-                  {' '}
-                  {appName}
-                  {' '}
-                  invitation reward
+                  {t('trending.invitations.collect.title', { appName })}
                 </h2>
                 <p className="text-sm text-foreground mb-4">
-                  Easily create and manage Token Sales with a bonding curve
-                  ensuring fair pricing. Engage in fair token launches,
-                  participate in community governance through integrated DAOs,
-                  and maximize rewards with a robust referral system.
+                  {t('trending.invitations.collect.description1')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Grow vibrant token-gated communities for businesses, projects,
-                  DAOs, or even meme coins. Step into the future of
-                  decentralized token management!
+                  {t('trending.invitations.collect.description2')}
                 </p>
               </div>
 
@@ -302,8 +292,8 @@ const CollectInvitationLinkCard = ({
                 <div className="flex flex-col items-center">
                   <h3 className="text-xl font-semibold mb-2">
                     {isRevoking
-                      ? 'You can revoke the invite reward of:'
-                      : 'You can claim the invite reward of:'}
+                      ? t('trending.invitations.collect.canRevokeRewardOf')
+                      : t('trending.invitations.collect.canClaimRewardOf')}
                   </h3>
 
                   <div className="mb-4">
@@ -321,8 +311,7 @@ const CollectInvitationLinkCard = ({
                     <div className="mb-4 flex items-center gap-2 text-sm">
                       <AddressAvatarWithChainName address={invitationSender} />
                       <span>
-                        has invited you to join
-                        {appName}
+                        {t('trending.invitations.collect.hasInvitedYou', { appName })}
                       </span>
                     </div>
                   )}
@@ -350,11 +339,11 @@ const CollectInvitationLinkCard = ({
                           disabled={!!errorMessage}
                           onClick={claimOrRevokeReward}
                         >
-                          {isRevoking ? 'Revoke Invitation' : 'Claim Reward'}
+                          {isRevoking ? t('trending.invitations.collect.revokeInvitation') : t('trending.invitations.collect.claimReward')}
                         </AeButton>
                       ) : (
                         <ConnectWalletButton
-                          label="CONNECT WALLET"
+                          label={t('common.buttons.connectWalletDex')}
                           variant="default"
                           className="text-sm"
                         />
@@ -369,7 +358,7 @@ const CollectInvitationLinkCard = ({
                             setSuccessMessage(undefined);
                           }}
                         >
-                          Dismiss
+                          {t('trending.invitations.collect.dismiss')}
                         </AeButton>
                       )}
                     </div>

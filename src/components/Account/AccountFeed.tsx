@@ -7,6 +7,7 @@ import {
   useEffect, useMemo, useRef, useState, useCallback,
 } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { SuperheroApi } from '@/api/backend';
 import type { PostDto } from '@/api/generated';
 
@@ -16,6 +17,7 @@ interface AccountFeedProps {
 }
 
 const AccountFeed = ({ address, tab }: AccountFeedProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const ACTIVITY_PAGE_SIZE = 50;
 
@@ -237,7 +239,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
               }}
               aria-expanded={!collapsed}
             >
-              {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+              {collapsed ? t('social.showMore', { count: groupItems.length - 3 }) : t('social.showLess')}
             </button>
           ) : undefined;
 
@@ -273,7 +275,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
                 }}
                 aria-expanded={!collapsed}
               >
-                {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+                {collapsed ? t('social.showMore', { count: groupItems.length - 3 }) : t('social.showLess')}
               </button>
             </div>,
           );
@@ -281,7 +283,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
       }
     }
     return nodes;
-  }, [combinedList, expandedGroups, navigate, toggleGroup]);
+  }, [combinedList, expandedGroups, navigate, toggleGroup, t]);
 
   return (
     <div className="w-full">
@@ -294,7 +296,7 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
             {renderItems}
             {(hasNextPage || hasMoreActivities) && <div ref={sentinelRef} className="h-10" />}
             {combinedList.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">No posts yet</div>
+              <div className="p-8 text-center text-muted-foreground">{t('common.account.noPostsYet')}</div>
             )}
           </>
         )}

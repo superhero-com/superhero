@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Head } from '../../../seo/Head';
 import { DexTokenDto, PairDto } from '../../../api/generated';
 import SwapForm from '../../../components/dex/core/SwapForm';
@@ -6,14 +7,15 @@ import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 import { PoolCandlestickChart } from '../components/charts/PoolCandlestickChart';
 
 const DexSwap = () => {
+  const { t } = useTranslation();
   const [selectedPair, setSelectedPair] = useState<PairDto | null>(null);
   const [fromToken, setFromToken] = useState<DexTokenDto | null>(null);
   // todo get selected pool address3
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       <Head
-        title="Swap AE and tokens – Superhero DEX"
-        description="Trustless swapping on Superhero DEX with live charts and recent activity."
+        title={t('common.views.dexSwap.pageTitle')}
+        description={t('common.views.dexSwap.pageDescription')}
         canonicalPath="/defi/swap"
       />
       {/* Main Content - unified layout */}

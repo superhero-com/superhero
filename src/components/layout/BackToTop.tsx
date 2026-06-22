@@ -93,7 +93,9 @@ const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
           visible ? 'opacity-100' : 'opacity-0',
         ].join(' ')}
       >
-        ↑ Back to top
+        ↑
+        {' '}
+        {t('aria.backToTop')}
       </button>
     </div>
   );

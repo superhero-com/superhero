@@ -12,6 +12,7 @@
   no-console
 */
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { TokensService } from '@/api/generated/services/TokensService';
 import { TokenHolderDto } from '@/api/generated/models/TokenHolderDto';
@@ -45,11 +46,12 @@ interface TokenHolderCardProps {
 }
 
 function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#222222] md:border-0 bg-[#141414]/50 md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
       {/* Account */}
       <div className="flex items-center gap-2">
-        <div className="text-[10px] text-white/60 md:hidden">Account:</div>
+        <div className="text-[10px] text-white/60 md:hidden">{t('trending.tokenHolders.accountLabel')}</div>
         <AddressAvatarWithChainName
           address={holder.address}
           contentClassName="break-all max-w-full"
@@ -60,7 +62,7 @@ function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
       <div className="flex items-center justify-between md:contents">
         {/* Balance */}
         <div className="flex items-center gap-2">
-          <div className="text-[10px] text-white/60 md:hidden">Balance:</div>
+          <div className="text-[10px] text-white/60 md:hidden">{t('trending.tokenHolders.balanceLabel')}</div>
           <div className="text-white">
             <TokenPriceFormatter
               hideSymbol
@@ -109,6 +111,7 @@ function TokenHolderCard({ holder, token, percentage }: TokenHolderCardProps) {
 }
 
 export default function TokenHolders({ token }: TokenHoldersProps) {
+  const { t } = useTranslation();
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -174,11 +177,11 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   // Table headers configuration
   const headers = useMemo(
     () => [
-      { title: 'Account', key: 'address', sortable: false },
-      { title: token.name || 'Balance', key: 'balance', sortable: false },
+      { title: t('trending.tokenHolders.account'), key: 'address', sortable: false },
+      { title: token.name || t('trending.tokenHolders.balance'), key: 'balance', sortable: false },
       { title: '%', key: 'percentage', sortable: false },
     ],
-    [token.name],
+    [token.name, t],
   );
 
   // Helper function to calculate percentage
@@ -250,9 +253,9 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         {!isFetching && !holders.length && (
           <div className="text-center py-12">
             <div className="text-white/40 text-lg mb-2">👥</div>
-            <div className="text-white/60 text-sm">No holders found</div>
+            <div className="text-white/60 text-sm">{t('trending.tokenHolders.noHoldersFound')}</div>
             <div className="text-white/40 text-xs mt-1">
-              Token holders will appear here once tokens are distributed
+              {t('trending.tokenHolders.noHoldersDescription')}
             </div>
           </div>
         )}
@@ -261,12 +264,12 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         {error && !isFetching && (
           <div className="text-center py-12">
             <div className="text-red-400 text-lg mb-2">⚠️</div>
-            <div className="text-red-400 text-sm">Failed to load holders</div>
+            <div className="text-red-400 text-sm">{t('trending.tokenHolders.failedToLoadHolders')}</div>
             <button
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs hover:bg-red-500/30 transition-colors"
             >
-              Retry
+              {t('trending.tokenHolders.retry')}
             </button>
           </div>
         )}
@@ -278,7 +281,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
           {/* Items per page selector */}
           <div className="flex items-center flex-col md:flex-row justify-between text-sm text-white/60">
             <div className="flex items-center gap-2">
-              <span>Show:</span>
+              <span>{t('trending.tokenHolders.show')}</span>
               <AppSelect
                 value={String(itemsPerPage)}
                 onValueChange={(v) => {
@@ -294,21 +297,14 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                   </AppSelectItem>
                 ))}
               </AppSelect>
-              <span>items per page</span>
+              <span>{t('trending.tokenHolders.itemsPerPage')}</span>
             </div>
             <div>
-              Showing
-              {' '}
-              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
-              {' '}
-              to
-              {' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)}
-              {' '}
-              of
-              {totalItems}
-              {' '}
-              holders
+              {t('trending.tokenHolders.showingRange', {
+                from: Math.min((currentPage - 1) * itemsPerPage + 1, totalItems),
+                to: Math.min(currentPage * itemsPerPage, totalItems),
+                total: totalItems,
+              })}
             </div>
           </div>
 
@@ -319,7 +315,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               disabled={currentPage <= 1}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t('trending.tokenHolders.previous')}
             </button>
 
             {/* Page numbers */}
@@ -357,7 +353,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               disabled={currentPage >= totalPages}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t('trending.tokenHolders.next')}
             </button>
           </div>
         </div>

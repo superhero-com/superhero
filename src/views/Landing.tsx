@@ -4,6 +4,7 @@
   max-len
 */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   Shield, TrendingUp, Users, Fingerprint, Smartphone,
@@ -56,6 +57,7 @@ function FeatureCard({
 /*  Main Product Page                                                 */
 /* ------------------------------------------------------------------ */
 export default function Landing() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-pink-500/30">
 
@@ -86,7 +88,7 @@ export default function Landing() {
           >
             <Sparkles className="w-3.5 h-3.5 text-pink-400" />
             <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
-              New paradigm shift in attention markets
+              {t('common.views.landing.heroBadge')}
             </span>
           </div>
 
@@ -94,9 +96,9 @@ export default function Landing() {
           <h1
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6"
           >
-            <span className="block text-white/95">Following trends</span>
+            <span className="block text-white/95">{t('common.views.landing.heroTitleLine1')}</span>
             <span className="block bg-gradient-to-r from-blue-700 via-blue-500 to-purple-600 bg-clip-text text-transparent pb-4">
-              just got a new meaning
+              {t('common.views.landing.heroTitleLine2')}
             </span>
           </h1>
 
@@ -104,8 +106,7 @@ export default function Landing() {
           <p
             className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-10"
           >
-            Superhero is the on-chain attention market where you can discover,
-            trade, and govern the trends you believe in — before everyone else.
+            {t('common.views.landing.heroSubtitle')}
           </p>
 
           {/* CTAs */}
@@ -118,7 +119,7 @@ export default function Landing() {
               className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
-              Download on Mobile
+              {t('common.views.landing.downloadOnMobile')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
@@ -128,7 +129,7 @@ export default function Landing() {
               className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
-              Openclaw or Claude
+              {t('common.views.landing.openclawOrClaude')}
               {' '}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
@@ -140,7 +141,7 @@ export default function Landing() {
               to="/"
               className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
-              Continue on Web
+              {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
 
@@ -177,16 +178,15 @@ export default function Landing() {
           {/* Section header */}
           <div className="max-w-2xl mb-16">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
-              What is Superhero?
+              {t('common.views.landing.whatIsEyebrow')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              A decentralized attention market
+              {t('common.views.landing.whatIsTitleLine1')}
               <br />
-              <span className="text-white/40">for social trends</span>
+              <span className="text-white/40">{t('common.views.landing.whatIsTitleLine2')}</span>
             </h2>
             <p className="text-[15px] text-white/40 leading-relaxed">
-              Where creators own their content, communities become tradable markets,
-              and attention is priced in real time.
+              {t('common.views.landing.whatIsDescription')}
             </p>
           </div>
 
@@ -195,38 +195,38 @@ export default function Landing() {
             <FeatureCard
               icon={Shield}
               number="01"
-              title="Own your content & identity"
-              description="On-chain posts and Superhero Onchain ID give creators full ownership. Your content is immutable, your identity is yours."
+              title={t('common.views.landing.features.ownContent.title')}
+              description={t('common.views.landing.features.ownContent.description')}
             />
             <FeatureCard
               icon={TrendingUp}
               number="02"
-              title="Tradable trend markets"
-              description="Communities and hashtags become tradable via bonding curve tokens. Attention and conviction show up directly in the price."
+              title={t('common.views.landing.features.tradableMarkets.title')}
+              description={t('common.views.landing.features.tradableMarkets.description')}
             />
             <FeatureCard
               icon={BarChart3}
               number="03"
-              title="Attention Market"
-              description="Trends = Hashtags = Communities = Tokens. Get real-time market data on attention and sentiment for any trend or community."
+              title={t('common.views.landing.features.attentionMarket.title')}
+              description={t('common.views.landing.features.attentionMarket.description')}
             />
             <FeatureCard
               icon={Coins}
               number="04"
-              title="Rewards & referrals"
-              description="The platform rewards participation through an affiliation system and ProtocolDAO token. Engage, refer, and earn."
+              title={t('common.views.landing.features.rewards.title')}
+              description={t('common.views.landing.features.rewards.description')}
             />
             <FeatureCard
               icon={MessageCircle}
               number="05"
-              title="On-chain posts & tipping"
-              description="Immutable content anchored to verifiable events. Tip creators directly — every interaction is transparent and permanent."
+              title={t('common.views.landing.features.posts.title')}
+              description={t('common.views.landing.features.posts.description')}
             />
             <FeatureCard
               icon={Users}
               number="06"
-              title="On-chain identity"
-              description="Wallet + chain names + X handle — all linked together. Your identity lives on-chain, not on a corporate server."
+              title={t('common.views.landing.features.identity.title')}
+              description={t('common.views.landing.features.identity.description')}
             />
           </div>
         </div>
@@ -244,14 +244,12 @@ export default function Landing() {
                 SuperheroID
               </span>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-6">
-                Decentralized identity,
+                {t('common.views.landing.id.titleLine1')}
                 <br />
-                <span className="text-white/40">W3C standard</span>
+                <span className="text-white/40">{t('common.views.landing.id.titleLine2')}</span>
               </h2>
               <p className="text-[15px] text-white/40 leading-relaxed">
-                A decentralized DID that links your social accounts to your wallet.
-                Your identity is verifiable, portable, and censorship-resistant —
-                following the W3C standard for decentralized identifiers.
+                {t('common.views.landing.id.description')}
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-5 mt-3">
 
@@ -259,15 +257,15 @@ export default function Landing() {
                   to="/whitepaper"
                   className="inline-flex items-center gap-2 text-[14px] text-white/50 hover:text-white/80 transition-colors"
                 >
-                  Read the Whitepaper
+                  {t('common.views.landing.id.readWhitepaper')}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
               <div className="space-y-4">
                 {[
-                  { icon: Fingerprint, label: 'W3C DID standard compliant' },
-                  { icon: Globe, label: 'Links wallet, chain names, and X handle' },
-                  { icon: Shield, label: 'Self-sovereign — you control your data' },
+                  { icon: Fingerprint, label: t('common.views.landing.id.point1') },
+                  { icon: Globe, label: t('common.views.landing.id.point2') },
+                  { icon: Shield, label: t('common.views.landing.id.point3') },
                 ].map(({ icon: I, label }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/10 flex items-center justify-center">
@@ -302,24 +300,23 @@ export default function Landing() {
 
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
-            Mobile App
+            {t('common.views.landing.mobile.eyebrow')}
           </span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-12">
-            Seamless experience,
+            {t('common.views.landing.mobile.titleLine1')}
             <br />
-            <span className="text-white/40">wallet built in</span>
+            <span className="text-white/40">{t('common.views.landing.mobile.titleLine2')}</span>
           </h2>
           {/* App mockup placeholder */}
           <div className="max-w-sm mx-auto">
             <img
               src="/screen-1.png"
-              alt="Superhero mobile app mockup"
+              alt={t('common.views.landing.mobile.imageAlt')}
               className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
             />
           </div>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed my-12">
-            The Superhero app comes with a built-in wallet so you can post, trade, tip,
-            and govern — all without leaving the app. No extensions, no friction.
+            {t('common.views.landing.mobile.description')}
           </p>
 
           <div className="flex flex-row items-center justify-center gap-4 mb-16">
@@ -331,8 +328,8 @@ export default function Landing() {
             >
               <Smartphone className="w-5 h-5 text-white/60" />
               <div className="text-left">
-                <span className="block text-[11px] text-white/40 leading-none">Download on</span>
-                <span className="block text-[14px] font-semibold text-white/90 leading-tight">App Store</span>
+                <span className="block text-[11px] text-white/40 leading-none">{t('common.views.landing.mobile.appStorePre')}</span>
+                <span className="block text-[14px] font-semibold text-white/90 leading-tight">{t('common.views.landing.mobile.appStore')}</span>
               </div>
             </a>
             <a
@@ -343,8 +340,8 @@ export default function Landing() {
             >
               <Smartphone className="w-5 h-5 text-white/60" />
               <div className="text-left">
-                <span className="block text-[11px] text-white/40 leading-none">Get it on</span>
-                <span className="block text-[14px] font-semibold text-white/90 leading-tight">Google Play</span>
+                <span className="block text-[11px] text-white/40 leading-none">{t('common.views.landing.mobile.googlePlayPre')}</span>
+                <span className="block text-[14px] font-semibold text-white/90 leading-tight">{t('common.views.landing.mobile.googlePlay')}</span>
               </div>
             </a>
           </div>
@@ -359,10 +356,10 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
-            Ready to discover the next trend?
+            {t('common.views.landing.bottomCta.title')}
           </h2>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
-            Join the attention market. Trade conviction. Own your identity.
+            {t('common.views.landing.bottomCta.subtitle')}
           </p>
           {/* CTAs */}
           <div
@@ -374,7 +371,7 @@ export default function Landing() {
               className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
-              Download on Mobile
+              {t('common.views.landing.downloadOnMobile')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
             <a
@@ -384,7 +381,7 @@ export default function Landing() {
               className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
-              Openclaw or Claude
+              {t('common.views.landing.openclawOrClaude')}
               {' '}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
@@ -396,7 +393,7 @@ export default function Landing() {
               to="/"
               className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
-              Continue on Web
+              {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
 

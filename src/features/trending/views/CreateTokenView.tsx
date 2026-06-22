@@ -2,6 +2,7 @@
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
+import { collectionLabel } from '@/utils/collection';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -15,6 +16,7 @@ import {
   type TxPayload,
 } from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
@@ -40,6 +42,7 @@ interface TokenMetaInfo {
 }
 
 const CreateTokenView = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
@@ -231,8 +234,8 @@ const CreateTokenView = () => {
     if (!errorMessages.length) return true;
 
     const chars = errorMessages.join(', ');
-    return `Only characters in the range "${chars}" are allowed.`;
-  }, [selectedCollection?.allowed_name_chars]);
+    return t('trending.createToken.errors.allowedCharsRange', { chars });
+  }, [selectedCollection?.allowed_name_chars, t]);
 
   const normalizeTokenName = useCallback((value: string): string => {
     if (!selectedCollection?.allowed_name_chars) return value;
@@ -290,7 +293,7 @@ const CreateTokenView = () => {
         const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
         const items: any[] = res?.items || [];
-        const exact = items.find((t: any) => t?.name === trimmed);
+        const exact = items.find((item: any) => item?.name === trimmed);
         if (exact && exact.address) {
           setFoundToken({
             address: exact.address,
@@ -447,7 +450,7 @@ const CreateTokenView = () => {
       navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
-      const message = error?.message || error?.reason || 'Unknown error';
+      const message = error?.message || error?.reason || t('trending.createToken.errors.unknownError');
       notifyError(message);
       if (message.includes('NAME_ALREADY_REGISTERED')) {
         try {
@@ -464,7 +467,7 @@ const CreateTokenView = () => {
           // ignore search error
         }
       }
-      setErrorMessage(`Oops, something went wrong. \n${message}`);
+      setErrorMessage(t('trending.createToken.errors.somethingWentWrong', { message }));
     } finally {
       setIsCreating(false);
       setTransactionType(null);
@@ -504,12 +507,12 @@ const CreateTokenView = () => {
         <div className="space-y-3">
           <ConnectWalletButton
             block
-            label="Connect Wallet to Create Token"
+            label={t('trending.createToken.submit.connectWalletToCreate')}
             className="w-full"
             muted
           />
           <p className="text-sm text-white/70 text-center">
-            You need to connect your wallet to create a token.
+            {t('trending.createToken.submit.connectWalletHint')}
           </p>
           <AeButton
             type="button"
@@ -519,7 +522,7 @@ const CreateTokenView = () => {
             onClick={() => { window.open('https://wallet.superhero.com', '_blank'); }}
             className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            Get Superhero Wallet ↗
+            {t('trending.createToken.submit.getSuperheroWallet')}
           </AeButton>
         </div>
       );
@@ -529,8 +532,8 @@ const CreateTokenView = () => {
       return (
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-blue-400 text-center">
           <div className="animate-pulse">
-            <h3 className="font-semibold mb-2">Waiting for Wallet Confirmation...</h3>
-            <p>Please review and sign the transaction in your wallet to start creating your token.</p>
+            <h3 className="font-semibold mb-2">{t('trending.createToken.submit.waitingForConfirmation')}</h3>
+            <p>{t('trending.createToken.submit.reviewAndSign')}</p>
           </div>
         </div>
       );
@@ -544,7 +547,7 @@ const CreateTokenView = () => {
         disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid'}
         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3"
       >
-        Create Token
+        {t('trending.createToken.submit.createToken')}
       </AeButton>
     );
   };
@@ -556,18 +559,16 @@ const CreateTokenView = () => {
           {/* Hero heading — visible on mobile/tablet above the form; hidden on xl (shown in left column instead) */}
           <div className="xl:hidden px-2 pt-2 pb-2 text-center">
             <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3">
-              Create Your Token.
+              {t('trending.createToken.hero.line1')}
               <br />
-              Build Your Community.
+              {t('trending.createToken.hero.line2')}
               <br />
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                Own the Trend.
+                {t('trending.createToken.hero.line3')}
               </span>
             </h3>
             <p className="hidden md:block text-white/75 text-base leading-relaxed">
-              Tokenized trends are community tokens launched on a bonding curve.
-              Price moves with buys/sells, no order books. Each token mints a DAO treasury
-              that can fund initiatives via on-chain votes.
+              {t('trending.createToken.hero.subtitle')}
             </p>
           </div>
 
@@ -589,7 +590,7 @@ const CreateTokenView = () => {
                     {/* Error Messages */}
                     {!alreadyRegisteredAs && errorMessage && (
                       <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
-                        <h3 className="font-semibold mb-2">Oops!</h3>
+                        <h3 className="font-semibold mb-2">{t('trending.createToken.oops')}</h3>
                         <p>{errorMessage}</p>
                       </div>
                     )}
@@ -598,11 +599,11 @@ const CreateTokenView = () => {
                     {activeFactoryCollectionsArr.length > 1 && (
                       <div>
                         <div className="block text-sm font-medium text-white/80 mb-2">
-                          Collection
+                          {t('trending.createToken.collection')}
                         </div>
                         <div
                           role="radiogroup"
-                          aria-label="Collection"
+                          aria-label={t('trending.createToken.collection')}
                           className="grid grid-cols-2 gap-2"
                         >
                           {activeFactoryCollectionsArr.map((collection: any) => {
@@ -636,7 +637,7 @@ const CreateTokenView = () => {
                                     selected ? 'text-white' : 'text-white/90'
                                   }`}
                                 >
-                                  {collection.name}
+                                  {collectionLabel(collection.name)}
                                 </span>
                               </button>
                             );
@@ -652,7 +653,7 @@ const CreateTokenView = () => {
                         htmlFor="trend-token-name"
                         className="block text-sm font-medium text-white/80 mb-2"
                       >
-                        Trend token name
+                        {t('trending.createToken.trendTokenName')}
                       </label>
                       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30">
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
@@ -682,11 +683,10 @@ const CreateTokenView = () => {
                       {/* Helper/status text - fixed height, no layout jumps */}
                       <div className="text-xs text-white/60 mt-1 flex items-center justify-between min-h-[20px]" aria-live="polite">
                         <span>
-                          {tokenName.length}
-                          /20 characters
+                          {t('trending.createToken.charactersCount', { count: tokenName.length, max: 20 })}
                         </span>
-                        <span className="opacity-80">
-                          {nameStatus === 'invalid' ? 'Invalid characters' : 'Allowed: A–Z, 0–9, and -'}
+                        <span className="opacity-80" dir="auto">
+                          {nameStatus === 'invalid' ? t('trending.createToken.invalidCharacters') : (selectedCollection?.description || t('trending.createToken.allowedCharsHint'))}
                         </span>
                       </div>
                     </div>
@@ -704,24 +704,24 @@ const CreateTokenView = () => {
                                 <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75 animate-ping" />
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                               </span>
-                              <span className="font-medium">Trading live</span>
+                              <span className="font-medium">{t('trending.createToken.tradingLive')}</span>
                             </span>
                             <div className="flex-1 w-full flex flex-wrap items-center gap-x-6 gap-y-2 justify-between">
                               <div className="text-white/80">
-                                <span className="text-white/60">Token</span>
+                                <span className="text-white/60">{t('trending.createToken.token')}</span>
                                 {' '}
                                 <span className="font-mono font-bold text-white">{alreadyRegisteredName || foundToken?.name}</span>
                               </div>
                               {foundToken?.price != null && (
                                 <div className="text-white/80">
-                                  <span className="text-white/60">Price</span>
+                                  <span className="text-white/60">{t('trending.createToken.price')}</span>
                                   {' '}
                                   <strong className="text-white">{foundToken.price}</strong>
                                 </div>
                               )}
                               {foundToken?.holders != null && (
                                 <div className="text-white/80">
-                                  <span className="text-white/60">Holders</span>
+                                  <span className="text-white/60">{t('trending.createToken.holders')}</span>
                                   {' '}
                                   <strong className="text-white">{foundToken.holders.toLocaleString?.() || foundToken.holders}</strong>
                                 </div>
@@ -739,7 +739,7 @@ const CreateTokenView = () => {
                           className="w-full"
                           onClick={() => navigate(`/trends/tokens/${foundToken?.name || alreadyRegisteredName}`)}
                         >
-                          BUY TOKEN
+                          {t('trending.createToken.buyToken')}
                         </AeButton>
                       </div>
                     )}
@@ -749,7 +749,7 @@ const CreateTokenView = () => {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="block text-sm font-medium text-white/80">
-                            {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
+                            {inputMode === 'AE' ? t('trending.createToken.amountToSpend') : t('trending.createToken.tokensToBuy')}
                           </div>
                           {/* Tooltip */}
                           <div className="relative group inline-block align-middle">
@@ -757,15 +757,15 @@ const CreateTokenView = () => {
                               type="button"
                               className="text-white/70 cursor-help select-none leading-none px-1"
                               aria-label={inputMode === 'AE'
-                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
-                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                                ? t('trending.createToken.prebuyTooltipAe')
+                                : t('trending.createToken.prebuyTooltipTokens')}
                             >
                               ⓘ
                             </button>
                             <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[min(320px,80vw)] rounded-lg border border-white/10 bg-gray-900/95 text-white text-xs p-3 shadow-xl z-50">
                               {inputMode === 'AE'
-                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
-                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                                ? t('trending.createToken.prebuyTooltipAe')
+                                : t('trending.createToken.prebuyTooltipTokens')}
                             </div>
                           </div>
                         </div>
@@ -774,9 +774,7 @@ const CreateTokenView = () => {
                           onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
                           className="text-xs underline text-purple-300 hover:text-purple-200"
                         >
-                          Switch to
-                          {' '}
-                          {inputMode === 'AE' ? 'Tokens' : 'AE'}
+                          {t('trending.createToken.switchTo', { target: inputMode === 'AE' ? t('trending.createToken.tokensUnit') : 'AE' })}
                         </button>
                       </div>
 
@@ -795,7 +793,7 @@ const CreateTokenView = () => {
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
-                              title="This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                              title={t('trending.createToken.prebuyTooltipAe')}
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
@@ -808,7 +806,7 @@ const CreateTokenView = () => {
                             <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
                           </div>
                           <div className="text-sm text-white/70">
-                            Estimated tokens you&apos;ll receive:
+                            {t('trending.createToken.estimatedTokensReceive')}
                             {' '}
                             <span className="text-white">{estimatedTokens.prettify()}</span>
                           </div>
@@ -825,7 +823,7 @@ const CreateTokenView = () => {
                               placeholder="0.0"
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
-                            <div className="text-white font-extrabold text-2xl leading-none">TOKENS</div>
+                            <div className="text-white font-extrabold text-2xl leading-none">{t('trending.createToken.tokensUnitUpper')}</div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
                             <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
@@ -836,14 +834,14 @@ const CreateTokenView = () => {
                           </div>
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
-                              <span>Estimated cost:</span>
+                              <span>{t('trending.createToken.estimatedCost')}</span>
                               <LivePriceFormatter
                                 row
                                 aePrice={price}
                                 watchPrice={false}
                                 priceLoading={loadingPrice}
                               />
-                              <span>(incl. fees)</span>
+                              <span>{t('trending.createToken.inclFees')}</span>
                             </div>
                           </div>
                         </div>
@@ -851,10 +849,10 @@ const CreateTokenView = () => {
                       {/* Shared explanatory note (tooltip carries the AE explanation now) */}
                       <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
                         <div className="text-white text-sm md:text-md">
-                          Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
+                          {t('trending.createToken.note.tradingAvailable')}
                         </div>
                         <div className="opacity-80">
-                          You&apos;ll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
+                          {t('trending.createToken.note.deployFromWallet')}
                         </div>
                       </div>
                     </div>
@@ -878,77 +876,69 @@ const CreateTokenView = () => {
                 {/* Desktop-only heading - mobile version is rendered above the flex container */}
                 <div className="hidden xl:block mb-6">
                   <div className="text-5xl font-bold leading-tight text-white mb-4">
-                    Create Your Token.
+                    {t('trending.createToken.hero.line1')}
                     <br />
-                    Build Your Community.
+                    {t('trending.createToken.hero.line2')}
                     <br />
                     <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                      Own the Trend.
+                      {t('trending.createToken.hero.line3')}
                     </span>
                   </div>
                   <p className="text-white/75 text-lg leading-relaxed">
-                    Tokenized trends are community tokens launched on a bonding curve.
-                    Price moves with buys/sells, no order books. Each token mints a DAO treasury
-                    that can fund initiatives via on-chain votes.
+                    {t('trending.createToken.hero.subtitle')}
                   </p>
                 </div>
 
                 {/* Explainer Section */}
                 <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                    How Bonding Curves Work
+                    {t('trending.createToken.explainer.title')}
                   </h3>
                   <div className="space-y-4 text-white/80 text-sm leading-relaxed">
                     <div>
-                      <h4 className="font-semibold text-white mb-2">Price Discovery Mechanism</h4>
+                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
                       <p>
-                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices.
-                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery
-                        based on supply and demand.
+                        {t('trending.createToken.explainer.priceDiscoveryBody')}
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-2">The Math Behind It</h4>
+                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.mathTitle')}</h4>
                       <p className="mb-2">
-                        The bonding curve follows a quadratic formula:
+                        {t('trending.createToken.explainer.formulaIntro')}
                         {' '}
                         <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
                       </p>
                       <p className="mb-2">
-                        Where
+                        {t('trending.createToken.explainer.whereLabel')}
                         {' '}
                         <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
                         {' '}
-                        is a constant and
+                        {t('trending.createToken.explainer.constantAnd')}
                         {' '}
                         <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
                         {' '}
-                        is the total number of tokens in circulation.
+                        {t('trending.createToken.explainer.supplyDescription')}
                       </p>
                       <p>
-                        This means:
+                        {t('trending.createToken.explainer.thisMeans')}
                       </p>
                       <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                        <li>Early buyers get tokens at lower prices</li>
-                        <li>Each purchase increases the price for the next buyer</li>
-                        <li>Selling tokens reduces the supply and lowers the price</li>
-                        <li>The curve ensures liquidity - you can always buy or sell</li>
+                        <li>{t('trending.createToken.explainer.bullet1')}</li>
+                        <li>{t('trending.createToken.explainer.bullet2')}</li>
+                        <li>{t('trending.createToken.explainer.bullet3')}</li>
+                        <li>{t('trending.createToken.explainer.bullet4')}</li>
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-2">DAO Treasury</h4>
+                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
                       <p>
-                        A portion of every transaction goes into a DAO treasury controlled by token holders.
-                        This treasury can fund community initiatives through on-chain governance votes,
-                        allowing the community to collectively decide how to grow and develop the token.
+                        {t('trending.createToken.explainer.daoTreasuryBody')}
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-2">Fees & Affiliations</h4>
+                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.feesTitle')}</h4>
                       <p>
-                        When creating a token, you can set an initial buy amount. A small protocol fee (5%)
-                        is applied to support the platform and protocol token rewards. The rest goes into
-                        the bonding curve, ensuring fair price discovery from the start.
+                        {t('trending.createToken.explainer.feesBody')}
                       </p>
                     </div>
                   </div>

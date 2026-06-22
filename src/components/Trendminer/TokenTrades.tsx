@@ -9,6 +9,7 @@
 */
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
 import { TokenDto } from '@/api/generated/models/TokenDto';
@@ -51,6 +52,7 @@ interface TransactionCardProps {
 }
 
 function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps) {
+  const { t } = useTranslation('trending');
   const isBuy = transaction.tx_type === 'buy';
   const isSell = transaction.tx_type === 'sell';
 
@@ -68,9 +70,9 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
     try {
       return moment(transaction.created_at).fromNow();
     } catch {
-      return 'just now';
+      return t('tokenTrades.justNow');
     }
-  }, [transaction.created_at]);
+  }, [transaction.created_at, t]);
 
   const handleOpenTx = React.useCallback(() => {
     if (transaction.tx_hash) {
@@ -83,9 +85,9 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
     const normalizedType = txType?.toLowerCase();
     switch (normalizedType) {
       case 'buy':
-        return 'Buy';
+        return t('tokenTrades.buy');
       case 'sell':
-        return 'Sell';
+        return t('tokenTrades.sell');
       default:
         return txType;
     }
@@ -125,7 +127,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div>
-              <div className="text-[10px] text-white/60 mb-0.5">Price</div>
+              <div className="text-[10px] text-white/60 mb-0.5">{t('tokenTrades.price')}</div>
               <PriceDataFormatter
                 watchPrice={false}
                 priceData={transaction.price_data}
@@ -134,7 +136,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
             </div>
             <span className="text-white/60">×</span>
             <div>
-              <div className="text-[10px] text-white/60 mb-0.5">Amount</div>
+              <div className="text-[10px] text-white/60 mb-0.5">{t('tokenTrades.amount')}</div>
               <div className="text-xs font-semibold text-white">
                 {Decimal.from(transaction.volume).shorten()}
               </div>
@@ -143,7 +145,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
 
           {/* Total - Right Aligned */}
           <div className="text-right">
-            <div className="text-[10px] text-white/60 mb-0.5">Total</div>
+            <div className="text-[10px] text-white/60 mb-0.5">{t('tokenTrades.total')}</div>
             <PriceDataFormatter
               watchPrice={false}
               priceData={transaction.spent_amount_data}
@@ -157,6 +159,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
 }
 
 export default function TokenTrades({ token }: TokenTradesProps) {
+  const { t } = useTranslation('trending');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -242,15 +245,15 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   // Table headers configuration
   const headers = useMemo(
     () => [
-      { title: 'Account', key: 'account', sortable: false },
-      { title: 'Type', key: 'tx_type', sortable: false },
-      { title: token.symbol || 'Volume', key: 'volume', sortable: false },
-      { title: 'Unit Price', key: 'price_data', sortable: false },
-      { title: 'Total Price', key: 'spent_amount_data', sortable: false },
-      { title: 'Date', key: 'created_at', sortable: false },
-      { title: 'Transaction', key: 'tx_hash', sortable: false },
+      { title: t('tokenTrades.account'), key: 'account', sortable: false },
+      { title: t('tokenTrades.type'), key: 'tx_type', sortable: false },
+      { title: token.symbol || t('tokenTrades.volume'), key: 'volume', sortable: false },
+      { title: t('tokenTrades.unitPrice'), key: 'price_data', sortable: false },
+      { title: t('tokenTrades.totalPrice'), key: 'spent_amount_data', sortable: false },
+      { title: t('tokenTrades.date'), key: 'created_at', sortable: false },
+      { title: t('tokenTrades.transaction'), key: 'tx_hash', sortable: false },
     ],
-    [token.symbol],
+    [token.symbol, t],
   );
 
   // Function to get transaction type color
@@ -309,19 +312,19 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     const normalizedType = txType?.toLowerCase();
     switch (normalizedType) {
       case 'create_community':
-        return 'CREATE';
+        return t('tokenTrades.badge.create');
       case 'buy':
-        return 'BUY';
+        return t('tokenTrades.badge.buy');
       case 'sell':
-        return 'SELL';
+        return t('tokenTrades.badge.sell');
       case 'transfer':
-        return 'TRANSFER';
+        return t('tokenTrades.badge.transfer');
       case 'mint':
-        return 'MINT';
+        return t('tokenTrades.badge.mint');
       case 'burn':
-        return 'BURN';
+        return t('tokenTrades.badge.burn');
       default:
-        return txType?.toUpperCase() || 'TRADE';
+        return txType?.toUpperCase() || t('tokenTrades.badge.trade');
     }
   };
 
@@ -455,9 +458,9 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         {!isFetching && !transactions.length && (
           <div className="text-center py-12">
             <div className="text-white/40 text-lg mb-2">📈</div>
-            <div className="text-white/60 text-sm">No transactions yet</div>
+            <div className="text-white/60 text-sm">{t('tokenTrades.noTransactionsYet')}</div>
             <div className="text-white/40 text-xs mt-1">
-              Trades will appear here once the token starts trading
+              {t('tokenTrades.tradesWillAppear')}
             </div>
           </div>
         )}
@@ -467,13 +470,13 @@ export default function TokenTrades({ token }: TokenTradesProps) {
           <div className="text-center py-12">
             <div className="text-red-400 text-lg mb-2">⚠️</div>
             <div className="text-red-400 text-sm">
-              Failed to load transactions
+              {t('tokenTrades.failedToLoad')}
             </div>
             <button
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs hover:bg-red-500/30 transition-colors"
             >
-              Retry
+              {t('retry')}
             </button>
           </div>
         )}
@@ -486,7 +489,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-white/60">
             {/* Left: Items per page selector */}
             <div className="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-start">
-              <span className="whitespace-nowrap">Show</span>
+              <span className="whitespace-nowrap">{t('tokenTrades.show')}</span>
               <div>
                 <AppSelect
                   value={String(itemsPerPage)}
@@ -504,24 +507,16 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                   ))}
                 </AppSelect>
               </div>
-              <span className="whitespace-nowrap">items per page</span>
+              <span className="whitespace-nowrap">{t('tokenTrades.itemsPerPage')}</span>
             </div>
 
             {/* Right: Showing info */}
             <div className="text-center lg:text-right whitespace-nowrap">
-              Showing
-              {' '}
-              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
-              {' '}
-              to
-              {' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)}
-              {' '}
-              of
-              {' '}
-              {totalItems}
-              {' '}
-              transactions
+              {t('tokenTrades.showingRange', {
+                from: Math.min((currentPage - 1) * itemsPerPage + 1, totalItems),
+                to: Math.min(currentPage * itemsPerPage, totalItems),
+                total: totalItems,
+              })}
             </div>
           </div>
 
@@ -532,7 +527,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
               disabled={currentPage <= 1}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t('tokenTrades.previous')}
             </button>
 
             {/* Page numbers */}
@@ -569,7 +564,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
               disabled={currentPage >= totalPages}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t('tokenTrades.next')}
             </button>
           </div>
         </div>

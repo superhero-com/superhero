@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Input } from './ui/input';
 
 const SearchInput = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
@@ -23,7 +25,7 @@ const SearchInput = () => {
         name="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search Superhero"
+        placeholder={t('common.placeholders.searchSuperhero')}
         className="w-full bg-secondary border-border text-foreground focus:border-accent focus:ring-accent/20 placeholder:text-muted-foreground"
       />
     </form>

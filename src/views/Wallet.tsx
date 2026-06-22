@@ -4,6 +4,7 @@
   max-len
 */
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Shield, Smartphone, ArrowRight, ChevronDown, Sparkles, Globe,
   Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon, Monitor,
@@ -691,6 +692,7 @@ const FAQ_CATEGORIES: { title: string; items: { question: string; answer: string
 /*  Main Wallet Page                                                  */
 /* ------------------------------------------------------------------ */
 export default function Wallet() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-blue-500/30">
 
@@ -721,7 +723,7 @@ export default function Wallet() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
                 <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
                 <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
-                  Multichain Wallet
+                  {t('common.views.wallet.hero.badge')}
                 </span>
               </div>
 
@@ -801,16 +803,15 @@ export default function Wallet() {
           {/* Section header */}
           <div className="max-w-2xl mb-16 text-left">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-              Features
+              {t('common.views.wallet.features.eyebrow')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              Everything you need
+              {t('common.views.wallet.features.titleLine1')}
               <br />
-              <span className="text-white/40">in a multichain wallet</span>
+              <span className="text-white/40">{t('common.views.wallet.features.titleLine2')}</span>
             </h2>
             <p className="text-[15px] text-white/40 leading-relaxed">
-              Superhero Wallet gives you full control of your assets across multiple blockchains
-              with a simple, secure interface.
+              {t('common.views.wallet.features.description')}
             </p>
           </div>
 
@@ -827,9 +828,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">01</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Multichain support</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.multichain.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed">
-                    Manage Ethereum, Bitcoin, Dogecoin, BNB Chain, and æternity assets from a single wallet. No switching between apps.
+                    {t('common.views.wallet.cards.multichain.description')}
                   </p>
                 </div>
                 <div className="md:col-span-5 bg-black/40 border border-white/[0.04] rounded-xl p-3 space-y-1.5 font-mono select-none text-left w-full">
@@ -876,9 +877,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">02</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Secure & non-custodial</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.secure.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Your keys, your control. Superhero ensures that your private keys and assets remain secure and completely under your ownership.
+                    {t('common.views.wallet.cards.secure.description')}
                   </p>
                 </div>
               </div>
@@ -898,9 +899,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">03</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Crypto & Token management</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.cryptoManagement.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Store, send, and receive cryptocurrencies and tokens with an intuitive interface that makes asset management straightforward and efficient.
+                    {t('common.views.wallet.cards.cryptoManagement.description')}
                   </p>
                 </div>
                 <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
@@ -931,9 +932,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">04</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Cold Signing with AIRGAP Vault</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.coldSigning.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Enhance security by pairing Superhero with AIRGAP Vault for cold signing, ensuring your private keys never touch the internet.
+                    {t('common.views.wallet.cards.coldSigning.description')}
                   </p>
                 </div>
                 <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex items-center justify-between font-mono text-[9px] mt-auto w-full">
@@ -963,9 +964,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">05</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Advanced DApp integration</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.dappIntegration.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed">
-                    Connect and interact with decentralized applications on both æternity and Ethereum blockchains, unlocking access to DeFi, DAOs, and more.
+                    {t('common.views.wallet.cards.dappIntegration.description')}
                   </p>
                 </div>
                 <div className="md:col-span-5 bg-black/35 border border-white/[0.04] rounded-xl p-2.5 space-y-1 text-[10px] font-mono w-full">
@@ -995,9 +996,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">06</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Multisig Support for Enhanced Security</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.multisig.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Manage multisignature (multisig) vaults on the æternity blockchain, ideal for shared control or joint asset management.
+                    {t('common.views.wallet.cards.multisig.description')}
                   </p>
                 </div>
                 <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full font-sans">
@@ -1016,9 +1017,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">07</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Buy .chain names</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.chainNames.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Simplify blockchain interactions with æternity Naming System (AENS), which lets you register and use human-readable names for wallet addresses.
+                    {t('common.views.wallet.cards.chainNames.description')}
                   </p>
                 </div>
                 <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono space-y-2 mt-auto w-full">
@@ -1063,9 +1064,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">08</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Biometric Login for Mobile Devices</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.biometric.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                    Access your wallet quickly and securely with biometric authentication, adding a layer of convenience and safety.
+                    {t('common.views.wallet.cards.biometric.description')}
                   </p>
                 </div>
                 <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex flex-col items-center justify-center font-mono space-y-2 mt-auto w-full">
@@ -1088,9 +1089,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">09</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Import Accounts From Cold Wallet Or Ledger</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.importAccounts.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed">
-                    Effortlessly import existing accounts from other wallets using your private key or ledger, giving you instant access to your assets and transactions.
+                    {t('common.views.wallet.cards.importAccounts.description')}
                   </p>
                 </div>
                 <div className="md:col-span-5 bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 w-full">
@@ -1123,9 +1124,9 @@ export default function Wallet() {
                     </div>
                     <span className="text-xs font-mono text-white/30 tracking-wider">10</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white/90 mb-2">Convenient Address Book</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-2">{t('common.views.wallet.cards.addressBook.title')}</h3>
                   <p className="text-[13px] text-white/50 leading-relaxed font-normal">
-                    Save frequently used addresses in your personal address book, making transactions faster and more organized.
+                    {t('common.views.wallet.cards.addressBook.description')}
                   </p>
                 </div>
                 <div className="lg:col-span-7 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
@@ -1146,13 +1147,13 @@ export default function Wallet() {
         <div className="max-w-[1180px] mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
-              Download
+              {t('common.views.wallet.download.eyebrow')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              Get Superhero Wallet
+              {t('common.views.wallet.download.title')}
             </h2>
             <p className="max-w-2xl mx-auto text-[15px] text-white/40 leading-relaxed">
-              Choose the right option for your platform and use case.
+              {t('common.views.wallet.download.description')}
             </p>
           </div>
 
@@ -1162,9 +1163,9 @@ export default function Wallet() {
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
                 <Monitor className="w-6 h-6 text-blue-400" />
               </div>
-              <h3 className="text-[15px] font-semibold text-white/90 mb-2">Desktop Web</h3>
+              <h3 className="text-[15px] font-semibold text-white/90 mb-2">{t('common.views.wallet.download.desktopWeb.title')}</h3>
               <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                To use Superhero on desktop web, you need the Superhero Wallet Chrome extension to sign transactions and manage your keys.
+                {t('common.views.wallet.download.desktopWeb.description')}
               </p>
               <a
                 href="https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne"
@@ -1173,7 +1174,7 @@ export default function Wallet() {
                 className="inline-flex items-center gap-2 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />
-                Get Chrome Extension
+                {t('common.views.wallet.download.getChromeExtension')}
               </a>
             </div>
 
@@ -1182,9 +1183,9 @@ export default function Wallet() {
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
                 <Smartphone className="w-6 h-6 text-blue-400" />
               </div>
-              <h3 className="text-[15px] font-semibold text-white/90 mb-2">Mobile Browser</h3>
+              <h3 className="text-[15px] font-semibold text-white/90 mb-2">{t('common.views.wallet.download.mobileBrowser.title')}</h3>
               <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-                To use Superhero on a mobile browser, you need the Superhero Wallet app installed on your device to handle transaction signing.
+                {t('common.views.wallet.download.mobileBrowser.description')}
               </p>
               <div className="flex flex-col gap-2">
                 <a
@@ -1220,10 +1221,10 @@ export default function Wallet() {
           <div className="text-center mb-16">
             <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               <HelpCircle className="w-4 h-4 inline-block mr-1 -mt-0.5" />
-              FAQ
+              {t('common.layout.faq')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
-              Frequently Asked Questions
+              {t('common.views.wallet.faq.title')}
             </h2>
           </div>
 
@@ -1248,10 +1249,10 @@ export default function Wallet() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
-            Take control of your crypto
+            {t('common.views.wallet.cta.title')}
           </h2>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
-            Download Superhero Wallet and manage all your assets in one secure, multichain wallet.
+            {t('common.views.wallet.cta.description')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <a

@@ -1,6 +1,7 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AspectMediaProps {
   src: string;
@@ -13,8 +14,10 @@ interface AspectMediaProps {
 // - Parses optional w/h from URL hash (e.g. #w=480&h=270)
 // - Falls back to natural dimensions on load
 export const AspectMedia = ({
-  src, alt = 'media', className = '', maxHeight = '50vh',
+  src, alt, className = '', maxHeight = '50vh',
 }: AspectMediaProps) => {
+  const { t } = useTranslation();
+  const altText = alt ?? t('common.aria.media');
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
@@ -63,7 +66,7 @@ export const AspectMedia = ({
         <img
           ref={mediaRef as any}
           src={src}
-          alt={alt}
+          alt={altText}
           className="w-full h-full object-contain object-left block"
         />
       )}

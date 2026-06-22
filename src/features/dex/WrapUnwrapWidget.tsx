@@ -44,13 +44,17 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
         const amount = Decimal.from(currentAmount);
         const balance = Decimal.from(currentBalance);
         if (amount.gt(balance)) {
-          setError(`Insufficient ${mode === 'wrap' ? 'AE' : 'WAE'} balance. You need ${amount.prettify()} but only have ${balance.prettify()}`);
+          setError(t('dex:swap.insufficientBalance', {
+            symbol: mode === 'wrap' ? 'AE' : 'WAE',
+            needed: amount.prettify(),
+            have: balance.prettify(),
+          }));
         }
       } catch {
         // Invalid amount format, ignore
       }
     }
-  }, [currentAmount, currentBalance, mode]);
+  }, [currentAmount, currentBalance, mode, t]);
 
   const handleAmountChange = (value: string) => {
     const raw = value.replace(/,/g, '.');
@@ -122,7 +126,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
       setCurrentAmount('');
       loadAccountData({ force: true });
     } catch (e: any) {
-      setError(e.message || `Failed to ${mode} tokens`);
+      setError(e.message || (mode === 'wrap' ? t('dex:wrapFailedShort') : t('dex:unwrapFailedShort')));
     }
   };
 
@@ -138,7 +142,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0">
-          (Un)Wrap AE
+          {t('dex:wrapUnwrap.title')}
         </h2>
 
         {/* Mode Toggle */}
@@ -155,7 +159,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
                 : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
-            Wrap
+            {t('dex:wrapUnwrap.wrap')}
           </Button>
           <Button
             onClick={() => setMode('unwrap')}
@@ -169,14 +173,14 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
                 : 'text-white/60 hover:text-white hover:bg-white/10',
             )}
           >
-            Unwrap
+            {t('dex:wrapUnwrap.unwrap')}
           </Button>
         </div>
       </div>
 
       {/* Description */}
       <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
-        Wrap AE into WAE (and unwrap) for compatibility with DeFi protocols.
+        {t('dex:wrapUnwrap.description')}
       </p>
 
       {/* Balance Display */}
@@ -185,7 +189,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
           <div className="flex justify-between items-center gap-4">
             <div className="text-center flex-1">
               <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
-                AE Balance
+                {t('dex:wrapUnwrap.aeBalance')}
               </div>
               <div className="text-base font-bold text-white font-mono">
                 {wrapBalances.ae ? Decimal.from(wrapBalances.ae).prettify() : '…'}
@@ -196,7 +200,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
 
             <div className="text-center flex-1">
               <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
-                WAE Balance
+                {t('dex:wrapUnwrap.waeBalance')}
               </div>
               <div className="text-base font-bold text-white font-mono">
                 {wrapBalances.wae ? Decimal.from(wrapBalances.wae).prettify() : '…'}
@@ -212,15 +216,15 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
           {/* Label and Balance Row */}
           <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
             <div className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Amount to
-              {' '}
-              {mode}
+              {t('dex:wrapUnwrap.amountTo', {
+                action: mode === 'wrap' ? t('dex:wrapUnwrap.wrap') : t('dex:wrapUnwrap.unwrap'),
+              })}
             </div>
 
             {currentBalance && (
               <div className="flex items-center gap-2 text-xs text-white/60">
                 <div>
-                  Balance:
+                  {t('dex:wrapUnwrap.balanceLabel')}
                   <span className="font-semibold text-white text-xs ml-2">
                     {Decimal.from(currentBalance).prettify()}
                   </span>

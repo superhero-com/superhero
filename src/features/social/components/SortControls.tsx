@@ -1,6 +1,7 @@
 import React, {
   memo, useEffect, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -33,18 +34,18 @@ export type WeightValue = 'low' | 'med' | 'high';
 
 export type PopularWeights = Partial<Record<WeightKey, WeightValue>>;
 
-const WEIGHT_LABELS: Record<WeightKey, string> = {
-  comments: 'Comments',
-  tipsAmountAE: 'Tip Amount',
-  tipsCount: 'Tip Count',
-  uniqueTippers: 'Unique Tippers',
-  trendingBoost: 'Trending Boost',
-  contentQuality: 'Content Quality',
-  reads: 'Reads',
-  interactionsPerHour: 'Activity Rate',
+const WEIGHT_LABEL_KEYS: Record<WeightKey, string> = {
+  comments: 'social.sortControls.weights.comments',
+  tipsAmountAE: 'social.sortControls.weights.tipsAmountAE',
+  tipsCount: 'social.sortControls.weights.tipsCount',
+  uniqueTippers: 'social.sortControls.weights.uniqueTippers',
+  trendingBoost: 'social.sortControls.weights.trendingBoost',
+  contentQuality: 'social.sortControls.weights.contentQuality',
+  reads: 'social.sortControls.weights.reads',
+  interactionsPerHour: 'social.sortControls.weights.interactionsPerHour',
 };
 
-const WEIGHT_KEYS = Object.keys(WEIGHT_LABELS) as WeightKey[];
+const WEIGHT_KEYS = Object.keys(WEIGHT_LABEL_KEYS) as WeightKey[];
 const WEIGHT_VALUES: WeightValue[] = ['low', 'med', 'high'];
 
 /**
@@ -71,6 +72,7 @@ const SortControls = memo(
     sortBy, onSortChange, className = '', popularFeedEnabled = true,
     popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
+    const { t } = useTranslation();
     const mobileSortRef = useRef<HTMLDivElement>(null);
     const [customizeOpen, setCustomizeOpen] = useState(false);
     const [mobileSortOpen, setMobileSortOpen] = useState(false);
@@ -151,7 +153,7 @@ const SortControls = memo(
       return (
         <div className={cn('w-full mb-0 md:mb-3 mt-4 md:mt-0', className)}>
           <h2 className="text-lg md:text-lg font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white]">
-            Latest Feed
+            {t('social.sortControls.latestFeed')}
           </h2>
           {/* Mobile horizontal line */}
           <div className="md:hidden border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] mt-3" />
@@ -161,9 +163,9 @@ const SortControls = memo(
 
     const getMobileTitle = () => {
       if (sortBy === 'latest') {
-        return 'Latest';
+        return t('social.sortControls.latest');
       }
-      return 'Popular';
+      return t('social.sortControls.popular');
     };
 
     const handleMobileSortToggle = (newSort: 'hot' | 'latest') => {
@@ -177,7 +179,7 @@ const SortControls = memo(
       <>
         {!isMobile && (
           <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-white/10">
-            <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">Customize Feed</span>
+            <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">{t('social.sortControls.customizeFeed')}</span>
             {hasCustomSettings && (
               <button
                 type="button"
@@ -189,18 +191,18 @@ const SortControls = memo(
                 className="flex items-center gap-1 text-[11px] text-white/50 hover:text-white/80 transition-colors"
               >
                 <RotateCcw className="h-3 w-3" />
-                Reset
+                {t('social.sortControls.reset')}
               </button>
             )}
           </div>
         )}
         <div className="px-4 pt-2 pb-1">
-          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Weights</span>
+          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">{t('social.sortControls.weightsLabel')}</span>
         </div>
         <div className="px-3 pb-3 flex flex-col gap-2">
           {WEIGHT_KEYS.map((key) => (
             <div key={key} className="flex items-center justify-between gap-3 px-1">
-              <span className="text-xs text-white/70 min-w-[90px]">{WEIGHT_LABELS[key]}</span>
+              <span className="text-xs text-white/70 min-w-[90px]">{t(WEIGHT_LABEL_KEYS[key])}</span>
               <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
                 {WEIGHT_VALUES.map((val) => {
                   const isActive = getEffectiveWeight(key) === val;
@@ -267,7 +269,7 @@ const SortControls = memo(
                       background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
                     }}
                     role="menu"
-                    aria-label="Feed sort options"
+                    aria-label={t('social.sortControls.feedSortOptions')}
                   >
                     {sortBy === 'hot' ? (
                       <button
@@ -276,7 +278,7 @@ const SortControls = memo(
                         className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
                         role="menuitem"
                       >
-                        Latest
+                        {t('social.sortControls.latest')}
                       </button>
                     ) : (
                       <button
@@ -285,7 +287,7 @@ const SortControls = memo(
                         className="flex min-h-[44px] w-full items-center rounded-xl px-4 py-2.5 text-left text-sm text-white transition-colors hover:bg-white/10"
                         role="menuitem"
                       >
-                        Popular
+                        {t('social.sortControls.popular')}
                       </button>
                     )}
                   </div>
@@ -319,7 +321,7 @@ const SortControls = memo(
                         ? 'text-[#1161FE]'
                         : 'text-white/50 hover:text-white/80',
                     )}
-                    title="Customize popular feed"
+                    title={t('social.sortControls.customizePopularFeed')}
                   >
                     <SlidersHorizontal className="h-5 w-5" />
                     {hasCustomSettings && (
@@ -335,24 +337,24 @@ const SortControls = memo(
                       <div className="flex items-start justify-between gap-4 border-b border-white/10 px-4 pt-3 pb-3">
                         <div>
                           <DialogTitle className="text-base font-semibold text-white">
-                            Customize Feed
+                            {t('social.sortControls.customizeFeed')}
                           </DialogTitle>
                           <DialogDescription className="mt-1 text-sm text-white/60">
-                            Tune the popular feed ranking.
+                            {t('social.sortControls.tunePopularFeed')}
                           </DialogDescription>
                         </div>
                         <button
                           type="button"
                           onClick={() => setMobileCustomizeOpen(false)}
                           className="rounded-full p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-                          aria-label="Close customization panel"
+                          aria-label={t('social.sortControls.closeCustomizationPanel')}
                         >
                           <X className="h-4 w-4" />
                         </button>
                       </div>
                       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
                         <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-                          Popular Feed Settings
+                          {t('social.sortControls.popularFeedSettings')}
                         </span>
                         {hasCustomSettings && (
                           <button
@@ -372,7 +374,7 @@ const SortControls = memo(
                           onClick={() => setMobileCustomizeOpen(false)}
                           className="flex min-h-[44px] w-full items-center justify-center rounded-2xl bg-[#1161FE] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0e50d8]"
                         >
-                          Done
+                          {t('social.sortControls.done')}
                         </button>
                       </div>
                     </div>
@@ -433,7 +435,7 @@ const SortControls = memo(
                       ? 'bg-[#1161FE]/20 border-[#1161FE]/50 text-[#1161FE]'
                       : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10',
                   )}
-                  title="Customize popular feed"
+                  title={t('social.sortControls.customizePopularFeedAria')}
                 >
                   <SlidersHorizontal className="h-5 w-5" />
                   {hasCustomSettings && (

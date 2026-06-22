@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import SpaceEffects from './SpaceEffects';
@@ -15,6 +16,7 @@ interface HeroBannerCarouselProps {
 }
 
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
+  const { t } = useTranslation();
   const [hidden, setHidden] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isIOSWebKit = React.useMemo(() => {
@@ -125,7 +127,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
           background:
             'radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)',
         }}
-        aria-label="Superhero banner"
+        aria-label={t('common.heroBanner.bannerAria')}
       >
         <SpaceEffects
           supernovaColor="rgba(255,94,188,.55)"
@@ -152,7 +154,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       <button
         type="button"
         onClick={handleDismiss}
-        aria-label="Dismiss banner"
+        aria-label={t('common.heroBanner.dismissAria')}
         className="banner-dismiss"
       >
         <svg
@@ -176,7 +178,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
         type="button"
         onClick={scrollPrev}
         className="carousel-arrow carousel-arrow--prev"
-        aria-label="Previous slide"
+        aria-label={t('common.heroBanner.previousSlide')}
       >
         <svg
           width="16"
@@ -195,7 +197,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
         type="button"
         onClick={scrollNext}
         className="carousel-arrow carousel-arrow--next"
-        aria-label="Next slide"
+        aria-label={t('common.heroBanner.nextSlide')}
       >
         <svg
           width="16"
@@ -219,7 +221,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
             key={index}
             onClick={() => scrollTo(index)}
             className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
-            aria-label={`Go to slide ${index + 1}`}
+            aria-label={t('common.heroBanner.goToSlide', { number: index + 1 })}
           />
         ))}
       </div>

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
 import { DexTokenDto } from '../../../api/generated';
 import {
   addSlippage, fromAettos, subSlippage, toAettos,
@@ -44,6 +45,7 @@ export default function SwapConfirmation({
   loading = false,
   swapStep = null,
 }: SwapConfirmationProps) {
+  const { t } = useTranslation();
   if (!tokenIn || !tokenOut) return null;
 
   const minReceivedText = (() => {
@@ -70,7 +72,7 @@ export default function SwapConfirmation({
           {/* Header */}
           <div className="flex justify-between items-center mb-3">
             <Dialog.Title className="font-bold text-base m-0">
-              Confirm Swap
+              {t('dex.swapConfirmation.confirmSwap')}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button className="p-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-white cursor-pointer text-sm leading-none">
@@ -105,16 +107,16 @@ export default function SwapConfirmation({
           {/* Details + Settings combined */}
           <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 mb-3 space-y-1.5 text-[12px]">
             <div className="flex justify-between text-white/60">
-              <span>Rate</span>
+              <span>{t('dex.swapConfirmation.rate')}</span>
               <span className="text-white">1 {tokenIn.symbol} = {Decimal.from(rate).prettify()} {tokenOut.symbol}</span>
             </div>
             <div className="flex justify-between text-white/60">
-              <span>Inverse</span>
+              <span>{t('dex.swapConfirmation.inverse')}</span>
               <span className="text-white">1 {tokenOut.symbol} = {Decimal.from(inverseRate).prettify()} {tokenIn.symbol}</span>
             </div>
             {priceImpactPct != null && (
               <div className="flex justify-between text-white/60">
-                <span>Price Impact</span>
+                <span>{t('dex.priceImpact')}</span>
                 <span className={`font-semibold ${priceImpactPct > 10 ? 'text-red-400' : priceImpactPct > 5 ? 'text-[#ffb86b]' : 'text-green-400'}`}>
                   {Decimal.from(priceImpactPct).prettify()}%
                 </span>
@@ -122,23 +124,23 @@ export default function SwapConfirmation({
             )}
             {isExactIn && minReceivedText && (
               <div className="flex justify-between text-white/60">
-                <span>Min Received</span>
+                <span>{t('dex.swapConfirmation.minReceived')}</span>
                 <span className="text-white">{minReceivedText}</span>
               </div>
             )}
             {!isExactIn && maxSoldText && (
               <div className="flex justify-between text-white/60">
-                <span>Max Sold</span>
+                <span>{t('dex.swapConfirmation.maxSold')}</span>
                 <span className="text-white">{maxSoldText}</span>
               </div>
             )}
             <div className="flex justify-between text-white/60">
-              <span>Slippage</span>
+              <span>{t('dex.swapConfirmation.slippage')}</span>
               <span className="text-white">{slippagePct}%</span>
             </div>
             <div className="flex justify-between text-white/60">
-              <span>Deadline</span>
-              <span className="text-white">{deadlineMins} min</span>
+              <span>{t('dex.swapConfirmation.deadline')}</span>
+              <span className="text-white">{t('dex.swapConfirmation.minutesShort', { count: deadlineMins })}</span>
             </div>
             <SwapRouteInfo
               routeInfo={routeInfo}
@@ -152,7 +154,7 @@ export default function SwapConfirmation({
           {priceImpactPct != null && priceImpactPct > 10 && (
             <div className="text-red-400 text-[12px] bg-red-400/10 border border-red-400/20 rounded-xl p-3 mb-3 flex items-start gap-2">
               <span className="shrink-0">⚠️</span>
-              <span className="opacity-90">High price impact. Consider reducing the amount or choosing a different route.</span>
+              <span className="opacity-90">{t('dex.swapConfirmation.highPriceImpactWarning')}</span>
             </div>
           )}
 
@@ -165,7 +167,7 @@ export default function SwapConfirmation({
                 loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-white/[0.08]'
               }`}
             >
-              Cancel
+              {t('dex.settings.cancel')}
             </button>
             <button
               onClick={onConfirm}
@@ -179,9 +181,11 @@ export default function SwapConfirmation({
               {loading ? (
                 <>
                   <Spinner className="w-4 h-4" />
-                  {swapStep ? `${swapStep.label}... (${swapStep.current}/${swapStep.total})` : 'Swapping...'}
+                  {swapStep
+                    ? t('dex.swapConfirmation.swapStep', { label: swapStep.label, current: swapStep.current, total: swapStep.total })
+                    : t('dex.swapConfirmation.swapping')}
                 </>
-              ) : 'Confirm on Wallet'}
+              ) : t('dex.swapConfirmation.confirmOnWallet')}
             </button>
           </div>
 

@@ -1,6 +1,7 @@
 import React, {
   useEffect, useMemo, useRef, useState, useCallback,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   useLatestTransactions,
 } from '@/hooks/useLatestTransactions';
@@ -10,6 +11,7 @@ import AddressAvatar from '../AddressAvatar';
 import './LatestTransactionsCarousel.scss';
 
 const LatestTransactionsCarousel = () => {
+  const { t } = useTranslation();
   const { latestTransactions } = useLatestTransactions();
   // Number of items visible at once for loading state
   const [itemsToShow, setItemsToShow] = useState(4);
@@ -114,7 +116,7 @@ const LatestTransactionsCarousel = () => {
 
                   {/* Token Name - Second Row */}
                   <div className="skeleton-token-name">
-                    Loading token name...
+                    {t('common.trendminer.latestTransactions.loadingTokenName')}
                   </div>
 
                   {/* Transaction Type and Volume - Third Row */}
@@ -123,7 +125,7 @@ const LatestTransactionsCarousel = () => {
                       •••
                     </div>
                     <div className="skeleton-badge">
-                      LOADING
+                      {t('common.trendminer.latestTransactions.loadingBadge')}
                     </div>
                   </div>
                 </div>

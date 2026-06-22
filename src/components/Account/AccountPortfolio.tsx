@@ -1542,7 +1542,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
               onClick={() => refetch()}
               className="px-4 py-2 text-sm font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
             >
-              Retry
+              {t('buttons.retry')}
             </button>
           </div>
         </div>
@@ -1587,9 +1587,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                         ref={tooltipContentRef}
                         className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
                       >
-                        Portfolio value shows the combined worth of AE balance and trend tokens
-                        {' '}
-                        held in this wallet. The chart tracks how this value changes over time.
+                        {t('portfolio.valueTooltipDescription')}
                       </div>
                     </>
                   )}
@@ -1613,9 +1611,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                       alignOffset={0}
                       className="max-w-[320px] z-[100]"
                     >
-                      Portfolio value shows the combined worth of AE balance and trend tokens
-                      {' '}
-                      held in this wallet. The chart tracks how this value changes over time.
+                      {t('portfolio.valueTooltipDescription')}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

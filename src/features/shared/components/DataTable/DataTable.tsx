@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from '@/components/Spinner';
 import { DataTablePagination } from './DataTablePagination';
@@ -40,13 +41,14 @@ export const DataTable = <T, >({
   renderRow,
   initialParams = {},
   className = '',
-  emptyMessage = 'No data found',
+  emptyMessage,
   loadingComponent,
   fetchingOverlayComponent,
   errorComponent,
   showPagination = true,
   itemsPerPage = 10,
 }: DataTableProps<T>) => {
+  const { t } = useTranslation('common');
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
     limit: itemsPerPage,
@@ -96,7 +98,7 @@ export const DataTable = <T, >({
         {loadingComponent || (
           <div className="flex items-center space-x-2">
             <Spinner className="h-6 w-6" />
-            <span className="text-sm text-muted-foreground">Loading...</span>
+            <span className="text-sm text-muted-foreground">{t('dataTable.loading')}</span>
           </div>
         )}
       </div>
@@ -110,16 +112,16 @@ export const DataTable = <T, >({
           errorComponent(error as Error)
         ) : (
           <div className="text-destructive">
-            <p className="font-medium">Error loading data</p>
+            <p className="font-medium">{t('dataTable.errorLoadingData')}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {error instanceof Error ? error.message : 'An unknown error occurred'}
+              {error instanceof Error ? error.message : t('dataTable.unknownError')}
             </p>
             <button
               type="button"
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              Try Again
+              {t('dataTable.tryAgain')}
             </button>
           </div>
         )}
@@ -131,7 +133,7 @@ export const DataTable = <T, >({
     return (
       <div className={`p-8 text-center ${className}`}>
         <div className="text-muted-foreground">
-          <p className="font-medium">{emptyMessage}</p>
+          <p className="font-medium">{emptyMessage ?? t('dataTable.noDataFound')}</p>
         </div>
       </div>
     );
@@ -161,7 +163,7 @@ export const DataTable = <T, >({
             {fetchingOverlayComponent || (
               <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm">
                 <Spinner className="h-4 w-4" />
-                <span>Loading page...</span>
+                <span>{t('dataTable.loadingPage')}</span>
               </div>
             )}
           </div>

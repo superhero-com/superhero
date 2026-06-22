@@ -95,7 +95,7 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
             <Plus className="absolute h-2.5 w-2.5" />
           </span>
           <Badge className="border-sky-400/30 bg-sky-500/20 text-sky-200 uppercase tracking-wide">
-            Trade
+            {t('trade')}
           </Badge>
         </div>
       </div>

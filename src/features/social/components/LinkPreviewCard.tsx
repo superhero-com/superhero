@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IconClose } from '@/icons';
 
 interface OgData {
@@ -56,6 +57,7 @@ function fetchOgData(url: string): Promise<OgData | null> {
 }
 
 export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
+  const { t } = useTranslation();
   // null = not yet loaded, false = all proxies failed, OgData = full card
   const [data, setData] = useState<OgData | false | null>(null);
 
@@ -78,7 +80,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
       type="button"
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(); }}
       className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-      aria-label="Dismiss preview"
+      aria-label={t('social.dismissPreview')}
     >
       <IconClose className="w-3 h-3 text-white" />
     </button>
@@ -93,7 +95,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
             type="button"
             onClick={onDismiss}
             className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-            aria-label="Dismiss preview"
+            aria-label={t('social.dismissPreview')}
           >
             <IconClose className="w-3 h-3 text-white" />
           </button>
@@ -128,7 +130,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
         <div className="flex-shrink-0 w-[120px] md:w-[160px] overflow-hidden">
           <img
             src={data.image}
-            alt={data.title ?? 'Link preview'}
+            alt={data.title ?? t('social.linkPreviewAlt')}
             className="w-full h-full object-cover"
             style={{ minHeight: '90px', maxHeight: '120px' }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

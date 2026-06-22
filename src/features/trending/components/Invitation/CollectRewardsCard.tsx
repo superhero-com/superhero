@@ -1,6 +1,7 @@
 import React, {
   useState, useEffect, useCallback, useMemo,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -66,6 +67,7 @@ function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]
 }
 
 const CollectRewardsCard = () => {
+  const { t } = useTranslation();
   const { sdk, activeAccount } = useAeSdk();
 
   // State
@@ -225,10 +227,10 @@ const CollectRewardsCard = () => {
         || error?.message?.includes('MINIMUM_OF_4_ACCOUNTS_SHALL_BUY')
       ) {
         setErrorMessage(
-          `Not eligible yet: you need ${MIN_INVITEES} direct invitees who each spent at least ${MIN_SPENT_AE} AE in token sales.`,
+          t('trending.invitations.rewards.notEligibleDetail', { minInvitees: MIN_INVITEES, minSpent: MIN_SPENT_AE }),
         );
       } else {
-        setErrorMessage(error?.message || 'An error occurred while collecting rewards.');
+        setErrorMessage(error?.message || t('trending.invitations.rewards.collectError'));
       }
     } finally {
       setCollectingReward(false);
@@ -253,14 +255,14 @@ const CollectRewardsCard = () => {
       return (
         <div className="flex items-center justify-center gap-3">
           <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
-          Withdrawing...
+          {t('trending.invitations.rewards.withdrawing')}
         </div>
       );
     }
-    if (!thresholdReached) return 'Not eligible yet';
-    if (accumulatedRewardsAe.lte(Decimal.ZERO)) return 'No rewards yet';
-    return 'Collect rewards';
-  }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
+    if (!thresholdReached) return t('trending.invitations.rewards.notEligibleYet');
+    if (accumulatedRewardsAe.lte(Decimal.ZERO)) return t('trending.invitations.rewards.noRewardsYet');
+    return t('trending.invitations.rewards.collectRewards');
+  }, [collectingReward, thresholdReached, accumulatedRewardsAe, t]);
 
   return (
     <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
@@ -270,7 +272,7 @@ const CollectRewardsCard = () => {
           💰
         </div>
         <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Collect your rewards
+          {t('trending.invitations.rewards.title')}
         </h3>
       </div>
 
@@ -279,26 +281,23 @@ const CollectRewardsCard = () => {
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once
+            {t('trending.invitations.rewards.descriptionPart1')}
             {' '}
             <span className="font-semibold text-white/80">
-              {MIN_INVITEES}
-              {' '}
-              direct invitees
+              {t('trending.invitations.rewards.directInvitees', { count: MIN_INVITEES })}
             </span>
             {' '}
-            have each
-            spent at least
+            {t('trending.invitations.rewards.descriptionPart2')}
             <span className="font-semibold text-white/80">
               {MIN_SPENT_AE}
               {' '}
               AE
             </span>
             {' '}
-            (cumulative).
+            {t('trending.invitations.rewards.descriptionPart3')}
           </p>
           <p className="text-xs opacity-60">
-            Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
+            {t('trending.invitations.rewards.note')}
           </p>
         </div>
 
@@ -307,13 +306,9 @@ const CollectRewardsCard = () => {
           {/* Progress Section */}
           <div className="flex flex-col gap-3 p-4 bg-white/3 rounded-xl border border-white/5">
             <div className="flex justify-between items-center font-semibold text-sm md:text-base flex-wrap gap-2">
-              <span>Progress to rewards</span>
+              <span>{t('trending.invitations.rewards.progressToRewards')}</span>
               <span className="text-teal-400 font-bold text-base md:text-lg text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
-                {inviteesReachedCount}
-                /
-                {MIN_INVITEES}
-                {' '}
-                reached
+                {t('trending.invitations.rewards.reachedCount', { reached: inviteesReachedCount, total: MIN_INVITEES })}
               </span>
             </div>
             <div className="w-full h-2 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
@@ -324,17 +319,12 @@ const CollectRewardsCard = () => {
             </div>
             <div className="text-center font-medium text-slate-400 text-xs md:text-sm p-1 rounded-lg bg-white/2 break-words">
               {thresholdReached
-                ? '🎉 Eligible to withdraw'
-                : `${Math.max(0, MIN_INVITEES - inviteesReachedCount)} more invitees need to reach ${MIN_SPENT_AE} AE`}
+                ? t('trending.invitations.rewards.eligibleToWithdraw')
+                : t('trending.invitations.rewards.moreInviteesNeeded', { count: Math.max(0, MIN_INVITEES - inviteesReachedCount), minSpent: MIN_SPENT_AE })}
             </div>
             {!thresholdReached && inviteesInProgressCount > 0 && (
               <div className="text-center text-xs text-white/60">
-                {inviteesInProgressCount}
-                {' '}
-                invitee
-                {inviteesInProgressCount === 1 ? '' : 's'}
-                {' '}
-                still accumulating
+                {t('trending.invitations.rewards.stillAccumulating', { count: inviteesInProgressCount })}
               </div>
             )}
 
@@ -347,7 +337,7 @@ const CollectRewardsCard = () => {
                         {item.address}
                       </div>
                       <div className="text-xs text-white/70 whitespace-nowrap">
-                        {item.reached ? 'Reached' : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
+                        {item.reached ? t('trending.invitations.rewards.reached') : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 bg-white/10 rounded overflow-hidden">
@@ -360,10 +350,7 @@ const CollectRewardsCard = () => {
                 ))}
                 {inviteeProgress.length > 6 && (
                   <div className="text-center text-xs text-white/50">
-                    +
-                    {inviteeProgress.length - 6}
-                    {' '}
-                    more
+                    {t('trending.invitations.rewards.andMore', { count: inviteeProgress.length - 6 })}
                   </div>
                 )}
               </div>
@@ -374,7 +361,7 @@ const CollectRewardsCard = () => {
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2 text-center p-4 bg-white/3 rounded-xl border border-white/5">
               <span className="text-xs md:text-sm text-slate-400 font-medium uppercase tracking-wider break-words">
-                Available Rewards
+                {t('trending.invitations.rewards.availableRewards')}
               </span>
               <LivePriceFormatter
                 aePrice={Decimal.from(accumulatedRewardsAe.toString())}

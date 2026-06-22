@@ -2,6 +2,7 @@ import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarW
 import {
   useCallback, useEffect, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import AeButton from '../AeButton';
 
@@ -68,32 +69,39 @@ const MessageItem = ({ message }: { message: QualiMessage }) => {
 };
 
 // Error display component
-const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-  <div className="text-red-400 text-sm text-center p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-    <div className="mb-2">{error}</div>
-    <AeButton
-      onClick={onRetry}
-      variant="ghost"
-      size="small"
-      className="text-red-400 hover:text-red-300"
-    >
-      Retry
-    </AeButton>
-  </div>
-);
+const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => {
+  const { t } = useTranslation('trending');
+  return (
+    <div className="text-red-400 text-sm text-center p-3 bg-red-500/10 rounded-lg border border-red-500/30">
+      <div className="mb-2">{error}</div>
+      <AeButton
+        onClick={onRetry}
+        variant="ghost"
+        size="small"
+        className="text-red-400 hover:text-red-300"
+      >
+        {t('retry')}
+      </AeButton>
+    </div>
+  );
+};
 
 // Empty state component
-const EmptyState = () => (
-  <div className="text-center py-8">
-    <div className="text-sm text-white/60 mb-2">No public chat messages yet</div>
-    <div className="text-xs text-white/40">Be the first to share your thoughts!</div>
-  </div>
-);
+const EmptyState = () => {
+  const { t } = useTranslation('trending');
+  return (
+    <div className="text-center py-8">
+      <div className="text-sm text-white/60 mb-2">{t('tokenChat.noMessages')}</div>
+      <div className="text-xs text-white/40">{t('tokenChat.beFirst')}</div>
+    </div>
+  );
+};
 
 const loadingSkeletonKeys = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
 
 // Add chat CTAs component (reimagined layout)
 const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
+  const { t } = useTranslation('trending');
   const roomName = (token.name || '').replace(/-/g, '');
   const encodedName = encodeURIComponent(roomName);
   const encodedAddress = encodeURIComponent(token.address);
@@ -112,15 +120,10 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         </div>
         <div className="flex-1">
           <h4 className="text-white font-semibold text-[16px] mb-0.5 tracking-wide">
-            Chat for #
-            {token.name || 'this token'}
-            {' '}
-            holders
+            {t('tokenChat.chatForHolders', { name: token.name || t('tokenChat.thisToken') })}
           </h4>
           <p className="text-white/70 text-xs leading-relaxed">
-            Buy this token to join the exclusive chat rooms.
-            {' '}
-            Your wallet proves ownership; access is token‑gated.
+            {t('tokenChat.buyToJoin')}
           </p>
         </div>
       </div>
@@ -132,7 +135,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           target="_blank"
           rel="noopener noreferrer"
           className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
-          title="Open the public chat on Quali.chat"
+          title={t('tokenChat.openPublicChatTitle')}
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
@@ -140,9 +143,9 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
             </div>
             <div className="flex-1">
               <div className="font-semibold leading-tight">
-                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Public chat</span>
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">{t('tokenChat.publicChat')}</span>
               </div>
-              <div className="text-[11px] text-white/65 leading-tight">Read for all • Write only for holders</div>
+              <div className="text-[11px] text-white/65 leading-tight">{t('tokenChat.publicChatDesc')}</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
           </div>
@@ -153,7 +156,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           target="_blank"
           rel="noopener noreferrer"
           className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
-          title="Open the private chat on Quali.chat (holders only)"
+          title={t('tokenChat.openPrivateChatTitle')}
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
@@ -161,16 +164,16 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
             </div>
             <div className="flex-1">
               <div className="font-semibold leading-tight">
-                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Private chat</span>
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">{t('tokenChat.privateChat')}</span>
               </div>
-              <div className="text-[11px] text-white/65 leading-tight">Read and write only for holders</div>
+              <div className="text-[11px] text-white/65 leading-tight">{t('tokenChat.privateChatDesc')}</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
           </div>
         </a>
       </div>
       <div className="mt-3 text-xs opacity-70 text-white/70 text-center">
-        Service provided by
+        {t('tokenChat.serviceProvidedBy')}
         {' '}
         <a
           href="https://quali.chat"
@@ -186,6 +189,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
 };
 
 const TokenChat = ({ token, mode = 'full' }: Props) => {
+  const { t } = useTranslation('trending');
   const [state, setState] = useState<ChatState>({
     messages: [],
     from: undefined,
@@ -240,7 +244,7 @@ const TokenChat = ({ token, mode = 'full' }: Props) => {
         if (prevState.retryCount >= maxRetries) {
           return {
             ...prevState,
-            error: 'Failed to load comments after multiple attempts. Please try again later.',
+            error: t('tokenChat.failedAfterAttempts'),
             loading: false,
           };
         }
@@ -305,19 +309,19 @@ const TokenChat = ({ token, mode = 'full' }: Props) => {
             return {
               ...currentState,
               loading: false,
-              error: `Failed to load messages. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
+              error: t('tokenChat.retryingInSeconds', { current: currentState.retryCount + 1, max: maxRetries }),
             };
           }
           // Max retries reached
           return {
             ...currentState,
             loading: false,
-            error: 'Unable to load messages after multiple attempts. Please try again later.',
+            error: t('tokenChat.unableAfterAttempts'),
           };
         });
       }
     }
-  }, []);
+  }, [t]);
 
   // Expose latest loadMessages to retry scheduler via ref
   loadMessagesRef.current = loadMessages;
@@ -387,7 +391,7 @@ const TokenChat = ({ token, mode = 'full' }: Props) => {
             size="medium"
             className="min-w-24"
           >
-            {state.loading ? 'Loading…' : 'Load more'}
+            {state.loading ? t('tokenChat.loading') : t('tokenChat.loadMore')}
           </AeButton>
         )}
 

@@ -1,5 +1,6 @@
 /* eslint-disable max-len, react/no-unescaped-entities */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
 import {
@@ -49,6 +50,7 @@ const CUSTOM_ICONS = [
 ];
 
 const Branding = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
 
@@ -111,7 +113,9 @@ const Branding = () => {
             size="sm"
             className="!border !border-solid !border-white/15 hover:!border-white/35"
           >
-            ← Back
+            ←
+            {' '}
+            {t('common.labels.back')}
           </AeButton>
         </div>
 
@@ -120,12 +124,12 @@ const Branding = () => {
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles className="w-32 h-32 text-neon-teal" />
           </div>
-          <div className="text-sm font-extrabold uppercase tracking-widest text-neon-teal mb-1">Superhero Brand Kit</div>
+          <div className="text-sm font-extrabold uppercase tracking-widest text-neon-teal mb-1">{t('common.views.branding.brandKit')}</div>
           <h1 className="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-3">
-            Brand Identity Guidelines
+            {t('common.views.branding.heroTitle')}
           </h1>
           <p className="text-[15px] md:text-lg opacity-80 max-w-[800px] leading-relaxed">
-            Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you construct material.
+            {t('common.views.branding.heroDescription')}
           </p>
         </div>
 
@@ -135,7 +139,7 @@ const Branding = () => {
             <div className="p-2 bg-neon-teal/10 rounded-lg border border-neon-teal/20">
               <Sparkles className="w-5 h-5 text-neon-teal" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Brand Color Palette</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.colorPaletteTitle')}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -153,7 +157,7 @@ const Branding = () => {
                       type="button"
                       onClick={() => handleCopyHex(color.hex)}
                       className="text-white/60 hover:text-white transition-colors"
-                      title="Copy HEX Code"
+                      title={t('common.views.branding.copyHexCode')}
                     >
                       {copiedColor === color.hex ? (
                         <Check className="w-4 h-4 text-neon-green" />
@@ -175,16 +179,16 @@ const Branding = () => {
             <div className="p-2 bg-neon-blue/10 rounded-lg border border-neon-blue/20">
               <Type className="w-5 h-5 text-neon-blue" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Typography System</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.typographyTitle')}</h2>
           </div>
 
           <div className="p-6 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <div className="text-sm font-bold text-neon-blue uppercase tracking-widest mb-1">Primary Typeface</div>
+                <div className="text-sm font-bold text-neon-blue uppercase tracking-widest mb-1">{t('common.views.branding.primaryTypeface')}</div>
                 <div className="text-4xl md:text-5xl font-black mb-3">Inter</div>
                 <p className="text-sm text-white/70 leading-relaxed mb-4">
-                  Inter is an open-source, modern type family carefully crafted for high readability on screens.
+                  {t('common.views.branding.interDescription')}
                 </p>
                 <div className="font-mono text-xs text-white/50 p-3 bg-black/20 rounded-lg border border-white/5">
                   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -194,17 +198,17 @@ const Branding = () => {
               <div className="border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-8 flex flex-col justify-center">
                 <div className="space-y-4">
                   <div>
-                    <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">Heading Style</span>
-                    <span className="text-2xl font-extrabold text-white">Attention Markets</span>
+                    <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">{t('common.views.branding.headingStyle')}</span>
+                    <span className="text-2xl font-extrabold text-white">{t('common.views.branding.headingSample')}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">Body Text</span>
-                    <span className="text-sm text-white/70">Follow Trends on-chain on a decentralized network.</span>
+                    <span className="text-xs text-white/40 uppercase font-bold tracking-widest block mb-1">{t('common.views.branding.bodyText')}</span>
+                    <span className="text-sm text-white/70">{t('common.views.branding.bodySample')}</span>
                   </div>
                   <div className="flex gap-2">
-                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-semibold">Regular</span>
-                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-bold">Semibold</span>
-                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-black">Black</span>
+                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-semibold">{t('common.views.branding.weightRegular')}</span>
+                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-bold">{t('common.views.branding.weightSemibold')}</span>
+                    <span className="px-2.5 py-1 rounded bg-white/10 text-xs font-black">{t('common.views.branding.weightBlack')}</span>
                   </div>
                 </div>
               </div>
@@ -218,7 +222,7 @@ const Branding = () => {
             <div className="p-2 bg-neon-pink/10 rounded-lg border border-neon-pink/20">
               <Award className="w-5 h-5 text-neon-pink" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Logos and Iconography</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.logosTitle')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -227,15 +231,15 @@ const Branding = () => {
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/full-logo.svg"
-                  alt="Superhero Full Logo"
+                  alt={t('common.views.branding.fullLogoAlt')}
                   className="max-h-12 w-auto object-contain z-10 transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Full Logo (SVG)</h3>
+                <h3 className="font-bold text-lg mb-1">{t('common.views.branding.fullLogoTitle')}</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  Our main combination logo featuring the Superhero brand name alongside the signature blue power shield icon.
+                  {t('common.views.branding.fullLogoDescription')}
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/full-logo.svg', 'superhero-full-logo.svg')}
@@ -245,7 +249,7 @@ const Branding = () => {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   {' '}
-                  Download SVG
+                  {t('common.views.branding.downloadSvg')}
                 </AeButton>
               </div>
             </div>
@@ -259,9 +263,9 @@ const Branding = () => {
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-transparent pointer-events-none" />
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Small Logo / Favicon</h3>
+                <h3 className="font-bold text-lg mb-1">{t('common.views.branding.faviconTitle')}</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  The minimalistic geometric shield icon. Highly identifiable at small scales, ideal for browser tabs, app icons, and avatar frames.
+                  {t('common.views.branding.faviconDescription')}
                 </p>
                 <AeButton
                   onClick={() => downloadSvgElementById('favicon-brand-download', 'superhero-favicon.svg')}
@@ -271,7 +275,7 @@ const Branding = () => {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   {' '}
-                  Download SVG
+                  {t('common.views.branding.downloadSvg')}
                 </AeButton>
               </div>
             </div>
@@ -281,7 +285,7 @@ const Branding = () => {
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/logo.png"
-                  alt="Superhero Square Logo"
+                  alt={t('common.views.branding.squareLogoAlt')}
                   className="w-16 h-16 rounded-2xl object-cover z-10 transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     // Fallback to placeholder if not found
@@ -291,9 +295,9 @@ const Branding = () => {
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Square Brand Logo</h3>
+                <h3 className="font-bold text-lg mb-1">{t('common.views.branding.squareLogoTitle')}</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  High quality PNG representation of the square logo emblem. Optimal for social profile images, directories, and standard app stores.
+                  {t('common.views.branding.squareLogoDescription')}
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/logo.png', 'superhero-square-logo.png')}
@@ -303,7 +307,7 @@ const Branding = () => {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   {' '}
-                  Download PNG
+                  {t('common.views.branding.downloadPng')}
                 </AeButton>
               </div>
             </div>
@@ -316,7 +320,7 @@ const Branding = () => {
             <div className="p-2 bg-neon-yellow/10 rounded-lg border border-neon-yellow/20">
               <ImageIcon className="w-5 h-5 text-neon-yellow" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Digital Banners & Assets</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.bannersTitle')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -325,7 +329,7 @@ const Branding = () => {
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/og-default.png"
-                  alt="Superhero OG Social Banner"
+                  alt={t('common.views.branding.ogBannerAlt')}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -336,9 +340,9 @@ const Branding = () => {
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">Standard OG Social Banner</h3>
+                <h3 className="font-bold text-lg mb-1">{t('common.views.branding.ogBannerTitle')}</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  The default sharing metadata card for Twitter, Telegram, Discord, or Facebook.
+                  {t('common.views.branding.ogBannerDescription')}
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/og-default.png', 'superhero-og-banner.png')}
@@ -348,7 +352,7 @@ const Branding = () => {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   {' '}
-                  Download PNG
+                  {t('common.views.branding.downloadPng')}
                 </AeButton>
               </div>
             </div>
@@ -358,20 +362,20 @@ const Branding = () => {
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/screen-1.png"
-                  alt="Superhero Interface Showcase"
+                  alt={t('common.views.branding.interfaceShowcaseAlt')}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-4">
-                  <span className="text-xs text-white/50 uppercase tracking-widest font-mono">App Interface Preview</span>
+                  <span className="text-xs text-white/50 uppercase tracking-widest font-mono">{t('common.views.branding.appInterfacePreview')}</span>
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg mb-1">App Showcase Screenshot</h3>
+                <h3 className="font-bold text-lg mb-1">{t('common.views.branding.appShowcaseTitle')}</h3>
                 <p className="text-xs text-white/60 mb-4 leading-relaxed flex-1">
-                  App screenshot highlighting interface layout, trending topics, feeds, and cryptocurrency components.
+                  {t('common.views.branding.appShowcaseDescription')}
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/screen-1.png', 'superhero-interface-screenshot.png')}
@@ -381,7 +385,7 @@ const Branding = () => {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   {' '}
-                  Download PNG
+                  {t('common.views.branding.downloadPng')}
                 </AeButton>
               </div>
             </div>
@@ -395,7 +399,7 @@ const Branding = () => {
             <div className="p-2 bg-neon-pink/10 rounded-lg border border-neon-pink/20">
               <Award className="w-5 h-5 text-neon-pink" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Custom Icons</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.customIconsTitle')}</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -411,7 +415,7 @@ const Branding = () => {
                   type="button"
                   onClick={() => downloadSvgElementById(id, `superhero-icon-${name.toLowerCase()}.svg`)}
                   className="p-1.5 rounded-lg bg-white/10 border border-white/20 hover:bg-neon-teal hover:text-black hover:border-neon-teal hover:scale-105 active:scale-100 transition-all duration-200"
-                  title={`Download ${name} Icon`}
+                  title={t('common.views.branding.downloadIcon', { name })}
                 >
                   <Download className="w-3.5 h-3.5" />
                 </button>

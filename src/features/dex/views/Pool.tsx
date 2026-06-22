@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 import { useAccount } from '../../../hooks';
@@ -7,6 +8,7 @@ import { useLiquidityPositions } from '../hooks';
 import Spinner from '../../../components/Spinner';
 
 const PoolContent = () => {
+  const { t } = useTranslation();
   const { activeAccount } = useAccount();
   const {
     positions, loading, error, refreshPositions,
@@ -43,10 +45,10 @@ const PoolContent = () => {
             {/* Header */}
             <div className="mb-6">
               <h1 className="text-[28px] font-bold m-0 mb-2">
-                Your Liquidity Positions
+                {t('dex.pool.yourLiquidityPositions')}
               </h1>
               <p className="text-sm text-white/60 m-0 leading-6">
-                Manage your liquidity positions and track earnings
+                {t('dex.pool.manageDescription')}
               </p>
             </div>
 
@@ -54,7 +56,7 @@ const PoolContent = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
-                  Positions
+                  {t('dex.pool.positions')}
                 </div>
                 <div className="text-xl font-bold text-white">
                   {positions.length}
@@ -62,7 +64,7 @@ const PoolContent = () => {
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
-                  Total Value
+                  {t('common.account.totalValue')}
                 </div>
                 <div className="text-xl font-bold text-green-400">
                   $
@@ -71,7 +73,7 @@ const PoolContent = () => {
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
-                  Fees Earned
+                  {t('dex.pool.feesEarned')}
                 </div>
                 <div className="text-xl font-bold text-[#4ecdc4]">
                   $0.00
@@ -84,7 +86,7 @@ const PoolContent = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-3">
                   <h3 className="text-base font-semibold text-white m-0">
-                    Active Positions
+                    {t('dex.pool.activePositions')}
                   </h3>
                   {loading && positions.length > 0 && (
                     <Spinner className="w-4 h-4" />
@@ -104,10 +106,13 @@ const PoolContent = () => {
                       {loading ? (
                         <>
                           <Spinner className="w-3 h-3" />
-                          Refreshing...
+                          {t('dex.pool.refreshing')}
                         </>
                       ) : (
-                        <>🔄 Refresh</>
+                        <>
+                          🔄
+                          {t('dex.pool.refresh')}
+                        </>
                       )}
                     </button>
                   )}
@@ -119,7 +124,7 @@ const PoolContent = () => {
                   return (
                     <div className="text-center py-10 text-white/60 flex flex-col items-center gap-4">
                       <Spinner className="w-8 h-8" />
-                      Loading your positions...
+                      {t('dex.pool.loadingPositions')}
                     </div>
                   );
                 }
@@ -139,14 +144,14 @@ const PoolContent = () => {
                         💧
                       </div>
                       <div className="text-base font-semibold mb-2 text-white">
-                        No liquidity positions found
+                        {t('dex.pool.noPositionsFound')}
                       </div>
                       <div className="text-sm text-white/60 mb-5 leading-relaxed">
-                        Start earning fees by providing liquidity to trading pairs
+                        {t('dex.pool.noPositionsHint')}
                       </div>
                       {!activeAccount && (
                         <ConnectWalletButton
-                          label="CONNECT WALLET"
+                          label={t('dex.swap.connectWallet')}
                           variant="dex"
                           className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                         />

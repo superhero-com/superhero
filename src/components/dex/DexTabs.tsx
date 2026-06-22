@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Tab = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
   <button
@@ -30,6 +31,7 @@ const Tab = ({ label, active, onClick }: { label: string; active: boolean; onCli
 );
 
 export default function DexTabs() {
+  const { t } = useTranslation('dex');
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
@@ -40,9 +42,9 @@ export default function DexTabs() {
 
   return (
     <div className="flex gap-3 mb-6 items-center flex-wrap justify-center md:gap-2 md:mb-5 sm:gap-1.5 sm:mb-4">
-      <Tab label="DeFi" active={isDex} onClick={() => navigate('/defi')} />
-      <Tab label="Pool" active={isPool} onClick={() => navigate('/pool')} />
-      <Tab label="Explore" active={isExplore} onClick={() => navigate('/explore')} />
+      <Tab label={t('tabs.defi')} active={isDex} onClick={() => navigate('/defi')} />
+      <Tab label={t('tabs.pool')} active={isPool} onClick={() => navigate('/pool')} />
+      <Tab label={t('tabs.explore')} active={isExplore} onClick={() => navigate('/explore')} />
       <div className="ml-auto" />
       <button
         onClick={() => navigate('/pool/add-tokens')}
@@ -61,7 +63,7 @@ export default function DexTabs() {
           e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
         }}
       >
-        Add tokens
+        {t('tabs.addTokens')}
       </button>
     </div>
   );

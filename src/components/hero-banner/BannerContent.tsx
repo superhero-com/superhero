@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface BannerContentProps {
   title: string;
@@ -22,6 +23,7 @@ const BannerContent = ({
   secondaryButtonText,
   secondaryButtonLink,
 }: BannerContentProps) => {
+  const { t } = useTranslation('banners');
   const renderTitle = () => {
     // Insert a mobile-only line break after the first period
     const parts = title.split('. ');
@@ -42,7 +44,7 @@ const BannerContent = ({
       <h1 className="banner-h1">{renderTitle()}</h1>
       <p className="banner-lede">{description}</p>
 
-      <ul className="banner-chips" aria-label="Key features">
+      <ul className="banner-chips" aria-label={t('keyFeatures')}>
         {chips.map((chip) => (
           <li key={chip} className="banner-chip">
             {chip}

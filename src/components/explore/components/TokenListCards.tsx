@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
@@ -56,6 +57,7 @@ export const TokenListCards = ({
   onSearchChange,
   loading,
 }: TokenListCardsProps) => {
+  const { t } = useTranslation('explore');
   const navigate = useNavigate();
 
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
@@ -103,7 +105,7 @@ export const TokenListCards = ({
       <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">
           <Spinner className="w-5 h-5" />
-          Loading tokens...
+          {t('tokenListCards.loadingTokens')}
         </div>
       </div>
     );
@@ -126,18 +128,18 @@ export const TokenListCards = ({
                   onValueChange={(v) => handleSort(v as any)}
                   triggerClassName="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                 >
-                  <AppSelectItem value="pairs_count">Pools</AppSelectItem>
-                  <AppSelectItem value="name">Name</AppSelectItem>
-                  <AppSelectItem value="symbol">Symbol</AppSelectItem>
-                  <AppSelectItem value="created_at">Created At</AppSelectItem>
-                  <AppSelectItem value="price">Price</AppSelectItem>
-                  <AppSelectItem value="tvl">TVL</AppSelectItem>
-                  <AppSelectItem value="24hchange">24h Change</AppSelectItem>
-                  <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
-                  <AppSelectItem value="7dchange">7d Change</AppSelectItem>
-                  <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
-                  <AppSelectItem value="30dchange">30d Change</AppSelectItem>
-                  <AppSelectItem value="30dvolume">30d Volume</AppSelectItem>
+                  <AppSelectItem value="pairs_count">{t('pools')}</AppSelectItem>
+                  <AppSelectItem value="name">{t('tokenListCards.sort.name')}</AppSelectItem>
+                  <AppSelectItem value="symbol">{t('tokenListCards.sort.symbol')}</AppSelectItem>
+                  <AppSelectItem value="created_at">{t('tokenListCards.sort.createdAt')}</AppSelectItem>
+                  <AppSelectItem value="price">{t('price')}</AppSelectItem>
+                  <AppSelectItem value="tvl">{t('tokenListCards.sort.tvl')}</AppSelectItem>
+                  <AppSelectItem value="24hchange">{t('tokenListCards.sort.change24h')}</AppSelectItem>
+                  <AppSelectItem value="24hvolume">{t('tokenListCards.sort.volume24h')}</AppSelectItem>
+                  <AppSelectItem value="7dchange">{t('tokenListCards.sort.change7d')}</AppSelectItem>
+                  <AppSelectItem value="7dvolume">{t('tokenListCards.sort.volume7d')}</AppSelectItem>
+                  <AppSelectItem value="30dchange">{t('tokenListCards.sort.change30d')}</AppSelectItem>
+                  <AppSelectItem value="30dvolume">{t('tokenListCards.sort.volume30d')}</AppSelectItem>
                 </AppSelect>
               </div>
 
@@ -147,7 +149,7 @@ export const TokenListCards = ({
                   ? 'bg-green-500 text-white'
                   : 'bg-white/10 text-white hover:bg-green-500 hover:text-white'
                 }`}
-                title={sort.asc ? 'Sort Ascending' : 'Sort Descending'}
+                title={sort.asc ? t('tokenListCards.sortAscending') : t('tokenListCards.sortDescending')}
               >
                 {sort.asc ? '↑' : '↓'}
               </button>
@@ -163,16 +165,16 @@ export const TokenListCards = ({
             {(search || sort.key !== 'name') ? (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] text-gray-300 font-medium opacity-80">
-                  Active:
+                  {t('tokenListCards.active')}
                 </span>
                 {search && (
                   <div className="flex items-center gap-1 bg-green-500/[0.12] px-[6px] py-[2px] rounded-lg text-[11px] text-green-500 border border-green-500/20">
                     <span>
-                      Search: "
-                      {search.length > 15
-                        ? `${search.substring(0, 15)}...`
-                        : search}
-                      "
+                      {t('tokenListCards.searchFilter', {
+                        value: search.length > 15
+                          ? `${search.substring(0, 15)}...`
+                          : search,
+                      })}
                     </span>
                     <button
                       onClick={() => onSearchChange('')}
@@ -185,7 +187,7 @@ export const TokenListCards = ({
                 {sort.key !== 'name' && (
                   <div className="flex items-center gap-1 bg-green-500/[0.12] px-[6px] py-[2px] rounded-lg text-[11px] text-green-500 border border-green-500/20">
                     <span>
-                      Sort:
+                      {t('tokenListCards.sortLabel')}
                       {' '}
                       {sort.key}
                       {' '}
@@ -200,9 +202,7 @@ export const TokenListCards = ({
             <div className="flex items-center gap-[6px] bg-green-500/10 px-[10px] py-[6px] rounded-2xl border border-green-500/20 flex-shrink-0">
               <div className="w-[5px] h-[5px] rounded-full bg-green-500 animate-pulse" />
               <span className="text-[11px] text-green-500 font-semibold">
-                {tokens.length}
-                {' '}
-                {tokens.length === 1 ? 'token' : 'tokens'}
+                {t('tokenListCards.tokenCount', { count: tokens.length })}
               </span>
             </div>
           </div>
@@ -231,7 +231,7 @@ export const TokenListCards = ({
                   <span className="text-xs text-green-500 font-semibold">
                     {token.pairs_count || 0}
                     {' '}
-                    Pools
+                    {t('pools')}
                   </span>
                 </div>
               </div>
@@ -241,7 +241,7 @@ export const TokenListCards = ({
                 {/* Price */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    Price
+                    {t('price')}
                   </div>
                   <div className="text-sm text-white font-semibold">
                     <PriceDataFormatter priceData={token.price} />
@@ -251,7 +251,7 @@ export const TokenListCards = ({
                 {/* TVL */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    TVL
+                    {t('tokenListCards.sort.tvl')}
                   </div>
                   <div className="text-sm text-white font-semibold">
                     <PriceDataFormatter priceData={token.summary?.total_volume} />
@@ -261,9 +261,7 @@ export const TokenListCards = ({
                 {/* 24h Change */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {timeBase}
-                    {' '}
-                    Change
+                    {t('tokenListCards.changeWithTimeframe', { timeframe: timeBase })}
                   </div>
                   <div className={`text-sm font-semibold ${
                     token.summary?.change?.[timeBase]?.percentage
@@ -287,9 +285,7 @@ export const TokenListCards = ({
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {timeBase}
-                    {' '}
-                    Volume
+                    {t('tokenListCards.volumeWithTimeframe', { timeframe: timeBase })}
                   </div>
                   <div className="text-sm text-white font-semibold">
                     <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
@@ -306,7 +302,7 @@ export const TokenListCards = ({
                   }}
                   className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
                 >
-                  🔄 Swap
+                  🔄 {t('tokenListCards.swap')}
                 </button>
                 <button
                   onClick={(e) => {
@@ -315,7 +311,7 @@ export const TokenListCards = ({
                   }}
                   className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
                 >
-                  ➕ Add Liquidity
+                  ➕ {t('tokenListCards.addLiquidity')}
                 </button>
               </div>
             </div>
@@ -324,10 +320,10 @@ export const TokenListCards = ({
           {tokens.length === 0 && !loading && (
             <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px] mt-5">
               <div className="text-gray-300 text-base font-medium mb-2">
-                No tokens found
+                {t('tokenListCards.noTokensFound')}
               </div>
               <div className="text-gray-300 text-sm opacity-70">
-                Try adjusting your search criteria
+                {t('tokenListCards.tryAdjustingSearch')}
               </div>
             </div>
           )}

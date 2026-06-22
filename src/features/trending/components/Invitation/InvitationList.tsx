@@ -96,7 +96,7 @@ const InvitationList = () => {
         <>
           <div className="text-[10px] text-red-400/80 font-medium mb-1">{t('invitations.revoked')}</div>
           <div className="text-xs text-white/50">
-            No one claimed this invite
+            {t('invitations.noOneClaimed')}
           </div>
           {invitation.revokedAt && (
             <div className="text-xs text-white/50 mt-1">
@@ -113,7 +113,7 @@ const InvitationList = () => {
       <>
         <div className="text-[10px] text-yellow-400/80 font-medium mb-1">{t('invitations.awaitingClaim')}</div>
         <div className="text-xs text-white/50 mb-1">
-          Share the link to invite someone
+          {t('invitations.shareLinkToInvite')}
         </div>
         {invitation.secretKey && (
           <button
@@ -144,7 +144,7 @@ const InvitationList = () => {
         )}
         {invitation.date && (
           <div className="text-xs text-white/50 mt-1">
-            Created on
+            {t('invitations.createdOn')}
             {' '}
             {invitation.date}
           </div>
@@ -163,13 +163,13 @@ const InvitationList = () => {
 
       {loading && (
       <div className="p-4 text-center text-white/60">
-        Loading invitations...
+        {t('invitations.loadingInvitations')}
       </div>
       )}
 
       {!loading && invitations.length === 0 && (
       <div className="p-4 text-center text-white/60 text-sm">
-        No invitations yet.
+        {t('invitations.noInvitationsYet')}
       </div>
       )}
 
@@ -292,7 +292,7 @@ const InvitationList = () => {
                           )}
                           {!invitation.claimedBy && (
                             <div className="text-xs text-white/50">
-                              Invitation was claimed
+                              {t('invitations.invitationWasClaimed')}
                             </div>
                           )}
                           {invitation.claimedAt && (
@@ -308,7 +308,7 @@ const InvitationList = () => {
                         <>
                           <div className="text-xs text-red-400/80 font-medium">{t('invitations.revoked')}</div>
                           <div className="text-xs text-white/50">
-                            Not claimed
+                            {t('invitations.notClaimed')}
                           </div>
                           {invitation.revokedAt && (
                             <div className="text-xs text-white/50">
@@ -323,7 +323,7 @@ const InvitationList = () => {
                       <>
                         <div className="text-xs text-yellow-400/80 font-medium">{t('invitations.awaiting')}</div>
                         <div className="text-xs text-white/50 mb-1">
-                          Share the link
+                          {t('invitations.shareLink')}
                         </div>
                         {invitation.secretKey && (
                           <button
@@ -353,7 +353,7 @@ const InvitationList = () => {
                         )}
                         {invitation.date && (
                           <div className="text-xs text-white/50 mt-1">
-                            Created on
+                            {t('invitations.createdOn')}
                             {' '}
                             {invitation.date}
                           </div>

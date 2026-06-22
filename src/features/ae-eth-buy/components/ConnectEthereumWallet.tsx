@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAppKit, useDisconnect, useAppKitAccount } from '@reown/appkit/react';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectEthereumWalletProps {
     onConnected?: (accounts: string[]) => void;
@@ -17,9 +18,10 @@ export const ConnectEthereumWallet = ({
   onError,
   disabled = false,
   className = '',
-  label = 'Connect Ethereum Wallet',
+  label,
   showConnectedState = false,
 }: ConnectEthereumWalletProps) => {
+  const { t } = useTranslation('buyAe');
   const { open } = useAppKit();
   const { disconnect } = useDisconnect();
   const { address: ethAddress, isConnected } = useAppKitAccount();
@@ -29,7 +31,7 @@ export const ConnectEthereumWallet = ({
       await open({ view: 'Connect' });
     } catch (error: any) {
       if (onError) {
-        onError(error.message || 'Failed to connect wallet');
+        onError(error.message || t('connectEthWallet.failedToConnect'));
       }
     }
   };
@@ -42,7 +44,7 @@ export const ConnectEthereumWallet = ({
       }
     } catch (error: any) {
       if (onError) {
-        onError(error.message || 'Failed to disconnect wallet');
+        onError(error.message || t('connectEthWallet.failedToDisconnect'));
       }
     }
   };
@@ -59,11 +61,11 @@ export const ConnectEthereumWallet = ({
       <div className="w-full bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs text-white/60 font-medium uppercase tracking-wider">
-            Ethereum Wallet
+            {t('connectEthWallet.ethereumWallet')}
           </span>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span className="text-xs text-green-400">Connected</span>
+            <span className="text-xs text-green-400">{t('connectEthWallet.connected')}</span>
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -78,14 +80,14 @@ export const ConnectEthereumWallet = ({
               onClick={handleConnect}
               className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
             >
-              Switch
+              {t('connectEthWallet.switch')}
             </button>
             <button
               type="button"
               onClick={handleDisconnect}
               className="text-xs text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 border border-red-400/30 hover:border-red-400/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
             >
-              Disconnect
+              {t('connectEthWallet.disconnect')}
             </button>
           </div>
         </div>
@@ -105,7 +107,7 @@ export const ConnectEthereumWallet = ({
           : 'bg-gradient-to-r from-[#627eea] to-[#8a92b2] shadow-[0_8px_25px_rgba(98,126,234,0.4)] hover:-translate-y-0.5 active:translate-y-0'
       } ${className}`}
     >
-      {label}
+      {label ?? t('connectEthWallet.connectEthereumWallet')}
     </button>
   );
 };

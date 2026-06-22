@@ -4,6 +4,7 @@ import React, {
 import {
   createChart, IChartApi, ISeriesApi, ColorType, LineSeries, HistogramSeries, MismatchDirection,
 } from 'lightweight-charts';
+import { useTranslation } from 'react-i18next';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
@@ -44,6 +45,7 @@ const TokenPricePerformance = ({
   tokenId,
   className = '',
 }: TokenPricePerformanceProps) => {
+  const { t } = useTranslation('dex');
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
@@ -382,7 +384,7 @@ const TokenPricePerformance = ({
           {/* Mobile dropdown */}
           <div className="md:hidden border border-border rounded-xl p-2">
             <label htmlFor="chart-select" className="sr-only">
-              Select Chart Type
+              {t('tokenPricePerformance.selectChartType')}
             </label>
             <AppSelect
               value={selectedChart.type}
@@ -413,14 +415,14 @@ const TokenPricePerformance = ({
         {/* Loading Overlay */}
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center text-3xl bg-background/20 rounded-xl">
-            <div className="text-foreground">Loading...</div>
+            <div className="text-foreground">{t('tokenPricePerformance.loading')}</div>
           </div>
         )}
 
         {/* No Data Overlay */}
         {showNoData && !loading && (
           <div className="absolute inset-0 flex justify-center items-center text-3xl text-muted-foreground">
-            No Data
+            {t('tokenPricePerformance.noData')}
           </div>
         )}
       </AeCard>

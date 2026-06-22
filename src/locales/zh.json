@@ -1567,7 +1567,8 @@
       "noLeaderboard": "目前没有可用的排行榜数据。",
       "popularPostsTitle": "热门帖子",
       "popularPostsSubtitle": "社区讨论最多的话题。",
-      "noPopularPosts": "目前没有可用的热门帖子。"
+      "noPopularPosts": "目前没有可用的热门帖子。",
+      "collectionAll": "全部"
     },
     "createToken": {
       "oops": "哎呀！",

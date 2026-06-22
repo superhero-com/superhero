@@ -26,7 +26,7 @@ export class TokensService {
     }: {
         orderBy?: 'name' | 'price' | 'market_cap' | 'created_at' | 'holders_count' | 'treasury',
         orderDirection?: 'ASC' | 'DESC',
-        collection?: 'all' | 'word' | 'number',
+        collection?: string,
         limit?: number,
         page?: number,
         ownerAddress?: string,

@@ -1567,7 +1567,8 @@
       "noLeaderboard": "Derzeit sind keine Bestenlisten-Daten verfügbar.",
       "popularPostsTitle": "Beliebte Beiträge",
       "popularPostsSubtitle": "Worüber die Community am meisten spricht.",
-      "noPopularPosts": "Derzeit sind keine beliebten Beiträge verfügbar."
+      "noPopularPosts": "Derzeit sind keine beliebten Beiträge verfügbar.",
+      "collectionAll": "Alle"
     },
     "createToken": {
       "oops": "Hoppla!",

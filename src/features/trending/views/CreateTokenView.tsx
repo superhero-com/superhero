@@ -2,6 +2,7 @@
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
+import { collectionLabel } from '@/utils/collection';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -636,7 +637,7 @@ const CreateTokenView = () => {
                                     selected ? 'text-white' : 'text-white/90'
                                   }`}
                                 >
-                                  {collection.name}
+                                  {collectionLabel(collection.name)}
                                 </span>
                               </button>
                             );
@@ -684,8 +685,8 @@ const CreateTokenView = () => {
                         <span>
                           {t('trending.createToken.charactersCount', { count: tokenName.length, max: 20 })}
                         </span>
-                        <span className="opacity-80">
-                          {nameStatus === 'invalid' ? t('trending.createToken.invalidCharacters') : t('trending.createToken.allowedCharsHint')}
+                        <span className="opacity-80" dir="auto">
+                          {nameStatus === 'invalid' ? t('trending.createToken.invalidCharacters') : (selectedCollection?.description || t('trending.createToken.allowedCharsHint'))}
                         </span>
                       </div>
                     </div>

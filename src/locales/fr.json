@@ -1567,7 +1567,8 @@
       "noLeaderboard": "Aucune donnée de classement n'est disponible pour le moment.",
       "popularPostsTitle": "Posts populaires",
       "popularPostsSubtitle": "Ce dont la communauté parle le plus.",
-      "noPopularPosts": "Aucun post populaire n'est disponible pour le moment."
+      "noPopularPosts": "Aucun post populaire n'est disponible pour le moment.",
+      "collectionAll": "Tout"
     },
     "createToken": {
       "oops": "Oups !",

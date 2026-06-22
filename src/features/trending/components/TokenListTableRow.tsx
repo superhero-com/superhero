@@ -1,7 +1,6 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
-import { collectionLabel } from '@/utils/collection';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

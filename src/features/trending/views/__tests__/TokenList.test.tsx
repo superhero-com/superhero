@@ -40,6 +40,13 @@ vi.mock('../../../../api/generated', () => ({
   },
 }));
 
+vi.mock('@/hooks/useCommunityFactory', () => ({
+  useCommunityFactory: () => ({
+    activeFactoryCollections: [],
+    loadFactorySchema: vi.fn().mockResolvedValue({ collections: {} }),
+  }),
+}));
+
 vi.mock('../../../../seo/Head', () => ({
   Head: () => null,
 }));

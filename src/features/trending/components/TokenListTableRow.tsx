@@ -126,11 +126,6 @@ const TokenListTableRow = ({
               <span className="text-white/40 text-[.85em] mr-0.5">#</span>
               {token.symbol || token.name}
             </div>
-            {collectionLabel(token.collection) && (
-              <span className="shrink-0 inline-flex items-center rounded-full bg-white/10 px-1.5 py-[1px] text-[9px] font-semibold leading-none text-white/50">
-                {collectionLabel(token.collection)}
-              </span>
-            )}
           </div>
           <div className="text-[11px] text-white/40 mt-0.5 tabular-nums">
             <PriceDataFormatter
@@ -196,11 +191,6 @@ const TokenListTableRow = ({
                   <span className="text-white/40 text-[.85em] mr-0.5">#</span>
                   {token.symbol || token.name}
                 </div>
-                {collectionLabel(token.collection) && (
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-white/10 px-1.5 py-[1px] text-[9px] font-semibold leading-none text-white/50">
-                    {collectionLabel(token.collection)}
-                  </span>
-                )}
               </div>
               {token.name && token.symbol && token.name !== token.symbol && (
                 <div className="text-[11px] text-white/40 truncate leading-3 mt-0.5">

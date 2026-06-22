@@ -7,6 +7,8 @@
 const COLLECTION_LABEL_OVERRIDES: Record<string, string> = {
   WORDS: 'English',
   CHINESE: 'Chinese',
+  RUSSIAN: 'Russian',
+  ARABIC: 'Arabic',
 };
 
 /** Extract the collection name from a full id ("NAME-ak_…") or pass a name through. */

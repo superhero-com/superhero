@@ -210,7 +210,7 @@ const TokenList = () => {
     queryFn: ({ pageParam = 1 }) => TokensService.listAll({
       orderBy: orderByMapped as any,
       orderDirection: finalOrderDirection,
-      collection: collection === 'all' ? undefined : collection,
+      collection,
       limit: 20,
       page: pageParam,
     }),

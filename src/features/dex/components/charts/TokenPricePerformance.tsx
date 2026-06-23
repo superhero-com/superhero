@@ -71,7 +71,8 @@ const TokenPricePerformance = ({
     if (!chartContainerRef.current) return () => {};
 
     const chart = createChart(chartContainerRef.current, {
-      height: 400,
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#ffffff',
@@ -103,11 +104,13 @@ const TokenPricePerformance = ({
 
     chartRef.current = chart;
 
-    // Handle resize
+    // Handle resize - keep both width and height in sync with the container so
+    // the time (date) axis is never clipped by the card's fixed height/padding.
     const handleResize = () => {
       if (chartContainerRef.current && chart) {
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
         });
       }
     };

@@ -1723,7 +1723,7 @@
         "daoTreasuryTitle": "DAO Treasury",
         "daoTreasuryBody": "A portion of every transaction goes into a DAO treasury controlled by token holders. This treasury can fund community initiatives through on-chain governance votes, allowing the community to collectively decide how to grow and develop the token.",
         "feesTitle": "Fees & Affiliations",
-        "feesBody": "When creating a token, you can set an initial buy amount. A small protocol fee (5%) is applied to support the platform and protocol token rewards. The rest goes into the bonding curve, ensuring fair price discovery from the start."
+        "feesBody": "When creating a token, you can set an initial buy amount. A small protocol fee (1%) is applied to support the platform and protocol token rewards. The rest goes into the bonding curve, ensuring fair price discovery from the start."
       },
       "errors": {
         "allowedCharsRange": "Only characters in the range \"{{chars}}\" are allowed.",

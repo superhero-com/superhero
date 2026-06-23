@@ -83,7 +83,7 @@ export const getMobileFooterNavigationItems = (
   ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
   {
     id: 'account',
-    labelKey: 'nav.account',
+    labelKey: 'nav.superheroId',
     path: activeAccount ? `/users/${activeAccount}` : undefined,
     icon: User,
   },

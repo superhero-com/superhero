@@ -4,11 +4,9 @@ import {
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import AddressAvatar from '@/components/AddressAvatar';
 import { AddressFormatted } from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
-import { getLinkedPreferredAensName, SuperheroApi } from '@/api/backend';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
@@ -56,26 +54,6 @@ export const AddressAvatarWithChainName = memo(({
     { enabled: showBalance },
   );
   const { chainName } = useChainName(address || '');
-  const { data: cachedProfile } = useQuery({
-    queryKey: ['SuperheroApi.getProfile', address || ''],
-    queryFn: () => SuperheroApi.getProfile(address || ''),
-    enabled: !!address,
-    staleTime: 20_000,
-    refetchOnWindowFocus: false,
-  });
-
-  // The profile payload does not carry address-link data (e.g. links.prefaens), so a preferred
-  // name set only via address-links is invisible here. Fall back to the account API — which does
-  // carry links — but only when the profile alone yields no preferred name, to avoid an extra
-  // request per avatar in the common case.
-  const profilePreferredName = getLinkedPreferredAensName(cachedProfile);
-  const { data: cachedAccount } = useQuery({
-    queryKey: ['AccountsService.getAccount', address || ''],
-    queryFn: () => SuperheroApi.getAccount(address || ''),
-    enabled: !!address && !profilePreferredName,
-    staleTime: 20_000,
-    refetchOnWindowFocus: false,
-  });
 
   // Hover state management (same as UserBadge)
   const [hover, setHover] = useState(false);
@@ -151,15 +129,7 @@ export const AddressAvatarWithChainName = memo(({
     return null;
   }
 
-  const preferredName = (
-    profilePreferredName
-    || getLinkedPreferredAensName(cachedAccount)
-    || cachedProfile?.public_name
-    || cachedProfile?.profile?.chain_name
-    || chainName
-    || ''
-  ).trim();
-  const avatarUrl = (cachedProfile?.profile?.avatarurl || '').trim() || null;
+  const preferredName = (chainName || '').trim();
 
   const renderContent = () => (
     <>
@@ -168,7 +138,6 @@ export const AddressAvatarWithChainName = memo(({
           <div className="rounded-full overflow-hidden shadow-md">
             <AddressAvatar
               address={address}
-              imageUrl={avatarUrl}
               size={size}
               borderRadius="50%"
             />

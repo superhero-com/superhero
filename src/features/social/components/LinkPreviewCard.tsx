@@ -89,7 +89,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
   // Loading skeleton
   if (data === null) {
     return (
-      <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden animate-pulse">
+      <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden">
         {onDismiss && (
           <button
             type="button"
@@ -101,13 +101,41 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
           </button>
         )}
         <div className="flex gap-3 p-3">
-          <div className="w-20 h-16 rounded-lg bg-white/10 flex-shrink-0" />
+          <div className="w-20 h-16 rounded-lg link-skeleton-shimmer flex-shrink-0" />
           <div className="flex-1 space-y-2 pt-1">
-            <div className="h-3 bg-white/10 rounded w-1/3" />
-            <div className="h-4 bg-white/10 rounded w-3/4" />
-            <div className="h-3 bg-white/10 rounded w-full" />
+            <div className="h-3 link-skeleton-shimmer rounded w-1/3" />
+            <div className="h-4 link-skeleton-shimmer rounded w-3/4" />
+            <div className="h-3 link-skeleton-shimmer rounded w-full" />
           </div>
         </div>
+        <style>
+          {`
+            .link-skeleton-shimmer {
+              background: linear-gradient(90deg,
+                rgba(255, 255, 255, 0.08) 25%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.08) 75%
+              );
+              background-size: 200% 100%;
+              animation: link-skeleton-loading 2.5s infinite linear;
+            }
+
+            @keyframes link-skeleton-loading {
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
+            }
+
+            /* Mobile browsers may render animations faster, so pin the duration
+               to match the post skeleton appearance. */
+            @media (max-width: 768px) {
+              .link-skeleton-shimmer {
+                animation: link-skeleton-loading 2.5s infinite linear !important;
+                animation-duration: 2.5s !important;
+                animation-timing-function: linear !important;
+              }
+            }
+          `}
+        </style>
       </div>
     );
   }

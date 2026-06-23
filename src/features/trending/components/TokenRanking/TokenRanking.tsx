@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { toAe } from '@aeternity/aepp-sdk';
 import { SuperheroApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
@@ -36,9 +37,6 @@ const LIST_SIZE = 5;
 
 const TokenRanking = ({ token }: TokenRankingProps) => {
   const { t } = useTranslation();
-  const [rankingData, setRankingData] = useState<RankingData | null>(null);
-  const [loading, setLoading] = useState(false);
-
   // Calculate ranking limit based on token rank (similar to Vue computed)
   const tokenRankingLimit = useMemo(() => {
     const rank = token.rank || 1;
@@ -47,40 +45,18 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
     return LIST_SIZE;
   }, [token.rank]);
 
-  // Fetch ranking data
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchRankings() {
-      if (!token.sale_address) return;
-
-      setLoading(true);
-      try {
-        const data = await SuperheroApi.listTokenRankings(token.sale_address, {
-          limit: tokenRankingLimit,
-          page: 1,
-        });
-
-        if (!cancelled) {
-          setRankingData(data as RankingData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch token rankings:', error);
-        if (!cancelled) {
-          setRankingData(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchRankings();
-    return () => {
-      cancelled = true;
-    };
-  }, [token.sale_address, tokenRankingLimit]);
+  // Fetch ranking data via react-query. Sharing the cache (and deduping
+  // in-flight requests by key) avoids the duplicate request that a raw
+  // useEffect fetch produced under StrictMode/remounts, and lets
+  // useLiveTokenData refetch this exact key on websocket updates.
+  const { data: rankingData, isLoading: loading } = useQuery<RankingData | null>({
+    queryKey: ['TokensService.listTokenRankings', token.sale_address, tokenRankingLimit],
+    queryFn: () => SuperheroApi.listTokenRankings(token.sale_address as string, {
+      limit: tokenRankingLimit,
+      page: 1,
+    }) as Promise<RankingData>,
+    enabled: !!token.sale_address,
+  });
 
   const rankingTokens = useMemo(() => rankingData?.items || [], [rankingData]);
 

@@ -603,18 +603,32 @@ const TokenList = () => {
               </div>
 
               <div className="mb-6 w-full">
-                <div className="flex w-full flex-wrap items-center justify-between gap-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
-                    <div className="text-xl font-bold text-white sm:text-2xl">
-                      {t('tokenList.tokenizedTrends')}
-                    </div>
-                    <div className="w-full sm:w-auto sm:flex-shrink-0">
-                      <Select value={orderBy} onValueChange={updateOrderBy}>
+                <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
+                  <div className="w-full text-xl font-bold text-white sm:w-auto sm:text-2xl">
+                    {t('tokenList.tokenizedTrends')}
+                  </div>
+                  <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
+                    <Select value={orderBy} onValueChange={updateOrderBy}>
+                      <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-white/10">
+                        {orderByOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                            {option.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {activeFactoryCollections.length > 0 && (
+                    <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
+                      <Select value={collection} onValueChange={setCollection}>
                         <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-white/10">
-                          {orderByOptions.map((option) => (
+                          {collectionOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
                               {option.title}
                             </SelectItem>
@@ -622,26 +636,10 @@ const TokenList = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    {activeFactoryCollections.length > 0 && (
-                      <div className="w-full sm:w-auto sm:flex-shrink-0">
-                        <Select value={collection} onValueChange={setCollection}>
-                          <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-gray-900 border-white/10">
-                            {collectionOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                                {option.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
+                  )}
                   <Link
                     to="/trends/create"
-                    className="inline-flex cursor-pointer items-center justify-center rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0"
+                    className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"
                   >
                     {t('tokenList.tokenizeTrend')}
                   </Link>

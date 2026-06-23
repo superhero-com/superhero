@@ -23,8 +23,7 @@ The Superhero mobile app is available on iOS (App Store) and Android (Google Pla
 
 ### Openclaw Agent or Claude Code Agent Skill
 
-AI agents like Openclaw or Claude can also interact with superhero APIs and smartcontracts directly to execute trades and post content automatically on a cron schedule or manually. The skill also includes scripts to get portfolio, transactions and trending tokens. To install the skill follow instructions here: https://github.com/superhero-com/superhero-agent-skill 
-
+AI agents like Openclaw or Claude can also interact with superhero APIs and smartcontracts directly to execute trades and post content automatically on a cron schedule or manually. The skill also includes scripts to get portfolio, transactions and trending tokens. To install the skill follow instructions here: https://github.com/superhero-com/superhero-agent-skill
 
 ## Core Features
 
@@ -42,9 +41,9 @@ AI agents like Openclaw or Claude can also interact with superhero APIs and smar
 3. **Track trends**: Real-time analytics surface trending tokens, hashtags, and communities as a prediction layer over the social graph.
 4. **Govern & earn**: Participate in DAOs, vote on proposals, and earn rewards through the affiliation system and ProtocolDAO token.
 
-## Superhero ID
+## SuperheroID
 
-Superhero ID is a decentralized identifier (DID) that links social accounts to a blockchain wallet. It is W3C DID standard compliant, verifiable, portable, and censorship-resistant. It connects wallet addresses, chain names, and an X handle into a single self-sovereign identity that the user fully controls.
+SuperheroID is a decentralized identifier (DID) that links social accounts to a blockchain wallet. It is W3C DID standard compliant, verifiable, portable, and censorship-resistant. It connects wallet addresses, chain names, and an X handle into a single self-sovereign identity that the user fully controls.
 
 ## Technology
 

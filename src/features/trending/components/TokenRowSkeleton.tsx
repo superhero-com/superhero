@@ -105,17 +105,27 @@ const TokenRowSkeleton = () => (
         .skeleton-loader {
           background: linear-gradient(90deg,
             rgba(255, 255, 255, 0.08) 25%,
-            rgba(255, 255, 255, 0.16) 50%,
+            rgba(255, 255, 255, 0.15) 50%,
             rgba(255, 255, 255, 0.08) 75%
           );
           background-size: 200% 100%;
-          animation: loading 1.5s infinite;
+          animation: loading 2.5s infinite linear;
           border-radius: 4px;
         }
 
         @keyframes loading {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
+        }
+
+        /* Mobile browsers may render animations faster, so pin the duration
+           to match the post skeleton appearance. */
+        @media (max-width: 768px) {
+          .skeleton-loader {
+            animation: loading 2.5s infinite linear !important;
+            animation-duration: 2.5s !important;
+            animation-timing-function: linear !important;
+          }
         }
 
         .skeleton-text {

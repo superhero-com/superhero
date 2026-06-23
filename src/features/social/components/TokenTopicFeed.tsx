@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
@@ -56,6 +58,12 @@ const TokenTopicFeed = ({
 }: TokenTopicFeedProps) => {
   const { t } = useTranslation('social');
   const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
+  // Render the feed incrementally. Each mounted post fires its own requests
+  // (avatar + recursive comment-count walk), so mounting the full list up front
+  // floods the network — especially on mobile. Start with ~1-2 viewports and
+  // let the user load more on demand.
+  const POSTS_PER_PAGE = 10;
+  const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
   const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
@@ -92,24 +100,67 @@ const TokenTopicFeed = ({
   // Optional: load holders for this Trend token so we can:
   // - filter posts to token holders only
   // - show holder balance badge on each item
-  const { data: holdersResponse, isFetching: isFetchingHolders } = useQuery({
+  const {
+    data: holdersResponse,
+    isFetching: isFetchingHolders,
+    isSuccess: holdersLoaded,
+    isError: holdersFailed,
+  } = useQuery({
     queryKey: ['TokensService.listTokenHolders-for-topic-feed', tokenSaleAddress],
     enabled: !!tokenSaleAddress,
     queryFn: async () => {
       if (!tokenSaleAddress) {
-        return { items: [] as TokenHolderDto[] };
+        return { items: [] as TokenHolderDto[], complete: true };
       }
-      const response = await TokensService.listTokenHolders({
-        address: tokenSaleAddress,
-        // Large page size to cover most holders, but still bounded
-        limit: 500,
-        page: 1,
-      }) as unknown as { items: TokenHolderDto[] };
-      if (Array.isArray((response as any)?.items)) return response;
-      if (Array.isArray(response as any)) {
-        return { items: response as any as TokenHolderDto[] };
+      // The API caps `limit` at 100, so paginate to cover most holders while staying bounded.
+      const PAGE_SIZE = 100;
+      const MAX_PAGES = 5; // up to 500 holders
+      const items: TokenHolderDto[] = [];
+      // `complete` means the holder set is authoritative enough to filter
+      // against — not that every last holder is included. The API returns
+      // holders by balance descending, so two outcomes are authoritative: we
+      // reach the natural end (a page shorter than PAGE_SIZE), or we exhaust the
+      // MAX_PAGES cap with full pages and hold the canonical top-N holders. A
+      // popular token with more than MAX_PAGES * PAGE_SIZE holders must still be
+      // filtered — otherwise "Holders only" silently shows every post. `complete`
+      // becomes false only when a page fails mid-pagination, leaving an arbitrary
+      // partial set; consumers then fall back to showing all posts rather than
+      // filter against an untrustworthy map.
+      let complete = true;
+      for (let page = 1; page <= MAX_PAGES; page += 1) {
+        let response: { items?: TokenHolderDto[] } | TokenHolderDto[];
+        try {
+          // Sequential by design: we stop early once a page returns fewer than
+          // PAGE_SIZE items, so the next request depends on the current result.
+          // eslint-disable-next-line no-await-in-loop
+          response = await TokensService.listTokenHolders({
+            address: tokenSaleAddress,
+            limit: PAGE_SIZE,
+            page,
+          }) as unknown as { items?: TokenHolderDto[] } | TokenHolderDto[];
+        } catch (err) {
+          // Preserve holders gathered from earlier pages: a late-page failure
+          // must not discard a real holder set. Only fail the whole query when
+          // we have nothing at all, so the caller can tell "unknown" (error)
+          // apart from "no holders" (successful empty result).
+          if (items.length === 0) throw err;
+          // A mid-pagination failure truncates the set at an arbitrary point —
+          // mark it non-authoritative so we don't hide posts based on it.
+          complete = false;
+          break;
+        }
+        let pageItems: TokenHolderDto[] = [];
+        if (Array.isArray((response as any)?.items)) {
+          pageItems = (response as any).items;
+        } else if (Array.isArray(response)) {
+          pageItems = response as TokenHolderDto[];
+        }
+        items.push(...pageItems);
+        // A short page means we've reached the last holder — stop early.
+        // `complete` is already true (the default for a clean run).
+        if (pageItems.length < PAGE_SIZE) break;
       }
-      return { items: [] as TokenHolderDto[] };
+      return { items, complete };
     },
     staleTime: 60 * 1000,
     refetchInterval: 2 * 60 * 1000,
@@ -126,6 +177,12 @@ const TokenTopicFeed = ({
     });
     return map;
   }, [holdersResponse]);
+
+  // Whether the fetched holder set is authoritative enough to filter against:
+  // the query succeeded and pagination either reached the natural end or filled
+  // the MAX_PAGES cap (the top-N holders by balance). Only a mid-pagination
+  // failure leaves it false, so we never hide posts against a broken map.
+  const holdersComplete = holdersLoaded && Boolean((holdersResponse as any)?.complete);
 
   // Check if any posts match the hashtag filter (not just if posts exist)
   const hasFilteredPosts = useMemo(() => posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))), [posts, hashtagRegex]);
@@ -196,11 +253,45 @@ const TokenTopicFeed = ({
 
   // Final list based on holders filter
   const displayPosts: any[] = useMemo(() => {
-    if (holdersOnly && tokenSaleAddress) {
+    // Only hide non-holder posts once we have a complete, authoritative holder
+    // set. While the holder query is still loading, or after a partial/failed
+    // fetch, the map may be missing real holder authors — fall back to all posts
+    // so the feed isn't empty and genuine holder posts aren't hidden.
+    if (holdersOnly && tokenSaleAddress && holdersComplete) {
       return holderPosts;
     }
     return allPosts;
-  }, [holdersOnly, tokenSaleAddress, holderPosts, allPosts]);
+  }, [holdersOnly, tokenSaleAddress, holdersComplete, holderPosts, allPosts]);
+
+  // Only mount the first `visibleCount` posts to keep per-post requests bounded.
+  const visiblePosts = useMemo(() => displayPosts.slice(0, visibleCount), [displayPosts, visibleCount]);
+  const hasMorePosts = displayPosts.length > visibleCount;
+
+  // Reset pagination whenever the source list or filter context changes so we
+  // don't keep a large batch mounted after switching topics/filters.
+  useEffect(() => {
+    setVisibleCount(POSTS_PER_PAGE);
+  }, [topicName, tokenSaleAddress, holdersOnly]);
+
+  // Auto-load the next batch when the sentinel near the bottom scrolls into view.
+  // The observer is recreated whenever `visibleCount` changes so that, if the
+  // sentinel is still within the root margin after a batch mounts (e.g. a tall
+  // viewport), a fresh observe() re-fires and keeps filling until the sentinel
+  // scrolls out of view or there are no more posts. A manual "Load more" button
+  // (rendered below) is the fallback when IntersectionObserver is unavailable.
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMorePosts) return undefined;
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || typeof IntersectionObserver === 'undefined') return undefined;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisibleCount((c) => c + POSTS_PER_PAGE);
+      }
+    }, { rootMargin: '600px 0px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMorePosts, visibleCount]);
 
   // If holders-only yields no posts but there are regular posts, automatically
   // switch to "all posts" and surface a small info banner.
@@ -209,11 +300,19 @@ const TokenTopicFeed = ({
     // Wait until holders have been fetched at least once so we don't
     // prematurely switch to "All posts" before we know if holders exist.
     if (isFetchingHolders) return;
+    // Switch only once we can conclude there are no usable holder posts: either
+    // the holder set is complete and authoritative, or the fetch failed outright
+    // so we have no map to filter with. A partial (incomplete) set is excluded —
+    // it could wrongly read as "no holders" while real holder posts still exist.
+    if (!holdersComplete && !holdersFailed) return;
     if (allPosts.length > 0 && holderPosts.length === 0 && onAutoDisableHoldersOnly) {
       setAutoSwitchedFromHolders(true);
       onAutoDisableHoldersOnly();
     }
-  }, [holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly, autoSwitchedFromHolders, isFetchingHolders]);
+  }, [
+    holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly,
+    autoSwitchedFromHolders, isFetchingHolders, holdersComplete, holdersFailed,
+  ]);
 
   // Reset auto-switch banner state when topic or token context changes
   useEffect(() => {
@@ -227,7 +326,7 @@ const TokenTopicFeed = ({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        <div className="flex items-center justify-between mb-1 px-1 md:px-0">
+        <div className="flex flex-col items-center text-center gap-0.5 mb-1 px-1 md:flex-row md:items-center md:justify-between md:text-left md:px-0">
           <h4 className="m-0 text-white/80 text-sm md:text-[15px] font-medium">
             {t('tokenTopicFeed.loadingPostsFor', { tag: displayTag || `#${baseName.toUpperCase()}` })}
           </h4>
@@ -272,8 +371,10 @@ const TokenTopicFeed = ({
         </div>
       )}
 
-      {/* Info banner when user explicitly selects "Holders only" but there are no holder posts */}
-      {holdersOnly && tokenSaleAddress && allPosts.length > 0 && holderPosts.length === 0 && (
+      {/* Info banner when user explicitly selects "Holders only" but there are no holder posts.
+          Only when the holder set is complete/authoritative — for a partial or failed fetch we
+          fall back to showing all posts, so claiming "no holder posts" would contradict the feed. */}
+      {holdersOnly && tokenSaleAddress && holdersComplete && allPosts.length > 0 && holderPosts.length === 0 && (
         <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">
@@ -330,7 +431,7 @@ const TokenTopicFeed = ({
           </div>
         </div>
       )}
-      {displayPosts.map((item: any) => {
+      {visiblePosts.map((item: any) => {
         let tokenHolderLabel: string | undefined;
         if (tokenSaleAddress) {
           const addr = String(item?.sender_address || '').toLowerCase();
@@ -375,6 +476,21 @@ const TokenTopicFeed = ({
           />
         );
       })}
+      {hasMorePosts && (
+        <div ref={loadMoreRef} className="flex flex-col items-center gap-2 py-3">
+          <div className="w-full" aria-hidden="true">
+            <PostSkeleton />
+          </div>
+          <AeButton
+            onClick={() => setVisibleCount((c) => c + POSTS_PER_PAGE)}
+            variant="ghost"
+            size="medium"
+            className="min-w-24"
+          >
+            Load more
+          </AeButton>
+        </div>
+      )}
       <div className="text-center mt-1.5">
         <AeButton
           onClick={() => {

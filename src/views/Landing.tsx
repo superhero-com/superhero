@@ -233,7 +233,7 @@ export default function Landing() {
       </section>
 
       {/* ============================================================ */}
-      {/*  SUPERHEROID                                                 */}
+      {/*  SuperheroID                                                */}
       {/* ============================================================ */}
       <section id="identity" className="relative py-32 border-t border-white/[0.04]">
         <div className="max-w-[1180px] mx-auto px-6">

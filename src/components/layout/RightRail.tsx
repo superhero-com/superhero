@@ -200,17 +200,9 @@ const RightRail = ({
         <p className="text-[11px] text-[var(--light-font-color)] mb-3">
           {t('buyAeRail.description')}
         </p>
-        <a
-          href="https://www.gate.io/trade/AE_USDT"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center"
-        >
-          {t('buyAeRail.gateButton')}
-        </a>
         <button
           type="button"
-          className="mt-2 w-full bg-transparent border-0 text-xs font-semibold text-cyan-200 cursor-pointer hover:text-white transition-colors"
+          className="block w-full bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center"
           onClick={() => navigate('/get-ae')}
         >
           {t('buyAeRail.moreWays')}

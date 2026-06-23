@@ -1,26 +1,13 @@
-import Avatars from '@dicebear/avatars';
-import sprites from '@dicebear/avatars-avataaars-sprites';
 import * as jdenticon from 'jdenticon';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 
 interface AddressAvatarProps {
   address: string;
-  imageUrl?: string | null;
   size?: number | string;
   className?: string;
   style?: React.CSSProperties;
   borderRadius?: string;
 }
-
-export const AVATAR_CONFIG = {
-  mode: 'exclude',
-  accessoriesChance: 28,
-  facialHairChance: 27,
-  eyes: ['cry', 'close'],
-  eyebrow: ['angry', 'sad', 'unibrow'],
-  mouth: ['concerned', 'vomit', 'disbelief', 'grimace', 'sad', 'scream'],
-  // base64: true,
-};
 
 export const JDENTICON_CONFIG = {
   lightness: {
@@ -36,30 +23,20 @@ export const JDENTICON_CONFIG = {
 
 const AddressAvatar = ({
   address,
-  imageUrl,
   size = 24,
   className = '',
   borderRadius = '50%',
   style = {},
 }: AddressAvatarProps) => {
-  // Generate avatar SVG using dicebear or jdenticon based on address
+  // Generate the avatar SVG deterministically from the address with jdenticon.
   const avatarSvg = useMemo(() => {
-    // Handle undefined/null address
     if (!address) {
       return null;
     }
 
     try {
       const avatarSize = typeof size === 'number' ? size : 128;
-
-      // Use dicebear avataaars for .chain addresses, jdenticon for others
-      if (address.includes('.chain')) {
-        const avatar = new Avatars(sprites, AVATAR_CONFIG);
-
-        return avatar.create(address);
-      }
-      // Use jdenticon for non-.chain addresses
-      return jdenticon.toSvg(address, (avatarSize * 0.95), JDENTICON_CONFIG);
+      return jdenticon.toSvg(address, avatarSize * 0.95, JDENTICON_CONFIG);
     } catch {
       return null;
     }
@@ -93,13 +70,6 @@ const AddressAvatar = ({
     return { initials, backgroundColor, fontSize };
   }, [address, size]);
 
-  const [imageError, setImageError] = useState(false);
-  useEffect(() => {
-    setImageError(false);
-  }, [imageUrl]);
-
-  const showImage = Boolean(imageUrl?.trim()) && !imageError;
-
   const radiusClass = 'rounded-full';
 
   return (
@@ -112,44 +82,27 @@ const AddressAvatar = ({
         ...style,
       }}
     >
-      {(() => {
-        if (showImage) {
-          return (
-            <img
-              src={imageUrl!}
-              alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={() => setImageError(true)}
-            />
-          );
-        }
-        if (avatarSvg) {
-          return (
-            <span
-              className="custom-address w-full h-full object-cover"
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: avatarSvg }}
-            />
-          );
-        }
-        return (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{
-              backgroundColor: fallbackContent.backgroundColor,
-            }}
+      {avatarSvg ? (
+        <span
+          className="custom-address w-full h-full object-cover"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: avatarSvg }}
+        />
+      ) : (
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{
+            backgroundColor: fallbackContent.backgroundColor,
+          }}
+        >
+          <span
+            className="text-white font-semibold"
+            style={{ fontSize: fallbackContent.fontSize }}
           >
-            <span
-              className="text-white font-semibold"
-              style={{ fontSize: fallbackContent.fontSize }}
-            >
-              {fallbackContent.initials}
-            </span>
-          </div>
-        );
-      })()}
+            {fallbackContent.initials}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

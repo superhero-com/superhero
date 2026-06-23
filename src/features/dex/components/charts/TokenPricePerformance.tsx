@@ -294,12 +294,15 @@ const TokenPricePerformance = ({
     }
 
     // Create new series based on chart type
+    const precision = ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6;
     const seriesOptions = {
       color: 'rgb(0, 255, 157)',
       priceFormat: {
         type: 'price' as const,
-        precision: ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6,
-        minMove: 0.01,
+        precision,
+        // minMove must match the precision, otherwise tiny token prices
+        // (e.g. 0.00005) get rounded to the nearest 0.01 and render as 0.000000.
+        minMove: 1 / 10 ** precision,
       },
     };
 

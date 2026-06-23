@@ -1,6 +1,7 @@
 import React, {
   useState, useEffect, useCallback, useMemo,
 } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -64,6 +65,7 @@ function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]
 }
 
 const CollectRewardsCard = () => {
+  const { t } = useTranslation('trending');
   const { sdk, activeAccount } = useAeSdk();
 
   const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<Decimal>(
@@ -213,10 +215,10 @@ const CollectRewardsCard = () => {
         || error?.message?.includes('MINIMUM_OF_4_ACCOUNTS_SHALL_BUY')
       ) {
         setErrorMessage(
-          `Not eligible yet: you need ${MIN_INVITEES} direct invitees who each spent at least ${MIN_SPENT_AE} AE in token sales.`,
+          t('collectRewards.notEligibleError', { invitees: MIN_INVITEES, spent: MIN_SPENT_AE }),
         );
       } else {
-        setErrorMessage(error?.message || 'An error occurred while collecting rewards.');
+        setErrorMessage(error?.message || t('collectRewards.collectError'));
       }
     } finally {
       setCollectingReward(false);
@@ -240,14 +242,14 @@ const CollectRewardsCard = () => {
       return (
         <div className="flex items-center justify-center gap-2">
           <Spinner className="w-4 h-4" />
-          Withdrawing...
+          {t('collectRewards.withdrawing')}
         </div>
       );
     }
-    if (!thresholdReached) return 'Not eligible yet';
-    if (accumulatedRewardsAe.lte(Decimal.ZERO)) return 'No rewards yet';
-    return 'Collect rewards';
-  }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
+    if (!thresholdReached) return t('collectRewards.notEligibleYet');
+    if (accumulatedRewardsAe.lte(Decimal.ZERO)) return t('collectRewards.noRewardsYet');
+    return t('collectRewards.collectRewards');
+  }, [collectingReward, thresholdReached, accumulatedRewardsAe, t]);
 
   return (
     <div className="bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
@@ -263,7 +265,7 @@ const CollectRewardsCard = () => {
       </div>
 
       <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2">
-        Collect your rewards
+        {t('collectRewards.title')}
       </h3>
 
       {/* Content */}
@@ -271,26 +273,18 @@ const CollectRewardsCard = () => {
         {/* Description */}
         <div className="flex-1 space-y-4 text-sm text-white/70">
           <p className="m-0 leading-relaxed">
-            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once
-            {' '}
-            <span className="font-semibold text-white/80">
-              {MIN_INVITEES}
-              {' '}
-              direct invitees
-            </span>
-            {' '}
-            have each spent at least
-            {' '}
-            <span className="font-semibold text-white/80">
-              {MIN_SPENT_AE}
-              {' '}
-              AE
-            </span>
-            {' '}
-            (cumulative).
+            <Trans
+              t={t}
+              i18nKey="collectRewards.description"
+              values={{ invitees: MIN_INVITEES, spent: MIN_SPENT_AE }}
+              components={{
+                invitees: <span className="font-semibold text-white/80" />,
+                spent: <span className="font-semibold text-white/80" />,
+              }}
+            />
           </p>
           <p className="text-xs text-white/60 m-0">
-            Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
+            {t('collectRewards.disclaimer')}
           </p>
         </div>
 
@@ -299,13 +293,9 @@ const CollectRewardsCard = () => {
           {/* Progress */}
           <div className="flex flex-col gap-3 p-4 bg-white/[0.03] rounded-xl border border-white/5">
             <div className="flex justify-between items-center font-semibold text-sm flex-wrap gap-2">
-              <span className="text-white/70">Progress to rewards</span>
+              <span className="text-white/70">{t('collectRewards.progressToRewards')}</span>
               <span className="text-cyan-400 font-bold">
-                {inviteesReachedCount}
-                /
-                {MIN_INVITEES}
-                {' '}
-                reached
+                {t('collectRewards.reached', { reached: inviteesReachedCount, total: MIN_INVITEES })}
               </span>
             </div>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -316,17 +306,15 @@ const CollectRewardsCard = () => {
             </div>
             <div className="font-medium text-white/40 text-xs">
               {thresholdReached
-                ? 'Eligible to withdraw'
-                : `${Math.max(0, MIN_INVITEES - inviteesReachedCount)} more invitees need to reach ${MIN_SPENT_AE} AE`}
+                ? t('collectRewards.eligibleToWithdraw')
+                : t('collectRewards.moreInviteesNeeded', {
+                  remaining: Math.max(0, MIN_INVITEES - inviteesReachedCount),
+                  amount: MIN_SPENT_AE,
+                })}
             </div>
             {!thresholdReached && inviteesInProgressCount > 0 && (
               <div className="text-xs text-white/30">
-                {inviteesInProgressCount}
-                {' '}
-                invitee
-                {inviteesInProgressCount === 1 ? '' : 's'}
-                {' '}
-                still accumulating
+                {t('collectRewards.stillAccumulating', { count: inviteesInProgressCount })}
               </div>
             )}
 
@@ -339,7 +327,9 @@ const CollectRewardsCard = () => {
                         {item.address}
                       </div>
                       <div className="text-xs text-white/40 whitespace-nowrap">
-                        {item.reached ? 'Reached' : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
+                        {item.reached
+                          ? t('collectRewards.inviteeReached')
+                          : t('collectRewards.inviteeProgress', { spent: item.spentAe.toString(2), total: MIN_SPENT_AE })}
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -352,10 +342,7 @@ const CollectRewardsCard = () => {
                 ))}
                 {inviteeProgress.length > 6 && (
                   <div className="text-xs text-white/30">
-                    +
-                    {inviteeProgress.length - 6}
-                    {' '}
-                    more
+                    {t('collectRewards.moreCount', { extra: inviteeProgress.length - 6 })}
                   </div>
                 )}
               </div>
@@ -366,7 +353,7 @@ const CollectRewardsCard = () => {
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2 text-center p-4 bg-white/[0.03] rounded-xl border border-white/5">
               <span className="text-xs text-white/40 font-medium uppercase tracking-wider">
-                Available Rewards
+                {t('collectRewards.availableRewards')}
               </span>
               <LivePriceFormatter
                 aePrice={Decimal.from(accumulatedRewardsAe.toString())}

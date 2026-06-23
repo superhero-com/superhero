@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
@@ -28,13 +29,16 @@ const formatCooldown = (nextCheckAt: Date) => {
   return `${mins}m`;
 };
 
-const checkLabel = (loading: boolean, blocked: boolean, next: Date | null) => {
-  if (loading) return 'Checking…';
-  if (blocked && next) return `Check in ${formatCooldown(next)}`;
-  return 'Check rewards';
+type TFunc = (key: string, options?: Record<string, unknown>) => string;
+
+const checkLabel = (loading: boolean, blocked: boolean, next: Date | null, t: TFunc) => {
+  if (loading) return t('rewardsProgram.check.checking');
+  if (blocked && next) return t('rewardsProgram.check.checkIn', { time: formatCooldown(next) });
+  return t('rewardsProgram.check.checkRewards');
 };
 
 const RewardsProgram = () => {
+  const { t } = useTranslation('trending');
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
   const {
@@ -60,8 +64,8 @@ const RewardsProgram = () => {
   const totalEarned = (isOnboardingPaid ? 50 : 0) + rewardedPostCount * tierAe;
 
   const verifySteps = [
-    { text: 'Link your X account to your on-chain SuperheroID', done: isXLinked },
-    { text: 'Post about Superhero with your linked X account (mention @superhero_chain or link superhero.com)', done: isOnboardingPaid },
+    { text: t('rewardsProgram.milestone1.step1'), done: isXLinked },
+    { text: t('rewardsProgram.milestone1.step2'), done: isOnboardingPaid },
   ];
   const verifyDone = verifySteps.filter((s) => s.done).length;
   const verifyTotal = verifySteps.length;
@@ -97,7 +101,9 @@ const RewardsProgram = () => {
     await runRewardCheck();
   }, [runRewardCheck]);
 
-  const verifyActionLabel = currentVerifyStep === 0 ? 'Link Twitter' : 'Post on X';
+  const verifyActionLabel = currentVerifyStep === 0
+    ? t('rewardsProgram.milestone1.linkTwitter')
+    : t('rewardsProgram.milestone1.postOnX');
 
   // Check button is available once X is linked
   const showCheckButton = isXLinked;
@@ -112,18 +118,16 @@ const RewardsProgram = () => {
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
           <div className="relative">
             <span className="inline-block text-xs font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-4">
-              Rewards Earned
+              {t('rewardsProgram.rewardsEarnedBadge')}
             </span>
             <div className="flex items-center gap-4 mb-3">
               <h2 className="text-2xl md:text-3xl font-bold text-white m-0">
-                {totalEarned}
-                {' '}
-                AE Earned
+                {t('rewardsProgram.aeEarned', { amount: totalEarned })}
               </h2>
               <span className="text-3xl">🎉</span>
             </div>
             <p className="text-sm text-white/50 m-0 max-w-lg">
-              Your AE rewards have been sent automatically to your connected wallet.
+              {t('rewardsProgram.rewardsSentAutomatically')}
             </p>
           </div>
         </div>
@@ -158,7 +162,7 @@ const RewardsProgram = () => {
                 )}
               >
                 <span className="text-base">{verifyStatus === 'completed' ? '✅' : '🎁'}</span>
-                Earn 50 AE
+                {t('rewardsProgram.milestone1.earnBadge')}
               </span>
             </div>
             <div className="mb-4">
@@ -169,31 +173,31 @@ const RewardsProgram = () => {
                   verifyStatus === 'in_progress' && 'bg-cyan-500/15 text-cyan-400',
                 )}
               >
-                {verifyStatus === 'completed' ? 'COMPLETED' : 'IN PROGRESS'}
+                {verifyStatus === 'completed' ? t('rewardsProgram.status.completed') : t('rewardsProgram.status.inProgress')}
               </span>
             </div>
           </div>
           <div className="flex gap-10 flex-col lg:flex-row">
             <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">Link X Account &amp; Post</h3>
-              {/* eslint-disable-next-line max-len */}
+              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">{t('rewardsProgram.milestone1.title')}</h3>
               <p className="text-sm text-white/70 m-0 mb-5 leading-relaxed max-w-xl">
-                Verify ownership of your X account and link it on-chain to your SuperheroID. SuperheroID is a decentralized digital identity smart contract that connects all your social accounts to your wallet address. Your SuperheroID Profile will be set up automatically for you after linking your X account.
-                {' '}
+                {t('rewardsProgram.milestone1.descIdentity')}
                 <br />
                 <br />
-                After linking, make a post about Superhero on X from your account to spread the word and share with your network. The post just needs to mention Superhero — include a
-                {' '}
-                <span className="text-cyan-300">superhero.com</span>
-                {' '}
-                link or tag
-                {' '}
-                <span className="text-cyan-300">@superhero_chain</span>
-                . No referral link required for this step.
-                {' '}
+                <Trans
+                  t={t}
+                  i18nKey="rewardsProgram.milestone1.descPost"
+                  components={{
+                    link: <span className="text-cyan-300" />,
+                    handle: <span className="text-cyan-300" />,
+                  }}
+                />
                 <br />
                 <br />
-                By completing this milestone, you earn 50 AE tokens!
+                {t('rewardsProgram.milestone1.descFollowers')}
+                <br />
+                <br />
+                {t('rewardsProgram.milestone1.descEarn')}
               </p>
             </div>
             <div className="flex-1 mt-10">
@@ -252,7 +256,7 @@ const RewardsProgram = () => {
                     type="button"
                     onClick={handleCheckRewards}
                     disabled={checkButtonDisabled}
-                    title={!canCheck && nextCheckAt ? `Next check available in ${formatCooldown(nextCheckAt)}` : undefined}
+                    title={!canCheck && nextCheckAt ? t('rewardsProgram.check.nextCheckTooltip', { time: formatCooldown(nextCheckAt) }) : undefined}
                     className={cn(
                       'ml-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
                       checkButtonDisabled
@@ -260,7 +264,7 @@ const RewardsProgram = () => {
                         : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white',
                     )}
                   >
-                    {checkLabel(checkLoading, !canCheck, nextCheckAt)}
+                    {checkLabel(checkLoading, !canCheck, nextCheckAt, t)}
                   </button>
                 )}
               </div>
@@ -269,11 +273,11 @@ const RewardsProgram = () => {
                   <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Milestone complete — 50 AE earned
+                  {t('rewardsProgram.milestone1.complete')}
                 </div>
               )}
               {statusLoading && !rewardData && (
-                <p className="mt-3 text-xs text-white/30">Loading your progress…</p>
+                <p className="mt-3 text-xs text-white/30">{t('rewardsProgram.milestone1.loadingProgress')}</p>
               )}
             </div>
           </div>
@@ -299,7 +303,7 @@ const RewardsProgram = () => {
                 )}
               >
                 <span className="text-base">{postStatus === 'completed' ? '✅' : '🎁'}</span>
-                Earn 10~30 AE Per Post Daily
+                {t('rewardsProgram.milestone2.earnBadge')}
               </span>
             </div>
             <div className="mb-4">
@@ -311,46 +315,33 @@ const RewardsProgram = () => {
                   postStatus === 'locked' && 'bg-white/10 text-white/40',
                 )}
               >
-                {postStatus === 'completed' && 'COMPLETED'}
-                {postStatus === 'in_progress' && 'IN PROGRESS'}
-                {postStatus === 'locked' && 'LOCKED'}
+                {postStatus === 'completed' && t('rewardsProgram.status.completed')}
+                {postStatus === 'in_progress' && t('rewardsProgram.status.inProgress')}
+                {postStatus === 'locked' && t('rewardsProgram.status.locked')}
               </span>
             </div>
           </div>
           <div className="flex gap-10 flex-col lg:flex-row">
             <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">Post on X &amp; Earn</h3>
-              {/* eslint-disable-next-line max-len */}
+              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">{t('rewardsProgram.milestone2.title')}</h3>
               <p className="text-sm text-white/70 m-0 mb-5 leading-relaxed max-w-xl">
-                Publish posts about Superhero from your linked X account to spread the word and share with your network. Each post must include your unique referral link in the post content. Your unique referral link will automatically be created when you click &quot;Post&quot;.
-
-                {' '}
+                {t('rewardsProgram.milestone2.desc')}
                 <br />
                 <br />
-                Less than 100 followers: not eligible
-                {' '}
+                {t('rewardsProgram.milestone2.tierIneligible')}
                 <br />
-                100 - 10k followers: 10 AE per post
-                {' '}
+                {t('rewardsProgram.milestone2.tier1')}
                 <br />
-                10k - 1M followers: 20 AE per post
-                {' '}
+                {t('rewardsProgram.milestone2.tier2')}
                 <br />
-                More than 1M followers: 30 AE per post
+                {t('rewardsProgram.milestone2.tier3')}
               </p>
               {tierAe > 0 && (
                 <p className="text-sm text-cyan-400 font-medium">
-                  Your tier:
-                  {' '}
-                  {tierAe}
-                  {' '}
-                  AE per post
+                  {t('rewardsProgram.milestone2.yourTier', { amount: tierAe })}
                   {rewardData?.follower_count != null && (
                     <span className="text-white/40 font-normal ml-1">
-                      (
-                      {rewardData.follower_count.toLocaleString()}
-                      {' '}
-                      followers)
+                      {t('rewardsProgram.milestone2.yourTierFollowers', { followers: rewardData.follower_count.toLocaleString() })}
                     </span>
                   )}
                 </p>
@@ -367,19 +358,13 @@ const RewardsProgram = () => {
                   )}
                 >
                   <span className="text-base">{postStatus === 'completed' ? '✅' : '🎁'}</span>
-                  Earn 50 AE on 10-Day Streak
+                  {t('rewardsProgram.milestone2.streakBadge')}
                 </span>
               </div>
 
               {streakDays > 0 && (
                 <p className="text-xs text-cyan-300/70 text-right mb-2">
-                  Current streak:
-                  {' '}
-                  {streakDays}
-                  /
-                  {STREAK_TOTAL}
-                  {' '}
-                  days
+                  {t('rewardsProgram.milestone2.currentStreak', { days: streakDays, total: STREAK_TOTAL })}
                 </p>
               )}
 
@@ -413,7 +398,7 @@ const RewardsProgram = () => {
                           : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0',
                       )}
                     >
-                      {linkLoading ? 'Opening wallet…' : 'Post on X'}
+                      {linkLoading ? t('rewardsProgram.milestone2.openingWallet') : t('rewardsProgram.milestone2.postOnX')}
                       {!linkLoading && <span className="text-base">→</span>}
                     </button>
                     {showCheckButton && (
@@ -421,7 +406,7 @@ const RewardsProgram = () => {
                         type="button"
                         onClick={handleCheckRewards}
                         disabled={checkButtonDisabled}
-                        title={!canCheck && nextCheckAt ? `Next check available in ${formatCooldown(nextCheckAt)}` : undefined}
+                        title={!canCheck && nextCheckAt ? t('rewardsProgram.check.nextCheckTooltip', { time: formatCooldown(nextCheckAt) }) : undefined}
                         className={cn(
                           'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
                           checkButtonDisabled
@@ -429,25 +414,21 @@ const RewardsProgram = () => {
                             : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white',
                         )}
                       >
-                        {checkLabel(checkLoading, !canCheck, nextCheckAt)}
+                        {checkLabel(checkLoading, !canCheck, nextCheckAt, t)}
                       </button>
                     )}
                   </>
                 )}
               </div>
               <p className="text-sm text-white/70 m-0 my-5 leading-relaxed max-w-xl">
-                For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10 day consecutive streak will earn you 50 AE extra, so keep posting and engaging with the community.
+                {t('rewardsProgram.milestone2.streakInfo')}
               </p>
               {postStatus === 'completed' && (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium">
                   <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Milestone complete —
-                  {' '}
-                  {rewardedPostCount * tierAe}
-                  {' '}
-                  AE earned
+                  {t('rewardsProgram.milestone2.complete', { amount: rewardedPostCount * tierAe })}
                 </div>
               )}
             </div>

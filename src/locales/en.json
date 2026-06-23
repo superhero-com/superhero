@@ -1819,7 +1819,12 @@
       "step1": "Generate invite links by funding a one-time AE reward per invite",
       "step2": "Share links with friends and community",
       "step3": "After 4 unique invitees buy tokens, you can withdraw accumulated rewards",
-      "step4": "Withdraw rewards anytime after eligibility"
+      "step4": "Withdraw rewards anytime after eligibility",
+      "heroBrand": "Superhero",
+      "heroRewards": "Rewards",
+      "referAndEarn": "Refer & Earn",
+      "yourInvitations": "Your Invitations",
+      "disclaimer": "The Superhero reward program rewards users for creating content on other social media platforms (like X) with backlinks and/or invite links, referring new users to the platform. Rewards will be distributed in the form of ae tokens. Eligibility and rewards depend on on-chain activity, are not guaranteed and can be paused at any time without notice or liability. The right is reserved to disqualify any user from the program. Users from blacklisted countries are not eligible for rewards. By participating in the program, users agree to these terms and conditions. Rewards sent may be subject to tax reporting. Users are responsible for any tax obligations arising from receiving rewards."
     },
     "leaderboardFilters": {
       "chooseFromCalendar": "Choose {{label}} from calendar",
@@ -1842,6 +1847,27 @@
       "amountPerInvite": "Amount per invite (AE)",
       "amountHint": "This amount will be claimable by the recipient who redeems the link.",
       "confirmCopiedHint": "Please confirm you copied the links to enable closing this dialog."
+    },
+    "collectRewards": {
+      "title": "Collect your rewards",
+      "description": "Rewards accumulate as your direct invitees participate in token sales. You can withdraw once <invitees>{{invitees}} direct invitees</invitees> have each spent at least <spent>{{spent}} AE</spent> (cumulative).",
+      "disclaimer": "Note: eligibility and rewards depend on on-chain activity and are not guaranteed.",
+      "progressToRewards": "Progress to rewards",
+      "reached": "{{reached}}/{{total}} reached",
+      "eligibleToWithdraw": "Eligible to withdraw",
+      "moreInviteesNeeded": "{{remaining}} more invitees need to reach {{amount}} AE",
+      "stillAccumulating_one": "{{count}} invitee still accumulating",
+      "stillAccumulating_other": "{{count}} invitees still accumulating",
+      "inviteeReached": "Reached",
+      "inviteeProgress": "{{spent}} / {{total}} AE",
+      "moreCount": "+{{extra}} more",
+      "availableRewards": "Available Rewards",
+      "withdrawing": "Withdrawing...",
+      "notEligibleYet": "Not eligible yet",
+      "noRewardsYet": "No rewards yet",
+      "collectRewards": "Collect rewards",
+      "notEligibleError": "Not eligible yet: you need {{invitees}} direct invitees who each spent at least {{spent}} AE in token sales.",
+      "collectError": "An error occurred while collecting rewards."
     },
     "creationBanner": {
       "statusInProgress": "Token creation in progress",
@@ -1910,6 +1936,53 @@
       "showingRange": "Showing {{from}} to {{to}} of {{total}} holders",
       "previous": "Previous",
       "next": "Next"
+    },
+    "rewardsProgram": {
+      "rewardsEarnedBadge": "Rewards Earned",
+      "aeEarned": "{{amount}} AE Earned",
+      "rewardsSentAutomatically": "Your AE rewards have been sent automatically to your connected wallet.",
+      "status": {
+        "completed": "COMPLETED",
+        "inProgress": "IN PROGRESS",
+        "locked": "LOCKED"
+      },
+      "check": {
+        "checking": "Checking…",
+        "checkIn": "Check in {{time}}",
+        "checkRewards": "Check rewards",
+        "nextCheckTooltip": "Next check available in {{time}}"
+      },
+      "milestone1": {
+        "earnBadge": "Earn 50 AE",
+        "title": "Link X Account & Post",
+        "descIdentity": "Verify ownership of your X account and link it on-chain to your SuperheroID. SuperheroID is a decentralized digital identity smart contract that connects all your social accounts to your wallet address. Your SuperheroID Profile will be set up automatically for you after linking your X account.",
+        "descPost": "After linking, make a post about Superhero on X from your account to spread the word and share with your network. The post just needs to mention Superhero — include a <link>superhero.com</link> link or tag <handle>@superhero_chain</handle>.",
+        "descFollowers": "Your X account must have at least 100 followers to be eligible for this reward.",
+        "descEarn": "By completing this milestone, you earn 50 AE tokens!",
+        "step1": "Link your X account to your on-chain SuperheroID",
+        "step2": "Post about Superhero with your linked X account (mention @superhero_chain or link superhero.com)",
+        "linkTwitter": "Link Twitter",
+        "postOnX": "Post on X",
+        "complete": "Milestone complete — 50 AE earned",
+        "loadingProgress": "Loading your progress…"
+      },
+      "milestone2": {
+        "earnBadge": "Earn 10~30 AE Per Post Daily",
+        "title": "Post on X & Earn",
+        "desc": "Publish posts about Superhero from your linked X account to spread the word and share with your network. Each post must include your unique referral link in the post content. Your unique referral link will automatically be created when you click \"Post\".",
+        "tierIneligible": "Less than 100 followers: not eligible",
+        "tier1": "100 - 10k followers: 10 AE per post",
+        "tier2": "10k - 1M followers: 20 AE per post",
+        "tier3": "More than 1M followers: 30 AE per post",
+        "yourTier": "Your tier: {{amount}} AE per post",
+        "yourTierFollowers": "({{followers}} followers)",
+        "streakBadge": "Earn 50 AE on 10-Day Streak",
+        "currentStreak": "Current streak: {{days}}/{{total}} days",
+        "openingWallet": "Opening wallet…",
+        "postOnX": "Post on X",
+        "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10 day consecutive streak will earn you 50 AE extra, so keep posting and engaging with the community.",
+        "complete": "Milestone complete — {{amount}} AE earned"
+      }
     }
   },
   "errors": {

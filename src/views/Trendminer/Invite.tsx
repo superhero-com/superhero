@@ -4,6 +4,7 @@
   no-empty
 */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CollectRewardsCard,
   InvitationList,
@@ -13,9 +14,8 @@ import {
 import Shell from '../../components/layout/Shell';
 import { useAeSdk } from '../../hooks';
 
-const DISCLAIMER_TEXT = 'The Superhero reward program rewards users for creating content on other social media platforms (like X) with backlinks and/or invite links, referring new users to the platform. Rewards will be distributed in the form of ae tokens. Eligibility and rewards depend on on-chain activity, are not guaranteed and can be paused at any time without notice or liability. The right is reserved to disqualify any user from the program. Users from blacklisted countries are not eligible for rewards. By participating in the program, users agree to these terms and conditions. Rewards sent may be subject to tax reporting. Users are responsible for any tax obligations arising from receiving rewards.';
-
 export default function Invite() {
+  const { t } = useTranslation('trending');
   const { activeAccount } = useAeSdk();
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try {
@@ -32,10 +32,10 @@ export default function Invite() {
         <div className="mb-8 py-2">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold m-0 leading-tight">
             <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              Superhero
+              {t('inviteView.heroBrand')}
               {' '}
             </span>
-            <span className="text-white">Rewards</span>
+            <span className="text-white">{t('inviteView.heroRewards')}</span>
           </h1>
 
         </div>
@@ -44,7 +44,7 @@ export default function Invite() {
 
         <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
           <h3 className="mb-5 m-1 text-2xl md:text-2xl font-bold text-white">
-            Refer & Earn
+            {t('inviteView.referAndEarn')}
           </h3>
           {/* Info Card (existing, dismissible) */}
           {showInfo && (
@@ -72,15 +72,15 @@ export default function Invite() {
                   </svg>
                 </div>
                 <h3 className="m-0 text-xl md:text-2xl font-bold text-white">
-                  How it works
+                  {t('inviteView.howItWorks')}
                 </h3>
               </div>
               <div className="grid gap-3">
                 {[
-                  'Generate invite links by funding a one-time AE reward per invite',
-                  'Share links with friends and community',
-                  'After 4 unique invitees buy tokens, you can withdraw accumulated rewards',
-                  'Withdraw rewards anytime after eligibility',
+                  t('inviteView.step1'),
+                  t('inviteView.step2'),
+                  t('inviteView.step3'),
+                  t('inviteView.step4'),
                 ].map((text, i) => (
                   <div key={text} className="flex items-start gap-3 p-2 rounded-lg">
                     <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-semibold text-white/50 flex-shrink-0 text-xs">
@@ -106,7 +106,7 @@ export default function Invite() {
         {activeAccount && (
           <div className="mb-12">
             <h3 className="text-xl md:text-2xl font-bold m-0 mb-6 text-white">
-              Your Invitations
+              {t('inviteView.yourInvitations')}
             </h3>
             <InvitationList />
           </div>
@@ -115,7 +115,7 @@ export default function Invite() {
         {/* ========== Disclaimer ========== */}
         <div className="border-t border-white/10 mt-10 pt-6 pb-8">
           <p className="text-xs text-white/50 leading-relaxed m-0">
-            {DISCLAIMER_TEXT}
+            {t('inviteView.disclaimer')}
           </p>
         </div>
       </div>

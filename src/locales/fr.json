@@ -1627,7 +1627,7 @@
         "daoTreasuryTitle": "Trésorerie DAO",
         "daoTreasuryBody": "Une partie de chaque transaction est versée dans une trésorerie DAO contrôlée par les détenteurs de jetons. Cette trésorerie peut financer des initiatives communautaires via des votes de gouvernance on-chain, permettant à la communauté de décider collectivement de la manière de développer le jeton.",
         "feesTitle": "Frais et affiliations",
-        "feesBody": "Lors de la création d'un jeton, vous pouvez définir un montant d'achat initial. Un petit frais de protocole (5 %) est appliqué pour soutenir la plateforme et les récompenses en jeton de protocole. Le reste est versé dans la courbe de liaison, garantissant une découverte équitable du prix dès le départ."
+        "feesBody": "Lors de la création d'un jeton, vous pouvez définir un montant d'achat initial. Un petit frais de protocole (1 %) est appliqué pour soutenir la plateforme et les récompenses en jeton de protocole. Le reste est versé dans la courbe de liaison, garantissant une découverte équitable du prix dès le départ."
       },
       "errors": {
         "allowedCharsRange": "Seuls les caractères dans la plage « {{chars}} » sont autorisés.",

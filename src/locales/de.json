@@ -1627,7 +1627,7 @@
         "daoTreasuryTitle": "DAO-Treasury",
         "daoTreasuryBody": "Ein Teil jeder Transaktion fließt in eine DAO-Treasury, die von den Token-Inhabern kontrolliert wird. Diese Treasury kann Community-Initiativen über On-Chain-Governance-Abstimmungen finanzieren, sodass die Community gemeinsam entscheiden kann, wie der Token wachsen und sich entwickeln soll.",
         "feesTitle": "Gebühren & Affiliations",
-        "feesBody": "Beim Erstellen eines Tokens können Sie einen anfänglichen Kaufbetrag festlegen. Eine kleine Protokollgebühr (5 %) wird erhoben, um die Plattform und die Protokoll-Token-Belohnungen zu unterstützen. Der Rest fließt in die Bonding Curve und sorgt von Anfang an für eine faire Preisfindung."
+        "feesBody": "Beim Erstellen eines Tokens können Sie einen anfänglichen Kaufbetrag festlegen. Eine kleine Protokollgebühr (1 %) wird erhoben, um die Plattform und die Protokoll-Token-Belohnungen zu unterstützen. Der Rest fließt in die Bonding Curve und sorgt von Anfang an für eine faire Preisfindung."
       },
       "errors": {
         "allowedCharsRange": "Es sind nur Zeichen im Bereich \"{{chars}}\" erlaubt.",

@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useMemo, useState, ReactNode,
+  useCallback, useMemo, useRef, useState, ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import { ShieldCheck, X } from 'lucide-react';
 import { CONFIG } from '@/config';
 import { cn } from '@/lib/utils';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+
+// Max finger travel (px) still treated as a tap rather than a scroll.
+const TAP_MOVE_THRESHOLD = 10;
 
 type BlockchainInfoPopoverProps = {
   txHash: string;
@@ -40,6 +43,45 @@ export const BlockchainInfoPopover = ({
 }: BlockchainInfoPopoverProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  // On touch devices Radix's DropdownMenuTrigger opens on pointerdown, so a
+  // finger that's really starting a scroll over this button pops the menu open.
+  // For touch we suppress Radix's open-on-pointerdown and only toggle on a
+  // genuine tap: a pointerup with no meaningful movement and no pointercancel
+  // (the browser fires pointercancel the moment a scroll begins). Mouse input
+  // keeps Radix's default behaviour.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchScrolledRef = useRef(false);
+
+  const handleTriggerPointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (e.pointerType !== 'touch') return;
+    e.preventDefault(); // stop Radix from opening on pointerdown
+    touchStartRef.current = { x: e.clientX, y: e.clientY };
+    touchScrolledRef.current = false;
+  }, []);
+
+  const handleTriggerPointerMove = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch' || !touchStartRef.current) return;
+    const dx = Math.abs(e.clientX - touchStartRef.current.x);
+    const dy = Math.abs(e.clientY - touchStartRef.current.y);
+    if (dx > TAP_MOVE_THRESHOLD || dy > TAP_MOVE_THRESHOLD) {
+      touchScrolledRef.current = true;
+    }
+  }, []);
+
+  const handleTriggerPointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return;
+    const wasTap = touchStartRef.current && !touchScrolledRef.current;
+    touchStartRef.current = null;
+    if (wasTap) setOpen((prev) => !prev);
+  }, []);
+
+  const handleTriggerPointerCancel = useCallback(() => {
+    // Scroll/gesture took over — never treat this as a tap.
+    touchStartRef.current = null;
+    touchScrolledRef.current = true;
+  }, []);
   // Only fetch the on-chain status while the popover is open — the status is
   // only shown inside the dropdown, so fetching on mount would flood the feed
   // with one transaction request per visible post.
@@ -76,6 +118,10 @@ export const BlockchainInfoPopover = ({
               : cn('inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20', className),
           )}
           onClick={(e) => e.stopPropagation()}
+          onPointerDown={handleTriggerPointerDown}
+          onPointerMove={handleTriggerPointerMove}
+          onPointerUp={handleTriggerPointerUp}
+          onPointerCancel={handleTriggerPointerCancel}
           aria-label={t('social.blockchainInfo.label')}
           title={t('social.blockchainInfo.label')}
         >

@@ -71,7 +71,8 @@ const TokenPricePerformance = ({
     if (!chartContainerRef.current) return () => {};
 
     const chart = createChart(chartContainerRef.current, {
-      height: 400,
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#ffffff',
@@ -103,11 +104,13 @@ const TokenPricePerformance = ({
 
     chartRef.current = chart;
 
-    // Handle resize
+    // Handle resize - keep both width and height in sync with the container so
+    // the time (date) axis is never clipped by the card's fixed height/padding.
     const handleResize = () => {
       if (chartContainerRef.current && chart) {
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
         });
       }
     };
@@ -291,12 +294,15 @@ const TokenPricePerformance = ({
     }
 
     // Create new series based on chart type
+    const precision = ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6;
     const seriesOptions = {
       color: 'rgb(0, 255, 157)',
       priceFormat: {
         type: 'price' as const,
-        precision: ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6,
-        minMove: 0.01,
+        precision,
+        // minMove must match the precision, otherwise tiny token prices
+        // (e.g. 0.00005) get rounded to the nearest 0.01 and render as 0.000000.
+        minMove: 1 / 10 ** precision,
       },
     };
 

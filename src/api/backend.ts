@@ -389,6 +389,10 @@ export type XPostingRewardStatus = {
   tier_amount_ae?: number;
   follower_count?: number;
   referral_link?: string | null;
+  // Human-readable reason a reward was NOT sent, returned even on a successful
+  // (HTTP 200) recheck — e.g. below the follower minimum, the X identity is
+  // already rewarded, or the payout failed. Null when there is nothing to report.
+  error?: string | null;
 };
 
 /**

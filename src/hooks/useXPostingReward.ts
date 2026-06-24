@@ -21,6 +21,10 @@ const isUserRejection = (err: unknown) => {
   );
 };
 
+// The API client wraps backend messages as "Superhero API error (NNN): <reason>".
+// Strip that prefix so the user sees just the human-readable reason.
+const cleanErrorMessage = (raw: string): string => raw.replace(/^Superhero API error \(\d+\):\s*/, '').trim() || raw;
+
 export function useXPostingReward() {
   const {
     activeAccount,
@@ -56,6 +60,12 @@ export function useXPostingReward() {
   const [checkLoading, setCheckLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Surface a reward failure as the persistent banner (error state) so the user
+  // sees why the reward was not sent, shown as the red wording in the header.
+  const surfaceError = useCallback((message: string) => {
+    setError(cleanErrorMessage(message));
+  }, []);
 
   // Track whether status has been loaded at least once for this address.
   const loadedForRef = useRef<string | undefined>(undefined);
@@ -109,13 +119,13 @@ export function useXPostingReward() {
       return result;
     } catch (err) {
       if (!isUserRejection(err)) {
-        setError(err instanceof Error ? err.message : 'Failed to get referral link');
+        surfaceError(err instanceof Error ? err.message : 'Failed to get referral link');
       }
       return null;
     } finally {
       setLinkLoading(false);
     }
-  }, [activeAccount, buildSignedProof]);
+  }, [activeAccount, buildSignedProof, surfaceError]);
 
   const runRewardCheck = useCallback(async (): Promise<XPostingRewardStatus | null> => {
     if (!activeAccount) {
@@ -129,16 +139,20 @@ export function useXPostingReward() {
       const updated = await SuperheroApi.runXPostingRewardRecheck(activeAccount, proof);
       setStatus(updated);
       if (updated.referral_link) setReferralLink(updated.referral_link);
+      // A successful (HTTP 200) recheck still reports via `error` why no reward
+      // was sent (below follower minimum, identity already rewarded, payout
+      // failed, etc.). Surface it instead of silently showing "no change".
+      if (updated.error) surfaceError(updated.error);
       return updated;
     } catch (err) {
       if (!isUserRejection(err)) {
-        setError(err instanceof Error ? err.message : 'Reward check failed');
+        surfaceError(err instanceof Error ? err.message : 'Reward check failed');
       }
       return null;
     } finally {
       setCheckLoading(false);
     }
-  }, [activeAccount, buildSignedProof]);
+  }, [activeAccount, buildSignedProof, surfaceError]);
 
   const nextCheckAt = status?.next_check_allowed_at
     ? new Date(status.next_check_allowed_at)

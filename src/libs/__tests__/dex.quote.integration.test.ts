@@ -28,7 +28,7 @@ type FactoryContractApi = ContractMethodsBase & {
 
 async function initSdk(): Promise<AeSdk | null> {
   try {
-    const nodeUrl = (import.meta as any).env?.VITE_NODE_URL || 'https://mdw.wordcraft.fun';
+    const nodeUrl = (import.meta as any).env?.VITE_NODE_URL || 'https://mainnet.aeternity.io';
     const sdk = new AeSdk({ nodes: [{ name: 'node', instance: new Node(nodeUrl) }] });
     return sdk;
   } catch {

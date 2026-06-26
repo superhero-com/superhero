@@ -201,9 +201,16 @@ export default function TokenDetail() {
                   {t('explore.price')}
                 </div>
                 <div className="text-2xl font-extrabold text-white mb-1 font-mono">
-                  <PriceDataFormatter
-                    priceData={tokenDetails?.price}
-                  />
+                  {tokenDetails && tokenDetails.price?.ae == null ? (
+                    <span
+                      className="text-base font-semibold text-white/50"
+                      title="This token has no liquidity pool against AE, so an AE price can't be determined."
+                    >
+                      No AE price
+                    </span>
+                  ) : (
+                    <PriceDataFormatter priceData={tokenDetails?.price} />
+                  )}
                 </div>
                 {tokenDetails?.summary?.change?.[selectedPeriod]
                   ?.percentage && (
@@ -481,9 +488,9 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {circulatingSupply ? (
+                  {circulatingSupply && tokenDetails?.price?.ae != null ? (
                     <>
-                      {circulatingSupply.mul(Decimal.from(tokenDetails?.price?.ae || 0)).shorten()}
+                      {circulatingSupply.mul(Decimal.from(tokenDetails.price.ae)).shorten()}
                       {' '}
                       AE
                     </>
@@ -541,8 +548,6 @@ export default function TokenDetail() {
                 availableGraphTypes={[
                   { type: 'Price', text: t('explore.price') },
                   { type: 'Volume', text: t('explore.volume') },
-                  { type: 'TVL', text: t('explore.tvl') },
-                  { type: 'Fees', text: t('explore.fees') },
                 ]}
                 initialChart={{ type: 'Price', text: t('explore.price') }}
                 initialTimeFrame="1Y"

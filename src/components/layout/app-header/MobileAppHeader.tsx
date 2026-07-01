@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AddressAvatar from '../../AddressAvatar';
 import { HeaderLogo } from '../../../icons';
+import { NotificationBell } from '../../../features/notifications';
 import { TokensService } from '../../../api/generated/services/TokensService';
+import { toTokenLookupParam } from '../../../utils/address';
 import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
@@ -47,7 +49,7 @@ const MobileAppHeader = () => {
     queryKey: ['TokensService.findByAddress', tokenNameParam],
     queryFn: async () => {
       if (!tokenNameParam) return null;
-      return TokensService.findByAddress({ address: tokenNameParam.toUpperCase() });
+      return TokensService.findByAddress({ address: toTokenLookupParam(tokenNameParam) });
     },
     enabled: Boolean(tokenNameParam),
     staleTime: 60 * 1000,
@@ -137,6 +139,7 @@ const MobileAppHeader = () => {
               <HeaderLogo className="h-7 w-auto" />
             </Link>
             <div className="flex-grow" />
+            <NotificationBell />
             {activeAccount ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

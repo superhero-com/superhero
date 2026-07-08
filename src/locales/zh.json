@@ -128,7 +128,18 @@
       "xCallbackSuccess": "X 账户关联成功。",
       "xCallbackGoToProfile": "前往个人资料",
       "transactionFailed": "交易失败",
-      "copiedExclaim": "已复制！"
+      "copiedExclaim": "已复制！",
+      "linkingXAccount": "正在关联您的 X 账户…",
+      "xCallbackUnlinkSuccess": "X 账户已成功取消关联。",
+      "xCallbackLinkingTitle": "关联您的 X 账户",
+      "xCallbackVerifyingTitle": "正在通过 X 验证",
+      "xCallbackReadyDesc": "在您的钱包中签署关联消息，将您的 X 账户连接到链上 SuperheroID。",
+      "xCallbackConfirmButton": "在钱包中签署以关联",
+      "xCallbackSigning": "等待您的钱包响应…",
+      "xCallbackBlockedHint": "如果您的钱包未能打开，可能已被拦截。请点击按钮重试。",
+      "xCallbackRetry": "重试",
+      "xCallbackDoneTitle": "X 账户已关联",
+      "xCallbackGoBack": "返回"
     },
     "portfolio": {
       "portfolioValue": "投资组合价值",
@@ -1738,7 +1749,12 @@
       "step1": "为每个邀请注资一次性 AE 奖励以生成邀请链接",
       "step2": "与好友和社区分享链接",
       "step3": "当 4 名独立受邀者购买代币后，你即可提取累积的奖励",
-      "step4": "在符合资格后随时提取奖励"
+      "step4": "在符合资格后随时提取奖励",
+      "heroBrand": "Superhero",
+      "heroRewards": "奖励",
+      "referAndEarn": "邀请好友，赚取奖励",
+      "yourInvitations": "您的邀请",
+      "disclaimer": "Superhero 奖励计划会对在其他社交媒体平台（如 X）上创作内容并附带反向链接和/或邀请链接、邀请新用户加入平台的用户予以奖励。奖励将以 AE 代币的形式发放。资格认定和奖励取决于链上活动，不予保证，且可随时暂停，恕不另行通知，亦不承担任何责任。我们保留取消任何用户参与资格的权利。来自黑名单国家的用户不具备奖励资格。参与本计划即表示用户同意上述条款与条件。所发放的奖励可能须进行税务申报，用户须自行承担因收取奖励而产生的一切税务义务。"
     },
     "leaderboardHeading": "交易排行榜",
     "leaderboardHeadingDescription": "发现按链上表现排名的最活跃 Superhero 交易者。提升你的交易量、稳定性和趋势所有权，攀升排行榜，让你的钱包成为公开的链上业绩记录。",
@@ -1852,6 +1868,86 @@
     },
     "tokenLineChart": {
       "alt": "代币折线图"
+    },
+    "collectRewards": {
+      "title": "领取您的奖励",
+      "description": "随着您的直接受邀者参与代币销售，奖励将持续累积。当 <invitees>{{invitees}} 位直接受邀者</invitees> 各自累计消费至少 <spent>{{spent}} AE</spent> 后，您即可提取奖励（累计计算）。",
+      "disclaimer": "注意：资格认定和奖励取决于链上活动，不予保证。",
+      "progressToRewards": "奖励进度",
+      "reached": "已达成 {{reached}}/{{total}}",
+      "eligibleToWithdraw": "有资格提取",
+      "moreInviteesNeeded": "还需 {{remaining}} 位受邀者达到 {{amount}} AE",
+      "stillAccumulating_one": "{{count}} 位受邀者仍在累积",
+      "stillAccumulating_other": "{{count}} 位受邀者仍在累积",
+      "inviteeReached": "已达成",
+      "inviteeProgress": "{{spent}} / {{total}} AE",
+      "moreCount": "另有 +{{extra}} 位",
+      "availableRewards": "可用奖励",
+      "withdrawing": "提取中...",
+      "notEligibleYet": "暂无资格",
+      "noRewardsYet": "暂无奖励",
+      "collectRewards": "领取奖励",
+      "notEligibleError": "暂无资格：您需要 {{invitees}} 位直接受邀者，每人在代币销售中各自消费至少 {{spent}} AE。",
+      "collectError": "领取奖励时发生错误。"
+    },
+    "rewardsProgram": {
+      "rewardsEarnedBadge": "已获奖励",
+      "aeEarned": "已获得 {{amount}} AE",
+      "rewardsSentAutomatically": "您的 AE 奖励已自动发送至您绑定的钱包。",
+      "status": {
+        "completed": "已完成",
+        "inProgress": "进行中",
+        "locked": "已锁定"
+      },
+      "check": {
+        "checking": "检查中…",
+        "checkIn": "{{time}} 后检查",
+        "checkRewards": "查看奖励",
+        "nextCheckTooltip": "{{time}} 后可进行下次检查"
+      },
+      "milestone1": {
+        "earnBadge": "获得 50 AE",
+        "title": "关联 X 账户并发帖",
+        "descIdentity": "验证您的 X 账户所有权，并将其链上关联至您的 SuperheroID。SuperheroID 是一种去中心化的数字身份智能合约，可将您的所有社交账户连接到您的钱包地址。关联 X 账户后，您的 SuperheroID 主页将自动为您创建。",
+        "descPost": "关联后，从您的账户在 X 上发布一条关于 Superhero 的帖子，以传播消息并与您的人脉分享。帖子只需提及 Superhero——附上 <link>superhero.com</link> 链接或标记 <handle>@superhero_chain</handle>。",
+        "descFollowers": "您的 X 账户须拥有至少 100 位关注者方可获得此奖励。",
+        "descEarn": "完成此里程碑，即可获得 50 AE 代币！",
+        "step1": "将您的 X 账户关联至链上 SuperheroID",
+        "step2": "使用已关联的 X 账户发布关于 Superhero 的帖子（提及 @superhero_chain 或附上 superhero.com 链接）",
+        "linkTwitter": "关联 Twitter",
+        "postOnX": "在 X 上发帖",
+        "complete": "里程碑完成——已获得 50 AE",
+        "loadingProgress": "正在加载您的进度…"
+      },
+      "milestone2": {
+        "earnBadge": "每日每帖获得 10~30 AE",
+        "title": "在 X 上发帖并赚取奖励",
+        "desc": "从您已关联的 X 账户发布关于 Superhero 的帖子，以传播消息并与您的人脉分享。每篇帖子须在内容中包含您的专属邀请链接。点击“发帖”时，您的专属邀请链接将自动生成。",
+        "tierIneligible": "不足 100 位关注者：不具备资格",
+        "tier1": "100 - 1 万关注者：每帖 10 AE",
+        "tier2": "1 万 - 100 万关注者：每帖 20 AE",
+        "tier3": "超过 100 万关注者：每帖 30 AE",
+        "yourTier": "您的等级：每帖 {{amount}} AE",
+        "yourTierFollowers": "（{{followers}} 位关注者）",
+        "streakBadge": "连续 10 天发帖额外获得 50 AE",
+        "currentStreak": "当前连续天数：{{days}}/{{total}} 天",
+        "openingWallet": "正在打开钱包…",
+        "postOnX": "在 X 上发帖",
+        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每日发帖将额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "complete": "里程碑完成——已获得 {{amount}} AE"
+      }
+    },
+    "onboarding": {
+      "badge": "立即开始",
+      "title": "设置您的 Superhero 账户",
+      "subtitle": "完成以下步骤，即可开始赚取 AE 奖励。",
+      "step1": "关联您的 X 账户",
+      "step2": "发布关于 Superhero 的帖子，获得 50 AE",
+      "progress": "已完成 {{done}}/{{total}} 个步骤",
+      "continue": "继续设置",
+      "connectX": "连接 X",
+      "postOnX": "发帖赚取",
+      "done": "全部完成！"
     }
   },
   "errors": {
@@ -2358,7 +2454,23 @@
     "qGlossaryLi1": "AE：aeternity 区块链的原生币。",
     "qGlossaryLi2": "销售地址：在曲线上铸造/销毁代币的合约。",
     "qGlossaryLi3": "DAO：代币社区的链上金库 + 治理。",
-    "qGlossaryLi4": "交易哈希：交易 ID；可在浏览器中查看以进行验证。"
+    "qGlossaryLi4": "交易哈希：交易 ID；可在浏览器中查看以进行验证。",
+    "categoryRewardsProgram": "奖励计划",
+    "categoryNameClaims": "名称申领",
+    "qRewardsProgramTitle": "什么是 Superhero 奖励计划？",
+    "qRewardsProgramAnswer": "Superhero 奖励计划让您通过完成里程碑来赚取 AE 代币：验证您的 X（Twitter）账户、邀请新用户，以及在社交媒体上发布关于 Superhero 的内容。完成里程碑以解锁各阶段并最多赚取 200 AE 代币。",
+    "qRewardsMilestonesTitle": "有哪些里程碑可以完成？",
+    "qRewardsMilestonesLi1": "验证 X 账户并发帖——连接您的 X 账户以证明所有权。",
+    "qRewardsMilestonesLi2": "将您的 X 账户链上关联至 SuperheroID。",
+    "qRewardsMilestonesLi3": "发布关于 Superhero 的帖子——在内容中包含您的邀请链接，共发布 10 篇。",
+    "qRewardsClaimTitle": "如何领取我的奖励？",
+    "qRewardsClaimAnswer": "里程碑被标记为已完成后，奖励页面上将出现领取提示横幅。点击领取按钮并在钱包中确认交易。需支付少量 Gas 费用。",
+    "qRewardsEligibilityTitle": "奖励有保障吗？",
+    "qRewardsEligibilityAnswer": "资格认定和奖励取决于链上活动，不予保证。本计划可随时暂停，恕不另行通知。来自黑名单国家的用户不具备资格。参与即表示您同意奖励页面上显示的条款。",
+    "qSponsoredNameClaimTitle": "什么是赞助名称申领？",
+    "qSponsoredNameClaimAnswer": "我们为每个地址赞助一次免费的 .chain 名称申领。名称长度须超过 12 个字符（不含 .chain 后缀）。这让您可以在 æternity 区块链上免费拥有一个易于识别的身份标识。",
+    "qClaimMoreNamesTitle": "我可以申领多个名称吗？",
+    "qClaimMoreNamesAnswer": "每个地址我们仅赞助一次名称申领。如需申领更多名称，您可以直接在 Superhero Wallet 中操作——可作为浏览器扩展程序、原生移动应用，或通过网页版 wallet.superhero.com 使用。"
   },
   "buyAe": {
     "pageTitle": "购买 AE – Superhero",

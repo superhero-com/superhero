@@ -120,7 +120,7 @@ const Branding = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="liquid-glass liquid-glass--strong relative overflow-hidden rounded-xl p-6 md:p-8 text-white mb-8 animate-fadeInUp">
+        <div className="liquid-glass liquid-glass--gradient card-3d relative overflow-hidden rounded-xl p-6 md:p-8 text-white mb-8 animate-fadeInUp">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles className="w-32 h-32 text-neon-teal" />
           </div>
@@ -227,7 +227,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Full Logo Card */}
-            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
+            <div className="liquid-glass tilt-3d flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/full-logo.svg"
@@ -255,7 +255,7 @@ const Branding = () => {
             </div>
 
             {/* Small Icon Favicon Card */}
-            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
+            <div className="liquid-glass tilt-3d flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <div className="w-16 h-16 flex items-center justify-center p-3 rounded-xl liquid-glass z-10 transition-transform duration-300 group-hover:scale-105">
                   <FaviconIcon id="favicon-brand-download" className="w-full h-full text-blue-600" />
@@ -281,7 +281,7 @@ const Branding = () => {
             </div>
 
             {/* Square PNG Logo */}
-            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
+            <div className="liquid-glass tilt-3d flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/logo.png"
@@ -325,7 +325,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* OG Social Banner */}
-            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
+            <div className="liquid-glass tilt-3d flex flex-col rounded-xl overflow-hidden group">
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/og-default.png"
@@ -358,7 +358,7 @@ const Branding = () => {
             </div>
 
             {/* Interface Screenshot Showcase */}
-            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
+            <div className="liquid-glass tilt-3d flex flex-col rounded-xl overflow-hidden group">
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/screen-1.png"

@@ -260,7 +260,7 @@ const Dao = () => {
           {/* Create Vote and Votes in a row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Create Vote Card */}
-            <Card className="liquid-glass rounded-xl">
+            <Card className="liquid-glass liquid-glass--gradient card-3d rounded-xl">
               <CardHeader>
                 <CardTitle className="text-white">{t('createVote')}</CardTitle>
               </CardHeader>

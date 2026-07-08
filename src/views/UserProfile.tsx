@@ -364,7 +364,7 @@ export default function UserProfile({
       </div>
 
       {/* Compact Profile Header */}
-      <div className="mb-4 md:mb-4">
+      <div className="mb-4 md:mb-4 liquid-glass liquid-glass--gradient card-3d rounded-xl p-4 md:p-6">
         <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
           {/* Avatar and Identity */}
           <div className="flex items-center gap-4 flex-1 min-w-0">

@@ -32,7 +32,7 @@ const PoolDetail = () => {
       <div className="grid grid-cols-1 items-start">
         <div className="flex flex-col gap-6">
           {/* Pool Header Card */}
-          <div className="flex flex-col gap-4 liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
+          <div className="flex flex-col gap-4 liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 relative overflow-hidden">
             <PoolHeader pairData={pairData} />
             <PoolStatsOverview pairSummary={pairSummary} />
             <PoolReserves pairData={pairData} />

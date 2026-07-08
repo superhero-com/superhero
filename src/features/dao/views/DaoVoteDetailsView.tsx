@@ -166,7 +166,7 @@ const DaoVoteDetailsContent = ({
               {/* Enhanced Vote Card */}
               <div className="space-y-6">
                 {/* Vote Header */}
-                <Card className="liquid-glass rounded-xl">
+                <Card className="liquid-glass liquid-glass--gradient card-3d rounded-xl">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xl font-semibold text-white">

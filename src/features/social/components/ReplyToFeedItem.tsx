@@ -261,9 +261,9 @@ const ReplyToFeedItem = memo(({
       id={`post-${postId}`}
       ref={containerRef}
       className={cn(
-        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
-        !isActive && 'cursor-pointer hover:bg-white/[0.04]',
-        isActive && 'bg-white/[0.06] border-white/25',
+        'relative w-full px-3 md:px-4 py-4 md:py-5 transition-colors',
+        !isActive && 'border-b border-white/10 bg-transparent cursor-pointer hover:bg-white/[0.04]',
+        isActive && 'liquid-glass liquid-glass--gradient card-3d rounded-xl',
         isContextMuted && 'bg-white/[0.02] border-white/10',
       )}
       onClick={isActive ? undefined : handleOpen}

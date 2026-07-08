@@ -135,7 +135,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
   return (
     <div
       className={cn(
-        'liquid-glass max-w-[min(480px,100%)] relative overflow-hidden p-4 sm:p-6',
+        'liquid-glass liquid-glass--gradient card-3d max-w-[min(480px,100%)] relative overflow-hidden p-4 sm:p-6',
         className,
       )}
     >

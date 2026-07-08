@@ -365,7 +365,7 @@ const TxQueue = () => {
   if (messageResult) {
     return (
       <div className="h-screen w-screen flex items-center justify-center px-6 text-center aurora-surface">
-        <div className="space-y-4 liquid-glass liquid-glass--strong rounded-xl p-6 max-w-sm">
+        <div className="space-y-4 liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 max-w-sm">
           <p className={messageResult.status === 'success' ? 'text-white/80 text-lg' : 'text-red-300 text-lg'}>
             {messageResult.message}
           </p>

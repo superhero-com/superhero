@@ -123,10 +123,7 @@ const WalletOverviewCard = ({
   if (!activeAccount) {
     return (
       <div
-        className={
-          `grid gap-2 ${
-            className || ''}`
-        }
+        className={`grid gap-2 ${className || ''}`}
       >
         <div className="py-1">
           <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">

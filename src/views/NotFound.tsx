@@ -48,7 +48,7 @@ const NotFound = () => {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 text-center max-w-lg mx-auto">
+      <div className="relative z-10 text-center max-w-lg mx-auto liquid-glass liquid-glass--gradient card-3d rounded-xl p-8 md:p-10">
         {/* Glitch-style 404 number */}
         <div className="relative mb-6">
           <h1

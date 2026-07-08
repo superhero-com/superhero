@@ -576,7 +576,7 @@ const CreateTokenView = () => {
             {/* Form — rendered first in DOM so it appears at top on mobile/tablet.
                 On xl screens xl:order-2 moves it visually to the right column. */}
             <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2">
-              <div className="liquid-glass liquid-glass--strong rounded-xl py-3 px-2 md:p-6">
+              <div className="liquid-glass liquid-glass--gradient card-3d rounded-xl py-3 px-2 md:p-6">
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">

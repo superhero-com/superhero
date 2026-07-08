@@ -183,10 +183,12 @@ export default function AddTokens() {
   return (
     <div className="max-w-[900px] mx-auto py-4 px-4">
       <DexTabs />
-      <h2 className="text-2xl font-bold text-white mb-2">{t('title')}</h2>
-      <p className="text-sm text-white/80 mb-3 leading-relaxed">
-        {t('description')}
-      </p>
+      <div className="liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 mb-3">
+        <h2 className="text-2xl font-bold text-white mb-2">{t('title')}</h2>
+        <p className="text-sm text-white/80 m-0 leading-relaxed">
+          {t('description')}
+        </p>
+      </div>
       <div className="flex gap-2 items-center mb-2">
         <input
           placeholder={tDex('filterBySymbolAddress')}

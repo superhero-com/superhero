@@ -334,6 +334,8 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 @media (min-width: 1101px) {
   .hero-banner__inner { margin: 0; max-width: 100%; padding-right: clamp(360px, 30vw, 460px); }
   .banner-lede { padding-right: 0; }
+  /* The floating token card is the focal visual on desktop — dim the planet so it doesn't clash. */
+  .banner-planet { opacity: 0.38; }
 }
 
 .banner-token-card__inner {

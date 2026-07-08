@@ -30,7 +30,7 @@ export default function ExploreRefactored() {
       <DexTabs />
 
       {/* Header */}
-      <div className="mb-6">
+      <div className="liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 mb-6">
         <h1 className="text-[32px] font-bold text-white m-0 mb-2">
           {t('exploreTitle')}
         </h1>

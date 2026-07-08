@@ -97,7 +97,7 @@ const TokenTradeCard = ({
   }
 
   return (
-    <div className="w-full mx-auto liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
+    <div className="w-full mx-auto liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 relative overflow-hidden">
       {/* Header with Tabs */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">

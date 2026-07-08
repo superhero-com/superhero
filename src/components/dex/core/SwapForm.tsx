@@ -353,7 +353,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto liquid-glass liquid-glass--strong rounded-xl p-0 sm:p-6 relative overflow-hidden flex-shrink-0">
+    <div className="w-full sm:w-[480px] mx-auto liquid-glass liquid-glass--gradient card-3d rounded-xl p-0 sm:p-6 relative overflow-hidden flex-shrink-0">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0">

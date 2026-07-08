@@ -149,7 +149,7 @@ export default function Landing() {
 
           {/* Video */}
           <div
-            className="relative max-w-4xl mx-auto liquid-glass liquid-glass--strong rounded-xl overflow-hidden"
+            className="relative max-w-4xl mx-auto liquid-glass liquid-glass--gradient card-3d tilt-3d rounded-xl overflow-hidden"
           >
             <div className="aspect-video bg-gradient-to-br from-pink-600/10 via-purple-600/10 to-blue-600/10">
               <video
@@ -283,7 +283,7 @@ export default function Landing() {
               <img
                 src="/did-image.png"
                 alt="SuperheroID visual mockup"
-                className="liquid-glass rounded-xl hue-rotate-60"
+                className="liquid-glass tilt-3d rounded-xl hue-rotate-60"
               />
               {/* Decorative glow */}
               <div className="absolute -inset-4 rounded-xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 -z-10 blur-2xl" />
@@ -312,7 +312,7 @@ export default function Landing() {
             <img
               src="/screen-1.png"
               alt={t('common.views.landing.mobile.imageAlt')}
-              className="liquid-glass rounded-xl"
+              className="liquid-glass tilt-3d rounded-xl"
             />
           </div>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed my-12">

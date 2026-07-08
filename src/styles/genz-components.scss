@@ -117,27 +117,36 @@
   -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(1.05);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.13), /* specular top edge */
-    0 2px 6px -1px rgba(0, 0, 0, 0.35),
-    0 18px 36px -14px rgba(0, 0, 0, 0.55); /* dimensional elevation — cards float */
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    0 4px 10px -2px rgba(0, 0, 0, 0.40),
+    0 24px 48px -16px rgba(0, 0, 0, 0.62); /* dimensional elevation — cards float */
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-/* EMPHASIS: deeper floating depth + glossier fill (modals, hero, detail cards). Clean — NO rainbow ring. */
+/* EMPHASIS: deeper floating depth + glossy diagonal reflection (modals, hero, detail cards). Clean — NO rainbow ring. */
 .liquid-glass--strong {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 20%, transparent 46%), /* glass reflection */
+    radial-gradient(130% 90% at 12% -14%, rgba(255, 255, 255, 0.13), transparent 48%),
+    var(--glass-bg);
   backdrop-filter: blur(30px) saturate(190%) brightness(1.07);
   -webkit-backdrop-filter: blur(30px) saturate(190%) brightness(1.07);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
-    0 2px 10px -1px rgba(0, 0, 0, 0.42),
-    0 30px 64px -18px rgba(0, 0, 0, 0.66); /* stronger floating depth */
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
+    0 6px 16px -2px rgba(0, 0, 0, 0.48),
+    0 44px 84px -24px rgba(0, 0, 0, 0.74); /* strong floating depth */
 }
-/* FLAGSHIP: brand-gradient hairline ring + brand glow — OPT-IN, reserve for a few showcase/hero cards only. */
+/* FLAGSHIP: brand-gradient hairline ring + brand glow + glossy reflection — OPT-IN, showcase/hero cards only. */
 .liquid-glass--gradient {
   border-color: transparent;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 20%, transparent 46%),
+    radial-gradient(130% 90% at 12% -14%, rgba(255, 255, 255, 0.14), transparent 48%),
+    var(--glass-bg);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
-    0 30px 64px -18px rgba(0, 0, 0, 0.66),
-    var(--glow-brand);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+    0 6px 16px -2px rgba(0, 0, 0, 0.48),
+    0 44px 84px -24px rgba(0, 0, 0, 0.74),
+    0 0 40px rgba(139, 92, 246, 0.4), 0 0 80px rgba(59, 130, 246, 0.22); /* stronger brand glow */
 }
 .liquid-glass--gradient::after {
   content: "";
@@ -155,6 +164,33 @@
   mask-composite: exclude;
 }
 .liquid-glass--hover:hover { transform: translateY(-4px); }
+
+/* ===== Bold 3D card treatments ===== */
+/* Interactive lift + perspective tilt on hover (for clickable hero cards). */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.card-3d:hover {
+  transform: perspective(1300px) rotateX(3deg) translateY(-8px) scale(1.012);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+    0 10px 24px -4px rgba(0, 0, 0, 0.5),
+    0 60px 110px -30px rgba(0, 0, 0, 0.78),
+    0 0 48px rgba(139, 92, 246, 0.32);
+}
+/* Static subtle 3D tilt for showcase visuals (mockups, hero token cards). */
+.tilt-3d {
+  transform: perspective(1400px) rotateY(-8deg) rotateX(3deg);
+  transform-origin: center right;
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.tilt-3d:hover { transform: perspective(1400px) rotateY(-4deg) rotateX(1.5deg); }
+@media (prefers-reduced-motion: reduce) {
+  .card-3d, .card-3d:hover, .tilt-3d, .tilt-3d:hover { transform: none; transition: none; }
+}
+html.ios-webkit .tilt-3d, html.safari.safari-zooming .tilt-3d { transform: none; }
 /* iOS WebKit / Safari-zoom: backdrop-filter is disabled for stability — fall back to an
    opaque-enough fill so the panel still reads (mirrors the existing glass guardrails). */
 html.ios-webkit .liquid-glass,

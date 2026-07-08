@@ -12,7 +12,7 @@ const Conference = () => {
     return `https://${CONFIG.JITSI_DOMAIN}/${name}#${opts}`;
   }, [room]);
   return (
-    <div className="max-w-[980px] mx-auto p-4 aurora-surface">
+    <div className="max-w-[980px] mx-auto p-4 aurora-surface liquid-glass liquid-glass--gradient card-3d rounded-xl">
       <iframe
         id="jitsiConferenceFrame0"
         title={t('titles.conference')}

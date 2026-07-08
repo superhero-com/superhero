@@ -126,7 +126,7 @@ export default function TokenDetail() {
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         <div className="flex flex-col gap-6">
           {/* Token Detail Card */}
-          <div className="liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
+          <div className="liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
               {

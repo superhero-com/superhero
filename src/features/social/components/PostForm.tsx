@@ -1,4 +1,5 @@
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { cn } from '@/lib/utils';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import React, {
@@ -58,6 +59,10 @@ interface PostFormProps {
   showImageInput?: boolean;
   characterLimit?: number;
   autoFocus?: boolean;
+
+  // Visual accent: marks this instance as the page's single flagship card
+  // (used only by the top-level home composer). Purely cosmetic.
+  flagship?: boolean;
 }
 
 const DEFAULT_EMOJIS = [
@@ -117,6 +122,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     showImageInput = true,
     characterLimit = 280,
     autoFocus = false,
+    flagship = false,
   } = props;
   const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
@@ -954,7 +960,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     <div
       className={`${isPost ? 'w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
     >
-      <div className="liquid-glass liquid-glass--strong rounded-xl p-0 transition-all duration-300 relative md:p-4">
+      <div className={cn(
+        'rounded-xl p-0 transition-all duration-300 relative md:p-4',
+        flagship ? 'liquid-glass liquid-glass--gradient card-3d' : 'liquid-glass liquid-glass--strong',
+      )}
+      >
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
             {activeAccount && (

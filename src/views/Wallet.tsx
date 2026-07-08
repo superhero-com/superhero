@@ -58,7 +58,7 @@ function InteractiveHeroVisual() {
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full max-w-[320px] aspect-[10/12] mx-auto lg:mx-0 rounded-xl liquid-glass liquid-glass--strong p-4 transition-all duration-300 ease-out cursor-pointer hover:shadow-2xl hover:shadow-blue-500/10"
+      className="relative w-full max-w-[320px] aspect-[10/12] mx-auto lg:mx-0 rounded-xl liquid-glass liquid-glass--gradient card-3d tilt-3d p-4 transition-all duration-300 ease-out cursor-pointer hover:shadow-2xl hover:shadow-blue-500/10"
       style={{
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.02 : 1}, ${isHovered ? 1.02 : 1}, 1)`,
         transformStyle: 'preserve-3d',

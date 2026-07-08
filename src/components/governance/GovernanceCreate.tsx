@@ -196,7 +196,7 @@ export default function GovernanceCreate() {
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
+          <div className="relative liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 md:p-8">
             <h1 className="text-2xl md:text-3xl font-bold m-0"><span className="gradient-text">{t('createPoll')}</span></h1>
             <p className="text-slate-300 mt-2">{t('description')}</p>
           </div>

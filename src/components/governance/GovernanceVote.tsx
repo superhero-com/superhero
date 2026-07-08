@@ -114,7 +114,7 @@ export default function GovernanceVote({
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-            <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
+            <div className="relative liquid-glass liquid-glass--gradient card-3d rounded-xl p-6 md:p-8">
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-xl flex items-center justify-center">

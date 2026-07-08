@@ -433,7 +433,7 @@ const AddLiquidityForm = () => {
     || hasInsufficientBalance;
 
   return (
-    <div className="liquid-glass max-w-[min(480px,100%)] relative overflow-hidden p-4 sm:p-6">
+    <div className="liquid-glass liquid-glass--gradient card-3d max-w-[min(480px,100%)] relative overflow-hidden p-4 sm:p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

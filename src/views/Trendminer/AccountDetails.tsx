@@ -60,7 +60,7 @@ export default function AccountDetails() {
 
   return (
     <div className="max-w-5xl mx-auto p-4">
-      <div className="flex items-center gap-3 mb-3">
+      <div className="liquid-glass liquid-glass--gradient card-3d rounded-xl p-4 flex items-center gap-3 mb-3">
         <div className="w-16 h-16 rounded-lg bg-black/20 border border-white/10" />
         <div>
           <div className="text-2xl font-extrabold text-white">{address}</div>

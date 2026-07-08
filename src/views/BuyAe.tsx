@@ -120,7 +120,7 @@ export default function BuyAe() {
         canonicalPath="/get-ae"
       />
 
-      <div className="liquid-glass liquid-glass--strong overflow-hidden rounded-xl p-7 text-white mb-5">
+      <div className="liquid-glass liquid-glass--gradient card-3d overflow-hidden rounded-xl p-7 text-white mb-5">
         <div className="flex flex-col">
           <div className="max-w-2xl">
             <div className="text-sm opacity-90">{t('eyebrow')}</div>

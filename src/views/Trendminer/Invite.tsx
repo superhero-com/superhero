@@ -57,7 +57,7 @@ export default function Invite() {
                 setShowInfo(false);
               }}
               className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/5 border border-white/10 text-white/40 cursor-pointer w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center hover:bg-white/10 hover:text-white/70 z-20 text-sm"
-              aria-label="Dismiss"
+              aria-label={t('inviteView.dismiss')}
             >
               ✕
             </button>

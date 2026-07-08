@@ -52,21 +52,24 @@ import { useProfile } from '../hooks/useProfile';
 import { IconDiamond, IconLink } from '../icons';
 import { formatAddress } from '../utils/address';
 
-const XVerifiedBadge = ({ username }: { username?: string | null }) => (
-  <span
-    className="ml-1.5 inline-flex shrink-0 items-center justify-center align-middle relative -top-px"
-    title={username ? `X account verified: @${username}` : 'X account verified'}
-  >
+const XVerifiedBadge = ({ username }: { username?: string | null }) => {
+  const { t } = useTranslation('common');
+  return (
     <span
-      className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full"
-      style={{ background: 'var(--neon-teal)' }}
+      className="ml-1.5 inline-flex shrink-0 items-center justify-center align-middle relative -top-px"
+      title={username ? t('account.xVerifiedTitle', { username }) : t('account.xVerified')}
     >
-      <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] fill-black" aria-hidden>
-        <path d="M20.285 6.709a1 1 0 0 0-1.414-1.418l-9.373 9.393-3.373-3.375a1 1 0 1 0-1.414 1.417l4.08 4.083a1 1 0 0 0 1.415 0z" />
-      </svg>
+      <span
+        className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full"
+        style={{ background: 'var(--neon-teal)' }}
+      >
+        <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] fill-black" aria-hidden>
+          <path d="M20.285 6.709a1 1 0 0 0-1.414-1.418l-9.373 9.393-3.373-3.375a1 1 0 1 0-1.414 1.417l4.08 4.083a1 1 0 0 0 1.415 0z" />
+        </svg>
+      </span>
     </span>
-  </span>
-);
+  );
+};
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
@@ -487,11 +490,11 @@ export default function UserProfile({
           }}
         >
           <span style={{ color: 'var(--neon-teal)' }} className="font-semibold">
-            Link your X account
+            {t('account.linkXCtaTitle')}
           </span>
           <span className="text-white/70">
             {' '}
-            to show your X username on your profile.
+            {t('account.linkXCtaDescription')}
           </span>
         </button>
       )}

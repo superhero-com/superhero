@@ -18,6 +18,7 @@ const mockIssueProfileChallenge = vi.fn();
 const mockUpdateProfile = vi.fn();
 const mockSignAndVerifyLinkMessage = vi.fn();
 const mockAddStaticAccount = vi.fn();
+const mockI18nT = vi.fn((key: string) => `translated:${key}`);
 
 let mockActiveAccount = 'ak_test_active';
 
@@ -40,6 +41,12 @@ vi.mock('@/api/backend', () => ({
 
 vi.mock('@/utils/signLinkMessage', () => ({
   signAndVerifyLinkMessage: (...args: any[]) => mockSignAndVerifyLinkMessage(...args),
+}));
+
+vi.mock('@/i18n', () => ({
+  default: {
+    t: (...args: any[]) => mockI18nT(...args),
+  },
 }));
 
 vi.mock('@/hooks/useAeSdk', () => ({
@@ -84,6 +91,7 @@ describe('useProfile', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockActiveAccount = 'ak_test_active';
+    mockI18nT.mockImplementation((key: string) => `translated:${key}`);
     mockGetProfile.mockResolvedValue(emptyProfileAggregate());
     mockIssueProfileChallenge.mockResolvedValue({
       challenge: 'profile-challenge',
@@ -196,6 +204,31 @@ describe('useProfile', () => {
 
     expect(mockIssueProfileChallenge).not.toHaveBeenCalled();
     expect(mockUpdateProfile).not.toHaveBeenCalled();
+  });
+
+  it('uses translated errors for missing X verification addresses', async () => {
+    const { result } = renderHook(() => useProfile());
+
+    await act(async () => {
+      await expect(result.current.completeXAddressLink({
+        message: 'sign me',
+        nonce: 1,
+        value: 'value',
+        verification_token: 'token',
+      })).rejects.toThrow('translated:common.messages.missingAddressForXVerification');
+    });
+
+    expect(mockI18nT).toHaveBeenCalledWith('common.messages.missingAddressForXVerification');
+  });
+
+  it('uses translated errors for missing X OAuth tokens', async () => {
+    const { result } = renderHook(() => useProfile('ak_test_active'));
+
+    await act(async () => {
+      await expect(result.current.linkXWithAccessToken({ accessToken: '   ' })).rejects.toThrow('translated:common.messages.missingXOAuthToken');
+    });
+
+    expect(mockI18nT).toHaveBeenCalledWith('common.messages.missingXOAuthToken');
   });
 
   it('links bio via address-link claim and submit', async () => {

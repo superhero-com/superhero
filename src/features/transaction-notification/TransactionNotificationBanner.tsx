@@ -4,6 +4,7 @@ import { Decimal } from '@/libs/decimal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
 import { IconDiamond } from '@/icons';
 import type { TxPayload } from './transaction-notification.context';
@@ -15,13 +16,20 @@ function fmt(amount: string): string {
   return Decimal.from(amount).prettify();
 }
 
-function formatChangedFields(fields: Array<'bio' | 'website' | 'chain_name'>): string {
+function formatChangedFields(
+  fields: Array<'bio' | 'website' | 'chain_name'>,
+  t: TFunction,
+): string {
   const labels: Record<'bio' | 'website' | 'chain_name', string> = {
-    bio: 'bio',
-    website: 'website',
-    chain_name: 'chain name',
+    bio: t('common.transactionNotification.fieldBio'),
+    website: t('common.transactionNotification.fieldWebsite'),
+    chain_name: t('common.transactionNotification.fieldChainName'),
   };
-  return fields.map((field) => labels[field]).join(' & ') || 'profile';
+  const parts = fields.map((field) => labels[field]);
+  if (!parts.length) return t('common.transactionNotification.fieldProfile');
+  if (parts.length === 1) return parts[0];
+  // Comma list with a final ampersand: "bio, website & chain name".
+  return `${parts.slice(0, -1).join(', ')} & ${parts[parts.length - 1]}`;
 }
 
 // Toasts backed by a central icon other than the Superhero mark (e.g. the blue diamond
@@ -31,50 +39,88 @@ function getIconVariant(payload: TxPayload): 'superhero' | 'diamond' {
 }
 
 // User must sign in their wallet — the app is waiting for that action.
-function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string } {
+function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; subtitle: string } {
   switch (payload.type) {
     case TxPayloadType.BuyToken:
     case TxPayloadType.SellToken:
-      return { title: 'Confirm in your wallet', subtitle: 'Sign the transaction to continue' };
+      return {
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.signTransactionToContinue'),
+      };
     case TxPayloadType.ApproveAllowance:
       return {
-        title: 'Approve token spending',
-        subtitle: `Step ${payload.stepNumber} of ${payload.totalSteps} — allow Superhero to use your ${payload.tokenSymbol}`,
+        title: t('common.transactionNotification.approveTokenSpending'),
+        subtitle: t('common.transactionNotification.approveAllowanceStep', {
+          step: payload.stepNumber,
+          total: payload.totalSteps,
+          token: payload.tokenSymbol,
+        }),
       };
     case TxPayloadType.CreateToken:
-      return { title: `Creating #${payload.tokenName}`, subtitle: 'Sign in your wallet to continue' };
+      return {
+        title: t('common.transactionNotification.creatingToken', { name: payload.tokenName }),
+        subtitle: t('common.transactionNotification.signInWalletToContinue'),
+      };
     case TxPayloadType.CreatePost:
-      return { title: 'Publishing post', subtitle: 'Sign in your wallet to continue' };
+      return {
+        title: t('common.transactionNotification.publishingPost'),
+        subtitle: t('common.transactionNotification.signInWalletToContinue'),
+      };
     case TxPayloadType.CreateComment:
-      return { title: 'Publishing reply', subtitle: 'Sign in your wallet to continue' };
+      return {
+        title: t('common.transactionNotification.publishingReply'),
+        subtitle: t('common.transactionNotification.signInWalletToContinue'),
+      };
     case TxPayloadType.ClaimChainName:
       return {
-        title: 'Confirm in your wallet',
-        subtitle: `Sign the claim request for ${payload.name}.chain`,
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.signClaimRequest', { name: payload.name }),
       };
     case TxPayloadType.SwapToken:
       return {
-        title: 'Confirm in your wallet',
-        subtitle: `Swapping ${fmt(payload.amountIn)} ${payload.tokenInSymbol} → ${fmt(payload.amountOut)} ${payload.tokenOutSymbol}`,
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.swappingTokens', {
+          amountIn: fmt(payload.amountIn),
+          tokenIn: payload.tokenInSymbol,
+          amountOut: fmt(payload.amountOut),
+          tokenOut: payload.tokenOutSymbol,
+        }),
       };
     case TxPayloadType.WrapToken:
-      return { title: 'Confirm in your wallet', subtitle: `Wrapping ${fmt(payload.amount)} AE → WAE` };
+      return {
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.wrappingAmount', { amount: fmt(payload.amount) }),
+      };
     case TxPayloadType.UnwrapToken:
-      return { title: 'Confirm in your wallet', subtitle: `Unwrapping ${fmt(payload.amount)} WAE → AE` };
+      return {
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.unwrappingAmount', { amount: fmt(payload.amount) }),
+      };
     case TxPayloadType.AddLiquidity:
       return {
-        title: 'Confirm in your wallet',
-        subtitle: `Adding ${fmt(payload.amountA)} ${payload.tokenASymbol} + ${fmt(payload.amountB)} ${payload.tokenBSymbol}`,
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.addingLiquidityAmounts', {
+          amountA: fmt(payload.amountA),
+          tokenA: payload.tokenASymbol,
+          amountB: fmt(payload.amountB),
+          tokenB: payload.tokenBSymbol,
+        }),
       };
     case TxPayloadType.RemoveLiquidity:
       return {
-        title: 'Confirm in your wallet',
-        subtitle: `Removing ${payload.liquidityPct}% from ${payload.tokenASymbol}/${payload.tokenBSymbol}`,
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.removingLiquidityFromPool', {
+          pct: payload.liquidityPct,
+          tokenA: payload.tokenASymbol,
+          tokenB: payload.tokenBSymbol,
+        }),
       };
     case TxPayloadType.UpdateProfile:
       return {
-        title: 'Confirm in your wallet',
-        subtitle: `Sign to update your ${formatChangedFields(payload.fields)}`,
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.signToUpdateFields', {
+          fields: formatChangedFields(payload.fields, t),
+        }),
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
@@ -82,86 +128,102 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
 }
 
 // Tx is broadcast; we're waiting for the blockchain to confirm.
-function getPendingMeta(payload: TxPayload): { title: string; subtitle: string } {
+function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subtitle: string } {
   switch (payload.type) {
     case TxPayloadType.BuyToken:
     case TxPayloadType.SellToken:
-      return { title: 'Confirming on blockchain', subtitle: 'Usually takes a few seconds' };
+      return {
+        title: t('common.transactionNotification.confirmingOnBlockchain'),
+        subtitle: t('common.transactionNotification.usuallyTakesFewSeconds'),
+      };
     case TxPayloadType.ApproveAllowance:
-      return { title: `Approving ${payload.tokenSymbol}…`, subtitle: 'Confirming allowance on-chain' };
+      return {
+        title: t('common.transactionNotification.approvingToken', { token: payload.tokenSymbol }),
+        subtitle: t('common.transactionNotification.confirmingAllowanceOnChain'),
+      };
     case TxPayloadType.CreateToken:
-      return { title: `Creating #${payload.tokenName}`, subtitle: 'Confirming on blockchain…' };
+      return {
+        title: t('common.transactionNotification.creatingToken', { name: payload.tokenName }),
+        subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
+      };
     case TxPayloadType.CreatePost:
-      return { title: 'Publishing post', subtitle: 'Confirming on blockchain…' };
+      return {
+        title: t('common.transactionNotification.publishingPost'),
+        subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
+      };
     case TxPayloadType.CreateComment:
-      return { title: 'Publishing reply', subtitle: 'Confirming on blockchain…' };
-    case TxPayloadType.ClaimChainName:
+      return {
+        title: t('common.transactionNotification.publishingReply'),
+        subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
+      };
+    case TxPayloadType.ClaimChainName: {
+      const title = t('common.transactionNotification.claimingName', { name: payload.name });
       switch (payload.step) {
         case 'preclaim':
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Step 1 of 4 - reserving the name on-chain',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimStepPreclaim') };
         case 'claim':
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Step 2 of 4 - submitting the sponsored claim',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimStepClaim') };
         case 'update':
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Step 3 of 4 - updating the name pointers',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimStepUpdate') };
         case 'transfer':
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Step 4 of 4 - transferring the name to your wallet',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimStepTransfer') };
         case 'queued':
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Preparing the sponsored transactions. This can take a couple of minutes.',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimQueued') };
         default:
-          return {
-            title: `Claiming ${payload.name}.chain`,
-            subtitle: 'Processing in the background. You can continue using the app.',
-          };
+          return { title, subtitle: t('common.transactionNotification.claimProcessingBackground') };
       }
+    }
     case TxPayloadType.SwapToken:
-      return { title: 'Swap in progress', subtitle: 'Usually confirms in a few seconds' };
+      return {
+        title: t('common.transactionNotification.swapInProgress'),
+        subtitle: t('common.transactionNotification.usuallyConfirmsFewSeconds'),
+      };
     case TxPayloadType.WrapToken:
-      return { title: 'Wrapping AE → WAE', subtitle: 'Confirming on-chain…' };
+      return {
+        title: t('common.transactionNotification.wrappingAeToWae'),
+        subtitle: t('common.transactionNotification.confirmingOnChainEllipsis'),
+      };
     case TxPayloadType.UnwrapToken:
-      return { title: 'Unwrapping WAE → AE', subtitle: 'Confirming on-chain…' };
+      return {
+        title: t('common.transactionNotification.unwrappingWaeToAe'),
+        subtitle: t('common.transactionNotification.confirmingOnChainEllipsis'),
+      };
     case TxPayloadType.AddLiquidity:
       return {
-        title: 'Adding liquidity…',
-        subtitle: `Depositing into ${payload.tokenASymbol}/${payload.tokenBSymbol} pool`,
+        title: t('common.transactionNotification.addingLiquidityEllipsis'),
+        subtitle: t('common.transactionNotification.depositingIntoPool', {
+          tokenA: payload.tokenASymbol,
+          tokenB: payload.tokenBSymbol,
+        }),
       };
     case TxPayloadType.RemoveLiquidity:
       return {
-        title: 'Removing liquidity…',
-        subtitle: `Withdrawing from ${payload.tokenASymbol}/${payload.tokenBSymbol} pool`,
+        title: t('common.transactionNotification.removingLiquidityEllipsis'),
+        subtitle: t('common.transactionNotification.withdrawingFromPool', {
+          tokenA: payload.tokenASymbol,
+          tokenB: payload.tokenBSymbol,
+        }),
       };
     case TxPayloadType.UpdateProfile:
       return {
-        title: 'Updating profile…',
-        subtitle: `Saving your ${formatChangedFields(payload.fields)}`,
+        title: t('common.transactionNotification.updatingProfileEllipsis'),
+        subtitle: t('common.transactionNotification.savingYourFields', {
+          fields: formatChangedFields(payload.fields, t),
+        }),
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
   }
 }
 
-function getConfirmedMeta(payload: TxPayload): {
+function getConfirmedMeta(payload: TxPayload, t: TFunction): {
   title: string;
   line: { leftLabel: string; leftColor: string; rightLabel?: string; rightColor?: string } | null;
 } {
   switch (payload.type) {
     case TxPayloadType.BuyToken:
       return {
-        title: 'Transaction confirmed',
+        title: t('common.transactionNotification.transactionConfirmed'),
         line: {
           leftLabel: `-${fmt(payload.coinAmount)} AE`,
           leftColor: '#f87171',
@@ -171,7 +233,7 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.SellToken:
       return {
-        title: 'Transaction confirmed',
+        title: t('common.transactionNotification.transactionConfirmed'),
         line: {
           leftLabel: `-${fmt(payload.tokenAmount)} ${payload.tokenSymbol}`,
           leftColor: '#f87171',
@@ -180,10 +242,16 @@ function getConfirmedMeta(payload: TxPayload): {
         },
       };
     case TxPayloadType.ApproveAllowance:
-      return { title: 'Allowance approved', line: { leftLabel: `${payload.tokenSymbol} approved`, leftColor: '#4ade80' } };
+      return {
+        title: t('common.transactionNotification.allowanceApproved'),
+        line: {
+          leftLabel: t('common.transactionNotification.tokenApproved', { token: payload.tokenSymbol }),
+          leftColor: '#4ade80',
+        },
+      };
     case TxPayloadType.SwapToken:
       return {
-        title: 'Swap confirmed',
+        title: t('common.transactionNotification.swapConfirmed'),
         line: {
           leftLabel: `-${fmt(payload.amountIn)} ${payload.tokenInSymbol}`,
           leftColor: '#f87171',
@@ -193,7 +261,7 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.WrapToken:
       return {
-        title: 'Wrap complete',
+        title: t('common.transactionNotification.wrapComplete'),
         line: {
           leftLabel: `-${fmt(payload.amount)} AE`,
           leftColor: '#f87171',
@@ -203,7 +271,7 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.UnwrapToken:
       return {
-        title: 'Unwrap complete',
+        title: t('common.transactionNotification.unwrapComplete'),
         line: {
           leftLabel: `-${fmt(payload.amount)} WAE`,
           leftColor: '#f87171',
@@ -213,21 +281,21 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.CreateToken:
       return {
-        title: 'Token created',
+        title: t('common.transactionNotification.tokenCreated'),
         line: { leftLabel: `#${payload.tokenName}`, leftColor: '#4ade80' },
       };
     case TxPayloadType.CreatePost:
-      return { title: 'Post published', line: null };
+      return { title: t('common.transactionNotification.postPublished'), line: null };
     case TxPayloadType.CreateComment:
-      return { title: 'Reply published', line: null };
+      return { title: t('common.transactionNotification.replyPublished'), line: null };
     case TxPayloadType.ClaimChainName:
       return {
-        title: 'Name claimed',
+        title: t('common.transactionNotification.nameClaimed'),
         line: { leftLabel: `${payload.name}.chain`, leftColor: '#4ade80' },
       };
     case TxPayloadType.AddLiquidity:
       return {
-        title: 'Liquidity added',
+        title: t('common.transactionNotification.liquidityAdded'),
         line: {
           leftLabel: `+${fmt(payload.amountA)} ${payload.tokenASymbol}`,
           leftColor: '#4ade80',
@@ -237,7 +305,7 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.RemoveLiquidity:
       return {
-        title: 'Liquidity removed',
+        title: t('common.transactionNotification.liquidityRemoved'),
         line: {
           leftLabel: `-${payload.liquidityPct}% LP`,
           leftColor: '#f87171',
@@ -247,8 +315,13 @@ function getConfirmedMeta(payload: TxPayload): {
       };
     case TxPayloadType.UpdateProfile:
       return {
-        title: 'Profile updated',
-        line: { leftLabel: `${formatChangedFields(payload.fields)} saved`, leftColor: '#4ade80' },
+        title: t('common.transactionNotification.profileUpdated'),
+        line: {
+          leftLabel: t('common.transactionNotification.fieldsSaved', {
+            fields: formatChangedFields(payload.fields, t),
+          }),
+          leftColor: '#4ade80',
+        },
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
@@ -322,9 +395,10 @@ const NotificationWaiting = ({
   payload: TxPayload;
   kind: 'submitted' | 'pending';
 }) => {
+  const { t } = useTranslation();
   const { title, subtitle } = kind === 'submitted'
-    ? getSubmittedMeta(payload)
-    : getPendingMeta(payload);
+    ? getSubmittedMeta(payload, t)
+    : getPendingMeta(payload, t);
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
       <NotificationIcon variant="loading" icon={getIconVariant(payload)} />
@@ -345,7 +419,7 @@ const NotificationConfirmed = ({
   activeAccount: string | undefined;
 }) => {
   const { t } = useTranslation();
-  const meta = getConfirmedMeta(payload);
+  const meta = getConfirmedMeta(payload, t);
   const portfolioHref = activeAccount
     ? `/users/${encodeURIComponent(activeAccount)}`
     : undefined;

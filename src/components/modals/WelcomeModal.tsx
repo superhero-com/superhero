@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 import { useSetAtom } from 'jotai';
 import { AeButton } from '@/components/ui/ae-button';
@@ -26,6 +27,7 @@ export function markOnboardingComplete(): void {
 }
 
 const WelcomeModal = ({ onClose }: Props) => {
+  const { t } = useTranslation();
   const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
 
   function handleGetStarted() {
@@ -49,11 +51,11 @@ const WelcomeModal = ({ onClose }: Props) => {
       </div>
 
       <h2 className="text-2xl font-bold text-white/95 mb-2">
-        Welcome to Superhero
+        {t('common.modals.welcome.title')}
       </h2>
 
       <p className="text-sm text-white/60 leading-relaxed max-w-xs mx-auto mb-8">
-        Trade tokenized hashtags &amp; social trends — the web3 attention market.
+        {t('common.modals.welcome.tagline')}
       </p>
 
       {/* Get Started */}
@@ -63,7 +65,7 @@ const WelcomeModal = ({ onClose }: Props) => {
         className="w-full max-w-[280px] uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] rounded-xl font-semibold"
         onClick={handleGetStarted}
       >
-        Get Started
+        {t('common.modals.welcome.getStarted')}
       </AeButton>
 
       {/* Continue as guest */}
@@ -73,7 +75,7 @@ const WelcomeModal = ({ onClose }: Props) => {
           className="text-sm text-white/50 underline underline-offset-2 hover:text-white/70 transition-colors bg-transparent border-none cursor-pointer"
           onClick={handleContinueAsGuest}
         >
-          Continue as guest
+          {t('common.modals.welcome.continueAsGuest')}
         </button>
       </div>
     </div>

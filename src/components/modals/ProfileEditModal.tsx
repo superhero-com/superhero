@@ -112,33 +112,38 @@ const GLASS_CARD_STYLE = {
 
 const FieldHeading = ({
   label,
+  labelClassName = FIELD_LABEL_CLASS,
   helpLabel,
   helpOpen,
   onHelpClick,
 }: {
   label: string;
+  labelClassName?: string;
   helpLabel?: string;
   helpOpen?: boolean;
   onHelpClick?: () => void;
-}) => (
-  <div className="flex items-center justify-between gap-3">
-    <div className="flex items-center gap-2 min-w-0">
-      <Label className={label === '.chain name' ? CHAIN_NAME_LABEL_CLASS : FIELD_LABEL_CLASS}>{label}</Label>
-      {helpLabel && onHelpClick ? (
-        <button
-          type="button"
-          aria-label={helpLabel}
-          aria-expanded={helpOpen}
-          onClick={onHelpClick}
-          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
-        >
-          <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-      ) : null}
+}) => {
+  const { t } = useTranslation('common');
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <Label className={labelClassName}>{label}</Label>
+        {helpLabel && onHelpClick ? (
+          <button
+            type="button"
+            aria-label={helpLabel}
+            aria-expanded={helpOpen}
+            onClick={onHelpClick}
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
+          >
+            <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+      <span className={OPTIONAL_BADGE_CLASS}>{t('labels.optional')}</span>
     </div>
-    <span className={OPTIONAL_BADGE_CLASS}>Optional</span>
-  </div>
-);
+  );
+};
 
 const HelpPanel = ({
   children,
@@ -1203,7 +1208,8 @@ const ProfileEditModal = ({
 
             <div>
               <FieldHeading
-                label=".chain name"
+                label={t('labels.dotChainName')}
+                labelClassName={CHAIN_NAME_LABEL_CLASS}
                 helpLabel={t('messages.chainNameHelpLabel')}
                 helpOpen={showChainNameInfo}
                 onHelpClick={() => setShowChainNameInfo((value) => !value)}
@@ -1240,7 +1246,7 @@ const ProfileEditModal = ({
                   </AppSelect>
                   <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
                     <span>AENS</span>
-                    <span className="text-blue-400">Preferred name</span>
+                    <span className="text-blue-400">{t('labels.preferredName')}</span>
                   </div>
                 </div>
               ) : (
@@ -1298,14 +1304,13 @@ const ProfileEditModal = ({
                     <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
                       <span>{t('messages.chainNameClaimHint')}</span>
                       <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
-                        {availabilityStatus === 'available' ? 'Available' : ''}
+                        {availabilityStatus === 'available' ? t('labels.available') : ''}
                       </span>
                     </div>
                   </div>
                   {isClaimTooShort && (
                   <p className="mt-2 text-xs text-amber-300">
-                    {normalizedClaimValueLength}
-                    /13 characters before `.chain`
+                    {t('messages.chainNameClaimLengthHint', { length: normalizedClaimValueLength })}
                   </p>
                   )}
                   {showSponsorshipHint && sponsorshipForCurrentName && (
@@ -1333,7 +1338,7 @@ const ProfileEditModal = ({
 
             {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
               <div ref={xSectionRef}>
-                <FieldHeading label="X (Twitter)" />
+                <FieldHeading label={t('labels.xTwitter')} />
                 {!xSectionReady && !isGuest && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
                   <Spinner className="w-5 h-5 text-white/60" />
@@ -1380,7 +1385,7 @@ const ProfileEditModal = ({
                   }}
                 >
                   <XIcon className="w-4 h-4 fill-current" />
-                  {connectingX ? t('messages.connectingX') : 'Link account'}
+                  {connectingX ? t('messages.connectingX') : t('buttons.linkAccount')}
                 </button>
                 )}
                 {xSectionReady && hasXVerified && xUsername && (
@@ -1395,11 +1400,11 @@ const ProfileEditModal = ({
             ) : null}
 
             <div>
-              <FieldHeading label="Bio" />
+              <FieldHeading label={t('labels.bio')} />
               <Textarea
                 value={form.bio}
                 onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-                placeholder="Tell the world about yourself…"
+                placeholder={t('placeholders.profileBio')}
                 className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
                 maxLength={200}
               />
@@ -1410,7 +1415,7 @@ const ProfileEditModal = ({
             </div>
 
             <div>
-              <FieldHeading label="Website" />
+              <FieldHeading label={t('labels.website')} />
               <div className="relative mt-1.5">
                 <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
                 <Input

@@ -32,7 +32,8 @@
       "done": "Done",
       "trade": "Trade",
       "getChainName": "+ Get .chain name",
-      "claimChainName": "Claim"
+      "claimChainName": "Claim",
+      "linkAccount": "Link account"
     },
     "labels": {
       "superheroHome": "Superhero Home",
@@ -58,7 +59,13 @@
       "connectX": "Link X account",
       "xAccount": "X account",
       "profile": "Profile",
-      "claimChainName": "Claim a new .chain name"
+      "claimChainName": "Claim a new .chain name",
+      "optional": "Optional",
+      "dotChainName": ".chain name",
+      "preferredName": "Preferred name",
+      "available": "Available",
+      "website": "Website",
+      "xTwitter": "X (Twitter)"
     },
     "actions": {
       "copy": "Copy"
@@ -112,7 +119,8 @@
       "searchSuperhero": "Search Superhero",
       "solName": "Your Solana name",
       "xAccessToken": "Paste your X OAuth access token",
-      "claimChainName": "myuniquename123"
+      "claimChainName": "myuniquename123",
+      "profileBio": "Tell the world about yourself…"
     },
     "messages": {
       "somethingWentWrong": "Something went wrong",
@@ -145,12 +153,12 @@
       "noChainNamesFound": "No owned chain names found for this account.",
       "connectWalletToClaimChainName": "Connect your wallet to claim a .chain name",
       "chainNameClaimRequired": "Enter the name you want to claim.",
-      "chainNameClaimHint": "Use letters, numbers, or hyphens. More than 12 characters name is for free.",
+      "chainNameClaimHint": "Use letters, numbers, or hyphens. Names longer than 12 characters are free.",
       "chainNameClaimInvalidChars": "Chain names can use letters, numbers, and hyphens, and can't start or end with a hyphen.",
       "chainNameClaimChecking": "Checking…",
       "chainNameClaimTooShort": "Sponsored claims require more than 12 characters before .chain.",
       "chainNameClaimLoading": "Claiming…",
-      "chainNameClaimStarted": "Claim submitted. Waiting for backend sponsorship and transfer…",
+      "chainNameClaimStarted": "Claim submitted. Waiting for sponsorship and transfer…",
       "chainNameClaimPending": "Claim status: {{status}}",
       "chainNameClaimCompleted": ".chain name claimed successfully.",
       "chainNameClaimWalletUnavailable": "Wallet message signing is not available right now. Please try again.",
@@ -169,7 +177,7 @@
       "chainNameSponsorPrice": "≈ {{amount}} AE",
       "chainNameSponsorPriceHint": "Paid from your wallet.",
       "chainNameSponsorCheckFailed": "Couldn't check name sponsorship right now. Please try again.",
-      "selectChainNameForDisplaySource": "Choose a chain name before using Chain as display source.",
+      "selectChainNameForDisplaySource": "Choose a chain name before using Chain as your display source.",
       "oops": "Oops",
       "loading": "Loading…",
       "connectXHint": "Link your X account so your profile can show your X username. You will sign in with X once; no token to copy.",
@@ -195,7 +203,30 @@
       "xCallbackBlockedHint": "If your wallet did not open, it may have been blocked. Tap the button to try again.",
       "xCallbackRetry": "Try again",
       "xCallbackDoneTitle": "X account linked",
-      "xCallbackGoBack": "Go back"
+      "xCallbackGoBack": "Go back",
+      "chainNameClaimLengthHint": "{{length}}/13 characters before .chain",
+      "connectWalletFirst": "Connect your wallet first",
+      "referralLinkFailed": "Failed to get referral link",
+      "rewardCheckFailed": "Reward check failed",
+      "walletNotConnected": "Your wallet is not connected",
+      "noWalletAccountConnected": "No wallet account connected",
+      "invalidHexSignature": "Wallet returned an invalid hex signature",
+      "invalidWalletSignature": "Wallet did not return a valid signature",
+      "signatureVerificationFailed": "Wallet signature verification failed locally",
+      "walletAccountMismatchX": "Connected wallet account does not match X verification address",
+      "bioRequiredToLink": "Enter a bio before linking it",
+      "siteRequiredToLink": "Enter a website before linking it",
+      "preferredNameRequiredToLink": "Choose a preferred name before linking it",
+      "missingAddressForXVerification": "Missing address for X verification",
+      "missingXOAuthToken": "Missing X OAuth token",
+      "missingAddressForBioLink": "Missing address for bio link",
+      "missingAddressForSiteLink": "Missing address for site link",
+      "missingAddressForPreferredNameLink": "Missing address for preferred name link",
+      "missingAddressForPreferredNameUnlink": "Missing address for preferred name unlink",
+      "missingAddressForBioUnlink": "Missing address for bio unlink",
+      "missingAddressForSiteUnlink": "Missing address for site unlink",
+      "missingAddressForXUnlink": "Missing address for X unlink",
+      "requestFailed": "Request failed"
     },
     "portfolio": {
       "portfolioValue": "Portfolio Value",
@@ -223,14 +254,18 @@
       "txLabel": "Tx:",
       "txTypeCreated": "CREATED",
       "txTypeTrade": "TRADE",
-      "noTransactionsFound": "No transactions found matching your.",
+      "noTransactionsFound": "No transactions found matching your criteria.",
       "loadingTrades": "Loading trades...",
       "aeBalance": "AE Balance",
       "claimAeVerifyX": "Claim 100 AE by verifying your X account.",
       "noPostsYet": "No posts yet",
       "aeBalanceLabel": "AE Balance: ",
-      "tokenHoldings": "Tokens Holdings:",
-      "moreTokens": "+ {{count}} more..."
+      "tokenHoldings": "Token Holdings:",
+      "moreTokens": "+ {{count}} more...",
+      "xVerifiedTitle": "X account verified: @{{username}}",
+      "xVerified": "X account verified",
+      "linkXCtaTitle": "Link your X account",
+      "linkXCtaDescription": "to show your X username on your profile."
     },
     "errorBoundary": {
       "title": "Something went wrong.",
@@ -281,7 +316,7 @@
       "connected": "Connected",
       "offline": "Offline",
       "copyAddress": "Copy address",
-      "openOnAescan": "Open on aeScan",
+      "openOnAescan": "Open on æScan",
       "noHoldings": "No holdings found. Explore trending tokens to get started.",
       "showMore": "Show more"
     },
@@ -396,7 +431,7 @@
         "shareWithOthers": "Share this token with others:",
         "shareOnSocialMedia": "Share on social media:",
         "checkOutToken": "Check out this token!",
-        "twitter": "🐦 Twitter",
+        "twitter": "𝕏 X",
         "telegram": "✈️ Telegram"
       },
       "tokenSelect": {
@@ -431,6 +466,22 @@
         "getExtensionFirefox": "Get extension for Firefox",
         "agreePrefix": "By connecting your wallet you agree to the",
         "and": "and"
+      },
+      "onboarding": {
+        "title": "Edit SuperheroID",
+        "subtitle": "Connect your wallet to create and manage your SuperheroID",
+        "stepWalletApp": "Make sure you have the Superhero Wallet app",
+        "stepExtension": "Make sure you have the extension",
+        "or": "or",
+        "downloadAppHint": "Download the all-in-one Superhero app with a built-in wallet",
+        "downloadOn": "Download on",
+        "getItOn": "Get it on"
+      },
+      "welcome": {
+        "title": "Welcome to Superhero",
+        "tagline": "Trade tokenized hashtags & social trends — the web3 attention market.",
+        "getStarted": "Get Started",
+        "continueAsGuest": "Continue as guest"
       }
     },
     "trendminer": {
@@ -446,7 +497,8 @@
       },
       "wallet": {
         "hero": {
-          "badge": "Multichain Wallet"
+          "badge": "Multichain Wallet",
+          "subtitle": "**Superhero** — more than a wallet, it’s your **key** to the decentralized world! Access, create, and engage. Superhero is the key to DAOs, tokens, DeFi tools, and more."
         },
         "features": {
           "eyebrow": "Features",
@@ -489,7 +541,7 @@
           },
           "importAccounts": {
             "title": "Import Accounts From Cold Wallet Or Ledger",
-            "description": "Effortlessly import existing accounts from other wallets using your private key or ledger, giving you instant access to your assets and transactions."
+            "description": "Effortlessly import existing accounts from other wallets using your private key or Ledger, giving you instant access to your assets and transactions."
           },
           "addressBook": {
             "title": "Convenient Address Book",
@@ -508,14 +560,252 @@
           "mobileBrowser": {
             "title": "Mobile Browser",
             "description": "To use Superhero on a mobile browser, you need the Superhero Wallet app installed on your device to handle transaction signing."
-          }
+          },
+          "chromeExtension": "Chrome Extension"
         },
         "faq": {
-          "title": "Frequently Asked Questions"
+          "title": "Frequently Asked Questions",
+          "categories": {
+            "gettingStarted": {
+              "title": "Getting Started with Superhero Wallet",
+              "items": {
+                "whatIsSuperheroWallet": {
+                  "question": "What is Superhero Wallet?",
+                  "answer": "Superhero Wallet is a **non-custodial open-source wallet** that allows users to manage crypto assets securely across **multiple blockchains**, including Bitcoin, Ethereum, and æternity. Users maintain full control over their private keys and can interact with decentralized applications (dApps) and the Web3 ecosystem."
+                },
+                "downloadAndInstall": {
+                  "question": "How do I download and install the wallet?",
+                  "answer": "You can download Superhero Wallet as a browser extension for Chrome and Firefox, or as a mobile app for Android and iOS. Simply visit the Superhero Wallet website and choose the version that suits your device."
+                },
+                "supportedPlatforms": {
+                  "question": "Which platforms support Superhero Wallet?",
+                  "answer": "Superhero Wallet is available on desktop browsers (Chrome and Firefox extensions), as well as Android and iOS mobile devices. A web version is also accessible on desktop and mobile browsers."
+                },
+                "setUpNewWallet": {
+                  "question": "How do I set up a new wallet?",
+                  "answer": "After installing the wallet, open the Superhero Wallet extension or app. Select “Create New Wallet,” and follow the prompts to set up a new wallet. Be sure to securely back up your seed phrase during this process."
+                },
+                "importExistingWallet": {
+                  "question": "How do I import an existing wallet?",
+                  "answer": "Open Superhero Wallet, select “Import Wallet,” and enter your seed phrase. This will restore your existing wallet, giving you access to previously stored assets."
+                },
+                "backUpWallet": {
+                  "question": "How do I back up my wallet?",
+                  "answer": "When creating or importing a wallet, you’ll receive a seed phrase. Write this down and store it securely. The seed phrase is the only way to recover your wallet if you lose access."
+                }
+              }
+            },
+            "overview": {
+              "title": "Superhero Wallet Overview",
+              "items": {
+                "dashboardDisplay": {
+                  "question": "What is displayed on the Superhero Wallet?",
+                  "answer": "The Dashboard is your main overview in Superhero Wallet. It shows your total crypto balance and how many tokens each account owns, individual account balances, quick action buttons (send, receive), and your recent transactions."
+                },
+                "totalBalanceFiat": {
+                  "question": "How can I see my total balance in fiat currency?",
+                  "answer": "Your total balance is displayed at the top of the Dashboard, reflecting the combined value of assets across all connected blockchains."
+                },
+                "switchAccounts": {
+                  "question": "How do I switch between accounts?",
+                  "answer": "Scroll left or right on the active account card to view and switch between different accounts (e.g., Bitcoin, Ethereum, æternity). Each account displays its token balance and address."
+                },
+                "multisigVaults": {
+                  "question": "What are multisignature vaults, and how can I use them?",
+                  "answer": "Multisignature (multisig) vaults require multiple accounts to approve transactions, offering enhanced security and control. You can toggle to view your multisig vaults on the Dashboard, currently available only on the æternity blockchain."
+                },
+                "sendReceiveFunds": {
+                  "question": "How do I send and receive funds?",
+                  "answer": "Use the “Send” button to transfer assets from your wallet to another address. The “Receive” button provides your wallet address and QR code to receive funds."
+                }
+              }
+            },
+            "accountManagement": {
+              "title": "Account Management",
+              "items": {
+                "accountDetails": {
+                  "question": "How do I view detailed information for each account?",
+                  "answer": "Click on any account card on the Dashboard to access the account overview page. Here, you’ll find account balance, current fiat value, account address, and the option to execute available actions like sending and receiving funds."
+                },
+                "assetsTab": {
+                  "question": "What does the ‘Assets’ tab show?",
+                  "answer": "The Assets tab lists all tokens stored in your account. Each token shows the quantity owned and, for assets with fiat value, the equivalent conversion."
+                },
+                "transactionHistory": {
+                  "question": "How do I check my transaction history?",
+                  "answer": "The Transactions tab displays all past transactions for your selected account, including details like amount, transaction type, and time."
+                },
+                "aens": {
+                  "question": "What is the AENS (æternity Naming System)?",
+                  "answer": "The AENS is a naming system on the æternity blockchain that allows users to register human-readable names for their wallet addresses, making interactions simpler."
+                },
+                "shareAddress": {
+                  "question": "How do I share or copy my wallet address?",
+                  "answer": "You can view a shortened version of your wallet address on the account overview page. Click the copy icon next to the address to easily share it with others."
+                }
+              }
+            },
+            "security": {
+              "title": "Security and Privacy",
+              "items": {
+                "nonCustodial": {
+                  "question": "Is Superhero Wallet non-custodial?",
+                  "answer": "Yes, Superhero Wallet is non-custodial, meaning only you have control over your private keys and assets. No third party, including Superhero, has access to your funds."
+                },
+                "privateKeysManaged": {
+                  "question": "How are my private keys managed?",
+                  "answer": "Private keys are encrypted and stored securely on your device. You can view your private keys and back them up. The seed phrase is a master key that can restore all your accounts and their private keys. An optional password is used to encrypt the seed phrase in web applications; in the mobile apps the seed phrase is stored in secure storage and protected by biometric login."
+                },
+                "forgotSeedPhrase": {
+                  "question": "What should I do if I forgot my seed phrase?",
+                  "answer": "Unfortunately, without your seed phrase, you cannot recover your wallet. We recommend securely backing it up when setting up the wallet."
+                },
+                "airgapSetup": {
+                  "question": "How can I set up AIRGAP for extra security?",
+                  "answer": "Superhero Wallet supports AIRGAP, an offline signing method, to enhance security. Download the AIRGAP app and link it to Superhero Wallet for secure, offline transactions."
+                },
+                "seedPhraseBackup": {
+                  "question": "What is the seed phrase backup process?",
+                  "answer": "Your seed phrase is provided during wallet setup and also in settings. Store this phrase securely, as it’s the only way to recover your wallet if you lose access."
+                }
+              }
+            },
+            "dapps": {
+              "title": "dApps and Web3 Integration",
+              "items": {
+                "supportedDapps": {
+                  "question": "Which dApps can I connect to with Superhero Wallet?",
+                  "answer": "We currently support dApp integration for the ETH (via WalletConnect; EVM support coming soon) and AE blockchains."
+                },
+                "walletConnect": {
+                  "question": "How do I connect Superhero Wallet to dApps using WalletConnect?",
+                  "answer": "Select the WalletConnect option in Superhero Wallet and scan the dApp’s QR code. This enables connection to Ethereum dApps for a seamless Web3 experience."
+                },
+                "inAppBrowser": {
+                  "question": "How do I use the in-app browser on mobile for dApps?",
+                  "answer": "Open the Superhero Wallet mobile app and navigate to the In-App Browser section. Input the dApp URL, and connect directly to interact without leaving the app."
+                }
+              }
+            },
+            "giftCards": {
+              "title": "Using Gift Cards and Invite Links",
+              "items": {
+                "createSendGiftCard": {
+                  "question": "How do I create and send a gift card?",
+                  "answer": "In Wallet Settings, access the “Gift Cards” feature (currently available for æternity accounts only). Enter the amount you want to load onto the gift card, generate it, and share the unique invite link with new users. They can use it to redeem the gift card balance."
+                },
+                "customizeGiftCards": {
+                  "question": "Can gift cards be customized?",
+                  "answer": "At present, you can specify the amount, but customization features are limited to this function."
+                }
+              }
+            },
+            "troubleshooting": {
+              "title": "Troubleshooting Common Issues",
+              "items": {
+                "forgotPassword": {
+                  "question": "What should I do if I forgot my wallet password?",
+                  "answer": "If you forget your password, the only way to access your wallet is by resetting it and using your seed phrase to restore your accounts. Ensure you’ve backed up your seed phrase and address book before resetting."
+                },
+                "resetWallet": {
+                  "question": "How do I reset my wallet?",
+                  "answer": "In Settings, select the “Reset Wallet” option. Note that this action will delete all local wallet data, so back up your seed phrase and address book beforehand."
+                },
+                "delayedTransaction": {
+                  "question": "Why is my transaction delayed?",
+                  "answer": "Delays can happen when the blockchain is congested. Transactions might not display immediately on the wallet but will appear once they’re processed and indexed."
+                },
+                "dappConnection": {
+                  "question": "Why can’t I connect to a dApp?",
+                  "answer": "Ensure that you’re using the latest version of Superhero Wallet. We provide EVM connectivity and WalletConnect for ETH dApps; AE uses its own method for dApp integration."
+                },
+                "walletNotSyncing": {
+                  "question": "What can I do if my wallet isn’t syncing?",
+                  "answer": "Try upgrading the wallet to the latest version and make sure you have internet connectivity."
+                }
+              }
+            },
+            "advanced": {
+              "title": "Advanced Features and Settings",
+              "items": {
+                "switchNetworks": {
+                  "question": "How do I switch between mainnet and testnet?",
+                  "answer": "Go to Settings, where you’ll see an option to toggle between mainnet, testnet, and custom networks. Select the network based on your needs."
+                },
+                "manageMultipleAccounts": {
+                  "question": "How do I manage multiple accounts?",
+                  "answer": "You can create and manage multiple accounts within the same wallet by scrolling through the active account cards on the Dashboard."
+                },
+                "exportAddressBook": {
+                  "question": "Can I export my address book?",
+                  "answer": "Yes, you can export saved addresses in JSON format, which can then be imported into another Superhero Wallet."
+                },
+                "customizeSettings": {
+                  "question": "How do I customize notifications and settings?",
+                  "answer": "Access the Settings menu to adjust notifications, customize profile preferences, and configure other wallet options."
+                }
+              }
+            },
+            "support": {
+              "title": "Support and Resources",
+              "items": {
+                "githubRepository": {
+                  "question": "Where can I find Superhero Wallet’s GitHub Repository?",
+                  "answer": "Visit Superhero Wallet GitHub for the repository, where you can view the source code, report issues, and request new features."
+                },
+                "reportBugs": {
+                  "question": "How do I report bugs or request features?",
+                  "answer": "Submit bug reports or feature requests directly through GitHub."
+                },
+                "contactSupport": {
+                  "question": "Who can I contact for support?",
+                  "answer": "For support, visit the Help Center on our website or submit bug reports directly through GitHub."
+                }
+              }
+            }
+          }
         },
         "cta": {
           "title": "Take control of your crypto",
           "description": "Download Superhero Wallet and manage all your assets in one secure, multichain wallet."
+        },
+        "mock": {
+          "currentBalance": "Current Balance",
+          "superheroWallet": "Superhero Wallet",
+          "tokens": "Tokens",
+          "vault": "Vault {{address}}",
+          "airgap": "AIRGAP",
+          "superhero": "SUPERHERO",
+          "aens": "AENS",
+          "chainNameExample": "yourname.chain",
+          "availableBalance": "Available Balance: {{amount}}",
+          "amountToSend": "Amount to send",
+          "recipientIdentity": "Recipient identity",
+          "sendAssets": "Send Assets",
+          "broadcasting": "Broadcasting...",
+          "confirmed": "✓ Confirmed ({{txHash}})",
+          "executed": "✓ Executed",
+          "awaitingSignature": "● Awaiting Signature",
+          "transferRequest": "Transfer request:",
+          "threshold": "Threshold: {{required}} of {{total}}",
+          "signedCount": "{{signed}}/{{total}} Signed",
+          "signedCheck": "Signed ✓",
+          "pending": "Pending ⏳",
+          "signAsBackupKey": "Sign as Backup Key",
+          "addressDirectory": "Address Directory",
+          "searchContacts": "Search contacts...",
+          "noContactsMatch": "No contacts match your query",
+          "vaultOffline": "Vault (Offline)",
+          "appOnline": "App (Online)",
+          "connected": "Connected 🟢",
+          "active": "Active 🟢",
+          "available": "Available",
+          "registered": "Registered ✓",
+          "touchFaceIdActive": "Touch ID / Face ID Active",
+          "privateKey": "Private Key",
+          "seedPhrase": "Seed Phrase",
+          "standardFormat": "⚡ Standard format",
+          "secureImport": "Secure import ✓"
         }
       },
       "tokenSummary": {
@@ -536,7 +826,7 @@
       "branding": {
         "brandKit": "Superhero Brand Kit",
         "heroTitle": "Brand Identity Guidelines",
-        "heroDescription": "Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you construct material.",
+        "heroDescription": "Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you create materials.",
         "colorPaletteTitle": "Brand Color Palette",
         "copyHexCode": "Copy HEX Code",
         "typographyTitle": "Typography System",
@@ -558,33 +848,57 @@
         "faviconDescription": "The minimalistic geometric shield icon. Highly identifiable at small scales, ideal for browser tabs, app icons, and avatar frames.",
         "squareLogoAlt": "Superhero Square Logo",
         "squareLogoTitle": "Square Brand Logo",
-        "squareLogoDescription": "High quality PNG representation of the square logo emblem. Optimal for social profile images, directories, and standard app stores.",
+        "squareLogoDescription": "High-quality PNG representation of the square logo emblem. Optimal for social profile images, directories, and standard app stores.",
         "downloadPng": "Download PNG",
         "bannersTitle": "Digital Banners & Assets",
         "ogBannerAlt": "Superhero OG Social Banner",
         "ogBannerTitle": "Standard OG Social Banner",
-        "ogBannerDescription": "The default sharing metadata card for Twitter, Telegram, Discord, or Facebook.",
+        "ogBannerDescription": "The default sharing metadata card for X, Telegram, Discord, or Facebook.",
         "interfaceShowcaseAlt": "Superhero Interface Showcase",
         "appInterfacePreview": "App Interface Preview",
         "appShowcaseTitle": "App Showcase Screenshot",
         "appShowcaseDescription": "App screenshot highlighting interface layout, trending topics, feeds, and cryptocurrency components.",
         "customIconsTitle": "Custom Icons",
-        "downloadIcon": "Download {{name}} Icon"
+        "downloadIcon": "Download {{name}} Icon",
+        "colors": {
+          "neonTeal": {
+            "name": "Primary Neon Teal",
+            "desc": "The heart of our visual system. Used for core interactions, success states, and primary actions."
+          },
+          "neonPink": {
+            "name": "Neon Pink / Crimson",
+            "desc": "Vibrant highlight accent. Used for error states, destructive actions, and active gradients."
+          },
+          "neonBlue": {
+            "name": "Neon Blue",
+            "desc": "Fresh corporate balance. Used for sub-headings, secondary buttons, and informative components."
+          },
+          "background": {
+            "name": "Background",
+            "desc": "Our deep dark-mode backdrop, optimized for high contrast with radiant cyberpunk neon hues."
+          }
+        },
+        "icons": {
+          "diamond": "Diamond",
+          "wallet": "Wallet",
+          "hashtag": "Hashtag",
+          "feed": "Feed"
+        }
       },
       "terms": {
         "title": "TERMS OF USE",
         "lastUpdated": "The present Terms of Use (\"Terms\") were last updated on 29 September 2025.",
         "section1Title": "I. Company information",
-        "section1Para1": "Superhero.com is an open-source, decentralised protocol deployed on æternity blockchain. The protocol operates in a distributed manner, and no single party controls or operates the underlying smart contracts. Users interact with the protocol directly, at their own discretion and risk.",
+        "section1Para1": "Superhero.com is an open-source, decentralised protocol deployed on the æternity blockchain. The protocol operates in a distributed manner, and no single party controls or operates the underlying smart contracts. Users interact with the protocol directly, at their own discretion and risk.",
         "section1Para2": "Superhero.com LVC, with address Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein (\"the Company\") provides and maintains this website and related interfaces (the \"Interface\") to facilitate access to the protocol. The Company does not hold custody of assets, execute transactions on behalf of users, or control the operation of the decentralised protocol.",
         "section1Para3": "By using the Interface, you acknowledge that all transactions occur directly on the blockchain, outside the control of the Company, and that you remain solely responsible for securing your digital assets, private keys, and compliance with applicable laws. By accessing or using the Website, you represent and warrant that you are at least 18 years old (or the age of majority in your jurisdiction, if higher) and have the legal capacity to enter into these Terms.",
         "section2Title": "II. Subject of activity",
-        "section2Para1": "Superhero.com developed a website which reflects as a newsfeed users’ donations and comments to news about anything they like on the internet and gives the possibility for other users to actively donate and comment on the news available on the newsfeed. This information hub enables users to incentivize informative and accurate updates about anything all over the world — whether created by news organizations or regular people. Therefore, due to the active role of users, the website is a platform on which real-time global updates about best content are shared.",
+        "section2Para1": "Superhero.com developed a website which reflects as a newsfeed users’ donations and comments to news about anything they like on the internet and gives the possibility for other users to actively donate and comment on the news available on the newsfeed. This information hub enables users to incentivize informative and accurate updates about anything all over the world — whether created by news organizations or regular people. Therefore, due to the active role of users, the website is a platform on which real-time global updates about the best content are shared.",
         "section2Para2": "Superhero.com allows Users to swap, wrap, and bridge using a decentralised protocol. Swap enables users to directly exchange native AE tokens and AEX-9 tokens with each other. Transactions are executed directly on-chain, are irreversible, and users retain full responsibility for their assets and keys. Wrap converts AE into wrapped AE (wAE) for DeFi use, and back again when needed. ETH Bridge lets users move native ETH from the Ethereum blockchain into æternity as æETH, which is then automatically swapped into AE tokens. Pool — users provide liquidity into pools that power the decentralized exchange (DEX) swaps, and they share in the transaction fees. All these features operate directly from the user’s wallet to on-chain smart contracts, without intermediaries. They are trustless, meaning users stay in control of their assets at all times.",
         "section3Title": "III. Legal Disclaimer",
         "section3Para1": "Superhero.com functions as a decentralised, open-source protocol through which users interact directly on the blockchain without intermediaries. When using the Website, you remain solely responsible for the security of your private keys and wallets, as the Website operates in a decentralised manner, leaving full control of assets and keys with you. All use of the Website occurs directly on the blockchain via a decentralised protocol, with users retaining full responsibility for safeguarding their assets and transaction decisions. Nothing on the Website constitutes guidance or professional advice. Users are solely responsible for the use of their assets and activities conducted through the protocol. It is the sole responsibility of users to assess the risks associated with the use of the Website, including but not limited to market volatility, changes in regulation, and potential technological vulnerabilities. The Website is provided \"as is\" and \"as available,\" without warranties of any kind, whether express or implied. To the fullest extent permitted by law, the Website and its contributors disclaim all liability for direct, indirect, incidental, or consequential damages arising out of or in connection with the use of the Website, including but not limited to loss of funds, data, or profits. You are responsible for ensuring that your use of the Website complies with the laws and regulations applicable to it. As the Website is open-source, deployments may be operated independently by community members. Superhero.com is not responsible for the operation, modification, or compliance of third-party or community-run instances.",
         "section4Title": "IV. Copyright notice regarding third-party links",
-        "section4Para1": "Please bear in mind that the Website’s main function is to objectively and without interference reflect donations and comments of users to third parties — organizations or regular people — sharing online news regarding best content. Therefore, Superhero.com is not the owner or author of the content shared on the newsfeed and does not in any way claim any rights over the materials in whole or partially. The materials published on the newsfeed are objects of intellectual property of the people or organizations claimed in the third-party links. In regard to third-party links, please bear in mind that by clicking on the available hyperlinks, users are forwarded to third-party websites. These third-party websites are not connected to Superhero.com, and they have independent and separate policies regarding their use. Users should inform themselves about the rules applicable to each website and comply with their online behavior accordingly. Please note that the appearance of the links on the newsfeed is not under the control of Superhero.com but of users. Superhero.com accepts no responsibility or liability whatsoever with regard to the information provided by third parties and their hyperlink relation on the Website. The hyperlinks may forward to news regarding highly sensitive or inappropriate content for some people. Users click on the hyperlinks and visit the third-party websites at their own risk.",
+        "section4Para1": "Please bear in mind that the Website’s main function is to objectively and without interference reflect donations and comments of users to third parties — organizations or regular people — sharing online news regarding the best content. Therefore, Superhero.com is not the owner or author of the content shared on the newsfeed and does not in any way claim any rights over the materials in whole or partially. The materials published on the newsfeed are objects of intellectual property of the people or organizations claimed in the third-party links. In regard to third-party links, please bear in mind that by clicking on the available hyperlinks, users are forwarded to third-party websites. These third-party websites are not connected to Superhero.com, and they have independent and separate policies regarding their use. Users should inform themselves about the rules applicable to each website and comply with their online behavior accordingly. Please note that the appearance of the links on the newsfeed is not under the control of Superhero.com but of users. Superhero.com accepts no responsibility or liability whatsoever with regard to the information provided by third parties and their hyperlink relation on the Website. The hyperlinks may forward to news regarding highly sensitive or inappropriate content for some people. Users click on the hyperlinks and visit the third-party websites at their own risk.",
         "section5Title": "V. Copyright notice regarding the Website",
         "section5Para1": "The Terms are applicable for the following internet address: https://superhero.com/ (hereinafter the “Website”). Superhero.com supports the operation of this Website, which serves as an interface to the decentralised protocol. The concept for the Website, the layout of the Website and the integrated components and structures for its creation, including but not limited to logos, trademarks, domain names, codes, which appear in any way on the website or are accessible in any way through the website: https://superhero.com/ are protected by the current laws with subject intellectual property. Therefore, they belong strictly and solely to Superhero.com, and the use of any of the above-mentioned is subject to prior authorisation. None of the above-mentioned can be reproduced, copied, edited, transmitted, downloaded or distributed in any way whatsoever, partially or in whole, on any medium whatsoever, without the prior written consent of Superhero.com. Apart from this, the use for press requirements is allowed solely in compliance with the intellectual property rights that are mentioned. The act of copying is authorised only for private, non-commercial, personal use on the personal technical devices of the user (including telephone, laptop, computer, tablet). The authorised use must not be denatured, modified, altered or changed in any way whatsoever.",
         "section6Title": "VI. Indemnification",
@@ -603,13 +917,13 @@
         "section6Para2": "You acknowledge and agree that the decentralised nature of the protocol means that the Indemnified Parties have no control over, and accept no responsibility for, on-chain transactions, and that you bear full responsibility for securing your private keys, digital assets, and compliance with applicable legal and regulatory requirements. This indemnity will apply regardless of whether the claims arise out of contract, tort (including negligence), strict liability, or other legal theory, and will survive your use of the Website and termination of these Terms.",
         "section7Title": "VII. Governing Law and Jurisdiction",
         "section7Para1": "These Terms shall be governed by and construed in accordance with the laws of the Principality of Liechtenstein, without regard to its conflict of law rules. Any dispute, controversy, or claim arising out of or in connection with these Terms, including the validity, interpretation, performance, or termination thereof, shall be submitted to the exclusive jurisdiction of the courts of Vaduz, Liechtenstein. The parties expressly waive any objection based on inconvenient forum or jurisdiction and agree that the courts of Vaduz shall have full authority to hear and decide such disputes.",
-        "copyrightNotice": "“COPYRIGHT – 2025 – Superhero.com ALL RIGHTS RESERVED”. Superhero.com reserves its right to take every necessary legal action against any breach or infringement of its intellectual property rights. The rules mentioned above apply to databases on the website, which are protected under Directive 96/9/EC of the European Parliament and the Council of 11 March 1996 on the legal protection of databases. For any additional questions, please contact Superhero.com team at: superherowallet@protonmail.com"
+        "copyrightNotice": "“COPYRIGHT – 2025 – Superhero.com ALL RIGHTS RESERVED”. Superhero.com reserves its right to take every necessary legal action against any breach or infringement of its intellectual property rights. The rules mentioned above apply to databases on the website, which are protected under Directive 96/9/EC of the European Parliament and the Council of 11 March 1996 on the legal protection of databases. For any additional questions, please contact the Superhero.com team at: superherowallet@protonmail.com"
       },
       "privacy": {
         "title": "PRIVACY POLICY",
-        "lastUpdated": "The present Privacy Policy was last updated on 29th of September 2025.",
+        "lastUpdated": "The present Privacy Policy was last updated on 29 September 2025.",
         "introHeading": "I. Introduction",
-        "introP1": "Superhero.com is an open-source, decentralised protocol deployed on æternity blockchain. The protocol operates in a distributed manner, and no single party controls or operates the underlying smart contracts. Users interact with the protocol directly, at their own discretion and risk.",
+        "introP1": "Superhero.com is an open-source, decentralised protocol deployed on the æternity blockchain. The protocol operates in a distributed manner, and no single party controls or operates the underlying smart contracts. Users interact with the protocol directly, at their own discretion and risk.",
         "introP2": "Superhero.com LVC, with address Dr. Grass-Strasse 12, Vaduz, 9490 Liechtenstein (\"the Company\") provides and maintains this website and related interfaces (the \"Interface\") to facilitate access to the protocol.",
         "introP3": "This Privacy Policy explains how Superhero.com handles information in connection with your use of the Platform and its website/interface. If you have any questions regarding this Policy, please contact us at superherowallet@protonmail.com. If you do not agree to the terms of this Policy, please do not use the Website. Each time you use the Website, the current version of this Policy will apply. The new version of the Privacy Policy becomes effective from the day it is announced publicly on the Website unless stated otherwise.",
         "definitionsHeading": "II. Definitions",
@@ -684,7 +998,7 @@
           "eyebrow": "Superhero ID",
           "titleLine1": "Decentralized identity,",
           "titleLine2": "W3C standard",
-          "description": "A decentralized DID that links your social accounts to your wallet. Your identity is verifiable, portable, and censorship-resistant — following the W3C standard for decentralized identifiers.",
+          "description": "A DID (decentralized identifier) that links your social accounts to your wallet. Your identity is verifiable, portable, and censorship-resistant — following the W3C standard for decentralized identifiers.",
           "readWhitepaper": "Read the Whitepaper",
           "point1": "W3C DID standard compliant",
           "point2": "Links wallet, chain names, and X handle",
@@ -787,6 +1101,64 @@
       "getAe": "Get AE",
       "superheroId": "Superhero ID",
       "account": "Account"
+    },
+    "transactionNotification": {
+      "fieldBio": "bio",
+      "fieldWebsite": "website",
+      "fieldChainName": "chain name",
+      "fieldProfile": "profile",
+      "confirmInWallet": "Confirm in your wallet",
+      "signTransactionToContinue": "Sign the transaction to continue",
+      "approveTokenSpending": "Approve token spending",
+      "approveAllowanceStep": "Step {{step}} of {{total}} — allow Superhero to use your {{token}}",
+      "creatingToken": "Creating #{{name}}",
+      "signInWalletToContinue": "Sign in your wallet to continue",
+      "publishingPost": "Publishing post",
+      "publishingReply": "Publishing reply",
+      "signClaimRequest": "Sign the claim request for {{name}}.chain",
+      "swappingTokens": "Swapping {{amountIn}} {{tokenIn}} → {{amountOut}} {{tokenOut}}",
+      "wrappingAmount": "Wrapping {{amount}} AE → WAE",
+      "unwrappingAmount": "Unwrapping {{amount}} WAE → AE",
+      "addingLiquidityAmounts": "Adding {{amountA}} {{tokenA}} + {{amountB}} {{tokenB}}",
+      "removingLiquidityFromPool": "Removing {{pct}}% from {{tokenA}}/{{tokenB}}",
+      "signToUpdateFields": "Sign to update your {{fields}}",
+      "confirmingOnBlockchain": "Confirming on blockchain",
+      "usuallyTakesFewSeconds": "Usually takes a few seconds",
+      "approvingToken": "Approving {{token}}…",
+      "confirmingAllowanceOnChain": "Confirming allowance on-chain",
+      "confirmingOnBlockchainEllipsis": "Confirming on blockchain…",
+      "claimingName": "Claiming {{name}}.chain",
+      "claimStepPreclaim": "Step 1 of 4 — reserving the name on-chain",
+      "claimStepClaim": "Step 2 of 4 — submitting the sponsored claim",
+      "claimStepUpdate": "Step 3 of 4 — updating the name pointers",
+      "claimStepTransfer": "Step 4 of 4 — transferring the name to your wallet",
+      "claimQueued": "Preparing the sponsored transactions. This can take a couple of minutes.",
+      "claimProcessingBackground": "Processing in the background. You can continue using the app.",
+      "swapInProgress": "Swap in progress",
+      "usuallyConfirmsFewSeconds": "Usually confirms in a few seconds",
+      "wrappingAeToWae": "Wrapping AE → WAE",
+      "unwrappingWaeToAe": "Unwrapping WAE → AE",
+      "confirmingOnChainEllipsis": "Confirming on-chain…",
+      "addingLiquidityEllipsis": "Adding liquidity…",
+      "depositingIntoPool": "Depositing into {{tokenA}}/{{tokenB}} pool",
+      "removingLiquidityEllipsis": "Removing liquidity…",
+      "withdrawingFromPool": "Withdrawing from {{tokenA}}/{{tokenB}} pool",
+      "updatingProfileEllipsis": "Updating profile…",
+      "savingYourFields": "Saving your {{fields}}",
+      "transactionConfirmed": "Transaction confirmed",
+      "allowanceApproved": "Allowance approved",
+      "tokenApproved": "{{token}} approved",
+      "swapConfirmed": "Swap confirmed",
+      "wrapComplete": "Wrap complete",
+      "unwrapComplete": "Unwrap complete",
+      "tokenCreated": "Token created",
+      "postPublished": "Post published",
+      "replyPublished": "Reply published",
+      "nameClaimed": "Name claimed",
+      "liquidityAdded": "Liquidity added",
+      "liquidityRemoved": "Liquidity removed",
+      "profileUpdated": "Profile updated",
+      "fieldsSaved": "{{fields}} saved"
     }
   },
   "dex": {
@@ -1112,7 +1484,7 @@
       "highPriceImpactWarning": "High price impact. Consider reducing the amount or choosing a different route.",
       "swapStep": "{{label}}... ({{current}}/{{total}})",
       "swapping": "Swapping...",
-      "confirmOnWallet": "Confirm on Wallet"
+      "confirmOnWallet": "Confirm in Wallet"
     },
     "liquidityConfirmation": {
       "confirmAddLiquidity": "Confirm Add Liquidity",
@@ -1198,7 +1570,7 @@
       "nativeToken": "Native Token",
       "noTokensAvailable": "No tokens available",
       "tryAddingCustomToken": "Try adding a custom token by address",
-      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the mint address or check token list settings below."
+      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below."
     },
     "exploreTransactions": {
       "txTypes": {
@@ -1305,7 +1677,7 @@
     "loadMore": "Load more",
     "feedAnnouncement": {
       "new": "New",
-      "text": "Superhero is now available on iOS, Android & AI Agents via Openclaw or Claude - the new on-chain home for AI Agents to earn real value through automated trading of trending topics, posting tamperproof content & instantly receiving a self-custodial wallet.",
+      "text": "Superhero is now available on iOS, Android & to AI agents via Openclaw or Claude — the new on-chain home for AI agents to earn real value through automated trading of trending topics, posting tamperproof content & instantly receiving a self-custodial wallet.",
       "installNow": "Install Now →"
     },
     "blockchainInfo": {
@@ -1511,7 +1883,7 @@
       "today": "Today",
       "7days": "7 Days",
       "30days": "30 Days",
-      "allTime": "All-Time",
+      "allTime": "All Time",
       "noTokenSelected": "No token selected.",
       "price": "Price",
       "high24h": "24h High",
@@ -1728,7 +2100,7 @@
         "bullet1": "Early buyers get tokens at lower prices",
         "bullet2": "Each purchase increases the price for the next buyer",
         "bullet3": "Selling tokens reduces the supply and lowers the price",
-        "bullet4": "The curve ensures liquidity - you can always buy or sell",
+        "bullet4": "The curve ensures liquidity — you can always buy or sell",
         "daoTreasuryTitle": "DAO Treasury",
         "daoTreasuryBody": "A portion of every transaction goes into a DAO treasury controlled by token holders. This treasury can fund community initiatives through on-chain governance votes, allowing the community to collectively decide how to grow and develop the token.",
         "feesTitle": "Fees & Affiliations",
@@ -1833,7 +2205,7 @@
       "heroRewards": "Rewards",
       "referAndEarn": "Refer & Earn",
       "yourInvitations": "Your Invitations",
-      "disclaimer": "The Superhero reward program rewards users for creating content on other social media platforms (like X) with backlinks and/or invite links, referring new users to the platform. Rewards will be distributed in the form of ae tokens. Eligibility and rewards depend on on-chain activity, are not guaranteed and can be paused at any time without notice or liability. The right is reserved to disqualify any user from the program. Users from blacklisted countries are not eligible for rewards. By participating in the program, users agree to these terms and conditions. Rewards sent may be subject to tax reporting. Users are responsible for any tax obligations arising from receiving rewards."
+      "disclaimer": "The Superhero reward program rewards users for creating content on other social media platforms (like X) with backlinks and/or invite links, referring new users to the platform. Rewards will be distributed in the form of AE tokens. Eligibility and rewards depend on on-chain activity, are not guaranteed and can be paused at any time without notice or liability. The right is reserved to disqualify any user from the program. Users from blacklisted countries are not eligible for rewards. By participating in the program, users agree to these terms and conditions. Rewards sent may be subject to tax reporting. Users are responsible for any tax obligations arising from receiving rewards."
     },
     "leaderboardFilters": {
       "chooseFromCalendar": "Choose {{label}} from calendar",
@@ -1970,13 +2342,13 @@
         "descEarn": "By completing this milestone, you earn 50 AE tokens!",
         "step1": "Link your X account to your on-chain SuperheroID",
         "step2": "Post about Superhero with your linked X account (mention @superhero_chain or link superhero.com)",
-        "linkTwitter": "Link Twitter",
+        "linkX": "Link X",
         "postOnX": "Post on X",
         "complete": "Milestone complete — 50 AE earned",
         "loadingProgress": "Loading your progress…"
       },
       "milestone2": {
-        "earnBadge": "Earn 10~30 AE Per Post Daily",
+        "earnBadge": "Earn 10–30 AE Per Post Daily",
         "title": "Post on X & Earn",
         "desc": "Publish posts about Superhero from your linked X account to spread the word and share with your network. Each post must include your unique referral link in the post content. Your unique referral link will automatically be created when you click \"Post\".",
         "tierIneligible": "Less than 100 followers: not eligible",
@@ -1989,7 +2361,7 @@
         "currentStreak": "Current streak: {{days}}/{{total}} days",
         "openingWallet": "Opening wallet…",
         "postOnX": "Post on X",
-        "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10 day consecutive streak will earn you 50 AE extra, so keep posting and engaging with the community.",
+        "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10-day consecutive streak will earn you an extra 50 AE, so keep posting and engaging with the community.",
         "complete": "Milestone complete — {{amount}} AE earned"
       }
     },
@@ -2426,7 +2798,7 @@
     "copyAddress": "Copy Address",
     "tokensOwned": "Tokens Owned",
     "tokensCreated": "Tokens Created",
-    "transactionsViewComingSoon": "Transactions view will be added once backend endpoint is exposed.",
+    "transactionsViewComingSoon": "The transactions view is coming soon.",
     "mcLabel": "MC:",
     "holdersLabel": "Holders:",
     "switchToDefault": "Switch to default",
@@ -2499,11 +2871,11 @@
     "qAccountsTitle": "What can I see on Accounts pages?",
     "qAccountsAnswer": "Account profiles show owned tokens, created tokens, and activity. Leaderboards highlight the most active creators and traders.",
     "qRewardsProgramTitle": "What is the Superhero Rewards Program?",
-    "qRewardsProgramAnswer": "The Superhero Rewards Program lets you earn AE tokens by completing milestones: verifying your X (Twitter) account, inviting new users, and posting about Superhero on social media. Complete milestones to unlock phases and earn up to 200 AE tokens.",
+    "qRewardsProgramAnswer": "The Superhero Rewards Program lets you earn AE tokens by completing milestones: verifying your X account, inviting new users, and posting about Superhero on social media. Complete milestones to unlock phases and earn up to 200 AE tokens.",
     "qRewardsMilestonesTitle": "What milestones are available?",
-    "qRewardsMilestonesLi1": "Verify X Account & Post — connect your X account and to prove ownership.",
-    "qRewardsMilestonesLi2": "Link your X account to SuperheroID onchain.",
-    "qRewardsMilestonesLi3": "Post about Superhero — publish 10 posts that include your ref link in the text.",
+    "qRewardsMilestonesLi1": "Verify X Account & Post — connect your X account and post to prove ownership.",
+    "qRewardsMilestonesLi2": "Link your X account to SuperheroID on-chain.",
+    "qRewardsMilestonesLi3": "Post about Superhero — publish 10 posts that include your referral link in the text.",
     "qRewardsClaimTitle": "How do I claim my rewards?",
     "qRewardsClaimAnswer": "Once a milestone is marked as completed, a claim banner appears on the Rewards page. Click the claim button and confirm the transaction in your wallet. A small gas fee applies.",
     "qRewardsEligibilityTitle": "Are rewards guaranteed?",
@@ -2565,7 +2937,7 @@
     "referDescription": "Superhero invitations can help grow the network and unlock rewards when invitees become active. Use the invite page to create links and track rewards.",
     "referAction": "Open Refer & Earn",
     "xEarnTitle": "Earn by posting on X",
-    "xEarnDescription": "A future earning path will reward activity from posting on X (formerly Twitter). This option is coming soon.",
+    "xEarnDescription": "A future earning path will reward activity from posting on X. This option is coming soon.",
     "comingSoon": "Coming soon",
     "safetyTitle": "Before you buy",
     "safetyLi1": "Confirm the token, network, deposit address, withdrawal fees, and minimum withdrawal amount.",

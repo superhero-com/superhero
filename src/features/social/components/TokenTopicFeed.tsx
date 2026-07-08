@@ -487,7 +487,7 @@ const TokenTopicFeed = ({
             size="medium"
             className="min-w-24"
           >
-            Load more
+            {t('loadMore')}
           </AeButton>
         </div>
       )}

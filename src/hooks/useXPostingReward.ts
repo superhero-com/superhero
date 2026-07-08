@@ -7,6 +7,7 @@ import {
   type XReferralLinkResponse,
 } from '@/api/backend';
 import { signAndVerifyLinkMessage } from '@/utils/signLinkMessage';
+import i18n from '@/i18n';
 import { useAeSdk } from './useAeSdk';
 import { useWalletConnect } from './useWalletConnect';
 import { useWalletReconnect } from './useWalletReconnect';
@@ -110,7 +111,7 @@ export function useXPostingReward() {
 
   const fetchReferralLink = useCallback(async (): Promise<XReferralLinkResponse | null> => {
     if (!activeAccount) {
-      setError('Connect your wallet first');
+      setError(i18n.t('common.messages.connectWalletFirst'));
       return null;
     }
     setError(null);
@@ -122,7 +123,7 @@ export function useXPostingReward() {
       return result;
     } catch (err) {
       if (!isUserRejection(err)) {
-        surfaceError(err instanceof Error ? err.message : 'Failed to get referral link');
+        surfaceError(err instanceof Error ? err.message : i18n.t('common.messages.referralLinkFailed'));
       }
       return null;
     } finally {
@@ -132,7 +133,7 @@ export function useXPostingReward() {
 
   const runRewardCheck = useCallback(async (): Promise<XPostingRewardStatus | null> => {
     if (!activeAccount) {
-      setError('Connect your wallet first');
+      setError(i18n.t('common.messages.connectWalletFirst'));
       return null;
     }
     setError(null);
@@ -149,7 +150,7 @@ export function useXPostingReward() {
       return updated;
     } catch (err) {
       if (!isUserRejection(err)) {
-        surfaceError(err instanceof Error ? err.message : 'Reward check failed');
+        surfaceError(err instanceof Error ? err.message : i18n.t('common.messages.rewardCheckFailed'));
       }
       return null;
     } finally {

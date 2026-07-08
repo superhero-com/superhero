@@ -317,6 +317,8 @@ async function loadOwnedChainNamesFromMdw(address: string): Promise<OwnedChainNa
 const ProfileEditModal = ({
   open,
   onClose,
+  onHide,
+  onSaveError,
   onSkip,
   onClaimSuccess,
   address,
@@ -326,6 +328,16 @@ const ProfileEditModal = ({
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
+  // Hide the dialog WITHOUT running the parent's cancel/dismiss routing (flow flags,
+  // refetches). Called when a save kicks off, and again if the user dismisses a reopened
+  // dialog while that save is still running — in both cases the save's settle callbacks
+  // (onClose(updated) on success, onSaveError on failure) decide the outcome. Falls back
+  // to onClose() when not provided.
+  onHide?: () => void;
+  // Called when the save fails after the dialog was already closed. Deliberately separate
+  // from onClose(): a failed save is not a user cancel, so parents must not run their
+  // dismiss logic (e.g. resetting onboarding flow flags).
+  onSaveError?: () => void;
   onSkip?: () => void;
   onClaimSuccess?: () => void;
   address?: string;
@@ -366,7 +378,6 @@ const ProfileEditModal = ({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
-  const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showSuperheroIdInfo, setShowSuperheroIdInfo] = useState(false);
   const [showChainNameInfo, setShowChainNameInfo] = useState(false);
@@ -388,6 +399,10 @@ const ProfileEditModal = ({
   const xSectionRef = useRef<HTMLDivElement | null>(null);
   const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
   const submittedRef = useRef(false);
+  // Guards against overlapping saves: rapid repeated Save clicks could otherwise start
+  // parallel link/sign flows for the same fields. Stays set for the whole background save;
+  // while set, dismissal hides the dialog silently instead of running cancel routing.
+  const savingRef = useRef(false);
   const availabilityRequestIdRef = useRef(0);
   const sponsorshipRequestIdRef = useRef(0);
 
@@ -506,7 +521,6 @@ const ProfileEditModal = ({
 
   useEffect(() => {
     if (!open) {
-      setLoading(false);
       setFormError(null);
       setClaiming(false);
       setClaimInFlight(false);
@@ -873,11 +887,28 @@ const ProfileEditModal = ({
     return msg || t('messages.failedToUpdateProfile');
   };
 
-  const handleClose = () => onClose();
+  const hideDialog = () => {
+    if (onHide) onHide();
+    else onClose();
+  };
+  // While a save is in flight (including one started from an earlier open of this dialog),
+  // dismissing must only hide the dialog: running the parent's onClose/onSkip would reset
+  // onboarding flow flags and kick off refetches that race the save. The save's settle
+  // callbacks (onClose(updated) / onSaveError) take care of the routing instead.
+  const handleClose = () => {
+    if (savingRef.current) {
+      hideDialog();
+      return;
+    }
+    onClose();
+  };
   const handleSkip = () => {
-    if (loading) return;
+    if (savingRef.current) {
+      hideDialog();
+      return;
+    }
     if (onSkip) onSkip();
-    else handleClose();
+    else onClose();
   };
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -886,31 +917,48 @@ const ProfileEditModal = ({
   };
 
   async function onSave() {
+    if (savingRef.current) return;
+    const targetAddress = (address as string) || (activeAccount as string);
+    if (!targetAddress || !activeAccount) {
+      openModal({ name: 'onboarding' });
+      return;
+    }
+    const validationError = validateForm();
+    if (validationError) {
+      setFormError(validationError);
+      push(<div style={{ color: '#ffb3b3' }}>{validationError}</div>);
+      return;
+    }
+    const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
+    const chainNameChanged = (
+      trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
+    );
+    const websiteChanged = trimmedForm.website !== initialForm.website.trim();
+    if (!bioChanged && !chainNameChanged && !websiteChanged) {
+      const msg = t('messages.profileNothingToUpdate');
+      setFormError(msg);
+      push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+      return;
+    }
+
+    const changedFields: Array<'bio' | 'website' | 'chain_name'> = [
+      ...(bioChanged ? (['bio'] as const) : []),
+      ...(websiteChanged ? (['website'] as const) : []),
+      ...(chainNameChanged ? (['chain_name'] as const) : []),
+    ];
+    const notifyPayload = { type: TxPayloadType.UpdateProfile, fields: changedFields } as const;
+
+    savingRef.current = true;
+    setFormError(null);
+    // The link/sign flow below can trigger one or more wallet prompts and background requests.
+    // Close the dialog right away instead of blocking it on an undismissable "Saving…" state,
+    // and surface progress via the shared transaction toast (same as create-token/swap).
+    // hideDialog lets the parent hide the dialog without treating this as a cancel;
+    // routing (success vs dismiss) happens via onClose/onSaveError once the save settles.
+    notifySubmitted(notifyPayload);
+    hideDialog();
+
     try {
-      const targetAddress = (address as string) || (activeAccount as string);
-      if (!targetAddress || !activeAccount) {
-        openModal({ name: 'onboarding' });
-        return;
-      }
-      const validationError = validateForm();
-      if (validationError) {
-        setFormError(validationError);
-        push(<div style={{ color: '#ffb3b3' }}>{validationError}</div>);
-        return;
-      }
-      const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
-      const chainNameChanged = (
-        trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
-      );
-      const websiteChanged = trimmedForm.website !== initialForm.website.trim();
-      if (!bioChanged && !chainNameChanged && !websiteChanged) {
-        const msg = t('messages.profileNothingToUpdate');
-        setFormError(msg);
-        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
-        return;
-      }
-      setLoading(true);
-      setFormError(null);
       if (bioChanged) {
         if (trimmedForm.bio) {
           await linkBio({ address: targetAddress, bio: trimmedForm.bio });
@@ -941,6 +989,9 @@ const ProfileEditModal = ({
           await unlinkSite(targetAddress);
         }
       }
+
+      notifyPending(notifyPayload);
+
       const prevProfile = queryClient.getQueryData<ProfileAggregate | null>(
         ['SuperheroApi.getProfile', targetAddress],
       );
@@ -950,6 +1001,16 @@ const ProfileEditModal = ({
       ]);
       const accountRecord = accountResult.status === 'fulfilled' ? accountResult.value : null;
       const profileFromApi = profileResult.status === 'fulfilled' ? profileResult.value : null;
+
+      // Discard any in-flight cache fetches for these keys before writing the fresh data.
+      // The profile page refetches on modal close (the dialog can be reopened and dismissed
+      // while this save is still running) and polls the profile query on an interval; a
+      // fetch started before the links above were applied would resolve with a pre-save
+      // snapshot and overwrite the setQueryData writes below.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ['SuperheroApi.getProfile', targetAddress] }),
+        queryClient.cancelQueries({ queryKey: ['AccountsService.getAccount', targetAddress] }),
+      ]);
 
       if (accountRecord) {
         queryClient.setQueryData(['AccountsService.getAccount', targetAddress], accountRecord);
@@ -1024,18 +1085,21 @@ const ProfileEditModal = ({
           ? t('messages.siteLinkSuccess')
           : t('messages.siteUnlinkSuccess');
       }
+      notifyConfirmed(notifyPayload);
       push(<div>{successMessage}</div>);
       onClose(updated);
     } catch (e) {
       const msg = resolveErrorMessage(e);
-      setFormError(msg);
+      notifyError(msg);
       push(
         <div style={{ color: '#ffb3b3' }}>
           {msg}
         </div>,
       );
+      // Not onClose(): a failed save must not run the parents' cancel/dismiss logic.
+      onSaveError?.();
     } finally {
-      setLoading(false);
+      savingRef.current = false;
     }
   }
 
@@ -1367,7 +1431,6 @@ const ProfileEditModal = ({
               <button
                 type="button"
                 onClick={handleSkip}
-                disabled={loading}
                 className="mb-3 w-full border-0 bg-transparent text-xs font-semibold text-white/45 transition-colors hover:text-white disabled:opacity-50"
               >
                 {t('buttons.skipForNow')}
@@ -1377,7 +1440,6 @@ const ProfileEditModal = ({
               <Button
                 variant="ghost"
                 onClick={handleClose}
-                disabled={loading}
                 className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
               >
                 {t('buttons.cancel')}
@@ -1386,14 +1448,14 @@ const ProfileEditModal = ({
                 onClick={onSave}
                 // Keep Save active when logged out so the click can trigger onboarding;
                 // only gate on edit permission once an account is actually connected.
-                disabled={loading || (!!activeAccount && !canEdit)}
+                disabled={!!activeAccount && !canEdit}
                 className="flex-1 rounded-xl font-semibold disabled:opacity-50"
                 style={{
                   background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
                   color: '#0a0a0a',
                 }}
               >
-                {loading ? t('messages.savingProfile') : t('buttons.save')}
+                {t('buttons.save')}
               </Button>
             </div>
           </div>

@@ -18,6 +18,7 @@ export const TxPayloadType = {
   UnwrapToken: 'unwrap_wae',
   AddLiquidity: 'add_liquidity',
   RemoveLiquidity: 'remove_liquidity',
+  UpdateProfile: 'update_profile',
 } as const;
 
 export type TxPayload =
@@ -32,7 +33,8 @@ export type TxPayload =
   | { type: typeof TxPayloadType.WrapToken; amount: string }
   | { type: typeof TxPayloadType.UnwrapToken; amount: string }
   | { type: typeof TxPayloadType.AddLiquidity; tokenASymbol: string; tokenBSymbol: string; amountA: string; amountB: string; lpTokensEstimate?: string }
-  | { type: typeof TxPayloadType.RemoveLiquidity; tokenASymbol: string; tokenBSymbol: string; liquidityPct: string; lpAmount: string };
+  | { type: typeof TxPayloadType.RemoveLiquidity; tokenASymbol: string; tokenBSymbol: string; liquidityPct: string; lpAmount: string }
+  | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 

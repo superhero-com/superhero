@@ -640,6 +640,20 @@ export default function UserProfile({
     <ProfileEditModal
       open={editOpen}
       onClose={handleProfileEditClose}
+      // Hide the dialog while a save runs (or when it's dismissed mid-save) without
+      // triggering the refetches in handleProfileEditClose — those would race the
+      // in-flight link requests and could write pre-save data back into the cache.
+      // onClose/onSaveError fire once the save settles.
+      onHide={() => {
+        setEditOpen(false);
+        setEditInitialSection('profile');
+      }}
+      // A failed save may have partially applied (e.g. bio linked but site failed), so
+      // refetch to restore server truth without running the dismiss logic above.
+      onSaveError={() => {
+        refetchAccount();
+        refetchProfile();
+      }}
       address={effectiveAddress}
       initialBio={bioText}
       initialSection={editInitialSection}

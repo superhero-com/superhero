@@ -68,6 +68,10 @@ const ConfirmWalletStep = ({
     }
   }, [claim, completeXAddressLink, onDone, signing, t]);
 
+  const buttonLabel = attempted
+    ? t('messages.xCallbackRetry')
+    : t('messages.xCallbackConfirmButton');
+
   return (
     <>
       <XGlyph />
@@ -96,7 +100,7 @@ const ConfirmWalletStep = ({
             {t('messages.xCallbackSigning')}
           </>
         ) : (
-          attempted ? t('messages.xCallbackRetry') : t('messages.xCallbackConfirmButton')
+          buttonLabel
         )}
       </button>
 

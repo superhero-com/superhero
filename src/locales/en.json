@@ -1992,6 +1992,18 @@
         "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10 day consecutive streak will earn you 50 AE extra, so keep posting and engaging with the community.",
         "complete": "Milestone complete — {{amount}} AE earned"
       }
+    },
+    "onboarding": {
+      "badge": "Get started",
+      "title": "Set up your Superhero account",
+      "subtitle": "Finish these steps to start earning AE rewards.",
+      "step1": "Link your X account",
+      "step2": "Post about Superhero to earn 50 AE",
+      "progress": "{{done}} of {{total}} steps done",
+      "continue": "Continue setup",
+      "connectX": "Connect X",
+      "postOnX": "Post & earn",
+      "done": "All set!"
     }
   },
   "errors": {

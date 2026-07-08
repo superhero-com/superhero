@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Gem } from 'lucide-react';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
 import FeedRailSearch from '@/components/layout/FeedRailSearch';
+import RewardsOnboarding from '@/components/onboarding/RewardsOnboarding';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
 import { useAeSdk } from '../../hooks/useAeSdk';
@@ -96,6 +97,9 @@ const RightRail = ({
 
   return (
     <div id="right-rail-root" className={railClassName}>
+      {/* Onboarding nudge — first item so users can continue account setup. */}
+      <RewardsOnboarding variant="rail" />
+
       {isSocialHomeFeed ? (
         <div className={feedSearchCardClassName}>
           <FeedRailSearch />

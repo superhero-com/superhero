@@ -62,6 +62,40 @@
   /* Governance Vote Animations */
   --vote-pulse: 0 0 0 0 rgba(255, 107, 107, 0.7);
   --vote-pulse-active: 0 0 0 6px rgba(255, 107, 107, 0);
+
+  /* === Foundation: brand gradient (blue → purple → pink) — NEW, additive; distinct from the legacy --primary-gradient above, which stays untouched === */
+  --gradient-brand-start: #3b82f6;
+  --gradient-brand-mid: #8b5cf6;
+  --gradient-brand-end: #ec4899;
+  --gradient-brand: linear-gradient(90deg, var(--gradient-brand-start) 0%, var(--gradient-brand-mid) 50%, var(--gradient-brand-end) 100%);
+  --gradient-brand-135: linear-gradient(135deg, var(--gradient-brand-start) 0%, var(--gradient-brand-mid) 50%, var(--gradient-brand-end) 100%);
+
+  /* === Foundation: signal colors — RESERVED for market direction only (price %, BULLISH/BEARISH, chart lines, buy/sell chips). Never generic UI state. === */
+  --color-bull: #22c55e;
+  --color-bull-neon: #00ffa3; /* glow-only intensified variant — never for text (contrast) */
+  --color-bull-glow: rgba(34, 197, 94, 0.45);
+  --color-bear: #ef4444;
+  --color-bear-glow: rgba(239, 68, 68, 0.45);
+
+  /* === Foundation: surface / elevation scale === */
+  --surface-0: #05060a; /* canvas / deepest — aurora base */
+  --surface-1: var(--background-color); /* app bg — unchanged */
+  --surface-2: var(--glass-bg); /* raised glass card fill — reuses existing --glass-bg */
+  --surface-3: rgba(255, 255, 255, 0.06); /* overlay / raised popover */
+
+  /* === Foundation: colored glow (opt-in) — distinct from the neutralized --glow-shadow/--card-shadow/--button-shadow above === */
+  --glow-brand: 0 0 24px rgba(139, 92, 246, 0.35), 0 0 48px rgba(59, 130, 246, 0.18);
+  --glow-bull: 0 0 20px var(--color-bull-glow);
+  --glow-bear: 0 0 20px var(--color-bear-glow);
+
+  /* === Foundation: radius scale — documents the ad hoc values already hardcoded across button/input/card === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;  /* glass/liquid card default — tighter house style */
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-btn: 8px;     /* button / chip radius — large (default, lg) */
+  --radius-btn-sm: 4px;  /* button / chip radius — small (sm, xs) */
 }
 
 :root[data-theme='light'] {
@@ -115,6 +149,32 @@
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* === Foundation layer (mirrored for the light theme; app currently forces dark) === */
+  --gradient-brand-start: #3b82f6;
+  --gradient-brand-mid: #8b5cf6;
+  --gradient-brand-end: #ec4899;
+  --gradient-brand: linear-gradient(90deg, var(--gradient-brand-start) 0%, var(--gradient-brand-mid) 50%, var(--gradient-brand-end) 100%);
+  --gradient-brand-135: linear-gradient(135deg, var(--gradient-brand-start) 0%, var(--gradient-brand-mid) 50%, var(--gradient-brand-end) 100%);
+  --color-bull: #16a34a;
+  --color-bull-neon: #00ffa3;
+  --color-bull-glow: rgba(22, 163, 74, 0.35);
+  --color-bear: #dc2626;
+  --color-bear-glow: rgba(220, 38, 38, 0.35);
+  --surface-0: #ffffff;
+  --surface-1: var(--background-color);
+  --surface-2: var(--glass-bg);
+  --surface-3: rgba(0, 0, 0, 0.04);
+  --glow-brand: 0 0 24px rgba(139, 92, 246, 0.22), 0 0 48px rgba(59, 130, 246, 0.12);
+  --glow-bull: 0 0 20px var(--color-bull-glow);
+  --glow-bear: 0 0 20px var(--color-bear-glow);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-btn: 8px;
+  --radius-btn-sm: 4px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -133,7 +193,16 @@ html {
 
 body {
   margin: 0;
-  background: $background_color;
+  /* Foundation: on-brand aurora depth (blue/purple/pink) over a deep base.
+     Flat --surface-0 stays as the fallback the iOS guardrail below relies on. */
+  background-color: var(--surface-0);
+  background-image:
+    radial-gradient(circle at 15% 18%, rgba(59, 130, 246, 0.09) 0%, transparent 46%),
+    radial-gradient(circle at 86% 12%, rgba(139, 92, 246, 0.085) 0%, transparent 50%),
+    radial-gradient(circle at 76% 82%, rgba(236, 72, 153, 0.06) 0%, transparent 55%),
+    radial-gradient(circle at 20% 85%, rgba(7, 13, 32, 0.5) 0%, transparent 55%),
+    linear-gradient(135deg, var(--surface-0) 0%, #070b16 55%, #0b1224 100%);
+  background-attachment: fixed;
   color: $standard_font_color;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   line-height: 1.6;
@@ -144,13 +213,6 @@ body {
   overflow-x: hidden;
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Dark blue/black background (no red/green) */
-  // background:
-  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
-  //   background-attachment: fixed;
 }
 
 /* iOS-safe fixed background to full viewport height */
@@ -164,11 +226,13 @@ body::before {
   height: 100dvh; /* ensure fixed to device viewport on mobile */
   z-index: -1;
   pointer-events: none;
-  // background:
-  //   radial-gradient(circle at 20% 80%, rgba(7, 13, 32, 0.65) 0%, transparent 55%),
-  //   radial-gradient(circle at 80% 20%, rgba(8, 12, 26, 0.6) 0%, transparent 60%),
-  //   radial-gradient(circle at 40% 40%, rgba(13, 24, 48, 0.35) 0%, transparent 65%),
-  //   linear-gradient(135deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  /* Foundation: iOS-safe fixed aurora layer (disabled on ios-webkit / safari-zooming below). */
+  background:
+    radial-gradient(circle at 15% 18%, rgba(59, 130, 246, 0.09) 0%, transparent 46%),
+    radial-gradient(circle at 86% 12%, rgba(139, 92, 246, 0.085) 0%, transparent 50%),
+    radial-gradient(circle at 76% 82%, rgba(236, 72, 153, 0.06) 0%, transparent 55%),
+    radial-gradient(circle at 20% 85%, rgba(7, 13, 32, 0.5) 0%, transparent 55%),
+    linear-gradient(135deg, var(--surface-0) 0%, #070b16 55%, #0b1224 100%);
   will-change: transform;
   transform: translateZ(0); /* helps Safari keep it fixed */
 }
@@ -178,7 +242,8 @@ body::before {
 html.ios-webkit body {
   background-attachment: scroll;
   background-color: #05060a;
-  // background-image: linear-gradient(160deg, #05060a 0%, #070b16 55%, #0b1224 100%);
+  /* Flatten the aurora on iOS WebKit — avoids the fixed gradient + blur compositor bug noted above. */
+  background-image: none;
   -webkit-overflow-scrolling: auto;
 }
 

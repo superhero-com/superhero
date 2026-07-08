@@ -77,11 +77,59 @@ export default {
 
         success: 'var(--success-color)',
         error: 'var(--error-color)',
+
+        // Foundation — brand gradient stops (for gradient border/ring/text composition)
+        'brand-start': 'var(--gradient-brand-start)',
+        'brand-mid': 'var(--gradient-brand-mid)',
+        'brand-end': 'var(--gradient-brand-end)',
+
+        // Foundation — signal colors (market direction ONLY)
+        bull: 'var(--color-bull)',
+        bear: 'var(--color-bear)',
+
+        // Foundation — surface / elevation scale
+        surface: {
+          0: 'var(--surface-0)',
+          1: 'var(--surface-1)',
+          2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
+        },
+
+        // Foundation — activates existing-but-dead glass classes referenced in
+        // ae-button.tsx, ae-card.tsx, AddressChip.tsx, TokenChip.tsx
+        'glass-bg': 'var(--glass-bg)',
+        'glass-border': 'var(--glass-border)',
+      },
+      backgroundImage: {
+        'gradient-brand': 'var(--gradient-brand)',
+        'gradient-brand-135': 'var(--gradient-brand-135)',
+
+        // Activates classes already referenced in shipped components but currently dead.
+        // NOTE: primary-gradient is repointed to the NEW on-brand gradient (was off-brand pink/green/blue).
+        'primary-gradient': 'var(--gradient-brand)',
+        'secondary-gradient': 'var(--secondary-gradient)',
+        'accent-gradient': 'var(--accent-gradient)',
+        'card-gradient': 'var(--card-gradient)',
+      },
+      boxShadow: {
+        button: 'var(--button-shadow)',
+        glow: 'var(--glow-brand)',
+        glass: 'var(--glass-shadow)',
+        card: 'var(--card-shadow)',
+        'glow-bull': 'var(--glow-bull)',
+        'glow-bear': 'var(--glow-bear)',
+      },
+      backdropBlur: {
+        glass: '20px',
+        card: '12px',
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        // Foundation — button/chip radius standard: 8px large, 4px small
+        btn: 'var(--radius-btn)',
+        'btn-sm': 'var(--radius-btn-sm)',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],

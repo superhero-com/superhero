@@ -79,18 +79,18 @@ const RightRail = ({
     'hover:scrollbar-thumb-to-pink-500/80',
   ].join(' ');
   const walletRailCardClassName = [
-    'bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'liquid-glass liquid-glass--hover rounded-xl px-5 py-4',
+    'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
     'relative overflow-hidden',
   ].join(' ');
   const feedSearchCardClassName = [
-    'bg-white/[0.03] border border-white/10 rounded-[20px] p-3',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'liquid-glass rounded-xl p-3',
+    'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
     'relative overflow-visible',
   ].join(' ');
   const priceCardClassName = [
-    'bg-white/[0.03] border border-white/10 rounded-[20px] p-4',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'liquid-glass liquid-glass--hover rounded-xl p-4',
+    'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
     'relative overflow-hidden',
   ].join(' ');
 
@@ -184,13 +184,13 @@ const RightRail = ({
       {/* Enhanced Trending Section removed for now. */}
 
       {/* Buy AE with ETH (disabled): uncomment BuyAeWidget import above, then the block below.
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+      <div className="liquid-glass liquid-glass--hover rounded-xl p-4">
         <BuyAeWidget embedded />
       </div>
       */}
 
       {/* Buy AE promo */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+      <div className="liquid-glass liquid-glass--hover rounded-xl p-4">
         <div className="flex items-center gap-2 mb-2">
           <Gem className="h-[1.1rem] w-[1.1rem] text-cyan-300 shrink-0" aria-hidden />
           <h4 className="m-0 text-white text-base font-bold">
@@ -210,7 +210,7 @@ const RightRail = ({
       </div>
 
       {/* Trading Leaderboard promo */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
+      <div className="liquid-glass liquid-glass--hover rounded-xl p-4 mb-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🏆</span>
           <h4 className="m-0 text-white text-base font-bold">
@@ -230,7 +230,7 @@ const RightRail = ({
       </div>
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+      <div className="liquid-glass liquid-glass--hover rounded-xl p-4 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h4 className="m-0 text-white text-base font-bold">

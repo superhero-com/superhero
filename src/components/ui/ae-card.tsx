@@ -4,29 +4,34 @@ import { cn } from '@/lib/utils';
 const AeCard = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    variant?: 'default' | 'glass' | 'gradient' | 'glow'
+    variant?: 'default' | 'glass' | 'gradient' | 'glow' | 'glow-bull' | 'glow-bear'
     hover?: boolean
   }
 >(({
   className, variant = 'default', hover = true, ...props
 }, ref) => {
-  const baseClasses = 'rounded-2xl border text-card-foreground transition-all duration-300 ease-out relative overflow-hidden';
+  const baseClasses = 'rounded-xl border text-card-foreground transition-all duration-300 ease-out relative overflow-hidden';
 
   const variantClasses = {
     default: 'bg-card border-border shadow-card',
-    glass: 'bg-glass-bg backdrop-blur-card border-glass-border shadow-glass',
+    glass: 'bg-glass-bg backdrop-blur-card border border-transparent ae-glass-ring shadow-glass',
     gradient: 'bg-card-gradient border-border shadow-card',
     glow: 'bg-card border-border shadow-glow',
+    'glow-bull': 'bg-card border-bull/40 shadow-glow-bull',
+    'glow-bear': 'bg-card border-bear/40 shadow-glow-bear',
   };
 
   const hoverClasses = hover ? 'hover:-translate-y-1' : '';
 
   let background: string | undefined;
   if (variant === 'glass') {
-    background = 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)';
+    // Liquid glass: corner specular + top sheen over the translucent fill.
+    background = 'radial-gradient(130% 90% at 12% -12%, rgba(255,255,255,0.12), transparent 46%), linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 55%), var(--glass-bg)';
   } else if (variant === 'gradient') {
     background = 'var(--card-gradient)';
   }
+
+  const glassFilter = variant === 'glass' ? 'blur(22px) saturate(180%) brightness(1.06)' : undefined;
 
   return (
     <div
@@ -39,8 +44,9 @@ const AeCard = React.forwardRef<
       )}
       style={{
         background,
-        backdropFilter: variant === 'glass' ? 'blur(12px)' : undefined,
-        WebkitBackdropFilter: variant === 'glass' ? 'blur(12px)' : undefined,
+        backdropFilter: glassFilter,
+        WebkitBackdropFilter: glassFilter,
+        boxShadow: variant === 'glass' ? 'inset 0 1px 0 0 rgba(255,255,255,0.14), 0 10px 34px rgba(0,0,0,0.30)' : undefined,
         ...props.style,
       }}
       {...props}

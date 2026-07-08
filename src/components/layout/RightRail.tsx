@@ -97,14 +97,14 @@ const RightRail = ({
 
   return (
     <div id="right-rail-root" className={railClassName}>
-      {/* Onboarding nudge — first item so users can continue account setup. */}
-      <RewardsOnboarding variant="rail" />
-
       {isSocialHomeFeed ? (
         <div className={feedSearchCardClassName}>
           <FeedRailSearch />
         </div>
       ) : null}
+
+      {/* Onboarding nudge — placed below the search bar so users can continue account setup. */}
+      <RewardsOnboarding variant="rail" />
 
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (

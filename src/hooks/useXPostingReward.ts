@@ -159,6 +159,14 @@ export function useXPostingReward() {
     : null;
   const canCheck = !nextCheckAt || nextCheckAt.getTime() <= Date.now();
 
+  // Derived onboarding state, shared by the rewards page and the inline
+  // onboarding nudges (home feed + right rail).
+  const isXLinked = Boolean(status?.x_username)
+    || (status != null && status.status !== 'not_started');
+  const isOnboardingPaid = status?.status === 'paid';
+  // Milestone 1 is complete once the onboarding reward has been paid.
+  const onboardingComplete = isOnboardingPaid;
+
   return {
     status,
     referralLink,
@@ -168,6 +176,9 @@ export function useXPostingReward() {
     error,
     canCheck,
     nextCheckAt,
+    isXLinked,
+    isOnboardingPaid,
+    onboardingComplete,
     fetchReferralLink,
     runRewardCheck,
     refresh: loadStatus,

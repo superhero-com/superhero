@@ -21,6 +21,7 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
 import TradeActivityItem, { TradeActivityItemData } from '../components/TradeActivityItem';
 import TrendingAssetsFeedItem from '../components/TrendingAssetsFeedItem';
+import RewardsOnboarding from '../../../components/onboarding/RewardsOnboarding';
 import { PostApiResponse } from '../types';
 import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
@@ -940,10 +941,21 @@ const FeedList = ({
       }
     };
 
+    // Inline onboarding nudge, injected once near the top of the feed. The card
+    // self-hides when the user has no pending onboarding steps.
+    let onboardingInserted = false;
+    const maybeInsertOnboarding = () => {
+      if (!onboardingInserted && renderedCount === 1) {
+        onboardingInserted = true;
+        nodes.push(<RewardsOnboarding key="rewards-onboarding-feed" variant="feed" />);
+      }
+    };
+
     while (i < filteredAndSortedList.length) {
       const item = filteredAndSortedList[i];
       if (isTradeItem(item)) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         nodes.push(
           <TradeActivityItem key={item.id} item={item} />,
         );
@@ -957,6 +969,7 @@ const FeedList = ({
 
       if (!isTokenCreated) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         nodes.push(renderPostItem(item as PostDto));
         i += 1;
         renderedCount += 1;
@@ -982,6 +995,7 @@ const FeedList = ({
 
       for (let j = 0; j < visibleCount; j += 1) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         const gi = groupItems[j];
         const isLastVisible = j === visibleCount - 1;
         // on mobile, never show lines between items, only at the end
@@ -1070,6 +1084,9 @@ const FeedList = ({
     // eslint-disable-next-line no-restricted-syntax
     for (const item of filteredAndSortedList) {
       maybeInsertTrending();
+      if (renderedCount === 1) {
+        nodes.push(<RewardsOnboarding key="rewards-onboarding-hot" variant="feed" />);
+      }
       nodes.push(renderPostItem(item as PostDto));
       renderedCount += 1;
     }

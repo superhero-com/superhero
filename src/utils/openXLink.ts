@@ -39,6 +39,7 @@ function openWithDeepLinkFallback(deepLink: string, webLink: string): void {
   }
 
   let handedOff = false;
+  let fallbackTimer = 0;
 
   // If the native app opens, the page is backgrounded — cancel the fallback.
   const onVisibilityChange = () => {
@@ -49,7 +50,7 @@ function openWithDeepLinkFallback(deepLink: string, webLink: string): void {
     }
   };
 
-  const fallbackTimer = window.setTimeout(() => {
+  fallbackTimer = window.setTimeout(() => {
     document.removeEventListener('visibilitychange', onVisibilityChange);
     if (handedOff) return;
     // Universal link keeps us out of the iOS in-app Safari browser and still

@@ -128,7 +128,18 @@
       "xCallbackSuccess": "X-Konto erfolgreich verknüpft.",
       "xCallbackGoToProfile": "Zum Profil",
       "transactionFailed": "Transaktion fehlgeschlagen",
-      "copiedExclaim": "Kopiert!"
+      "copiedExclaim": "Kopiert!",
+      "linkingXAccount": "Dein X-Konto wird verknüpft…",
+      "xCallbackUnlinkSuccess": "X-Konto erfolgreich getrennt.",
+      "xCallbackLinkingTitle": "Verknüpfe dein X-Konto",
+      "xCallbackVerifyingTitle": "Verifizierung mit X",
+      "xCallbackReadyDesc": "Unterzeichne die Verknüpfungsnachricht in deiner Wallet, um dein X-Konto mit deiner On-Chain-SuperheroID zu verbinden.",
+      "xCallbackConfirmButton": "In Wallet signieren um zu verknüpfen",
+      "xCallbackSigning": "Warte auf deine Wallet…",
+      "xCallbackBlockedHint": "Wenn deine Wallet nicht geöffnet wurde, wurde sie möglicherweise blockiert. Tippe auf die Schaltfläche, um es erneut zu versuchen.",
+      "xCallbackRetry": "Erneut versuchen",
+      "xCallbackDoneTitle": "X-Konto verknüpft",
+      "xCallbackGoBack": "Zurück"
     },
     "portfolio": {
       "portfolioValue": "Portfoliowert",
@@ -1738,7 +1749,12 @@
       "step1": "Erstellen Sie Einladungslinks, indem Sie eine einmalige AE-Belohnung pro Einladung finanzieren",
       "step2": "Teilen Sie Links mit Freunden und der Community",
       "step3": "Nachdem 4 einzelne Eingeladene Token gekauft haben, können Sie angesammelte Belohnungen abheben",
-      "step4": "Heben Sie Belohnungen jederzeit nach Erreichen der Berechtigung ab"
+      "step4": "Heben Sie Belohnungen jederzeit nach Erreichen der Berechtigung ab",
+      "heroBrand": "Superhero",
+      "heroRewards": "Prämien",
+      "referAndEarn": "Empfehlen & Verdienen",
+      "yourInvitations": "Deine Einladungen",
+      "disclaimer": "Das Superhero-Prämien­programm belohnt Nutzer dafür, Inhalte auf anderen Social-Media-Plattformen (wie X) mit Backlinks und/oder Einladungslinks zu erstellen und neue Nutzer auf die Plattform zu verweisen. Prämien werden in Form von AE-Tokens ausgeschüttet. Berechtigung und Prämien hängen von der On-Chain-Aktivität ab, sind nicht garantiert und können jederzeit ohne Ankündigung oder Haftung ausgesetzt werden. Es wird das Recht vorbehalten, Nutzer vom Programm auszuschließen. Nutzer aus gesperrten Ländern sind nicht prämien­berechtigt. Durch die Teilnahme am Programm stimmen die Nutzer diesen Bedingungen zu. Gesendete Prämien können der Steuermeldepflicht unterliegen. Nutzer sind für alle steuerlichen Verpflichtungen verantwortlich, die sich aus dem Erhalt von Prämien ergeben."
     },
     "leaderboardHeading": "Handels-Bestenliste",
     "leaderboardHeadingDescription": "Entdecken Sie die aktivsten Superhero-Trader, sortiert nach On-Chain-Performance. Steigern Sie Ihr Handelsvolumen, Ihre Konsistenz und Ihren Trendbesitz, um in der Liste aufzusteigen und Ihre Wallet in eine öffentliche On-Chain-Erfolgsbilanz zu verwandeln.",
@@ -1852,6 +1868,86 @@
     },
     "tokenLineChart": {
       "alt": "Token-Liniendiagramm"
+    },
+    "collectRewards": {
+      "title": "Deine Prämien einlösen",
+      "description": "Prämien sammeln sich an, wenn deine direkten Eingeladenen an Token-Verkäufen teilnehmen. Du kannst abheben, sobald <invitees>{{invitees}} direkte Eingeladene</invitees> jeweils mindestens <spent>{{spent}} AE</spent> ausgegeben haben (kumulativ).",
+      "disclaimer": "Hinweis: Berechtigung und Prämien hängen von der On-Chain-Aktivität ab und sind nicht garantiert.",
+      "progressToRewards": "Fortschritt bis zu den Prämien",
+      "reached": "{{reached}}/{{total}} erreicht",
+      "eligibleToWithdraw": "Auszahlung möglich",
+      "moreInviteesNeeded": "{{remaining}} weitere Eingeladene müssen {{amount}} AE erreichen",
+      "stillAccumulating_one": "{{count}} Eingeladener sammelt noch",
+      "stillAccumulating_other": "{{count}} Eingeladene sammeln noch",
+      "inviteeReached": "Erreicht",
+      "inviteeProgress": "{{spent}} / {{total}} AE",
+      "moreCount": "+{{extra}} weitere",
+      "availableRewards": "Verfügbare Prämien",
+      "withdrawing": "Auszahlung läuft...",
+      "notEligibleYet": "Noch nicht berechtigt",
+      "noRewardsYet": "Noch keine Prämien",
+      "collectRewards": "Prämien einlösen",
+      "notEligibleError": "Noch nicht berechtigt: Du benötigst {{invitees}} direkte Eingeladene, die jeweils mindestens {{spent}} AE in Token-Verkäufen ausgegeben haben.",
+      "collectError": "Beim Einlösen der Prämien ist ein Fehler aufgetreten."
+    },
+    "rewardsProgram": {
+      "rewardsEarnedBadge": "Verdiente Prämien",
+      "aeEarned": "{{amount}} AE verdient",
+      "rewardsSentAutomatically": "Deine AE-Prämien wurden automatisch an deine verbundene Wallet gesendet.",
+      "status": {
+        "completed": "ABGESCHLOSSEN",
+        "inProgress": "IN BEARBEITUNG",
+        "locked": "GESPERRT"
+      },
+      "check": {
+        "checking": "Wird geprüft…",
+        "checkIn": "Prüfen in {{time}}",
+        "checkRewards": "Prämien prüfen",
+        "nextCheckTooltip": "Nächste Prüfung verfügbar in {{time}}"
+      },
+      "milestone1": {
+        "earnBadge": "50 AE verdienen",
+        "title": "X-Konto verknüpfen & posten",
+        "descIdentity": "Verifiziere die Inhaberschaft deines X-Kontos und verknüpfe es on-chain mit deiner SuperheroID. SuperheroID ist ein dezentraler digitaler Identitäts-Smart-Contract, der alle deine sozialen Konten mit deiner Wallet-Adresse verbindet. Dein SuperheroID-Profil wird nach der Verknüpfung deines X-Kontos automatisch für dich eingerichtet.",
+        "descPost": "Erstelle nach der Verknüpfung einen Beitrag über Superhero auf X, um die Nachricht zu verbreiten und mit deinem Netzwerk zu teilen. Der Beitrag muss lediglich Superhero erwähnen – füge einen <link>superhero.com</link>-Link ein oder tagge <handle>@superhero_chain</handle>.",
+        "descFollowers": "Dein X-Konto muss mindestens 100 Follower haben, um für diese Prämie berechtigt zu sein.",
+        "descEarn": "Durch das Abschließen dieses Meilensteins verdienst du 50 AE-Tokens!",
+        "step1": "Verknüpfe dein X-Konto mit deiner On-Chain-SuperheroID",
+        "step2": "Poste über Superhero mit deinem verknüpften X-Konto (erwähne @superhero_chain oder verlinke superhero.com)",
+        "linkTwitter": "Twitter verknüpfen",
+        "postOnX": "Auf X posten",
+        "complete": "Meilenstein abgeschlossen – 50 AE verdient",
+        "loadingProgress": "Fortschritt wird geladen…"
+      },
+      "milestone2": {
+        "earnBadge": "Täglich 10–30 AE pro Beitrag verdienen",
+        "title": "Auf X posten & verdienen",
+        "desc": "Veröffentliche Beiträge über Superhero von deinem verknüpften X-Konto, um die Nachricht zu verbreiten und mit deinem Netzwerk zu teilen. Jeder Beitrag muss deinen eindeutigen Empfehlungslink im Beitragsinhalt enthalten. Dein eindeutiger Empfehlungslink wird automatisch erstellt, wenn du auf „Posten“ klickst.",
+        "tierIneligible": "Weniger als 100 Follower: nicht berechtigt",
+        "tier1": "100 – 10k Follower: 10 AE pro Beitrag",
+        "tier2": "10k – 1M Follower: 20 AE pro Beitrag",
+        "tier3": "Mehr als 1M Follower: 30 AE pro Beitrag",
+        "yourTier": "Deine Stufe: {{amount}} AE pro Beitrag",
+        "yourTierFollowers": "({{followers}} Follower)",
+        "streakBadge": "50 AE bei 10-Tage-Serie verdienen",
+        "currentStreak": "Aktuelle Serie: {{days}}/{{total}} Tage",
+        "openingWallet": "Wallet wird geöffnet…",
+        "postOnX": "Auf X posten",
+        "streakInfo": "Für jeden Beitrag, der die Kriterien erfüllt, verdienst du AE-Tokens basierend auf deiner Follower-Stufe. Wenn du 10 Tage lang täglich postest, verdienst du zusätzlich 50 AE – also bleib dabei und engagiere dich in der Community.",
+        "complete": "Meilenstein abgeschlossen – {{amount}} AE verdient"
+      }
+    },
+    "onboarding": {
+      "badge": "Loslegen",
+      "title": "Richte dein Superhero-Konto ein",
+      "subtitle": "Schließe diese Schritte ab, um AE-Prämien zu verdienen.",
+      "step1": "Dein X-Konto verknüpfen",
+      "step2": "Über Superhero posten und 50 AE verdienen",
+      "progress": "{{done}} von {{total}} Schritten abgeschlossen",
+      "continue": "Einrichtung fortsetzen",
+      "connectX": "X verbinden",
+      "postOnX": "Posten & verdienen",
+      "done": "Alles erledigt!"
     }
   },
   "errors": {
@@ -2358,7 +2454,23 @@
     "qGlossaryLi1": "AE: die native Münze der aeternity-Blockchain.",
     "qGlossaryLi2": "Sale-Adresse: der Contract, der Token auf der Curve mintet/burnt.",
     "qGlossaryLi3": "DAO: On‑Chain-Treasury + Governance für eine Token-Community.",
-    "qGlossaryLi4": "Tx-Hash: die Transaktions-ID; in Explorern ansehen, um zu verifizieren."
+    "qGlossaryLi4": "Tx-Hash: die Transaktions-ID; in Explorern ansehen, um zu verifizieren.",
+    "categoryRewardsProgram": "Prämien­programm",
+    "categoryNameClaims": "Namens­ansprüche",
+    "qRewardsProgramTitle": "Was ist das Superhero-Prämien­programm?",
+    "qRewardsProgramAnswer": "Das Superhero-Prämien­programm ermöglicht dir, AE-Tokens zu verdienen, indem du Meilensteine abschließt: dein X-(Twitter-)Konto verifizierst, neue Nutzer einlädst und über Superhero in sozialen Medien postest. Schließe Meilensteine ab, um Phasen freizuschalten und bis zu 200 AE-Tokens zu verdienen.",
+    "qRewardsMilestonesTitle": "Welche Meilensteine sind verfügbar?",
+    "qRewardsMilestonesLi1": "X-Konto verifizieren & posten – verbinde dein X-Konto und weise die Inhaberschaft nach.",
+    "qRewardsMilestonesLi2": "Verknüpfe dein X-Konto on-chain mit der SuperheroID.",
+    "qRewardsMilestonesLi3": "Über Superhero posten – veröffentliche 10 Beiträge, die deinen Empfehlungslink im Text enthalten.",
+    "qRewardsClaimTitle": "Wie löse ich meine Prämien ein?",
+    "qRewardsClaimAnswer": "Sobald ein Meilenstein als abgeschlossen markiert ist, erscheint ein Einlöse-Banner auf der Prämien-Seite. Klicke auf die Einlöse-Schaltfläche und bestätige die Transaktion in deiner Wallet. Eine geringe Gas-Gebühr fällt an.",
+    "qRewardsEligibilityTitle": "Sind Prämien garantiert?",
+    "qRewardsEligibilityAnswer": "Berechtigung und Prämien hängen von der On-Chain-Aktivität ab und sind nicht garantiert. Das Programm kann jederzeit ohne Ankündigung ausgesetzt werden. Nutzer aus gesperrten Ländern sind nicht berechtigt. Durch die Teilnahme stimmst du den auf der Prämien-Seite angezeigten Bedingungen zu.",
+    "qSponsoredNameClaimTitle": "Was ist ein geförderter Namensanspruch?",
+    "qSponsoredNameClaimAnswer": "Wir fördern einen kostenlosen .chain-Namensanspruch pro Adresse. Der Name muss länger als 12 Zeichen sein (ohne die .chain-Endung). Damit erhältst du eine menschenlesbare Identität auf der æternity-Blockchain kostenlos.",
+    "qClaimMoreNamesTitle": "Kann ich mehr als einen Namen beanspruchen?",
+    "qClaimMoreNamesAnswer": "Wir fördern nur einen Namensanspruch pro Adresse. Wenn du weitere Namen beanspruchen möchtest, kannst du dies direkt in der Superhero Wallet tun – verfügbar als Browser-Erweiterung, native mobile App oder im Web unter wallet.superhero.com."
   },
   "buyAe": {
     "pageTitle": "AE kaufen – Superhero",

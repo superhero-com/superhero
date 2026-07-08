@@ -168,6 +168,11 @@ const App = () => {
           if (updatedProfile) handleProfileEditSuccess();
           else handleProfileEditDismiss();
         }}
+        // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
+        // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
+        // them on success. No onSaveError handler on purpose: a failed save is not a
+        // cancel, so the flags survive and the flow can resume when the user retries.
+        onHide={() => setProfileEditOpen(false)}
         showSkip={profileEditFlow.showSkip}
         onSkip={handleProfileEditDismiss}
         onClaimSuccess={

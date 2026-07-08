@@ -5,6 +5,7 @@ import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
+import { IconDiamond } from '@/icons';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
@@ -12,6 +13,21 @@ import { TxPayloadType, useTransactionNotification } from './transaction-notific
 
 function fmt(amount: string): string {
   return Decimal.from(amount).prettify();
+}
+
+function formatChangedFields(fields: Array<'bio' | 'website' | 'chain_name'>): string {
+  const labels: Record<'bio' | 'website' | 'chain_name', string> = {
+    bio: 'bio',
+    website: 'website',
+    chain_name: 'chain name',
+  };
+  return fields.map((field) => labels[field]).join(' & ') || 'profile';
+}
+
+// Toasts backed by a central icon other than the Superhero mark (e.g. the blue diamond
+// used for Superhero ID / profile updates).
+function getIconVariant(payload: TxPayload): 'superhero' | 'diamond' {
+  return payload.type === TxPayloadType.UpdateProfile ? 'diamond' : 'superhero';
 }
 
 // User must sign in their wallet — the app is waiting for that action.
@@ -54,6 +70,11 @@ function getSubmittedMeta(payload: TxPayload): { title: string; subtitle: string
       return {
         title: 'Confirm in your wallet',
         subtitle: `Removing ${payload.liquidityPct}% from ${payload.tokenASymbol}/${payload.tokenBSymbol}`,
+      };
+    case TxPayloadType.UpdateProfile:
+      return {
+        title: 'Confirm in your wallet',
+        subtitle: `Sign to update your ${formatChangedFields(payload.fields)}`,
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
@@ -122,6 +143,11 @@ function getPendingMeta(payload: TxPayload): { title: string; subtitle: string }
       return {
         title: 'Removing liquidity…',
         subtitle: `Withdrawing from ${payload.tokenASymbol}/${payload.tokenBSymbol} pool`,
+      };
+    case TxPayloadType.UpdateProfile:
+      return {
+        title: 'Updating profile…',
+        subtitle: `Saving your ${formatChangedFields(payload.fields)}`,
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
@@ -219,6 +245,11 @@ function getConfirmedMeta(payload: TxPayload): {
           rightColor: '#9ca3af',
         },
       };
+    case TxPayloadType.UpdateProfile:
+      return {
+        title: 'Profile updated',
+        line: { leftLabel: `${formatChangedFields(payload.fields)} saved`, leftColor: '#4ade80' },
+      };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }
@@ -230,7 +261,10 @@ function getConfirmedMeta(payload: TxPayload): {
 const cardBase = 'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
 
 // Declared first — referenced by the components below.
-const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success' }) => {
+const NotificationIcon = ({
+  variant,
+  icon = 'superhero',
+}: { variant: 'error' | 'loading' | 'success'; icon?: 'superhero' | 'diamond' }) => {
   const isError = variant === 'error';
   const isSuccess = variant === 'success';
 
@@ -247,8 +281,12 @@ const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success
 
   return (
     <div className="relative w-11 h-11 flex-shrink-0">
-      <div>
-        <SuperheroIcon className="w-[38px] h-[38px]" />
+      <div className={icon === 'diamond' ? 'w-[38px] h-[38px] flex items-center justify-center' : undefined}>
+        {icon === 'diamond' ? (
+          <IconDiamond className="w-[26px] h-[26px] text-[var(--neon-teal)]" />
+        ) : (
+          <SuperheroIcon className="w-[38px] h-[38px]" />
+        )}
       </div>
       <div
         className={`absolute -bottom-0.5 -right-0.5 w-[22px] h-[22px] rounded-full ${badgeBg} flex items-center justify-center border-2 ${borderColor}`}
@@ -289,7 +327,7 @@ const NotificationWaiting = ({
     : getPendingMeta(payload);
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
-      <NotificationIcon variant="loading" />
+      <NotificationIcon variant="loading" icon={getIconVariant(payload)} />
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-white font-bold text-sm leading-[18px] m-0">{title}</p>
         <p className="text-gray-400 text-[13px] leading-[17px] m-0">{subtitle}</p>
@@ -314,7 +352,7 @@ const NotificationConfirmed = ({
 
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
-      <NotificationIcon variant="success" />
+      <NotificationIcon variant="success" icon={getIconVariant(payload)} />
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-white font-bold text-sm leading-[18px] m-0">{meta.title}</p>
         {meta.line && (

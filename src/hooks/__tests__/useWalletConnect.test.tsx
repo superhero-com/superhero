@@ -23,6 +23,7 @@ const walletConnectMocks = vi.hoisted(() => {
   });
   const mockValidateHash = vi.fn();
   const mockAddStaticAccount = vi.fn();
+  const mockConnectToWallet = vi.fn();
   const mockDisconnectWallet = vi.fn();
   const mockScanForAccounts = vi.fn();
   const mockSetActiveAccount = vi.fn();
@@ -50,6 +51,7 @@ const walletConnectMocks = vi.hoisted(() => {
     getLocation: () => currentLocation,
     getLatestWalletHandler: () => latestWalletHandler,
     mockAddStaticAccount,
+    mockConnectToWallet,
     mockDisconnectWallet,
     mockNavigate,
     mockScanForAccounts,
@@ -104,6 +106,7 @@ vi.mock('react-router-dom', async () => {
 vi.mock('@/hooks/useAeSdk', () => ({
   useAeSdk: () => ({
     aeSdk: {
+      connectToWallet: (...args: any[]) => walletConnectMocks.mockConnectToWallet(...args),
       disconnectWallet: (...args: any[]) => walletConnectMocks.mockDisconnectWallet(...args),
       subscribeAddress: (...args: any[]) => walletConnectMocks.mockSubscribeAddress(...args),
       _accounts: { current: {} },
@@ -131,6 +134,7 @@ describe('useWalletConnect', () => {
     localStorage.clear();
     walletConnectMocks.mockValidateHash.mockReturnValue({ valid: true });
     walletConnectMocks.mockAddStaticAccount.mockResolvedValue(undefined);
+    walletConnectMocks.mockConnectToWallet.mockResolvedValue({ name: 'wallet' });
     walletConnectMocks.mockDisconnectWallet.mockResolvedValue(undefined);
     walletConnectMocks.mockScanForAccounts.mockResolvedValue(undefined);
     walletConnectMocks.mockSubscribeAddress.mockResolvedValue(undefined);
@@ -289,5 +293,94 @@ describe('useWalletConnect', () => {
 
     walletConnectMocks.getLatestWalletHandler()?.({ newWallet: undefined, wallets: {} });
     await expect(pendingScan).resolves.toBeUndefined();
+  });
+
+  it('attemptReconnection silently re-establishes a persisted extension session', async () => {
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+    walletConnectMocks.mockScanForAccounts.mockResolvedValue('ak_saved');
+
+    const store = createStore();
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+    const wallet = {
+      info: { id: 'wallet-id', type: 'extension', origin: 'https://wallet.example' },
+      getConnection: () => ({ connection: true }) as any,
+    };
+
+    await act(async () => {
+      const reconnection = result.current.attemptReconnection();
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: wallet, wallets: { wallet } });
+      await reconnection;
+    });
+
+    expect(walletConnectMocks.mockConnectToWallet).toHaveBeenCalledWith({ connection: true });
+    expect(walletConnectMocks.mockSubscribeAddress).toHaveBeenCalledWith('subscribe', 'connected');
+    expect(result.current.walletConnected).toBe(true);
+    // Silent reconnection must not clear the restored session at any point.
+    expect(walletConnectMocks.mockSetActiveAccount).not.toHaveBeenCalledWith(undefined);
+    expect(walletConnectMocks.mockSetAccounts).not.toHaveBeenCalledWith([]);
+  });
+
+  it('attemptReconnection keeps the restored static session when no wallet is detected', async () => {
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+
+    const store = createStore();
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    await act(async () => {
+      const reconnection = result.current.attemptReconnection();
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: undefined, wallets: {} });
+      await reconnection;
+    });
+
+    expect(walletConnectMocks.mockConnectToWallet).not.toHaveBeenCalled();
+    expect(result.current.walletConnected).toBe(false);
+    expect(walletConnectMocks.mockSetActiveAccount).not.toHaveBeenCalledWith(undefined);
+    expect(store.get(walletInfoAtom)).toEqual({ name: 'wallet' });
+  });
+
+  it('attemptReconnection stays retryable until persisted wallet state is present', async () => {
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+
+    const store = createStore();
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+    const { result, rerender } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    // No persisted walletInfo yet (e.g. storage not hydrated) — must not attempt.
+    await act(async () => {
+      await result.current.attemptReconnection();
+    });
+    expect(walletConnectMocks.walletDetectorMock).not.toHaveBeenCalled();
+
+    // Once walletInfo appears, a later call must still be able to reconnect.
+    act(() => {
+      store.set(walletInfoAtom, { name: 'wallet' } as any);
+    });
+    rerender();
+
+    const wallet = {
+      info: { id: 'wallet-id', type: 'extension', origin: 'https://wallet.example' },
+      getConnection: () => ({ connection: true }) as any,
+    };
+    walletConnectMocks.mockScanForAccounts.mockResolvedValue('ak_saved');
+
+    await act(async () => {
+      const reconnection = result.current.attemptReconnection();
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: wallet, wallets: { wallet } });
+      await reconnection;
+    });
+
+    expect(walletConnectMocks.mockConnectToWallet).toHaveBeenCalledTimes(1);
   });
 });

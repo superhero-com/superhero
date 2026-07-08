@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import SpaceEffects from './SpaceEffects';
+import BannerTokenCard from './BannerTokenCard';
 import BannerA from './BannerA';
 import BannerB from './BannerB';
 import BannerC from './BannerC';
@@ -133,6 +134,8 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
           supernovaColor="rgba(255,94,188,.55)"
           reduced={isIOSWebKit}
         />
+
+        <BannerTokenCard />
 
         <div className="hero-banner__viewport" ref={emblaRef}>
           <div className="hero-banner__container">

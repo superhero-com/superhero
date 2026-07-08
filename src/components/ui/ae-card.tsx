@@ -14,7 +14,7 @@ const AeCard = React.forwardRef<
 
   const variantClasses = {
     default: 'bg-card border-border shadow-card',
-    glass: 'bg-glass-bg backdrop-blur-card border border-transparent ae-glass-ring shadow-glass',
+    glass: 'bg-glass-bg backdrop-blur-card border border-white/10 shadow-glass',
     gradient: 'bg-card-gradient border-border shadow-card',
     glow: 'bg-card border-border shadow-glow',
     'glow-bull': 'bg-card border-bull/40 shadow-glow-bull',

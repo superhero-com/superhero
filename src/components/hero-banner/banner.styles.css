@@ -142,12 +142,11 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 
 /* Typography */
 .banner-h1 {
-  font-size: clamp(20px, 3.5vw, 36px);
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: clamp(26px, 4.4vw, 48px);
+  font-weight: 800;
+  line-height: 1.04;
   margin: 4px 0 2px;
-  padding-right: 50px;
-  letter-spacing: 0.1px;
+  letter-spacing: -0.01em;
   color: #ffffff !important;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
@@ -315,6 +314,77 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 .banner-btn::after {
   display: none !important;
 }
+
+/* ===== Hero token-card showcase (reference-2 style, flagship 3D floating card) ===== */
+.banner-token-card {
+  position: absolute;
+  right: clamp(20px, 3vw, 56px);
+  top: 50%;
+  width: clamp(300px, 26vw, 380px);
+  transform: translateY(-50%) perspective(1400px) rotateY(-9deg) rotateX(3deg);
+  transform-origin: center right;
+  z-index: 3;
+  pointer-events: none;
+  animation: btcFloat 7s ease-in-out infinite;
+}
+@media (max-width: 1100px) {
+  .banner-token-card { display: none; }
+}
+/* Reserve the right side for the card so the headline never sits under it */
+@media (min-width: 1101px) {
+  .hero-banner__inner { margin: 0; max-width: 100%; padding-right: clamp(360px, 30vw, 460px); }
+  .banner-lede { padding-right: 0; }
+}
+
+.banner-token-card__inner {
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+  border-radius: var(--radius-xl, 14px);
+}
+
+@keyframes btcFloat {
+  0%, 100% { transform: translateY(-50%) perspective(1400px) rotateY(-9deg) rotateX(3deg); }
+  50% { transform: translateY(calc(-50% - 8px)) perspective(1400px) rotateY(-7deg) rotateX(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .banner-token-card { animation: none; }
+}
+html.ios-webkit .banner-token-card { animation: none; transform: translateY(-50%); }
+
+.btc-head { display: flex; align-items: center; gap: 12px; }
+.btc-logo {
+  width: 44px; height: 44px; border-radius: 12px; flex: none;
+  display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #fff;
+  background: var(--gradient-brand-135, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899));
+  box-shadow: var(--glow-brand);
+}
+.btc-id { display: grid; gap: 3px; min-width: 0; }
+.btc-name { font-weight: 800; font-size: 16px; color: #fff; }
+.btc-sub { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--banner-muted, #cbd2ff); }
+
+.btc-price { display: flex; align-items: baseline; gap: 10px; }
+.btc-value { font-weight: 800; font-size: 34px; letter-spacing: -0.02em; color: #fff; }
+.btc-delta { font-weight: 700; font-size: 14px; color: var(--color-bull, #22c55e); }
+
+.btc-chart { width: 100%; height: 84px; display: block; }
+
+.btc-tfs { display: flex; gap: 5px; flex-wrap: wrap; }
+.btc-tf {
+  padding: 4px 9px; border-radius: var(--radius-btn-sm, 4px);
+  font-size: 11px; font-weight: 600; color: var(--banner-muted, #cbd2ff);
+}
+.btc-tf.active { color: #fff; background: rgba(255, 255, 255, 0.08); }
+
+.btc-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;
+}
+.btc-stat { display: grid; gap: 3px; }
+.btc-stat-lbl { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--banner-muted, #cbd2ff); }
+.btc-stat-v { font-weight: 800; font-size: 17px; color: #fff; }
+.btc-stat-sub { font-size: 10px; font-weight: 700; color: var(--color-bull, #22c55e); }
+.btc-stat-sub--muted { color: var(--banner-muted, #cbd2ff); }
 
 .banner-micro {
   margin-top: 8px;

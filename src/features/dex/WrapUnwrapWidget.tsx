@@ -135,7 +135,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
   return (
     <div
       className={cn(
-        'max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
+        'liquid-glass max-w-[min(480px,100%)] relative overflow-hidden p-4 sm:p-6',
         className,
       )}
     >
@@ -184,7 +184,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
       </p>
 
       {/* Balance Display */}
-      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
+      <Card className="liquid-glass rounded-xl mb-5">
         <CardContent className="p-4">
           <div className="flex justify-between items-center gap-4">
             <div className="text-center flex-1">
@@ -211,7 +211,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
       </Card>
 
       {/* Amount Input */}
-      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
+      <Card className="liquid-glass rounded-xl mb-5">
         <CardContent className="p-4">
           {/* Label and Balance Row */}
           <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
@@ -293,7 +293,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
           onClick={handleExecute}
           disabled={isExecuteDisabled}
           className={cn(
-            'w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            'w-full px-6 py-3 sm:px-5 sm:py-3 rounded-btn border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
             isExecuteDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0',

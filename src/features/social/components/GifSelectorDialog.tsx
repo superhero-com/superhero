@@ -234,7 +234,7 @@ export const GifSelectorDialog = ({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="w-full px-6 py-3 rounded-full bg-[#1161FE] text-white font-semibold text-sm uppercase tracking-wide transition-all duration-300 hover:bg-[#0d4fd8] hover:shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full px-6 py-3 rounded-btn bg-[#1161FE] text-white font-semibold text-sm uppercase tracking-wide transition-all duration-300 hover:bg-[#0d4fd8] hover:shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('gifSelector.confirm')}
             {' '}

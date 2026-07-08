@@ -162,10 +162,10 @@ const Daos = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
         {allItems.map((t) => (
           <div
-            className={`border rounded-2xl p-4 bg-gradient-to-b from-gray-800/85 to-gray-900/70 text-white shadow-lg transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl ${
+            className={`liquid-glass liquid-glass--hover rounded-xl p-4 text-white ${
               activeAccount === t.owner_address
-                ? 'border-purple-500/50 shadow-purple-500/25 relative'
-                : 'border-black/20'
+                ? 'liquid-glass--strong relative'
+                : ''
             }`}
             key={t.address}
           >
@@ -175,7 +175,7 @@ const Daos = () => {
                   {`#${t.symbol}`}
                 </div>
                 {activeAccount === t.owner_address && (
-                <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
+                <div className="text-xs px-2 py-1 rounded-btn-sm bg-purple-500/25 border border-purple-500/50 text-white w-fit">
                   {translate('owned')}
                 </div>
                 )}
@@ -305,7 +305,7 @@ const Daos = () => {
             ref={loadMoreBtn}
             onClick={() => fetchNextPage()}
             disabled={isFetching}
-            className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`px-6 py-3 rounded-btn border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isFetching
                 ? 'bg-white/10 cursor-not-allowed opacity-60'
                 : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'

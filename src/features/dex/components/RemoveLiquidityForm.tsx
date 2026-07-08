@@ -42,7 +42,7 @@ const RemoveLiquidityForm = () => {
 
   if (!selectedPosition) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none text-center md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-8 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+      <div className="liquid-glass max-w-[min(480px,100%)] mx-auto relative overflow-hidden text-center p-6 md:p-8">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
           💧
         </div>
@@ -58,7 +58,7 @@ const RemoveLiquidityForm = () => {
 
   if (!address) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.1)] text-center">
+      <div className="liquid-glass max-w-[min(480px,100%)] mx-auto relative overflow-hidden p-8 text-center">
         <ConnectWalletButton label={t('buttons.connectWalletDex')} variant="dex" className="text-sm" />
       </div>
     );
@@ -140,7 +140,7 @@ const RemoveLiquidityForm = () => {
 
   if (showConfirm) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-6 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+      <div className="liquid-glass max-w-[min(480px,100%)] mx-auto relative overflow-hidden p-4 md:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ const RemoveLiquidityForm = () => {
         </div>
 
         {/* Transaction Details */}
-        <div className="p-5 bg-white/[0.05] rounded-2xl border border-white/10 mb-6 backdrop-blur-[10px]">
+        <div className="p-5 liquid-glass rounded-xl mb-6">
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-white/60">
@@ -206,11 +206,11 @@ const RemoveLiquidityForm = () => {
           </div>
 
           {estimatedValueUsd && (
-            <div className="mt-3 p-3 bg-gradient-to-r from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20 text-center">
+            <div className="mt-3 p-3 bg-gradient-to-r from-bull/10 to-bull/5 rounded-lg border border-bull/20 text-center">
               <div className="text-xs text-white/60 mb-0.5">
                 {t('removeLiquidity.estimatedValue')}
               </div>
-              <div className="text-lg font-bold text-green-400">
+              <div className="text-lg font-bold text-bull">
                 $
                 {estimatedValueUsd.prettify()}
               </div>
@@ -223,7 +223,7 @@ const RemoveLiquidityForm = () => {
           <button
             type="button"
             onClick={() => setShowConfirm(false)}
-            className="flex-1 px-6 py-4 rounded-2xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
+            className="flex-1 px-6 py-4 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('buttons.cancel')}
           </button>
@@ -231,7 +231,7 @@ const RemoveLiquidityForm = () => {
             type="button"
             onClick={handleRemove}
             disabled={loading}
-            className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${loading
+            className={`flex-[2] px-6 py-4 rounded-xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${loading
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
@@ -249,7 +249,7 @@ const RemoveLiquidityForm = () => {
   }
 
   return (
-    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="liquid-glass max-w-[min(480px,100%)] mx-auto relative overflow-hidden p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ const RemoveLiquidityForm = () => {
       </div>
 
       {/* Selected Position Info */}
-      <div className="p-4 bg-white/[0.05] rounded-2xl border border-white/10 mb-6 backdrop-blur-[10px]">
+      <div className="p-4 liquid-glass rounded-xl mb-6">
         <div className="flex flex-row flex-wrap justify-between items-center mb-3">
           <span className="text-sm text-white/60">
             {t('removeLiquidity.position')}
@@ -301,7 +301,7 @@ const RemoveLiquidityForm = () => {
               <div className="text-white/60 mb-0.5">
                 {t('account.totalValue')}
               </div>
-              <div className="text-green-400 font-semibold">
+              <div className="text-bull font-semibold">
                 $
                 {Decimal.from(selectedPosition.valueUsd).prettify()}
               </div>
@@ -419,7 +419,7 @@ const RemoveLiquidityForm = () => {
       </div>
 
       {/* Remove Summary */}
-      <div className="p-4 bg-gradient-to-br from-red-500/5 to-yellow-500/5 rounded-2xl border border-red-500/20 mb-6">
+      <div className="p-4 bg-gradient-to-br from-red-500/5 to-yellow-500/5 rounded-xl border border-red-500/20 mb-6">
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
             <div className="text-xs text-white/60 mb-1">
@@ -444,11 +444,11 @@ const RemoveLiquidityForm = () => {
         </div>
 
         {estimatedValueUsd && (
-          <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+          <div className="text-center p-3 bg-bull/10 rounded-lg border border-bull/20">
             <div className="text-xs text-white/60 mb-1">
               {t('removeLiquidity.estimatedValue')}
             </div>
-            <div className="text-xl font-bold text-green-400">
+            <div className="text-xl font-bold text-bull">
               $
               {estimatedValueUsd.prettify()}
             </div>
@@ -463,7 +463,7 @@ const RemoveLiquidityForm = () => {
         disabled={
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
         }
-        className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
+        className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-btn border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
           ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
           : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}

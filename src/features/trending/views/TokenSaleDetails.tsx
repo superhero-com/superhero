@@ -361,7 +361,7 @@ const TokenSaleDetails = () => {
   }, [tokenDoesNotExist, activeTab]);
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen aurora-surface text-white px-4">
       <Head
         title={tokenDoesNotExist
           ? `Create #${tokenName} Token on Superhero.com`
@@ -440,16 +440,16 @@ const TokenSaleDetails = () => {
 
       {/* Deploy Success Message */}
       {showDeployedMessage && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between">
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
               ✓
             </div>
             <div>
-              <h3 className="font-semibold text-green-400">
+              <h3 className="font-semibold text-bull">
                 {t('trending.tokenSale.tokenDeployedSuccessfully')}
               </h3>
-              <p className="text-green-300/70 text-sm">
+              <p className="text-bull/70 text-sm">
                 {t('trending.tokenSale.tokenNowLive')}
               </p>
             </div>
@@ -458,7 +458,7 @@ const TokenSaleDetails = () => {
             variant="ghost"
             size="sm"
             onClick={() => setShowDeployedMessage(false)}
-            className="text-green-400 hover:text-green-300"
+            className="text-bull hover:text-bull/80"
           >
             ×
           </Button>
@@ -472,20 +472,20 @@ const TokenSaleDetails = () => {
         >
           {/* Token Header */}
           {!isMobile && (
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="liquid-glass liquid-glass--strong rounded-xl">
               <div className="p-2">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
                       <span className="text-[.9em] mr-0.5 align-baseline">#</span>
-                      <span>{token?.symbol || token?.name || tokenName}</span>
+                      <span className="gradient-text">{token?.symbol || token?.name || tokenName}</span>
                     </h1>
 
                     <div className="flex items-center gap-2 flex-wrap">
                       {collectionLabel((token as any)?.collection) && (
                         <Badge
                           variant="secondary"
-                          className="bg-white/10 text-white/70 text-xs font-medium px-2.5 py-1 rounded-full border-0"
+                          className="bg-white/10 text-white/70 text-xs font-medium px-2.5 py-1 rounded-btn-sm border-0"
                         >
                           {collectionLabel((token as any)?.collection)}
                         </Badge>
@@ -493,7 +493,7 @@ const TokenSaleDetails = () => {
                       {tokenDoesNotExist ? (
                         <Badge
                           variant="secondary"
-                          className="bg-gradient-to-r from-orange-600/80 to-red-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                          className="bg-gradient-to-r from-orange-600/80 to-red-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-btn-sm border-0 shadow-sm"
                         >
                           {t('trending.tokenSale.badgeNotCreated')}
                         </Badge>
@@ -502,13 +502,13 @@ const TokenSaleDetails = () => {
                           {token?.rank && (
                             <Badge
                               variant="secondary"
-                              className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                              className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-btn-sm border-0 shadow-sm"
                             >
                               {t('trending.tokenSale.badgeRank', { rank: token.rank })}
                             </Badge>
                           )}
                           {ownsThisToken && (
-                            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
+                            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-btn-sm border-0 shadow-sm">
                               {t('trending.tokenSale.badgeOwned')}
                             </Badge>
                           )}
@@ -619,10 +619,10 @@ const TokenSaleDetails = () => {
           <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
               tokenDoesNotExist ? (
-                <Card className="bg-white/[0.02] border-white/10 p-6">
+                <Card className="liquid-glass rounded-xl p-6">
                   <div className="text-center">
                     <div
-                      className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                      className="w-20 h-20 mx-auto mb-4 rounded-xl flex items-center justify-center"
                       style={{
                         background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(78, 205, 196, 0.15) 100%)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -649,17 +649,13 @@ const TokenSaleDetails = () => {
                       {t('trending.tokenSale.tokenNotCreatedYetHint')}
                     </p>
                     <Button
+                      variant="gradient"
                       size="lg"
                       onClick={() => {
                         const truncatedName = (tokenName || '').slice(0, 20);
                         navigate(`/trends/create?tokenName=${encodeURIComponent(truncatedName)}`);
                       }}
-                      className="w-full px-6 py-5 text-sm font-bold rounded-xl transition-all duration-300 hover:scale-105"
-                      style={{
-                        background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
-                        color: '#0a0a0f',
-                        border: 'none',
-                      }}
+                      className="w-full px-6 py-5 text-sm font-bold transition-all duration-300 hover:scale-105"
                     >
                       {t('trending.tokenSale.createThisToken')}
                     </Button>
@@ -672,7 +668,7 @@ const TokenSaleDetails = () => {
 
             {isMobile && activeTab === TAB_TRADE && (
               tokenDoesNotExist ? (
-                <Card className="bg-white/[0.02] border-white/10 p-6">
+                <Card className="liquid-glass rounded-xl p-6">
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
@@ -712,7 +708,7 @@ const TokenSaleDetails = () => {
 
             {activeTab === TAB_TRANSACTIONS && (
               tokenDoesNotExist ? (
-                <Card className="bg-white/[0.02] border-white/10 p-6">
+                <Card className="liquid-glass rounded-xl p-6">
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
@@ -730,7 +726,7 @@ const TokenSaleDetails = () => {
 
             {activeTab === TAB_HOLDERS && (
               tokenDoesNotExist ? (
-                <Card className="bg-white/[0.02] border-white/10 p-6">
+                <Card className="liquid-glass rounded-xl p-6">
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
@@ -754,10 +750,10 @@ const TokenSaleDetails = () => {
             {(() => {
               if (tokenDoesNotExist) {
                 return (
-                  <Card className="bg-white/[0.02] border-white/10 p-6">
+                  <Card className="liquid-glass rounded-xl p-6">
                     <div className="text-center">
                       <div
-                        className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                        className="w-20 h-20 mx-auto mb-4 rounded-xl flex items-center justify-center"
                         style={{
                           background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(78, 205, 196, 0.15) 100%)',
                           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -784,17 +780,13 @@ const TokenSaleDetails = () => {
                         {t('trending.tokenSale.createTokenSidebarHint')}
                       </p>
                       <Button
+                        variant="gradient"
                         size="lg"
                         onClick={() => {
                           const truncatedName = (tokenName || '').slice(0, 20);
                           navigate(`/trends/create?tokenName=${encodeURIComponent(truncatedName)}`);
                         }}
-                        className="w-full px-6 py-5 text-sm font-bold rounded-xl transition-all duration-300 hover:scale-105"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
-                          color: '#0a0a0f',
-                          border: 'none',
-                        }}
+                        className="w-full px-6 py-5 text-sm font-bold transition-all duration-300 hover:scale-105"
                       >
                         Create This Token
                       </Button>
@@ -860,16 +852,12 @@ const TokenSaleDetails = () => {
         <button
           type="button"
           onClick={() => setShowComposer(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
-          style={{
-            background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
-            color: '#0a0a0f',
-          }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-btn bg-gradient-brand-135 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
           aria-label={t('trending.tokenSale.addNewPost')}
           title={t('trending.tokenSale.addNewPost')}
         >
-          <Plus className="w-5 h-5" style={{ color: '#0a0a0f' }} />
-          <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#0a0a0f' }}>
+          <Plus className="w-5 h-5" />
+          <span className="text-sm font-semibold whitespace-nowrap">
             {t('trending.tokenSale.addNewPost')}
           </span>
         </button>

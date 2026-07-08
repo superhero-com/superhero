@@ -137,7 +137,7 @@ export default function TokenSelector({
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000] animate-in fade-in duration-150" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 liquid-glass liquid-glass--strong text-white rounded-xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
             <Dialog.Title className="font-bold text-lg sm:text-xl m-0">
@@ -157,7 +157,7 @@ export default function TokenSelector({
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
               autoFocus
-              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
+              className="w-full py-3.5 pr-12 pl-4 rounded-xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
               🔍
@@ -171,7 +171,7 @@ export default function TokenSelector({
             padding: 16,
             background: 'rgba(0, 255, 157, 0.1)',
             border: '1px solid rgba(0, 255, 157, 0.3)',
-            borderRadius: 16,
+            borderRadius: 12,
           }}
           >
             <div style={{
@@ -206,12 +206,11 @@ export default function TokenSelector({
                 };
                 handleSelect(customToken);
               }}
+              className="bg-gradient-brand-135 text-white"
               style={{
                 padding: '8px 16px',
                 borderRadius: 8,
-                background: 'var(--accent-color)',
                 border: 'none',
-                color: 'white',
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -219,7 +218,7 @@ export default function TokenSelector({
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 157, 0.4)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';

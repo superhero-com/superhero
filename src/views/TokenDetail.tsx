@@ -114,7 +114,7 @@ export default function TokenDetail() {
   if (error) {
     return (
       <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
-        <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20 backdrop-blur-xl">
+        <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-xl border border-red-500/20 backdrop-blur-xl">
           {error}
         </div>
       </div>
@@ -122,11 +122,11 @@ export default function TokenDetail() {
   }
 
   return (
-    <div className="mx-auto mb-10 md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="aurora-surface mx-auto mb-10 md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         <div className="flex flex-col gap-6">
           {/* Token Detail Card */}
-          <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
+          <div className="liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
               {
@@ -136,7 +136,7 @@ export default function TokenDetail() {
                     {t('common.views.tokenDetail.loadingTokenDetails')}
                   </div>
                 ) : (
-                  <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-[28px] font-bold gradient-text m-0 mb-2">
                     {tokenDetails?.symbol}
                     {
                       tokenDetails?.name && tokenDetails?.name !== tokenDetails?.symbol && (
@@ -169,7 +169,7 @@ export default function TokenDetail() {
                 onClick={() => navigate(`/defi/pool?from=AE&to=${tokenAddress}`)}
                 variant="secondary-dark"
                 size="medium"
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gradient-brand-135 text-white hover:opacity-90 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {t('dex.addLiquidityForm.addLiquidityButton')}
               </AeButton>
@@ -194,7 +194,7 @@ export default function TokenDetail() {
             {/* Token Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* Price Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
+              <div className="p-5 rounded-xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                   💰
                   {' '}
@@ -209,8 +209,8 @@ export default function TokenDetail() {
                   ?.percentage && (
                     <div
                       className={`text-xs font-semibold flex items-center gap-1 ${isPositive
-                        ? 'text-green-400'
-                        : 'text-red-400'
+                        ? 'text-bull'
+                        : 'text-bear'
                       }`}
                     >
                       {isPositive
@@ -236,7 +236,7 @@ export default function TokenDetail() {
               <div
                 style={{
                   padding: 20,
-                  borderRadius: 16,
+                  borderRadius: 12,
                   background:
                     'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   border: '1px solid rgba(0, 255, 127, 0.2)',
@@ -291,7 +291,7 @@ export default function TokenDetail() {
               <div
                 style={{
                   padding: 20,
-                  borderRadius: 16,
+                  borderRadius: 12,
                   background:
                     'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
                   border: '1px solid rgba(138, 43, 226, 0.2)',
@@ -351,15 +351,7 @@ export default function TokenDetail() {
             {/* Secondary Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Locked Tokens */}
-              <div
-                style={{
-                  padding: 18,
-                  borderRadius: 14,
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--glass-border)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
+              <div className="liquid-glass rounded-xl p-[18px]">
                 <div
                   style={{
                     fontSize: 10,
@@ -399,15 +391,7 @@ export default function TokenDetail() {
               </div>
 
               {/* Total Supply */}
-              <div
-                style={{
-                  padding: 18,
-                  borderRadius: 14,
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--glass-border)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
+              <div className="liquid-glass rounded-xl p-[18px]">
                 <div
                   style={{
                     fontSize: 10,
@@ -447,15 +431,7 @@ export default function TokenDetail() {
               </div>
 
               {/* Market Cap (VFD) */}
-              <div
-                style={{
-                  padding: 18,
-                  borderRadius: 14,
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--glass-border)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
+              <div className="liquid-glass rounded-xl p-[18px]">
                 <div
                   style={{
                     fontSize: 10,
@@ -504,17 +480,7 @@ export default function TokenDetail() {
 
           {/* Price Performance Chart Card */}
           <div
-            className="genz-card"
-            style={{
-              background: 'var(--glass-bg)',
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: 24,
-              padding: 24,
-              boxShadow: 'var(--glass-shadow)',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
+            className="liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden"
           >
             <div
               style={{

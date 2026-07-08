@@ -88,7 +88,7 @@ const DexExploreTokens = () => {
 
         {/* Responsive Pagination Controls */}
         {data && data.meta.totalItems > 0 && (
-          <div className="flex flex-col md:flex-row justify-between items-center mt-5 p-3 md:py-4 md:px-5 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] gap-3 md:gap-0">
+          <div className="flex flex-col md:flex-row justify-between items-center mt-5 p-3 md:py-4 md:px-5 liquid-glass rounded-xl gap-3 md:gap-0">
 
             {/* Pagination Info */}
             <div className="flex items-center gap-2 order-2 md:order-1">
@@ -145,7 +145,7 @@ const DexExploreTokens = () => {
         )}
 
         {data?.items.length === 0 && !isLoading && (
-          <div className="text-center py-15 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] mt-5">
+          <div className="text-center py-15 liquid-glass rounded-xl mt-5">
             <div className="text-[var(--light-font-color)] text-base font-medium mb-2">
               {t('dex.noTokensFound')}
             </div>

@@ -272,7 +272,7 @@ const TipModal = ({
   return (
     <div className="w-full">
       {/* Stylish header */}
-      <div className="relative overflow-hidden rounded-2xl p-4 mb-4 border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl">
+      <div className="liquid-glass liquid-glass--strong relative overflow-hidden rounded-xl p-4 mb-4">
         <div
           className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20 blur-2xl"
           style={{ background: 'radial-gradient( circle at 30% 30%, #1161FE 0%, rgba(17,97,254,0) 60% )' }}
@@ -303,7 +303,7 @@ const TipModal = ({
 
       {/* Success state */}
       {txHash && (
-        <div className="mb-4 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-sm">
+        <div className="mb-4 p-3 rounded-xl border border-bull/30 bg-bull/10 text-bull text-sm">
           {t('common.modals.tip.tipSentSuccessfully')}
           {explorerTxUrl && (
             <a href={explorerTxUrl} target="_blank" rel="noreferrer" className="underline ml-1">{t('common.modals.tip.viewOnExplorer')}</a>
@@ -313,13 +313,13 @@ const TipModal = ({
 
       {/* Error state */}
       {error && (
-        <div className="mb-3 p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-sm">
+        <div className="mb-3 p-3 rounded-xl border border-bear/30 bg-bear/10 text-bear text-sm">
           {error}
         </div>
       )}
 
       {/* Form card */}
-      <div className="rounded-2xl p-4 border border-white/10 bg-white/[0.03] backdrop-blur-lg">
+      <div className="liquid-glass rounded-xl p-4">
         <div className="flex items-center justify-between text-xs text-white/70 mb-2">
           <span>{t('common.labels.balance')}</span>
           <span>
@@ -377,7 +377,7 @@ const TipModal = ({
           </div>
 
           {insufficient && (
-            <div className="text-xs text-red-400">{t('common.modals.tip.insufficientBalance')}</div>
+            <div className="text-xs text-bear">{t('common.modals.tip.insufficientBalance')}</div>
           )}
         </div>
       </div>

@@ -23,10 +23,7 @@ const LiquidityPositionCard = ({
 
   return (
     <div
-      className={`flex justify-between flex-col p-4 gap-2 rounded-2xl backdrop-blur-sm transition-all duration-300 ${isSelected
-        ? 'bg-red-500/10 border border-accent-color'
-        : 'bg-white/[0.05] border border-glass-border'
-      }`}
+      className={`liquid-glass flex justify-between flex-col p-4 gap-2 rounded-xl transition-all duration-300 ${isSelected ? 'ring-2 ring-accent-color' : ''}`}
     >
       <div className="flex-col md:flex-row flex gap-3 mb-2 ">
         <div className="flex items-center gap-3 mb-2 ">

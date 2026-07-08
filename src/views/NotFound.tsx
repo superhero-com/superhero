@@ -93,14 +93,7 @@ const NotFound = () => {
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
           {t('common.views.notFound.lostInThe')}
           {' '}
-          <span
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+          <span className="gradient-text">
             {t('common.views.notFound.blockchain')}
           </span>
         </h2>
@@ -112,14 +105,10 @@ const NotFound = () => {
         {/* Action buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button
+            variant="gradient"
             size="lg"
             onClick={() => navigate('/')}
-            className="w-full sm:w-auto px-8 py-6 text-base font-bold rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,255,157,0.4)]"
-            style={{
-              background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
-              color: '#0a0a0f',
-              border: 'none',
-            }}
+            className="w-full sm:w-auto px-8 py-6 text-base font-bold rounded-btn transition-all duration-300 hover:scale-105"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -141,7 +130,7 @@ const NotFound = () => {
             variant="outline"
             size="lg"
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto px-8 py-6 text-base font-semibold rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="w-full sm:w-auto px-8 py-6 text-base font-semibold rounded-btn border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
           >
             <svg
               className="w-5 h-5 mr-2"

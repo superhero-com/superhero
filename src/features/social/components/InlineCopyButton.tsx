@@ -27,7 +27,7 @@ const InlineCopyButton = ({ value, className = '' }: InlineCopyButtonProps) => {
       className={[
         'inline-flex items-center justify-center rounded-sm text-white/45 transition-colors',
         'hover:text-white/80 focus-visible:outline-none focus-visible:text-white/80',
-        copied ? 'text-emerald-300' : '',
+        copied ? 'text-bull' : '',
         className,
       ].join(' ')}
       aria-label={copied ? t('social.copiedAddress') : t('common.wallet.copyAddress')}

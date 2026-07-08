@@ -58,7 +58,7 @@ function InteractiveHeroVisual() {
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative w-full max-w-[320px] aspect-[10/12] mx-auto lg:mx-0 rounded-[28px] border border-white/[0.08] bg-white/[0.02] backdrop-blur-3xl p-4 transition-all duration-300 ease-out cursor-pointer hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10"
+      className="relative w-full max-w-[320px] aspect-[10/12] mx-auto lg:mx-0 rounded-xl liquid-glass liquid-glass--strong p-4 transition-all duration-300 ease-out cursor-pointer hover:shadow-2xl hover:shadow-blue-500/10"
       style={{
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.02 : 1}, ${isHovered ? 1.02 : 1}, 1)`,
         transformStyle: 'preserve-3d',
@@ -86,7 +86,7 @@ function InteractiveHeroVisual() {
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-white/40 mb-0.5 font-mono">Current Balance</p>
                 <h3 className="text-3xl font-extrabold text-white/95 leading-none tracking-tight">$1,248.50</h3>
-                <p className="text-[11px] text-green-400/80 font-mono mt-1 font-semibold flex items-center gap-1">
+                <p className="text-[11px] text-bull/80 font-mono mt-1 font-semibold flex items-center gap-1">
                   <span>▲</span>
                   {' '}
                   +2.84%
@@ -459,7 +459,7 @@ function FaqCategory({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.04]">
+    <div className="liquid-glass liquid-glass--hover rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -729,7 +729,7 @@ export default function Wallet() {
 
               {/* Headline */}
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[44px] xl:text-6xl font-extrabold leading-[1.05] tracking-tight mb-6">
-                <span className="block bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent pb-3">
+                <span className="block gradient-text pb-3">
                   Superhero Wallet
                 </span>
               </h1>
@@ -818,8 +818,8 @@ export default function Wallet() {
           {/* Row 1: 2/3 + 1/3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Card 1: Multichain support (2/3) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="lg:col-span-2 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full">
                 <div className="md:col-span-7 flex flex-col justify-center text-left">
                   <div className="flex items-center gap-3 mb-4">
@@ -868,7 +868,7 @@ export default function Wallet() {
             </div>
 
             {/* Card 2: Secure & non-custodial (1/3) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+            <div className="lg:col-span-1 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
               <div className="relative z-10 flex flex-col h-full justify-between text-left">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -889,8 +889,8 @@ export default function Wallet() {
           {/* Row 2: 3/3 */}
           <div className="grid grid-cols-1 gap-6">
             {/* Card 3: Crypto & Token management (3/3) */}
-            <div className="group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
                 <div className="md:col-span-6 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -923,7 +923,7 @@ export default function Wallet() {
           {/* Row 1: 1/3 + 2/3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Card 4: Cold Signing with AIRGAP Vault (1/3) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+            <div className="lg:col-span-1 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
               <div className="relative z-10 flex flex-col h-full justify-between text-left">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -954,8 +954,8 @@ export default function Wallet() {
             </div>
 
             {/* Card 5: Advanced DApp integration (2/3) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="lg:col-span-2 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
                 <div className="md:col-span-7 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -986,8 +986,8 @@ export default function Wallet() {
           {/* Row 2: 2/3 + 1/3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Card 6: Multisig Support (2/3) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="lg:col-span-2 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
                 <div className="md:col-span-6 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -1008,7 +1008,7 @@ export default function Wallet() {
             </div>
 
             {/* Card 7: Buy .chain names (1/3) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+            <div className="lg:col-span-1 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
               <div className="relative z-10 flex flex-col h-full justify-between text-left">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -1055,7 +1055,7 @@ export default function Wallet() {
           {/* Row 1: 1/3 + 2/3 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Card 8: Biometric Login (1/3) */}
-            <div className="lg:col-span-1 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-400/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
+            <div className="lg:col-span-1 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
               <div className="relative z-10 flex flex-col h-full justify-between text-left">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -1079,8 +1079,8 @@ export default function Wallet() {
             </div>
 
             {/* Card 9: Import Accounts (2/3) */}
-            <div className="lg:col-span-2 group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="lg:col-span-2 group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center h-full text-left">
                 <div className="md:col-span-7 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -1114,8 +1114,8 @@ export default function Wallet() {
           {/* Row 2: 3/3 */}
           <div className="grid grid-cols-1 gap-6">
             {/* Card 10: Convenient Address Book (3/3) */}
-            <div className="group relative bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.05] hover:border-blue-500/20 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="group relative liquid-glass liquid-glass--hover rounded-xl p-6 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full text-left">
                 <div className="lg:col-span-5 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
@@ -1159,7 +1159,7 @@ export default function Wallet() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Desktop Web */}
-            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
+            <div className="liquid-glass liquid-glass--hover rounded-xl p-6 text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
                 <Monitor className="w-6 h-6 text-blue-400" />
               </div>
@@ -1179,7 +1179,7 @@ export default function Wallet() {
             </div>
 
             {/* Mobile Browser */}
-            <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 text-center transition-all duration-300 hover:border-blue-400/20 hover:bg-white/[0.06]">
+            <div className="liquid-glass liquid-glass--hover rounded-xl p-6 text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-blue-500/10 backdrop-blur-sm border border-blue-400/20 flex items-center justify-center">
                 <Smartphone className="w-6 h-6 text-blue-400" />
               </div>

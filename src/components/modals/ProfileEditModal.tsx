@@ -87,7 +87,7 @@ type SponsorshipStatus = 'idle' | 'checking' | 'resolved';
 
 const CHAIN_NAME_LABEL_CLASS = 'text-white/70 text-[11px] tracking-wider font-semibold';
 const FIELD_LABEL_CLASS = 'text-white/70 text-[11px] uppercase tracking-wider font-semibold';
-const OPTIONAL_BADGE_CLASS = 'rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/35';
+const OPTIONAL_BADGE_CLASS = 'rounded-btn-sm border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/35';
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden>
@@ -101,14 +101,6 @@ const XIcon = ({ className }: { className?: string }) => (
 const formatChainNameLabel = (name: string) => (
   name.endsWith('.chain') ? name : `${name}.chain`
 );
-
-const GLASS_CARD_STYLE = {
-  background: 'linear-gradient(135deg, rgba(16,19,26,0.96) 0%, rgba(8,10,16,0.94) 100%)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
-  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10)',
-} as const;
 
 const FieldHeading = ({
   label,
@@ -145,7 +137,7 @@ const HelpPanel = ({
 }: {
   children: ReactNode;
 }) => (
-  <div className="mt-2 rounded-xl border border-white/[0.08] bg-black/25 p-3 text-[12px] leading-relaxed text-white/55">
+  <div className="liquid-glass mt-2 rounded-xl p-3 text-[12px] leading-relaxed text-white/55">
     {children}
   </div>
 );
@@ -1088,7 +1080,7 @@ const ProfileEditModal = ({
           'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
         ].join(' ')}
       >
-        <div className="relative rounded-2xl overflow-hidden flex flex-col max-h-[90dvh]" style={GLASS_CARD_STYLE}>
+        <div className="liquid-glass liquid-glass--strong relative rounded-xl overflow-hidden flex flex-col max-h-[90dvh]">
           <div
             className="absolute top-0 left-0 right-0 h-px"
             style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
@@ -1158,7 +1150,7 @@ const ProfileEditModal = ({
               ) : null}
               {hasOwnedChainNames ? (
               // The user already owns one or more names — let them pick the preferred one.
-                <div className="mt-1.5 rounded-xl border border-white/[0.08] bg-black/35 p-2 font-mono">
+                <div className="liquid-glass mt-1.5 rounded-xl p-2 font-mono">
                   <AppSelect
                     value={trimmedForm.chain_name || NONE_CHAIN_NAME_VALUE}
                     onValueChange={handleChainNameSelect}
@@ -1182,7 +1174,7 @@ const ProfileEditModal = ({
               ) : (
               // The user owns no names — let them type one to claim it directly.
                 <>
-                  <div className="mt-2 rounded-xl border border-white/[0.08] bg-black/35 p-2 font-mono">
+                  <div className="liquid-glass mt-2 rounded-xl p-2 font-mono">
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Input
@@ -1219,13 +1211,10 @@ const ProfileEditModal = ({
                       </div>
                       <Button
                         type="button"
+                        variant="gradient"
                         onClick={onClaim}
                         disabled={isClaimDisabled}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold whitespace-nowrap disabled:opacity-50"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
-                          color: '#0a0a0a',
-                        }}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold whitespace-nowrap disabled:opacity-50"
                       >
                         {isClaimLoading && <Spinner className="w-3.5 h-3.5" />}
                         {claimButtonLabel}
@@ -1233,7 +1222,7 @@ const ProfileEditModal = ({
                     </div>
                     <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
                       <span>{t('messages.chainNameClaimHint')}</span>
-                      <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
+                      <span className={availabilityStatus === 'available' ? 'text-bull' : 'text-blue-400'}>
                         {availabilityStatus === 'available' ? 'Available' : ''}
                       </span>
                     </div>
@@ -1246,7 +1235,7 @@ const ProfileEditModal = ({
                   )}
                   {showSponsorshipHint && sponsorshipForCurrentName && (
                     sponsorshipForCurrentName.sponsorable ? (
-                      <p className="mt-2 text-xs font-semibold text-green-400">
+                      <p className="mt-2 text-xs font-semibold text-bull">
                         {t('messages.chainNameSponsorFree')}
                       </p>
                     ) : (
@@ -1262,7 +1251,7 @@ const ProfileEditModal = ({
                       </div>
                     )
                   )}
-                  {claimError && <p className="mt-2 text-xs text-red-300">{claimError}</p>}
+                  {claimError && <p className="mt-2 text-xs text-bear">{claimError}</p>}
                 </>
               )}
             </div>
@@ -1271,7 +1260,7 @@ const ProfileEditModal = ({
               <div ref={xSectionRef}>
                 <FieldHeading label="X (Twitter)" />
                 {!xSectionReady && !isGuest && (
-                <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
+                <div className="liquid-glass mt-1.5 flex items-center justify-center gap-2 rounded-xl px-3 py-6">
                   <Spinner className="w-5 h-5 text-white/60" />
                   <span className="text-xs text-white/50">{t('messages.loading')}</span>
                 </div>
@@ -1320,7 +1309,7 @@ const ProfileEditModal = ({
                 </button>
                 )}
                 {xSectionReady && hasXVerified && xUsername && (
-                <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
+                <div className="liquid-glass mt-1.5 flex items-center gap-2 rounded-xl px-3 py-2">
                   <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
                   <span className="text-sm text-white/90">
                     {`@${xUsername.replace(/^@/u, '')}`}
@@ -1359,7 +1348,7 @@ const ProfileEditModal = ({
               </div>
             </div>
 
-            {formError ? <p className="text-xs text-red-300">{formError}</p> : null}
+            {formError ? <p className="text-xs text-bear">{formError}</p> : null}
           </div>
 
           <div className="px-5 pb-5 pt-2 shrink-0 border-t border-white/[0.06]">
@@ -1378,20 +1367,17 @@ const ProfileEditModal = ({
                 variant="ghost"
                 onClick={handleClose}
                 disabled={loading}
-                className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
+                className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-btn"
               >
                 {t('buttons.cancel')}
               </Button>
               <Button
+                variant="gradient"
                 onClick={onSave}
                 // Keep Save active when logged out so the click can trigger onboarding;
                 // only gate on edit permission once an account is actually connected.
                 disabled={loading || (!!activeAccount && !canEdit)}
-                className="flex-1 rounded-xl font-semibold disabled:opacity-50"
-                style={{
-                  background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
-                  color: '#0a0a0a',
-                }}
+                className="flex-1 font-semibold disabled:opacity-50"
               >
                 {loading ? t('messages.savingProfile') : t('buttons.save')}
               </Button>

@@ -130,7 +130,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
 
   if (loading) {
     return (
-      <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+      <div className="liquid-glass rounded-xl p-6">
         <div className="flex items-center justify-center py-8">
           <Spinner className="w-6 h-6" />
         </div>
@@ -147,7 +147,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
     }
     if (difference) {
       return (
-        <span className={difference.isPositive ? 'text-red-400' : 'text-green-400'}>
+        <span className={difference.isPositive ? 'text-bear' : 'text-bull'}>
           {difference.isPositive ? '+' : '-'}
           {difference.value}
         </span>
@@ -161,7 +161,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="liquid-glass rounded-xl p-6">
       {/* Header */}
       <h3 className="text-xl font-bold text-white m-0 mb-6 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
         {t('trending.ranking.title')}

@@ -102,7 +102,7 @@ export const TokenListCards = ({
 
   if (loading && tokens.length === 0) {
     return (
-      <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
+      <div className="text-center p-[60px] liquid-glass rounded-xl">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">
           <Spinner className="w-5 h-5" />
           {t('tokenListCards.loadingTokens')}
@@ -114,7 +114,7 @@ export const TokenListCards = ({
   return (
     <div className="overflow-x-auto">
       {/* Responsive Filter Controls */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-3 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      <div className="liquid-glass rounded-xl p-4 mb-3">
         {/* Responsive Filter Layout */}
 
         <div className="flex items-stretch justify-between gap-3 flex-wrap flex-col sm:flex-row mb-[10px]">
@@ -199,7 +199,7 @@ export const TokenListCards = ({
             ) : (
               <div />
             )}
-            <div className="flex items-center gap-[6px] bg-green-500/10 px-[10px] py-[6px] rounded-2xl border border-green-500/20 flex-shrink-0">
+            <div className="flex items-center gap-[6px] bg-green-500/10 px-[10px] py-[6px] rounded-btn border border-green-500/20 flex-shrink-0">
               <div className="w-[5px] h-[5px] rounded-full bg-green-500 animate-pulse" />
               <span className="text-[11px] text-green-500 font-semibold">
                 {t('tokenListCards.tokenCount', { count: tokens.length })}
@@ -212,7 +212,7 @@ export const TokenListCards = ({
           {tokens.map((token) => (
             <div
               key={token.address}
-              className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 hover:bg-white/[0.05] active:scale-[0.98]"
+              className="liquid-glass liquid-glass--hover rounded-xl p-4 cursor-pointer active:scale-[0.98]"
               onClick={() => handleTokenClick(token)}
             >
               {/* Token Header */}
@@ -227,7 +227,7 @@ export const TokenListCards = ({
                 </div>
 
                 {/* Pools Count Badge */}
-                <div className="bg-green-500/10 px-2 py-1 rounded-xl border border-green-500/20 mt-2">
+                <div className="bg-green-500/10 px-2 py-1 rounded-btn-sm border border-green-500/20 mt-2">
                   <span className="text-xs text-green-500 font-semibold">
                     {token.pairs_count || 0}
                     {' '}
@@ -266,8 +266,8 @@ export const TokenListCards = ({
                   <div className={`text-sm font-semibold ${
                     token.summary?.change?.[timeBase]?.percentage
                     && Number(token.summary.change[timeBase].percentage) >= 0
-                      ? 'text-green-400'
-                      : 'text-red-400'
+                      ? 'text-bull'
+                      : 'text-bear'
                   }`}
                   >
                     {token.summary?.change?.[timeBase]?.percentage ? (
@@ -318,7 +318,7 @@ export const TokenListCards = ({
           ))}
 
           {tokens.length === 0 && !loading && (
-            <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px] mt-5">
+            <div className="text-center p-[60px] liquid-glass rounded-xl mt-5">
               <div className="text-gray-300 text-base font-medium mb-2">
                 {t('tokenListCards.noTokensFound')}
               </div>

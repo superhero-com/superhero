@@ -39,7 +39,7 @@ const HeaderWalletButton = () => {
         loading={false}
         variant="default"
         size="default"
-        className="gap-2 rounded-xl sm:rounded-full text-sm"
+        className="gap-2 rounded-btn text-sm"
       >
         <Favicon className="w-4 h-4" />
         {t('buttons.connectWalletDex')}

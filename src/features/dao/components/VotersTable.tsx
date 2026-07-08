@@ -35,7 +35,7 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
 
   if (!items.length) {
     return (
-      <div className="border border-white/10 rounded-xl p-3 sm:p-4 bg-black/20 backdrop-blur-lg text-white">
+      <div className="liquid-glass rounded-xl p-3 sm:p-4 text-white">
         <div className="text-base sm:text-lg font-bold mb-3 sm:mb-4">{t('dao.voters.title')}</div>
         <div className="text-xs sm:text-sm text-white/80">
           {t('dao.voters.noVotersFound')}
@@ -45,7 +45,7 @@ const VotersTable = ({ voteState, token }: VotersTableProps) => {
   }
 
   return (
-    <div className="border border-white/10 rounded-xl bg-black/20 backdrop-blur-lg text-white">
+    <div className="liquid-glass rounded-xl text-white">
       <div className="p-3 sm:p-4 border-b border-white/10">
         <div className="text-base sm:text-lg font-bold">{t('dao.voters.title')}</div>
       </div>

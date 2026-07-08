@@ -89,7 +89,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
   // Loading skeleton
   if (data === null) {
     return (
-      <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+      <div className="relative liquid-glass rounded-xl overflow-hidden">
         {onDismiss && (
           <button
             type="button"
@@ -150,7 +150,7 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
       href={data.url ?? url}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex gap-0 hover:bg-white/8 hover:border-white/20 transition-all duration-200 group no-underline"
+      className="relative liquid-glass liquid-glass--hover rounded-xl overflow-hidden flex gap-0 transition-all duration-200 group no-underline"
       onClick={(e) => e.stopPropagation()}
     >
       {dismissBtn}

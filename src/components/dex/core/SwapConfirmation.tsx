@@ -67,7 +67,7 @@ export default function SwapConfirmation({
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-2xl p-4 w-[420px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1000] outline-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 liquid-glass liquid-glass--strong text-white rounded-xl p-4 w-[420px] max-w-[90vw] max-h-[85vh] overflow-y-auto z-[1000] outline-none">
 
           {/* Header */}
           <div className="flex justify-between items-center mb-3">
@@ -117,7 +117,7 @@ export default function SwapConfirmation({
             {priceImpactPct != null && (
               <div className="flex justify-between text-white/60">
                 <span>{t('dex.priceImpact')}</span>
-                <span className={`font-semibold ${priceImpactPct > 10 ? 'text-red-400' : priceImpactPct > 5 ? 'text-[#ffb86b]' : 'text-green-400'}`}>
+                <span className={`font-semibold ${priceImpactPct > 10 ? 'text-bear' : priceImpactPct > 5 ? 'text-[#ffb86b]' : 'text-bull'}`}>
                   {Decimal.from(priceImpactPct).prettify()}%
                 </span>
               </div>

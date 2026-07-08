@@ -48,7 +48,7 @@ const AccountCreatedToken = ({
   return (
     <div className="mt-4">
       {!loadingCreated && ((createdResp?.items?.length ?? 0) === 0) && (
-        <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
+        <div className="text-center py-12 px-6 liquid-glass rounded-xl">
           <div className="text-4xl mb-3 opacity-30">✨</div>
           <div className="text-white font-semibold mb-1">{t('noCreatedTokens')}</div>
           <div className="text-white/60 text-sm">

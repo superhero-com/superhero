@@ -28,7 +28,7 @@ const PercentChange = ({
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-medium tabular-nums ${
-        isUp ? 'text-emerald-400' : 'text-red-400'
+        isUp ? 'text-bull' : 'text-bear'
       }`}
     >
       <span className="text-[9px]">{isUp ? '▲' : '▼'}</span>

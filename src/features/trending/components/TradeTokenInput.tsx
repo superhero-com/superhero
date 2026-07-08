@@ -115,7 +115,7 @@ const TradeTokenInput = ({
         errorMessages={isInsufficientBalance ? ['Insufficient balance'] : undefined}
         onFocus={onTokenAFocus}
         aeValue={tokenAAeValue}
-        className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
+        className="liquid-glass rounded-xl"
       />
 
       {/* Middle Arrow Button */}
@@ -146,7 +146,7 @@ const TradeTokenInput = ({
         showBalance
         onFocus={onTokenBFocus}
         aeValue={tokenBAeValue}
-        className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
+        className="liquid-glass rounded-xl"
       />
     </div>
   );

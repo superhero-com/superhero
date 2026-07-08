@@ -43,7 +43,7 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
   return (
     <section className="mt-2">
       <h3 className="text-white/90 font-semibold mb-2">{t('social:tips')}</h3>
-      <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
+      <div className="liquid-glass rounded-xl p-3 sm:p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm text-white/70">
             {t('totalTipped')}

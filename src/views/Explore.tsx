@@ -136,7 +136,7 @@ export default function ExploreRefactored() {
             </div>
 
             {/* Pairs Table */}
-            <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
+            <table className="w-full border-collapse liquid-glass rounded-xl overflow-hidden">
               <thead>
                 <tr className="border-b border-gray-600 bg-white/10">
                   <th className="text-left p-3 text-xs opacity-80 text-white/80">{t('pair')}</th>

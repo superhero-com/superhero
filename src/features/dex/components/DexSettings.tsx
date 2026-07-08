@@ -47,7 +47,7 @@ const DexSettings = ({ children, title }: DexSettingsProps) => {
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[1000]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-standard-font-color border border-glass-border rounded-2xl p-6 w-[400px] max-w-[90vw] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1001] outline-none">
+        <Dialog.Content className="liquid-glass liquid-glass--strong fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-standard-font-color rounded-xl p-6 w-[400px] max-w-[90vw] z-[1001] outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <Dialog.Title className="font-bold text-lg m-0 text-standard-font-color">
@@ -159,7 +159,7 @@ const DexSettings = ({ children, title }: DexSettingsProps) => {
             <button
               type="button"
               onClick={handleSave}
-              className="flex-1 px-5 py-3 rounded-xl border-none bg-button-gradient text-white text-sm font-bold cursor-pointer transition-all duration-300"
+              className="flex-1 px-5 py-3 rounded-xl border-none bg-gradient-brand-135 text-white text-sm font-bold cursor-pointer transition-all duration-300"
             >
               {t('settings.save')}
             </button>

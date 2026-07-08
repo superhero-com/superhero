@@ -147,7 +147,7 @@ const LeaderboardView = () => {
   };
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4 py-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen aurora-surface text-white px-4 py-4">
       <Head
         title={t('leaderboardPageTitle')}
         description={t('explore:leaderboardDescription')}
@@ -179,7 +179,7 @@ const LeaderboardView = () => {
         </div>
 
         {isDateRangeInvalid && (
-          <div className="bg-amber-500/10 border border-amber-500/40 text-amber-100 text-sm rounded-2xl px-4 py-3">
+          <div className="bg-amber-500/10 border border-amber-500/40 text-amber-100 text-sm rounded-xl px-4 py-3">
             {hasInvalidDateFormat
               ? t('leaderboardInvalidDateFormat')
               : t('leaderboardStartBeforeEnd')}
@@ -187,12 +187,12 @@ const LeaderboardView = () => {
         )}
 
         {hasCustomDateInput && !isCustomDateRangeComplete && !isDateRangeInvalid && (
-          <div className="bg-white/[0.03] border border-white/10 text-white/60 text-sm rounded-2xl px-4 py-3">
+          <div className="liquid-glass text-white/60 text-sm rounded-xl px-4 py-3">
             {t('leaderboardEnterBothDates')}
           </div>
         )}
 
-        <div className="flex items-start gap-3 rounded-2xl border border-sky-400/20 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
+        <div className="flex items-start gap-3 rounded-xl border border-sky-400/20 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
           <AlertCircle
             aria-hidden="true"
             className="mt-0.5 h-4 w-4 shrink-0 text-sky-200"
@@ -204,7 +204,7 @@ const LeaderboardView = () => {
 
         {/* Error state */}
         {isError && (
-          <div className="bg-red-500/10 border border-red-500/40 text-red-200 text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+          <div className="bg-red-500/10 border border-red-500/40 text-red-200 text-sm rounded-xl px-4 py-3 flex items-center justify-between gap-3">
             <span>{t('unableToLoadLeaderboard')}</span>
             <button
               type="button"
@@ -217,7 +217,7 @@ const LeaderboardView = () => {
         )}
 
         {!isError && (
-          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
+          <div className="liquid-glass liquid-glass--strong rounded-xl p-4 sm:p-6">
             {/* Loading */}
             {isLoading && (
               <>

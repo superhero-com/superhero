@@ -120,7 +120,7 @@ const InvitationList = () => {
             type="button"
             onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
             className={cn(
-              'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs',
+              'inline-flex items-center gap-2 px-3 py-1.5 rounded-btn-sm text-xs',
               'bg-white/5 border border-white/10 backdrop-blur-sm',
               'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-white/10',
               'cursor-pointer relative overflow-hidden',
@@ -156,7 +156,7 @@ const InvitationList = () => {
   if (!activeAccount) return null;
 
   return (
-    <div className="border border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-sm">
+    <div className="liquid-glass rounded-xl">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <h3 className="text-lg font-semibold text-white">{t('invitations.yourInvitations')}</h3>
       </div>
@@ -332,7 +332,7 @@ const InvitationList = () => {
                               handleCopyLink(invitation.invitee, invitation.secretKey!);
                             }}
                             className={cn(
-                              'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px]',
+                              'inline-flex items-center gap-1.5 px-2 py-1 rounded-btn-sm text-[10px]',
                               'bg-white/5 border border-white/10 backdrop-blur-sm',
                               'transition-all duration-300 hover:bg-white/10',
                               'cursor-pointer relative overflow-hidden',

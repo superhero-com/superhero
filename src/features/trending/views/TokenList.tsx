@@ -76,7 +76,7 @@ const SearchSectionShell = ({
   footer?: React.ReactNode;
   contentClassName?: string;
 }) => (
-  <section className="overflow-hidden bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
+  <section className="overflow-hidden liquid-glass rounded-xl p-4 sm:p-6">
     <div className="flex flex-col gap-1 mb-4">
       <h2
         className="text-lg sm:text-xl font-semibold text-white"
@@ -91,7 +91,7 @@ const SearchSectionShell = ({
 );
 
 const EmptyPanel = ({ message }: { message: string }) => (
-  <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/70">
+  <div className="liquid-glass rounded-xl p-6 text-center text-white/70">
     {message}
   </div>
 );
@@ -469,7 +469,7 @@ const TokenList = () => {
     : null;
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen aurora-surface text-white px-4">
       <Head
         title={t('tokenList.pageTitle')}
         description={t('tokenList.pageDescription')}
@@ -639,7 +639,7 @@ const TokenList = () => {
                   )}
                   <Link
                     to="/trends/create"
-                    className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"
+                    className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-btn border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"
                   >
                     {t('tokenList.tokenizeTrend')}
                   </Link>
@@ -666,7 +666,7 @@ const TokenList = () => {
                     type="button"
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingTokens}
-                    className={`px-6 py-3 rounded-full border text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ${
+                    className={`px-6 py-3 rounded-btn border text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ${
                       isFetchingTokens
                         ? 'border-white/10 bg-white/10 cursor-not-allowed opacity-60'
                         : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'

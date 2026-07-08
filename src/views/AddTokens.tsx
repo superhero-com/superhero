@@ -206,7 +206,7 @@ export default function AddTokens() {
       </div>
       {error && <div className="text-red-400 mb-2 p-2 bg-red-500/10 rounded border border-red-500/20">{error}</div>}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
+        <table className="w-full border-collapse liquid-glass rounded-xl overflow-hidden">
           <thead>
             <tr className="bg-white/10">
               <th className="text-left p-3 text-sm font-semibold text-white/80">{t('token')}</th>
@@ -231,7 +231,7 @@ export default function AddTokens() {
                 <td className="p-3 font-mono text-xs text-white/80">{item.address}</td>
                 <td className="text-right p-3 text-white">{item.balance}</td>
                 <td className="text-center p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`px-2 py-1 rounded-btn-sm text-xs font-medium ${
                     poolExists[item.address]
                       ? 'bg-green-500/20 text-green-400'
                       : 'bg-gray-500/20 text-gray-400'

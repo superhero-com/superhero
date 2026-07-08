@@ -40,7 +40,7 @@ export default function Invite() {
         </div>
         {/* Info Card */}
         {showInfo && (
-          <div className="mb-6 sm:mb-8 bg-black/20 backdrop-blur-lg border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-30">
+          <div className="mb-6 sm:mb-8 liquid-glass rounded-xl p-4 sm:p-5 md:p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-30">
             {/* Close button - absolute positioned on all screen sizes for better space usage */}
             <button
               onClick={() => {

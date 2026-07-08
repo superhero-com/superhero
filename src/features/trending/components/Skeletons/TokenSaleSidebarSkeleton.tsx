@@ -14,7 +14,7 @@ const TokenSaleSidebarSkeleton = () => {
   return (
     <div className="token-sale-sidebar-skeleton">
       {/* Trade Card Skeleton */}
-      <Card className="mb-2 bg-white/[0.02] border-white/10">
+      <Card className="mb-2 liquid-glass liquid-glass--strong rounded-xl">
         <CardContent className="p-4">
           {/* Buy/Sell buttons */}
           <div className="flex gap-2">
@@ -34,7 +34,7 @@ const TokenSaleSidebarSkeleton = () => {
       </Card>
 
       {/* Token Details Card Skeleton */}
-      <Card className="mt-2 bg-white/[0.02] border-white/10">
+      <Card className="mt-2 liquid-glass rounded-xl">
         <CardContent className="p-4">
           {/* Highlighted info box */}
           <div className="border border-white/10 p-2 rounded mb-2">
@@ -62,7 +62,7 @@ const TokenSaleSidebarSkeleton = () => {
       </Card>
 
       {/* Token Ranking Card Skeleton */}
-      <Card className="mt-2 bg-white/[0.02] border-white/10">
+      <Card className="mt-2 liquid-glass rounded-xl">
         <CardContent className="p-4">
           <div className="flex flex-col gap-2">
             {makeKeys(5, 'rank-row').map((key) => (

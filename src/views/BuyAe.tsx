@@ -120,7 +120,7 @@ export default function BuyAe() {
         canonicalPath="/get-ae"
       />
 
-      <div className="overflow-hidden rounded-3xl p-7 bg-gradient-to-br from-cyan-500/20 via-white/8 to-purple-500/15 text-white mb-5 border border-white/10 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+      <div className="liquid-glass liquid-glass--strong overflow-hidden rounded-xl p-7 text-white mb-5">
         <div className="flex flex-col">
           <div className="max-w-2xl">
             <div className="text-sm opacity-90">{t('eyebrow')}</div>
@@ -186,7 +186,7 @@ export default function BuyAe() {
 }
 
 const Badge = ({ label }: { label: string }) => (
-  <span className="px-2.5 py-1.5 rounded-full bg-white/12 border border-white/20 text-xs">
+  <span className="px-2.5 py-1.5 rounded-btn-sm bg-white/12 border border-white/20 text-xs">
     {label}
   </span>
 );
@@ -194,7 +194,7 @@ const Badge = ({ label }: { label: string }) => (
 const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <section
     id={id}
-    className="p-4 border border-cyan-200/20 rounded-xl backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    className="liquid-glass p-4 rounded-xl text-white"
   >
     {children}
   </section>
@@ -240,7 +240,7 @@ const MethodCard = ({ method }: { method: MethodDef }) => {
   const action = method.actionKey ? t(method.actionKey) : undefined;
 
   return (
-    <div className="h-full border border-white/10 rounded-2xl bg-gradient-to-b from-white/8 to-white/4 p-4 transition-transform hover:-translate-y-0.5 hover:border-cyan-300/35">
+    <div className="h-full liquid-glass liquid-glass--hover rounded-xl p-4 transition-transform">
       <div className="flex items-start gap-3 h-full">
         <MethodIconBox Icon={method.Icon} />
         <div className="min-w-0 flex-1 flex flex-col h-full">
@@ -261,11 +261,11 @@ const MethodCard = ({ method }: { method: MethodDef }) => {
 
 const MethodAction = ({ method, label }: { method: MethodDef; label: string }) => {
   const className = [
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs',
+    'inline-flex items-center justify-center rounded-btn px-3 py-2 text-xs',
     'font-semibold no-underline transition-colors gap-1.5 no-underline text-center',
     method.disabled
       ? 'bg-white/10 text-white/45 cursor-not-allowed'
-      : 'bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5',
+      : 'bg-gradient-brand-135 text-white border-none py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5',
   ].join(' ');
 
   if (method.disabled) {

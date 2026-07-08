@@ -153,7 +153,7 @@ export const BlockchainInfoPopover = ({
         </div>
         <div className="px-1 pb-2 flex items-center gap-2">
           {status?.confirmed && (
-            <Badge className="border-green-500/30 bg-green-500/25 text-green-300">{t('social.blockchainInfo.mined')}</Badge>
+            <Badge variant="signal-bull">{t('social.blockchainInfo.mined')}</Badge>
           )}
           {typeof status?.confirmations === 'number' && status?.confirmations >= 0 && (
             <span className="text-xs text-white/80">

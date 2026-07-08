@@ -139,7 +139,7 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
         <div className={`${compact ? 'hidden' : 'text-sm'} md:order-2 md:text-[13px]`} style={{ color: 'var(--light-font-color)' }}>{t('layout.openSource')}</div>
       </div>
       <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-2 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
-        <div className={`bg-white/[0.02] border border-white/[0.06] rounded-lg ${compact ? 'px-2 py-2' : 'px-3 py-2'} shadow-sm`}>
+        <div className={`liquid-glass rounded-xl ${compact ? 'px-2 py-2' : 'px-3 py-2'}`}>
           <div className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-[var(--light-font-color)] uppercase tracking-wide mb-1 text-center`}>{t('layout.status')}</div>
           <div className={`grid grid-cols-2 gap-x-3 gap-y-1 ${compact ? 'text-xs' : 'text-sm'} md:text-[13px] sm:text-xs`}>
             <span style={{ color: isOnline ? 'var(--neon-green)' : 'var(--neon-pink)' }}>
@@ -175,18 +175,11 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
           href="https://github.com/superhero-com/superhero/issues"
           target="_blank"
           rel="noreferrer"
-          className="no-underline inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none focus:shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
-          style={{
-            background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
-            color: '#0a0a0f',
-            WebkitTextFillColor: '#0a0a0f',
-            backgroundClip: 'padding-box',
-            WebkitBackgroundClip: 'padding-box',
-          }}
+          className="no-underline inline-flex items-center gap-2 font-semibold rounded-btn px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none focus:shadow-[0_10px_24px_rgba(0,0,0,0.25)] bg-gradient-brand-135 text-white"
           aria-label={t('aria.sendFeedbackOnGitHub')}
         >
-          <MessageSquare className="w-5 h-5" style={{ color: '#0a0a0f' }} aria-hidden="true" />
-          <span className={compact ? 'text-sm' : 'text-base'} style={{ color: '#0a0a0f', WebkitTextFillColor: '#0a0a0f' }}>{t('buttons.sendFeedback')}</span>
+          <MessageSquare className="w-5 h-5 text-white" aria-hidden="true" />
+          <span className={`text-white ${compact ? 'text-sm' : 'text-base'}`}>{t('buttons.sendFeedback')}</span>
         </a>
       </div>
       {/* No BackToTop in footer; it is rendered inside the right rail only */}

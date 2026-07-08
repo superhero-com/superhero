@@ -73,14 +73,9 @@ export default function TokenInput({
         'transition-all duration-300 border-glass-border',
         hasInsufficientBalance && address && 'border-destructive',
       )}
-      style={{
-        background: 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        boxShadow: hasInsufficientBalance && address
-          ? '0 8px 25px rgba(255, 107, 107, 0.2)'
-          : '0 8px 25px rgba(0,0,0,0.2)',
-      }}
+      style={hasInsufficientBalance && address
+        ? { boxShadow: '0 8px 25px rgba(255, 107, 107, 0.2)' }
+        : undefined}
     >
       <AeCardContent className="p-4">
         {/* Label and Balance Row */}

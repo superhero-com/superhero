@@ -16,8 +16,8 @@ const MessageBox = ({
   <div className={cn(
     'py-3 px-4 rounded-xl mb-5 text-center text-sm border backdrop-blur-[10px]',
     color === 'error'
-      ? 'text-red-400 bg-red-400/10 border-red-400/20'
-      : 'text-green-400 bg-green-400/10 border-green-400/20',
+      ? 'text-bear bg-bear/10 border-bear/20'
+      : 'text-bull bg-bull/10 border-bull/20',
   )}
   >
     <div className="flex justify-between items-start">

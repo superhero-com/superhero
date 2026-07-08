@@ -66,7 +66,7 @@ export default function GovernanceVote({
         {/* Enhanced Header */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+          <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
@@ -97,7 +97,7 @@ export default function GovernanceVote({
               </div>
               <AeButton
                 onClick={() => setActiveTab('polls')}
-                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
+                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-btn transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ export default function GovernanceVote({
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-            <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+            <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-xl flex items-center justify-center">
@@ -139,7 +139,7 @@ export default function GovernanceVote({
                         onClick={() => handleVote(idx)}
                         disabled={votingFor != null}
                         className={cn(
-                          'group relative p-6 text-left bg-[var(--glass-bg)] backdrop-blur-2xl border-2 border-[var(--glass-border)] rounded-2xl transition-all cursor-pointer touch-manipulation vote-button',
+                          'group relative p-6 text-left bg-[var(--glass-bg)] backdrop-blur-2xl border-2 border-[var(--glass-border)] rounded-xl transition-all cursor-pointer touch-manipulation vote-button',
                           'hover:bg-white/5 hover:border-white/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20',
                           'focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50',
                           isSelected && 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-1 animate-vote-pulse',
@@ -207,7 +207,7 @@ export default function GovernanceVote({
           <div className="mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-xl" />
-              <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+              <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center">
@@ -217,7 +217,7 @@ export default function GovernanceVote({
                     </div>
                     <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.liveResults')}</h2>
                   </div>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-lg">
+                  <div className="flex items-center gap-3 px-4 py-3 liquid-glass rounded-xl">
                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -244,7 +244,7 @@ export default function GovernanceVote({
                       <div
                         key={idx}
                         className={cn(
-                          'group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
+                          'group relative p-6 bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
                           isWinning && 'bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse',
                         )}
                       >
@@ -322,7 +322,7 @@ export default function GovernanceVote({
           <div className="mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl" />
-              <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+              <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +334,7 @@ export default function GovernanceVote({
 
                 {decimalBalance && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                    <div className="group p-6 liquid-glass liquid-glass--hover rounded-xl">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
                           <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,7 +354,7 @@ export default function GovernanceVote({
                     </div>
 
                     {delegators.length > 0 && (
-                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                      <div className="group p-6 liquid-glass liquid-glass--hover rounded-xl">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +372,7 @@ export default function GovernanceVote({
                   </div>
                 )}
 
-                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="p-6 liquid-glass rounded-xl">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

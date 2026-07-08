@@ -23,8 +23,8 @@ const ChangePill = ({ token }: { token?: TokenDto | null }) => {
   return (
     <span className={cn(
       'inline-flex items-center gap-1 text-xs font-semibold tabular-nums',
-      isPositive ? 'text-green-400' : '',
-      isNegative ? 'text-red-400' : '',
+      isPositive ? 'text-bull' : '',
+      isNegative ? 'text-bear' : '',
       !isPositive && !isNegative ? 'text-white/60' : '',
     )}
     >
@@ -174,8 +174,8 @@ export const TokenTradeTab = ({
               <div className={cn(
                 'text-sm font-semibold tabular-nums',
                 !token?.performance ? 'text-white/40' : '',
-                s.isUp ? 'text-green-400' : '',
-                s.isDown ? 'text-red-400' : '',
+                s.isUp ? 'text-bull' : '',
+                s.isDown ? 'text-bear' : '',
                 (!s.isUp && !s.isDown) ? 'text-white/60' : '',
               )}
               >
@@ -193,14 +193,14 @@ export const TokenTradeTab = ({
             <button
               type="button"
               onClick={onBuy}
-              className="w-full rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-semibold py-3"
+              className="w-full rounded-xl bg-bull hover:bg-bull/90 active:bg-bull/80 text-white font-semibold py-3"
             >
               {t('tradeTab.buy')}
             </button>
             <button
               type="button"
               onClick={onSell}
-              className="w-full rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold py-3"
+              className="w-full rounded-xl bg-bear hover:bg-bear/90 active:bg-bear/80 text-white font-semibold py-3"
             >
               {t('tradeTab.sell')}
             </button>

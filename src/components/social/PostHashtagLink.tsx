@@ -103,7 +103,7 @@ const PostHashtagLink = ({
       to={target}
       className={cn(
         variant === 'pill'
-          ? 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[var(--neon-blue)] text-[12px] font-semibold hover:bg-white/15 hover:border-white/25'
+          ? 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-btn bg-white/10 border border-white/15 text-[var(--neon-blue)] text-[12px] font-semibold hover:bg-white/15 hover:border-white/25'
           : 'inline-flex items-baseline gap-1 text-[var(--neon-blue)] underline-offset-2 hover:underline text-[13px] font-medium',
         'no-underline outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 break-words',
       )}
@@ -115,7 +115,7 @@ const PostHashtagLink = ({
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums leading-none',
-            isPositive ? 'text-emerald-400' : 'text-rose-400',
+            isPositive ? 'text-bull' : 'text-bear',
           )}
         >
           <span className="text-[10px] leading-none">{isPositive ? '▲' : '▼'}</span>

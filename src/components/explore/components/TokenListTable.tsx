@@ -88,13 +88,10 @@ export const TokenListTable = ({
   if (loading && tokens.length === 0) {
     return (
       <div
+        className="liquid-glass rounded-xl"
         style={{
           textAlign: 'center',
           padding: 60,
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 16,
-          backdropFilter: 'blur(10px)',
         }}
       >
         <div
@@ -118,14 +115,10 @@ export const TokenListTable = ({
     <div style={{ overflowX: 'auto' }}>
       {/* Compact Filter Controls */}
       <div
+        className="liquid-glass rounded-xl"
         style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 12,
           padding: '12px 16px',
           marginBottom: 20,
-          backdropFilter: 'blur(15px)',
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
         }}
       >
         {/* Compact Filter Layout */}
@@ -492,12 +485,9 @@ export const TokenListTable = ({
 
       {/* Table */}
       <div
+        className="liquid-glass rounded-xl"
         style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 16,
           // overflow: 'hidden',
-          backdropFilter: 'blur(10px)',
         }}
       >
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -774,13 +764,10 @@ export const TokenListTable = ({
 
       {tokens.length === 0 && !loading && (
         <div
+          className="liquid-glass rounded-xl"
           style={{
             textAlign: 'center',
             padding: 60,
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 16,
-            backdropFilter: 'blur(10px)',
             marginTop: 20,
           }}
         >

@@ -38,7 +38,7 @@ const TokenVoteCard = ({
   // Loading state
   if (!voteState) {
     return (
-      <Card className="bg-white/[0.02] border-white/10">
+      <Card className="liquid-glass rounded-xl">
         <CardContent className="p-4">
           <div className="flex items-center justify-center py-4">
             <Spinner className="w-6 h-6" />
@@ -78,7 +78,7 @@ const TokenVoteCard = ({
   };
 
   return (
-    <Card className="bg-white/[0.02] border-white/10 hover:bg-white/[0.04] transition-all duration-200">
+    <Card className="liquid-glass liquid-glass--hover rounded-xl">
       <CardContent className="p-4">
         <div className="flex flex-col items-start justify-between mb-3 gap-4">
           <Badge variant="secondary" className={getVoteStatusColor()}>

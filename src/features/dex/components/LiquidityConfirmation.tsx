@@ -43,7 +43,7 @@ const LiquidityConfirmation = ({
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-lg z-[1000]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/[0.02] text-white border border-white/10 rounded-[24px] p-6 sm:p-8 w-[480px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] z-[1001] outline-none">
+        <Dialog.Content className="liquid-glass liquid-glass--strong fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white rounded-xl p-6 sm:p-8 w-[480px] max-w-[90vw] max-h-[85vh] overflow-y-auto z-[1001] outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <Dialog.Title className="text-xl font-bold m-0">
@@ -60,7 +60,7 @@ const LiquidityConfirmation = ({
           </div>
 
           {/* Token Amounts */}
-          <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 mb-6">
+          <div className="liquid-glass rounded-xl p-5 mb-6">
             <div className="text-sm font-semibold text-white/60 mb-4 text-center">
               {t('dex.liquidityConfirmation.youWillDeposit')}
             </div>
@@ -102,7 +102,7 @@ const LiquidityConfirmation = ({
 
           {/* Pool Info */}
           {pairPreview && (
-            <div className="bg-white/[0.05] border border-white/10 rounded-xl p-4 mb-6">
+            <div className="liquid-glass rounded-xl p-4 mb-6">
               <div className="text-sm font-semibold text-white/60 mb-3">
                 {t('dex.liquidityConfirmation.poolDetails')}
               </div>
@@ -148,7 +148,7 @@ const LiquidityConfirmation = ({
           )}
 
           {/* Settings */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-6">
+          <div className="liquid-glass rounded-xl p-4 mb-6">
             <div className="grid gap-2 text-xs">
               <div className="flex justify-between text-white/60">
                 <span>{t('dex.settings.slippageTolerance')}</span>
@@ -174,7 +174,7 @@ const LiquidityConfirmation = ({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className={`flex-1 px-5 py-3 rounded-full border border-white/10 bg-white/[0.02] text-white text-sm font-semibold cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out ${
+              className={`flex-1 px-5 py-3 rounded-btn border border-white/10 bg-white/[0.02] text-white text-sm font-semibold cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out ${
                 loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0'
               }`}
             >
@@ -184,7 +184,7 @@ const LiquidityConfirmation = ({
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className={`flex-[2] px-5 py-3 rounded-full border-none text-white text-sm font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 ${
+              className={`flex-[2] px-5 py-3 rounded-btn border-none text-white text-sm font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 ${
                 loading
                   ? 'bg-white/10 cursor-not-allowed opacity-60'
                   : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'

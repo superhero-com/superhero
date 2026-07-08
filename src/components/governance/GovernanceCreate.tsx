@@ -196,8 +196,8 @@ export default function GovernanceCreate() {
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
+          <div className="relative liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8">
+            <h1 className="text-2xl md:text-3xl font-bold m-0"><span className="gradient-text">{t('createPoll')}</span></h1>
             <p className="text-slate-300 mt-2">{t('description')}</p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function GovernanceCreate() {
         <MobileInput label={t('form.description')} value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
 
         {showForumHint && (
-          <MobileCard variant="outlined" padding="small" className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-slate-200 backdrop-blur-2xl">
+          <MobileCard variant="outlined" padding="small" className="liquid-glass text-slate-200">
             {t('messages.forumHint')}
           </MobileCard>
         )}

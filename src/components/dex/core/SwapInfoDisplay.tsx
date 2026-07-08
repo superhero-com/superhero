@@ -73,7 +73,7 @@ export default function SwapInfoDisplay({
   }
 
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px] space-y-3">
+    <div className="liquid-glass rounded-xl p-4 mb-5 space-y-3">
       {/* Exchange Rate Display */}
       <div className="flex items-center justify-center gap-2 text-center py-2">
         <span className="text-xl font-bold text-white">
@@ -116,9 +116,9 @@ export default function SwapInfoDisplay({
           <span className="text-sm text-white/70 font-medium">
             {t('priceImpact')}
           </span>
-          <span className={`text-sm font-semibold ${routeInfo.priceImpact && routeInfo.priceImpact > 10 ? 'text-red-400'
+          <span className={`text-sm font-semibold ${routeInfo.priceImpact && routeInfo.priceImpact > 10 ? 'text-bear'
             : routeInfo.priceImpact && routeInfo.priceImpact > 5 ? 'text-yellow-400'
-              : 'text-green-400'
+              : 'text-bull'
           }`}
           >
             {formattedPriceImpact}

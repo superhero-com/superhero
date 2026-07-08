@@ -343,10 +343,10 @@ const ReplyToFeedItem = memo(({
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
           {tokenHolderLabel && (
-            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
+            <div className="mt-1 stat-chip stat-chip--bull">
               <span className="text-[13px]" aria-hidden="true">🏅</span>
               <span className="uppercase tracking-wide">{t('social:holder')}</span>
-              <span className="text-emerald-100/80">
+              <span className="opacity-80">
                 ·
                 {tokenHolderLabel}
               </span>
@@ -362,7 +362,7 @@ const ReplyToFeedItem = memo(({
                 const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, '');
                 onOpenPost(slugOrId);
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
+              className="mt-3 mb-2 block w-full text-left liquid-glass liquid-glass--hover rounded-xl p-3"
               title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">

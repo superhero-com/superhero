@@ -213,7 +213,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   return (
     <div className="space-y-4">
       {/* Data Table */}
-      <div className="bg-transparent md:bg-white/[0.02] border-0 md:border md:border-white/10 rounded-2xl overflow-visible md:overflow-hidden">
+      <div className="bg-transparent md:bg-white/[0.02] border-0 md:border md:border-white/10 rounded-xl overflow-visible md:overflow-hidden">
         {/* Table Header */}
         <div
           className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide"

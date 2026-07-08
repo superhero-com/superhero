@@ -41,7 +41,7 @@ const AccountOwnedTokens = ({
 
   return (
     <div className="mt-3">
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="liquid-glass rounded-xl overflow-hidden">
         {/* Header */}
         <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-4 py-2.5 border-b border-white/10 text-[11px] font-semibold text-white/60 uppercase tracking-wide">
           <div>{t('account.token')}</div>

@@ -24,7 +24,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
+      <DialogContent className="liquid-glass liquid-glass--strong w-[95vw] max-w-md mx-auto rounded-xl border-0">
         <DialogHeader>
           <DialogTitle className="text-white">{t('common.modals.tokenSelect.title')}</DialogTitle>
         </DialogHeader>

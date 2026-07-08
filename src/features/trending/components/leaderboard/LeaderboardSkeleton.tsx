@@ -15,7 +15,7 @@ export const LeaderboardSkeleton = ({
         {items.map((rowKey) => (
           <div
             key={rowKey}
-            className="animate-pulse flex flex-col gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.01]"
+            className="animate-pulse flex flex-col gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.01]"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-white/[0.06]" />

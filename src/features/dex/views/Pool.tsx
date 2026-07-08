@@ -41,7 +41,7 @@ const PoolContent = () => {
 
         {/* Mobile: Positions Second, Desktop: Positions Second (right column) */}
         <div className="min-[1360px]:order-2 order-2">
-          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+          <div className="liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
               <h1 className="text-[28px] font-bold m-0 mb-2">
@@ -54,7 +54,7 @@ const PoolContent = () => {
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+              <div className="p-4 liquid-glass rounded-xl">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
                   {t('dex.pool.positions')}
                 </div>
@@ -62,16 +62,16 @@ const PoolContent = () => {
                   {positions.length}
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+              <div className="p-4 liquid-glass rounded-xl">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
                   {t('common.account.totalValue')}
                 </div>
-                <div className="text-xl font-bold text-green-400">
+                <div className="text-xl font-bold text-bull">
                   $
                   {positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+              <div className="p-4 liquid-glass rounded-xl">
                 <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
                   {t('dex.pool.feesEarned')}
                 </div>
@@ -131,7 +131,7 @@ const PoolContent = () => {
 
                 if (error) {
                   return (
-                    <div className="text-center p-5 text-red-400 bg-red-400/10 rounded-2xl border border-red-400/20 backdrop-blur-[10px]">
+                    <div className="text-center p-5 text-red-400 bg-red-400/10 rounded-xl border border-red-400/20 backdrop-blur-[10px]">
                       {error}
                     </div>
                   );
@@ -139,7 +139,7 @@ const PoolContent = () => {
 
                 if (positions.length === 0) {
                   return (
-                    <div className="text-center p-10 bg-white/[0.03] rounded-2xl border border-white/10 backdrop-blur-[10px]">
+                    <div className="text-center p-10 liquid-glass rounded-xl">
                       <div className="text-5xl mb-4 opacity-30">
                         💧
                       </div>

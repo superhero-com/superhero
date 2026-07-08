@@ -33,7 +33,7 @@ const TokenCreationBanner = ({
 
   return (
     <div className="fixed top-[calc(var(--mobile-navigation-height,0px)+env(safe-area-inset-top,0px)+1rem)] md:top-6 right-4 md:right-6 left-4 md:left-auto z-[9999] md:max-w-sm w-auto">
-      <div className="bg-[#0d1f1e] border border-[#4ecdc4]/40 rounded-2xl p-4 shadow-[0_8px_40px_rgba(78,205,196,0.18)] backdrop-blur-xl animate-in slide-in-from-top duration-400">
+      <div className="liquid-glass liquid-glass--strong rounded-xl p-4 animate-in slide-in-from-top duration-400">
 
         {/* Step progress */}
         <div className="flex items-center mb-4">

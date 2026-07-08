@@ -174,7 +174,7 @@ const LatestTransactionsCarousel = () => {
     switch (colorType) {
       case 'error':
         return {
-          color: '#ef4444', // error/red
+          color: 'var(--color-bear)', // error/red
           bg: 'rgba(239,68,68,0.15)',
           border: 'rgba(239,68,68,0.35)',
           cardBg: 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.12))',
@@ -182,7 +182,7 @@ const LatestTransactionsCarousel = () => {
         };
       case 'success':
         return {
-          color: '#22c55e', // success/green
+          color: 'var(--color-bull)', // success/green
           bg: 'rgba(34,197,94,0.15)',
           border: 'rgba(34,197,94,0.35)',
           cardBg: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))',

@@ -44,14 +44,14 @@ export const LeaderboardCard = ({
   const roiIsNaN = Number.isNaN(roiPct);
   const mddIsNaN = Number.isNaN(mddPct);
   const pnlClassName = useMemo(() => {
-    if (pnlUsd < 0) return 'text-red-400';
-    if (pnlUsd > 0) return 'text-emerald-400';
+    if (pnlUsd < 0) return 'text-bear';
+    if (pnlUsd > 0) return 'text-bull';
     return 'text-white';
   }, [pnlUsd]);
   const roiClassName = useMemo(() => {
     if (roiIsNaN) return 'text-white/40';
-    if (roiPct < 0) return 'text-red-300';
-    if (roiPct > 0) return 'text-emerald-300';
+    if (roiPct < 0) return 'text-bear';
+    if (roiPct > 0) return 'text-bull';
     return 'text-white/70';
   }, [roiIsNaN, roiPct]);
   const roiPrefix = useMemo(() => {
@@ -122,7 +122,7 @@ export const LeaderboardCard = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-white/10 bg-[#050712] backdrop-blur-[18px] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 liquid-glass rounded-xl">
       {/* Header: rank + trader identity */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -264,14 +264,14 @@ export const LeaderboardCard = ({
         <span>
           {t('trending.leaderboardCard.buys')}
           {' '}
-          <span className="text-emerald-300 font-mono">
+          <span className="text-bull font-mono">
             {formatNumber(buyTrades, 0)}
           </span>
         </span>
         <span>
           {t('trending.leaderboardCard.sells')}
           {' '}
-          <span className="text-red-300 font-mono">
+          <span className="text-bear font-mono">
             {formatNumber(sellTrades, 0)}
           </span>
         </span>

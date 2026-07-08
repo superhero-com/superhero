@@ -520,7 +520,7 @@ const CreateTokenView = () => {
             size="md"
             outlined
             onClick={() => { window.open('https://wallet.superhero.com', '_blank'); }}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+            className="w-full bg-gradient-brand-135 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
           >
             {t('trending.createToken.submit.getSuperheroWallet')}
           </AeButton>
@@ -553,8 +553,8 @@ const CreateTokenView = () => {
   };
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
-      <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen aurora-surface text-white px-2 md:px-4">
+      <div className="rounded-xl mt-2 mb-6 mx-0 md:mx-4">
         <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
           {/* Hero heading — visible on mobile/tablet above the form; hidden on xl (shown in left column instead) */}
           <div className="xl:hidden px-2 pt-2 pb-2 text-center">
@@ -563,7 +563,7 @@ const CreateTokenView = () => {
               <br />
               {t('trending.createToken.hero.line2')}
               <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="gradient-text">
                 {t('trending.createToken.hero.line3')}
               </span>
             </h3>
@@ -576,7 +576,7 @@ const CreateTokenView = () => {
             {/* Form — rendered first in DOM so it appears at top on mobile/tablet.
                 On xl screens xl:order-2 moves it visually to the right column. */}
             <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2">
-              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+              <div className="liquid-glass liquid-glass--strong rounded-xl py-3 px-2 md:p-6">
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -699,7 +699,7 @@ const CreateTokenView = () => {
                         {/* Row 1: Badge + Name + Price + Holders (left) · Sparkline (right) */}
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-3 flex-wrap w-full">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/30">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-btn-sm bg-emerald-500/10 text-emerald-300 border border-emerald-400/30">
                               <span className="relative inline-flex">
                                 <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75 animate-ping" />
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
@@ -890,7 +890,7 @@ const CreateTokenView = () => {
                 </div>
 
                 {/* Explainer Section */}
-                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
+                <div className="mt-8 md:mt-12 liquid-glass rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
                     {t('trending.createToken.explainer.title')}
                   </h3>

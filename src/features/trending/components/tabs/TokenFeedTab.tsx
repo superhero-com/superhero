@@ -38,12 +38,12 @@ export const TokenFeedTab = ({
           </h3>
         )}
         {(!isMobile && token.sale_address) && (
-          <div className="inline-flex items-center rounded-full bg-white/10 border border-white/25 p-1">
+          <div className="inline-flex items-center rounded-btn-sm bg-white/10 border border-white/25 p-1">
             <button
               type="button"
               onClick={() => setShowTradePanels((prev) => !prev)}
               aria-pressed={showTradePanels}
-              className={`px-3.5 py-1.5 rounded-full text-[18px] font-bold tracking-wide transition-colors ${showTradePanels
+              className={`px-3.5 py-1.5 rounded-btn-sm text-[18px] font-bold tracking-wide transition-colors ${showTradePanels
                 ? 'bg-white/10 text-white/80 hover:text-white'
                 : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md'
               }`}
@@ -59,13 +59,13 @@ export const TokenFeedTab = ({
       )}
 
       <div className="flex items-center justify-center">
-        <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
+        <div className="inline-flex items-center gap-1 rounded-btn-sm bg-white/5 border border-white/15 p-0.5 text-[11px]">
           {
             token.sale_address && (
               <button
                 type="button"
                 onClick={() => setHoldersOnly(true)}
-                className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${holdersOnly
+                className={`px-2.5 py-1 rounded-btn-sm font-semibold transition-colors ${holdersOnly
                   ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm'
                   : 'bg-transparent text-white/65 hover:text-white'
                 }`}
@@ -77,7 +77,7 @@ export const TokenFeedTab = ({
           <button
             type="button"
             onClick={() => setHoldersOnly(false)}
-            className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${!holdersOnly
+            className={`px-2.5 py-1 rounded-btn-sm font-semibold transition-colors ${!holdersOnly
               ? 'bg-white text-black shadow-sm'
               : 'bg-transparent text-white/65 hover:text-white'
             }`}

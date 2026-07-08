@@ -48,7 +48,7 @@ export const PoolHeader = ({ pairData }: PoolHeaderProps) => {
           )}
           variant="secondary-dark"
           size="medium"
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-gradient-brand-135 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
         >
           {t('addLiquidityForm.title')}
         </AeButton>

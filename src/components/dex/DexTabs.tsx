@@ -14,7 +14,7 @@ const Tab = ({ label, active, onClick }: { label: string; active: boolean; onCli
       : 'text-[var(--light-font-color)] border-transparent hover:text-[var(--standard-font-color)] hover:-translate-y-0.5 hover:shadow-lg'
                   }`}
     style={{
-      background: active ? 'var(--button-gradient)' : 'var(--secondary-gradient)',
+      background: active ? 'var(--gradient-brand-135)' : 'var(--secondary-gradient)',
       boxShadow: active ? 'var(--button-shadow)' : 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
     }}
     onMouseEnter={(e) => {

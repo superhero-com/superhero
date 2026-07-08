@@ -128,7 +128,7 @@ const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: 
           to={`/trending/tokens/${encodeURIComponent(it.name || it.address)}`}
           className="no-underline text-inherit"
         >
-          <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
+          <div className="p-3 liquid-glass liquid-glass--hover rounded-xl">
             <div className="font-bold text-white">
               {it.name}
               {' '}

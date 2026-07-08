@@ -15,7 +15,7 @@ const ImpactBadge = ({ isPositive, isZero, percentage }: ImpactBadgeProps) => {
   return (
     <span className={cn(
       'px-2 py-1 rounded text-xs font-medium',
-      isPositive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+      isPositive ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear',
     )}
     >
       {sign}

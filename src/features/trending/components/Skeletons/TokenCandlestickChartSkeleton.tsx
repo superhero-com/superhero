@@ -22,7 +22,7 @@ const TokenCandlestickChartSkeleton = ({
   );
 
   return (
-    <Card className="bg-white/[0.02] border-white/10">
+    <Card className="liquid-glass rounded-xl">
       <CardContent className="p-4">
         <div className="chart-skeleton relative w-full h-full">
           {/* Token Info Section */}

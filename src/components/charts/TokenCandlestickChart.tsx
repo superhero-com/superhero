@@ -53,6 +53,12 @@ const intervals: IInterval[] = [
   { label: 'M', value: 31 * 24 * 60 * 60 },
 ];
 
+// Chart series colours — aligned to the liquid-glass bull/bear design tokens
+// (--color-bull / --color-bear). Canvas-rendered series can't consume CSS
+// custom properties, so the literal hex values are mirrored here.
+const CHART_COLOR_BULL = '#22C55E';
+const CHART_COLOR_BEAR = '#EF4444';
+
 //
 export default function TokenCandlestickChart({
   token,
@@ -169,11 +175,11 @@ export default function TokenCandlestickChart({
 
       // Setup candlestick series
       const _candlestickSeries = chartInstance.addSeries(CandlestickSeries, {
-        upColor: '#2BCC61',
-        downColor: '#F5274E',
+        upColor: CHART_COLOR_BULL,
+        downColor: CHART_COLOR_BEAR,
         borderVisible: false,
-        wickUpColor: '#2BCC61',
-        wickDownColor: '#F5274E',
+        wickUpColor: CHART_COLOR_BULL,
+        wickDownColor: CHART_COLOR_BEAR,
         priceFormat: {
           type: 'custom',
           minMove: 0.00000001,
@@ -398,7 +404,7 @@ export default function TokenCandlestickChart({
         time: item.time,
         value: item.volume,
         market_cap: Number(item.market_cap) ?? 0,
-        color: index === 0 || isGreen ? '#2BCC61' : '#F5274E',
+        color: index === 0 || isGreen ? CHART_COLOR_BULL : CHART_COLOR_BEAR,
       };
     });
 
@@ -473,14 +479,14 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: volumeData.time,
             value: newVolume,
-            color: isGreen ? '#2BCC61' : '#F5274E',
+            color: isGreen ? CHART_COLOR_BULL : CHART_COLOR_BEAR,
           });
 
           const marketCapData = latestMarketCap as any;
           marketCapSeries.current.update({
             time: marketCapData.time,
             value: newMarketCap,
-            color: isGreen ? '#2BCC61' : '#F5274E',
+            color: isGreen ? CHART_COLOR_BULL : CHART_COLOR_BEAR,
           });
         } else {
           // Create new candle
@@ -498,13 +504,13 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: currentTime as any,
             value: parseInt(tx.data.volume),
-            color: '#2BCC61',
+            color: CHART_COLOR_BULL,
           });
 
           marketCapSeries.current.update({
             time: currentTime as any,
             value: Number(tx.data.market_cap[convertTo]),
-            color: '#2BCC61',
+            color: CHART_COLOR_BULL,
           });
         }
       },
@@ -539,7 +545,7 @@ export default function TokenCandlestickChart({
       ref={chartWrapper}
       className={cn(
         'max-w-[100%] mx-auto relative',
-        noBackground ? '' : 'bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
+        noBackground ? '' : 'liquid-glass rounded-xl',
         className,
       )}
     >
@@ -567,14 +573,14 @@ export default function TokenCandlestickChart({
                   <span className="text-muted-foreground">
                     O
                     {' '}
-                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                       {currentCandlePrice.open.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
                     H
                     {' '}
-                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                       {currentCandlePrice.high.toFixed(6)}
                     </span>
                   </span>
@@ -583,20 +589,20 @@ export default function TokenCandlestickChart({
                   <span className="text-muted-foreground">
                     L
                     {' '}
-                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                       {currentCandlePrice.low.toFixed(6)}
                     </span>
                   </span>
                   <span className="text-muted-foreground">
                     C
                     {' '}
-                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                       {currentCandlePrice.close.toFixed(6)}
                     </span>
                   </span>
                 </div>
                 <div className="pl-2">
-                  <span className={`font-bold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className={`font-bold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                     {isTrendingUp ? '+' : ''}
                     {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)}
                     {' '}
@@ -611,14 +617,14 @@ export default function TokenCandlestickChart({
                 <div className="text-muted-foreground">
                   {t('candlestickChart.vol')}
                   {' '}
-                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                     {currentCandleVolume ? Decimal.from(currentCandleVolume).shorten() : 0}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
                   {t('candlestickChart.mcap')}
                   {' '}
-                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-bull' : 'text-bear'}`}>
                     {currentCandleMarketCap ? Decimal.from(currentCandleMarketCap).shorten() : 0}
                   </span>
                 </div>

@@ -84,7 +84,7 @@ const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
         onClick={scrollTop}
         className={[
           'pointer-events-auto select-none transition-opacity duration-200',
-          'rounded-full px-4 py-2 text-xs font-semibold',
+          'rounded-btn px-4 py-2 text-xs font-semibold',
           // Glass styling
           'bg-[var(--glass-bg)] text-white border border-white/20',
           'backdrop-blur-[12px] shadow-[var(--glass-shadow)]',

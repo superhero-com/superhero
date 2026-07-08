@@ -146,7 +146,7 @@ const ConnectWalletModal = ({ onClose, onConnected }: Props) => {
           </div>
           <AeButton
             variant="default"
-            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-xl sm:rounded-full"
+            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-btn"
             onClick={handleConnect}
             loading={connectingWallet}
             disabled={connectingWallet}

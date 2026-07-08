@@ -125,12 +125,12 @@ const InviteAndEarnCard = ({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
+    <div className={`liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 ${className || ''}`}>
       <div className="flex items-center gap-4 mb-6">
         <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
           🎯
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold gradient-text break-words">
           {t('inviteAndEarn.generateInvites', { ns: 'trending' })}
         </h3>
       </div>
@@ -221,10 +221,10 @@ const InviteAndEarnCard = ({
               <button
                 type="submit"
                 disabled={generatingInviteLink || !activeAccount}
-                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
+                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-btn transition-all duration-300 ${
                   !activeAccount
                     ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
-                    : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
+                    : "bg-gradient-brand-135 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
                 }`}
               >
                 {generatingInviteLink ? (

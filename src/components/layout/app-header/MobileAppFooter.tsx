@@ -111,7 +111,7 @@ const MobileAppFooter = () => {
   const baseItemClassName = 'no-gradient-text flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center transition-colors duration-200';
 
   const getItemStateClassName = (isActive: boolean) => (isActive
-    ? 'bg-white/10 text-[var(--standard-font-color)]'
+    ? 'bg-gradient-to-br from-brand-start/15 via-brand-mid/15 to-brand-end/15 text-[var(--standard-font-color)]'
     : 'text-[var(--light-font-color)] hover:bg-white/5 hover:text-[var(--standard-font-color)]');
 
   const handleSuperheroIdClick = () => {
@@ -141,7 +141,7 @@ const MobileAppFooter = () => {
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
-        borderTopColor: 'rgba(255, 255, 255, 0.12)',
+        borderTopColor: 'var(--glass-border)',
         boxShadow: '0 -10px 28px rgba(0,0,0,0.28)',
       }}
     >
@@ -200,7 +200,7 @@ const MobileAppFooter = () => {
                       to={item.path}
                       className={`flex min-h-[var(--mobile-footer-height)] w-full items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition-colors justify-center ${
                         isActive
-                          ? 'bg-white/10 text-[var(--standard-font-color)]'
+                          ? 'bg-gradient-to-br from-brand-start/15 via-brand-mid/15 to-brand-end/15 text-[var(--standard-font-color)]'
                           : 'text-card-foreground hover:bg-accent hover:text-accent-foreground'
                       }`}
                       aria-current={isActive ? 'page' : undefined}

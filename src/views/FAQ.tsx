@@ -96,7 +96,7 @@ export default function FAQ() {
 
   return (
     <div className="max-w-[1000px] mx-auto p-6 text-white">
-      <div className="rounded-2xl p-7 bg-gradient-to-b from-white/6 to-white/3 text-white mb-4 border border-white/10 backdrop-blur-md">
+      <div className="liquid-glass liquid-glass--strong rounded-xl p-7 text-white mb-4">
         <div className="text-sm opacity-90">{t('welcome')}</div>
         <div className="text-[32px] font-extrabold leading-tight">{t('heroTitle')}</div>
         <div className="text-[15px] opacity-90 mt-2">{t('heroDescription')}</div>
@@ -165,7 +165,7 @@ export default function FAQ() {
 }
 
 const Badge = ({ label }: { label: string }) => (
-  <span className="px-2.5 py-1.5 rounded-full bg-white/12 border border-white/20 text-xs">
+  <span className="px-2.5 py-1.5 rounded-btn-sm bg-white/12 border border-white/20 text-xs">
     {label}
   </span>
 );
@@ -173,7 +173,7 @@ const Badge = ({ label }: { label: string }) => (
 const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <section
     id={id}
-    className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    className="liquid-glass p-4 rounded-xl text-white"
   >
     {children}
   </section>
@@ -184,7 +184,7 @@ const QAItem = ({
 }: { title: string; answer: React.ReactNode; expandLabel: string; collapseLabel: string }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
+    <div className="liquid-glass rounded-xl text-white">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

@@ -36,7 +36,7 @@ export default function NoLiquidityWarning({
 
   if (exceedsLiquidity && maxAvailable) {
     return (
-      <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
+      <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-xl p-4 mb-5 backdrop-blur-[10px]">
         <div className="flex items-start gap-3">
           {/* Warning Icon */}
           <div className="flex-shrink-0 mt-0.5">
@@ -97,7 +97,7 @@ export default function NoLiquidityWarning({
 
   // No liquidity case
   return (
-    <div className="bg-red-400/10 border border-red-400/20 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
+    <div className="bg-red-400/10 border border-red-400/20 rounded-xl p-4 mb-5 backdrop-blur-[10px]">
       <div className="flex items-start gap-3">
         {/* Warning Icon */}
         <div className="flex-shrink-0 mt-0.5">

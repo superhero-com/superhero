@@ -22,17 +22,17 @@ export default function GovernancePolls() {
         {/* Enhanced Header Section */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="flex items-center justify-between mb-8 py-8 px-6 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
+          <div className="flex items-center justify-between mb-8 py-8 px-6 liquid-glass liquid-glass--strong rounded-xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                   <span className="text-2xl">🗳️</span>
                 </div>
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full animate-pulse" />
               </div>
               <div className="header-text">
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
-                  {t('polls.title')}
+                <h1 className="text-4xl md:text-5xl font-bold m-0 leading-tight">
+                  <span className="gradient-text">{t('polls.title')}</span>
                 </h1>
                 <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
                   {t('polls.subtitle')}
@@ -41,7 +41,7 @@ export default function GovernancePolls() {
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div
-                className={`px-4 py-2 rounded-2xl  ${
+                className={`px-4 py-2 rounded-btn-sm  ${
                   status === 'open'
                     ? 'to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20'
                     : 'to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20'
@@ -65,7 +65,7 @@ export default function GovernancePolls() {
         <div className="sticky top-4 z-20 mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-2xl -z-10" />
-            <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 shadow-2xl">
+            <div className="liquid-glass rounded-xl p-6">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
                   <MobileInput
@@ -147,11 +147,11 @@ export default function GovernancePolls() {
               <MobileCard
                 variant="outlined"
                 padding="large"
-                className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl"
+                className="liquid-glass rounded-xl"
               >
                 <div className="text-center py-20 px-8">
                   <div className="relative mb-8">
-                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                       <span className="text-4xl">🗳️</span>
                     </div>
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full animate-pulse" />
@@ -176,14 +176,14 @@ export default function GovernancePolls() {
                   <div className="flex flex-col gap-4">
                     <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
+                    <div className="p-4 liquid-glass liquid-glass--hover rounded-xl overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
                       {/* Animated gradient border */}
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
 
                       {/* Status indicator with glow */}
                       <div className="absolute top-4 right-4 z-10">
                         <div
-                          className={`relative px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
+                          className={`relative px-3 py-2 rounded-btn-sm text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
                             p.status?.toLowerCase() === 'open'
                               ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
                               : p.status?.toLowerCase() === 'closed'
@@ -194,7 +194,7 @@ export default function GovernancePolls() {
                           {p.status || t('polls.unknown')}
 
                           {p.status?.toLowerCase() === 'open' && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl animate-pulse" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-btn-sm animate-pulse" />
                           )}
                         </div>
                       </div>
@@ -255,7 +255,7 @@ export default function GovernancePolls() {
                         </div>
 
                         {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-xl" />
                       </div>
                     </div>
                   </div>

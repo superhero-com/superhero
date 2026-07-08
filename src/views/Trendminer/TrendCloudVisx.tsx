@@ -86,7 +86,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
         </div>
         <a
           href="/trends"
-          className="px-3 py-2 rounded-full border border-white/20 bg-white text-black no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
+          className="px-3 py-2 rounded-btn border border-white/20 bg-white text-black no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
         >
           {t('switchToDefault')}
         </a>

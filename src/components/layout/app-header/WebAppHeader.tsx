@@ -71,9 +71,10 @@ const WebAppHeader = () => {
     <aside
       className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col border-r z-[1000]"
       style={{
+        backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderRightColor: 'rgba(255, 255, 255, 0.12)',
+        borderRightColor: 'var(--glass-border)',
       }}
       aria-label={t('aria.primary')}
     >
@@ -97,11 +98,13 @@ const WebAppHeader = () => {
             const isDisconnectedAccount = item.id === 'account' && !activeAccount;
             const activeStyles = {
               color: 'var(--standard-font-color)',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'transparent',
+              backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(139, 92, 246, 0.16) 50%, rgba(236, 72, 153, 0.16) 100%)',
             };
             const idleStyles = {
               color: 'var(--light-font-color)',
               backgroundColor: 'transparent',
+              backgroundImage: 'none',
             };
             let itemStyles = idleStyles;
             if (isActive) itemStyles = activeStyles;

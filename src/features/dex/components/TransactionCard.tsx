@@ -227,7 +227,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
         <div className="mb-3 flex flex-col gap-2">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl border bg-muted/30 text-xl shadow-sm">
+              <div className="grid h-10 w-10 place-items-center rounded-xl border bg-muted/30 text-xl shadow-sm">
                 {txConfig.icon}
               </div>
               <div>
@@ -240,7 +240,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
             <Badge
               className={[
-                'border px-2.5 py-1 rounded-full hidden md:block',
+                'border px-2.5 py-1 rounded-btn hidden md:block',
                 'shadow-sm',
                 txConfig.color,
                 txConfig.chip,
@@ -318,7 +318,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
             <div className="space-y-3 p-4 pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{t('transactions.type')}</span>
-                <Badge className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-700">
+                <Badge className="rounded-btn border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-700">
                   {transaction.pair_mint_info.type}
                 </Badge>
               </div>

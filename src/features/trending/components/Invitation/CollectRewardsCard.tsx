@@ -265,13 +265,13 @@ const CollectRewardsCard = () => {
   }, [collectingReward, thresholdReached, accumulatedRewardsAe, t]);
 
   return (
-    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+    <div className="liquid-glass liquid-glass--strong rounded-xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 flex-wrap">
         <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
           💰
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold gradient-text break-words">
           {t('trending.invitations.rewards.title')}
         </h3>
       </div>
@@ -304,7 +304,7 @@ const CollectRewardsCard = () => {
         {/* Progress and Actions - Right Side */}
         <div className="flex-1 flex flex-col gap-6">
           {/* Progress Section */}
-          <div className="flex flex-col gap-3 p-4 bg-white/3 rounded-xl border border-white/5">
+          <div className="flex flex-col gap-3 p-4 liquid-glass rounded-xl">
             <div className="flex justify-between items-center font-semibold text-sm md:text-base flex-wrap gap-2">
               <span>{t('trending.invitations.rewards.progressToRewards')}</span>
               <span className="text-teal-400 font-bold text-base md:text-lg text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
@@ -359,14 +359,14 @@ const CollectRewardsCard = () => {
 
           {/* Rewards Display */}
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2 text-center p-4 bg-white/3 rounded-xl border border-white/5">
+            <div className="flex flex-col gap-2 text-center p-4 liquid-glass rounded-xl">
               <span className="text-xs md:text-sm text-slate-400 font-medium uppercase tracking-wider break-words">
                 {t('trending.invitations.rewards.availableRewards')}
               </span>
               <LivePriceFormatter
                 aePrice={Decimal.from(accumulatedRewardsAe.toString())}
                 watchPrice={false}
-                className="gap-2 items-center text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
+                className="gap-2 items-center text-2xl md:text-3xl font-extrabold gradient-text text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
               />
             </div>
 
@@ -383,7 +383,7 @@ const CollectRewardsCard = () => {
               type="button"
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
-              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${isEligibleForRewards
+              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-btn transition-all duration-300 ${isEligibleForRewards
                 ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40'
                 : 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
               }`}

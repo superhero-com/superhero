@@ -79,7 +79,7 @@ const DexExploreTransactions = () => {
         </div>
 
         {/* Enhanced Filter Controls */}
-        <div className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-glass-border rounded-2xl p-6 backdrop-blur-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+        <div className="liquid-glass rounded-xl p-6">
           {/* Filter Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

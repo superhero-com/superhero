@@ -47,7 +47,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
     <div className="mt-4 space-y-4">
       {/* Table header */}
       <div
-        className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1.5fr_1fr_2fr] gap-2 px-4 py-2 border border-white/10 rounded-2xl bg-white/[0.02] text-[10px] font-semibold text-white/60 uppercase tracking-wide"
+        className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1.5fr_1fr_2fr] gap-2 px-4 py-2 liquid-glass rounded-xl text-[10px] font-semibold text-white/60 uppercase tracking-wide"
       >
         <div>{t('account.token')}</div>
         <div>{t('account.type')}</div>
@@ -59,7 +59,7 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden">
+      <div className="divide-y divide-white/5 liquid-glass rounded-xl overflow-hidden">
         <DataTable
           queryFn={fetchTransactions}
           renderRow={({ item: transaction }) => {
@@ -84,15 +84,15 @@ const AccountTrades = ({ address, tab }: AccountTradesProps) => {
               switch (color) {
                 case 'green':
                   return {
-                    textColor: 'text-green-400',
-                    chipBg: 'bg-green-500/20',
-                    borderColor: 'border-green-500/30',
+                    textColor: 'text-bull',
+                    chipBg: 'bg-bull/20',
+                    borderColor: 'border-bull/30',
                   };
                 case 'red':
                   return {
-                    textColor: 'text-red-400',
-                    chipBg: 'bg-red-500/20',
-                    borderColor: 'border-red-500/30',
+                    textColor: 'text-bear',
+                    chipBg: 'bg-bear/20',
+                    borderColor: 'border-bear/30',
                   };
                 case 'yellow':
                   return {

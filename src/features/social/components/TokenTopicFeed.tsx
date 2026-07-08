@@ -375,7 +375,7 @@ const TokenTopicFeed = ({
           Only when the holder set is complete/authoritative — for a partial or failed fetch we
           fall back to showing all posts, so claiming "no holder posts" would contradict the feed. */}
       {holdersOnly && tokenSaleAddress && holdersComplete && allPosts.length > 0 && holderPosts.length === 0 && (
-        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">
             <div className="font-semibold text-emerald-100">
@@ -396,7 +396,7 @@ const TokenTopicFeed = ({
 
       {/* Info banner when holders-only had no matches and we auto-switched to all posts */}
       {autoSwitchedFromHolders && !holdersOnly && allPosts.length > 0 && holderPosts.length === 0 && (
-        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">ℹ️</span>
           <div className="text-left">
             <div className="font-semibold text-emerald-100">
@@ -417,7 +417,7 @@ const TokenTopicFeed = ({
 
       {/* Empty state when there are no posts at all for this trend */}
       {showEmptyMessage && allPosts.length === 0 && displayPosts.length === 0 && (
-        <div className="mt-1 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-5 text-center">
+        <div className="mt-1 liquid-glass rounded-xl px-4 py-5 text-center">
           <div className="text-2xl mb-1" aria-hidden="true">🗯️</div>
           <div className="font-semibold text-white/85 mb-1 text-sm md:text-[15px]">
             {t('tokenTopicFeed.noPostsFor', { tag: displayTag })}

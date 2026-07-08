@@ -49,7 +49,9 @@ const WelcomeModal = ({ onClose }: Props) => {
       </div>
 
       <h2 className="text-2xl font-bold text-white/95 mb-2">
-        Welcome to Superhero
+        Welcome to
+        {' '}
+        <span className="gradient-text">Superhero</span>
       </h2>
 
       <p className="text-sm text-white/60 leading-relaxed max-w-xs mx-auto mb-8">

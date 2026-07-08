@@ -19,7 +19,7 @@ export const PoolComposition = ({ pairData }: PoolCompositionProps) => {
     : Decimal.ZERO;
 
   return (
-    <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
+    <div className="liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
       <h3 className="text-lg font-semibold text-white m-0 mb-4">
         {t('poolComposition.title')}
       </h3>

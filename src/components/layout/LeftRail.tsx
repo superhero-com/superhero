@@ -164,7 +164,7 @@ const LeftRail = () => {
   return (
     <div className="scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-[rgba(0,255,157,0.6)] scrollbar-thumb-via-pink-500/60 scrollbar-thumb-to-[rgba(0,255,157,0.6)] scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-via-pink-500/80 hover:scrollbar-thumb-to-[rgba(0,255,157,0.8)]">
       {/* Enhanced Quick Stats Dashboard */}
-      <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.15] shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-[20px] rounded-[20px] p-5 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1.5 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--neon-teal)] before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 mb-4">
+      <div className="liquid-glass liquid-glass--hover rounded-xl p-5 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden mb-4">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
             📊
@@ -196,7 +196,7 @@ const LeftRail = () => {
           </div>
 
           {/* Enhanced Current Time Display */}
-          <div className="p-4 bg-gradient-to-br from-teal-500/10 to-blue-500/5 rounded-2xl border border-teal-500/20 backdrop-blur-[15px] relative overflow-hidden">
+          <div className="p-4 bg-gradient-to-br from-teal-500/10 to-blue-500/5 rounded-xl border border-teal-500/20 backdrop-blur-[15px] relative overflow-hidden">
             {/* Animated background effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-500/5 to-transparent animate-[shimmer_3s_infinite] z-0" />
 

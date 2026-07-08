@@ -49,8 +49,8 @@ const TokenChange = ({
             className={cn(
               'text-sm font-semibold flex items-center gap-0.5 tabular-nums',
               isPositive
-                ? 'text-green-400'
-                : 'text-red-400',
+                ? 'text-bull'
+                : 'text-bear',
             )}
           >
 

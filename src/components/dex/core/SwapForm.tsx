@@ -353,7 +353,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="w-full sm:w-[480px] mx-auto liquid-glass liquid-glass--strong rounded-xl p-0 sm:p-6 relative overflow-hidden flex-shrink-0">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0">
@@ -473,7 +473,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isSwapDisabled}
-          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-btn border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isSwapDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
@@ -490,7 +490,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label={t('swap.connectWallet')}
           variant="dex"
-          className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+          className="text-sm w-full py-4 px-6 rounded-xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
           block
         />
       )}

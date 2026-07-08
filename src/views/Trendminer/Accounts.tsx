@@ -80,7 +80,7 @@ export default function Accounts() {
       {error && <div className="text-red-400 mb-4">{error}</div>}
       <div className="grid gap-2">
         {rows.map((r) => (
-          <div key={r.address} className="flex justify-between p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg">
+          <div key={r.address} className="flex justify-between p-3 liquid-glass rounded-xl">
             <div className="max-w-72 overflow-hidden text-ellipsis text-white font-mono text-sm">
               {r.address}
             </div>

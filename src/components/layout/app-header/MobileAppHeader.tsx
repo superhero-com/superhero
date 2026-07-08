@@ -74,9 +74,10 @@ const MobileAppHeader = () => {
     <div
       className="mobile-app-header z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b"
       style={{
+        backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+        borderBottomColor: 'var(--glass-border)',
         boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
       }}
     >
@@ -99,7 +100,7 @@ const MobileAppHeader = () => {
               <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
                 <span className="text-white/90">{priceText}</span>
                 {typeof changePercent === 'number' ? (
-                  <span className={`font-semibold tabular-nums ${changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-semibold tabular-nums ${changePercent >= 0 ? 'text-bull' : 'text-bear'}`}>
                     {changePercent >= 0 ? '▲' : '▼'}
                     {' '}
                     {Math.abs(changePercent).toFixed(2)}
@@ -112,7 +113,7 @@ const MobileAppHeader = () => {
               {tokenData?.sale_address && (
                 <button
                   type="button"
-                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-btn text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
                   onClick={() => {
                     const params = new URLSearchParams(search);
                     params.set('showTrade', '1');

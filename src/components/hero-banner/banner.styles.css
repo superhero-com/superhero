@@ -13,7 +13,7 @@
 .hero-banner-carousel {
   position: relative;
   width: 100%;
-  border-radius: 18px;
+  border-radius: var(--radius-lg, 12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
@@ -131,7 +131,7 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   font-weight: 800;
   color: #d7deff;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-btn-sm, 4px);
   border: 1px solid var(--banner-stroke);
   background: linear-gradient(
     180deg,
@@ -190,7 +190,7 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 
 .banner-chip {
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-btn, 8px);
   background: radial-gradient(
       120% 140% at 10% 10%,
       rgba(255, 255, 255, 0.18),
@@ -240,7 +240,7 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 
 .banner-btn {
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-btn, 8px);
   font-weight: 800;
   font-size: 13px;
   letter-spacing: 0.1px;
@@ -260,8 +260,8 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 }
 
 .banner-btn--primary {
-  color: #0a1820 !important;
-  background: linear-gradient(90deg, #38ffb3, #a0ffd9) !important;
+  color: #ffffff !important;
+  background: var(--gradient-brand-135, linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899)) !important;
   font-weight: 900;
   text-shadow: none;
 }

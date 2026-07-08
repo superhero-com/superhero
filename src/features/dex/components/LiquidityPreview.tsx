@@ -31,10 +31,10 @@ const LiquidityPreview = ({
   if (!tokenA || !tokenB) return null;
 
   return (
-    <div className={`p-4 mb-5 backdrop-blur-sm rounded-2xl ${
+    <div className={`p-4 mb-5 rounded-xl ${
       hasError
         ? 'bg-red-500/10 border border-red-500/30'
-        : 'bg-white/[0.05] border border-glass-border'
+        : 'liquid-glass'
     }`}
     >
       <div className="text-sm font-semibold text-standard-font-color mb-3 flex items-center gap-2">

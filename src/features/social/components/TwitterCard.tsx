@@ -59,7 +59,7 @@ export const TwitterCard = ({ url, onDismiss }: TwitterCardProps) => {
 
   if (loading) {
     return (
-      <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden animate-pulse">
+      <div className="relative liquid-glass rounded-xl overflow-hidden animate-pulse">
         {onDismiss && (
           <button
             type="button"
@@ -85,7 +85,7 @@ export const TwitterCard = ({ url, onDismiss }: TwitterCardProps) => {
   if (error || !html) return null;
 
   return (
-    <div className="relative rounded-xl border border-white/10 overflow-hidden">
+    <div className="relative liquid-glass rounded-xl overflow-hidden">
       {onDismiss && (
         <button
           type="button"

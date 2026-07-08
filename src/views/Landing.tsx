@@ -37,8 +37,8 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-1">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <div className="group relative liquid-glass liquid-glass--hover rounded-xl p-6">
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
@@ -84,7 +84,7 @@ export default function Landing() {
         <div className="relative z-10 max-w-[1180px] mx-auto px-6 text-center">
           {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-8"
+            className="stat-chip mb-8"
           >
             <Sparkles className="w-3.5 h-3.5 text-pink-400" />
             <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
@@ -97,7 +97,7 @@ export default function Landing() {
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6"
           >
             <span className="block text-white/95">{t('common.views.landing.heroTitleLine1')}</span>
-            <span className="block bg-gradient-to-r from-blue-700 via-blue-500 to-purple-600 bg-clip-text text-transparent pb-4">
+            <span className="block gradient-text pb-4">
               {t('common.views.landing.heroTitleLine2')}
             </span>
           </h1>
@@ -116,7 +116,7 @@ export default function Landing() {
 
             <a
               href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
               {t('common.views.landing.downloadOnMobile')}
@@ -126,7 +126,7 @@ export default function Landing() {
               href="https://github.com/superhero-com/superhero-agent-skill"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
               {t('common.views.landing.openclawOrClaude')}
@@ -139,7 +139,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
               {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -149,7 +149,7 @@ export default function Landing() {
 
           {/* Video */}
           <div
-            className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
+            className="relative max-w-4xl mx-auto liquid-glass liquid-glass--strong rounded-xl overflow-hidden"
           >
             <div className="aspect-video bg-gradient-to-br from-pink-600/10 via-purple-600/10 to-blue-600/10">
               <video
@@ -283,7 +283,7 @@ export default function Landing() {
               <img
                 src="/did-image.png"
                 alt="SuperheroID visual mockup"
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm hue-rotate-60"
+                className="liquid-glass rounded-xl hue-rotate-60"
               />
               {/* Decorative glow */}
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 -z-10 blur-2xl" />
@@ -312,7 +312,7 @@ export default function Landing() {
             <img
               src="/screen-1.png"
               alt={t('common.views.landing.mobile.imageAlt')}
-              className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
+              className="liquid-glass rounded-xl"
             />
           </div>
           <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed my-12">
@@ -324,7 +324,7 @@ export default function Landing() {
               href="https://apps.apple.com/us/app/superhero-web3-communities/id6758045846"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-white/[0.05] border border-white/[0.1] rounded-xl px-6 py-3.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              className="inline-flex items-center gap-3 bg-white/[0.05] border border-white/[0.1] rounded-btn px-6 py-3.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
             >
               <Smartphone className="w-5 h-5 text-white/60" />
               <div className="text-left">
@@ -336,7 +336,7 @@ export default function Landing() {
               href="https://play.google.com/store/apps/details?id=com.superhero.apps"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-white/[0.05] border border-white/[0.1] rounded-xl px-6 py-3.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+              className="inline-flex items-center gap-3 bg-white/[0.05] border border-white/[0.1] rounded-btn px-6 py-3.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
             >
               <Smartphone className="w-5 h-5 text-white/60" />
               <div className="text-left">
@@ -368,7 +368,7 @@ export default function Landing() {
 
             <a
               href="#mobile"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Smartphone className="w-4 h-4" />
               {t('common.views.landing.downloadOnMobile')}
@@ -378,7 +378,7 @@ export default function Landing() {
               href="https://github.com/superhero-com/superhero-agent-skill"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5 min-w-64 justify-center"
             >
               <Sparkles className="w-4 h-4" />
               {t('common.views.landing.openclawOrClaude')}
@@ -391,7 +391,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
+              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-btn transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
             >
               {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />

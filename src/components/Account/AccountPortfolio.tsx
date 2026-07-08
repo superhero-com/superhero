@@ -1455,8 +1455,8 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
   const getPnlClassName = (pnl: any) => {
     if (!pnl) return 'text-white/60';
     const pnlGain = convertTo === 'ae' ? pnl.gain.ae : pnl.gain.usd;
-    if (pnlGain > 0) return 'text-green-400';
-    if (pnlGain < 0) return 'text-red-400';
+    if (pnlGain > 0) return 'text-bull';
+    if (pnlGain < 0) return 'text-bear';
     return 'text-white/60';
   };
 
@@ -1528,7 +1528,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return (
       <div className="mt-4 mb-6">
-        <div className="bg-white/[0.02] border border-red-500/30 rounded-2xl overflow-hidden">
+        <div className="bg-white/[0.02] border border-red-500/30 rounded-xl overflow-hidden">
           <div className="px-4 md:px-6 pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-bold text-white">{t('portfolio.portfolioValue')}</h3>
@@ -1552,7 +1552,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
 
   return (
     <div className="mt-4 mb-6">
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+      <div className="liquid-glass liquid-glass--strong rounded-xl overflow-hidden">
         {/* Header */}
         <div className="px-4 md:px-6 pt-4 pb-0">
           <div className="flex items-center justify-between mb-2">

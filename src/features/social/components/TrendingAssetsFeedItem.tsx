@@ -25,8 +25,7 @@ const TrendingTokenCard = memo(({ token }: { token: TokenDto }) => {
     <Link
       to={tokenHref}
       className={cn(
-        'group rounded-2xl border border-white/10 bg-transparent p-3',
-        'hover:bg-white/[0.06] hover:border-white/15 transition-colors',
+        'group liquid-glass liquid-glass--hover rounded-xl p-3',
         'no-underline block',
         'cursor-pointer',
       )}
@@ -117,7 +116,7 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
       <div className="w-full">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] md:text-[16px] font-semibold text-white m-0 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-emerald-300" />
+            <TrendingUp className="h-4 w-4 text-bull" />
             {t('social.trendingAssets')}
           </h3>
           <Link
@@ -133,7 +132,7 @@ const TrendingAssetsFeedItem = ({ page }: { page: number }) => {
             skeletonKeys.map((key) => (
               <div
                 key={key}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 animate-pulse"
+                className="liquid-glass rounded-xl p-3 animate-pulse"
               >
                 <div className="h-4 w-16 rounded bg-white/10" />
                 <div className="mt-2 h-3 w-10 rounded bg-white/10" />

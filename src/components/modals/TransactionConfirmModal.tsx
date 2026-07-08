@@ -75,7 +75,7 @@ const TradeTransactionConfirm = ({
 
       {/* Token swap boxes */}
       <div className="relative flex flex-col gap-1">
-        <div className="flex items-center justify-between px-3 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+        <div className="liquid-glass flex items-center justify-between px-3 py-3 rounded-xl">
           <span className="text-xl text-white">
             <FractionFormatter fractionalPrice={tokenAFormatted} />
           </span>
@@ -84,7 +84,7 @@ const TradeTransactionConfirm = ({
           </span>
         </div>
 
-        <div className="flex items-center justify-between px-3 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+        <div className="liquid-glass flex items-center justify-between px-3 py-3 rounded-xl">
           <span className="text-xl text-white">
             <FractionFormatter fractionalPrice={tokenBFormatted} />
           </span>
@@ -122,7 +122,7 @@ const TradeTransactionConfirm = ({
           </TransactionConfirmDetailRow>
 
           <TransactionConfirmDetailRow label={t('dex.priceImpact')}>
-            <div className={`flex items-center gap-1 ${isBuying ? 'text-green-500' : 'text-red-500'}`}>
+            <div className={`flex items-center gap-1 ${isBuying ? 'text-bull' : 'text-bear'}`}>
               <span className="flex items-center">
                 {!priceImpactDiff.isZero && (isBuying ? '+' : '-')}
                 <FractionFormatter fractionalPrice={formatFractionalPrice(priceImpactDiff)} />
@@ -154,7 +154,6 @@ const TradeTransactionConfirm = ({
             size="md"
             fullWidth
             disabled={!isAllowSelling}
-            style={{ background: '#1161FE' }}
           >
             {`${t('common.modals.transactionConfirm.allowUseOfToken')}${!isAllowSelling ? ' ✓' : ''}`}
           </AeButton>
@@ -165,7 +164,6 @@ const TradeTransactionConfirm = ({
           size="md"
           fullWidth
           disabled={!isBuying && isAllowSelling}
-          style={{ background: '#1161FE' }}
         >
           {t('dex.placeOrder')}
         </AeButton>
@@ -222,7 +220,6 @@ const DefaultTransactionConfirm = ({
             size="md"
             fullWidth
             className="text-sm sm:text-base"
-            style={{ background: '#1161FE' }}
           >
             {t('common.modals.transactionConfirm.confirmInWallet')}
           </AeButton>
@@ -261,7 +258,7 @@ const CreateTokenTransactionConfirm = ({
       <h2 className="text-lg font-semibold text-white">{t('common.modals.transactionConfirm.confirmTokenCreation')}</h2>
 
       {/* Token identity box */}
-      <div className="flex items-center gap-3 px-4 py-3 border border-white/10 rounded-md bg-white/[0.03]">
+      <div className="liquid-glass flex items-center gap-3 px-4 py-3 rounded-xl">
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center text-white font-bold text-sm shrink-0">
           {details?.tokenName?.[0] ?? '?'}
         </div>
@@ -334,7 +331,6 @@ const CreateTokenTransactionConfirm = ({
           onClick={handleConfirm}
           size="md"
           fullWidth
-          style={{ background: '#1161FE' }}
         >
           {t('common.modals.transactionConfirm.confirmInWallet')}
         </AeButton>

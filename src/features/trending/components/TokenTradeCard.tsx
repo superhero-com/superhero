@@ -97,7 +97,7 @@ const TokenTradeCard = ({
   }
 
   return (
-    <div className="w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+    <div className="w-full mx-auto liquid-glass liquid-glass--strong rounded-xl p-6 relative overflow-hidden">
       {/* Header with Tabs */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
@@ -112,7 +112,7 @@ const TokenTradeCard = ({
             variant={isBuying ? 'default' : 'outline'}
             size="lg"
             className={cn(
-              'w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              'w-full rounded-btn border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
               isBuying
                 ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
                 : 'bg-white/10 border border-white/10 hover:bg-white/20',
@@ -125,7 +125,7 @@ const TokenTradeCard = ({
             variant={!isBuying ? 'default' : 'outline'}
             size="lg"
             className={cn(
-              'w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              'w-full rounded-btn border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
               !isBuying
                 ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
                 : 'bg-white/10 border border-white/10 hover:bg-white/20',
@@ -170,7 +170,7 @@ const TokenTradeCard = ({
           )}
 
           {detailsShown && (
-            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px] space-y-2">
+            <div className="liquid-glass rounded-xl p-4 mb-5 space-y-2">
               <button
                 type="button"
                 onClick={() => setDetailsShown(!detailsShown)}
@@ -197,7 +197,7 @@ const TokenTradeCard = ({
                 <div
                   className={cn(
                     'flex items-center gap-4',
-                    isBuying ? 'text-green-600' : 'text-red-600',
+                    isBuying ? 'text-bull' : 'text-bear',
                   )}
                 >
                   <div className="flex items-center">
@@ -243,7 +243,7 @@ const TokenTradeCard = ({
           {activeAccount && (
             <Button
               className={cn(
-                'w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                'w-full py-4 px-6 rounded-btn border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                 loadingTransaction || isInsufficientBalance
                   ? 'bg-white/10 cursor-not-allowed opacity-60'
                   : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0',
@@ -269,7 +269,7 @@ const TokenTradeCard = ({
           <Button
             variant="outline"
             size="lg"
-            className="w-full mt-2 py-4 px-6 rounded-2xl border border-white/10 bg-white/10 text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20"
+            className="w-full mt-2 py-4 px-6 rounded-btn border border-white/10 bg-white/10 text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20"
             onClick={onClose}
           >
             {t('settings.cancel')}
@@ -280,7 +280,7 @@ const TokenTradeCard = ({
       {/* Settings Dialog */}
       {settingsDialogVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 max-w-sm w-full mx-4 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+          <div className="liquid-glass liquid-glass--strong rounded-xl p-6 max-w-sm w-full mx-4">
             <h3 className="text-lg font-semibold mb-4 text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
               {t('settingsTitle')}
             </h3>
@@ -323,7 +323,7 @@ const TokenTradeCard = ({
                 commitSlippageInput();
                 setSettingsDialogVisible(false);
               }}
-              className="w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full py-4 px-6 rounded-btn border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
             >
               {t('done')}
             </Button>

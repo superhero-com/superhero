@@ -59,11 +59,11 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
   let typeColor = 'text-blue-400';
   let typeGlow = 'bg-blue-400/10';
   if (isBuy) {
-    typeColor = 'text-emerald-400';
-    typeGlow = 'bg-emerald-400/10';
+    typeColor = 'text-bull';
+    typeGlow = 'bg-bull/10';
   } else if (isSell) {
-    typeColor = 'text-red-400';
-    typeGlow = 'bg-red-400/10';
+    typeColor = 'text-bear';
+    typeGlow = 'bg-bear/10';
   }
 
   const timeAgo = React.useMemo(() => {
@@ -115,7 +115,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
 
           {/* Compact TX Type Badge */}
           {transaction.tx_type && (
-            <div className={`px-2 py-0.5 rounded-full flex items-center gap-1 ${typeGlow}`}>
+            <div className={`px-2 py-0.5 rounded-btn-sm flex items-center gap-1 ${typeGlow}`}>
               <span className={`text-xs font-semibold ${typeColor}`}>
                 {getDisplayName(transaction.tx_type)}
               </span>
@@ -278,17 +278,17 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     switch (color) {
       case 'green':
         return {
-          bgColor: 'bg-green-500/10',
-          borderColor: 'border-green-500/30',
-          textColor: 'text-green-400',
-          chipBg: 'bg-green-500/20',
+          bgColor: 'bg-bull/10',
+          borderColor: 'border-bull/40',
+          textColor: 'text-bull',
+          chipBg: 'bg-bull/20',
         };
       case 'red':
         return {
-          bgColor: 'bg-red-500/10',
-          borderColor: 'border-red-500/30',
-          textColor: 'text-red-400',
-          chipBg: 'bg-red-500/20',
+          bgColor: 'bg-bear/10',
+          borderColor: 'border-bear/40',
+          textColor: 'text-bear',
+          chipBg: 'bg-bear/20',
         };
       case 'yellow':
         return {
@@ -353,7 +353,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   return (
     <div className="md:space-y-4">
       {/* Data Table */}
-      <div className="md:bg-white/[0.02] md:border md:border-white/10 md:rounded-2xl overflow-hidden">
+      <div className="md:bg-white/[0.02] md:border md:border-white/10 md:rounded-xl overflow-hidden">
         {/* Table Header */}
         <div className="hidden lg:grid gap-4 px-2 xl:px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px]">
           {headers.map((header) => (

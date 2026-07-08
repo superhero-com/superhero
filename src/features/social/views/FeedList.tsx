@@ -1234,9 +1234,9 @@ const FeedList = ({
         />
       )}
 
-      <div className="w-full mb-3 flex items-center gap-2.5 px-3.5 py-2 rounded-[20px] bg-gradient-to-r from-purple-500/[0.09] to-transparent border border-purple-500/[0.18]">
+      <div className="w-full mb-3 flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-500/[0.09] to-transparent border border-purple-500/[0.18]">
 
-        <div className=" flex gap-2 text-[10px] font-semibold tracking-[0.08em] uppercase bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full">
+        <div className=" flex gap-2 text-[10px] font-semibold tracking-[0.08em] uppercase bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-btn-sm">
           <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           {t('feedAnnouncement.new')}
         </div>

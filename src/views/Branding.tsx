@@ -120,7 +120,7 @@ const Branding = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 backdrop-blur-md text-white mb-8 shadow-glass animate-fadeInUp">
+        <div className="liquid-glass liquid-glass--strong relative overflow-hidden rounded-xl p-6 md:p-8 text-white mb-8 animate-fadeInUp">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles className="w-32 h-32 text-neon-teal" />
           </div>
@@ -144,7 +144,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {BRAND_COLORS.map((color) => (
-              <div key={color.name} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-sm transition-all duration-300 hover:border-white/20 hover:scale-[1.015]">
+              <div key={color.name} className="liquid-glass group overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.015]">
                 <div
                   className="h-24 w-full transition-transform duration-300 group-hover:scale-105"
                   style={{ backgroundColor: color.hex }}
@@ -182,7 +182,7 @@ const Branding = () => {
             <h2 className="text-2xl font-bold tracking-tight text-white">{t('common.views.branding.typographyTitle')}</h2>
           </div>
 
-          <div className="p-6 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md">
+          <div className="liquid-glass p-6 rounded-xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <div className="text-sm font-bold text-neon-blue uppercase tracking-widest mb-1">{t('common.views.branding.primaryTypeface')}</div>
@@ -227,7 +227,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Full Logo Card */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
+            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/full-logo.svg"
@@ -255,9 +255,9 @@ const Branding = () => {
             </div>
 
             {/* Small Icon Favicon Card */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
+            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
-                <div className="w-16 h-16 flex items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm z-10 transition-transform duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 flex items-center justify-center p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm z-10 transition-transform duration-300 group-hover:scale-105">
                   <FaviconIcon id="favicon-brand-download" className="w-full h-full text-blue-600" />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-transparent pointer-events-none" />
@@ -281,12 +281,12 @@ const Branding = () => {
             </div>
 
             {/* Square PNG Logo */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
+            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
                 <img
                   src="/logo.png"
                   alt={t('common.views.branding.squareLogoAlt')}
-                  className="w-16 h-16 rounded-2xl object-cover z-10 transition-transform duration-300 group-hover:scale-105"
+                  className="w-16 h-16 rounded-xl object-cover z-10 transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     // Fallback to placeholder if not found
                     e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="%231161FE" rx="16"/><text x="32" y="38" font-family="sans-serif" font-size="28" fill="white" text-anchor="middle" font-weight="bold">S</text></svg>';
@@ -325,7 +325,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* OG Social Banner */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
+            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/og-default.png"
@@ -358,7 +358,7 @@ const Branding = () => {
             </div>
 
             {/* Interface Screenshot Showcase */}
-            <div className="flex flex-col rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden group">
+            <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="relative aspect-[16/9] bg-slate-950 border-b border-white/10 overflow-hidden flex items-center justify-center">
                 <img
                   src="/screen-1.png"
@@ -404,7 +404,7 @@ const Branding = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
             {CUSTOM_ICONS.map(({ Component, name, id }) => (
-              <div key={name} className="flex flex-col items-center p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm group hover:border-white/20 transition-all duration-300">
+              <div key={name} className="liquid-glass flex flex-col items-center p-4 rounded-xl group transition-all duration-300">
                 <div className="w-12 h-12 flex items-center justify-center text-white/80 group-hover:text-neon-teal transition-colors mb-3">
                   <Component id={id} className="w-8 h-8" />
                 </div>

@@ -13,13 +13,8 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Token 0 Reserve */}
       <div
-        style={{
-          padding: 18,
-          borderRadius: 14,
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(10px)',
-        }}
+        className="liquid-glass rounded-xl"
+        style={{ padding: 18 }}
       >
         <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
           🪙
@@ -35,13 +30,8 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => {
 
       {/* Token 1 Reserve */}
       <div
-        style={{
-          padding: 18,
-          borderRadius: 14,
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(10px)',
-        }}
+        className="liquid-glass rounded-xl"
+        style={{ padding: 18 }}
       >
         <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
           🪙
@@ -57,13 +47,8 @@ export const PoolReserves = ({ pairData }: PoolReservesProps) => {
 
       {/* LP Token Supply */}
       <div
-        style={{
-          padding: 18,
-          borderRadius: 14,
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(10px)',
-        }}
+        className="liquid-glass rounded-xl"
+        style={{ padding: 18 }}
       >
         <div
           style={{

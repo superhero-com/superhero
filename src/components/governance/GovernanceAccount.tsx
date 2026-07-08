@@ -55,11 +55,11 @@ export default function GovernanceAccount() {
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
         <div className="text-center mb-12 animate-slideInUp">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/25 mb-6 animate-float">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/25 mb-6 animate-float">
             <IconGovernance className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent mb-4 leading-tight">
-            {t('account.title')}
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+            <span className="gradient-text">{t('account.title')}</span>
           </h1>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
             {t('account.subtitle')}
@@ -72,10 +72,10 @@ export default function GovernanceAccount() {
             <MobileCard
               variant="elevated"
               padding="large"
-              className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+              className="liquid-glass liquid-glass--hover rounded-xl"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
                   <span className="text-lg">👤</span>
                 </div>
                 <div>
@@ -87,13 +87,13 @@ export default function GovernanceAccount() {
               {delegatorsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />
+                    <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
                   ))}
                 </div>
               ) : activeAccount ? (
                 <div className="grid gap-4">
                   {/* Address */}
-                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                  <div className="group p-5 liquid-glass liquid-glass--hover rounded-xl transition-all duration-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
@@ -112,7 +112,7 @@ export default function GovernanceAccount() {
                   </div>
 
                   {/* Balance */}
-                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                  <div className="group p-5 liquid-glass liquid-glass--hover rounded-xl transition-all duration-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
@@ -132,7 +132,7 @@ export default function GovernanceAccount() {
 
                   {/* Delegators Count */}
                   {delegators.length > 0 && (
-                    <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                    <div className="group p-5 liquid-glass liquid-glass--hover rounded-xl transition-all duration-300">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
@@ -152,7 +152,7 @@ export default function GovernanceAccount() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">⚠️</span>
                   </div>
                   <p className="text-slate-400">{t('account.unableToLoadAccount')}</p>
@@ -167,10 +167,10 @@ export default function GovernanceAccount() {
           <MobileCard
             variant="elevated"
             padding="large"
-            className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+            className="liquid-glass liquid-glass--hover rounded-xl"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center shadow-lg">
                 <span className="text-lg">🤝</span>
               </div>
               <div>
@@ -182,7 +182,7 @@ export default function GovernanceAccount() {
             <div className="space-y-6">
               {/* Current Delegation Status */}
               {delegation && (
-                <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl">
+                <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                       <span className="text-sm">✅</span>
@@ -226,7 +226,7 @@ export default function GovernanceAccount() {
                   size="large"
                   fullWidth
                   loading={isSaving}
-                  className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25"
+                  className="h-14 text-base font-semibold rounded-btn transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25"
                 >
                   {isSaving ? t('account.savingDelegation') : t('account.saveDelegation')}
                 </AeButton>
@@ -239,7 +239,7 @@ export default function GovernanceAccount() {
                     size="large"
                     fullWidth
                     loading={isRevoking}
-                    className="h-14 text-base font-semibold rounded-2xl transition-all duration-300"
+                    className="h-14 text-base font-semibold rounded-btn transition-all duration-300"
                   >
                     {isRevoking ? t('account.revokingDelegation') : t('account.revokeDelegation')}
                   </AeButton>
@@ -266,7 +266,7 @@ export default function GovernanceAccount() {
                   {delegators.map((delegator: any, idx: number) => (
                     <div
                       key={idx}
-                      className="group p-4 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-2xl rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg"
+                      className="group p-4 liquid-glass liquid-glass--hover rounded-xl transition-all duration-300"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -308,7 +308,7 @@ export default function GovernanceAccount() {
         {/* Success/Error Messages */}
         {setDelegationMutation.isSuccess && (
           <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl shadow-2xl">
+            <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">✅</span>
                 <div>
@@ -322,7 +322,7 @@ export default function GovernanceAccount() {
 
         {revokeDelegationMutation.isSuccess && (
           <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl shadow-2xl">
+            <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">🔄</span>
                 <div>
@@ -336,7 +336,7 @@ export default function GovernanceAccount() {
 
         {(setDelegationMutation.isError || revokeDelegationMutation.isError) && (
           <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl shadow-2xl">
+            <div className="p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">❌</span>
                 <div>

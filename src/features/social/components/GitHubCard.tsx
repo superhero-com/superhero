@@ -83,7 +83,7 @@ export const GitHubCard = ({
 
   if (loading) {
     return (
-      <div className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden animate-pulse">
+      <div className="relative liquid-glass rounded-xl overflow-hidden animate-pulse">
         {onDismiss && (
           <button
             type="button"
@@ -114,7 +114,7 @@ export const GitHubCard = ({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex flex-col gap-3 p-4 hover:bg-white/8 hover:border-white/20 transition-all duration-200 no-underline pr-10"
+      className="relative liquid-glass liquid-glass--hover rounded-xl overflow-hidden flex flex-col gap-3 p-4 transition-all duration-200 no-underline pr-10"
       onClick={(e) => e.stopPropagation()}
     >
       {onDismiss && (

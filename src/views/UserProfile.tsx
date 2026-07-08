@@ -486,7 +486,7 @@ export default function UserProfile({
 
         {/* Stats Grid - Right column on md+, full width on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
-          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+          <div className="liquid-glass liquid-glass--hover rounded-xl p-2 md:p-2.5 flex flex-col justify-center">
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               {t('account.aeBalance')}
             </div>
@@ -514,7 +514,7 @@ export default function UserProfile({
           </div>
           <button
             onClick={() => handleTabChange('owned')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="liquid-glass liquid-glass--hover rounded-xl p-2 md:p-2.5 cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               {t('explore:ownedTrends')}
@@ -525,7 +525,7 @@ export default function UserProfile({
           </button>
           <button
             onClick={() => handleTabChange('created')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="liquid-glass liquid-glass--hover rounded-xl p-2 md:p-2.5 cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               {t('explore:createdTrends')}
@@ -536,7 +536,7 @@ export default function UserProfile({
           </button>
           <button
             onClick={() => handleTabChange('feed')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="liquid-glass liquid-glass--hover rounded-xl p-2 md:p-2.5 cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               {t('explore:posts')}

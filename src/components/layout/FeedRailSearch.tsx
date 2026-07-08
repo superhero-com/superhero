@@ -29,8 +29,8 @@ import { Link, useNavigate, type NavigateFunction } from 'react-router-dom';
 import { formatAddress } from '@/utils/address';
 
 const FEED_RAIL_DROPDOWN_PANEL_CLASS = [
-  'absolute z-[60] left-0 right-0 mt-2 rounded-xl border border-white/10',
-  'bg-[#0f1118] shadow-lg max-h-[min(70vh,33rem)] overflow-y-auto overflow-x-hidden',
+  'liquid-glass liquid-glass--strong absolute z-[60] left-0 right-0 mt-2 rounded-xl',
+  'shadow-lg max-h-[min(70vh,33rem)] overflow-y-auto overflow-x-hidden',
 ].join(' ');
 
 function feedNavTrendToken(navigate: NavigateFunction, nameOrAddress: string) {

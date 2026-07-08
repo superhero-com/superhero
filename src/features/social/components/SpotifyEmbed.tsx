@@ -22,7 +22,7 @@ export const SpotifyEmbed = ({ spotifyType, spotifyId, onDismiss }: SpotifyEmbed
   const src = `https://open.spotify.com/embed/${spotifyType}/${spotifyId}?utm_source=oembed`;
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-white/10">
+    <div className="relative liquid-glass rounded-xl overflow-hidden">
       {onDismiss && (
         <button
           type="button"

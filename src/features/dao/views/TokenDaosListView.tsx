@@ -137,8 +137,8 @@ const Dao = () => {
         {token && (
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
-                {token.name || token.symbol}
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">
+                <span className="gradient-text">{token.name || token.symbol}</span>
                 {' '}
                 [
                 {t('badge')}
@@ -146,7 +146,7 @@ const Dao = () => {
               </h1>
               <Badge
                 variant="secondary"
-                className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-btn-sm border-0 shadow-sm"
               >
                 {t('badge')}
               </Badge>
@@ -192,7 +192,7 @@ const Dao = () => {
       </div>
 
       {isLoading && (
-        <Card className="bg-white/[0.02] border-white/10">
+        <Card className="liquid-glass rounded-xl">
           <CardContent className="p-6">
             <div className="text-white/80">{t('loading')}</div>
           </CardContent>
@@ -210,7 +210,7 @@ const Dao = () => {
       {!isLoading && !error && (
         <div className="grid grid-cols-1 gap-6">
           {/* Stats Card */}
-          <Card className="bg-white/[0.02] border-white/10">
+          <Card className="liquid-glass rounded-xl">
             <CardContent className="p-6">
               <div className="flex flex-wrap gap-6 text-sm mb-4">
                 <div>
@@ -260,7 +260,7 @@ const Dao = () => {
           {/* Create Vote and Votes in a row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Create Vote Card */}
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="liquid-glass rounded-xl">
               <CardHeader>
                 <CardTitle className="text-white">{t('createVote')}</CardTitle>
               </CardHeader>
@@ -368,7 +368,7 @@ const Dao = () => {
             </Card>
 
             {/* Votes Card */}
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="liquid-glass rounded-xl">
               <CardHeader>
                 <CardTitle className="text-white">{t('votes')}</CardTitle>
               </CardHeader>

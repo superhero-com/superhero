@@ -8,6 +8,7 @@ import {
   normalizeAddress,
   sdkHasAccount,
 } from '@/utils/walletSdk';
+import i18n from '@/i18n';
 
 type MaybeAsync<T> = T | Promise<T>;
 
@@ -118,7 +119,7 @@ export function useWalletReconnect({
     if (restored) return restored;
 
     if (!walletConnectedRef.current && !walletInfoRef.current && connectWallet) {
-      throw new Error('You are not connected to Wallet');
+      throw new Error(i18n.t('common.messages.walletNotConnected'));
     }
 
     const canReconnectWallet = !walletConnectedRef.current
@@ -159,7 +160,7 @@ export function useWalletReconnect({
         }
         if (Date.now() - startedAt >= timeoutMs) {
           window.clearInterval(interval);
-          reject(new Error('You are not connected to Wallet'));
+          reject(new Error(i18n.t('common.messages.walletNotConnected')));
         }
       }, 300);
     });

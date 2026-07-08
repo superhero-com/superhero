@@ -16,6 +16,7 @@ import {
   normalizeLinkSignature,
   verifyLinkMessageSignature,
 } from '../utils/signLinkMessage';
+import i18n from '../i18n';
 
 const RELAY_ACK_TIMEOUT_MS = 1500;
 
@@ -103,7 +104,7 @@ const submitMessageSignRequest = async (
   const signature = normalizeLinkSignature(rawSignature);
   const isValid = verifyLinkMessageSignature(request.address, request.message, signature);
   if (!isValid) {
-    throw new Error('Wallet signature verification failed locally');
+    throw new Error(i18n.t('common.messages.signatureVerificationFailed'));
   }
 
   if (request.type === 'profile-update') {
@@ -340,7 +341,9 @@ const TxQueue = () => {
           setMessageResult({
             status: 'error',
             address: request.address,
-            message: error instanceof Error ? error.message : String(error || 'Request failed'),
+            message: error instanceof Error
+              ? error.message
+              : String(error || tCommon('messages.requestFailed')),
           });
         }
       }, RELAY_ACK_TIMEOUT_MS);

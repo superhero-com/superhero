@@ -282,7 +282,7 @@ export default function Landing() {
             <div className="relative">
               <img
                 src="/did-image.png"
-                alt="SuperheroID visual mockup"
+                alt={t('common.views.landing.id.imageAlt')}
                 className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm hue-rotate-60"
               />
               {/* Decorative glow */}

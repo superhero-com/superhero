@@ -4,6 +4,7 @@ import {
   verifyMessageSignature,
 } from '@aeternity/aepp-sdk';
 import type { MessageSignRequest } from '@/atoms/txQueueAtoms';
+import i18n from '@/i18n';
 
 type SignMessageOptions = {
   request?: MessageSignRequest;
@@ -29,7 +30,7 @@ const normalizeSignatureHex = (signature: string): string => {
 const hexToBytes = (hex: string): Uint8Array => {
   const clean = normalizeSignatureHex(hex);
   if (clean.length % 2 !== 0) {
-    throw new Error('Wallet returned an invalid hex signature');
+    throw new Error(i18n.t('common.messages.invalidHexSignature'));
   }
   const bytes = new Uint8Array(clean.length / 2);
   for (let i = 0; i < clean.length; i += 2) {
@@ -69,7 +70,7 @@ export const normalizeLinkSignature = (signature: unknown): string => {
       ?? (signature as Record<string, unknown>).value;
     if (value != null) return normalizeLinkSignature(value);
   }
-  throw new Error('Wallet did not return a valid signature');
+  throw new Error(i18n.t('common.messages.invalidWalletSignature'));
 };
 
 const signatureToBytes = (signature: string): Uint8Array => {
@@ -121,7 +122,7 @@ export async function signAndVerifyLinkMessage(
   const signature = await signLinkMessage(signMessage, challengeMessage, signOptions);
   const isValid = verifyLinkMessageSignature(address, challengeMessage, signature);
   if (!isValid) {
-    throw new Error('Wallet signature verification failed locally');
+    throw new Error(i18n.t('common.messages.signatureVerificationFailed'));
   }
   return signature;
 }

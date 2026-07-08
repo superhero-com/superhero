@@ -99,7 +99,7 @@ const RewardsProgram = () => {
   }, [runRewardCheck]);
 
   const verifyActionLabel = currentVerifyStep === 0
-    ? t('rewardsProgram.milestone1.linkTwitter')
+    ? t('rewardsProgram.milestone1.linkX')
     : t('rewardsProgram.milestone1.postOnX');
 
   // Check button is available once X is linked

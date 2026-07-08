@@ -17,36 +17,44 @@ import FooterSection from '../components/layout/FooterSection';
 
 const BRAND_COLORS = [
   {
-    name: 'Primary Neon Teal',
+    nameKey: 'common.views.branding.colors.neonTeal.name',
     hex: '#00ff9d',
     rgb: '0, 255, 157',
-    desc: 'The heart of our visual system. Used for core interactions, success states, and primary actions.',
+    descKey: 'common.views.branding.colors.neonTeal.desc',
   },
   {
-    name: 'Neon Pink / Crimson',
+    nameKey: 'common.views.branding.colors.neonPink.name',
     hex: '#ff6b6b',
     rgb: '255, 107, 107',
-    desc: 'Vibrant highlight accent. Used for error states, destructive actions, and active gradients.',
+    descKey: 'common.views.branding.colors.neonPink.desc',
   },
   {
-    name: 'Neon Blue',
+    nameKey: 'common.views.branding.colors.neonBlue.name',
     hex: '#0f61fe',
     rgb: '15, 97, 254',
-    desc: 'Fresh corporate balance. Used for sub-headings, secondary buttons, and informative components.',
+    descKey: 'common.views.branding.colors.neonBlue.desc',
   },
   {
-    name: 'Background',
+    nameKey: 'common.views.branding.colors.background.name',
     hex: '#0a0a0f',
     rgb: '10, 10, 15',
-    desc: 'Our deep dark-mode backdrop, optimized for high contrast with radiant cyberpunk neon hues.',
+    descKey: 'common.views.branding.colors.background.desc',
   },
 ];
 
 const CUSTOM_ICONS = [
-  { Component: IconDiamond, name: 'Diamond', id: 'svg-icon-diamond' },
-  { Component: IconWallet, name: 'Wallet', id: 'svg-icon-wallet' },
-  { Component: IconHashtag, name: 'Hashtag', id: 'svg-icon-hashtag' },
-  { Component: IconFeed, name: 'Feed', id: 'svg-icon-feed' },
+  {
+    Component: IconDiamond, nameKey: 'common.views.branding.icons.diamond', slug: 'diamond', id: 'svg-icon-diamond',
+  },
+  {
+    Component: IconWallet, nameKey: 'common.views.branding.icons.wallet', slug: 'wallet', id: 'svg-icon-wallet',
+  },
+  {
+    Component: IconHashtag, nameKey: 'common.views.branding.icons.hashtag', slug: 'hashtag', id: 'svg-icon-hashtag',
+  },
+  {
+    Component: IconFeed, nameKey: 'common.views.branding.icons.feed', slug: 'feed', id: 'svg-icon-feed',
+  },
 ];
 
 const Branding = () => {
@@ -144,13 +152,13 @@ const Branding = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {BRAND_COLORS.map((color) => (
-              <div key={color.name} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-sm transition-all duration-300 hover:border-white/20 hover:scale-[1.015]">
+              <div key={color.hex} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-sm transition-all duration-300 hover:border-white/20 hover:scale-[1.015]">
                 <div
                   className="h-24 w-full transition-transform duration-300 group-hover:scale-105"
                   style={{ backgroundColor: color.hex }}
                 />
                 <div className="p-4">
-                  <h3 className="font-bold text-white text-base mb-1">{color.name}</h3>
+                  <h3 className="font-bold text-white text-base mb-1">{t(color.nameKey)}</h3>
                   <div className="flex items-center justify-between gap-1 mb-2 bg-black/20 px-2 py-1.5 rounded-lg border border-white/5">
                     <span className="font-mono text-xs text-white/80">{color.hex}</span>
                     <button
@@ -166,7 +174,7 @@ const Branding = () => {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed min-h-[48px]">{color.desc}</p>
+                  <p className="text-xs text-white/60 leading-relaxed min-h-[48px]">{t(color.descKey)}</p>
                 </div>
               </div>
             ))}
@@ -403,19 +411,21 @@ const Branding = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {CUSTOM_ICONS.map(({ Component, name, id }) => (
-              <div key={name} className="flex flex-col items-center p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm group hover:border-white/20 transition-all duration-300">
+            {CUSTOM_ICONS.map(({
+              Component, nameKey, slug, id,
+            }) => (
+              <div key={id} className="flex flex-col items-center p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm group hover:border-white/20 transition-all duration-300">
                 <div className="w-12 h-12 flex items-center justify-center text-white/80 group-hover:text-neon-teal transition-colors mb-3">
                   <Component id={id} className="w-8 h-8" />
                 </div>
                 <div className="text-xs font-semibold text-white/80 group-hover:text-white transition-colors text-center mb-3 truncate w-full">
-                  {name}
+                  {t(nameKey)}
                 </div>
                 <button
                   type="button"
-                  onClick={() => downloadSvgElementById(id, `superhero-icon-${name.toLowerCase()}.svg`)}
+                  onClick={() => downloadSvgElementById(id, `superhero-icon-${slug}.svg`)}
                   className="p-1.5 rounded-lg bg-white/10 border border-white/20 hover:bg-neon-teal hover:text-black hover:border-neon-teal hover:scale-105 active:scale-100 transition-all duration-200"
-                  title={t('common.views.branding.downloadIcon', { name })}
+                  title={t('common.views.branding.downloadIcon', { name: t(nameKey) })}
                 >
                   <Download className="w-3.5 h-3.5" />
                 </button>

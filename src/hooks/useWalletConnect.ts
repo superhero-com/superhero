@@ -29,6 +29,7 @@ import {
   scanningForAccountsAtom,
 } from '../atoms/walletAtoms';
 import { liquidityPositionsAtom } from '../features/dex/atoms/positionsAtoms';
+import i18n from '../i18n';
 
 /**
  * Detection window for silent reconnection after a page refresh. The extension
@@ -253,7 +254,7 @@ export function useWalletConnect() {
       setWalletInfo(newWalletInfo);
 
       const connectedAccount = await subscribeAddress();
-      if (!connectedAccount) throw new Error('No wallet account connected');
+      if (!connectedAccount) throw new Error(i18n.t('common.messages.noWalletAccountConnected'));
       setWalletConnected(true);
       return connectedAccount;
     } catch {

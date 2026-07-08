@@ -45,7 +45,7 @@ const Daos = () => {
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
-      title: translate('explore.marketCapLabel'),
+      title: translate('explore:marketCapLabel'),
       value: SORT.marketCap,
     },
     {
@@ -53,11 +53,11 @@ const Daos = () => {
       value: SORT.treasury,
     },
     {
-      title: translate('explore.newest'),
+      title: translate('explore:newest'),
       value: SORT.newest,
     },
     {
-      title: translate('explore.holdersCount'),
+      title: translate('explore:holdersCount'),
       value: SORT.holdersCount,
     },
   ];
@@ -217,7 +217,7 @@ const Daos = () => {
               </div>
               <div>
                 <div className="text-xs opacity-80 text-white/80">
-                  {translate('explore.holders')}
+                  {translate('explore:holders')}
                 </div>
                 <div className="font-bold text-white">
                   {t.holders_count ?? 0}
@@ -235,7 +235,7 @@ const Daos = () => {
               </div>
               <div>
                 <div className="text-xs opacity-80 text-white/80">
-                  {translate('explore.marketCapLabel')}
+                  {translate('explore:marketCapLabel')}
                 </div>
                 <div className="font-bold text-white">
                   {t.market_cap != null ? (
@@ -314,10 +314,10 @@ const Daos = () => {
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">
                 <Spinner className="w-4 h-4" />
-                {translate('trending.tokenList.loadingEllipsis')}
+                {translate('trending:tokenList.loadingEllipsis')}
               </div>
             ) : (
-              translate('trending.tokenList.loadMore')
+              translate('trending:tokenList.loadMore')
             )}
           </button>
         </div>

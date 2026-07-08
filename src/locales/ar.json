@@ -23,7 +23,17 @@
       "tip": "إكرامية",
       "viewPortfolio": "عرض المحفظة",
       "done": "تم",
-      "trade": "تداول"
+      "trade": "تداول",
+      "skipForNow": "تخطَّ هذا الآن",
+      "editSuperheroId": "تعديل SuperheroID",
+      "changeChainName": "تغيير",
+      "chooseChainName": "اختيار",
+      "buyChainName": "شراء",
+      "apply": "تطبيق",
+      "save": "حفظ",
+      "getChainName": "+ احصل على اسم ‎.chain",
+      "claimChainName": "مطالبة",
+      "linkAccount": "ربط الحساب"
     },
     "labels": {
       "superheroHome": "الصفحة الرئيسية لـ Superhero",
@@ -48,7 +58,14 @@
       "none": "لا شيء",
       "connectX": "ربط حساب X",
       "xAccount": "حساب X",
-      "profile": "الملف الشخصي"
+      "profile": "الملف الشخصي",
+      "claimChainName": "المطالبة باسم ‎.chain جديد",
+      "optional": "اختياري",
+      "dotChainName": "اسم ‎.chain",
+      "preferredName": "الاسم المفضّل",
+      "available": "متاح",
+      "website": "الموقع الإلكتروني",
+      "xTwitter": "X (تويتر)"
     },
     "actions": {
       "copy": "نسخ"
@@ -70,7 +87,9 @@
       "conference": "مؤتمر",
       "sortByBalance": "ترتيب حسب الرصيد",
       "clickToExpandTips": "انقر لعرض النصائح",
-      "clickToCopyTokenAddress": "انقر لنسخ عنوان الرمز"
+      "clickToCopyTokenAddress": "انقر لنسخ عنوان الرمز",
+      "editSuperheroId": "SuperheroID",
+      "selectChainName": "اختر اسم ‎.chain"
     },
     "aria": {
       "loading": "جارٍ التحميل",
@@ -97,7 +116,11 @@
       "avatarurl": "https://...",
       "username": "your_username",
       "selectChainName": "اختر أحد أسماء السلسلة الخاصة بك",
-      "searchSuperhero": "ابحث في Superhero"
+      "searchSuperhero": "ابحث في Superhero",
+      "solName": "اسمك على Solana",
+      "xAccessToken": "الصق رمز وصول OAuth الخاص بحسابك على X",
+      "claimChainName": "myuniquename123",
+      "profileBio": "أخبر العالم عن نفسك…"
     },
     "messages": {
       "somethingWentWrong": "حدث خطأ ما",
@@ -139,7 +162,71 @@
       "xCallbackBlockedHint": "إذا لم تفتح محفظتك، فربما تم حجبها. اضغط على الزر للمحاولة مرة أخرى.",
       "xCallbackRetry": "حاول مرة أخرى",
       "xCallbackDoneTitle": "تم ربط حساب X",
-      "xCallbackGoBack": "العودة"
+      "xCallbackGoBack": "العودة",
+      "missingAddressForXVerification": "عنوان X للتحقق مفقود",
+      "missingXOAuthToken": "رمز X OAuth مفقود",
+      "missingAddressForBioLink": "عنوان الربط الخاص بالـ bio مفقود",
+      "missingAddressForSiteLink": "عنوان الربط الخاص بالموقع مفقود",
+      "missingAddressForPreferredNameLink": "عنوان الربط الخاص بالاسم المفضل مفقود",
+      "missingAddressForPreferredNameUnlink": "عنوان إلغاء الربط الخاص بالاسم المفضل مفقود",
+      "missingAddressForBioUnlink": "عنوان إلغاء الربط الخاص بالـ bio مفقود",
+      "missingAddressForSiteUnlink": "عنوان إلغاء الربط الخاص بالموقع مفقود",
+      "missingAddressForXUnlink": "عنوان إلغاء الربط الخاص بـ X مفقود",
+      "invalidWebsiteUrl": "يجب أن يكون الموقع الإلكتروني رابطاً صالحاً (بما في ذلك https://) لا يتجاوز 500 حرف",
+      "missingXToken": "رمز وصول X مطلوب للتحقق من X.",
+      "failedAddressLink": "فشل التحقق من الربط. يرجى المحاولة مرة أخرى.",
+      "bioLinkSuccess": "تم ربط النبذة التعريفية بنجاح.",
+      "bioUnlinkSuccess": "تم إلغاء ربط النبذة التعريفية بنجاح.",
+      "siteLinkSuccess": "تم ربط الموقع الإلكتروني بنجاح.",
+      "siteUnlinkSuccess": "تم إلغاء ربط الموقع الإلكتروني بنجاح.",
+      "preferredNameLinkSuccess": "تم ربط الاسم المفضّل بنجاح.",
+      "preferredNameUnlinkSuccess": "تم إلغاء ربط الاسم المفضّل بنجاح.",
+      "preferredNameNotOwned": "اختر اسم ‎.chain تملكه.",
+      "connectWalletToClaimChainName": "اربط محفظتك للمطالبة باسم ‎.chain",
+      "chainNameClaimRequired": "أدخل الاسم الذي تريد المطالبة به.",
+      "chainNameClaimHint": "استخدم أحرفاً أو أرقاماً أو شرطات. الأسماء الأطول من 12 حرفاً مجانية.",
+      "chainNameClaimInvalidChars": "يمكن لأسماء السلسلة استخدام الأحرف والأرقام والشرطات، ولا يمكن أن تبدأ أو تنتهي بشرطة.",
+      "chainNameClaimChecking": "جارٍ التحقق…",
+      "chainNameClaimTooShort": "تتطلب المطالبات المشمولة بالرعاية أكثر من 12 حرفاً قبل ‎.chain.",
+      "chainNameClaimLoading": "جارٍ المطالبة…",
+      "chainNameClaimStarted": "تم إرسال المطالبة. في انتظار الرعاية والنقل…",
+      "chainNameClaimPending": "حالة المطالبة: {{status}}",
+      "chainNameClaimCompleted": "تمت المطالبة باسم ‎.chain بنجاح.",
+      "chainNameClaimWalletUnavailable": "توقيع الرسائل في المحفظة غير متاح حالياً. يرجى المحاولة مرة أخرى.",
+      "chainNameClaimNameTaken": "اسم ‎.chain هذا محجوز بالفعل. جرّب اسماً آخر.",
+      "chainNameClaimNameInProgress": "تجري المطالبة باسم ‎.chain هذا حالياً. جرّب اسماً آخر.",
+      "chainNameClaimAddressInProgress": "لديك بالفعل مطالبة ‎.chain مشمولة بالرعاية قيد التنفيذ.",
+      "chainNameClaimAddressClaimed": "تمتلك هذه المحفظة بالفعل اسم ‎.chain مشمولاً بالرعاية.",
+      "chainNameClaimChallengeExpired": "انتهت صلاحية جلسة المطالبة. يرجى المحاولة مرة أخرى.",
+      "chainNameClaimVerificationFailed": "تعذّر التحقق من توقيع محفظتك. يرجى المحاولة مرة أخرى.",
+      "chainNameClaimUnavailable": "المطالبة باسم ‎.chain برعاية غير متاحة مؤقتاً. يرجى المحاولة لاحقاً.",
+      "chainNameClaimRetry": "تعذّر بدء المطالبة باسم ‎.chain. يرجى المحاولة مرة أخرى.",
+      "chainNameClaimFailed": "فشلت المطالبة باسم ‎.chain.",
+      "chainNameClaimTimedOut": "لا تزال المطالبة قيد المعالجة. يرجى التحقق مرة أخرى بعد قليل.",
+      "chainNameClaimRejected": "رفضت الطلب في محفظتك. يرجى المحاولة مرة أخرى.",
+      "chainNameSponsorFree": "مجاني",
+      "chainNameSponsorPrice": "≈ {{amount}} AE",
+      "chainNameSponsorPriceHint": "يُدفع من محفظتك.",
+      "chainNameSponsorCheckFailed": "تعذّر التحقق من رعاية الاسم حالياً. يرجى المحاولة مرة أخرى.",
+      "selectChainNameForDisplaySource": "اختر اسم سلسلة قبل استخدام السلسلة كمصدر للعرض.",
+      "superheroIdHelpLabel": "ما هو SuperheroID؟",
+      "superheroIdHelp": "SuperheroID هو عقد ذكي لهوية رقمية لامركزية يربط جميع حساباتك الاجتماعية بعنوان محفظتك. سيتم إعداد ملف SuperheroID الشخصي الخاص بك تلقائياً بعد ربط حسابك على X.",
+      "chainNameHelpLabel": "ما هي أسماء ‎.chain؟",
+      "chainNameHelp": "بسّط تفاعلات البلوكتشين مع نظام تسمية æternity ‏(AENS)، الذي يتيح لك تسجيل أسماء مقروءة لعناوين المحافظ واستخدامها.",
+      "chainNameClaimLengthHint": "{{length}}/13 حرفاً قبل ‎.chain",
+      "connectWalletFirst": "اربط محفظتك أولاً",
+      "referralLinkFailed": "فشل الحصول على رابط الإحالة",
+      "rewardCheckFailed": "فشل التحقق من المكافأة",
+      "walletNotConnected": "محفظتك غير متصلة",
+      "noWalletAccountConnected": "لا يوجد حساب محفظة متصل",
+      "invalidHexSignature": "أعادت المحفظة توقيعاً سداسياً عشرياً غير صالح",
+      "invalidWalletSignature": "لم تُعد المحفظة توقيعاً صالحاً",
+      "signatureVerificationFailed": "فشل التحقق من توقيع المحفظة محلياً",
+      "walletAccountMismatchX": "حساب المحفظة المتصل لا يطابق عنوان التحقق من X",
+      "bioRequiredToLink": "أدخل نبذة تعريفية قبل ربطها",
+      "siteRequiredToLink": "أدخل موقعاً إلكترونياً قبل ربطه",
+      "preferredNameRequiredToLink": "اختر اسماً مفضّلاً قبل ربطه",
+      "requestFailed": "فشل الطلب"
     },
     "portfolio": {
       "portfolioValue": "قيمة المحفظة",
@@ -174,7 +261,11 @@
       "aeBalanceLabel": "رصيد AE: ",
       "tokenHoldings": "ممتلكات الرموز:",
       "moreTokens": "+ {{count}} المزيد...",
-      "noPostsYet": "لا توجد منشورات بعد"
+      "noPostsYet": "لا توجد منشورات بعد",
+      "xVerifiedTitle": "تم التحقق من حساب X: @{{username}}",
+      "xVerified": "تم التحقق من حساب X",
+      "linkXCtaTitle": "اربط حسابك على X",
+      "linkXCtaDescription": "لإظهار اسم مستخدم X الخاص بك في ملفك الشخصي."
     },
     "layout": {
       "openSource": "Superhero مفتوح المصدر",
@@ -261,7 +352,8 @@
     "views": {
       "wallet": {
         "hero": {
-          "badge": "محفظة متعددة السلاسل"
+          "badge": "محفظة متعددة السلاسل",
+          "subtitle": "**Superhero** — أكثر من مجرّد محفظة، إنها **مفتاحك** إلى العالم اللامركزي! ادخل وأنشئ وتفاعل. Superhero هي المفتاح إلى DAOs والرموز وأدوات DeFi والمزيد."
         },
         "features": {
           "eyebrow": "المزايا",
@@ -323,14 +415,252 @@
           "mobileBrowser": {
             "title": "متصفّح الجوال",
             "description": "لاستخدام Superhero على متصفّح الجوال، تحتاج إلى تثبيت تطبيق محفظة Superhero على جهازك للتعامل مع توقيع المعاملات."
-          }
+          },
+          "chromeExtension": "إضافة Chrome"
         },
         "faq": {
-          "title": "الأسئلة الشائعة"
+          "title": "الأسئلة الشائعة",
+          "categories": {
+            "gettingStarted": {
+              "title": "البدء مع محفظة Superhero",
+              "items": {
+                "whatIsSuperheroWallet": {
+                  "question": "ما هي محفظة Superhero؟",
+                  "answer": "محفظة Superhero هي **محفظة مفتوحة المصدر غير وصائية** تتيح للمستخدمين إدارة الأصول الرقمية بأمان عبر **عدة سلاسل بلوكتشين**، بما في ذلك Bitcoin وEthereum وæternity. يحتفظ المستخدمون بالسيطرة الكاملة على مفاتيحهم الخاصة ويمكنهم التفاعل مع التطبيقات اللامركزية (dApps) ومنظومة Web3."
+                },
+                "downloadAndInstall": {
+                  "question": "كيف أنزّل المحفظة وأثبّتها؟",
+                  "answer": "يمكنك تنزيل محفظة Superhero كإضافة متصفح لـ Chrome وFirefox، أو كتطبيق للهواتف بنظامي Android وiOS. ما عليك سوى زيارة موقع محفظة Superhero واختيار الإصدار المناسب لجهازك."
+                },
+                "supportedPlatforms": {
+                  "question": "ما المنصات التي تدعم محفظة Superhero؟",
+                  "answer": "تتوفر محفظة Superhero على متصفحات سطح المكتب (إضافتا Chrome وFirefox)، وكذلك على أجهزة Android وiOS المحمولة. كما يمكن الوصول إلى نسخة الويب من متصفحات سطح المكتب والهواتف."
+                },
+                "setUpNewWallet": {
+                  "question": "كيف أُعِدّ محفظة جديدة؟",
+                  "answer": "بعد تثبيت المحفظة، افتح إضافة أو تطبيق محفظة Superhero. اختر «إنشاء محفظة جديدة» واتّبع التعليمات لإعداد محفظة جديدة. احرص على نسخ عبارة الاسترداد احتياطياً بأمان خلال هذه العملية."
+                },
+                "importExistingWallet": {
+                  "question": "كيف أستورد محفظة موجودة؟",
+                  "answer": "افتح محفظة Superhero، واختر «استيراد محفظة»، وأدخل عبارة الاسترداد الخاصة بك. سيؤدي هذا إلى استعادة محفظتك الحالية ومنحك الوصول إلى الأصول المخزّنة سابقاً."
+                },
+                "backUpWallet": {
+                  "question": "كيف أنسخ محفظتي احتياطياً؟",
+                  "answer": "عند إنشاء محفظة أو استيرادها، ستحصل على عبارة استرداد. اكتبها واحفظها في مكان آمن. عبارة الاسترداد هي الطريقة الوحيدة لاستعادة محفظتك إذا فقدت الوصول إليها."
+                }
+              }
+            },
+            "overview": {
+              "title": "نظرة عامة على محفظة Superhero",
+              "items": {
+                "dashboardDisplay": {
+                  "question": "ماذا تعرض محفظة Superhero؟",
+                  "answer": "لوحة التحكم هي نظرتك العامة الرئيسية في محفظة Superhero. تعرض رصيدك الإجمالي من العملات الرقمية وعدد الرموز التي يملكها كل حساب، وأرصدة الحسابات الفردية، وأزرار الإجراءات السريعة (إرسال، استلام)، ومعاملاتك الأخيرة."
+                },
+                "totalBalanceFiat": {
+                  "question": "كيف يمكنني رؤية رصيدي الإجمالي بالعملة التقليدية؟",
+                  "answer": "يظهر رصيدك الإجمالي أعلى لوحة التحكم، ويعكس القيمة المجمّعة للأصول عبر جميع سلاسل البلوكتشين المتصلة."
+                },
+                "switchAccounts": {
+                  "question": "كيف أتنقل بين الحسابات؟",
+                  "answer": "مرّر يميناً أو يساراً على بطاقة الحساب النشط لعرض الحسابات المختلفة والتبديل بينها (مثل Bitcoin وEthereum وæternity). يعرض كل حساب رصيده من الرموز وعنوانه."
+                },
+                "multisigVaults": {
+                  "question": "ما هي خزائن التوقيع المتعدد، وكيف يمكنني استخدامها؟",
+                  "answer": "تتطلب خزائن التوقيع المتعدد (multisig) موافقة عدة حسابات على المعاملات، ما يوفر أماناً وتحكماً معزّزين. يمكنك التبديل لعرض خزائن التوقيع المتعدد الخاصة بك في لوحة التحكم، وهي متاحة حالياً على بلوكتشين æternity فقط."
+                },
+                "sendReceiveFunds": {
+                  "question": "كيف أرسل الأموال وأستلمها؟",
+                  "answer": "استخدم زر «إرسال» لتحويل الأصول من محفظتك إلى عنوان آخر. يوفّر زر «استلام» عنوان محفظتك ورمز QR لاستلام الأموال."
+                }
+              }
+            },
+            "accountManagement": {
+              "title": "إدارة الحسابات",
+              "items": {
+                "accountDetails": {
+                  "question": "كيف أعرض معلومات مفصّلة لكل حساب؟",
+                  "answer": "انقر على أي بطاقة حساب في لوحة التحكم للوصول إلى صفحة نظرة عامة على الحساب. ستجد هناك رصيد الحساب، وقيمته الحالية بالعملة التقليدية، وعنوان الحساب، وخيار تنفيذ الإجراءات المتاحة مثل إرسال الأموال واستلامها."
+                },
+                "assetsTab": {
+                  "question": "ماذا تعرض علامة تبويب «الأصول»؟",
+                  "answer": "تسرد علامة تبويب الأصول جميع الرموز المخزّنة في حسابك. يعرض كل رمز الكمية المملوكة، وللأصول ذات القيمة بالعملة التقليدية، ما يعادلها بعد التحويل."
+                },
+                "transactionHistory": {
+                  "question": "كيف أتحقق من سجل معاملاتي؟",
+                  "answer": "تعرض علامة تبويب المعاملات جميع المعاملات السابقة للحساب المحدد، بما في ذلك تفاصيل مثل المبلغ ونوع المعاملة والوقت."
+                },
+                "aens": {
+                  "question": "ما هو AENS (نظام تسمية æternity)؟",
+                  "answer": "AENS هو نظام تسمية على بلوكتشين æternity يتيح للمستخدمين تسجيل أسماء مقروءة لعناوين محافظهم، ما يجعل التفاعلات أبسط."
+                },
+                "shareAddress": {
+                  "question": "كيف أشارك عنوان محفظتي أو أنسخه؟",
+                  "answer": "يمكنك عرض نسخة مختصرة من عنوان محفظتك في صفحة نظرة عامة على الحساب. انقر على أيقونة النسخ بجوار العنوان لمشاركته بسهولة مع الآخرين."
+                }
+              }
+            },
+            "security": {
+              "title": "الأمان والخصوصية",
+              "items": {
+                "nonCustodial": {
+                  "question": "هل محفظة Superhero غير وصائية؟",
+                  "answer": "نعم، محفظة Superhero غير وصائية، ما يعني أنك وحدك من يتحكم في مفاتيحك الخاصة وأصولك. لا يمكن لأي طرف ثالث، بما في ذلك Superhero، الوصول إلى أموالك."
+                },
+                "privateKeysManaged": {
+                  "question": "كيف تُدار مفاتيحي الخاصة؟",
+                  "answer": "تُشفَّر المفاتيح الخاصة وتُخزَّن بأمان على جهازك. يمكنك عرض مفاتيحك الخاصة ونسخها احتياطياً. عبارة الاسترداد هي مفتاح رئيسي يمكنه استعادة جميع حساباتك ومفاتيحها الخاصة. تُستخدم كلمة مرور اختيارية لتشفير عبارة الاسترداد في تطبيقات الويب؛ أما في تطبيقات الهاتف فتُخزَّن عبارة الاسترداد في تخزين آمن وتُحمى بتسجيل الدخول البيومتري."
+                },
+                "forgotSeedPhrase": {
+                  "question": "ماذا أفعل إذا نسيت عبارة الاسترداد؟",
+                  "answer": "للأسف، من دون عبارة الاسترداد لا يمكنك استعادة محفظتك. نوصي بنسخها احتياطياً بشكل آمن عند إعداد المحفظة."
+                },
+                "airgapSetup": {
+                  "question": "كيف يمكنني إعداد AIRGAP لمزيد من الأمان؟",
+                  "answer": "تدعم محفظة Superhero تقنية AIRGAP، وهي طريقة توقيع دون اتصال بالإنترنت، لتعزيز الأمان. نزّل تطبيق AIRGAP واربطه بمحفظة Superhero لإجراء معاملات آمنة دون اتصال."
+                },
+                "seedPhraseBackup": {
+                  "question": "ما هي عملية النسخ الاحتياطي لعبارة الاسترداد؟",
+                  "answer": "تُقدَّم لك عبارة الاسترداد أثناء إعداد المحفظة وكذلك في الإعدادات. خزّن هذه العبارة بأمان، فهي الطريقة الوحيدة لاستعادة محفظتك إذا فقدت الوصول إليها."
+                }
+              }
+            },
+            "dapps": {
+              "title": "التطبيقات اللامركزية (dApps) وتكامل Web3",
+              "items": {
+                "supportedDapps": {
+                  "question": "ما التطبيقات اللامركزية التي يمكنني الاتصال بها عبر محفظة Superhero؟",
+                  "answer": "ندعم حالياً تكامل التطبيقات اللامركزية لسلسلتي ETH (عبر WalletConnect؛ دعم EVM قادم قريباً) وAE."
+                },
+                "walletConnect": {
+                  "question": "كيف أربط محفظة Superhero بالتطبيقات اللامركزية باستخدام WalletConnect؟",
+                  "answer": "اختر خيار WalletConnect في محفظة Superhero وامسح رمز QR الخاص بالتطبيق اللامركزي. يتيح ذلك الاتصال بتطبيقات Ethereum اللامركزية لتجربة Web3 سلسة."
+                },
+                "inAppBrowser": {
+                  "question": "كيف أستخدم المتصفح المدمج في تطبيق الهاتف للتطبيقات اللامركزية؟",
+                  "answer": "افتح تطبيق محفظة Superhero على هاتفك وانتقل إلى قسم المتصفح المدمج. أدخل رابط التطبيق اللامركزي واتصل مباشرة للتفاعل دون مغادرة التطبيق."
+                }
+              }
+            },
+            "giftCards": {
+              "title": "استخدام بطاقات الهدايا وروابط الدعوة",
+              "items": {
+                "createSendGiftCard": {
+                  "question": "كيف أنشئ بطاقة هدية وأرسلها؟",
+                  "answer": "في إعدادات المحفظة، ادخل إلى ميزة «بطاقات الهدايا» (متاحة حالياً لحسابات æternity فقط). أدخل المبلغ الذي تريد تحميله على بطاقة الهدية، وأنشئها، وشارك رابط الدعوة الفريد مع المستخدمين الجدد. يمكنهم استخدامه لاسترداد رصيد بطاقة الهدية."
+                },
+                "customizeGiftCards": {
+                  "question": "هل يمكن تخصيص بطاقات الهدايا؟",
+                  "answer": "في الوقت الحالي، يمكنك تحديد المبلغ فقط، وتقتصر ميزات التخصيص على هذه الوظيفة."
+                }
+              }
+            },
+            "troubleshooting": {
+              "title": "حل المشكلات الشائعة",
+              "items": {
+                "forgotPassword": {
+                  "question": "ماذا أفعل إذا نسيت كلمة مرور محفظتي؟",
+                  "answer": "إذا نسيت كلمة المرور، فالطريقة الوحيدة للوصول إلى محفظتك هي إعادة تعيينها واستخدام عبارة الاسترداد لاستعادة حساباتك. تأكّد من نسخ عبارة الاسترداد ودفتر العناوين احتياطياً قبل إعادة التعيين."
+                },
+                "resetWallet": {
+                  "question": "كيف أعيد تعيين محفظتي؟",
+                  "answer": "في الإعدادات، اختر «إعادة تعيين المحفظة». لاحظ أن هذا الإجراء سيحذف جميع بيانات المحفظة المحلية، لذا انسخ عبارة الاسترداد ودفتر العناوين احتياطياً مسبقاً."
+                },
+                "delayedTransaction": {
+                  "question": "لماذا تأخرت معاملتي؟",
+                  "answer": "قد تحدث التأخيرات عندما تكون شبكة البلوكتشين مزدحمة. قد لا تظهر المعاملات فوراً في المحفظة لكنها ستظهر بمجرد معالجتها وفهرستها."
+                },
+                "dappConnection": {
+                  "question": "لماذا لا أستطيع الاتصال بتطبيق لامركزي؟",
+                  "answer": "تأكّد من أنك تستخدم أحدث إصدار من محفظة Superhero. نوفّر اتصال EVM وWalletConnect لتطبيقات ETH اللامركزية؛ أما AE فتستخدم طريقتها الخاصة لتكامل التطبيقات اللامركزية."
+                },
+                "walletNotSyncing": {
+                  "question": "ماذا أفعل إذا لم تتزامن محفظتي؟",
+                  "answer": "جرّب ترقية المحفظة إلى أحدث إصدار وتأكّد من اتصالك بالإنترنت."
+                }
+              }
+            },
+            "advanced": {
+              "title": "الميزات والإعدادات المتقدمة",
+              "items": {
+                "switchNetworks": {
+                  "question": "كيف أبدّل بين الشبكة الرئيسية وشبكة الاختبار؟",
+                  "answer": "اذهب إلى الإعدادات، حيث سترى خياراً للتبديل بين الشبكة الرئيسية وشبكة الاختبار والشبكات المخصصة. اختر الشبكة وفق احتياجاتك."
+                },
+                "manageMultipleAccounts": {
+                  "question": "كيف أدير عدة حسابات؟",
+                  "answer": "يمكنك إنشاء عدة حسابات وإدارتها داخل المحفظة نفسها عبر التمرير بين بطاقات الحسابات النشطة في لوحة التحكم."
+                },
+                "exportAddressBook": {
+                  "question": "هل يمكنني تصدير دفتر عناويني؟",
+                  "answer": "نعم، يمكنك تصدير العناوين المحفوظة بتنسيق JSON، ويمكن بعد ذلك استيرادها إلى محفظة Superhero أخرى."
+                },
+                "customizeSettings": {
+                  "question": "كيف أخصص الإشعارات والإعدادات؟",
+                  "answer": "ادخل إلى قائمة الإعدادات لضبط الإشعارات وتخصيص تفضيلات الملف الشخصي وتهيئة خيارات المحفظة الأخرى."
+                }
+              }
+            },
+            "support": {
+              "title": "الدعم والموارد",
+              "items": {
+                "githubRepository": {
+                  "question": "أين أجد مستودع محفظة Superhero على GitHub؟",
+                  "answer": "تفضّل بزيارة GitHub الخاص بمحفظة Superhero للاطلاع على المستودع، حيث يمكنك عرض الشيفرة المصدرية والإبلاغ عن المشكلات وطلب ميزات جديدة."
+                },
+                "reportBugs": {
+                  "question": "كيف أبلغ عن الأخطاء أو أطلب ميزات؟",
+                  "answer": "أرسل تقارير الأخطاء أو طلبات الميزات مباشرة عبر GitHub."
+                },
+                "contactSupport": {
+                  "question": "بمن أتصل للحصول على الدعم؟",
+                  "answer": "للحصول على الدعم، تفضّل بزيارة مركز المساعدة في موقعنا أو أرسل تقارير الأخطاء مباشرة عبر GitHub."
+                }
+              }
+            }
+          }
         },
         "cta": {
           "title": "تحكّم في عملاتك المشفّرة",
           "description": "نزّل محفظة Superhero وأدِر جميع أصولك في محفظة واحدة آمنة ومتعددة السلاسل."
+        },
+        "mock": {
+          "currentBalance": "الرصيد الحالي",
+          "availableBalance": "الرصيد المتاح: {{amount}}",
+          "amountToSend": "المبلغ المراد إرساله",
+          "recipientIdentity": "هوية المستلم",
+          "sendAssets": "إرسال الأصول",
+          "broadcasting": "جارٍ البث...",
+          "confirmed": "✓ مؤكّدة ({{txHash}})",
+          "executed": "✓ منفّذة",
+          "awaitingSignature": "● في انتظار التوقيع",
+          "transferRequest": "طلب تحويل:",
+          "threshold": "الحد الأدنى: {{required}} من {{total}}",
+          "signedCount": "{{signed}}/{{total}} موقّعة",
+          "signedCheck": "موقّعة ✓",
+          "pending": "قيد الانتظار ⏳",
+          "signAsBackupKey": "التوقيع كمفتاح احتياطي",
+          "addressDirectory": "دليل العناوين",
+          "searchContacts": "ابحث في جهات الاتصال...",
+          "noContactsMatch": "لا توجد جهات اتصال تطابق بحثك",
+          "vaultOffline": "الخزنة (دون اتصال)",
+          "appOnline": "التطبيق (متصل)",
+          "connected": "متصل 🟢",
+          "active": "نشط 🟢",
+          "available": "متاح",
+          "registered": "مسجّل ✓",
+          "touchFaceIdActive": "Touch ID / Face ID مفعّل",
+          "privateKey": "المفتاح الخاص",
+          "seedPhrase": "عبارة الاسترداد",
+          "standardFormat": "⚡ تنسيق قياسي",
+          "secureImport": "استيراد آمن ✓",
+          "superheroWallet": "محفظة Superhero",
+          "tokens": "الرموز",
+          "vault": "الخزنة {{address}}",
+          "airgap": "AIRGAP",
+          "superhero": "SUPERHERO",
+          "aens": "AENS",
+          "chainNameExample": "yourname.chain"
         }
       },
       "privacy": {
@@ -465,13 +795,37 @@
         "bannersTitle": "اللافتات والأصول الرقمية",
         "ogBannerAlt": "لافتة Superhero الاجتماعية OG",
         "ogBannerTitle": "لافتة OG اجتماعية قياسية",
-        "ogBannerDescription": "بطاقة بيانات المشاركة الافتراضية لـ Twitter أو Telegram أو Discord أو Facebook.",
+        "ogBannerDescription": "بطاقة بيانات المشاركة الافتراضية لـ X أو Telegram أو Discord أو Facebook.",
         "interfaceShowcaseAlt": "عرض واجهة Superhero",
         "appInterfacePreview": "معاينة واجهة التطبيق",
         "appShowcaseTitle": "لقطة شاشة لعرض التطبيق",
         "appShowcaseDescription": "لقطة شاشة للتطبيق تُبرز تخطيط الواجهة والمواضيع الرائجة والخلاصات ومكوّنات العملات المشفّرة.",
         "customIconsTitle": "أيقونات مخصّصة",
-        "downloadIcon": "تنزيل أيقونة {{name}}"
+        "downloadIcon": "تنزيل أيقونة {{name}}",
+        "colors": {
+          "neonTeal": {
+            "name": "التركواز النيوني الأساسي",
+            "desc": "قلب نظامنا البصري. يُستخدم للتفاعلات الأساسية وحالات النجاح والإجراءات الرئيسية."
+          },
+          "neonPink": {
+            "name": "الوردي النيوني / القرمزي",
+            "desc": "لمسة إبراز نابضة بالحياة. تُستخدم لحالات الخطأ والإجراءات التدميرية والتدرجات النشطة."
+          },
+          "neonBlue": {
+            "name": "الأزرق النيوني",
+            "desc": "توازن مؤسسي منعش. يُستخدم للعناوين الفرعية والأزرار الثانوية والمكوّنات المعلوماتية."
+          },
+          "background": {
+            "name": "الخلفية",
+            "desc": "خلفيتنا الداكنة العميقة للوضع الليلي، محسّنة لتباين عالٍ مع درجات النيون السايبربانك المشعّة."
+          }
+        },
+        "icons": {
+          "diamond": "الماسة",
+          "wallet": "المحفظة",
+          "hashtag": "الوسم",
+          "feed": "الموجز"
+        }
       },
       "terms": {
         "title": "شروط الاستخدام",
@@ -619,7 +973,7 @@
         "shareWithOthers": "شارك هذا الرمز مع الآخرين:",
         "shareOnSocialMedia": "شارك على وسائل التواصل الاجتماعي:",
         "checkOutToken": "اطّلع على هذا الرمز!",
-        "twitter": "🐦 Twitter",
+        "twitter": "𝕏 X",
         "telegram": "✈️ Telegram"
       },
       "cookies": {
@@ -632,7 +986,23 @@
         "nativeToken": "الرمز الأصلي",
         "unknown": "غير معروف"
       },
-      "titleSuffix": "نافذة {{name}}"
+      "titleSuffix": "نافذة {{name}}",
+      "onboarding": {
+        "title": "تعديل SuperheroID",
+        "subtitle": "اربط محفظتك لإنشاء SuperheroID الخاص بك وإدارته",
+        "stepWalletApp": "تأكّد من أن لديك تطبيق محفظة Superhero",
+        "stepExtension": "تأكّد من أن لديك الإضافة",
+        "or": "أو",
+        "downloadAppHint": "نزّل تطبيق Superhero الشامل مع محفظة مدمجة",
+        "downloadOn": "نزّله من",
+        "getItOn": "احصل عليه من"
+      },
+      "welcome": {
+        "title": "مرحباً بك في Superhero",
+        "tagline": "تداول الوسوم المحوّلة إلى رموز والترندات الاجتماعية — سوق الانتباه في Web3.",
+        "getStarted": "ابدأ الآن",
+        "continueAsGuest": "المتابعة كضيف"
+      }
     },
     "wallet": {
       "aePrice": "سعر AE",
@@ -731,6 +1101,64 @@
       "getAe": "احصل على AE",
       "superheroId": "معرّف Superhero",
       "account": "الحساب"
+    },
+    "transactionNotification": {
+      "fieldBio": "النبذة التعريفية",
+      "fieldWebsite": "الموقع الإلكتروني",
+      "fieldChainName": "اسم السلسلة",
+      "fieldProfile": "الملف الشخصي",
+      "confirmInWallet": "أكّد في محفظتك",
+      "signTransactionToContinue": "وقّع المعاملة للمتابعة",
+      "approveTokenSpending": "الموافقة على إنفاق الرمز",
+      "approveAllowanceStep": "الخطوة {{step}} من {{total}} — اسمح لـ Superhero باستخدام {{token}} الخاصة بك",
+      "creatingToken": "جارٍ إنشاء #{{name}}",
+      "signInWalletToContinue": "وقّع في محفظتك للمتابعة",
+      "publishingPost": "جارٍ نشر المنشور",
+      "publishingReply": "جارٍ نشر الرد",
+      "signClaimRequest": "وقّع طلب المطالبة بـ {{name}}.chain",
+      "swappingTokens": "جارٍ مبادلة {{amountIn}} {{tokenIn}} → {{amountOut}} {{tokenOut}}",
+      "wrappingAmount": "جارٍ تغليف {{amount}} AE → WAE",
+      "unwrappingAmount": "جارٍ فك تغليف {{amount}} WAE → AE",
+      "addingLiquidityAmounts": "جارٍ إضافة {{amountA}} {{tokenA}} + {{amountB}} {{tokenB}}",
+      "removingLiquidityFromPool": "جارٍ إزالة {{pct}}% من {{tokenA}}/{{tokenB}}",
+      "signToUpdateFields": "وقّع لتحديث {{fields}}",
+      "confirmingOnBlockchain": "جارٍ التأكيد على البلوكتشين",
+      "usuallyTakesFewSeconds": "يستغرق عادةً بضع ثوانٍ",
+      "approvingToken": "جارٍ اعتماد {{token}}…",
+      "confirmingAllowanceOnChain": "جارٍ تأكيد السماح على السلسلة",
+      "confirmingOnBlockchainEllipsis": "جارٍ التأكيد على البلوكتشين…",
+      "claimingName": "جارٍ المطالبة بـ {{name}}.chain",
+      "claimStepPreclaim": "الخطوة 1 من 4 — حجز الاسم على السلسلة",
+      "claimStepClaim": "الخطوة 2 من 4 — إرسال المطالبة المشمولة بالرعاية",
+      "claimStepUpdate": "الخطوة 3 من 4 — تحديث مؤشرات الاسم",
+      "claimStepTransfer": "الخطوة 4 من 4 — نقل الاسم إلى محفظتك",
+      "claimQueued": "جارٍ تجهيز المعاملات المشمولة بالرعاية. قد يستغرق هذا بضع دقائق.",
+      "claimProcessingBackground": "تجري المعالجة في الخلفية. يمكنك متابعة استخدام التطبيق.",
+      "swapInProgress": "المبادلة قيد التنفيذ",
+      "usuallyConfirmsFewSeconds": "يتم التأكيد عادةً خلال بضع ثوانٍ",
+      "wrappingAeToWae": "جارٍ تغليف AE → WAE",
+      "unwrappingWaeToAe": "جارٍ فك تغليف WAE → AE",
+      "confirmingOnChainEllipsis": "جارٍ التأكيد على السلسلة…",
+      "addingLiquidityEllipsis": "جارٍ إضافة السيولة…",
+      "depositingIntoPool": "جارٍ الإيداع في مجمّع {{tokenA}}/{{tokenB}}",
+      "removingLiquidityEllipsis": "جارٍ إزالة السيولة…",
+      "withdrawingFromPool": "جارٍ السحب من مجمّع {{tokenA}}/{{tokenB}}",
+      "updatingProfileEllipsis": "جارٍ تحديث الملف الشخصي…",
+      "savingYourFields": "جارٍ حفظ {{fields}}",
+      "transactionConfirmed": "تم تأكيد المعاملة",
+      "allowanceApproved": "تمت الموافقة على السماح",
+      "tokenApproved": "تم اعتماد {{token}}",
+      "swapConfirmed": "تم تأكيد المبادلة",
+      "wrapComplete": "اكتمل التغليف",
+      "unwrapComplete": "اكتمل فك التغليف",
+      "tokenCreated": "تم إنشاء الرمز",
+      "postPublished": "تم نشر المنشور",
+      "replyPublished": "تم نشر الرد",
+      "nameClaimed": "تمت المطالبة بالاسم",
+      "liquidityAdded": "تمت إضافة السيولة",
+      "liquidityRemoved": "تمت إزالة السيولة",
+      "profileUpdated": "تم تحديث الملف الشخصي",
+      "fieldsSaved": "تم حفظ {{fields}}"
     }
   },
   "dex": {
@@ -1914,7 +2342,7 @@
         "descEarn": "من خلال إكمال هذه المرحلة، ستكسب 50 رمزاً من AE!",
         "step1": "اربط حساب X الخاص بك بـ SuperheroID الخاص بك على السلسلة",
         "step2": "انشر عن Superhero من حساب X المرتبط (اذكر @superhero_chain أو أضف رابط superhero.com)",
-        "linkTwitter": "اربط Twitter",
+        "linkX": "اربط X",
         "postOnX": "انشر على X",
         "complete": "المرحلة مكتملة — تم كسب 50 AE",
         "loadingProgress": "جارٍ تحميل تقدمك…"
@@ -2458,7 +2886,7 @@
     "categoryRewardsProgram": "برنامج المكافآت",
     "categoryNameClaims": "المطالبات بالأسماء",
     "qRewardsProgramTitle": "ما هو برنامج مكافآت Superhero؟",
-    "qRewardsProgramAnswer": "يتيح لك برنامج مكافآت Superhero كسب رموز AE من خلال إكمال المراحل: التحقق من حساب X (Twitter) الخاص بك، ودعوة مستخدمين جدد، والنشر عن Superhero على وسائل التواصل الاجتماعي. أكمل المراحل لفتح الأطوار وكسب ما يصل إلى 200 رمز AE.",
+    "qRewardsProgramAnswer": "يتيح لك برنامج مكافآت Superhero كسب رموز AE من خلال إكمال المراحل: التحقق من حساب X الخاص بك، ودعوة مستخدمين جدد، والنشر عن Superhero على وسائل التواصل الاجتماعي. أكمل المراحل لفتح الأطوار وكسب ما يصل إلى 200 رمز AE.",
     "qRewardsMilestonesTitle": "ما هي المراحل المتاحة؟",
     "qRewardsMilestonesLi1": "التحقق من حساب X والنشر — قم بتوصيل حساب X الخاص بك لإثبات الملكية.",
     "qRewardsMilestonesLi2": "اربط حساب X الخاص بك بـ SuperheroID على السلسلة.",
@@ -2551,6 +2979,10 @@
       "switch": "تبديل",
       "disconnect": "فصل",
       "connectEthereumWallet": "ربط محفظة Ethereum"
-    }
+    },
+    "earnSectionTitle": "اكسب AE",
+    "earnSectionDescription": "ابدأ بالطرق الأصلية في Superhero لكسب AE عبر تنمية المجتمع والانضمام إلى برامج المكافآت.",
+    "buySectionTitle": "الشراء من جهات خارجية",
+    "buySectionDescription": "استخدم منصات التداول ومزوّدي المبادلة الخارجيين عندما تفضّل شراء AE مباشرة خارج Superhero."
   }
 }

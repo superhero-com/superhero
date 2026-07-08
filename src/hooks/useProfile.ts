@@ -16,6 +16,7 @@ import {
   normalizeAddress,
   sdkHasAccount,
 } from '@/utils/walletSdk';
+import i18n from '@/i18n';
 import { useAeSdk } from './useAeSdk';
 import { useWalletReconnect } from './useWalletReconnect';
 import { useWalletConnect } from './useWalletConnect';
@@ -92,7 +93,7 @@ export function useProfile(targetAddress?: string) {
       });
     }
 
-    throw new Error('Connected wallet account does not match X verification address');
+    throw new Error(i18n.t('common.messages.walletAccountMismatchX'));
   }, [aeSdk, connectWallet, sdk, staticAeSdk, walletConnected]);
 
   const getProfile = useCallback(async (address?: string): Promise<ProfileAggregate | null> => {
@@ -204,7 +205,7 @@ export function useProfile(targetAddress?: string) {
 
   const completeXAddressLink = useCallback(async (claim: XAddressLinkClaimResponse) => {
     if (!targetAddress) {
-      throw new Error('Missing address for X verification');
+      throw new Error(i18n.t('common.messages.missingAddressForXVerification'));
     }
     await addStaticAccount(targetAddress);
     await ensureWalletReadyForMessageSigning(targetAddress);
@@ -247,10 +248,10 @@ export function useProfile(targetAddress?: string) {
     }
     const target = params.address || targetAddress || connectedAddress;
     if (!target) {
-      throw new Error('Missing address for X verification');
+      throw new Error(i18n.t('common.messages.missingAddressForXVerification'));
     }
     if (!params.accessToken?.trim()) {
-      throw new Error('Missing X OAuth token');
+      throw new Error(i18n.t('common.messages.missingXOAuthToken'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -296,11 +297,11 @@ export function useProfile(targetAddress?: string) {
   }) => {
     const target = params.address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for bio link');
+      throw new Error(i18n.t('common.messages.missingAddressForBioLink'));
     }
     const value = params.bio.trim();
     if (!value) {
-      throw new Error('Bio is required to link');
+      throw new Error(i18n.t('common.messages.bioRequiredToLink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -345,11 +346,11 @@ export function useProfile(targetAddress?: string) {
   }) => {
     const target = params.address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for site link');
+      throw new Error(i18n.t('common.messages.missingAddressForSiteLink'));
     }
     const value = params.site.trim();
     if (!value) {
-      throw new Error('Site is required to link');
+      throw new Error(i18n.t('common.messages.siteRequiredToLink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -394,11 +395,11 @@ export function useProfile(targetAddress?: string) {
   }) => {
     const target = params.address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for preferred name link');
+      throw new Error(i18n.t('common.messages.missingAddressForPreferredNameLink'));
     }
     const value = normalizeName(params.chainName);
     if (!value) {
-      throw new Error('Preferred name is required to link');
+      throw new Error(i18n.t('common.messages.preferredNameRequiredToLink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -425,7 +426,7 @@ export function useProfile(targetAddress?: string) {
   const unlinkPreferredAensName = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for preferred name unlink');
+      throw new Error(i18n.t('common.messages.missingAddressForPreferredNameUnlink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -449,7 +450,7 @@ export function useProfile(targetAddress?: string) {
   const unlinkBio = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for bio unlink');
+      throw new Error(i18n.t('common.messages.missingAddressForBioUnlink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -473,7 +474,7 @@ export function useProfile(targetAddress?: string) {
   const unlinkSite = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for site unlink');
+      throw new Error(i18n.t('common.messages.missingAddressForSiteUnlink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);
@@ -497,7 +498,7 @@ export function useProfile(targetAddress?: string) {
   const unlinkXAccount = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
-      throw new Error('Missing address for X unlink');
+      throw new Error(i18n.t('common.messages.missingAddressForXUnlink'));
     }
     await addStaticAccount(target);
     await ensureWalletReadyForMessageSigning(target);

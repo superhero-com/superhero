@@ -79,7 +79,7 @@ describe('useWalletReconnect', () => {
       connectWallet: mockConnectWallet,
     }));
 
-    await expect(result.current('ak_missing')).rejects.toThrow('You are not connected to Wallet');
+    await expect(result.current('ak_missing')).rejects.toThrow('Your wallet is not connected');
     expect(mockConnectWallet).not.toHaveBeenCalled();
   });
 
@@ -94,6 +94,6 @@ describe('useWalletReconnect', () => {
       defaultTimeoutMs: 500,
     }));
 
-    await expect(result.current('ak_wait')).rejects.toThrow('You are not connected to Wallet');
+    await expect(result.current('ak_wait')).rejects.toThrow('Your wallet is not connected');
   });
 });

@@ -186,7 +186,16 @@
       "xCallbackGoToProfile": "Go to profile",
       "transactionFailed": "Transaction failed",
       "copiedExclaim": "Copied!",
-      "xCallbackUnlinkSuccess": "X account unlinked successfully."
+      "xCallbackUnlinkSuccess": "X account unlinked successfully.",
+      "xCallbackLinkingTitle": "Link your X account",
+      "xCallbackVerifyingTitle": "Verifying with X",
+      "xCallbackReadyDesc": "Sign the link message in your wallet to connect your X account to your on-chain SuperheroID.",
+      "xCallbackConfirmButton": "Sign in wallet to link",
+      "xCallbackSigning": "Waiting for your wallet…",
+      "xCallbackBlockedHint": "If your wallet did not open, it may have been blocked. Tap the button to try again.",
+      "xCallbackRetry": "Try again",
+      "xCallbackDoneTitle": "X account linked",
+      "xCallbackGoBack": "Go back"
     },
     "portfolio": {
       "portfolioValue": "Portfolio Value",

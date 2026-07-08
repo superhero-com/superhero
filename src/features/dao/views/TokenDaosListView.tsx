@@ -369,7 +369,7 @@ const Dao = () => {
             </Card>
 
             {/* Votes Card */}
-            <Card className="liquid-glass rounded-xl">
+            <Card className="rounded-xl">
               <CardHeader>
                 <CardTitle className="text-white">{t('votes')}</CardTitle>
               </CardHeader>

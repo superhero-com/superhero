@@ -381,7 +381,7 @@ const DaoVoteDetailsContent = ({
 
                 {/* Voters Table */}
 
-                <Card className="liquid-glass rounded-xl">
+                <Card className="rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold text-white">{t('voters.title')}</CardTitle>
                   </CardHeader>

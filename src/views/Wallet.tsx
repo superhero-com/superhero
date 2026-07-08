@@ -459,7 +459,7 @@ function FaqCategory({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="liquid-glass liquid-glass--hover rounded-xl overflow-hidden">
+    <div className="rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}

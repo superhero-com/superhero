@@ -217,7 +217,7 @@ const LeaderboardView = () => {
         )}
 
         {!isError && (
-          <div className="liquid-glass liquid-glass--strong rounded-xl p-4 sm:p-6">
+          <div className="rounded-xl py-2">
             {/* Loading */}
             {isLoading && (
               <>

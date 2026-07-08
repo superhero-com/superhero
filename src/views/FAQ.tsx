@@ -149,7 +149,7 @@ export default function FAQ() {
           </Card>
 
           {categories.map((catKey) => (
-            <Card key={catKey} id={catKey}>
+            <Card key={catKey} id={catKey} glass={false}>
               <div className="font-extrabold mb-2">{t(catKey)}</div>
               <div className="grid gap-2.5">
                 {questions.filter((q) => q.categoryKey === catKey).map((q) => (
@@ -170,10 +170,12 @@ const Badge = ({ label }: { label: string }) => (
   </span>
 );
 
-const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
+const Card = ({
+  id, children, glass = true,
+}: { id?: string; children: React.ReactNode; glass?: boolean }) => (
   <section
     id={id}
-    className="liquid-glass p-4 rounded-xl text-white"
+    className={`${glass ? 'liquid-glass ' : ''}p-4 rounded-xl text-white`}
   >
     {children}
   </section>

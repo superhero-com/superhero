@@ -114,7 +114,7 @@ export const TokenListCards = ({
   return (
     <div className="overflow-x-auto">
       {/* Responsive Filter Controls */}
-      <div className="liquid-glass rounded-xl p-4 mb-3">
+      <div className="rounded-xl p-4 mb-3">
         {/* Responsive Filter Layout */}
 
         <div className="flex items-stretch justify-between gap-3 flex-wrap flex-col sm:flex-row mb-[10px]">

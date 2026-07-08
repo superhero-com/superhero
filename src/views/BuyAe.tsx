@@ -191,10 +191,12 @@ const Badge = ({ label }: { label: string }) => (
   </span>
 );
 
-const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
+const Card = ({
+  id, children, glass = true,
+}: { id?: string; children: React.ReactNode; glass?: boolean }) => (
   <section
     id={id}
-    className="liquid-glass p-4 rounded-xl text-white"
+    className={`${glass ? 'liquid-glass ' : ''}p-4 rounded-xl text-white`}
   >
     {children}
   </section>
@@ -213,7 +215,7 @@ const MethodSectionCard = ({
   description: string;
   children: React.ReactNode;
 }) => (
-  <Card id={id}>
+  <Card id={id} glass={false}>
     <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <div className="flex items-center gap-2 font-extrabold text-xl">

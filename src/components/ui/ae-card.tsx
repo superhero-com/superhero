@@ -14,7 +14,7 @@ const AeCard = React.forwardRef<
 
   const variantClasses = {
     default: 'bg-card border-border shadow-card',
-    glass: 'bg-glass-bg backdrop-blur-card border border-white/10 shadow-glass',
+    glass: 'liquid-glass', // the one house glass card (ring + gloss + depth); nested instances auto-flatten
     gradient: 'bg-card-gradient border-border shadow-card',
     glow: 'bg-card border-border shadow-glow',
     'glow-bull': 'bg-card border-bull/40 shadow-glow-bull',
@@ -24,14 +24,9 @@ const AeCard = React.forwardRef<
   const hoverClasses = hover ? 'hover:-translate-y-1' : '';
 
   let background: string | undefined;
-  if (variant === 'glass') {
-    // Liquid glass: corner specular + top sheen over the translucent fill.
-    background = 'radial-gradient(130% 90% at 12% -12%, rgba(255,255,255,0.12), transparent 46%), linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0) 55%), var(--glass-bg)';
-  } else if (variant === 'gradient') {
+  if (variant === 'gradient') {
     background = 'var(--card-gradient)';
   }
-
-  const glassFilter = variant === 'glass' ? 'blur(22px) saturate(180%) brightness(1.06)' : undefined;
 
   return (
     <div
@@ -44,9 +39,6 @@ const AeCard = React.forwardRef<
       )}
       style={{
         background,
-        backdropFilter: glassFilter,
-        WebkitBackdropFilter: glassFilter,
-        boxShadow: variant === 'glass' ? 'inset 0 1px 0 0 rgba(255,255,255,0.14), 0 10px 34px rgba(0,0,0,0.30)' : undefined,
         ...props.style,
       }}
       {...props}

@@ -4,6 +4,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
+import { openXComposeIntent } from '../../../../utils/openXLink';
 
 const POST_TOTAL = 10;
 const STREAK_TOTAL = 10;
@@ -14,11 +15,7 @@ const ONBOARDING_TWEET = 'Check out @superhero_chain — earn AE tokens by posti
 const REFERRAL_TWEET = (link: string) => `Check out @superhero_chain — earn AE tokens by posting on X! ${link}`;
 
 const openTweet = (text: string) => {
-  window.open(
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-    '_blank',
-    'noopener,noreferrer',
-  );
+  openXComposeIntent(text);
 };
 
 const formatCooldown = (nextCheckAt: Date) => {

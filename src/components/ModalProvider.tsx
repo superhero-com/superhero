@@ -35,7 +35,7 @@ const ModalProvider = ({ registry }: { registry: Registry }) => {
           >
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 grid place-items-center z-[2001] backdrop-blur-sm" />
-              <Dialog.Content className="fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 border border-white/10 rounded-2xl max-w-[520px] w-[calc(100%-24px)] sm:w-full p-6 outline-none z-[2002] shadow-2xl bg-white/5 supports-not-[backdrop-filter]:bg-gray-900/90 [backdrop-filter:blur(24px)] [-webkit-backdrop-filter:blur(24px)]">
+              <Dialog.Content className="liquid-glass liquid-glass--strong fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-xl max-w-[520px] w-[calc(100%-24px)] sm:w-full p-6 outline-none z-[2002]">
                 <VisuallyHidden>
                   <Dialog.Title>
                     {t('common.modals.titleSuffix', { name: modalName })}

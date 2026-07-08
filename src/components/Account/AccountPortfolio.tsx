@@ -1528,7 +1528,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return (
       <div className="mt-4 mb-6">
-        <div className="bg-white/[0.02] border border-red-500/30 rounded-xl overflow-hidden">
+        <div className="liquid-glass rounded-xl overflow-hidden ring-1 ring-red-500/30">
           <div className="px-4 md:px-6 pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-bold text-white">{t('portfolio.portfolioValue')}</h3>
@@ -1540,7 +1540,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
             <button
               type="button"
               onClick={() => refetch()}
-              className="px-4 py-2 text-sm font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
+              className="px-4 py-2 text-sm font-semibold rounded-btn border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
             >
               {t('buttons.retry')}
             </button>
@@ -1585,7 +1585,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                       {/* Tooltip content */}
                       <div
                         ref={tooltipContentRef}
-                        className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
+                        className="max-w-[320px] liquid-glass rounded-xl text-white/90 shadow-lg px-3 py-2 text-[12px] leading-relaxed z-[100]"
                       >
                         {t('portfolio.valueTooltipDescription')}
                       </div>
@@ -1620,13 +1620,13 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
             <button
               type="button"
               onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
+              className="px-3 py-1.5 text-xs font-semibold rounded-btn border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
             >
               {convertTo.toUpperCase()}
             </button>
           </div>
           <div className="mb-2 min-h-[3.5rem]">
-            <span className={`text-3xl md:text-4xl ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
+            <span className={`text-3xl md:text-4xl ${hoveredPrice ? 'text-bull' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
               {renderValueDisplay()}
             </span>
 
@@ -1733,7 +1733,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                 type="button"
                 key={range}
                 onClick={() => setSelectedTimeRange(range)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-btn transition-colors ${
                   selectedTimeRange === range
                     ? 'bg-white/20 text-white'
                     : 'text-white/60 hover:text-white/80 hover:bg-white/[0.08]'

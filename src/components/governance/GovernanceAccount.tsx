@@ -152,7 +152,7 @@ export default function GovernanceAccount() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-xl liquid-glass flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">⚠️</span>
                   </div>
                   <p className="text-slate-400">{t('account.unableToLoadAccount')}</p>

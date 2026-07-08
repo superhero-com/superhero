@@ -272,7 +272,7 @@ const CreateTokenTransactionConfirm = ({
 
       {/* Initial buy section */}
       {hasInitialBuy && (
-        <div className="space-y-0 divide-y divide-white/5 border border-white/10 rounded-md px-4">
+        <div className="liquid-glass space-y-0 divide-y divide-white/5 rounded-xl px-4">
           <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider pt-3 pb-2">
             {t('common.modals.transactionConfirm.initialBuy')}
           </h3>

@@ -286,7 +286,7 @@ export default function Landing() {
                 className="liquid-glass rounded-xl hue-rotate-60"
               />
               {/* Decorative glow */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 -z-10 blur-2xl" />
+              <div className="absolute -inset-4 rounded-xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 -z-10 blur-2xl" />
             </div>
           </div>
         </div>

@@ -71,10 +71,15 @@ const WebAppHeader = () => {
     <aside
       className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col border-r z-[1000]"
       style={{
-        backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backgroundImage: [
+          'radial-gradient(130% 90% at 12% -14%, rgba(255, 255, 255, 0.10), transparent 48%)',
+          'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 52%)',
+        ].join(', '),
+        backgroundColor: 'rgba(var(--background-color-rgb), 0.86)',
+        backdropFilter: 'blur(22px) saturate(185%) brightness(1.08)',
+        WebkitBackdropFilter: 'blur(22px) saturate(185%) brightness(1.08)',
         borderRightColor: 'var(--glass-border)',
+        boxShadow: 'inset -1px 0 0 0 rgba(255, 255, 255, 0.10), 6px 0 28px rgba(0, 0, 0, 0.30)',
       }}
       aria-label={t('aria.primary')}
     >

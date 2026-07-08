@@ -139,7 +139,7 @@ function InteractiveHeroVisual() {
               ))}
             </div>
 
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 min-h-[72px] flex items-center transition-all duration-300">
+            <div className="liquid-glass rounded-xl p-3 min-h-[72px] flex items-center transition-all duration-300">
               {activeTab === 'ae' && (
                 <div className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -284,7 +284,7 @@ function MultisigWidget() {
           {complete ? '✓ Executed' : '● Awaiting Signature'}
         </span>
       </div>
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-2 space-y-2">
+      <div className="liquid-glass rounded-lg p-2 space-y-2">
         <div className="flex items-center justify-between text-[10px]">
           <span className="text-white/50">Transfer request:</span>
           <span className="text-white/90 font-bold font-mono">5,000.00 AE</span>
@@ -390,7 +390,7 @@ function AddressBookWidget() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto pr-1">
         {filtered.length > 0 ? (
           filtered.map((contact) => (
-            <div key={contact.address} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex items-center justify-between hover:bg-white/[0.04] transition-all">
+            <div key={contact.address} className="liquid-glass liquid-glass--hover rounded-lg p-2.5 flex items-center justify-between transition-all">
               <div>
                 <h4 className="text-[11px] font-bold text-white/85 leading-none mb-0.5">{contact.name}</h4>
                 <p className="text-[9px] text-blue-400 font-medium leading-none mb-1 font-mono">{contact.domain}</p>
@@ -417,7 +417,7 @@ function AddressBookWidget() {
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white/[0.02] border border-white/[0.05] rounded-lg overflow-hidden transition-all duration-200 hover:border-blue-400/20">
+    <div className="liquid-glass liquid-glass--hover rounded-lg overflow-hidden transition-all duration-200">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -720,7 +720,7 @@ export default function Wallet() {
             {/* Left Column: Title & CTAs */}
             <div className="lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-btn-sm bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] mb-8">
                 <WalletIcon className="w-3.5 h-3.5 text-blue-400" />
                 <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
                   {t('common.views.wallet.hero.badge')}
@@ -833,7 +833,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.multichain.description')}
                   </p>
                 </div>
-                <div className="md:col-span-5 bg-black/40 border border-white/[0.04] rounded-xl p-3 space-y-1.5 font-mono select-none text-left w-full">
+                <div className="md:col-span-5 liquid-glass rounded-xl p-3 space-y-1.5 font-mono select-none text-left w-full">
                   {[
                     {
                       coin: 'AE', name: 'æternity', amount: '15,420.0', usd: '$1,542.0', color: 'bg-purple-500',
@@ -904,7 +904,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.cryptoManagement.description')}
                   </p>
                 </div>
-                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
+                <div className="md:col-span-6 liquid-glass rounded-xl p-4 w-full">
                   <CryptoManagementWidget />
                 </div>
               </div>
@@ -937,7 +937,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.coldSigning.description')}
                   </p>
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex items-center justify-between font-mono text-[9px] mt-auto w-full">
+                <div className="liquid-glass rounded-xl p-3 flex items-center justify-between font-mono text-[9px] mt-auto w-full">
                   <div className="text-center w-[45%] bg-white/[0.02] p-1.5 rounded border border-white/[0.05]">
                     <span className="block text-amber-400 font-bold mb-0.5">AIRGAP</span>
                     <span className="text-white/20">Vault (Offline)</span>
@@ -969,7 +969,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.dappIntegration.description')}
                   </p>
                 </div>
-                <div className="md:col-span-5 bg-black/35 border border-white/[0.04] rounded-xl p-2.5 space-y-1 text-[10px] font-mono w-full">
+                <div className="md:col-span-5 liquid-glass rounded-xl p-2.5 space-y-1 text-[10px] font-mono w-full">
                   <div className="flex items-center justify-between bg-white/[0.01] p-1 border border-white/[0.05] rounded">
                     <span className="text-white/60">🥞 Superhero.com</span>
                     <span className="text-[8px] bg-green-500/20 text-green-400 px-1 py-0.5 rounded font-bold border border-green-500/30">Connected 🟢</span>
@@ -1001,7 +1001,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.multisig.description')}
                   </p>
                 </div>
-                <div className="md:col-span-6 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full font-sans">
+                <div className="md:col-span-6 liquid-glass rounded-xl p-4 w-full font-sans">
                   <MultisigWidget />
                 </div>
               </div>
@@ -1022,7 +1022,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.chainNames.description')}
                   </p>
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono space-y-2 mt-auto w-full">
+                <div className="liquid-glass rounded-xl p-3 font-mono space-y-2 mt-auto w-full">
                   <div className="relative flex items-center">
                     <input
                       type="text"
@@ -1069,7 +1069,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.biometric.description')}
                   </p>
                 </div>
-                <div className="bg-black/35 border border-white/[0.04] rounded-xl p-3 flex flex-col items-center justify-center font-mono space-y-2 mt-auto w-full">
+                <div className="liquid-glass rounded-xl p-3 flex flex-col items-center justify-center font-mono space-y-2 mt-auto w-full">
                   <div className="relative w-10 h-10 flex items-center justify-center border border-blue-500/20 bg-blue-500/5 rounded-full ring-4 ring-blue-500/10 animate-pulse">
                     <Fingerprint className="w-6 h-6 text-blue-400" />
                   </div>
@@ -1094,7 +1094,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.importAccounts.description')}
                   </p>
                 </div>
-                <div className="md:col-span-5 bg-black/35 border border-white/[0.04] rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 w-full">
+                <div className="md:col-span-5 liquid-glass rounded-xl p-3 font-mono text-[9px] text-white/40 space-y-2 w-full">
                   <div className="flex gap-1.5 border-b border-white/[0.05] pb-1.5">
                     <span className="text-blue-400 font-bold border-b border-blue-400/50 pb-0.5">Private Key</span>
                     <span className="text-white/20">Seed Phrase</span>
@@ -1129,7 +1129,7 @@ export default function Wallet() {
                     {t('common.views.wallet.cards.addressBook.description')}
                   </p>
                 </div>
-                <div className="lg:col-span-7 bg-black/40 border border-white/[0.04] rounded-xl p-4 w-full">
+                <div className="lg:col-span-7 liquid-glass rounded-xl p-4 w-full">
                   <AddressBookWidget />
                 </div>
               </div>

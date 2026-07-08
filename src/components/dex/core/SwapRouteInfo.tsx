@@ -67,7 +67,7 @@ export default function SwapRouteInfo({
         <div className="text-xs text-muted-foreground space-y-3">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">{t('swapRouteInfo.route')}</span>
-            <Badge variant="secondary" className="font-mono text-xs bg-muted/30 px-2 py-1">
+            <Badge variant="chip" className="font-mono text-xs">
               {buildRouteDisplay()}
             </Badge>
           </div>
@@ -86,7 +86,7 @@ export default function SwapRouteInfo({
                 const hr1 = r1 != null ? formatAmountHuman(r1) : null;
 
                 return (
-                  <div key={idx} className="flex justify-between items-center text-xs bg-muted/20 p-2 rounded-lg">
+                  <div key={idx} className="flex justify-between items-center text-xs liquid-glass p-2 rounded-xl">
                     <Badge variant="outline" className="text-xs font-mono">
                       {routeLabel(t0)}
                       {' '}

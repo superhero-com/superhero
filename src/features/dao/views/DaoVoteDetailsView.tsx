@@ -136,7 +136,7 @@ const DaoVoteDetailsContent = ({
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4 aurora-surface">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left sidebar - Token info (hidden on mobile) */}
         <div className="hidden lg:block lg:col-span-1 space-y-4">
@@ -278,7 +278,7 @@ const DaoVoteDetailsContent = ({
                     {voteState?.metadata?.description && (
                       <div>
                         <div className="text-white/60 font-medium mb-2">{t('descriptionLabel')}</div>
-                        <div className="text-white/80 bg-white/5 rounded-lg p-4 border border-white/10">
+                        <div className="text-white/80 liquid-glass rounded-xl p-4">
                           {voteState.metadata.description}
                         </div>
                       </div>

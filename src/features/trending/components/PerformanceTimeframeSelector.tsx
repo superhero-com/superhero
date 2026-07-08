@@ -68,7 +68,7 @@ const PerformanceTimeframeSelector = () => {
             />
 
             {/* Menu */}
-            <div className="absolute right-0 sm:right-0 sm:left-0 top-full mt-1 bg-gray-900 border border-white/10 rounded-lg shadow-lg z-20 min-w-[140px] w-full sm:w-auto">
+            <div className="absolute right-0 sm:right-0 sm:left-0 top-full mt-1 liquid-glass liquid-glass--strong rounded-xl shadow-lg z-20 min-w-[140px] w-full sm:w-auto">
               <div className="py-1">
                 {PRICE_MOVEMENT_TIMEFRAMES
                   .filter((timeframe) => timeframe !== value)

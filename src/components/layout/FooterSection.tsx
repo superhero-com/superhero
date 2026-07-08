@@ -165,7 +165,7 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
               label: `${l.flag}  ${l.label}`,
             }))}
             triggerClassName="min-w-[150px] bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-[var(--light-font-color)] hover:bg-white/[0.05] focus:outline-none"
-            contentClassName="bg-gray-900 border border-white/10 text-white"
+            contentClassName="liquid-glass liquid-glass--strong rounded-xl text-white"
           />
         </div>
       </div>

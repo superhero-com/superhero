@@ -152,14 +152,14 @@ const DexSettings = ({ children, title }: DexSettingsProps) => {
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-standard-font-color text-sm font-semibold cursor-pointer transition-all duration-300"
+              className="flex-1 px-5 py-3 rounded-btn border border-white/10 bg-white/5 text-standard-font-color text-sm font-semibold cursor-pointer transition-all duration-300"
             >
               {t('settings.cancel')}
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="flex-1 px-5 py-3 rounded-xl border-none bg-gradient-brand-135 text-white text-sm font-bold cursor-pointer transition-all duration-300"
+              className="flex-1 px-5 py-3 rounded-btn border-none bg-gradient-brand-135 text-white text-sm font-bold cursor-pointer transition-all duration-300"
             >
               {t('settings.save')}
             </button>

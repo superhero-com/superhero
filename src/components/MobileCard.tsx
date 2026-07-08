@@ -24,12 +24,12 @@ const MobileCard: React.FC<MobileCardProps> = ({
     className={cn(
       // Base styles
       'relative overflow-hidden transition-all duration-200 touch-manipulation',
-      'rounded-2xl sm:rounded-xl',
+      'rounded-xl',
       // Variant styles
-      variant === 'default' && 'bg-[var(--secondary-color)] border border-white/10',
-      variant === 'elevated' && 'bg-[var(--secondary-color)] border-none',
+      variant === 'default' && 'liquid-glass',
+      variant === 'elevated' && 'liquid-glass liquid-glass--strong border-none',
       variant === 'outlined' && 'bg-transparent border-2 border-white/20',
-      variant === 'filled' && 'bg-white/5 border border-white/10',
+      variant === 'filled' && 'liquid-glass',
       // Shadow styles
       shadow && variant !== 'elevated' && 'shadow-[0_2px_8px_rgba(0,0,0,0.1)]',
       variant === 'elevated' && 'shadow-[0_4px_20px_rgba(0,0,0,0.15)]',

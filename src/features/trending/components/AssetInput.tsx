@@ -228,7 +228,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
               <Button
                 variant="outline"
                 size="sm"
-                className="px-2 h-6 text-xs rounded-xl bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="px-2 h-6 text-xs rounded-btn-sm bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={handleMaxClick}
               >
                 {t('trending.assetInput.max')}

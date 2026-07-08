@@ -155,7 +155,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 lg:pt-0">
+      <div className="aurora-surface min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 lg:pt-0">
         {/* Top pill navigation for tablet/desktop */}
         <div className="hidden lg:block top-0 z-30 lg:mb-2">
           <div className="w-full overflow-x-auto px-2 py-2 lg:px-3 lg:py-0">
@@ -172,7 +172,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       aria-label={t(item.label)}
                       title={t(item.description)}
                       className={`
-                      flex items-center gap-2 px-3.5 py-2.5 rounded-full
+                      flex items-center gap-2 px-3.5 py-2.5 rounded-btn
                       border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
                       transition-all duration-200
                       ${isActive
@@ -204,7 +204,7 @@ const DexLayout = ({ children }: DexLayoutProps) => {
                       aria-label={t(item.label)}
                       title={t(item.description)}
                       className={`
-                          flex items-center gap-1.5 px-3 py-2 rounded-full
+                          flex items-center gap-1.5 px-3 py-2 rounded-btn
                           border-[1.5px] text-xs font-semibold
                           transition-all duration-200
                           ${isActive

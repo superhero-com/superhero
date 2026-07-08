@@ -98,7 +98,7 @@ const PoolContent = () => {
                       type="button"
                       onClick={() => refreshPositions()}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] flex items-center gap-2 ${loading
+                      className={`px-4 py-2 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] flex items-center gap-2 ${loading
                         ? 'cursor-not-allowed opacity-60'
                         : 'hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0'
                       }`}
@@ -153,7 +153,7 @@ const PoolContent = () => {
                         <ConnectWalletButton
                           label={t('dex.swap.connectWallet')}
                           variant="dex"
-                          className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                          className="px-6 py-3 rounded-btn border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                         />
                       )}
                     </div>

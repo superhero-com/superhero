@@ -131,7 +131,7 @@ const Dao = () => {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4 aurora-surface">
       {/* Header Section */}
       <div className="mb-6">
         {token && (
@@ -359,7 +359,8 @@ const Dao = () => {
                   <Button
                     onClick={createVote}
                     disabled={creating}
-                    className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
+                    variant="gradient"
+                    className="w-full"
                   >
                     {creating ? t('creating') : t('createVoteButton')}
                   </Button>

@@ -58,7 +58,7 @@ export const ConnectEthereumWallet = ({
   // If showing connected state and wallet is connected
   if (showConnectedState && isConnected && ethAddress) {
     return (
-      <div className="w-full bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+      <div className="w-full liquid-glass rounded-xl p-3 sm:p-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs text-white/60 font-medium uppercase tracking-wider">
             {t('connectEthWallet.ethereumWallet')}
@@ -78,14 +78,14 @@ export const ConnectEthereumWallet = ({
             <button
               type="button"
               onClick={handleConnect}
-              className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
+              className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-btn-sm px-2 py-1 transition-all duration-200 font-medium"
             >
               {t('connectEthWallet.switch')}
             </button>
             <button
               type="button"
               onClick={handleDisconnect}
-              className="text-xs text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 border border-red-400/30 hover:border-red-400/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
+              className="text-xs text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 border border-red-400/30 hover:border-red-400/50 rounded-btn-sm px-2 py-1 transition-all duration-200 font-medium"
             >
               {t('connectEthWallet.disconnect')}
             </button>
@@ -101,7 +101,7 @@ export const ConnectEthereumWallet = ({
       type="button"
       onClick={handleConnect}
       disabled={disabled}
-      className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+      className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-btn border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
         disabled
           ? 'bg-white/10 cursor-not-allowed opacity-60'
           : 'bg-gradient-to-r from-[#627eea] to-[#8a92b2] shadow-[0_8px_25px_rgba(98,126,234,0.4)] hover:-translate-y-0.5 active:translate-y-0'

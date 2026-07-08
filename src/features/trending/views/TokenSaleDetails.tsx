@@ -440,9 +440,9 @@ const TokenSaleDetails = () => {
 
       {/* Deploy Success Message */}
       {showDeployedMessage && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">
+        <div className="bg-bull/10 border border-bull/30 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-bull flex items-center justify-center">
               ✓
             </div>
             <div>

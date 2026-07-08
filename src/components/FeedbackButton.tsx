@@ -27,22 +27,16 @@ const FeedbackButton = () => {
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
-        style={{
-          background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
-          color: '#0a0a0f',
-        }}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-glow bg-gradient-brand-135 text-white transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95"
         aria-label={t('buttons.sendFeedback')}
         title={t('buttons.sendFeedback')}
       >
         <MessageSquare
           className={`w-5 h-5 transition-transform duration-300 ${isHovered ? 'rotate-12' : ''}`}
-          style={{ color: '#0a0a0f' }}
         />
         {isHovered && !isMobile && (
           <span
             className="text-sm font-semibold whitespace-nowrap animate-in fade-in slide-in-from-right-2 duration-300"
-            style={{ color: '#0a0a0f' }}
           >
             {t('buttons.sendFeedback')}
           </span>
@@ -59,7 +53,7 @@ const FeedbackButton = () => {
             onClick={() => setShowMobilePopup(false)}
           />
           <div
-            className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl"
+            className="liquid-glass liquid-glass--strong rounded-xl p-6 max-w-sm w-full relative"
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
@@ -98,7 +92,7 @@ const FeedbackButton = () => {
               <button
                 type="button"
                 onClick={() => setShowMobilePopup(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
+                className="flex-1 px-4 py-2.5 rounded-btn border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 {t('buttons.cancel')}
               </button>
@@ -108,11 +102,7 @@ const FeedbackButton = () => {
                   window.open('https://github.com/superhero-com/superhero/issues', '_blank', 'noopener,noreferrer');
                   setShowMobilePopup(false);
                 }}
-                className="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
-                style={{
-                  background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
-                  color: '#0a0a0f',
-                }}
+                className="flex-1 px-4 py-2.5 rounded-btn font-medium bg-gradient-brand-135 text-white transition-all duration-300 hover:shadow-glow"
               >
                 {t('feedback.openGitHub')}
               </button>

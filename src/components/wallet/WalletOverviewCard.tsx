@@ -180,7 +180,7 @@ const WalletOverviewCard = ({
             <button
               type="button"
               onClick={() => navigate(`/users/${activeAccount}`)}
-              className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
+              className="bg-white/5 border border-white/10 rounded-btn-sm px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
             >
               {t('common.wallet.viewProfile')}
             </button>
@@ -188,7 +188,7 @@ const WalletOverviewCard = ({
               type="button"
               aria-label={open ? t('common.wallet.collapseWallet') : t('common.wallet.expandWallet')}
               aria-expanded={open}
-              className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
+              className="bg-white/5 border border-white/10 rounded-btn-sm px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen((v) => !v);

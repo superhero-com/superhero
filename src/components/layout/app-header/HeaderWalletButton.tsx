@@ -99,7 +99,7 @@ const HeaderWalletButton = () => {
 
           <DropdownMenuSeparator className="my-3" />
 
-          <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg mb-3">
+          <div className="flex justify-between items-center p-3 liquid-glass rounded-xl mb-3">
             <span className="text-sm text-muted-foreground">
               {t('labels.balance')}
               :

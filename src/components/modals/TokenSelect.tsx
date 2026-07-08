@@ -32,7 +32,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
         <div className="space-y-3 py-4 max-h-96 overflow-y-auto">
           <Button
             variant="ghost"
-            className="w-full justify-start text-left bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            className="w-full justify-start text-left liquid-glass liquid-glass--hover text-white rounded-xl"
             onClick={() => handleSelect('native')}
           >
             <div className="flex items-center gap-3">
@@ -50,7 +50,7 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
             <Button
               key={address}
               variant="ghost"
-              className="w-full justify-start text-left bg-white/5 hover:bg-white/10 text-white border border-white/10"
+              className="w-full justify-start text-left liquid-glass liquid-glass--hover text-white rounded-xl"
               onClick={() => handleSelect(address)}
             >
               <div className="flex items-center gap-3">

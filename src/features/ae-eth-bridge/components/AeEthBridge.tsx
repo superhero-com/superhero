@@ -922,14 +922,14 @@ export const AeEthBridge = () => {
     <AppKitProvider>
       <>
         <div className="flex justify-center">
-          <div className="w-full mx-auto bg-transparent border-0 p-0 relative overflow-hidden box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+          <div className="liquid-glass rounded-xl w-full mx-auto relative overflow-hidden p-4 sm:p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-2 sm:mb-3 min-w-0">
               <h2 className="text-lg sm:text-xl font-bold m-0 min-w-0 flex-shrink">
                 {t('bridge.title')}
               </h2>
 
-              <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
+              <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 liquid-glass rounded-xl transition-all duration-300 ease-out font-medium flex-shrink-0">
                 {direction === Direction.AeternityToEthereum ? t('bridge.direction.aeToEth') : t('bridge.direction.ethToAe')}
               </div>
             </div>
@@ -1020,7 +1020,7 @@ export const AeEthBridge = () => {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className="bg-white/[0.05] border border-white/10 rounded-xl h-10 flex items-center px-4 text-white/60 text-sm">
+                  <div className="liquid-glass rounded-xl h-10 flex items-center px-4 text-white/60 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full" />
                       <span className="font-mono">
@@ -1032,7 +1032,7 @@ export const AeEthBridge = () => {
                   </div>
                 )
               ) : (
-                <div className="bg-white/[0.05] border border-white/10 rounded-xl h-10 flex items-center px-4 text-white/40 text-sm">
+                <div className="liquid-glass rounded-xl h-10 flex items-center px-4 text-white/40 text-sm">
                   {t('bridge.noEthereumAccountConnected')}
                 </div>
               )}
@@ -1073,7 +1073,7 @@ export const AeEthBridge = () => {
               toLoading={false}
               toTokenNode={(
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 liquid-glass rounded-xl">
                     <span className="text-white text-sm sm:text-base font-semibold">
                       {destinationTokenLabel}
                     </span>
@@ -1106,7 +1106,7 @@ export const AeEthBridge = () => {
             )}
 
             {/* Destination Address */}
-            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+            <div className="liquid-glass rounded-xl p-3 sm:p-4 mb-4 sm:mb-5">
               <div className="flex justify-between items-center mb-2">
                 {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                 <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
@@ -1124,7 +1124,7 @@ export const AeEthBridge = () => {
                       setDestination(selectedEthAccount);
                     }
                   }}
-                  className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
+                  className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-btn-sm px-2 py-1 transition-all duration-200 font-medium"
                 >
                   {t('bridge.useConnectedAccount')}
                 </button>
@@ -1145,7 +1145,7 @@ export const AeEthBridge = () => {
 
             {/* Bridge Process Status */}
             {(confirming || buttonBusy) && (
-            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+            <div className="liquid-glass rounded-xl p-3 sm:p-4 mb-4 sm:mb-5">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-white/60">
                   {t('bridge.transactionStatus')}
@@ -1215,7 +1215,7 @@ export const AeEthBridge = () => {
                       direction === Direction.EthereumToAeternity
                       && ethereumAccounts.length === 0
                     ))}
-                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || hasInsufficientBalance || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
+                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-btn border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || hasInsufficientBalance || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
                     ? 'bg-white/10 cursor-not-allowed opacity-60'
                     : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
                   }`}
@@ -1239,7 +1239,7 @@ export const AeEthBridge = () => {
 
         {/* Success Dialog */}
         <Dialog open={!!bridgeActionSummary} onOpenChange={() => setBridgeActionSummary(null)}>
-          <DialogContent className="max-w-md bg-[#1a1a2e] border border-white/10">
+          <DialogContent className="max-w-md liquid-glass liquid-glass--strong rounded-xl text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
                 <span className="text-2xl">✨</span>
@@ -1258,7 +1258,7 @@ export const AeEthBridge = () => {
                 </div>
               </div>
 
-              <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 space-y-2">
+              <div className="liquid-glass rounded-xl p-3 space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-white/60">{t('bridge.directionLabel')}</span>
                   <span className="text-white font-semibold">
@@ -1284,7 +1284,7 @@ export const AeEthBridge = () => {
               </div>
 
               {bridgeActionSummary?.allowanceTxHash && (
-                <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3">
+                <div className="liquid-glass rounded-xl p-3">
                   <div className="flex justify-between items-center">
                     <span className="text-white/60 text-sm">{t('bridge.allowanceTransaction')}</span>
                     <a
@@ -1302,7 +1302,7 @@ export const AeEthBridge = () => {
                 </div>
               )}
 
-              <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3">
+              <div className="liquid-glass rounded-xl p-3">
                 <div className="flex justify-between items-center">
                   <span className="text-white/60 text-sm">{t('bridge.bridgeTransaction')}</span>
                   <a
@@ -1325,7 +1325,7 @@ export const AeEthBridge = () => {
               </div>
 
               {!isBridgeActionFromAeternity && (
-                <div className="text-xs text-white/60 bg-white/[0.05] border border-white/10 rounded-xl p-3">
+                <div className="text-xs text-white/60 liquid-glass rounded-xl p-3">
                   {t('bridge.tokensAutoAppear')}
                   {' '}
                   <a href="https://forum.aeternity.com/" target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] hover:underline">
@@ -1336,7 +1336,7 @@ export const AeEthBridge = () => {
               )}
 
               {isBridgeActionFromAeternity && bridgeActionSummary?.asset.symbol !== 'ETH' && (
-                <div className="text-xs text-white/60 bg-white/[0.05] border border-white/10 rounded-xl p-3">
+                <div className="text-xs text-white/60 liquid-glass rounded-xl p-3">
                   {t('bridge.addTokenToWalletIntro')}
                   {' '}
                   <button
@@ -1355,7 +1355,7 @@ export const AeEthBridge = () => {
               <button
                 type="button"
                 onClick={() => setBridgeActionSummary(null)}
-                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5"
+                className="w-full py-3 px-6 rounded-btn bg-gradient-brand-135 text-white font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5"
               >
                 {t('bridge.close')}
               </button>

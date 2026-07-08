@@ -103,7 +103,7 @@ const LiquidityPreview = ({
 
       {/* Suggested Amounts */}
       {(preview.suggestedAmountA || preview.suggestedAmountB) && (
-        <div className="mt-4 p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+        <div className="liquid-glass mt-4 p-3 rounded-xl">
           <div className="text-xs font-semibold text-accent-color mb-2">
             {t('liquidityPreview.suggestedOptimalAmounts')}
           </div>

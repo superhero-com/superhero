@@ -40,7 +40,7 @@ const ConfirmWalletStep = ({
   }, [claim, completeXAddressLink, onDone, onError, t]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 liquid-glass liquid-glass--strong rounded-xl p-6 max-w-sm mx-auto">
       <p className="text-white/80">
         {submitting ? t('messages.xCallbackConfirmInWallet') : t('messages.xCallbackSuccess')}
       </p>
@@ -117,7 +117,7 @@ const ProfileXCallback = () => {
   }, [searchParams, t, activeAccount, addStaticAccount]);
 
   return (
-    <div className="min-h-[40vh] flex flex-col items-center justify-center p-6 text-center">
+    <div className="min-h-[40vh] flex flex-col items-center justify-center p-6 text-center aurora-surface">
       {status === 'loading' && (
         <p className="text-white/80">{t('messages.xCallbackExchanging')}</p>
       )}

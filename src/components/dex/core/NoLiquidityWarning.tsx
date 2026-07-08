@@ -87,7 +87,7 @@ export default function NoLiquidityWarning({
         </div>
         <button
           onClick={handleAddLiquidity}
-          className="mx-auto mt-4 px-4 py-2 rounded-xl border border-yellow-400/30 bg-yellow-400/10 text-yellow-400 text-sm font-semibold hover:bg-yellow-400/20 transition-all duration-300 cursor-pointer"
+          className="mx-auto mt-4 px-4 py-2 rounded-btn border border-yellow-400/30 bg-yellow-400/10 text-yellow-400 text-sm font-semibold hover:bg-yellow-400/20 transition-all duration-300 cursor-pointer"
         >
           ➕ {t('dex.noLiquidity.addLiquidity')}
         </button>
@@ -137,7 +137,7 @@ export default function NoLiquidityWarning({
           <div className="flex flex-col sm:flex-row gap-2 mt-3">
             <button
               onClick={handleAddLiquidity}
-              className="px-4 py-2 rounded-xl border border-red-400/30 bg-red-400/10 text-red-400 text-sm font-semibold hover:bg-red-400/20 transition-all duration-300 cursor-pointer"
+              className="px-4 py-2 rounded-btn border border-red-400/30 bg-red-400/10 text-red-400 text-sm font-semibold hover:bg-red-400/20 transition-all duration-300 cursor-pointer"
             >
               ➕ Add Liquidity
             </button>

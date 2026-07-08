@@ -202,7 +202,7 @@ const RightRail = ({
         </p>
         <button
           type="button"
-          className="block w-full bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center"
+          className="block w-full bg-gradient-brand-135 text-white border-none rounded-btn py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center"
           onClick={() => navigate('/get-ae')}
         >
           {t('buyAeRail.moreWays')}
@@ -222,7 +222,7 @@ const RightRail = ({
         </p>
         <button
           type="button"
-          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-btn py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
           onClick={() => navigate('/trends/leaderboard')}
         >
           {t('rightRail.viewTradingLeaderboard')}
@@ -241,7 +241,7 @@ const RightRail = ({
         <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
-            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/tokens')}
             title={t('titles.exploreTrends')}
           >
@@ -249,7 +249,7 @@ const RightRail = ({
           </button>
           <button
             type="button"
-            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/create')}
             title={t('titles.tokenizeATrend')}
           >
@@ -257,7 +257,7 @@ const RightRail = ({
           </button>
           <button
             type="button"
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-brand-135 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/swap')}
             title={t('titles.swapTokensOnDex')}
           >
@@ -265,7 +265,7 @@ const RightRail = ({
           </button>
           <button
             type="button"
-            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
@@ -275,7 +275,7 @@ const RightRail = ({
             href="https://quali.chat"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             title={t('titles.openChat')}
           >
             {t('rightRail.chat')}
@@ -292,7 +292,7 @@ const RightRail = ({
           */}
           <button
             type="button"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-btn py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/pool')}
             title={t('titles.provideLiquidityToPools')}
           >

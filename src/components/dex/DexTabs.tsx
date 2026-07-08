@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 const Tab = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
-    className={`px-6 py-3 rounded-xl border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] min-h-[48px] touch-manipulation uppercase tracking-wider font-semibold text-sm
+    className={`px-6 py-3 rounded-btn border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] min-h-[48px] touch-manipulation uppercase tracking-wider font-semibold text-sm
                   md:px-4 md:py-2.5 md:min-h-[44px] md:text-xs
                   sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-[10px]
                   ${active
@@ -48,7 +48,7 @@ export default function DexTabs() {
       <div className="ml-auto" />
       <button
         onClick={() => navigate('/pool/add-tokens')}
-        className="px-6 py-3 rounded-xl border border-transparent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] min-h-[48px] touch-manipulation uppercase tracking-wider font-semibold text-sm text-[var(--light-font-color)]
+        className="px-6 py-3 rounded-btn border border-transparent transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] min-h-[48px] touch-manipulation uppercase tracking-wider font-semibold text-sm text-[var(--light-font-color)]
                    md:px-4 md:py-2.5 md:min-h-[44px] md:text-xs
                    sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-[10px]
                    hover:text-[var(--standard-font-color)] hover:-translate-y-0.5 hover:shadow-lg"

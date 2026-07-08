@@ -81,7 +81,7 @@ export const TokenChip = ({
     <Badge
       variant="secondary"
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide bg-glass-bg border-glass-border text-foreground',
+        'inline-flex items-center gap-1.5 rounded-btn backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide bg-glass-bg border-glass-border text-foreground',
         large ? 'px-4 py-2 text-sm gap-2 min-h-9' : 'px-3 py-1.5 text-xs min-h-7',
         !(copyable || onClick) && 'cursor-default hover:translate-y-0 hover:shadow-none',
         className,
@@ -130,7 +130,7 @@ export const TokenChip = ({
 
       {/* Copied feedback */}
       {textCopied && (
-        <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
+        <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-btn animate-pulse">
           {t('common.messages.copiedExclaim')}
         </div>
       )}

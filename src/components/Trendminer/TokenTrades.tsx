@@ -98,7 +98,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
       onClick={handleOpenTx}
       className="w-full text-left active:opacity-80 transition-opacity"
     >
-      <div className="my-2 border border-[#222222] bg-[#141414]/50 overflow-hidden rounded-lg px-3 py-2 space-y-2">
+      <div className="my-2 border border-white/10 bg-white/5 overflow-hidden rounded-xl px-3 py-2 space-y-2">
         {/* Compact Header: Account, Badge & Time */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -353,7 +353,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   return (
     <div className="md:space-y-4">
       {/* Data Table */}
-      <div className="md:bg-white/[0.02] md:border md:border-white/10 md:rounded-xl overflow-hidden">
+      <div className="liquid-glass rounded-xl overflow-hidden">
         {/* Table Header */}
         <div className="hidden lg:grid gap-4 px-2 xl:px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px]">
           {headers.map((header) => (

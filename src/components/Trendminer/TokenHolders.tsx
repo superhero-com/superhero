@@ -63,7 +63,7 @@ const TokenHolderCard = React.memo(({ holder, token }: TokenHolderCardProps) => 
   );
 
   return (
-    <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#222222] md:border-0 bg-[#141414]/50 md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
+    <div className="my-2 md:my-0 mx-2 md:mx-0 border border-white/10 md:border-0 bg-white/5 md:bg-transparent rounded-xl md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.08] md:hover:bg-white/[0.02] transition-colors">
       {/* Account */}
       <div className="flex items-center gap-2">
         <div className="text-[10px] text-white/60 md:hidden">{t('trending.tokenHolders.accountLabel')}</div>
@@ -213,7 +213,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   return (
     <div className="space-y-4">
       {/* Data Table */}
-      <div className="bg-transparent md:bg-white/[0.02] border-0 md:border md:border-white/10 rounded-xl overflow-visible md:overflow-hidden">
+      <div className="liquid-glass rounded-xl overflow-visible md:overflow-hidden">
         {/* Table Header */}
         <div
           className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide"

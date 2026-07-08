@@ -203,7 +203,7 @@ const SortControls = memo(
           {WEIGHT_KEYS.map((key) => (
             <div key={key} className="flex items-center justify-between gap-3 px-1">
               <span className="text-xs text-white/70 min-w-[90px]">{t(WEIGHT_LABEL_KEYS[key])}</span>
-              <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+              <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-btn p-0.5 border border-white/10">
                 {WEIGHT_VALUES.map((val) => {
                   const isActive = getEffectiveWeight(key) === val;
                   return (
@@ -218,7 +218,7 @@ const SortControls = memo(
                         handleWeightChange(key, val);
                       }}
                       className={cn(
-                        'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                        'px-2.5 py-1 text-[10px] rounded-btn-sm border transition-all duration-200 capitalize',
                         isActive
                           ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
                           : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
@@ -245,9 +245,9 @@ const SortControls = memo(
           left: hasDesktopSidebar ? SIDEBAR_COLLISION_PADDING_LEFT : COLLISION_PADDING_EDGE,
         }}
         sideOffset={8}
-        className={cn('bg-[#0d0d0d] border-white/15 text-white p-0 rounded-xl shadow-2xl', minWidth)}
+        className={cn('liquid-glass liquid-glass--strong text-white p-0 rounded-xl', minWidth)}
         style={{
-          background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+          background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.14), transparent 60%), var(--glass-bg)',
         }}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
@@ -264,9 +264,9 @@ const SortControls = memo(
               <div ref={mobileSortRef} className="relative min-w-0">
                 {mobileSortOpen && (
                   <div
-                    className="absolute left-0 top-[calc(100%+8px)] z-[1200] min-w-[180px] rounded-2xl border border-white/15 bg-[#0d0d0d] p-1 text-white shadow-2xl"
+                    className="absolute left-0 top-[calc(100%+8px)] z-[1200] min-w-[180px] liquid-glass liquid-glass--strong rounded-xl p-1 text-white"
                     style={{
-                      background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.08), transparent 60%), #0d0d0d',
+                      background: 'radial-gradient(600px 300px at 50% -20%, rgba(17,97,254,0.14), transparent 60%), var(--glass-bg)',
                     }}
                     role="menu"
                     aria-label={t('social.sortControls.feedSortOptions')}
@@ -330,7 +330,7 @@ const SortControls = memo(
                   </button>
                   <DialogContent
                     hideClose
-                    className="!left-0 !right-0 !top-auto !bottom-0 !z-[1200] !w-full !max-w-none !translate-x-0 !translate-y-0 gap-0 rounded-t-[28px] rounded-b-none border-white/15 bg-[#0d0d0d] p-0 text-white shadow-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-left-0 data-[state=open]:slide-in-from-left-0 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:!max-w-none"
+                    className="!left-0 !right-0 !top-auto !bottom-0 !z-[1200] !w-full !max-w-none !translate-x-0 !translate-y-0 gap-0 rounded-t-xl rounded-b-none liquid-glass liquid-glass--strong p-0 text-white data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-left-0 data-[state=open]:slide-in-from-left-0 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:!max-w-none"
                   >
                     <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-white/15" />
                     <div className="max-h-[85vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+16px)]">
@@ -372,7 +372,7 @@ const SortControls = memo(
                         <button
                           type="button"
                           onClick={() => setMobileCustomizeOpen(false)}
-                          className="flex min-h-[44px] w-full items-center justify-center rounded-2xl bg-[#1161FE] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0e50d8]"
+                          className="flex min-h-[44px] w-full items-center justify-center rounded-btn bg-[#1161FE] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0e50d8]"
                         >
                           {t('social.sortControls.done')}
                         </button>
@@ -384,7 +384,7 @@ const SortControls = memo(
             </div>
             <Link
               to="/trends/create"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] shrink-0"
+              className="inline-flex items-center gap-1.5 rounded-btn bg-[#1161FE] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] shrink-0"
             >
               <Rocket className="h-3 w-3" />
               Tokenize Trend
@@ -394,14 +394,14 @@ const SortControls = memo(
 
         {/* Desktop */}
         <div className="hidden md:flex w-full items-center gap-2 px-4 py-1.5">
-          <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
+          <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-btn p-0.5 border border-white/10 md:w-auto">
             <AeButton
               onClick={() => onSortChange('hot')}
               variant={sortBy === 'hot' ? 'default' : 'ghost'}
               size="xs"
               noShadow
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
+                'rounded-btn-sm px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
                 sortBy === 'hot'
                   ? 'bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]'
                   : 'text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10',
@@ -415,7 +415,7 @@ const SortControls = memo(
               size="xs"
               noShadow
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
+                'rounded-btn-sm px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase',
                 sortBy === 'latest'
                   ? 'bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]'
                   : 'text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10',
@@ -448,7 +448,7 @@ const SortControls = memo(
           )}
           <Link
             to="/trends/create"
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] ml-auto"
+            className="inline-flex items-center gap-1.5 rounded-btn bg-[#1161FE] px-3.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] ml-auto"
           >
             <Rocket className="h-3 w-3" />
             Tokenize Trend

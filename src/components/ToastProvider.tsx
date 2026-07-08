@@ -34,11 +34,11 @@ const ToastProvider = ({ children }: { children: React.ReactNode }) => {
         {toasts.map((t) => (
           <div
             key={t.id}
+            className="liquid-glass liquid-glass--strong"
             style={{
-              background: '#333',
               color: '#fff',
               padding: '8px 12px',
-              borderRadius: 6,
+              borderRadius: 12,
               maxWidth: 360,
             }}
           >

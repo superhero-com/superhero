@@ -25,7 +25,7 @@ type ChatState = {
 
 // Loading skeleton component
 const MessageSkeleton = () => (
-  <div className="h-10.5 rounded-lg bg-white/8 animate-pulse" />
+  <div className="h-10.5 rounded-xl liquid-glass animate-pulse" />
 );
 
 // Individual message component
@@ -51,7 +51,7 @@ const MessageItem = ({ message }: { message: QualiMessage }) => {
   }
 
   return (
-    <div className="border border-white/20 rounded-lg p-2.5 bg-white/5">
+    <div className="liquid-glass rounded-xl p-2.5">
       <div className="text-xs opacity-80 flex justify-between mb-0.5 text-white/80">
         <AddressAvatarWithChainName
           address={parseAddress(message.sender)}
@@ -134,7 +134,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
+          className="group no-underline liquid-glass liquid-glass--hover rounded-xl p-3 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30"
           title={t('tokenChat.openPublicChatTitle')}
         >
           <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30"
+          className="group no-underline liquid-glass liquid-glass--hover rounded-xl p-3 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30"
           title={t('tokenChat.openPrivateChatTitle')}
         >
           <div className="flex items-center gap-2">

@@ -482,7 +482,7 @@ const CreateTokenView = () => {
 
   if (loading) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen aurora-surface bg-gradient-to-b from-gray-900 to-black text-white">
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-1/3 mb-4" />
@@ -615,10 +615,10 @@ const CreateTokenView = () => {
                                 role="radio"
                                 aria-checked={selected}
                                 onClick={() => setCollectionModel(collection.id as CollectionId)}
-                                className={`group relative flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 ${
+                                className={`group relative flex items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 ${
                                   selected
-                                    ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_0_1px_rgba(16,185,129,0.25)]'
-                                    : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07]'
+                                    ? 'border border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_0_1px_rgba(16,185,129,0.25)]'
+                                    : 'liquid-glass liquid-glass--hover'
                                 }`}
                               >
                                 <span
@@ -695,7 +695,7 @@ const CreateTokenView = () => {
 
                     {/* If taken, show richer Live box above */}
                     {nameStatus === 'taken' && (foundToken || alreadyRegisteredAs) && (
-                      <div className="mt-20 text-xs bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
+                      <div className="mt-20 text-xs liquid-glass rounded-xl p-3 space-y-2">
                         {/* Row 1: Badge + Name + Price + Holders (left) · Sparkline (right) */}
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-3 flex-wrap w-full">
@@ -762,7 +762,7 @@ const CreateTokenView = () => {
                             >
                               ⓘ
                             </button>
-                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[min(320px,80vw)] rounded-lg border border-white/10 bg-gray-900/95 text-white text-xs p-3 shadow-xl z-50">
+                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[min(320px,80vw)] liquid-glass liquid-glass--strong rounded-xl text-white text-xs p-3 shadow-xl z-50">
                               {inputMode === 'AE'
                                 ? t('trending.createToken.prebuyTooltipAe')
                                 : t('trending.createToken.prebuyTooltipTokens')}
@@ -799,11 +799,11 @@ const CreateTokenView = () => {
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('500'); setAeAmountDisplay('500'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
+                            <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('500'); setAeAmountDisplay('500'); }} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
                           </div>
                           <div className="text-sm text-white/70">
                             {t('trending.createToken.estimatedTokensReceive')}
@@ -826,11 +826,11 @@ const CreateTokenView = () => {
                             <div className="text-white font-extrabold text-2xl leading-none">{t('trending.createToken.tokensUnitUpper')}</div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('10000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('100000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('10000000')} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('100000000')} className="px-3 py-1.5 rounded-btn-sm border border-glass-border bg-glass-bg backdrop-blur-glass text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100M</button>
                           </div>
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
@@ -847,7 +847,7 @@ const CreateTokenView = () => {
                         </div>
                       )}
                       {/* Shared explanatory note (tooltip carries the AE explanation now) */}
-                      <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
+                      <div className="text-sm text-white/80 liquid-glass rounded-xl p-3 mt-2 space-y-1">
                         <div className="text-white text-sm md:text-md">
                           {t('trending.createToken.note.tradingAvailable')}
                         </div>
@@ -880,7 +880,7 @@ const CreateTokenView = () => {
                     <br />
                     {t('trending.createToken.hero.line2')}
                     <br />
-                    <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                    <span className="gradient-text">
                       {t('trending.createToken.hero.line3')}
                     </span>
                   </div>

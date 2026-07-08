@@ -412,7 +412,7 @@ const TokenPricePerformance = ({
       )}
 
       {/* Chart Container */}
-      <AeCard className="relative p-4" style={{ height: '400px' }}>
+      <AeCard variant="glass" className="relative p-4 rounded-xl" style={{ height: '400px' }}>
         <div
           ref={chartContainerRef}
           className="w-full h-full"

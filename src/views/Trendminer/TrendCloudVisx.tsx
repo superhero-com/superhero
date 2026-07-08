@@ -42,7 +42,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   const words = useMemo(() => tags.map((tag) => ({ text: tag.tag, value: tag.score })), [tags]);
 
   const cloud = (
-    <div className={`border border-dashed border-white/20 rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'} bg-black/10 backdrop-blur-sm`}>
+    <div className={`liquid-glass rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'}`}>
       <Wordcloud
         words={words}
         width={width}

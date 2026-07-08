@@ -138,9 +138,9 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Transaction confirmed',
         line: {
           leftLabel: `-${fmt(payload.coinAmount)} AE`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `+${fmt(payload.estimatedTokens)} ${payload.tokenSymbol}`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.SellToken:
@@ -148,21 +148,21 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Transaction confirmed',
         line: {
           leftLabel: `-${fmt(payload.tokenAmount)} ${payload.tokenSymbol}`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `+${fmt(payload.estimatedCoin)} AE`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.ApproveAllowance:
-      return { title: 'Allowance approved', line: { leftLabel: `${payload.tokenSymbol} approved`, leftColor: '#4ade80' } };
+      return { title: 'Allowance approved', line: { leftLabel: `${payload.tokenSymbol} approved`, leftColor: 'var(--color-bull)' } };
     case TxPayloadType.SwapToken:
       return {
         title: 'Swap confirmed',
         line: {
           leftLabel: `-${fmt(payload.amountIn)} ${payload.tokenInSymbol}`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `+${fmt(payload.amountOut)} ${payload.tokenOutSymbol}`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.WrapToken:
@@ -170,9 +170,9 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Wrap complete',
         line: {
           leftLabel: `-${fmt(payload.amount)} AE`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `+${fmt(payload.amount)} WAE`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.UnwrapToken:
@@ -180,15 +180,15 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Unwrap complete',
         line: {
           leftLabel: `-${fmt(payload.amount)} WAE`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `+${fmt(payload.amount)} AE`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.CreateToken:
       return {
         title: 'Token created',
-        line: { leftLabel: `#${payload.tokenName}`, leftColor: '#4ade80' },
+        line: { leftLabel: `#${payload.tokenName}`, leftColor: 'var(--color-bull)' },
       };
     case TxPayloadType.CreatePost:
       return { title: 'Post published', line: null };
@@ -197,16 +197,16 @@ function getConfirmedMeta(payload: TxPayload): {
     case TxPayloadType.ClaimChainName:
       return {
         title: 'Name claimed',
-        line: { leftLabel: `${payload.name}.chain`, leftColor: '#4ade80' },
+        line: { leftLabel: `${payload.name}.chain`, leftColor: 'var(--color-bull)' },
       };
     case TxPayloadType.AddLiquidity:
       return {
         title: 'Liquidity added',
         line: {
           leftLabel: `+${fmt(payload.amountA)} ${payload.tokenASymbol}`,
-          leftColor: '#4ade80',
+          leftColor: 'var(--color-bull)',
           rightLabel: `+${fmt(payload.amountB)} ${payload.tokenBSymbol}`,
-          rightColor: '#4ade80',
+          rightColor: 'var(--color-bull)',
         },
       };
     case TxPayloadType.RemoveLiquidity:
@@ -214,7 +214,7 @@ function getConfirmedMeta(payload: TxPayload): {
         title: 'Liquidity removed',
         line: {
           leftLabel: `-${payload.liquidityPct}% LP`,
-          leftColor: '#f87171',
+          leftColor: 'var(--color-bear)',
           rightLabel: `${payload.tokenASymbol}/${payload.tokenBSymbol}`,
           rightColor: '#9ca3af',
         },
@@ -226,8 +226,7 @@ function getConfirmedMeta(payload: TxPayload): {
 
 // ─── Notification content by type ────────────────────────────────────────────
 
-// eslint-disable-next-line max-len
-const cardBase = 'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
+const cardBase = 'rounded-xl px-3.5 py-3 flex items-center gap-3';
 
 // Declared first — referenced by the components below.
 const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success' }) => {
@@ -264,7 +263,7 @@ const NotificationIcon = ({ variant }: { variant: 'error' | 'loading' | 'success
 const NotificationError = ({ message }: { message: string }) => {
   const { t } = useTranslation();
   return (
-    <div className={`${cardBase} bg-red-950/90`}>
+    <div className={`${cardBase} bg-red-950/90 border border-white/[0.06] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]`}>
       <NotificationIcon variant="error" />
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-red-400 font-bold text-sm leading-[18px] m-0">{t('common.messages.transactionFailed')}</p>
@@ -288,7 +287,7 @@ const NotificationWaiting = ({
     ? getSubmittedMeta(payload)
     : getPendingMeta(payload);
   return (
-    <div className={`${cardBase} bg-[#1a1a1a]/95`}>
+    <div className={`${cardBase} liquid-glass`}>
       <NotificationIcon variant="loading" />
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-white font-bold text-sm leading-[18px] m-0">{title}</p>
@@ -313,7 +312,7 @@ const NotificationConfirmed = ({
     : undefined;
 
   return (
-    <div className={`${cardBase} bg-[#1a1a1a]/95`}>
+    <div className={`${cardBase} liquid-glass`}>
       <NotificationIcon variant="success" />
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-white font-bold text-sm leading-[18px] m-0">{meta.title}</p>
@@ -332,7 +331,7 @@ const NotificationConfirmed = ({
       {portfolioHref ? (
         <button
           type="button"
-          className="bg-green-400 rounded-full px-4 py-2 flex-shrink-0 cursor-pointer border-0"
+          className="bg-bull rounded-btn px-4 py-2 flex-shrink-0 cursor-pointer border-0"
           onClick={(e) => {
             e.stopPropagation();
             window.location.href = portfolioHref;
@@ -341,7 +340,7 @@ const NotificationConfirmed = ({
           <span className="text-[#0a0a0a] font-bold text-[13px]">{t('common.buttons.viewPortfolio')}</span>
         </button>
       ) : (
-        <div className="bg-green-400 rounded-full px-4 py-2 flex-shrink-0">
+        <div className="bg-bull rounded-btn px-4 py-2 flex-shrink-0">
           <span className="text-[#0a0a0a] font-bold text-[13px]">{t('common.buttons.done')}</span>
         </div>
       )}

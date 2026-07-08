@@ -108,7 +108,7 @@ const MobileAppFooter = () => {
     setIsMoreOpen(false);
   }, [pathname]);
 
-  const baseItemClassName = 'no-gradient-text flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-center transition-colors duration-200';
+  const baseItemClassName = 'no-gradient-text flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-btn px-2 py-2 text-center transition-colors duration-200';
 
   const getItemStateClassName = (isActive: boolean) => (isActive
     ? 'bg-gradient-to-br from-brand-start/15 via-brand-mid/15 to-brand-end/15 text-[var(--standard-font-color)]'
@@ -138,11 +138,15 @@ const MobileAppFooter = () => {
       ref={footerRef}
       className={`mobile-app-footer fixed bottom-0 left-0 right-0 z-[1100] border-t lg:hidden transition-transform duration-200 ${isKeyboardOpen ? 'translate-y-full' : ''}`}
       style={{
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
+        backgroundImage: [
+          'radial-gradient(120% 140% at 50% 160%, rgba(255, 255, 255, 0.08), transparent 55%)',
+          'linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 60%)',
+        ].join(', '),
+        backdropFilter: 'blur(20px) saturate(185%) brightness(1.08)',
+        WebkitBackdropFilter: 'blur(20px) saturate(185%) brightness(1.08)',
+        backgroundColor: 'rgba(var(--background-color-rgb), 0.86)',
         borderTopColor: 'var(--glass-border)',
-        boxShadow: '0 -10px 28px rgba(0,0,0,0.28)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.10), 0 -10px 28px rgba(0,0,0,0.28)',
       }}
     >
       <nav
@@ -184,7 +188,7 @@ const MobileAppFooter = () => {
           <div ref={moreMenuRef} className="relative flex min-w-0 flex-1">
             {isMoreOpen && (
               <div
-                className="absolute bottom-[calc(100%+12px)] right-0 z-[1101] min-w-[180px] rounded-xl border bg-card/95 p-1 text-card-foreground shadow-card backdrop-blur-card"
+                className="absolute bottom-[calc(100%+12px)] right-0 z-[1101] min-w-[180px] liquid-glass liquid-glass--strong rounded-xl p-1 text-card-foreground"
                 style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
                 role="menu"
                 aria-label={t('common.layout.moreOptions')}

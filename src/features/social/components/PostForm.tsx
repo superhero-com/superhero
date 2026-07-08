@@ -938,7 +938,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       <div
         className={`mx-auto mb-5 md:mb-4 ${className}`}
       >
-        <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-xl md:p-4 md:backdrop-blur-xl">
+        <div className="liquid-glass liquid-glass--strong rounded-xl p-0 transition-all duration-300 relative md:p-4">
           <div className="text-center text-white/70">
             <p className="text-sm">{tf('pleaseConnectWalletToReply')}</p>
           </div>
@@ -954,7 +954,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     <div
       className={`${isPost ? 'w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
     >
-      <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-xl md:p-4 md:backdrop-blur-xl">
+      <div className="liquid-glass liquid-glass--strong rounded-xl p-0 transition-all duration-300 relative md:p-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
             {activeAccount && (
@@ -1146,7 +1146,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showEmojiPicker && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('emoji')}
                         ref={emojiBtnRef}
                         onClick={() => {
@@ -1162,7 +1162,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showGifInput && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('gif')}
                         ref={gifBtnRef}
                         onClick={() => {
@@ -1179,7 +1179,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showImageInput && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('image')}
                         onClick={() => {
                           setShowImage((s) => !s);
@@ -1195,7 +1195,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {detectedLink && (
                       <button
                         type="button"
-                        className={`border text-white/70 px-3 py-2 rounded-xl md:rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
+                        className={`border text-white/70 px-3 py-2 rounded-btn cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
                           linkPreviewDismissedForCurrent
                             ? 'bg-primary-100 border-primary-300 text-primary-600'
                             : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
@@ -1215,7 +1215,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     )}
 
                     {showEmojiPicker && showEmoji && (
-                      <div className="absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                      <div className="absolute bottom-[110%] left-0 liquid-glass liquid-glass--strong rounded-xl p-2.5 z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-xl md:p-4">
                         <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
                           {DEFAULT_EMOJIS.map((e) => (
                             <button
@@ -1373,7 +1373,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   type="submit"
                   loading={isSubmitting}
                   disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-btn cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-btn cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {(() => {
                     if (isSubmitting) {
@@ -1386,7 +1386,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   })()}
                 </AeButton>
               ) : (
-                <ConnectWalletButton block className="w-full rounded-xl md:rounded-btn" />
+                <ConnectWalletButton block className="w-full rounded-btn" />
               )}
             </div>
           </div>

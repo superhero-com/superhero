@@ -244,7 +244,7 @@ export default function GovernanceVote({
                       <div
                         key={idx}
                         className={cn(
-                          'group relative p-6 bg-white/5 border border-white/10 rounded-xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
+                          'group relative p-6 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1',
                           isWinning && 'bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse',
                         )}
                       >

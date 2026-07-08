@@ -210,7 +210,7 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
             >
               !
             </button>
-            <div className="absolute bottom-6 left-0 bg-white/10 border border-white/20 rounded-lg p-2 text-xs text-white/80 backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+            <div className="absolute bottom-6 left-0 liquid-glass liquid-glass--strong rounded-xl p-2 text-xs text-white/80 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
               {t('trending.ranking.mcRankInfo')}
             </div>
           </div>
@@ -232,10 +232,10 @@ const TokenRanking = ({ token }: TokenRankingProps) => {
               key={item.sale_address}
               to={`/trending/tokens/${item.name}`}
               className={`
-                flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ease-out text-decoration-none
+                flex items-center justify-between p-3 rounded-xl transition-all duration-300 ease-out text-decoration-none
                 ${isCurrentToken
-                ? 'bg-white/20 border-white/30 text-white'
-                : 'bg-white/[0.05] border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white'
+                ? 'liquid-glass liquid-glass--strong text-white'
+                : 'liquid-glass liquid-glass--hover text-white/80 hover:text-white'
                 }
               `}
             >

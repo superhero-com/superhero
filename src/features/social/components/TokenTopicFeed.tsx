@@ -375,16 +375,16 @@ const TokenTopicFeed = ({
           Only when the holder set is complete/authoritative — for a partial or failed fetch we
           fall back to showing all posts, so claiming "no holder posts" would contradict the feed. */}
       {holdersOnly && tokenSaleAddress && holdersComplete && allPosts.length > 0 && holderPosts.length === 0 && (
-        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-bull/25 bg-bull/10 px-3 md:px-4 py-2.5 text-xs text-bull flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
           <div className="text-left">
-            <div className="font-semibold text-emerald-100">
+            <div className="font-semibold text-bull">
               {t('tokenTopicFeed.noHolderPostsYet')}
             </div>
-            <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
+            <div className="mt-0.5 text-bull/90 text-[11px] sm:text-xs leading-snug">
               {t('tokenTopicFeed.ifYouHoldCreatePostPrefix')}
               {' '}
-              <span className="font-semibold text-emerald-100 underline decoration-emerald-300/60 decoration-dashed underline-offset-2">
+              <span className="font-semibold text-bull underline decoration-bull/60 decoration-dashed underline-offset-2">
                 {displayTag}
               </span>
               {' '}
@@ -396,16 +396,16 @@ const TokenTopicFeed = ({
 
       {/* Info banner when holders-only had no matches and we auto-switched to all posts */}
       {autoSwitchedFromHolders && !holdersOnly && allPosts.length > 0 && holderPosts.length === 0 && (
-        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-xl border border-bull/25 bg-bull/10 px-3 md:px-4 py-2.5 text-xs text-bull flex items-start gap-2">
           <span className="text-[14px] pt-0.5" aria-hidden="true">ℹ️</span>
           <div className="text-left">
-            <div className="font-semibold text-emerald-100">
+            <div className="font-semibold text-bull">
               {t('tokenTopicFeed.noHolderPostsYet')}
             </div>
-            <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
+            <div className="mt-0.5 text-bull/90 text-[11px] sm:text-xs leading-snug">
               {t('tokenTopicFeed.showingAllPostsForPrefix')}
               {' '}
-              <span className="font-semibold text-emerald-100">
+              <span className="font-semibold text-bull">
                 {displayTag}
               </span>
               {' '}

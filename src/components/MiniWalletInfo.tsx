@@ -21,7 +21,7 @@ const MiniWalletInfo = ({ block, style, ...rest }: Props) => {
       {...rest}
       className={cn(
         'flex items-center gap-2',
-        block && 'p-3 rounded-full border border-border bg-card text-foreground',
+        block && 'p-3 rounded-btn border border-glass-border bg-glass-bg backdrop-blur-sm text-foreground',
         rest.className,
       )}
       style={style}

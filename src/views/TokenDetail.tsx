@@ -194,7 +194,7 @@ export default function TokenDetail() {
             {/* Token Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* Price Card */}
-              <div className="p-5 rounded-xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
+              <div className="liquid-glass rounded-xl p-5 relative overflow-hidden">
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                   💰
                   {' '}
@@ -234,16 +234,7 @@ export default function TokenDetail() {
 
               {/* TVL Card */}
               <div
-                style={{
-                  padding: 20,
-                  borderRadius: 12,
-                  background:
-                    'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                  border: '1px solid rgba(0, 255, 127, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+                className="liquid-glass rounded-xl p-5 relative overflow-hidden"
               >
                 <div
                   style={{
@@ -289,16 +280,7 @@ export default function TokenDetail() {
 
               {/* Volume Card */}
               <div
-                style={{
-                  padding: 20,
-                  borderRadius: 12,
-                  background:
-                    'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                  border: '1px solid rgba(138, 43, 226, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+                className="liquid-glass rounded-xl p-5 relative overflow-hidden"
               >
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
                   <span>

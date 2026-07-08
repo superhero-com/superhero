@@ -349,28 +349,28 @@ const TipModal = ({
             <button
               type="button"
               onClick={() => handleQuick('1')}
-              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+              className="px-3 py-1.5 rounded-btn border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
             >
               1 AE
             </button>
             <button
               type="button"
               onClick={() => handleQuick('10')}
-              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+              className="px-3 py-1.5 rounded-btn border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
             >
               10 AE
             </button>
             <button
               type="button"
               onClick={() => handleQuick('100')}
-              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+              className="px-3 py-1.5 rounded-btn border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
             >
               100 AE
             </button>
             <button
               type="button"
               onClick={() => handleQuick('500')}
-              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+              className="px-3 py-1.5 rounded-btn border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
             >
               500 AE
             </button>

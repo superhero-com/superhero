@@ -163,7 +163,7 @@ const RecentActivityItem = ({
 
   return (
     <div
-      className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
+      className="liquid-glass liquid-glass--hover rounded-xl p-3 transition-all duration-200 ease-out"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -186,7 +186,7 @@ const RecentActivityItem = ({
 
               <div className="flex-1 flex justify-between items-center gap-2 ">
                 {activity.amountIn && (
-                  <span className="font-semibold text-[#4caf50]">
+                  <span className="font-semibold text-bull">
                     {formatAmount(activity.amountIn)}
                   </span>
                 )}
@@ -277,7 +277,7 @@ export default function RecentActivity({
           {t('activity.recentActivity')}
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-white/60 bg-white/[0.05] py-0.5 px-2 rounded-xl border border-white/10">
+          <span className="stat-chip text-white/60 py-0.5 px-2">
             {activities.length}
           </span>
           {activities.length > 0 && (

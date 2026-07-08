@@ -85,12 +85,9 @@ const BridgeTokenSelector = ({
               onClick={() => {
                 setSearchValue('');
               }}
-              className={`flex-1 max-w-[max(120px,100%)] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
-                ? 'cursor-not-allowed opacity-50 bg-white/[0.05]'
-                : 'cursor-pointer hover:-translate-y-0.5'
-              } ${selected
-                ? 'bg-white/10 text-white border-[#4ecdc4]/30'
-                : 'bg-white/[0.05] text-white hover:bg-white/10'
+              className={`flex-1 max-w-[max(120px,100%)] py-2.5 px-4 liquid-glass liquid-glass--hover rounded-xl text-sm font-semibold text-white transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer'
               }`}
             >
               {loading ? (
@@ -115,7 +112,7 @@ const BridgeTokenSelector = ({
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000] animate-in fade-in duration-150" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 liquid-glass liquid-glass--strong text-white rounded-xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
             <Dialog.Title className="font-bold text-lg sm:text-xl m-0">
@@ -124,7 +121,7 @@ const BridgeTokenSelector = ({
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110"
+                className="p-2 liquid-glass rounded-xl text-white cursor-pointer transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110"
               >
                 ✕
               </button>
@@ -137,7 +134,7 @@ const BridgeTokenSelector = ({
               placeholder={t('searchTokenPlaceholder')}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
+              className="w-full py-3.5 pr-12 pl-4 rounded-xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
               🔍
@@ -199,18 +196,15 @@ const BridgeTokenSelector = ({
                   type="button"
                   key={asset.symbol}
                   onClick={() => handleSelect(asset)}
+                  className="liquid-glass liquid-glass--hover rounded-xl"
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '14px 16px',
-                    borderRadius: 12,
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    background: 'rgba(255, 255, 255, 0.04)',
                     color: 'var(--standard-font-color)',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(10px)',
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';

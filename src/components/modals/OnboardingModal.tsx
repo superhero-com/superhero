@@ -153,7 +153,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
         <div className="ml-10">
           <AeButton
             variant="default"
-            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full rounded-xl"
+            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full rounded-btn"
             onClick={handleConnect}
             loading={connectingWallet}
             disabled={connectingWallet}
@@ -180,7 +180,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             href={APP_LINKS.appStore}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-2.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] no-underline"
+            className="inline-flex items-center gap-2 liquid-glass liquid-glass--hover rounded-xl px-4 py-2.5 no-underline"
           >
             <Smartphone className="w-4 h-4 text-white/60" />
             <div className="text-left">
@@ -192,7 +192,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             href={APP_LINKS.playStore}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-2.5 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] no-underline"
+            className="inline-flex items-center gap-2 liquid-glass liquid-glass--hover rounded-xl px-4 py-2.5 no-underline"
           >
             <Smartphone className="w-4 h-4 text-white/60" />
             <div className="text-left">

@@ -17,15 +17,15 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     const { children } = this.props;
     if (hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center p-6">
-          <div className="text-center bg-white/5 border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
+        <div className="aurora-surface min-h-screen w-full flex items-center justify-center p-6">
+          <div className="liquid-glass liquid-glass--strong text-center rounded-xl p-8 max-w-md w-full">
             <div className="text-4xl mb-3">⚠️</div>
             <h1 className="text-lg font-semibold mb-1 text-white">{i18n.t('common.errorBoundary.title')}</h1>
             <p className="text-sm text-white/70 mb-5">{i18n.t('common.errorBoundary.reloading')}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white/15 active:bg-white/20 transition-colors"
+              className="px-4 py-2 rounded-btn bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white/15 active:bg-white/20 transition-colors"
             >
               {i18n.t('common.errorBoundary.reloadNow')}
             </button>

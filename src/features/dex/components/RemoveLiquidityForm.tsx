@@ -182,7 +182,7 @@ const RemoveLiquidityForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/10">
+          <div className="liquid-glass grid grid-cols-2 gap-4 p-4 rounded-xl">
             <div>
               <div className="text-xs text-white/60 mb-1">
                 {t('removeLiquidity.lpTokensToRemove')}
@@ -223,7 +223,7 @@ const RemoveLiquidityForm = () => {
           <button
             type="button"
             onClick={() => setShowConfirm(false)}
-            className="flex-1 px-6 py-4 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
+            className="flex-1 px-6 py-4 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('buttons.cancel')}
           </button>
@@ -231,7 +231,7 @@ const RemoveLiquidityForm = () => {
             type="button"
             onClick={handleRemove}
             disabled={loading}
-            className={`flex-[2] px-6 py-4 rounded-xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${loading
+            className={`flex-[2] px-6 py-4 rounded-btn border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${loading
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
@@ -349,7 +349,7 @@ const RemoveLiquidityForm = () => {
                   type="button"
                   key={pct}
                   onClick={() => setPercentage(pct)}
-                  className={`py-3 px-2 rounded-xl border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${percentage === pct
+                  className={`py-3 px-2 rounded-btn border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${percentage === pct
                     ? 'border-[#4ecdc4] bg-[#4ecdc4] text-white'
                     : 'border-white/10 bg-white/[0.02] text-white hover:bg-white/10'
                   }`}
@@ -419,7 +419,7 @@ const RemoveLiquidityForm = () => {
       </div>
 
       {/* Remove Summary */}
-      <div className="p-4 bg-gradient-to-br from-red-500/5 to-yellow-500/5 rounded-xl border border-red-500/20 mb-6">
+      <div className="liquid-glass p-4 rounded-xl mb-6">
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
             <div className="text-xs text-white/60 mb-1">

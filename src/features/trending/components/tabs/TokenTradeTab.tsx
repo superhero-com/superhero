@@ -193,14 +193,14 @@ export const TokenTradeTab = ({
             <button
               type="button"
               onClick={onBuy}
-              className="w-full rounded-xl bg-bull hover:bg-bull/90 active:bg-bull/80 text-white font-semibold py-3"
+              className="w-full rounded-btn bg-bull hover:bg-bull/90 active:bg-bull/80 text-white font-semibold py-3"
             >
               {t('tradeTab.buy')}
             </button>
             <button
               type="button"
               onClick={onSell}
-              className="w-full rounded-xl bg-bear hover:bg-bear/90 active:bg-bear/80 text-white font-semibold py-3"
+              className="w-full rounded-btn bg-bear hover:bg-bear/90 active:bg-bear/80 text-white font-semibold py-3"
             >
               {t('tradeTab.sell')}
             </button>

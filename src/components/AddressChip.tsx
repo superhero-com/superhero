@@ -82,7 +82,7 @@ export const AddressChip = ({
     <Badge
       variant={isActive ? 'default' : 'secondary'}
       className={cn(
-        'inline-flex items-center gap-2 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide',
+        'inline-flex items-center gap-2 rounded-btn backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide',
         large ? 'px-4 py-2 text-sm gap-2' : 'px-3 py-1.5 text-xs',
         isActive ? 'bg-accent text-accent-foreground border-accent' : 'bg-glass-bg border-glass-border text-foreground',
         !(copyable || linkToExplorer || linkToProfile || onClick) && 'cursor-default hover:translate-y-0 hover:shadow-none',
@@ -123,7 +123,7 @@ export const AddressChip = ({
 
       {/* Copied feedback */}
       {textCopied && (
-        <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
+        <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-btn animate-pulse">
           {t('common.addressChip.copied')}
         </div>
       )}

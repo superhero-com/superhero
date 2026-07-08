@@ -107,7 +107,7 @@ export const ImageSelectorDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[60vh] sm:max-h-[90vh] overflow-hidden sm:max-w-[600px] bg-gray-900 border-white/12 text-white flex flex-col"
+        className="max-h-[60vh] sm:max-h-[90vh] overflow-hidden sm:max-w-[600px] liquid-glass liquid-glass--strong rounded-xl text-white flex flex-col"
       >
         <DialogHeader>
           <DialogTitle className="text-white">{t('imageSelector.title')}</DialogTitle>

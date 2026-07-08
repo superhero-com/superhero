@@ -35,8 +35,8 @@ const FromTo = (props: FromToProps) => {
     toTokenNode,
   } = props;
 
-  const sectionBase = 'border border-white/10 rounded-2xl p-3 sm:p-4';
-  const sectionBg = embedded ? 'bg-transparent' : 'bg-white/[0.05] backdrop-blur-[10px]';
+  const sectionBase = 'rounded-xl p-3 sm:p-4';
+  const sectionBg = embedded ? 'bg-transparent border border-white/10' : 'liquid-glass';
   const arrowCircleBg = embedded ? 'bg-transparent' : 'bg-white/[0.08] backdrop-blur-[10px]';
 
   return (
@@ -56,7 +56,7 @@ const FromTo = (props: FromToProps) => {
                 type="button"
                 onClick={onMaxClick}
                 disabled={!!maxDisabled}
-                className={`text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0 ${maxDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded-btn-sm px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0 ${maxDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {maxDisabled ? '...' : 'MAX'}
               </button>

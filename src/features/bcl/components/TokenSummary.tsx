@@ -29,18 +29,18 @@ const TokenSummary = ({
 
   return (
     <div
-      className={`${className} p-0 bg-transparent border-0 rounded-none shadow-none backdrop-blur-none sm:p-6 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:rounded-[24px] sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:backdrop-blur-[20px]`}
+      className={`${className} liquid-glass liquid-glass--strong rounded-xl p-4 sm:p-6`}
     >
       {/* Header */}
       <div className="mb-6 hidden sm:block">
-        <h3 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+        <h3 className="text-xl font-bold text-white m-0 gradient-text">
           {t('common.views.tokenSummary.tokenInformation')}
         </h3>
       </div>
 
       {/* Token Name */}
       <div className="mb-6">
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
+        <div className="liquid-glass rounded-xl p-4 text-center">
           <div className="text-xs text-white/60 font-medium mb-2">
             {t('common.views.tokenSummary.tokenName')}
           </div>
@@ -52,7 +52,7 @@ const TokenSummary = ({
 
       {/* Price and Market Cap */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+        <div className="liquid-glass rounded-xl p-3 sm:p-4">
           <div className="text-xs text-white/60 font-medium mb-2">{t('common.account.price')}</div>
           <PriceDataFormatter
             className="text-xs sm:text-base"
@@ -60,7 +60,7 @@ const TokenSummary = ({
             priceData={token.price_data as PriceDto}
           />
         </div>
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+        <div className="liquid-glass rounded-xl p-3 sm:p-4">
           <div className="text-xs text-white/60 font-medium mb-2">
             {t('explore.marketCapLabel')}
           </div>
@@ -76,7 +76,7 @@ const TokenSummary = ({
       {/* DAO Balance and Total Supply */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         {token.dao_balance && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+          <div className="liquid-glass rounded-xl p-3 sm:p-4">
             <div className="text-xs text-white/60 font-medium mb-2">
               {t('common.views.tokenSummary.daoBalance')}
             </div>
@@ -88,7 +88,7 @@ const TokenSummary = ({
           </div>
         )}
         {token.total_supply && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+          <div className="liquid-glass rounded-xl p-3 sm:p-4">
             <div className="text-xs text-white/60 font-medium mb-2">
               {t('common.views.tokenSummary.totalSupply')}
             </div>
@@ -103,7 +103,7 @@ const TokenSummary = ({
       {/* Creation Date */}
       {token.created_at && (
         <div className="mb-6">
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
+          <div className="liquid-glass rounded-xl p-4 text-center">
             <div className="text-xs text-white/60 font-medium mb-2">
               {t('common.views.tokenSummary.creationDate')}
             </div>
@@ -117,7 +117,7 @@ const TokenSummary = ({
       {/* Contract Addresses */}
       <div className="flex flex-col gap-3 mb-6">
         {(token.address || token.creator_address) && (
-          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between liquid-glass rounded-xl p-4">
             <div className="text-xs text-white/60 font-medium">
               {t('common.views.tokenSummary.contractAddress')}
             </div>
@@ -125,7 +125,7 @@ const TokenSummary = ({
           </div>
         )}
         {token.sale_address && (
-          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between liquid-glass rounded-xl p-4">
             <div className="text-xs text-white/60 font-medium">
               {t('common.views.tokenSummary.saleAddress')}
             </div>
@@ -133,7 +133,7 @@ const TokenSummary = ({
           </div>
         )}
         {token.creator_address && (
-          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between liquid-glass rounded-xl p-4">
             <div className="text-xs text-white/60 font-medium">
               {t('common.views.tokenSummary.createdBy')}
             </div>
@@ -143,7 +143,7 @@ const TokenSummary = ({
       </div>
 
       {/* Description */}
-      <div className="text-sm text-white/60 leading-relaxed mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+      <div className="text-sm text-white/60 leading-relaxed mb-6 liquid-glass rounded-xl p-4">
         {t('common.views.tokenSummary.bondingCurveDescription')}
       </div>
 
@@ -152,7 +152,7 @@ const TokenSummary = ({
         {token.sale_address && (
           <a
             href={`/trends/dao/${encodeURIComponent(token.sale_address)}`}
-            className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center px-4 py-3 rounded-btn text-sm font-semibold text-white bg-gradient-brand-135 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('common.views.tokenSummary.openDao')}
           </a>
@@ -160,7 +160,7 @@ const TokenSummary = ({
         <div className="flex gap-3 ">
           <a
             href="/trends/invite"
-            className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center px-4 py-3 rounded-btn text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('common.views.tokenSummary.inviteAndEarn')}
           </a>
@@ -170,7 +170,7 @@ const TokenSummary = ({
             )}?type=call-transactions`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center px-4 py-3 rounded-btn text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
           >
             {t('dao.viewOnAescan')}
           </a>

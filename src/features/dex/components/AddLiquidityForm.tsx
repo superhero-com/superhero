@@ -445,7 +445,7 @@ const AddLiquidityForm = () => {
             <button
               type="button"
               onClick={clearSelection}
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
+              className="px-3 py-2 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
               {tDex('addLiquidityForm.cancel')}
             </button>
@@ -455,7 +455,7 @@ const AddLiquidityForm = () => {
             <button
               type="button"
               aria-label="open-settings"
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
+              className="px-3 py-2 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
               {tDex('addLiquidityForm.settings')}
             </button>

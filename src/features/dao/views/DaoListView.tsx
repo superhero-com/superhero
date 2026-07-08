@@ -124,20 +124,20 @@ const Daos = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 text-white">
+    <div className="max-w-6xl mx-auto p-4 text-white aurora-surface">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
-        <div className="text-3xl font-extrabold text-white">{translate('daosTitle')}</div>
+        <div className="text-3xl font-extrabold text-white"><span className="gradient-text">{translate('daosTitle')}</span></div>
         <div className="flex items-center gap-2">
           <input
             placeholder={translate('search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 min-h-10 box-border px-4 text-sm rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+            className="h-10 min-h-10 box-border px-4 text-sm rounded-xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
           />
           <AppSelect
             value={orderBy}
             onValueChange={(v) => updateOrderBy(v as OrderByOption)}
-            triggerClassName="h-10 min-h-10 w-auto min-w-[10rem] shrink-0 rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-0 text-sm text-white backdrop-blur-[10px] transition-all duration-300 hover:bg-white/[0.05] focus:outline-none data-[placeholder]:text-white/60"
+            triggerClassName="h-10 min-h-10 w-auto min-w-[10rem] shrink-0 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-0 text-sm text-white backdrop-blur-[10px] transition-all duration-300 hover:bg-white/[0.05] focus:outline-none data-[placeholder]:text-white/60"
             contentClassName="bg-gray-900 border-white/10"
           >
             {orderByOptions.map((option) => (
@@ -181,7 +181,7 @@ const Daos = () => {
                 )}
               </div>
               <a
-                className="px-4 py-2.5 rounded-xl text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45"
+                className="px-4 py-2.5 rounded-btn text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45"
                 href={`/trends/dao/${encodeURIComponent(
                   t.sale_address || '',
                 )}`}
@@ -271,7 +271,7 @@ const Daos = () => {
 
             <div className="flex justify-between items-center gap-2 mt-2">
               <a
-                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
+                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-btn border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                 href={`/trends/tokens/${encodeURIComponent(
                   t.name,
                 )}`}
@@ -279,7 +279,7 @@ const Daos = () => {
                 {translate('viewToken')}
               </a>
               <a
-                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
+                className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-btn border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                 href={`https://aescan.io/contracts/${encodeURIComponent(
                   t.sale_address || t.address,
                 )}?type=call-transactions`}

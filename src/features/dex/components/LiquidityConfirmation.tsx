@@ -52,7 +52,7 @@ const LiquidityConfirmation = ({
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
+                className="px-3 py-2 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
               >
                 ✕
               </button>
@@ -66,7 +66,7 @@ const LiquidityConfirmation = ({
             </div>
 
             <div className="grid gap-3">
-              <div className="flex justify-between items-center px-4 py-3 bg-white/[0.03] rounded-xl border border-white/10">
+              <div className="liquid-glass flex justify-between items-center px-4 py-3 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#1161FE] flex items-center justify-center text-sm font-bold text-white">
                     {tokenA.symbol.charAt(0)}
@@ -82,7 +82,7 @@ const LiquidityConfirmation = ({
                 </div>
               </div>
 
-              <div className="flex justify-between items-center px-4 py-3 bg-white/[0.03] rounded-xl border border-white/10">
+              <div className="liquid-glass flex justify-between items-center px-4 py-3 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#1161FE] flex items-center justify-center text-sm font-bold text-white">
                     {tokenB.symbol.charAt(0)}

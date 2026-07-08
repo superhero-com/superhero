@@ -112,7 +112,7 @@ export default function TokenSelector({
                 }
                 setCustomAddress('');
               }}
-              className={`min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
+              className={`min-w-[120px] py-2.5 px-4 rounded-btn border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
                 disabled || loading
                   ? 'cursor-not-allowed opacity-50'
                   : 'cursor-pointer hover:-translate-y-0.5'
@@ -144,7 +144,7 @@ export default function TokenSelector({
               {t('dex.bridge.selectAToken')}
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110">
+              <button className="p-2 rounded-btn bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110">
                 ✕
               </button>
             </Dialog.Close>
@@ -275,28 +275,21 @@ export default function TokenSelector({
               <button
                 key={token.address}
                 onClick={() => handleSelect(token)}
+                className="liquid-glass rounded-xl"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '14px 16px',
-                  borderRadius: 12,
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  background: 'rgba(255, 255, 255, 0.04)',
                   color: 'var(--standard-font-color)',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';
                   e.currentTarget.style.transform = 'translateX(2px)';
-                  e.currentTarget.style.borderColor = 'var(--accent-color)';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
                   e.currentTarget.style.transform = 'translateX(0)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                 }}
               >
                 <div style={{ textAlign: 'left' }}>

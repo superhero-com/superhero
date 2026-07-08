@@ -24,7 +24,7 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Total Volume Card */}
-      <div className="p-5 rounded-xl bg-gradient-to-br from-blue-400/10 to-white/5 border border-blue-400/20 backdrop-blur-xl relative overflow-hidden">
+      <div className="liquid-glass p-5 rounded-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
           📈
           {' '}
@@ -39,7 +39,7 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
       </div>
 
       {/* Volume Card with Dropdown */}
-      <div className="p-5 rounded-xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
+      <div className="liquid-glass p-5 rounded-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
           <span className="flex items-center gap-1.5">
             📊
@@ -79,13 +79,7 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
       </div>
 
       {/* Price Change Card with Dropdown */}
-      <div
-        className={`p-5 rounded-xl backdrop-blur-xl relative overflow-hidden ${
-          priceChangePercentage >= 0
-            ? 'bg-gradient-to-br from-bull/10 to-white/5 border border-bull/20'
-            : 'bg-gradient-to-br from-bear/10 to-white/5 border border-bear/20'
-        }`}
-      >
+      <div className="liquid-glass p-5 rounded-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
           <span className="flex items-center gap-1.5">
             📊

@@ -88,7 +88,7 @@ const GlobalStatsAnalytics = () => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {statsItems.map((item) => (
-        <div key={item.name} className="p-2">
+        <div key={item.name} className="p-3 liquid-glass rounded-xl">
           <div className="text-xs opacity-80 mb-1">{item.name}</div>
           <div className="flex align-center font-extrabold text-sm sm:text-base">
             {item.value}

@@ -342,7 +342,7 @@ export const TokenListTable = ({
               gap: 6,
               background: 'rgba(76, 175, 80, 0.1)',
               padding: '6px 10px',
-              borderRadius: 16,
+              borderRadius: 8,
               border: '1px solid rgba(76, 175, 80, 0.2)',
               flexShrink: 0,
             }}

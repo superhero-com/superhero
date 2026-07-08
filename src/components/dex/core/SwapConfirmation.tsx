@@ -82,7 +82,7 @@ export default function SwapConfirmation({
           </div>
 
           {/* Inline token swap row */}
-          <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 mb-3 flex items-center justify-between gap-3">
+          <div className="liquid-glass rounded-xl p-3 mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 shrink-0 rounded-full bg-[#1161FE] flex items-center justify-center text-xs font-bold">
                 {tokenIn.symbol.charAt(0)}
@@ -95,7 +95,7 @@ export default function SwapConfirmation({
             <div className="text-white/30 text-sm shrink-0">→</div>
             <div className="flex items-center gap-2 min-w-0 justify-end">
               <div className="min-w-0 text-right">
-                <div className="font-bold text-sm text-green-400 truncate">{Decimal.from(amountOut).prettify()}</div>
+                <div className="font-bold text-sm text-bull truncate">{Decimal.from(amountOut).prettify()}</div>
                 <div className="text-xs text-white/50">{tokenOut.symbol}</div>
               </div>
               <div className="w-7 h-7 shrink-0 rounded-full bg-[#1161FE] flex items-center justify-center text-xs font-bold">
@@ -105,7 +105,7 @@ export default function SwapConfirmation({
           </div>
 
           {/* Details + Settings combined */}
-          <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 mb-3 space-y-1.5 text-[12px]">
+          <div className="liquid-glass rounded-xl p-3 mb-3 space-y-1.5 text-[12px]">
             <div className="flex justify-between text-white/60">
               <span>{t('dex.swapConfirmation.rate')}</span>
               <span className="text-white">1 {tokenIn.symbol} = {Decimal.from(rate).prettify()} {tokenOut.symbol}</span>
@@ -163,7 +163,7 @@ export default function SwapConfirmation({
             <button
               onClick={onClose}
               disabled={loading}
-              className={`flex-1 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm font-semibold transition-all duration-200 ${
+              className={`flex-1 px-4 py-2.5 rounded-btn border border-white/10 bg-white/[0.05] text-white text-sm font-semibold transition-all duration-200 ${
                 loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-white/[0.08]'
               }`}
             >
@@ -172,7 +172,7 @@ export default function SwapConfirmation({
             <button
               onClick={onConfirm}
               disabled={loading}
-              className={`flex-[2] px-4 py-2.5 rounded-xl border-none text-white text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`flex-[2] px-4 py-2.5 rounded-btn border-none text-white text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
                 loading
                   ? 'bg-white/10 cursor-not-allowed'
                   : 'bg-[#1161FE] shadow-[0_6px_20px_rgba(17,97,254,0.35)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0'

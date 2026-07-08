@@ -482,7 +482,7 @@ const Whitepaper = () => {
 
   return (
     <>
-      <div className="max-w-[980px] mx-auto p-4">
+      <div className="max-w-[980px] mx-auto p-6 md:p-10 my-6 liquid-glass liquid-glass--strong rounded-xl">
         <div className="mb-4">
           <AeButton
             onClick={() => {

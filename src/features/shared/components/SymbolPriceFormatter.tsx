@@ -29,10 +29,10 @@ const SymbolPriceFormatter = ({
 }: SymbolPriceFormatterProps) => (
   <div className={`inline-flex items-center ${className}`}>
     {priceJustIncreased && (
-    <span className="text-green-400 mr-1">↗</span>
+    <span className="text-bull mr-1">↗</span>
     )}
     {priceJustDecreased && (
-    <span className="text-red-400 mr-1">↘</span>
+    <span className="text-bear mr-1">↘</span>
     )}
     <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} textClassName={textClassName} />
     {priceLoading && (

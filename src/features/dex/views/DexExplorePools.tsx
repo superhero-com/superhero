@@ -200,7 +200,7 @@ const DexExplorePools = () => {
                   </div>
 
                   {/* Results Counter */}
-                  <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-xl border border-[var(--accent-color)]/20">
+                  <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-btn border border-[var(--accent-color)]/20">
                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                     <span className="text-[11px] text-[var(--accent-color)] font-semibold">
                       {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
@@ -212,7 +212,7 @@ const DexExplorePools = () => {
 
             {/* Mobile Results Counter */}
             <div className="md:hidden flex justify-end">
-              <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-xl border border-[var(--accent-color)]/20">
+              <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-btn border border-[var(--accent-color)]/20">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
                 <span className="text-[11px] text-[var(--accent-color)] font-semibold">
                   {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
@@ -267,7 +267,7 @@ const DexExplorePools = () => {
                       </div>
 
                       {/* Transaction Count Badge */}
-                      <div className="bg-[var(--accent-color)]/10 px-2 py-1 rounded-xl border border-[var(--accent-color)]/20 mt-2">
+                      <div className="bg-[var(--accent-color)]/10 px-2 py-1 rounded-btn border border-[var(--accent-color)]/20 mt-2">
                         <span className="text-xs text-[var(--accent-color)] font-semibold">
                           {pair.transactions_count || 0}
                           {' '}
@@ -278,7 +278,7 @@ const DexExplorePools = () => {
 
                     {/* Pool Statistics Grid */}
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                      <div className="liquid-glass p-3 rounded-lg">
                         <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
                           {t('explore.tvlUsd')}
                         </div>
@@ -286,7 +286,7 @@ const DexExplorePools = () => {
                           <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
                         </div>
                       </div>
-                      <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                      <div className="liquid-glass p-3 rounded-lg">
                         <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
                           {t('explore.volume')}
                           {' '}
@@ -307,7 +307,7 @@ const DexExplorePools = () => {
                             `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
                           );
                         }}
-                        className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-gradient-brand-135 active:text-white"
+                        className="flex-1 py-3 rounded-btn border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-gradient-brand-135 active:text-white"
                       >
                         🔄
                         {' '}
@@ -321,7 +321,7 @@ const DexExplorePools = () => {
                             `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
                           );
                         }}
-                        className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-gradient-brand-135 active:text-white"
+                        className="flex-1 py-3 rounded-btn border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-gradient-brand-135 active:text-white"
                       >
                         ➕
                         {' '}

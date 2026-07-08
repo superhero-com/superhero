@@ -72,9 +72,9 @@ const AeButton = ({
       onClick={onClick}
       type={type}
       className={cn(
-        rounded && 'rounded-full',
+        rounded && 'rounded-btn',
         outlined && 'border-2',
-        gradient && 'bg-gradient-to-r',
+        gradient && 'bg-gradient-brand-135 text-white',
         className,
       )}
       style={style}

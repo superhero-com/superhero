@@ -28,10 +28,10 @@ const GlobalNewAccountEducation = () => {
       right: 20,
       zIndex: 1000,
       maxWidth: 400,
-      borderRadius: 20,
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+      borderRadius: 12,
+      background: 'var(--gradient-brand-135)',
       padding: 3,
-      boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+      boxShadow: 'var(--glow-brand), 0 20px 40px rgba(0,0,0,0.3)',
       animation: 'slideIn 0.5s ease-out',
     }}
     >
@@ -48,14 +48,14 @@ const GlobalNewAccountEducation = () => {
       }}
       />
 
-      <div style={{
-        background: 'linear-gradient(145deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
-        borderRadius: 17,
-        padding: 20,
-        position: 'relative',
-        zIndex: 1,
-        border: '1px solid rgba(255,255,255,0.1)',
-      }}
+      <div
+        className="liquid-glass liquid-glass--strong"
+        style={{
+          borderRadius: 12,
+          padding: 20,
+          position: 'relative',
+          zIndex: 1,
+        }}
       >
         {/* Header with close button */}
         <div style={{
@@ -137,13 +137,12 @@ const GlobalNewAccountEducation = () => {
             {t('newAccountEducation.subtitle')}
           </p>
 
-          <div style={{
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: 12,
-            padding: 12,
-            border: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(10px)',
-          }}
+          <div
+            className="liquid-glass"
+            style={{
+              borderRadius: 12,
+              padding: 12,
+            }}
           >
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
@@ -186,21 +185,19 @@ const GlobalNewAccountEducation = () => {
               padding: '8px 12px',
               borderRadius: 8,
               border: 'none',
-              background: 'linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%)',
+              background: 'var(--gradient-brand-135)',
               color: 'white',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(78,205,196,0.3)',
+              boxShadow: 'var(--glow-brand)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(78,205,196,0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(78,205,196,0.3)';
             }}
           >
             {t('newAccountEducation.goToDex')}

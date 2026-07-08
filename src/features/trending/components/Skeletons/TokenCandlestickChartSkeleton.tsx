@@ -53,7 +53,7 @@ const TokenCandlestickChartSkeleton = ({
             {/* Loading message */}
             {!boilerplate && (
               <div className="loading-message absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="loading-box border rounded bg-[#1a1a1a] flex items-center p-4 gap-2">
+                <div className="loading-box liquid-glass rounded-xl flex items-center p-4 gap-2">
                   {/* Chart Icon */}
                   <div className="chart-icon w-[30px] h-[30px] p-1 text-white">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">

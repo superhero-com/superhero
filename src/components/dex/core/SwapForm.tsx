@@ -363,7 +363,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <DexSettings title={t('swap.swapSettings')}>
           <button
             aria-label={t('labels.openSettings', { ns: 'common' })}
-            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
+            className="px-3 py-2 rounded-btn border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
           >
             ⚙️
             {' '}
@@ -490,7 +490,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label={t('swap.connectWallet')}
           variant="dex"
-          className="text-sm w-full py-4 px-6 rounded-xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+          className="text-sm w-full py-4 px-6 rounded-btn border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
           block
         />
       )}

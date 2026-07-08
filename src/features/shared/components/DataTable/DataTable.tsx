@@ -119,7 +119,7 @@ export const DataTable = <T, >({
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="mt-2 px-4 py-2 bg-gradient-brand-135 text-white rounded-btn hover:shadow-glow transition-colors"
             >
               {t('dataTable.tryAgain')}
             </button>
@@ -161,7 +161,7 @@ export const DataTable = <T, >({
         {isPageTransitioning && (
           <div className="absolute inset-0 flex items-center justify-center">
             {fetchingOverlayComponent || (
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm">
+              <div className="flex items-center gap-2 liquid-glass rounded-btn px-4 py-2 text-sm text-white shadow-lg">
                 <Spinner className="h-4 w-4" />
                 <span>{t('dataTable.loadingPage')}</span>
               </div>

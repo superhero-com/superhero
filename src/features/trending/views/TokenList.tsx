@@ -488,7 +488,7 @@ const TokenList = () => {
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
                   placeholder={t('tokenList.searchPlaceholder')}
-                  className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#1161FE]"
+                  className="h-12 rounded-xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#1161FE]"
                 />
               </div>
             </div>

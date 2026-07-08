@@ -386,21 +386,21 @@ const BuyAeWidgetContent = ({
 
   const isDisabledWithBalanceCheck = isDisabled || hasInsufficientEthBalance;
 
-  const sectionBase = 'border border-white/10 rounded-2xl p-3 sm:p-4';
+  const sectionBase = 'rounded-xl p-3 sm:p-4';
   const sectionBg = embedded
-    ? 'bg-transparent'
-    : 'bg-white/[0.05] backdrop-blur-[10px]';
+    ? 'bg-transparent border border-white/10'
+    : 'liquid-glass';
   const sectionSpacingLarge = 'mb-4 sm:mb-5';
   const chipBg = embedded
-    ? 'bg-transparent'
-    : 'bg-white/[0.02] backdrop-blur-[10px]';
+    ? 'bg-transparent border border-white/10'
+    : 'liquid-glass';
 
   return (
     <div
       className={
         embedded
           ? 'w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-visible box-border'
-          : 'w-full max-w-[min(480px,100vw)] mx-auto bg-transparent border-0 p-0 relative overflow-visible box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]'
+          : 'w-full max-w-[min(480px,100vw)] mx-auto liquid-glass rounded-xl relative overflow-visible box-border p-4 sm:p-6'
       }
     >
       {/* Header */}
@@ -417,7 +417,7 @@ const BuyAeWidgetContent = ({
         )}
 
         <div
-          className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}
+          className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}
         >
           {t('buyAeWidget.crossChain', { ns: 'buyAe' })}
         </div>
@@ -443,7 +443,7 @@ const BuyAeWidgetContent = ({
         maxDisabled={fetchingBalance}
         fromTokenNode={(
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent border border-white/10' : 'liquid-glass'} rounded-xl flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
@@ -455,7 +455,7 @@ const BuyAeWidgetContent = ({
         toLoading={ethBridgeQuoting}
         toTokenNode={(
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent border border-white/10' : 'liquid-glass'} rounded-xl flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
@@ -556,9 +556,9 @@ const BuyAeWidgetContent = ({
               type="button"
               onClick={handleEthBridge}
               disabled={isDisabledWithBalanceCheck}
-              className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabledWithBalanceCheck
+              className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-btn border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabledWithBalanceCheck
                 ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-gradient-brand-135 shadow-glow hover:-translate-y-0.5 active:translate-y-0'
               }`}
             >
               {ethBridgeProcessing ? (

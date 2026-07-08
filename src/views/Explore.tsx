@@ -317,7 +317,7 @@ export default function ExploreRefactored() {
             </div>
 
             {/* Transactions Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="w-full border-collapse liquid-glass rounded-xl overflow-hidden">
               <thead>
                 <tr style={{ borderBottom: '1px solid #3a3a4a' }}>
                   <th style={{

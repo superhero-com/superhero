@@ -239,7 +239,7 @@ export const TokenListCards = ({
               {/* Token Statistics Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 {/* Price */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                <div className="liquid-glass p-3 rounded-xl">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {t('price')}
                   </div>
@@ -249,7 +249,7 @@ export const TokenListCards = ({
                 </div>
 
                 {/* TVL */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                <div className="liquid-glass p-3 rounded-xl">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {t('tokenListCards.sort.tvl')}
                   </div>
@@ -259,7 +259,7 @@ export const TokenListCards = ({
                 </div>
 
                 {/* 24h Change */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                <div className="liquid-glass p-3 rounded-xl">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {t('tokenListCards.changeWithTimeframe', { timeframe: timeBase })}
                   </div>
@@ -283,7 +283,7 @@ export const TokenListCards = ({
                 </div>
 
                 {/* 24h Volume */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                <div className="liquid-glass p-3 rounded-xl">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {t('tokenListCards.volumeWithTimeframe', { timeframe: timeBase })}
                   </div>
@@ -300,7 +300,7 @@ export const TokenListCards = ({
                     e.stopPropagation();
                     handleSwapClick(token);
                   }}
-                  className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
+                  className="flex-1 p-3 rounded-btn bg-gradient-brand-135 text-white cursor-pointer text-sm font-semibold transition-all duration-300 outline-none hover:opacity-90 active:scale-95"
                 >
                   🔄 {t('tokenListCards.swap')}
                 </button>
@@ -309,7 +309,7 @@ export const TokenListCards = ({
                     e.stopPropagation();
                     handleAddClick(token);
                   }}
-                  className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
+                  className="flex-1 p-3 rounded-btn bg-gradient-brand-135 text-white cursor-pointer text-sm font-semibold transition-all duration-300 outline-none hover:opacity-90 active:scale-95"
                 >
                   ➕ {t('tokenListCards.addLiquidity')}
                 </button>

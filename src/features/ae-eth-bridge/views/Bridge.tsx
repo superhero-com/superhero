@@ -2,7 +2,7 @@ import { RecentActivity } from '@/components/dex';
 import { AeEthBridge } from '../components/AeEthBridge';
 
 const Bridge = () => (
-  <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+  <div className="aurora-surface mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
     {/* Main Content - unified layout */}
     <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start w-full">
       {/* Left card (Swap) */}

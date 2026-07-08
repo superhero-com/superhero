@@ -164,7 +164,7 @@ export const LeaderboardCard = ({
         {/* Portfolio value sparkline */}
         <div className="hidden sm:flex flex-1 items-center justify-end">
           <div
-            className="relative w-28 h-14 rounded-xl bg-[#050712] border border-white/5 flex items-center justify-center px-1 overflow-hidden"
+            className="relative w-28 h-14 liquid-glass rounded-xl flex items-center justify-center px-1 overflow-hidden"
             onMouseEnter={() => setIsChartHovered(true)}
             onMouseLeave={() => setIsChartHovered(false)}
           >
@@ -220,7 +220,7 @@ export const LeaderboardCard = ({
             )}
 
             {isChartHovered && latestPoint && (
-              <div className="absolute top-1 right-1 px-2 py-1 rounded-md bg-black/80 border border-white/10 text-[10px] text-white/80 shadow-lg pointer-events-none">
+              <div className="absolute top-1 right-1 px-2 py-1 liquid-glass liquid-glass--strong rounded-xl text-[10px] text-white/80 shadow-lg pointer-events-none">
                 <div className="font-semibold">
                   $
                   {formatNumber(latestPoint.value, 2)}

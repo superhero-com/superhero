@@ -331,7 +331,7 @@ const CollectRewardsCard = () => {
             {!thresholdReached && inviteeProgress.length > 0 && (
               <div className="mt-2 space-y-2">
                 {inviteeProgress.slice(0, 6).map((item) => (
-                  <div key={item.address} className="bg-white/3 rounded-lg border border-white/5 p-3">
+                  <div key={item.address} className="liquid-glass rounded-xl p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-xs font-mono text-white/80 truncate">
                         {item.address}

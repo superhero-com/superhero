@@ -214,8 +214,6 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
       className={[
         'group relative overflow-hidden',
         'transition-all duration-300 hover:-translate-y-0.5',
-        'border border-border/60 bg-gradient-to-br from-background/60 to-background/30',
-        'backdrop-blur-xl',
         `ring-1 ${ringColor}`,
       ].join(' ')}
     >
@@ -258,7 +256,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
         {/* Swap section */}
         {hasSwapInfo && (
-          <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 md:p-4">
+          <div className="liquid-glass mb-4 rounded-xl p-3 md:p-4">
             <div className="mb-3 flex items-center gap-2">
               <span className="text-lg">🔄</span>
               <span className="text-sm font-semibold text-blue-600">{t('transactions.swapDetails')}</span>
@@ -310,7 +308,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
         {/* Mint section */}
         {transaction.pair_mint_info && (
-          <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
+          <div className="liquid-glass mb-4 rounded-xl">
             <div className="flex items-center gap-2 px-4 pt-4">
               <span className="text-lg">🪙</span>
               <span className="text-sm font-semibold text-amber-600">{t('transactions.pairMint')}</span>
@@ -349,7 +347,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
         )}
 
         {/* Footer */}
-        <div className="mt-4 rounded-xl border border-border/60 bg-gradient-to-r from-slate-500/5 to-gray-500/5 p-3">
+        <div className="liquid-glass mt-4 rounded-xl p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <CopyPill

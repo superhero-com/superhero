@@ -151,7 +151,7 @@ const Branding = () => {
                 />
                 <div className="p-4">
                   <h3 className="font-bold text-white text-base mb-1">{color.name}</h3>
-                  <div className="flex items-center justify-between gap-1 mb-2 bg-black/20 px-2 py-1.5 rounded-lg border border-white/5">
+                  <div className="flex items-center justify-between gap-1 mb-2 liquid-glass px-2 py-1.5 rounded-btn-sm">
                     <span className="font-mono text-xs text-white/80">{color.hex}</span>
                     <button
                       type="button"
@@ -190,7 +190,7 @@ const Branding = () => {
                 <p className="text-sm text-white/70 leading-relaxed mb-4">
                   {t('common.views.branding.interDescription')}
                 </p>
-                <div className="font-mono text-xs text-white/50 p-3 bg-black/20 rounded-lg border border-white/5">
+                <div className="font-mono text-xs text-white/50 p-3 liquid-glass rounded-btn">
                   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                 </div>
               </div>
@@ -243,7 +243,7 @@ const Branding = () => {
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/full-logo.svg', 'superhero-full-logo.svg')}
-                  className="w-full justify-center"
+                  className="w-full justify-center !bg-gradient-brand-135"
                   variant="success"
                   size="sm"
                 >
@@ -257,7 +257,7 @@ const Branding = () => {
             {/* Small Icon Favicon Card */}
             <div className="liquid-glass flex flex-col rounded-xl overflow-hidden group">
               <div className="h-44 flex items-center justify-center p-6 bg-slate-950 border-b border-white/10 relative overflow-hidden">
-                <div className="w-16 h-16 flex items-center justify-center p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm z-10 transition-transform duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 flex items-center justify-center p-3 rounded-xl liquid-glass z-10 transition-transform duration-300 group-hover:scale-105">
                   <FaviconIcon id="favicon-brand-download" className="w-full h-full text-blue-600" />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-transparent pointer-events-none" />
@@ -269,7 +269,7 @@ const Branding = () => {
                 </p>
                 <AeButton
                   onClick={() => downloadSvgElementById('favicon-brand-download', 'superhero-favicon.svg')}
-                  className="w-full justify-center"
+                  className="w-full justify-center !bg-gradient-brand-135"
                   variant="success"
                   size="sm"
                 >
@@ -301,7 +301,7 @@ const Branding = () => {
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/logo.png', 'superhero-square-logo.png')}
-                  className="w-full justify-center"
+                  className="w-full justify-center !bg-gradient-brand-135"
                   variant="success"
                   size="sm"
                 >
@@ -346,7 +346,7 @@ const Branding = () => {
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/og-default.png', 'superhero-og-banner.png')}
-                  className="w-full justify-center"
+                  className="w-full justify-center !bg-gradient-brand-135"
                   variant="success"
                   size="sm"
                 >
@@ -379,7 +379,7 @@ const Branding = () => {
                 </p>
                 <AeButton
                   onClick={() => downloadFile('/screen-1.png', 'superhero-interface-screenshot.png')}
-                  className="w-full justify-center"
+                  className="w-full justify-center !bg-gradient-brand-135"
                   variant="success"
                   size="sm"
                 >

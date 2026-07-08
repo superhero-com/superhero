@@ -48,7 +48,7 @@ const SharePopover = ({
           <Share className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[260px] max-w-[92vw] p-1 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
+      <DropdownMenuContent className="w-[260px] max-w-[92vw] p-1 rounded-xl liquid-glass text-white">
         <DropdownMenuItem
           className="flex items-center gap-3 py-2.5 px-3 text-[14px] hover:bg-white/10 cursor-pointer"
           onClick={(e) => {

@@ -72,7 +72,7 @@ const LiquidityPositionCard = ({
             <button
               type="button"
               onClick={() => onAdd(position)}
-              className="px-4 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-accent-color hover:-translate-y-0.5"
+              className="px-4 py-2 rounded-btn border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-accent-color hover:-translate-y-0.5"
             >
               {t('liquidityPositionCard.add')}
             </button>
@@ -81,7 +81,7 @@ const LiquidityPositionCard = ({
             <button
               type="button"
               onClick={() => onRemove(position)}
-              className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-error-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-red-500/20 hover:-translate-y-0.5"
+              className="px-4 py-2 rounded-btn border border-red-500/30 bg-red-500/10 text-error-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-red-500/20 hover:-translate-y-0.5"
             >
               {t('liquidityPositionCard.remove')}
             </button>

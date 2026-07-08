@@ -225,8 +225,8 @@ export default function GovernanceCreate() {
         <MobileInput label={t('form.link')} value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
 
         <div className="flex gap-2">
-          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.publiclyListed')}</AeButton>
-          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.notListed')}</AeButton>
+          <AeButton onClick={() => setIsListed(true)} className={`rounded-btn ${isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}`}>{t('buttons.publiclyListed')}</AeButton>
+          <AeButton onClick={() => setIsListed(false)} className={`rounded-btn ${!isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}`}>{t('buttons.notListed')}</AeButton>
         </div>
 
         <div className="space-y-2">
@@ -240,7 +240,7 @@ export default function GovernanceCreate() {
                 error={errors.options || undefined}
               />
               {opt && (
-                <AeButton onClick={() => removeOption(idx)} className="bg-white/10">✕</AeButton>
+                <AeButton onClick={() => removeOption(idx)} className="rounded-btn bg-white/10">✕</AeButton>
               )}
             </div>
           ))}
@@ -272,7 +272,7 @@ export default function GovernanceCreate() {
         </div>
 
         <div className="sticky bottom-4">
-          <AeButton onClick={onSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+          <AeButton onClick={onSubmit} disabled={submitting} className="w-full rounded-btn bg-gradient-to-r from-pink-500 to-purple-600 text-white">
             {submitting ? t('buttons.creating') : t('buttons.createPoll')}
           </AeButton>
         </div>

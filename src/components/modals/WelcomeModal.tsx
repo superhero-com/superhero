@@ -62,7 +62,7 @@ const WelcomeModal = ({ onClose }: Props) => {
       <AeButton
         variant="default"
         size="lg"
-        className="w-full max-w-[280px] uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] rounded-xl font-semibold"
+        className="w-full max-w-[280px] uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] rounded-btn font-semibold"
         onClick={handleGetStarted}
       >
         Get Started

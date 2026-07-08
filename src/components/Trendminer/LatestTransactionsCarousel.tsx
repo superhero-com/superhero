@@ -258,6 +258,9 @@ const LatestTransactionsCarousel = () => {
         className="transaction-card"
         style={{
           background: type.cardBg,
+          backdropFilter: 'blur(16px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+          borderRadius: 12,
         }}
         onClick={() => {
           if (saleAddress) {

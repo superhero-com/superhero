@@ -41,9 +41,9 @@ const PriceFormatter = ({
   const prevWatchKeyRef = useRef<string | undefined>(undefined);
   let priceChangeClass = '';
   if (priceJustDecreased) {
-    priceChangeClass = 'text-red-400';
+    priceChangeClass = 'text-bear';
   } else if (priceJustIncreased) {
-    priceChangeClass = 'text-green-400';
+    priceChangeClass = 'text-bull';
   }
 
   useEffect(() => {

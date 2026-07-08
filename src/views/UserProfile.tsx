@@ -403,7 +403,7 @@ export default function UserProfile({
                   setEditOpen(true);
                 }}
                 className={[
-                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-solid',
+                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-btn-sm border border-solid',
                   'box-border whitespace-nowrap px-3 text-[12px] font-semibold leading-none',
                   '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
                   'hover:!shadow-none hover:!transform-none',

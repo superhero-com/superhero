@@ -28,21 +28,21 @@ export const ConnectWalletButton = ({
   if (activeAccount) return null;
 
   const dexClasses = cn(
-    // Mobile (default): superhero blue with card-like radius
-    'bg-[#1161FE] text-white border-none rounded-xl text-sm',
+    // Mobile (default): superhero blue with button radius
+    'bg-[#1161FE] text-white border-none rounded-btn text-sm',
     // Desktop+: elegant dark/glass pill with icon
-    'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full sm:text-sm',
+    'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-btn sm:text-sm',
     'sm:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:sm:shadow-[0_12px_32px_rgba(0,0,0,0.45)]',
   );
 
   const baseClasses = cn(
-    'rounded-xl sm:rounded-full border-border bg-card backdrop-blur-sm backdrop-saturate-120 hover:bg-card/80 hover:shadow-md text-sm',
+    'rounded-btn border-border bg-card backdrop-blur-sm backdrop-saturate-120 hover:bg-card/80 hover:shadow-md text-sm',
     'sm:bg-card sm:hover:bg-card/80 sm:text-sm',
-    'bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full',
+    'bg-[#1161FE] text-white border-none rounded-btn',
   );
 
   const mutedClasses = cn(
-    'rounded-xl sm:rounded-full text-sm',
+    'rounded-btn text-sm',
     'bg-white/10 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white/80',
     'shadow-none',
   );

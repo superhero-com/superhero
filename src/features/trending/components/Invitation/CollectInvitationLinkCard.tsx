@@ -245,7 +245,7 @@ const CollectInvitationLinkCard = ({
       {/* Collapsed state */}
       {isCollapsed ? (
         <Card
-          className="cursor-pointer transition-all hover:shadow-md"
+          className="liquid-glass liquid-glass--hover cursor-pointer transition-all"
           onClick={() => setIsCollapsed(false)}
         >
           <CardContent className="p-4 flex items-center justify-between">
@@ -262,7 +262,7 @@ const CollectInvitationLinkCard = ({
         </Card>
       ) : (
         /* Expanded state */
-        <Card>
+        <Card className="liquid-glass liquid-glass--strong">
           <CardContent className="p-6 relative">
             {/* Collapse button */}
             <button

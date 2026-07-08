@@ -74,11 +74,15 @@ const MobileAppHeader = () => {
     <div
       className="mobile-app-header z-[1100] fixed top-0 left-0 right-0 w-full lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b"
       style={{
-        backgroundColor: 'rgba(var(--background-color-rgb), 0.92)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        backgroundImage: [
+          'radial-gradient(120% 140% at 50% -60%, rgba(255, 255, 255, 0.10), transparent 55%)',
+          'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 60%)',
+        ].join(', '),
+        backgroundColor: 'rgba(var(--background-color-rgb), 0.86)',
+        backdropFilter: 'blur(18px) saturate(185%) brightness(1.08)',
+        WebkitBackdropFilter: 'blur(18px) saturate(185%) brightness(1.08)',
         borderBottomColor: 'var(--glass-border)',
-        boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
+        boxShadow: 'inset 0 -1px 0 0 rgba(255, 255, 255, 0.10), 0 6px 28px rgba(0,0,0,0.35)',
       }}
     >
       <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
@@ -166,7 +170,7 @@ const MobileAppHeader = () => {
                 onClick={handleConnect}
                 size="sm"
                 noShadow
-                className="h-10 rounded-full px-4 text-xs normal-case tracking-normal"
+                className="h-10 rounded-btn px-4 text-xs normal-case tracking-normal"
               >
                 <Favicon className="h-4 w-4" />
                 {t('buttons.connectWalletDex')}

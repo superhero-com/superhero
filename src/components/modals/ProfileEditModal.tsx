@@ -112,33 +112,38 @@ const GLASS_CARD_STYLE = {
 
 const FieldHeading = ({
   label,
+  labelClassName = FIELD_LABEL_CLASS,
   helpLabel,
   helpOpen,
   onHelpClick,
 }: {
   label: string;
+  labelClassName?: string;
   helpLabel?: string;
   helpOpen?: boolean;
   onHelpClick?: () => void;
-}) => (
-  <div className="flex items-center justify-between gap-3">
-    <div className="flex items-center gap-2 min-w-0">
-      <Label className={label === '.chain name' ? CHAIN_NAME_LABEL_CLASS : FIELD_LABEL_CLASS}>{label}</Label>
-      {helpLabel && onHelpClick ? (
-        <button
-          type="button"
-          aria-label={helpLabel}
-          aria-expanded={helpOpen}
-          onClick={onHelpClick}
-          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
-        >
-          <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-      ) : null}
+}) => {
+  const { t } = useTranslation('common');
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <Label className={labelClassName}>{label}</Label>
+        {helpLabel && onHelpClick ? (
+          <button
+            type="button"
+            aria-label={helpLabel}
+            aria-expanded={helpOpen}
+            onClick={onHelpClick}
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/45 transition-colors hover:border-[var(--neon-teal)] hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--neon-teal)]"
+          >
+            <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+      <span className={OPTIONAL_BADGE_CLASS}>{t('labels.optional')}</span>
     </div>
-    <span className={OPTIONAL_BADGE_CLASS}>Optional</span>
-  </div>
-);
+  );
+};
 
 const HelpPanel = ({
   children,
@@ -317,6 +322,8 @@ async function loadOwnedChainNamesFromMdw(address: string): Promise<OwnedChainNa
 const ProfileEditModal = ({
   open,
   onClose,
+  onHide,
+  onSaveError,
   onSkip,
   onClaimSuccess,
   address,
@@ -326,6 +333,16 @@ const ProfileEditModal = ({
 }: {
   open: boolean;
   onClose: (updatedProfile?: ProfileAggregate) => void;
+  // Hide the dialog WITHOUT running the parent's cancel/dismiss routing (flow flags,
+  // refetches). Called when a save kicks off, and again if the user dismisses a reopened
+  // dialog while that save is still running — in both cases the save's settle callbacks
+  // (onClose(updated) on success, onSaveError on failure) decide the outcome. Falls back
+  // to onClose() when not provided.
+  onHide?: () => void;
+  // Called when the save fails after the dialog was already closed. Deliberately separate
+  // from onClose(): a failed save is not a user cancel, so parents must not run their
+  // dismiss logic (e.g. resetting onboarding flow flags).
+  onSaveError?: () => void;
   onSkip?: () => void;
   onClaimSuccess?: () => void;
   address?: string;
@@ -366,7 +383,6 @@ const ProfileEditModal = ({
   const queryClient = useQueryClient();
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
-  const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showSuperheroIdInfo, setShowSuperheroIdInfo] = useState(false);
   const [showChainNameInfo, setShowChainNameInfo] = useState(false);
@@ -388,6 +404,10 @@ const ProfileEditModal = ({
   const xSectionRef = useRef<HTMLDivElement | null>(null);
   const connectXButtonRef = useRef<HTMLButtonElement | null>(null);
   const submittedRef = useRef(false);
+  // Guards against overlapping saves: rapid repeated Save clicks could otherwise start
+  // parallel link/sign flows for the same fields. Stays set for the whole background save;
+  // while set, dismissal hides the dialog silently instead of running cancel routing.
+  const savingRef = useRef(false);
   const availabilityRequestIdRef = useRef(0);
   const sponsorshipRequestIdRef = useRef(0);
 
@@ -506,7 +526,6 @@ const ProfileEditModal = ({
 
   useEffect(() => {
     if (!open) {
-      setLoading(false);
       setFormError(null);
       setClaiming(false);
       setClaimInFlight(false);
@@ -873,11 +892,28 @@ const ProfileEditModal = ({
     return msg || t('messages.failedToUpdateProfile');
   };
 
-  const handleClose = () => onClose();
+  const hideDialog = () => {
+    if (onHide) onHide();
+    else onClose();
+  };
+  // While a save is in flight (including one started from an earlier open of this dialog),
+  // dismissing must only hide the dialog: running the parent's onClose/onSkip would reset
+  // onboarding flow flags and kick off refetches that race the save. The save's settle
+  // callbacks (onClose(updated) / onSaveError) take care of the routing instead.
+  const handleClose = () => {
+    if (savingRef.current) {
+      hideDialog();
+      return;
+    }
+    onClose();
+  };
   const handleSkip = () => {
-    if (loading) return;
+    if (savingRef.current) {
+      hideDialog();
+      return;
+    }
     if (onSkip) onSkip();
-    else handleClose();
+    else onClose();
   };
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -886,31 +922,48 @@ const ProfileEditModal = ({
   };
 
   async function onSave() {
+    if (savingRef.current) return;
+    const targetAddress = (address as string) || (activeAccount as string);
+    if (!targetAddress || !activeAccount) {
+      openModal({ name: 'onboarding' });
+      return;
+    }
+    const validationError = validateForm();
+    if (validationError) {
+      setFormError(validationError);
+      push(<div style={{ color: '#ffb3b3' }}>{validationError}</div>);
+      return;
+    }
+    const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
+    const chainNameChanged = (
+      trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
+    );
+    const websiteChanged = trimmedForm.website !== initialForm.website.trim();
+    if (!bioChanged && !chainNameChanged && !websiteChanged) {
+      const msg = t('messages.profileNothingToUpdate');
+      setFormError(msg);
+      push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
+      return;
+    }
+
+    const changedFields: Array<'bio' | 'website' | 'chain_name'> = [
+      ...(bioChanged ? (['bio'] as const) : []),
+      ...(websiteChanged ? (['website'] as const) : []),
+      ...(chainNameChanged ? (['chain_name'] as const) : []),
+    ];
+    const notifyPayload = { type: TxPayloadType.UpdateProfile, fields: changedFields } as const;
+
+    savingRef.current = true;
+    setFormError(null);
+    // The link/sign flow below can trigger one or more wallet prompts and background requests.
+    // Close the dialog right away instead of blocking it on an undismissable "Saving…" state,
+    // and surface progress via the shared transaction toast (same as create-token/swap).
+    // hideDialog lets the parent hide the dialog without treating this as a cancel;
+    // routing (success vs dismiss) happens via onClose/onSaveError once the save settles.
+    notifySubmitted(notifyPayload);
+    hideDialog();
+
     try {
-      const targetAddress = (address as string) || (activeAccount as string);
-      if (!targetAddress || !activeAccount) {
-        openModal({ name: 'onboarding' });
-        return;
-      }
-      const validationError = validateForm();
-      if (validationError) {
-        setFormError(validationError);
-        push(<div style={{ color: '#ffb3b3' }}>{validationError}</div>);
-        return;
-      }
-      const bioChanged = trimmedForm.bio !== initialForm.bio.trim();
-      const chainNameChanged = (
-        trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
-      );
-      const websiteChanged = trimmedForm.website !== initialForm.website.trim();
-      if (!bioChanged && !chainNameChanged && !websiteChanged) {
-        const msg = t('messages.profileNothingToUpdate');
-        setFormError(msg);
-        push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
-        return;
-      }
-      setLoading(true);
-      setFormError(null);
       if (bioChanged) {
         if (trimmedForm.bio) {
           await linkBio({ address: targetAddress, bio: trimmedForm.bio });
@@ -941,6 +994,9 @@ const ProfileEditModal = ({
           await unlinkSite(targetAddress);
         }
       }
+
+      notifyPending(notifyPayload);
+
       const prevProfile = queryClient.getQueryData<ProfileAggregate | null>(
         ['SuperheroApi.getProfile', targetAddress],
       );
@@ -950,6 +1006,16 @@ const ProfileEditModal = ({
       ]);
       const accountRecord = accountResult.status === 'fulfilled' ? accountResult.value : null;
       const profileFromApi = profileResult.status === 'fulfilled' ? profileResult.value : null;
+
+      // Discard any in-flight cache fetches for these keys before writing the fresh data.
+      // The profile page refetches on modal close (the dialog can be reopened and dismissed
+      // while this save is still running) and polls the profile query on an interval; a
+      // fetch started before the links above were applied would resolve with a pre-save
+      // snapshot and overwrite the setQueryData writes below.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ['SuperheroApi.getProfile', targetAddress] }),
+        queryClient.cancelQueries({ queryKey: ['AccountsService.getAccount', targetAddress] }),
+      ]);
 
       if (accountRecord) {
         queryClient.setQueryData(['AccountsService.getAccount', targetAddress], accountRecord);
@@ -1024,18 +1090,21 @@ const ProfileEditModal = ({
           ? t('messages.siteLinkSuccess')
           : t('messages.siteUnlinkSuccess');
       }
+      notifyConfirmed(notifyPayload);
       push(<div>{successMessage}</div>);
       onClose(updated);
     } catch (e) {
       const msg = resolveErrorMessage(e);
-      setFormError(msg);
+      notifyError(msg);
       push(
         <div style={{ color: '#ffb3b3' }}>
           {msg}
         </div>,
       );
+      // Not onClose(): a failed save must not run the parents' cancel/dismiss logic.
+      onSaveError?.();
     } finally {
-      setLoading(false);
+      savingRef.current = false;
     }
   }
 
@@ -1139,7 +1208,8 @@ const ProfileEditModal = ({
 
             <div>
               <FieldHeading
-                label=".chain name"
+                label={t('labels.dotChainName')}
+                labelClassName={CHAIN_NAME_LABEL_CLASS}
                 helpLabel={t('messages.chainNameHelpLabel')}
                 helpOpen={showChainNameInfo}
                 onHelpClick={() => setShowChainNameInfo((value) => !value)}
@@ -1176,7 +1246,7 @@ const ProfileEditModal = ({
                   </AppSelect>
                   <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
                     <span>AENS</span>
-                    <span className="text-blue-400">Preferred name</span>
+                    <span className="text-blue-400">{t('labels.preferredName')}</span>
                   </div>
                 </div>
               ) : (
@@ -1234,14 +1304,13 @@ const ProfileEditModal = ({
                     <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
                       <span>{t('messages.chainNameClaimHint')}</span>
                       <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
-                        {availabilityStatus === 'available' ? 'Available' : ''}
+                        {availabilityStatus === 'available' ? t('labels.available') : ''}
                       </span>
                     </div>
                   </div>
                   {isClaimTooShort && (
                   <p className="mt-2 text-xs text-amber-300">
-                    {normalizedClaimValueLength}
-                    /13 characters before `.chain`
+                    {t('messages.chainNameClaimLengthHint', { length: normalizedClaimValueLength })}
                   </p>
                   )}
                   {showSponsorshipHint && sponsorshipForCurrentName && (
@@ -1269,7 +1338,7 @@ const ProfileEditModal = ({
 
             {(CONFIG as any).X_OAUTH_CLIENT_ID ? (
               <div ref={xSectionRef}>
-                <FieldHeading label="X (Twitter)" />
+                <FieldHeading label={t('labels.xTwitter')} />
                 {!xSectionReady && !isGuest && (
                 <div className="mt-1.5 flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-6">
                   <Spinner className="w-5 h-5 text-white/60" />
@@ -1316,7 +1385,7 @@ const ProfileEditModal = ({
                   }}
                 >
                   <XIcon className="w-4 h-4 fill-current" />
-                  {connectingX ? t('messages.connectingX') : 'Link account'}
+                  {connectingX ? t('messages.connectingX') : t('buttons.linkAccount')}
                 </button>
                 )}
                 {xSectionReady && hasXVerified && xUsername && (
@@ -1331,11 +1400,11 @@ const ProfileEditModal = ({
             ) : null}
 
             <div>
-              <FieldHeading label="Bio" />
+              <FieldHeading label={t('labels.bio')} />
               <Textarea
                 value={form.bio}
                 onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-                placeholder="Tell the world about yourself…"
+                placeholder={t('placeholders.profileBio')}
                 className="mt-1.5 bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm resize-none min-h-[72px]"
                 maxLength={200}
               />
@@ -1346,7 +1415,7 @@ const ProfileEditModal = ({
             </div>
 
             <div>
-              <FieldHeading label="Website" />
+              <FieldHeading label={t('labels.website')} />
               <div className="relative mt-1.5">
                 <Globe className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
                 <Input
@@ -1367,7 +1436,6 @@ const ProfileEditModal = ({
               <button
                 type="button"
                 onClick={handleSkip}
-                disabled={loading}
                 className="mb-3 w-full border-0 bg-transparent text-xs font-semibold text-white/45 transition-colors hover:text-white disabled:opacity-50"
               >
                 {t('buttons.skipForNow')}
@@ -1377,7 +1445,6 @@ const ProfileEditModal = ({
               <Button
                 variant="ghost"
                 onClick={handleClose}
-                disabled={loading}
                 className="flex-1 border border-white/15 text-white/70 hover:text-white hover:bg-white/[0.06] rounded-xl"
               >
                 {t('buttons.cancel')}
@@ -1386,14 +1453,14 @@ const ProfileEditModal = ({
                 onClick={onSave}
                 // Keep Save active when logged out so the click can trigger onboarding;
                 // only gate on edit permission once an account is actually connected.
-                disabled={loading || (!!activeAccount && !canEdit)}
+                disabled={!!activeAccount && !canEdit}
                 className="flex-1 rounded-xl font-semibold disabled:opacity-50"
                 style={{
                   background: 'linear-gradient(135deg, var(--neon-teal) 0%, #00c97e 100%)',
                   color: '#0a0a0a',
                 }}
               >
-                {loading ? t('messages.savingProfile') : t('buttons.save')}
+                {t('buttons.save')}
               </Button>
             </div>
           </div>

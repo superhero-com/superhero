@@ -97,7 +97,7 @@ export function useClaimChainName(targetAddress?: string) {
     signMessage,
   } = useAeSdk();
   const {
-    connectWallet,
+    reconnectWallet,
     connectingWallet,
     walletConnected,
     walletInfo,
@@ -111,7 +111,10 @@ export function useClaimChainName(targetAddress?: string) {
     walletConnected,
     walletInfo,
     connectingWallet,
-    connectWallet,
+    // Silent, non-destructive variant: connectWallet would clear the restored
+    // session (activeAccount, walletInfo) before scanning if the app-level
+    // silent reconnect has not finished yet.
+    connectWallet: reconnectWallet,
     requireWalletConnectedForSigner: true,
   });
 

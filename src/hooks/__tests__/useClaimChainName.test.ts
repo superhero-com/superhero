@@ -48,6 +48,9 @@ vi.mock('@/hooks/useAeSdk', () => ({
 vi.mock('@/hooks/useWalletConnect', () => ({
   useWalletConnect: () => ({
     connectWallet: (...args: any[]) => mockConnectWallet(...args),
+    // The hook wires the silent variant into useWalletReconnect; route it to the
+    // same spy so the reconnect expectations keep covering the wiring.
+    reconnectWallet: (...args: any[]) => mockConnectWallet(...args),
     connectingWallet: mockConnectingWallet,
     walletConnected: mockWalletConnected,
     walletInfo: mockWalletInfo,

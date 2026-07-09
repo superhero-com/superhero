@@ -1,6 +1,8 @@
 import type { ReactElement } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, waitFor } from '@testing-library/react';
+import {
+  fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
@@ -134,5 +136,53 @@ describe('ProfileXCallback', () => {
       expect(mockClaimXAddressLinkFromCode).toHaveBeenCalledTimes(1);
     });
     expect(mockAddStaticAccount).not.toHaveBeenCalled();
+  });
+
+  it('signs only after the user clicks the confirm button (user gesture)', async () => {
+    renderCallback(
+      <MemoryRouter initialEntries={['/profile/x/callback?code=abc&state=superhero_x_state_1']}>
+        <Routes>
+          <Route path="/profile/x/callback" element={<ProfileXCallback />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    // The confirm button appears once the code has been exchanged.
+    const button = await screen.findByRole('button', { name: /sign in wallet to link/i });
+
+    // Crucially, the blockchain signing must NOT be auto-triggered — otherwise
+    // browsers would block the wallet pop-up.
+    expect(mockCompleteXAddressLink).not.toHaveBeenCalled();
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(mockCompleteXAddressLink).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('re-enables the button so the user can retry after a failure', async () => {
+    mockCompleteXAddressLink.mockRejectedValueOnce(new Error('popup blocked'));
+
+    renderCallback(
+      <MemoryRouter initialEntries={['/profile/x/callback?code=abc&state=superhero_x_state_1']}>
+        <Routes>
+          <Route path="/profile/x/callback" element={<ProfileXCallback />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const button = await screen.findByRole('button', { name: /sign in wallet to link/i });
+    fireEvent.click(button);
+
+    // After the failure the button re-enables and offers a retry.
+    const retry = await screen.findByRole('button', { name: /try again/i });
+    expect(retry).not.toBeDisabled();
+
+    fireEvent.click(retry);
+
+    await waitFor(() => {
+      expect(mockCompleteXAddressLink).toHaveBeenCalledTimes(2);
+    });
   });
 });

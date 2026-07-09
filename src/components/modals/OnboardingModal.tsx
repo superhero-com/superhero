@@ -1,6 +1,8 @@
 import React, {
   useCallback, useEffect, useMemo, useRef,
 } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import { Smartphone } from 'lucide-react';
 import { AeButton } from '@/components/ui/ae-button';
@@ -46,15 +48,16 @@ function getDeviceInfo() {
 // Mirror the connect-wallet flow: show only the detected browser's extension, but for unknown
 // desktop browsers (e.g. Safari) offer both Chrome and Firefox rather than a misleading
 // Chrome-only path.
-function getExtensionLinks(device: ReturnType<typeof getDeviceInfo>) {
-  const chrome = { label: 'Get extension for Chrome', href: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne', Icon: ChromeIcon };
-  const firefox = { label: 'Get extension for Firefox', href: 'https://addons.mozilla.org/en-US/firefox/addon/superhero-wallet/', Icon: FirefoxIcon };
+function getExtensionLinks(device: ReturnType<typeof getDeviceInfo>, t: TFunction) {
+  const chrome = { label: t('common.modals.connectWallet.getExtensionChrome'), href: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne', Icon: ChromeIcon };
+  const firefox = { label: t('common.modals.connectWallet.getExtensionFirefox'), href: 'https://addons.mozilla.org/en-US/firefox/addon/superhero-wallet/', Icon: FirefoxIcon };
   if (device.isChromeFamily) return [chrome];
   if (device.isFirefox) return [firefox];
   return [chrome, firefox];
 }
 
 const OnboardingModal = ({ onClose, onConnected }: Props) => {
+  const { t } = useTranslation();
   const { connectWallet, connectingWallet } = useWalletConnect();
   const { activeAccount } = useAeSdk();
   const device = useMemo(() => getDeviceInfo(), []);
@@ -88,10 +91,10 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Favicon className="w-8 h-8" />
-          <h2 className="text-xl font-bold text-white/95">Edit SuperheroID</h2>
+          <h2 className="text-xl font-bold text-white/95">{t('common.modals.onboarding.title')}</h2>
         </div>
         <p className="text-sm text-white/50">
-          Connect your wallet to create and manage your SuperheroID
+          {t('common.modals.onboarding.subtitle')}
         </p>
       </div>
 
@@ -102,7 +105,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             1
           </span>
           <span className="text-sm font-semibold text-white/80">
-            {device.isMobile ? 'Make sure you have the Superhero Wallet app' : 'Make sure you have the extension'}
+            {device.isMobile ? t('common.modals.onboarding.stepWalletApp') : t('common.modals.onboarding.stepExtension')}
           </span>
         </div>
 
@@ -117,14 +120,14 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             >
               <Smartphone className="w-5 h-5 text-white/60 shrink-0" />
               <span className="text-sm text-white/90 font-medium">
-                {device.isIOS ? 'Download from App Store' : 'Download from Google Play'}
+                {device.isIOS ? t('common.modals.connectWallet.downloadAppStore') : t('common.modals.connectWallet.downloadGooglePlay')}
               </span>
             </a>
           </div>
         ) : (
           /* Desktop: show browser extension(s) */
           <div className="ml-10">
-            {getExtensionLinks(device).map((ext) => (
+            {getExtensionLinks(device, t).map((ext) => (
               <a
                 key={ext.href}
                 href={ext.href}
@@ -147,7 +150,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             2
           </span>
           <span className="text-sm font-semibold text-white/80">
-            Connect Wallet
+            {t('common.buttons.connectWallet')}
           </span>
         </div>
         <div className="ml-10">
@@ -158,7 +161,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             loading={connectingWallet}
             disabled={connectingWallet}
           >
-            {connectingWallet ? 'Connecting…' : 'CONNECT WALLET'}
+            {connectingWallet ? t('common.buttons.connecting') : t('common.buttons.connectWalletDex')}
           </AeButton>
         </div>
       </div>
@@ -166,14 +169,14 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
       {/* Divider with "or" */}
       <div className="flex items-center gap-3 my-5">
         <div className="flex-1 h-px bg-white/10" />
-        <span className="text-xs text-white/40 uppercase">or</span>
+        <span className="text-xs text-white/40 uppercase">{t('common.modals.onboarding.or')}</span>
         <div className="flex-1 h-px bg-white/10" />
       </div>
 
       {/* Download full app */}
       <div className="text-center">
         <p className="text-xs text-white/50 mb-3">
-          Download the all-in-one Superhero app with built-in wallet
+          {t('common.modals.onboarding.downloadAppHint')}
         </p>
         <div className="flex flex-row items-center justify-center gap-3">
           <a
@@ -184,7 +187,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
           >
             <Smartphone className="w-4 h-4 text-white/60" />
             <div className="text-left">
-              <span className="block text-[10px] text-white/40 leading-none">Download on</span>
+              <span className="block text-[10px] text-white/40 leading-none">{t('common.modals.onboarding.downloadOn')}</span>
               <span className="block text-[12px] font-semibold text-white/90 leading-tight">App Store</span>
             </div>
           </a>
@@ -196,7 +199,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
           >
             <Smartphone className="w-4 h-4 text-white/60" />
             <div className="text-left">
-              <span className="block text-[10px] text-white/40 leading-none">Get it on</span>
+              <span className="block text-[10px] text-white/40 leading-none">{t('common.modals.onboarding.getItOn')}</span>
               <span className="block text-[12px] font-semibold text-white/90 leading-tight">Google Play</span>
             </div>
           </a>
@@ -205,16 +208,16 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
 
       {/* Terms */}
       <div className="mt-5 text-center text-[11px] text-white/40 leading-relaxed">
-        By connecting your wallet you agree to the
+        {t('common.modals.connectWallet.agreePrefix')}
         {' '}
         <Link to="/terms" className="no-underline text-[var(--primary-color)] hover:opacity-90">
-          Terms of Use
+          {t('common.layout.termsOfUse')}
         </Link>
         {' '}
-        and
+        {t('common.modals.connectWallet.and')}
         {' '}
         <Link to="/privacy" className="no-underline text-[var(--primary-color)] hover:opacity-90">
-          Privacy Policy
+          {t('common.layout.privacyPolicy')}
         </Link>
         .
       </div>

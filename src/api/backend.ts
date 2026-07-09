@@ -381,6 +381,18 @@ export type XPostingRewardStatus = {
   qualified_posts_count?: number;
   tx_hash?: string | null;
   next_check_allowed_at?: string | number | null;
+  // Fields surfaced by the rewards UI (X posting reward redesign).
+  status?: XPostingRewardOnboardingStatus | string;
+  x_username?: string | null;
+  per_post_total_paid_count?: number;
+  current_streak_days?: number;
+  tier_amount_ae?: number;
+  follower_count?: number;
+  referral_link?: string | null;
+  // Human-readable reason a reward was NOT sent, returned even on a successful
+  // (HTTP 200) recheck — e.g. below the follower minimum, the X identity is
+  // already rewarded, or the payout failed. Null when there is nothing to report.
+  error?: string | null;
 };
 
 /**
@@ -390,6 +402,21 @@ export type XPostingRewardStatus = {
 export type XPostingRewardRecheckResult =
   | { rateLimited: false; status: XPostingRewardStatus }
   | { rateLimited: true; nextAllowedAt: string | number | null };
+
+/** Challenge issued before a manual recheck; the wallet signs `message` to authorize the scan. */
+export type XRecheckChallengeResponse = XPostingRewardChallengeResponse;
+
+/** Signed proof of address ownership submitted with a recheck or referral-link request. */
+export type XSignedProof = {
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  signature_hex: string;
+};
+
+/** Referral link issued for a qualifying X-linked account. */
+export type XReferralLinkResponse = {
+  link: string;
+};
 
 // Superhero API client
 export const SuperheroApi = {
@@ -975,6 +1002,30 @@ export const SuperheroApi = {
       body: JSON.stringify(payload),
     }) as Promise<AddressLinkSubmitResponse>;
   },
+  // X Posting Reward endpoints (recheck challenge, manual recheck, referral link).
+  // `getXPostingRewardStatus` is defined above (read-only status).
+  createXRecheckChallenge(address: string) {
+    return this.fetchJson('/api/profile/x-posting-reward/recheck-challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+    }) as Promise<XRecheckChallengeResponse>;
+  },
+  runXPostingRewardRecheck(address: string, proof: XSignedProof) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/x-posting-reward/recheck`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(proof),
+    }) as Promise<XPostingRewardStatus>;
+  },
+  getXReferralLink(address: string, proof: XSignedProof) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/x-reward/referral-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(proof),
+    }) as Promise<XReferralLinkResponse>;
+  },
+  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/challenge`, {
       method: 'POST',

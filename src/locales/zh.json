@@ -23,7 +23,17 @@
       "tip": "打赏",
       "viewPortfolio": "查看投资组合",
       "done": "完成",
-      "trade": "交易"
+      "trade": "交易",
+      "skipForNow": "暂时跳过",
+      "editSuperheroId": "编辑 SuperheroID",
+      "changeChainName": "更改",
+      "chooseChainName": "选择",
+      "buyChainName": "购买",
+      "apply": "应用",
+      "save": "保存",
+      "getChainName": "+ 获取 .chain 名称",
+      "claimChainName": "申领",
+      "linkAccount": "关联账户"
     },
     "labels": {
       "superheroHome": "Superhero 首页",
@@ -48,7 +58,14 @@
       "none": "无",
       "connectX": "关联 X 账户",
       "xAccount": "X 账户",
-      "profile": "个人资料"
+      "profile": "个人资料",
+      "claimChainName": "申领一个新的 .chain 名称",
+      "optional": "可选",
+      "dotChainName": ".chain 名称",
+      "preferredName": "首选名称",
+      "available": "可用",
+      "website": "网站",
+      "xTwitter": "X（Twitter）"
     },
     "actions": {
       "copy": "复制"
@@ -70,7 +87,9 @@
       "conference": "会议",
       "sortByBalance": "按余额排序",
       "clickToExpandTips": "点击展开提示",
-      "clickToCopyTokenAddress": "点击复制代币地址"
+      "clickToCopyTokenAddress": "点击复制代币地址",
+      "editSuperheroId": "SuperheroID",
+      "selectChainName": "选择 .chain 名称"
     },
     "aria": {
       "loading": "加载中",
@@ -97,7 +116,11 @@
       "avatarurl": "https://...",
       "username": "your_username",
       "selectChainName": "选择你的某个链上名称",
-      "searchSuperhero": "搜索 Superhero"
+      "searchSuperhero": "搜索 Superhero",
+      "solName": "你的 Solana 名称",
+      "xAccessToken": "粘贴你的 X OAuth 访问令牌",
+      "claimChainName": "myuniquename123",
+      "profileBio": "向世界介绍你自己…"
     },
     "messages": {
       "somethingWentWrong": "出了点问题",
@@ -128,7 +151,82 @@
       "xCallbackSuccess": "X 账户关联成功。",
       "xCallbackGoToProfile": "前往个人资料",
       "transactionFailed": "交易失败",
-      "copiedExclaim": "已复制！"
+      "copiedExclaim": "已复制！",
+      "linkingXAccount": "正在关联您的 X 账户…",
+      "xCallbackUnlinkSuccess": "X 账户已成功取消关联。",
+      "xCallbackLinkingTitle": "关联您的 X 账户",
+      "xCallbackVerifyingTitle": "正在通过 X 验证",
+      "xCallbackReadyDesc": "在您的钱包中签署关联消息，将您的 X 账户连接到链上 SuperheroID。",
+      "xCallbackConfirmButton": "在钱包中签署以关联",
+      "xCallbackSigning": "等待您的钱包响应…",
+      "xCallbackBlockedHint": "如果您的钱包未能打开，可能已被拦截。请点击按钮重试。",
+      "xCallbackRetry": "重试",
+      "xCallbackDoneTitle": "X 账户已关联",
+      "xCallbackGoBack": "返回",
+      "missingAddressForXVerification": "缺少 X 验证地址",
+      "missingXOAuthToken": "缺少 X OAuth 令牌",
+      "missingAddressForBioLink": "缺少 bio 关联地址",
+      "missingAddressForSiteLink": "缺少网站关联地址",
+      "missingAddressForPreferredNameLink": "缺少首选名称关联地址",
+      "missingAddressForPreferredNameUnlink": "缺少首选名称取消关联地址",
+      "missingAddressForBioUnlink": "缺少 bio 取消关联地址",
+      "missingAddressForSiteUnlink": "缺少网站取消关联地址",
+      "missingAddressForXUnlink": "缺少 X 取消关联地址",
+      "invalidWebsiteUrl": "网站必须是有效的 URL（包含 https://），最长 500 个字符",
+      "missingXToken": "X 验证需要 X 访问令牌。",
+      "failedAddressLink": "关联验证失败。请重试。",
+      "bioLinkSuccess": "简介关联成功。",
+      "bioUnlinkSuccess": "简介已成功取消关联。",
+      "siteLinkSuccess": "网站关联成功。",
+      "siteUnlinkSuccess": "网站已成功取消关联。",
+      "preferredNameLinkSuccess": "首选名称关联成功。",
+      "preferredNameUnlinkSuccess": "首选名称已成功取消关联。",
+      "preferredNameNotOwned": "请选择一个你拥有的 .chain 名称。",
+      "connectWalletToClaimChainName": "连接钱包以申领 .chain 名称",
+      "chainNameClaimRequired": "请输入你想申领的名称。",
+      "chainNameClaimHint": "可使用字母、数字或连字符。超过 12 个字符的名称免费。",
+      "chainNameClaimInvalidChars": "Chain 名称可使用字母、数字和连字符，且不能以连字符开头或结尾。",
+      "chainNameClaimChecking": "正在检查…",
+      "chainNameClaimTooShort": "赞助申领要求 .chain 之前的部分超过 12 个字符。",
+      "chainNameClaimLoading": "正在申领…",
+      "chainNameClaimStarted": "申领已提交。正在等待赞助和转移…",
+      "chainNameClaimPending": "申领状态：{{status}}",
+      "chainNameClaimCompleted": ".chain 名称申领成功。",
+      "chainNameClaimWalletUnavailable": "钱包消息签名当前不可用。请重试。",
+      "chainNameClaimNameTaken": "该 .chain 名称已被占用。请尝试其他名称。",
+      "chainNameClaimNameInProgress": "该 .chain 名称正在被他人申领。请尝试其他名称。",
+      "chainNameClaimAddressInProgress": "你已有一个正在进行的赞助 .chain 申领。",
+      "chainNameClaimAddressClaimed": "此钱包已拥有一个赞助的 .chain 名称。",
+      "chainNameClaimChallengeExpired": "你的申领会话已过期。请重试。",
+      "chainNameClaimVerificationFailed": "我们无法验证你的钱包签名。请重试。",
+      "chainNameClaimUnavailable": "赞助 .chain 申领暂时不可用。请稍后重试。",
+      "chainNameClaimRetry": "我们无法启动 .chain 申领。请重试。",
+      "chainNameClaimFailed": "申领 .chain 名称失败。",
+      "chainNameClaimTimedOut": "申领仍在处理中。请稍后再查看。",
+      "chainNameClaimRejected": "你在钱包中拒绝了该请求。请重试。",
+      "chainNameSponsorFree": "免费",
+      "chainNameSponsorPrice": "≈ {{amount}} AE",
+      "chainNameSponsorPriceHint": "从你的钱包中支付。",
+      "chainNameSponsorCheckFailed": "当前无法检查名称赞助资格。请重试。",
+      "selectChainNameForDisplaySource": "在将 Chain 用作显示来源之前，请先选择一个 chain 名称。",
+      "superheroIdHelpLabel": "什么是 SuperheroID？",
+      "superheroIdHelp": "SuperheroID 是一个去中心化数字身份智能合约，可将你的所有社交账户连接到你的钱包地址。关联 X 账户后，系统会自动为你设置 SuperheroID 个人资料。",
+      "chainNameHelpLabel": "什么是 .chain 名称？",
+      "chainNameHelp": "通过 æternity 命名系统（AENS）简化区块链交互，让你为钱包地址注册并使用易读的名称。",
+      "chainNameClaimLengthHint": "{{length}}/13 个字符（.chain 之前）",
+      "connectWalletFirst": "请先连接你的钱包",
+      "referralLinkFailed": "获取推荐链接失败",
+      "rewardCheckFailed": "奖励检查失败",
+      "walletNotConnected": "你的钱包未连接",
+      "noWalletAccountConnected": "没有已连接的钱包账户",
+      "invalidHexSignature": "钱包返回了无效的十六进制签名",
+      "invalidWalletSignature": "钱包未返回有效签名",
+      "signatureVerificationFailed": "钱包签名本地验证失败",
+      "walletAccountMismatchX": "已连接的钱包账户与 X 验证地址不匹配",
+      "bioRequiredToLink": "请先输入简介再进行关联",
+      "siteRequiredToLink": "请先输入网站再进行关联",
+      "preferredNameRequiredToLink": "请先选择首选名称再进行关联",
+      "requestFailed": "请求失败"
     },
     "portfolio": {
       "portfolioValue": "投资组合价值",
@@ -163,7 +261,11 @@
       "aeBalanceLabel": "AE 余额：",
       "tokenHoldings": "代币持仓：",
       "moreTokens": "+ {{count}} 更多…",
-      "noPostsYet": "暂无帖子"
+      "noPostsYet": "暂无帖子",
+      "xVerifiedTitle": "X 账户已验证：@{{username}}",
+      "xVerified": "X 账户已验证",
+      "linkXCtaTitle": "关联你的 X 账户",
+      "linkXCtaDescription": "以便在个人资料上显示你的 X 用户名。"
     },
     "layout": {
       "openSource": "Superhero 是开源的",
@@ -250,7 +352,8 @@
     "views": {
       "wallet": {
         "hero": {
-          "badge": "多链钱包"
+          "badge": "多链钱包",
+          "subtitle": "**Superhero**——不止是钱包，更是你通往去中心化世界的**钥匙**！访问、创建、参与。Superhero 是通向 DAO、代币、DeFi 工具等一切的钥匙。"
         },
         "features": {
           "eyebrow": "功能特性",
@@ -312,14 +415,252 @@
           "mobileBrowser": {
             "title": "移动浏览器",
             "description": "要在移动浏览器上使用 Superhero，你需要在设备上安装 Superhero Wallet 应用来处理交易签名。"
-          }
+          },
+          "chromeExtension": "Chrome 扩展"
         },
         "faq": {
-          "title": "常见问题"
+          "title": "常见问题",
+          "categories": {
+            "gettingStarted": {
+              "title": "Superhero Wallet 入门",
+              "items": {
+                "whatIsSuperheroWallet": {
+                  "question": "什么是 Superhero Wallet？",
+                  "answer": "Superhero Wallet 是一款**非托管开源钱包**，让用户可以在包括 Bitcoin、Ethereum 和 æternity 在内的**多条区块链**上安全地管理加密资产。用户完全掌控自己的私钥，并可与去中心化应用（dApp）及 Web3 生态系统交互。"
+                },
+                "downloadAndInstall": {
+                  "question": "如何下载并安装钱包？",
+                  "answer": "你可以下载 Superhero Wallet 的 Chrome 和 Firefox 浏览器扩展，或 Android 和 iOS 移动应用。只需访问 Superhero Wallet 网站，选择适合你设备的版本即可。"
+                },
+                "supportedPlatforms": {
+                  "question": "哪些平台支持 Superhero Wallet？",
+                  "answer": "Superhero Wallet 可用于桌面浏览器（Chrome 和 Firefox 扩展）以及 Android 和 iOS 移动设备。网页版也可在桌面和移动浏览器中访问。"
+                },
+                "setUpNewWallet": {
+                  "question": "如何设置新钱包？",
+                  "answer": "安装钱包后，打开 Superhero Wallet 扩展或应用。选择“创建新钱包”，然后按照提示完成新钱包的设置。在此过程中请务必安全备份你的助记词。"
+                },
+                "importExistingWallet": {
+                  "question": "如何导入现有钱包？",
+                  "answer": "打开 Superhero Wallet，选择“导入钱包”，然后输入你的助记词。这将恢复你现有的钱包，让你可以访问之前存储的资产。"
+                },
+                "backUpWallet": {
+                  "question": "如何备份我的钱包？",
+                  "answer": "在创建或导入钱包时，你会收到一组助记词。请将其抄写下来并安全保存。助记词是你在失去访问权限后恢复钱包的唯一方式。"
+                }
+              }
+            },
+            "overview": {
+              "title": "Superhero Wallet 概览",
+              "items": {
+                "dashboardDisplay": {
+                  "question": "Superhero Wallet 上显示哪些内容？",
+                  "answer": "仪表盘是 Superhero Wallet 的主概览页面。它显示你的加密货币总余额、各账户持有的代币数量、各账户余额、快捷操作按钮（发送、接收）以及你最近的交易。"
+                },
+                "totalBalanceFiat": {
+                  "question": "如何查看以法币计的总余额？",
+                  "answer": "你的总余额显示在仪表盘顶部，反映所有已连接区块链上资产的合计价值。"
+                },
+                "switchAccounts": {
+                  "question": "如何在账户之间切换？",
+                  "answer": "在活动账户卡片上左右滑动，即可查看并切换不同账户（例如 Bitcoin、Ethereum、æternity）。每个账户都会显示其代币余额和地址。"
+                },
+                "multisigVaults": {
+                  "question": "什么是多重签名金库？如何使用？",
+                  "answer": "多重签名（multisig）金库要求多个账户批准交易，提供更高的安全性和控制力。你可以在仪表盘上切换查看你的多签金库，目前仅在 æternity 区块链上可用。"
+                },
+                "sendReceiveFunds": {
+                  "question": "如何发送和接收资金？",
+                  "answer": "使用“发送”按钮将资产从你的钱包转移到其他地址。“接收”按钮会提供你的钱包地址和二维码，用于接收资金。"
+                }
+              }
+            },
+            "accountManagement": {
+              "title": "账户管理",
+              "items": {
+                "accountDetails": {
+                  "question": "如何查看每个账户的详细信息？",
+                  "answer": "点击仪表盘上的任意账户卡片即可进入账户概览页面。在这里你可以看到账户余额、当前法币价值、账户地址，并可执行发送和接收资金等可用操作。"
+                },
+                "assetsTab": {
+                  "question": "“资产”标签页显示什么？",
+                  "answer": "“资产”标签页列出你账户中存储的所有代币。每个代币都会显示持有数量；对于具有法币价值的资产，还会显示等值换算。"
+                },
+                "transactionHistory": {
+                  "question": "如何查看我的交易历史？",
+                  "answer": "“交易”标签页显示所选账户的所有历史交易，包括金额、交易类型和时间等详细信息。"
+                },
+                "aens": {
+                  "question": "什么是 AENS（æternity 命名系统）？",
+                  "answer": "AENS 是 æternity 区块链上的命名系统，允许用户为钱包地址注册易读的名称，使交互更简单。"
+                },
+                "shareAddress": {
+                  "question": "如何分享或复制我的钱包地址？",
+                  "answer": "你可以在账户概览页面查看钱包地址的缩略版本。点击地址旁的复制图标，即可轻松与他人分享。"
+                }
+              }
+            },
+            "security": {
+              "title": "安全与隐私",
+              "items": {
+                "nonCustodial": {
+                  "question": "Superhero Wallet 是非托管的吗？",
+                  "answer": "是的，Superhero Wallet 是非托管钱包，这意味着只有你能控制自己的私钥和资产。包括 Superhero 在内的任何第三方都无法访问你的资金。"
+                },
+                "privateKeysManaged": {
+                  "question": "我的私钥是如何管理的？",
+                  "answer": "私钥经过加密并安全地存储在你的设备上。你可以查看并备份你的私钥。助记词是一把主密钥，可以恢复你的所有账户及其私钥。在网页应用中，可选密码用于加密助记词；在移动应用中，助记词存储在安全存储区，并由生物识别登录保护。"
+                },
+                "forgotSeedPhrase": {
+                  "question": "如果我忘记了助记词该怎么办？",
+                  "answer": "很遗憾，没有助记词就无法恢复你的钱包。我们建议在设置钱包时安全地备份助记词。"
+                },
+                "airgapSetup": {
+                  "question": "如何设置 AIRGAP 以获得额外的安全性？",
+                  "answer": "Superhero Wallet 支持 AIRGAP 这种离线签名方式，以增强安全性。下载 AIRGAP 应用并将其关联到 Superhero Wallet，即可进行安全的离线交易。"
+                },
+                "seedPhraseBackup": {
+                  "question": "助记词备份流程是怎样的？",
+                  "answer": "助记词会在钱包设置过程中提供，也可在设置中查看。请安全保存这组助记词，它是你在失去访问权限后恢复钱包的唯一方式。"
+                }
+              }
+            },
+            "dapps": {
+              "title": "dApp 与 Web3 集成",
+              "items": {
+                "supportedDapps": {
+                  "question": "我可以用 Superhero Wallet 连接哪些 dApp？",
+                  "answer": "我们目前支持 ETH（通过 WalletConnect；EVM 支持即将推出）和 AE 区块链的 dApp 集成。"
+                },
+                "walletConnect": {
+                  "question": "如何通过 WalletConnect 将 Superhero Wallet 连接到 dApp？",
+                  "answer": "在 Superhero Wallet 中选择 WalletConnect 选项并扫描 dApp 的二维码。这样即可连接 Ethereum dApp，获得流畅的 Web3 体验。"
+                },
+                "inAppBrowser": {
+                  "question": "如何在移动端使用应用内浏览器访问 dApp？",
+                  "answer": "打开 Superhero Wallet 移动应用并进入应用内浏览器板块。输入 dApp 的 URL，即可直接连接并交互，无需离开应用。"
+                }
+              }
+            },
+            "giftCards": {
+              "title": "使用礼品卡和邀请链接",
+              "items": {
+                "createSendGiftCard": {
+                  "question": "如何创建并发送礼品卡？",
+                  "answer": "在钱包设置中打开“礼品卡”功能（目前仅适用于 æternity 账户）。输入要充入礼品卡的金额，生成礼品卡，并将唯一的邀请链接分享给新用户。他们可以用它兑换礼品卡余额。"
+                },
+                "customizeGiftCards": {
+                  "question": "礼品卡可以自定义吗？",
+                  "answer": "目前你可以指定金额，但自定义功能仅限于此。"
+                }
+              }
+            },
+            "troubleshooting": {
+              "title": "常见问题排查",
+              "items": {
+                "forgotPassword": {
+                  "question": "如果我忘记了钱包密码该怎么办？",
+                  "answer": "如果你忘记了密码，访问钱包的唯一方式是重置钱包并使用助记词恢复账户。重置前请确保已备份助记词和地址簿。"
+                },
+                "resetWallet": {
+                  "question": "如何重置我的钱包？",
+                  "answer": "在设置中选择“重置钱包”选项。请注意，此操作将删除所有本地钱包数据，因此请提前备份助记词和地址簿。"
+                },
+                "delayedTransaction": {
+                  "question": "为什么我的交易延迟了？",
+                  "answer": "区块链拥堵时可能出现延迟。交易可能不会立即显示在钱包中，但在处理并被索引后就会出现。"
+                },
+                "dappConnection": {
+                  "question": "为什么我无法连接到 dApp？",
+                  "answer": "请确保你使用的是最新版本的 Superhero Wallet。我们为 ETH dApp 提供 EVM 连接和 WalletConnect；AE 使用自己的方式进行 dApp 集成。"
+                },
+                "walletNotSyncing": {
+                  "question": "钱包无法同步时该怎么办？",
+                  "answer": "请尝试将钱包升级到最新版本，并确保网络连接正常。"
+                }
+              }
+            },
+            "advanced": {
+              "title": "高级功能与设置",
+              "items": {
+                "switchNetworks": {
+                  "question": "如何在主网和测试网之间切换？",
+                  "answer": "进入设置，你会看到在主网、测试网和自定义网络之间切换的选项。根据需要选择网络。"
+                },
+                "manageMultipleAccounts": {
+                  "question": "如何管理多个账户？",
+                  "answer": "你可以在同一个钱包中创建和管理多个账户，只需在仪表盘上滑动浏览活动账户卡片。"
+                },
+                "exportAddressBook": {
+                  "question": "我可以导出地址簿吗？",
+                  "answer": "可以，你可以将已保存的地址导出为 JSON 格式，然后导入到另一个 Superhero Wallet。"
+                },
+                "customizeSettings": {
+                  "question": "如何自定义通知和设置？",
+                  "answer": "进入设置菜单即可调整通知、自定义个人资料偏好并配置其他钱包选项。"
+                }
+              }
+            },
+            "support": {
+              "title": "支持与资源",
+              "items": {
+                "githubRepository": {
+                  "question": "在哪里可以找到 Superhero Wallet 的 GitHub 仓库？",
+                  "answer": "访问 Superhero Wallet 的 GitHub 即可查看代码仓库，你可以在那里查看源代码、报告问题并提出新功能需求。"
+                },
+                "reportBugs": {
+                  "question": "如何报告错误或请求新功能？",
+                  "answer": "请直接通过 GitHub 提交错误报告或功能请求。"
+                },
+                "contactSupport": {
+                  "question": "我可以联系谁获得支持？",
+                  "answer": "如需支持，请访问我们网站上的帮助中心，或直接通过 GitHub 提交错误报告。"
+                }
+              }
+            }
+          }
         },
         "cta": {
           "title": "掌控你的加密资产",
           "description": "下载 Superhero Wallet，在一个安全的多链钱包中管理你的所有资产。"
+        },
+        "mock": {
+          "currentBalance": "当前余额",
+          "availableBalance": "可用余额：{{amount}}",
+          "amountToSend": "发送金额",
+          "recipientIdentity": "收款人身份",
+          "sendAssets": "发送资产",
+          "broadcasting": "正在广播...",
+          "confirmed": "✓ 已确认（{{txHash}}）",
+          "executed": "✓ 已执行",
+          "awaitingSignature": "● 等待签名",
+          "transferRequest": "转账请求：",
+          "threshold": "阈值：{{total}} 个中需 {{required}} 个",
+          "signedCount": "{{signed}}/{{total}} 已签名",
+          "signedCheck": "已签名 ✓",
+          "pending": "待处理 ⏳",
+          "signAsBackupKey": "以备份密钥签名",
+          "addressDirectory": "地址目录",
+          "searchContacts": "搜索联系人...",
+          "noContactsMatch": "没有符合条件的联系人",
+          "vaultOffline": "金库（离线）",
+          "appOnline": "应用（在线）",
+          "connected": "已连接 🟢",
+          "active": "活跃 🟢",
+          "available": "可用",
+          "registered": "已注册 ✓",
+          "touchFaceIdActive": "Touch ID / Face ID 已启用",
+          "privateKey": "私钥",
+          "seedPhrase": "助记词",
+          "standardFormat": "⚡ 标准格式",
+          "secureImport": "安全导入 ✓",
+          "superheroWallet": "Superhero 钱包",
+          "tokens": "代币",
+          "vault": "保险库 {{address}}",
+          "airgap": "AIRGAP",
+          "superhero": "SUPERHERO",
+          "aens": "AENS",
+          "chainNameExample": "yourname.chain"
         }
       },
       "privacy": {
@@ -454,13 +795,37 @@
         "bannersTitle": "数字横幅与资产",
         "ogBannerAlt": "Superhero OG 社交横幅",
         "ogBannerTitle": "标准 OG 社交横幅",
-        "ogBannerDescription": "用于 Twitter、Telegram、Discord 或 Facebook 的默认分享元数据卡片。",
+        "ogBannerDescription": "用于 X、Telegram、Discord 或 Facebook 的默认分享元数据卡片。",
         "interfaceShowcaseAlt": "Superhero 界面展示",
         "appInterfacePreview": "应用界面预览",
         "appShowcaseTitle": "应用展示截图",
         "appShowcaseDescription": "突出界面布局、热门话题、信息流和加密货币组件的应用截图。",
         "customIconsTitle": "自定义图标",
-        "downloadIcon": "下载 {{name}} 图标"
+        "downloadIcon": "下载 {{name}} 图标",
+        "colors": {
+          "neonTeal": {
+            "name": "霓虹青主色",
+            "desc": "我们视觉系统的核心。用于核心交互、成功状态和主要操作。"
+          },
+          "neonPink": {
+            "name": "霓虹粉 / 绯红",
+            "desc": "鲜明的高亮点缀色。用于错误状态、破坏性操作和活跃渐变。"
+          },
+          "neonBlue": {
+            "name": "霓虹蓝",
+            "desc": "清新的商务平衡色。用于副标题、次要按钮和信息类组件。"
+          },
+          "background": {
+            "name": "背景",
+            "desc": "我们深邃的暗色模式背景，专为与炫目的赛博朋克霓虹色调形成高对比度而优化。"
+          }
+        },
+        "icons": {
+          "diamond": "钻石",
+          "wallet": "钱包",
+          "hashtag": "话题标签",
+          "feed": "动态"
+        }
       },
       "terms": {
         "title": "使用条款",
@@ -608,7 +973,7 @@
         "shareWithOthers": "与他人分享此代币：",
         "shareOnSocialMedia": "在社交媒体上分享：",
         "checkOutToken": "来看看这个代币！",
-        "twitter": "🐦 Twitter",
+        "twitter": "𝕏 X",
         "telegram": "✈️ Telegram"
       },
       "cookies": {
@@ -621,7 +986,23 @@
         "nativeToken": "原生代币",
         "unknown": "未知"
       },
-      "titleSuffix": "{{name}} 弹窗"
+      "titleSuffix": "{{name}} 弹窗",
+      "onboarding": {
+        "title": "编辑 SuperheroID",
+        "subtitle": "连接钱包以创建和管理你的 SuperheroID",
+        "stepWalletApp": "确保你已安装 Superhero Wallet 应用",
+        "stepExtension": "确保你已安装浏览器扩展",
+        "or": "或",
+        "downloadAppHint": "下载内置钱包的一体化 Superhero 应用",
+        "downloadOn": "下载于",
+        "getItOn": "获取于"
+      },
+      "welcome": {
+        "title": "欢迎来到 Superhero",
+        "tagline": "交易代币化的话题标签与社交趋势——web3 注意力市场。",
+        "getStarted": "开始使用",
+        "continueAsGuest": "以访客身份继续"
+      }
     },
     "wallet": {
       "aePrice": "AE 价格",
@@ -720,6 +1101,64 @@
       "getAe": "获取 AE",
       "superheroId": "Superhero ID",
       "account": "账户"
+    },
+    "transactionNotification": {
+      "fieldBio": "简介",
+      "fieldWebsite": "网站",
+      "fieldChainName": "链上名称",
+      "fieldProfile": "个人资料",
+      "confirmInWallet": "在钱包中确认",
+      "signTransactionToContinue": "签署交易以继续",
+      "approveTokenSpending": "批准代币支出",
+      "approveAllowanceStep": "第 {{step}}/{{total}} 步——允许 Superhero 使用你的 {{token}}",
+      "creatingToken": "正在创建 #{{name}}",
+      "signInWalletToContinue": "在钱包中签署以继续",
+      "publishingPost": "正在发布帖子",
+      "publishingReply": "正在发布回复",
+      "signClaimRequest": "签署 {{name}}.chain 的申领请求",
+      "swappingTokens": "正在兑换 {{amountIn}} {{tokenIn}} → {{amountOut}} {{tokenOut}}",
+      "wrappingAmount": "正在封装 {{amount}} AE → WAE",
+      "unwrappingAmount": "正在解封 {{amount}} WAE → AE",
+      "addingLiquidityAmounts": "正在添加 {{amountA}} {{tokenA}} + {{amountB}} {{tokenB}}",
+      "removingLiquidityFromPool": "正在从 {{tokenA}}/{{tokenB}} 中移除 {{pct}}%",
+      "signToUpdateFields": "签署以更新你的{{fields}}",
+      "confirmingOnBlockchain": "正在区块链上确认",
+      "usuallyTakesFewSeconds": "通常只需几秒钟",
+      "approvingToken": "正在批准 {{token}}…",
+      "confirmingAllowanceOnChain": "正在链上确认授权额度",
+      "confirmingOnBlockchainEllipsis": "正在区块链上确认…",
+      "claimingName": "正在申领 {{name}}.chain",
+      "claimStepPreclaim": "第 1/4 步——在链上预留名称",
+      "claimStepClaim": "第 2/4 步——提交赞助申领",
+      "claimStepUpdate": "第 3/4 步——更新名称指针",
+      "claimStepTransfer": "第 4/4 步——将名称转移到你的钱包",
+      "claimQueued": "正在准备赞助交易。这可能需要几分钟。",
+      "claimProcessingBackground": "正在后台处理。你可以继续使用应用。",
+      "swapInProgress": "兑换进行中",
+      "usuallyConfirmsFewSeconds": "通常几秒钟内确认",
+      "wrappingAeToWae": "正在封装 AE → WAE",
+      "unwrappingWaeToAe": "正在解封 WAE → AE",
+      "confirmingOnChainEllipsis": "正在链上确认…",
+      "addingLiquidityEllipsis": "正在添加流动性…",
+      "depositingIntoPool": "正在存入 {{tokenA}}/{{tokenB}} 资金池",
+      "removingLiquidityEllipsis": "正在移除流动性…",
+      "withdrawingFromPool": "正在从 {{tokenA}}/{{tokenB}} 资金池提取",
+      "updatingProfileEllipsis": "正在更新个人资料…",
+      "savingYourFields": "正在保存你的{{fields}}",
+      "transactionConfirmed": "交易已确认",
+      "allowanceApproved": "授权额度已批准",
+      "tokenApproved": "{{token}} 已批准",
+      "swapConfirmed": "兑换已确认",
+      "wrapComplete": "封装完成",
+      "unwrapComplete": "解封完成",
+      "tokenCreated": "代币已创建",
+      "postPublished": "帖子已发布",
+      "replyPublished": "回复已发布",
+      "nameClaimed": "名称已申领",
+      "liquidityAdded": "流动性已添加",
+      "liquidityRemoved": "流动性已移除",
+      "profileUpdated": "个人资料已更新",
+      "fieldsSaved": "{{fields}}已保存"
     }
   },
   "dex": {
@@ -1738,7 +2177,12 @@
       "step1": "为每个邀请注资一次性 AE 奖励以生成邀请链接",
       "step2": "与好友和社区分享链接",
       "step3": "当 4 名独立受邀者购买代币后，你即可提取累积的奖励",
-      "step4": "在符合资格后随时提取奖励"
+      "step4": "在符合资格后随时提取奖励",
+      "heroBrand": "Superhero",
+      "heroRewards": "奖励",
+      "referAndEarn": "邀请好友，赚取奖励",
+      "yourInvitations": "您的邀请",
+      "disclaimer": "Superhero 奖励计划会对在其他社交媒体平台（如 X）上创作内容并附带反向链接和/或邀请链接、邀请新用户加入平台的用户予以奖励。奖励将以 AE 代币的形式发放。资格认定和奖励取决于链上活动，不予保证，且可随时暂停，恕不另行通知，亦不承担任何责任。我们保留取消任何用户参与资格的权利。来自黑名单国家的用户不具备奖励资格。参与本计划即表示用户同意上述条款与条件。所发放的奖励可能须进行税务申报，用户须自行承担因收取奖励而产生的一切税务义务。"
     },
     "leaderboardHeading": "交易排行榜",
     "leaderboardHeadingDescription": "发现按链上表现排名的最活跃 Superhero 交易者。提升你的交易量、稳定性和趋势所有权，攀升排行榜，让你的钱包成为公开的链上业绩记录。",
@@ -1852,6 +2296,86 @@
     },
     "tokenLineChart": {
       "alt": "代币折线图"
+    },
+    "collectRewards": {
+      "title": "领取您的奖励",
+      "description": "随着您的直接受邀者参与代币销售，奖励将持续累积。当 <invitees>{{invitees}} 位直接受邀者</invitees> 各自累计消费至少 <spent>{{spent}} AE</spent> 后，您即可提取奖励（累计计算）。",
+      "disclaimer": "注意：资格认定和奖励取决于链上活动，不予保证。",
+      "progressToRewards": "奖励进度",
+      "reached": "已达成 {{reached}}/{{total}}",
+      "eligibleToWithdraw": "有资格提取",
+      "moreInviteesNeeded": "还需 {{remaining}} 位受邀者达到 {{amount}} AE",
+      "stillAccumulating_one": "{{count}} 位受邀者仍在累积",
+      "stillAccumulating_other": "{{count}} 位受邀者仍在累积",
+      "inviteeReached": "已达成",
+      "inviteeProgress": "{{spent}} / {{total}} AE",
+      "moreCount": "另有 +{{extra}} 位",
+      "availableRewards": "可用奖励",
+      "withdrawing": "提取中...",
+      "notEligibleYet": "暂无资格",
+      "noRewardsYet": "暂无奖励",
+      "collectRewards": "领取奖励",
+      "notEligibleError": "暂无资格：您需要 {{invitees}} 位直接受邀者，每人在代币销售中各自消费至少 {{spent}} AE。",
+      "collectError": "领取奖励时发生错误。"
+    },
+    "rewardsProgram": {
+      "rewardsEarnedBadge": "已获奖励",
+      "aeEarned": "已获得 {{amount}} AE",
+      "rewardsSentAutomatically": "您的 AE 奖励已自动发送至您绑定的钱包。",
+      "status": {
+        "completed": "已完成",
+        "inProgress": "进行中",
+        "locked": "已锁定"
+      },
+      "check": {
+        "checking": "检查中…",
+        "checkIn": "{{time}} 后检查",
+        "checkRewards": "查看奖励",
+        "nextCheckTooltip": "{{time}} 后可进行下次检查"
+      },
+      "milestone1": {
+        "earnBadge": "获得 50 AE",
+        "title": "关联 X 账户并发帖",
+        "descIdentity": "验证您的 X 账户所有权，并将其链上关联至您的 SuperheroID。SuperheroID 是一种去中心化的数字身份智能合约，可将您的所有社交账户连接到您的钱包地址。关联 X 账户后，您的 SuperheroID 主页将自动为您创建。",
+        "descPost": "关联后，从您的账户在 X 上发布一条关于 Superhero 的帖子，以传播消息并与您的人脉分享。帖子只需提及 Superhero——附上 <link>superhero.com</link> 链接或标记 <handle>@superhero_chain</handle>。",
+        "descFollowers": "您的 X 账户须拥有至少 100 位关注者方可获得此奖励。",
+        "descEarn": "完成此里程碑，即可获得 50 AE 代币！",
+        "step1": "将您的 X 账户关联至链上 SuperheroID",
+        "step2": "使用已关联的 X 账户发布关于 Superhero 的帖子（提及 @superhero_chain 或附上 superhero.com 链接）",
+        "linkX": "关联 X",
+        "postOnX": "在 X 上发帖",
+        "complete": "里程碑完成——已获得 50 AE",
+        "loadingProgress": "正在加载您的进度…"
+      },
+      "milestone2": {
+        "earnBadge": "每日每帖获得 10~30 AE",
+        "title": "在 X 上发帖并赚取奖励",
+        "desc": "从您已关联的 X 账户发布关于 Superhero 的帖子，以传播消息并与您的人脉分享。每篇帖子须在内容中包含您的专属邀请链接。点击“发帖”时，您的专属邀请链接将自动生成。",
+        "tierIneligible": "不足 100 位关注者：不具备资格",
+        "tier1": "100 - 1 万关注者：每帖 10 AE",
+        "tier2": "1 万 - 100 万关注者：每帖 20 AE",
+        "tier3": "超过 100 万关注者：每帖 30 AE",
+        "yourTier": "您的等级：每帖 {{amount}} AE",
+        "yourTierFollowers": "（{{followers}} 位关注者）",
+        "streakBadge": "连续 10 天发帖额外获得 50 AE",
+        "currentStreak": "当前连续天数：{{days}}/{{total}} 天",
+        "openingWallet": "正在打开钱包…",
+        "postOnX": "在 X 上发帖",
+        "streakInfo": "每篇符合条件的帖子都将根据您的关注者等级获得相应的 AE 代币。连续 10 天每日发帖将额外获得 50 AE，请保持发帖并积极参与社区互动。",
+        "complete": "里程碑完成——已获得 {{amount}} AE"
+      }
+    },
+    "onboarding": {
+      "badge": "立即开始",
+      "title": "设置您的 Superhero 账户",
+      "subtitle": "完成以下步骤，即可开始赚取 AE 奖励。",
+      "step1": "关联您的 X 账户",
+      "step2": "发布关于 Superhero 的帖子，获得 50 AE",
+      "progress": "已完成 {{done}}/{{total}} 个步骤",
+      "continue": "继续设置",
+      "connectX": "连接 X",
+      "postOnX": "发帖赚取",
+      "done": "全部完成！"
     }
   },
   "errors": {
@@ -2358,7 +2882,23 @@
     "qGlossaryLi1": "AE：aeternity 区块链的原生币。",
     "qGlossaryLi2": "销售地址：在曲线上铸造/销毁代币的合约。",
     "qGlossaryLi3": "DAO：代币社区的链上金库 + 治理。",
-    "qGlossaryLi4": "交易哈希：交易 ID；可在浏览器中查看以进行验证。"
+    "qGlossaryLi4": "交易哈希：交易 ID；可在浏览器中查看以进行验证。",
+    "categoryRewardsProgram": "奖励计划",
+    "categoryNameClaims": "名称申领",
+    "qRewardsProgramTitle": "什么是 Superhero 奖励计划？",
+    "qRewardsProgramAnswer": "Superhero 奖励计划让您通过完成里程碑来赚取 AE 代币：验证您的 X 账户、邀请新用户，以及在社交媒体上发布关于 Superhero 的内容。完成里程碑以解锁各阶段并最多赚取 200 AE 代币。",
+    "qRewardsMilestonesTitle": "有哪些里程碑可以完成？",
+    "qRewardsMilestonesLi1": "验证 X 账户并发帖——连接您的 X 账户以证明所有权。",
+    "qRewardsMilestonesLi2": "将您的 X 账户链上关联至 SuperheroID。",
+    "qRewardsMilestonesLi3": "发布关于 Superhero 的帖子——在内容中包含您的邀请链接，共发布 10 篇。",
+    "qRewardsClaimTitle": "如何领取我的奖励？",
+    "qRewardsClaimAnswer": "里程碑被标记为已完成后，奖励页面上将出现领取提示横幅。点击领取按钮并在钱包中确认交易。需支付少量 Gas 费用。",
+    "qRewardsEligibilityTitle": "奖励有保障吗？",
+    "qRewardsEligibilityAnswer": "资格认定和奖励取决于链上活动，不予保证。本计划可随时暂停，恕不另行通知。来自黑名单国家的用户不具备资格。参与即表示您同意奖励页面上显示的条款。",
+    "qSponsoredNameClaimTitle": "什么是赞助名称申领？",
+    "qSponsoredNameClaimAnswer": "我们为每个地址赞助一次免费的 .chain 名称申领。名称长度须超过 12 个字符（不含 .chain 后缀）。这让您可以在 æternity 区块链上免费拥有一个易于识别的身份标识。",
+    "qClaimMoreNamesTitle": "我可以申领多个名称吗？",
+    "qClaimMoreNamesAnswer": "每个地址我们仅赞助一次名称申领。如需申领更多名称，您可以直接在 Superhero Wallet 中操作——可作为浏览器扩展程序、原生移动应用，或通过网页版 wallet.superhero.com 使用。"
   },
   "buyAe": {
     "pageTitle": "购买 AE – Superhero",
@@ -2393,7 +2933,7 @@
     "referDescription": "Superhero 邀请有助于发展网络，并在受邀人变得活跃时解锁奖励。使用邀请页面创建链接并追踪奖励。",
     "referAction": "打开“推荐赚取”",
     "xEarnTitle": "通过在 X 上发帖赚取",
-    "xEarnDescription": "未来的一种赚取途径将奖励在 X（原 Twitter）上发帖的活动。此选项即将推出。",
+    "xEarnDescription": "未来的一种赚取途径将奖励在 X 上发帖的活动。此选项即将推出。",
     "comingSoon": "即将推出",
     "safetyTitle": "购买之前",
     "safetyLi1": "确认代币、网络、存款地址、提现手续费和最低提现金额。",
@@ -2439,6 +2979,10 @@
       "switch": "切换",
       "disconnect": "断开连接",
       "connectEthereumWallet": "连接 Ethereum 钱包"
-    }
+    },
+    "earnSectionTitle": "赚取 AE",
+    "earnSectionDescription": "从 Superhero 原生方式开始，通过壮大社区和参与奖励计划来赚取 AE。",
+    "buySectionTitle": "从外部第三方购买",
+    "buySectionDescription": "当你更愿意在 Superhero 之外直接购买 AE 时，可使用第三方交易所和兑换服务商。"
   }
 }

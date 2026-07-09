@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Gem } from 'lucide-react';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
 import FeedRailSearch from '@/components/layout/FeedRailSearch';
+import RewardsOnboarding from '@/components/onboarding/RewardsOnboarding';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
 import { useAeSdk } from '../../hooks/useAeSdk';
@@ -101,6 +102,9 @@ const RightRail = ({
           <FeedRailSearch />
         </div>
       ) : null}
+
+      {/* Onboarding nudge — placed below the search bar so users can continue account setup. */}
+      <RewardsOnboarding variant="rail" />
 
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (

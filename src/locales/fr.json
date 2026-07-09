@@ -23,7 +23,17 @@
       "tip": "Pourboire",
       "viewPortfolio": "Voir le portefeuille",
       "done": "Terminé",
-      "trade": "Trader"
+      "trade": "Trader",
+      "skipForNow": "Ignorer pour l'instant",
+      "editSuperheroId": "Modifier le SuperheroID",
+      "changeChainName": "Changer",
+      "chooseChainName": "Choisir",
+      "buyChainName": "Acheter",
+      "apply": "Appliquer",
+      "save": "Enregistrer",
+      "getChainName": "+ Obtenir un nom .chain",
+      "claimChainName": "Réclamer",
+      "linkAccount": "Lier le compte"
     },
     "labels": {
       "superheroHome": "Accueil Superhero",
@@ -48,7 +58,14 @@
       "none": "Aucun",
       "connectX": "Associer un compte X",
       "xAccount": "Compte X",
-      "profile": "Profil"
+      "profile": "Profil",
+      "claimChainName": "Réclamer un nouveau nom .chain",
+      "optional": "Facultatif",
+      "dotChainName": "Nom .chain",
+      "preferredName": "Nom préféré",
+      "available": "Disponible",
+      "website": "Site web",
+      "xTwitter": "X (Twitter)"
     },
     "actions": {
       "copy": "Copier"
@@ -70,7 +87,9 @@
       "conference": "Conférence",
       "sortByBalance": "Trier par solde",
       "clickToExpandTips": "Cliquez pour développer les conseils",
-      "clickToCopyTokenAddress": "Cliquez pour copier l'adresse du jeton"
+      "clickToCopyTokenAddress": "Cliquez pour copier l'adresse du jeton",
+      "editSuperheroId": "SuperheroID",
+      "selectChainName": "Choisir un nom .chain"
     },
     "aria": {
       "loading": "Chargement",
@@ -97,7 +116,11 @@
       "avatarurl": "https://...",
       "username": "votre_nom_utilisateur",
       "selectChainName": "Sélectionnez l'un de vos noms de chaîne",
-      "searchSuperhero": "Rechercher sur Superhero"
+      "searchSuperhero": "Rechercher sur Superhero",
+      "solName": "Votre nom Solana",
+      "xAccessToken": "Collez votre token d'accès OAuth X",
+      "claimChainName": "monnomunique123",
+      "profileBio": "Parlez de vous au monde entier…"
     },
     "messages": {
       "somethingWentWrong": "Une erreur s'est produite",
@@ -128,7 +151,82 @@
       "xCallbackSuccess": "Compte X associé avec succès.",
       "xCallbackGoToProfile": "Aller au profil",
       "transactionFailed": "Échec de la transaction",
-      "copiedExclaim": "Copié !"
+      "copiedExclaim": "Copié !",
+      "linkingXAccount": "Liaison de votre compte X en cours…",
+      "xCallbackUnlinkSuccess": "Compte X dissocié avec succès.",
+      "xCallbackLinkingTitle": "Liez votre compte X",
+      "xCallbackVerifyingTitle": "Vérification avec X",
+      "xCallbackReadyDesc": "Signez le message de liaison dans votre portefeuille pour connecter votre compte X à votre SuperheroID on-chain.",
+      "xCallbackConfirmButton": "Signer dans le portefeuille pour lier",
+      "xCallbackSigning": "En attente de votre portefeuille…",
+      "xCallbackBlockedHint": "Si votre portefeuille ne s'est pas ouvert, il a peut-être été bloqué. Appuyez sur le bouton pour réessayer.",
+      "xCallbackRetry": "Réessayer",
+      "xCallbackDoneTitle": "Compte X lié",
+      "xCallbackGoBack": "Retour",
+      "missingAddressForXVerification": "Adresse manquante pour la vérification X",
+      "missingXOAuthToken": "Jeton OAuth X manquant",
+      "missingAddressForBioLink": "Adresse manquante pour le lien de bio",
+      "missingAddressForSiteLink": "Adresse manquante pour le lien de site",
+      "missingAddressForPreferredNameLink": "Adresse manquante pour le lien du nom préféré",
+      "missingAddressForPreferredNameUnlink": "Adresse manquante pour la suppression du lien du nom préféré",
+      "missingAddressForBioUnlink": "Adresse manquante pour la suppression du lien de bio",
+      "missingAddressForSiteUnlink": "Adresse manquante pour la suppression du lien de site",
+      "missingAddressForXUnlink": "Adresse manquante pour la suppression du lien X",
+      "invalidWebsiteUrl": "Le site web doit être une URL valide (incluant https://) de 500 caractères maximum",
+      "missingXToken": "Le token d'accès X est requis pour la vérification X.",
+      "failedAddressLink": "Échec de la vérification du lien. Veuillez réessayer.",
+      "bioLinkSuccess": "Bio liée avec succès.",
+      "bioUnlinkSuccess": "Bio déliée avec succès.",
+      "siteLinkSuccess": "Site web lié avec succès.",
+      "siteUnlinkSuccess": "Site web délié avec succès.",
+      "preferredNameLinkSuccess": "Nom préféré lié avec succès.",
+      "preferredNameUnlinkSuccess": "Nom préféré délié avec succès.",
+      "preferredNameNotOwned": "Sélectionnez un nom .chain que vous possédez.",
+      "connectWalletToClaimChainName": "Connectez votre portefeuille pour réclamer un nom .chain",
+      "chainNameClaimRequired": "Saisissez le nom que vous souhaitez réclamer.",
+      "chainNameClaimHint": "Utilisez des lettres, des chiffres ou des tirets. Les noms de plus de 12 caractères sont gratuits.",
+      "chainNameClaimInvalidChars": "Les noms de chaîne peuvent contenir des lettres, des chiffres et des tirets, et ne peuvent ni commencer ni se terminer par un tiret.",
+      "chainNameClaimChecking": "Vérification…",
+      "chainNameClaimTooShort": "Les réclamations sponsorisées nécessitent plus de 12 caractères avant .chain.",
+      "chainNameClaimLoading": "Réclamation…",
+      "chainNameClaimStarted": "Réclamation soumise. En attente du sponsoring et du transfert…",
+      "chainNameClaimPending": "Statut de la réclamation : {{status}}",
+      "chainNameClaimCompleted": "Nom .chain réclamé avec succès.",
+      "chainNameClaimWalletUnavailable": "La signature de messages par le portefeuille n'est pas disponible pour le moment. Veuillez réessayer.",
+      "chainNameClaimNameTaken": "Ce nom .chain est déjà pris. Essayez-en un autre.",
+      "chainNameClaimNameInProgress": "Ce nom .chain est en cours de réclamation. Essayez-en un autre.",
+      "chainNameClaimAddressInProgress": "Vous avez déjà une réclamation .chain sponsorisée en cours.",
+      "chainNameClaimAddressClaimed": "Ce portefeuille possède déjà un nom .chain sponsorisé.",
+      "chainNameClaimChallengeExpired": "Votre session de réclamation a expiré. Veuillez réessayer.",
+      "chainNameClaimVerificationFailed": "Nous n'avons pas pu vérifier la signature de votre portefeuille. Veuillez réessayer.",
+      "chainNameClaimUnavailable": "La réclamation sponsorisée de noms .chain est temporairement indisponible. Veuillez réessayer plus tard.",
+      "chainNameClaimRetry": "Nous n'avons pas pu démarrer la réclamation du nom .chain. Veuillez réessayer.",
+      "chainNameClaimFailed": "Échec de la réclamation du nom .chain.",
+      "chainNameClaimTimedOut": "La réclamation est toujours en cours de traitement. Veuillez revenir dans un instant.",
+      "chainNameClaimRejected": "Vous avez refusé la demande dans votre portefeuille. Veuillez réessayer.",
+      "chainNameSponsorFree": "Gratuit",
+      "chainNameSponsorPrice": "≈ {{amount}} AE",
+      "chainNameSponsorPriceHint": "Payé depuis votre portefeuille.",
+      "chainNameSponsorCheckFailed": "Impossible de vérifier le sponsoring du nom pour le moment. Veuillez réessayer.",
+      "selectChainNameForDisplaySource": "Choisissez un nom de chaîne avant d'utiliser Chaîne comme source d'affichage.",
+      "superheroIdHelpLabel": "Qu'est-ce que SuperheroID ?",
+      "superheroIdHelp": "SuperheroID est un contrat intelligent d'identité numérique décentralisée qui relie tous vos comptes sociaux à votre adresse de portefeuille. Votre profil SuperheroID sera configuré automatiquement après la liaison de votre compte X.",
+      "chainNameHelpLabel": "Que sont les noms .chain ?",
+      "chainNameHelp": "Simplifiez les interactions avec la blockchain grâce au système de noms æternity (AENS), qui vous permet d'enregistrer et d'utiliser des noms lisibles pour les adresses de portefeuille.",
+      "chainNameClaimLengthHint": "{{length}}/13 caractères avant .chain",
+      "connectWalletFirst": "Connectez d'abord votre portefeuille",
+      "referralLinkFailed": "Échec de l'obtention du lien de parrainage",
+      "rewardCheckFailed": "Échec de la vérification de la récompense",
+      "walletNotConnected": "Votre portefeuille n'est pas connecté",
+      "noWalletAccountConnected": "Aucun compte de portefeuille connecté",
+      "invalidHexSignature": "Le portefeuille a renvoyé une signature hexadécimale invalide",
+      "invalidWalletSignature": "Le portefeuille n'a pas renvoyé de signature valide",
+      "signatureVerificationFailed": "La vérification locale de la signature du portefeuille a échoué",
+      "walletAccountMismatchX": "Le compte de portefeuille connecté ne correspond pas à l'adresse de vérification X",
+      "bioRequiredToLink": "Saisissez une bio avant de la lier",
+      "siteRequiredToLink": "Saisissez un site web avant de le lier",
+      "preferredNameRequiredToLink": "Choisissez un nom préféré avant de le lier",
+      "requestFailed": "Échec de la requête"
     },
     "portfolio": {
       "portfolioValue": "Valeur du portefeuille",
@@ -163,7 +261,11 @@
       "aeBalanceLabel": "Solde AE : ",
       "tokenHoldings": "Avoirs en jetons :",
       "moreTokens": "+ {{count}} de plus...",
-      "noPostsYet": "Aucune publication pour le moment"
+      "noPostsYet": "Aucune publication pour le moment",
+      "xVerifiedTitle": "Compte X vérifié : @{{username}}",
+      "xVerified": "Compte X vérifié",
+      "linkXCtaTitle": "Liez votre compte X",
+      "linkXCtaDescription": "pour afficher votre nom d'utilisateur X sur votre profil."
     },
     "layout": {
       "openSource": "Superhero est open source",
@@ -250,7 +352,8 @@
     "views": {
       "wallet": {
         "hero": {
-          "badge": "Portefeuille multichaîne"
+          "badge": "Portefeuille multichaîne",
+          "subtitle": "**Superhero** — plus qu'un portefeuille, c'est votre **clé** vers le monde décentralisé ! Accédez, créez et participez. Superhero est la clé des DAO, des jetons, des outils DeFi et bien plus encore."
         },
         "features": {
           "eyebrow": "Fonctionnalités",
@@ -312,14 +415,252 @@
           "mobileBrowser": {
             "title": "Navigateur mobile",
             "description": "Pour utiliser Superhero sur un navigateur mobile, vous avez besoin de l'application Superhero Wallet installée sur votre appareil pour gérer la signature des transactions."
-          }
+          },
+          "chromeExtension": "Extension Chrome"
         },
         "faq": {
-          "title": "Questions fréquentes"
+          "title": "Questions fréquentes",
+          "categories": {
+            "gettingStarted": {
+              "title": "Premiers pas avec Superhero Wallet",
+              "items": {
+                "whatIsSuperheroWallet": {
+                  "question": "Qu'est-ce que Superhero Wallet ?",
+                  "answer": "Superhero Wallet est un **portefeuille open source non-custodial** qui permet aux utilisateurs de gérer leurs actifs crypto en toute sécurité sur **plusieurs blockchains**, dont Bitcoin, Ethereum et æternity. Les utilisateurs gardent le contrôle total de leurs clés privées et peuvent interagir avec les applications décentralisées (dApps) et l'écosystème Web3."
+                },
+                "downloadAndInstall": {
+                  "question": "Comment télécharger et installer le portefeuille ?",
+                  "answer": "Vous pouvez télécharger Superhero Wallet sous forme d'extension de navigateur pour Chrome et Firefox, ou en tant qu'application mobile pour Android et iOS. Rendez-vous simplement sur le site web de Superhero Wallet et choisissez la version adaptée à votre appareil."
+                },
+                "supportedPlatforms": {
+                  "question": "Quelles plateformes prennent en charge Superhero Wallet ?",
+                  "answer": "Superhero Wallet est disponible sur les navigateurs de bureau (extensions Chrome et Firefox), ainsi que sur les appareils mobiles Android et iOS. Une version web est également accessible depuis les navigateurs de bureau et mobiles."
+                },
+                "setUpNewWallet": {
+                  "question": "Comment configurer un nouveau portefeuille ?",
+                  "answer": "Après avoir installé le portefeuille, ouvrez l'extension ou l'application Superhero Wallet. Sélectionnez « Créer un nouveau portefeuille » et suivez les instructions pour configurer un nouveau portefeuille. Veillez à sauvegarder votre phrase de récupération en lieu sûr durant ce processus."
+                },
+                "importExistingWallet": {
+                  "question": "Comment importer un portefeuille existant ?",
+                  "answer": "Ouvrez Superhero Wallet, sélectionnez « Importer un portefeuille » et saisissez votre phrase de récupération. Cela restaurera votre portefeuille existant et vous donnera accès aux actifs précédemment stockés."
+                },
+                "backUpWallet": {
+                  "question": "Comment sauvegarder mon portefeuille ?",
+                  "answer": "Lors de la création ou de l'importation d'un portefeuille, vous recevrez une phrase de récupération. Notez-la et conservez-la en lieu sûr. La phrase de récupération est le seul moyen de récupérer votre portefeuille en cas de perte d'accès."
+                }
+              }
+            },
+            "overview": {
+              "title": "Aperçu de Superhero Wallet",
+              "items": {
+                "dashboardDisplay": {
+                  "question": "Qu'affiche Superhero Wallet ?",
+                  "answer": "Le tableau de bord est votre vue principale dans Superhero Wallet. Il affiche votre solde crypto total et le nombre de jetons détenus par chaque compte, les soldes individuels des comptes, des boutons d'action rapide (envoyer, recevoir) et vos transactions récentes."
+                },
+                "totalBalanceFiat": {
+                  "question": "Comment voir mon solde total en monnaie fiat ?",
+                  "answer": "Votre solde total est affiché en haut du tableau de bord et reflète la valeur combinée de vos actifs sur toutes les blockchains connectées."
+                },
+                "switchAccounts": {
+                  "question": "Comment passer d'un compte à l'autre ?",
+                  "answer": "Faites défiler vers la gauche ou la droite sur la carte du compte actif pour voir les différents comptes et passer de l'un à l'autre (par ex. Bitcoin, Ethereum, æternity). Chaque compte affiche son solde de jetons et son adresse."
+                },
+                "multisigVaults": {
+                  "question": "Que sont les coffres multisignatures et comment les utiliser ?",
+                  "answer": "Les coffres multisignatures (multisig) exigent que plusieurs comptes approuvent les transactions, offrant une sécurité et un contrôle renforcés. Vous pouvez basculer l'affichage de vos coffres multisig sur le tableau de bord, actuellement disponibles uniquement sur la blockchain æternity."
+                },
+                "sendReceiveFunds": {
+                  "question": "Comment envoyer et recevoir des fonds ?",
+                  "answer": "Utilisez le bouton « Envoyer » pour transférer des actifs de votre portefeuille vers une autre adresse. Le bouton « Recevoir » fournit l'adresse de votre portefeuille et un QR code pour recevoir des fonds."
+                }
+              }
+            },
+            "accountManagement": {
+              "title": "Gestion des comptes",
+              "items": {
+                "accountDetails": {
+                  "question": "Comment voir les informations détaillées de chaque compte ?",
+                  "answer": "Cliquez sur n'importe quelle carte de compte du tableau de bord pour accéder à la page d'aperçu du compte. Vous y trouverez le solde du compte, sa valeur fiat actuelle, l'adresse du compte, ainsi que la possibilité d'exécuter les actions disponibles comme l'envoi et la réception de fonds."
+                },
+                "assetsTab": {
+                  "question": "Que montre l'onglet « Actifs » ?",
+                  "answer": "L'onglet Actifs répertorie tous les jetons stockés dans votre compte. Chaque jeton indique la quantité détenue et, pour les actifs ayant une valeur fiat, la conversion équivalente."
+                },
+                "transactionHistory": {
+                  "question": "Comment consulter mon historique de transactions ?",
+                  "answer": "L'onglet Transactions affiche toutes les transactions passées du compte sélectionné, avec des détails comme le montant, le type de transaction et l'heure."
+                },
+                "aens": {
+                  "question": "Qu'est-ce que l'AENS (æternity Naming System) ?",
+                  "answer": "L'AENS est un système de noms sur la blockchain æternity qui permet aux utilisateurs d'enregistrer des noms lisibles pour leurs adresses de portefeuille, ce qui simplifie les interactions."
+                },
+                "shareAddress": {
+                  "question": "Comment partager ou copier l'adresse de mon portefeuille ?",
+                  "answer": "Vous pouvez voir une version abrégée de l'adresse de votre portefeuille sur la page d'aperçu du compte. Cliquez sur l'icône de copie à côté de l'adresse pour la partager facilement avec d'autres personnes."
+                }
+              }
+            },
+            "security": {
+              "title": "Sécurité et confidentialité",
+              "items": {
+                "nonCustodial": {
+                  "question": "Superhero Wallet est-il non-custodial ?",
+                  "answer": "Oui, Superhero Wallet est non-custodial : vous seul avez le contrôle de vos clés privées et de vos actifs. Aucun tiers, y compris Superhero, n'a accès à vos fonds."
+                },
+                "privateKeysManaged": {
+                  "question": "Comment mes clés privées sont-elles gérées ?",
+                  "answer": "Les clés privées sont chiffrées et stockées en toute sécurité sur votre appareil. Vous pouvez consulter vos clés privées et les sauvegarder. La phrase de récupération est une clé maîtresse qui peut restaurer tous vos comptes et leurs clés privées. Un mot de passe facultatif sert à chiffrer la phrase de récupération dans les applications web ; dans les applications mobiles, la phrase de récupération est conservée dans un stockage sécurisé et protégée par la connexion biométrique."
+                },
+                "forgotSeedPhrase": {
+                  "question": "Que faire si j'ai oublié ma phrase de récupération ?",
+                  "answer": "Malheureusement, sans votre phrase de récupération, vous ne pouvez pas récupérer votre portefeuille. Nous vous recommandons de la sauvegarder en lieu sûr lors de la configuration du portefeuille."
+                },
+                "airgapSetup": {
+                  "question": "Comment configurer AIRGAP pour une sécurité renforcée ?",
+                  "answer": "Superhero Wallet prend en charge AIRGAP, une méthode de signature hors ligne, pour renforcer la sécurité. Téléchargez l'application AIRGAP et liez-la à Superhero Wallet pour des transactions sécurisées hors ligne."
+                },
+                "seedPhraseBackup": {
+                  "question": "En quoi consiste la sauvegarde de la phrase de récupération ?",
+                  "answer": "Votre phrase de récupération vous est fournie lors de la configuration du portefeuille ainsi que dans les paramètres. Conservez cette phrase en lieu sûr, car c'est le seul moyen de récupérer votre portefeuille en cas de perte d'accès."
+                }
+              }
+            },
+            "dapps": {
+              "title": "dApps et intégration Web3",
+              "items": {
+                "supportedDapps": {
+                  "question": "À quelles dApps puis-je me connecter avec Superhero Wallet ?",
+                  "answer": "Nous prenons actuellement en charge l'intégration des dApps pour les blockchains ETH (via WalletConnect ; prise en charge EVM à venir) et AE."
+                },
+                "walletConnect": {
+                  "question": "Comment connecter Superhero Wallet aux dApps avec WalletConnect ?",
+                  "answer": "Sélectionnez l'option WalletConnect dans Superhero Wallet et scannez le QR code de la dApp. Cela permet de se connecter aux dApps Ethereum pour une expérience Web3 fluide."
+                },
+                "inAppBrowser": {
+                  "question": "Comment utiliser le navigateur intégré sur mobile pour les dApps ?",
+                  "answer": "Ouvrez l'application mobile Superhero Wallet et accédez à la section Navigateur intégré. Saisissez l'URL de la dApp et connectez-vous directement pour interagir sans quitter l'application."
+                }
+              }
+            },
+            "giftCards": {
+              "title": "Utiliser les cartes cadeaux et les liens d'invitation",
+              "items": {
+                "createSendGiftCard": {
+                  "question": "Comment créer et envoyer une carte cadeau ?",
+                  "answer": "Dans les paramètres du portefeuille, accédez à la fonctionnalité « Cartes cadeaux » (actuellement disponible uniquement pour les comptes æternity). Saisissez le montant à charger sur la carte cadeau, générez-la et partagez le lien d'invitation unique avec de nouveaux utilisateurs. Ils pourront l'utiliser pour récupérer le solde de la carte cadeau."
+                },
+                "customizeGiftCards": {
+                  "question": "Les cartes cadeaux peuvent-elles être personnalisées ?",
+                  "answer": "Pour l'instant, vous pouvez spécifier le montant, mais les possibilités de personnalisation se limitent à cette fonction."
+                }
+              }
+            },
+            "troubleshooting": {
+              "title": "Résolution des problèmes courants",
+              "items": {
+                "forgotPassword": {
+                  "question": "Que faire si j'ai oublié le mot de passe de mon portefeuille ?",
+                  "answer": "Si vous oubliez votre mot de passe, le seul moyen d'accéder à votre portefeuille est de le réinitialiser et d'utiliser votre phrase de récupération pour restaurer vos comptes. Assurez-vous d'avoir sauvegardé votre phrase de récupération et votre carnet d'adresses avant la réinitialisation."
+                },
+                "resetWallet": {
+                  "question": "Comment réinitialiser mon portefeuille ?",
+                  "answer": "Dans les paramètres, sélectionnez l'option « Réinitialiser le portefeuille ». Notez que cette action supprimera toutes les données locales du portefeuille ; sauvegardez donc au préalable votre phrase de récupération et votre carnet d'adresses."
+                },
+                "delayedTransaction": {
+                  "question": "Pourquoi ma transaction est-elle retardée ?",
+                  "answer": "Des retards peuvent survenir lorsque la blockchain est congestionnée. Les transactions peuvent ne pas s'afficher immédiatement dans le portefeuille, mais elles apparaîtront une fois traitées et indexées."
+                },
+                "dappConnection": {
+                  "question": "Pourquoi ne puis-je pas me connecter à une dApp ?",
+                  "answer": "Assurez-vous d'utiliser la dernière version de Superhero Wallet. Nous fournissons la connectivité EVM et WalletConnect pour les dApps ETH ; AE utilise sa propre méthode d'intégration des dApps."
+                },
+                "walletNotSyncing": {
+                  "question": "Que faire si mon portefeuille ne se synchronise pas ?",
+                  "answer": "Essayez de mettre à jour le portefeuille vers la dernière version et vérifiez que vous disposez d'une connexion Internet."
+                }
+              }
+            },
+            "advanced": {
+              "title": "Fonctionnalités et paramètres avancés",
+              "items": {
+                "switchNetworks": {
+                  "question": "Comment basculer entre le mainnet et le testnet ?",
+                  "answer": "Allez dans les paramètres, où vous trouverez une option pour basculer entre le mainnet, le testnet et des réseaux personnalisés. Sélectionnez le réseau selon vos besoins."
+                },
+                "manageMultipleAccounts": {
+                  "question": "Comment gérer plusieurs comptes ?",
+                  "answer": "Vous pouvez créer et gérer plusieurs comptes au sein du même portefeuille en faisant défiler les cartes de compte actives sur le tableau de bord."
+                },
+                "exportAddressBook": {
+                  "question": "Puis-je exporter mon carnet d'adresses ?",
+                  "answer": "Oui, vous pouvez exporter les adresses enregistrées au format JSON, puis les importer dans un autre Superhero Wallet."
+                },
+                "customizeSettings": {
+                  "question": "Comment personnaliser les notifications et les paramètres ?",
+                  "answer": "Accédez au menu Paramètres pour ajuster les notifications, personnaliser les préférences de profil et configurer d'autres options du portefeuille."
+                }
+              }
+            },
+            "support": {
+              "title": "Assistance et ressources",
+              "items": {
+                "githubRepository": {
+                  "question": "Où trouver le dépôt GitHub de Superhero Wallet ?",
+                  "answer": "Visitez le GitHub de Superhero Wallet pour accéder au dépôt, où vous pouvez consulter le code source, signaler des problèmes et demander de nouvelles fonctionnalités."
+                },
+                "reportBugs": {
+                  "question": "Comment signaler des bugs ou demander des fonctionnalités ?",
+                  "answer": "Soumettez vos rapports de bugs ou vos demandes de fonctionnalités directement via GitHub."
+                },
+                "contactSupport": {
+                  "question": "Qui contacter pour obtenir de l'aide ?",
+                  "answer": "Pour obtenir de l'aide, visitez le centre d'aide sur notre site web ou soumettez vos rapports de bugs directement via GitHub."
+                }
+              }
+            }
+          }
         },
         "cta": {
           "title": "Prenez le contrôle de votre crypto",
           "description": "Téléchargez Superhero Wallet et gérez tous vos actifs dans un seul portefeuille multichaîne sécurisé."
+        },
+        "mock": {
+          "currentBalance": "Solde actuel",
+          "availableBalance": "Solde disponible : {{amount}}",
+          "amountToSend": "Montant à envoyer",
+          "recipientIdentity": "Identité du destinataire",
+          "sendAssets": "Envoyer des actifs",
+          "broadcasting": "Diffusion...",
+          "confirmed": "✓ Confirmée ({{txHash}})",
+          "executed": "✓ Exécutée",
+          "awaitingSignature": "● En attente de signature",
+          "transferRequest": "Demande de transfert :",
+          "threshold": "Seuil : {{required}} sur {{total}}",
+          "signedCount": "{{signed}}/{{total}} signées",
+          "signedCheck": "Signée ✓",
+          "pending": "En attente ⏳",
+          "signAsBackupKey": "Signer avec la clé de secours",
+          "addressDirectory": "Répertoire d'adresses",
+          "searchContacts": "Rechercher des contacts...",
+          "noContactsMatch": "Aucun contact ne correspond à votre recherche",
+          "vaultOffline": "Coffre (hors ligne)",
+          "appOnline": "Application (en ligne)",
+          "connected": "Connecté 🟢",
+          "active": "Actif 🟢",
+          "available": "Disponible",
+          "registered": "Enregistré ✓",
+          "touchFaceIdActive": "Touch ID / Face ID activé",
+          "privateKey": "Clé privée",
+          "seedPhrase": "Phrase de récupération",
+          "standardFormat": "⚡ Format standard",
+          "secureImport": "Import sécurisé ✓",
+          "superheroWallet": "Superhero Wallet",
+          "tokens": "Jetons",
+          "vault": "Coffre {{address}}",
+          "airgap": "AIRGAP",
+          "superhero": "SUPERHERO",
+          "aens": "AENS",
+          "chainNameExample": "yourname.chain"
         }
       },
       "privacy": {
@@ -454,13 +795,37 @@
         "bannersTitle": "Bannières et actifs numériques",
         "ogBannerAlt": "Bannière sociale OG Superhero",
         "ogBannerTitle": "Bannière sociale OG standard",
-        "ogBannerDescription": "La carte de métadonnées de partage par défaut pour Twitter, Telegram, Discord ou Facebook.",
+        "ogBannerDescription": "La carte de métadonnées de partage par défaut pour X, Telegram, Discord ou Facebook.",
         "interfaceShowcaseAlt": "Vitrine de l'interface Superhero",
         "appInterfacePreview": "Aperçu de l'interface de l'application",
         "appShowcaseTitle": "Capture d'écran de présentation de l'application",
         "appShowcaseDescription": "Capture d'écran de l'application mettant en évidence la mise en page de l'interface, les sujets tendances, les fils et les composants de cryptomonnaie.",
         "customIconsTitle": "Icônes personnalisées",
-        "downloadIcon": "Télécharger l'icône {{name}}"
+        "downloadIcon": "Télécharger l'icône {{name}}",
+        "colors": {
+          "neonTeal": {
+            "name": "Bleu-vert néon principal",
+            "desc": "Le cœur de notre système visuel. Utilisé pour les interactions essentielles, les états de succès et les actions principales."
+          },
+          "neonPink": {
+            "name": "Rose néon / Cramoisi",
+            "desc": "Accent vif de mise en valeur. Utilisé pour les états d'erreur, les actions destructrices et les dégradés actifs."
+          },
+          "neonBlue": {
+            "name": "Bleu néon",
+            "desc": "Équilibre corporate et fraîcheur. Utilisé pour les sous-titres, les boutons secondaires et les composants informatifs."
+          },
+          "background": {
+            "name": "Arrière-plan",
+            "desc": "Notre fond sombre profond, optimisé pour un contraste élevé avec des teintes néon cyberpunk éclatantes."
+          }
+        },
+        "icons": {
+          "diamond": "Diamant",
+          "wallet": "Portefeuille",
+          "hashtag": "Hashtag",
+          "feed": "Fil"
+        }
       },
       "terms": {
         "title": "CONDITIONS D'UTILISATION",
@@ -608,7 +973,7 @@
         "shareWithOthers": "Partagez ce jeton avec d'autres :",
         "shareOnSocialMedia": "Partager sur les réseaux sociaux :",
         "checkOutToken": "Découvrez ce jeton !",
-        "twitter": "🐦 Twitter",
+        "twitter": "𝕏 X",
         "telegram": "✈️ Telegram"
       },
       "cookies": {
@@ -621,7 +986,23 @@
         "nativeToken": "Jeton natif",
         "unknown": "Inconnu"
       },
-      "titleSuffix": "Fenêtre {{name}}"
+      "titleSuffix": "Fenêtre {{name}}",
+      "onboarding": {
+        "title": "Modifier le SuperheroID",
+        "subtitle": "Connectez votre portefeuille pour créer et gérer votre SuperheroID",
+        "stepWalletApp": "Assurez-vous d'avoir l'application Superhero Wallet",
+        "stepExtension": "Assurez-vous d'avoir l'extension",
+        "or": "ou",
+        "downloadAppHint": "Téléchargez l'application tout-en-un Superhero avec portefeuille intégré",
+        "downloadOn": "Télécharger sur",
+        "getItOn": "Disponible sur"
+      },
+      "welcome": {
+        "title": "Bienvenue sur Superhero",
+        "tagline": "Échangez des hashtags tokenisés et des tendances sociales — le marché de l'attention du web3.",
+        "getStarted": "Commencer",
+        "continueAsGuest": "Continuer en tant qu'invité"
+      }
     },
     "wallet": {
       "aePrice": "Prix AE",
@@ -720,6 +1101,64 @@
       "getAe": "Obtenir des AE",
       "superheroId": "Superhero ID",
       "account": "Compte"
+    },
+    "transactionNotification": {
+      "fieldBio": "bio",
+      "fieldWebsite": "site web",
+      "fieldChainName": "nom de chaîne",
+      "fieldProfile": "profil",
+      "confirmInWallet": "Confirmez dans votre portefeuille",
+      "signTransactionToContinue": "Signez la transaction pour continuer",
+      "approveTokenSpending": "Approuvez la dépense de jetons",
+      "approveAllowanceStep": "Étape {{step}} sur {{total}} — autorisez Superhero à utiliser vos {{token}}",
+      "creatingToken": "Création de #{{name}}",
+      "signInWalletToContinue": "Signez dans votre portefeuille pour continuer",
+      "publishingPost": "Publication du post",
+      "publishingReply": "Publication de la réponse",
+      "signClaimRequest": "Signez la demande de réclamation pour {{name}}.chain",
+      "swappingTokens": "Échange de {{amountIn}} {{tokenIn}} → {{amountOut}} {{tokenOut}}",
+      "wrappingAmount": "Enveloppement de {{amount}} AE → WAE",
+      "unwrappingAmount": "Désenveloppement de {{amount}} WAE → AE",
+      "addingLiquidityAmounts": "Ajout de {{amountA}} {{tokenA}} + {{amountB}} {{tokenB}}",
+      "removingLiquidityFromPool": "Retrait de {{pct}}% de {{tokenA}}/{{tokenB}}",
+      "signToUpdateFields": "Signez pour mettre à jour : {{fields}}",
+      "confirmingOnBlockchain": "Confirmation sur la blockchain",
+      "usuallyTakesFewSeconds": "Prend généralement quelques secondes",
+      "approvingToken": "Approbation de {{token}}…",
+      "confirmingAllowanceOnChain": "Confirmation de l'autorisation on-chain",
+      "confirmingOnBlockchainEllipsis": "Confirmation sur la blockchain…",
+      "claimingName": "Réclamation de {{name}}.chain",
+      "claimStepPreclaim": "Étape 1 sur 4 — réservation du nom on-chain",
+      "claimStepClaim": "Étape 2 sur 4 — soumission de la réclamation sponsorisée",
+      "claimStepUpdate": "Étape 3 sur 4 — mise à jour des pointeurs du nom",
+      "claimStepTransfer": "Étape 4 sur 4 — transfert du nom vers votre portefeuille",
+      "claimQueued": "Préparation des transactions sponsorisées. Cela peut prendre quelques minutes.",
+      "claimProcessingBackground": "Traitement en arrière-plan. Vous pouvez continuer à utiliser l'application.",
+      "swapInProgress": "Échange en cours",
+      "usuallyConfirmsFewSeconds": "Se confirme généralement en quelques secondes",
+      "wrappingAeToWae": "Enveloppement AE → WAE",
+      "unwrappingWaeToAe": "Désenveloppement WAE → AE",
+      "confirmingOnChainEllipsis": "Confirmation on-chain…",
+      "addingLiquidityEllipsis": "Ajout de liquidité…",
+      "depositingIntoPool": "Dépôt dans le pool {{tokenA}}/{{tokenB}}",
+      "removingLiquidityEllipsis": "Retrait de liquidité…",
+      "withdrawingFromPool": "Retrait du pool {{tokenA}}/{{tokenB}}",
+      "updatingProfileEllipsis": "Mise à jour du profil…",
+      "savingYourFields": "Enregistrement de : {{fields}}",
+      "transactionConfirmed": "Transaction confirmée",
+      "allowanceApproved": "Autorisation approuvée",
+      "tokenApproved": "{{token}} approuvé",
+      "swapConfirmed": "Échange confirmé",
+      "wrapComplete": "Enveloppement terminé",
+      "unwrapComplete": "Désenveloppement terminé",
+      "tokenCreated": "Jeton créé",
+      "postPublished": "Post publié",
+      "replyPublished": "Réponse publiée",
+      "nameClaimed": "Nom réclamé",
+      "liquidityAdded": "Liquidité ajoutée",
+      "liquidityRemoved": "Liquidité retirée",
+      "profileUpdated": "Profil mis à jour",
+      "fieldsSaved": "{{fields}} enregistré(s)"
     }
   },
   "dex": {
@@ -1738,7 +2177,12 @@
       "step1": "Générez des liens d'invitation en finançant une récompense unique en AE par invitation",
       "step2": "Partagez les liens avec vos amis et votre communauté",
       "step3": "Après que 4 invités uniques ont acheté des jetons, vous pouvez retirer les récompenses accumulées",
-      "step4": "Retirez vos récompenses à tout moment après l'éligibilité"
+      "step4": "Retirez vos récompenses à tout moment après l'éligibilité",
+      "heroBrand": "Superhero",
+      "heroRewards": "Récompenses",
+      "referAndEarn": "Parrainer & Gagner",
+      "yourInvitations": "Vos invitations",
+      "disclaimer": "Le programme de récompenses Superhero récompense les utilisateurs qui créent du contenu sur d'autres plateformes sociales (comme X) avec des liens retour et/ou des liens d'invitation, en référençant de nouveaux utilisateurs sur la plateforme. Les récompenses seront distribuées sous forme de jetons ae. L'éligibilité et les récompenses dépendent de l'activité on-chain, ne sont pas garanties et peuvent être suspendues à tout moment sans préavis ni responsabilité. Le droit de disqualifier tout utilisateur du programme est réservé. Les utilisateurs de pays figurant sur liste noire ne sont pas éligibles aux récompenses. En participant au programme, les utilisateurs acceptent ces conditions générales. Les récompenses envoyées peuvent être soumises à des obligations déclaratives fiscales. Les utilisateurs sont responsables de toute obligation fiscale découlant de la réception de récompenses."
     },
     "leaderboardHeading": "Classement des traders",
     "leaderboardHeadingDescription": "Découvrez les traders Superhero les plus actifs classés selon leur performance on-chain. Augmentez votre volume de trading, votre régularité et votre possession de tendances pour grimper au classement et faire de votre portefeuille un historique public on-chain.",
@@ -1852,6 +2296,86 @@
     },
     "tokenLineChart": {
       "alt": "Graphique linéaire du jeton"
+    },
+    "collectRewards": {
+      "title": "Collectez vos récompenses",
+      "description": "Les récompenses s'accumulent au fur et à mesure que vos filleuls directs participent aux ventes de jetons. Vous pouvez retirer une fois que <invitees>{{invitees}} filleuls directs</invitees> ont chacun dépensé au moins <spent>{{spent}} AE</spent> (cumulatif).",
+      "disclaimer": "Remarque : l'éligibilité et les récompenses dépendent de l'activité on-chain et ne sont pas garanties.",
+      "progressToRewards": "Progression vers les récompenses",
+      "reached": "{{reached}}/{{total}} atteint",
+      "eligibleToWithdraw": "Éligible au retrait",
+      "moreInviteesNeeded": "{{remaining}} filleuls supplémentaires doivent atteindre {{amount}} AE",
+      "stillAccumulating_one": "{{count}} filleul accumule encore",
+      "stillAccumulating_other": "{{count}} filleuls accumulent encore",
+      "inviteeReached": "Atteint",
+      "inviteeProgress": "{{spent}} / {{total}} AE",
+      "moreCount": "+{{extra}} de plus",
+      "availableRewards": "Récompenses disponibles",
+      "withdrawing": "Retrait en cours...",
+      "notEligibleYet": "Pas encore éligible",
+      "noRewardsYet": "Pas encore de récompenses",
+      "collectRewards": "Collecter les récompenses",
+      "notEligibleError": "Pas encore éligible : vous avez besoin de {{invitees}} filleuls directs ayant chacun dépensé au moins {{spent}} AE en ventes de jetons.",
+      "collectError": "Une erreur s'est produite lors de la collecte des récompenses."
+    },
+    "rewardsProgram": {
+      "rewardsEarnedBadge": "Récompenses obtenues",
+      "aeEarned": "{{amount}} AE gagnés",
+      "rewardsSentAutomatically": "Vos récompenses AE ont été envoyées automatiquement à votre portefeuille connecté.",
+      "status": {
+        "completed": "TERMINÉ",
+        "inProgress": "EN COURS",
+        "locked": "VERROUILLÉ"
+      },
+      "check": {
+        "checking": "Vérification…",
+        "checkIn": "Vérifier dans {{time}}",
+        "checkRewards": "Vérifier les récompenses",
+        "nextCheckTooltip": "Prochaine vérification disponible dans {{time}}"
+      },
+      "milestone1": {
+        "earnBadge": "Gagnez 50 AE",
+        "title": "Lier le compte X & Publier",
+        "descIdentity": "Vérifiez la propriété de votre compte X et liez-le on-chain à votre SuperheroID. SuperheroID est un contrat intelligent d'identité numérique décentralisée qui connecte tous vos comptes sociaux à votre adresse de portefeuille. Votre profil SuperheroID sera automatiquement configuré après avoir lié votre compte X.",
+        "descPost": "Après avoir lié votre compte, publiez un post sur Superhero sur X depuis votre compte pour faire passer le mot et partager avec votre réseau. Le post doit simplement mentionner Superhero — incluez un lien <link>superhero.com</link> ou taguez <handle>@superhero_chain</handle>.",
+        "descFollowers": "Votre compte X doit avoir au moins 100 abonnés pour être éligible à cette récompense.",
+        "descEarn": "En accomplissant ce jalon, vous gagnez 50 jetons AE !",
+        "step1": "Liez votre compte X à votre SuperheroID on-chain",
+        "step2": "Publiez un post sur Superhero avec votre compte X lié (mentionnez @superhero_chain ou liez superhero.com)",
+        "linkX": "Lier X",
+        "postOnX": "Publier sur X",
+        "complete": "Jalon accompli — 50 AE gagnés",
+        "loadingProgress": "Chargement de votre progression…"
+      },
+      "milestone2": {
+        "earnBadge": "Gagnez 10 à 30 AE par post par jour",
+        "title": "Publier sur X & Gagner",
+        "desc": "Publiez des posts sur Superhero depuis votre compte X lié pour faire passer le mot et partager avec votre réseau. Chaque post doit inclure votre lien de parrainage unique dans le contenu du post. Votre lien de parrainage unique sera automatiquement créé lorsque vous cliquerez sur « Publier ».",
+        "tierIneligible": "Moins de 100 abonnés : non éligible",
+        "tier1": "100 - 10k abonnés : 10 AE par post",
+        "tier2": "10k - 1M d'abonnés : 20 AE par post",
+        "tier3": "Plus d'1 million d'abonnés : 30 AE par post",
+        "yourTier": "Votre niveau : {{amount}} AE par post",
+        "yourTierFollowers": "({{followers}} abonnés)",
+        "streakBadge": "Gagnez 50 AE sur une série de 10 jours consécutifs",
+        "currentStreak": "Série actuelle : {{days}}/{{total}} jours",
+        "openingWallet": "Ouverture du portefeuille…",
+        "postOnX": "Publier sur X",
+        "streakInfo": "Pour chaque post répondant aux critères, vous gagnez des jetons AE en fonction de votre niveau d'abonnés. Publier chaque jour pendant une série consécutive de 10 jours vous rapportera 50 AE supplémentaires, alors continuez à publier et à interagir avec la communauté.",
+        "complete": "Jalon accompli — {{amount}} AE gagnés"
+      }
+    },
+    "onboarding": {
+      "badge": "Commencer",
+      "title": "Configurez votre compte Superhero",
+      "subtitle": "Effectuez ces étapes pour commencer à gagner des récompenses AE.",
+      "step1": "Liez votre compte X",
+      "step2": "Publiez sur Superhero pour gagner 50 AE",
+      "progress": "{{done}} sur {{total}} étapes effectuées",
+      "continue": "Continuer la configuration",
+      "connectX": "Connecter X",
+      "postOnX": "Publier & gagner",
+      "done": "Tout est prêt !"
     }
   },
   "errors": {
@@ -2358,7 +2882,23 @@
     "qGlossaryLi1": "AE : la monnaie native de la blockchain aeternity.",
     "qGlossaryLi2": "Adresse de vente : le contrat qui émet/détruit les tokens sur la courbe.",
     "qGlossaryLi3": "DAO : trésorerie + gouvernance on‑chain pour une communauté de token.",
-    "qGlossaryLi4": "Hachage de tx : l'identifiant de la transaction ; consultez-le dans les explorateurs pour vérifier."
+    "qGlossaryLi4": "Hachage de tx : l'identifiant de la transaction ; consultez-le dans les explorateurs pour vérifier.",
+    "categoryRewardsProgram": "Programme de récompenses",
+    "categoryNameClaims": "Demandes de nom",
+    "qRewardsProgramTitle": "Qu'est-ce que le programme de récompenses Superhero ?",
+    "qRewardsProgramAnswer": "Le programme de récompenses Superhero vous permet de gagner des jetons AE en accomplissant des jalons : vérifier votre compte X, inviter de nouveaux utilisateurs et publier des posts sur Superhero sur les réseaux sociaux. Accomplissez les jalons pour débloquer les phases et gagner jusqu'à 200 jetons AE.",
+    "qRewardsMilestonesTitle": "Quels jalons sont disponibles ?",
+    "qRewardsMilestonesLi1": "Vérifier le compte X & Publier — connectez votre compte X et prouvez-en la propriété.",
+    "qRewardsMilestonesLi2": "Liez votre compte X à SuperheroID on-chain.",
+    "qRewardsMilestonesLi3": "Publier sur Superhero — publiez 10 posts incluant votre lien de parrainage dans le texte.",
+    "qRewardsClaimTitle": "Comment réclamer mes récompenses ?",
+    "qRewardsClaimAnswer": "Une fois qu'un jalon est marqué comme accompli, une bannière de réclamation apparaît sur la page Récompenses. Cliquez sur le bouton de réclamation et confirmez la transaction dans votre portefeuille. Des frais de gaz minimes s'appliquent.",
+    "qRewardsEligibilityTitle": "Les récompenses sont-elles garanties ?",
+    "qRewardsEligibilityAnswer": "L'éligibilité et les récompenses dépendent de l'activité on-chain et ne sont pas garanties. Le programme peut être suspendu à tout moment sans préavis. Les utilisateurs de pays figurant sur liste noire ne sont pas éligibles. En participant, vous acceptez les conditions affichées sur la page des récompenses.",
+    "qSponsoredNameClaimTitle": "Qu'est-ce qu'une demande de nom sponsorisée ?",
+    "qSponsoredNameClaimAnswer": "Nous sponsorisons une revendication de nom .chain gratuite par adresse. Le nom doit comporter plus de 12 caractères (hors suffixe .chain). Cela vous donne une identité lisible sur la blockchain æternity sans frais.",
+    "qClaimMoreNamesTitle": "Puis-je revendiquer plus d'un nom ?",
+    "qClaimMoreNamesAnswer": "Nous ne sponsorisons qu'une seule revendication de nom par adresse. Si vous souhaitez revendiquer des noms supplémentaires, vous pouvez le faire directement dans le portefeuille Superhero — disponible en tant qu'extension de navigateur, application mobile native, ou sur le web à l'adresse wallet.superhero.com."
   },
   "buyAe": {
     "pageTitle": "Acheter des AE – Superhero",
@@ -2393,7 +2933,7 @@
     "referDescription": "Les invitations Superhero peuvent aider à développer le réseau et à débloquer des récompenses lorsque les invités deviennent actifs. Utilisez la page d'invitation pour créer des liens et suivre les récompenses.",
     "referAction": "Ouvrir Parrainez & Gagnez",
     "xEarnTitle": "Gagner en publiant sur X",
-    "xEarnDescription": "Une future voie de gain récompensera l'activité de publication sur X (anciennement Twitter). Cette option arrive bientôt.",
+    "xEarnDescription": "Une future voie de gain récompensera l'activité de publication sur X. Cette option arrive bientôt.",
     "comingSoon": "Bientôt disponible",
     "safetyTitle": "Avant d'acheter",
     "safetyLi1": "Confirmez le token, le réseau, l'adresse de dépôt, les frais de retrait et le montant minimum de retrait.",
@@ -2439,6 +2979,10 @@
       "switch": "Changer",
       "disconnect": "Déconnecter",
       "connectEthereumWallet": "Connecter le portefeuille Ethereum"
-    }
+    },
+    "earnSectionTitle": "Gagner des AE",
+    "earnSectionDescription": "Commencez avec les moyens natifs de Superhero pour gagner des AE en faisant grandir la communauté et en rejoignant les programmes de récompenses.",
+    "buySectionTitle": "Acheter auprès de tiers externes",
+    "buySectionDescription": "Utilisez des plateformes d'échange et des fournisseurs de swap tiers si vous préférez acheter des AE directement en dehors de Superhero."
   }
 }

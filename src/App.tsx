@@ -47,9 +47,14 @@ const OnboardingModal = React.lazy(
 const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { initSdk, activeAccount } = useAeSdk();
+  const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
   const { loadAccountData } = useAccount();
-  const { attemptReconnection } = useWalletConnect();
+  const {
+    attemptReconnection,
+    walletInfo,
+    connectingWallet,
+    walletConnected,
+  } = useWalletConnect();
   const [profileEditOpen, setProfileEditOpen] = useAtom(profileEditModalOpenAtom);
   const [profileEditFlow, setProfileEditFlow] = useAtom(profileEditModalFlowAtom);
   const [profileEditPendingAfterConnect, setProfileEditPendingAfterConnect] = useAtom(
@@ -69,15 +74,25 @@ const App = () => {
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
+    initSdk();
+  }, [initSdk]);
 
-    const initialize = async () => {
-      await initSdk();
-      // attemptReconnection will check if there's persisted wallet state and try to reconnect
-      await attemptReconnection();
-    };
-
-    initialize();
-  }, [attemptReconnection, initSdk]); // Run once per stable hook references
+  // Re-establish the extension connection for a persisted wallet session, so the
+  // SDK's onAddressChange keeps firing after a page refresh. attemptReconnection
+  // no-ops until persisted state is present and only ever attempts once.
+  // connectingWallet/walletConnected are deps so an attempt skipped because a
+  // connect was in flight is retried once that connect settles.
+  useEffect(() => {
+    if (!sdkInitialized) return;
+    attemptReconnection();
+  }, [
+    sdkInitialized,
+    activeAccount,
+    walletInfo,
+    connectingWallet,
+    walletConnected,
+    attemptReconnection,
+  ]);
 
   // Setup interval for periodic data refresh when account is active
   useEffect(() => {
@@ -153,6 +168,11 @@ const App = () => {
           if (updatedProfile) handleProfileEditSuccess();
           else handleProfileEditDismiss();
         }}
+        // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
+        // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
+        // them on success. No onSaveError handler on purpose: a failed save is not a
+        // cancel, so the flags survive and the flow can resume when the user retries.
+        onHide={() => setProfileEditOpen(false)}
         showSkip={profileEditFlow.showSkip}
         onSkip={handleProfileEditDismiss}
         onClaimSuccess={

@@ -29,6 +29,15 @@ import {
   scanningForAccountsAtom,
 } from '../atoms/walletAtoms';
 import { liquidityPositionsAtom } from '../features/dex/atoms/positionsAtoms';
+import i18n from '../i18n';
+
+/**
+ * Detection window for silent reconnection after a page refresh. The extension
+ * content script re-announces itself every few seconds, but its injection can
+ * lag behind app boot, so this is deliberately more patient than the
+ * user-initiated connect flow.
+ */
+const RECONNECT_WALLET_DETECTION_TIMEOUT_MS = 15_000;
 
 function pruneAccountKeyedMap<T>(
   prev: Record<string, T>,
@@ -91,7 +100,8 @@ export function useWalletConnect() {
   const walletInfoRef = useRef(walletInfo);
   const walletConnectedRef = useRef(walletConnected);
   const connectingWalletRef = useRef(connectingWallet);
-  const connectWalletRef = useRef<(() => Promise<void | null>) | null>(null);
+  const connectWalletRef = useRef<(() => Promise<string | null>) | null>(null);
+  const reconnectWalletRef = useRef<(() => Promise<string | null>) | null>(null);
 
   // Use only the current build network (mainnet or testnet; VITE_NETWORK)
   const availableNetworks = [CURRENT_NETWORK];
@@ -171,12 +181,13 @@ export function useWalletConnect() {
     }
   }, []);
 
-  async function subscribeAddress() {
+  async function subscribeAddress({ resetActiveAccount = true } = {}) {
     /*
          * Reset the active account to trigger
          * watchers once the wallet is connected
+         * (skipped during silent reconnection to keep the restored session visible)
          */
-    setActiveAccount(undefined);
+    if (resetActiveAccount) setActiveAccount(undefined);
     return new Promise((resolve, reject) => {
       setScanningForAccounts(true);
       const $timeout = setTimeout(() => {
@@ -192,9 +203,9 @@ export function useWalletConnect() {
             'subscribe' as any,
             'connected',
           );
-          await scanForAccounts();
+          const connectedAccount = await scanForAccounts();
 
-          resolve(true);
+          resolve(connectedAccount);
         } catch (error) {
           reject(error);
         } finally {
@@ -215,7 +226,7 @@ export function useWalletConnect() {
   }
 
   // eslint-disable-next-line consistent-return
-  async function connectWallet() {
+  async function connectWallet(): Promise<string | null> {
     // when trying to connect to the wallet all states should be reset
     // and sdk should be disconnected
     setWalletConnected(false);
@@ -234,21 +245,67 @@ export function useWalletConnect() {
 
     if (!wallet.current) {
       setConnectingWallet(false);
-      return !IS_FRAMED_AEPP ? deepLinkWalletConnect() : null;
+      if (!IS_FRAMED_AEPP) await deepLinkWalletConnect();
+      return null;
     }
 
     try {
       const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
       setWalletInfo(newWalletInfo);
 
-      await subscribeAddress();
+      const connectedAccount = await subscribeAddress();
+      if (!connectedAccount) throw new Error(i18n.t('common.messages.noWalletAccountConnected'));
       setWalletConnected(true);
+      return connectedAccount;
     } catch {
       disconnectWallet();
+      return null;
+    } finally {
+      setConnectingWallet(false);
     }
-    setConnectingWallet(false);
   }
   connectWalletRef.current = connectWallet;
+
+  /**
+   * Silently re-establish the wallet connection after a page refresh.
+   *
+   * The SDK only emits onAddressChange over an active RPC connection created by
+   * connectToWallet, so without this the restored session is read-only and
+   * account switches in the extension go unnoticed. Unlike connectWallet, this
+   * never clears the restored session up front, never opens a deep link, and
+   * keeps the static (read-only) account usable if the wallet does not answer.
+   */
+  async function reconnectWallet(): Promise<string | null> {
+    setConnectingWallet(true);
+    try {
+      // Extensions only exist in desktop browsers or framed contexts; elsewhere
+      // keep the default (short) detection window so we fail fast to static mode.
+      const detectionTimeout = (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP
+        ? undefined
+        : RECONNECT_WALLET_DETECTION_TIMEOUT_MS;
+      wallet.current ??= await scanForWallets(detectionTimeout);
+      if (!wallet.current) return null;
+
+      try {
+        await aeSdk.disconnectWallet();
+      } catch {
+        // No previous RPC session in this SDK instance — expected after refresh.
+      }
+      const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
+      setWalletInfo(newWalletInfo);
+
+      const connectedAccount = await subscribeAddress({ resetActiveAccount: false });
+      if (!connectedAccount) return null;
+      setWalletConnected(true);
+      return connectedAccount;
+    } catch {
+      // Keep persisted state intact; the user can still act via deep-link signing.
+      return null;
+    } finally {
+      setConnectingWallet(false);
+    }
+  }
+  reconnectWalletRef.current = reconnectWallet;
 
   useEffect(() => {
     activeAccountRef.current = activeAccount;
@@ -314,8 +371,9 @@ export function useWalletConnect() {
 
   /**
    * Scan for wallets
+   * @param timeoutMs - overrides the default detection window (see reconnectWallet)
    */
-  async function scanForWallets(): Promise<Wallet | undefined> {
+  async function scanForWallets(timeoutMs?: number): Promise<Wallet | undefined> {
     // Concurrency guard: reuse the in-flight scan rather than starting a duplicate.
     if (scanPromiseRef.current) return scanPromiseRef.current;
 
@@ -340,7 +398,7 @@ export function useWalletConnect() {
           cleanup();
           resolve(undefined);
         },
-        (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 4000,
+        timeoutMs ?? ((IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 100 : 4000),
       );
 
       const handleWallets = async ({
@@ -371,22 +429,21 @@ export function useWalletConnect() {
     if (reconnectionAttemptedRef.current) {
       return;
     }
-    reconnectionAttemptedRef.current = true;
 
     // Guard against concurrent operations
     if (connectingWalletRef.current || walletConnectedRef.current) {
       return;
     }
 
-    if (
-      // route.name !== "tx-queue" &&
-      activeAccountRef.current
-      && !walletConnectedRef.current
-    ) {
-      if (walletInfoRef.current) {
-        await connectWalletRef.current?.();
-      }
+    // Only a session that was actually connected to a wallet (persisted
+    // walletInfo) can be re-established. Leave the attempted flag unset on
+    // early return so a later call can retry once persisted state is in place.
+    if (!activeAccountRef.current || !walletInfoRef.current) {
+      return;
     }
+
+    reconnectionAttemptedRef.current = true;
+    await reconnectWalletRef.current?.();
   }, []);
 
   // Monitor wallet connection health - if walletInfo exists but connection is lost, clear state
@@ -421,6 +478,7 @@ export function useWalletConnect() {
     walletInfo,
     attemptReconnection,
     connectWallet,
+    reconnectWallet,
     deepLinkWalletConnect,
     disconnectWallet,
     scanForWallets,

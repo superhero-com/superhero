@@ -18,6 +18,7 @@ import { Decimal } from '@/libs/decimal';
 import { formatFractionalPrice } from '@/utils/common';
 import { COIN_SYMBOL, PROTOCOL_DAO_AFFILIATION_FEE, PROTOCOL_DAO_TOKEN_AE_RATIO } from '@/utils/constants';
 import { useAtomValue } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { IconWallet } from '../../icons';
 import AeButton from '../AeButton';
 
@@ -32,6 +33,7 @@ const TradeTransactionConfirm = ({
   onCancel,
   onClose,
 }: TransactionConfirmModalProps) => {
+  const { t } = useTranslation();
   const tokenA = useAtomValue(tokenAAtom);
   const tokenB = useAtomValue(tokenBAtom);
   const token = useAtomValue(tokenTradeTokenAtom);
@@ -68,7 +70,7 @@ const TradeTransactionConfirm = ({
     <div className="w-full max-w-md mx-auto space-y-4">
       {/* Title */}
       <h2 className="text-lg font-semibold text-white">
-        {`Confirm ${isBuying ? 'Buy' : 'Sell'}`}
+        {isBuying ? t('common.modals.transactionConfirm.confirmBuy') : t('common.modals.transactionConfirm.confirmSell')}
       </h2>
 
       {/* Token swap boxes */}
@@ -99,24 +101,27 @@ const TradeTransactionConfirm = ({
 
       {/* Estimated output */}
       <p className="text-sm text-white/80">
-        {`Estimated output: ${tokenBFormatted.number} ${isBuying ? token?.symbol : COIN_SYMBOL}`}
+        {t('common.modals.transactionConfirm.estimatedOutput', {
+          amount: tokenBFormatted.number,
+          symbol: isBuying ? token?.symbol : COIN_SYMBOL,
+        })}
       </p>
 
       {/* Order details */}
       <div>
-        <h3 className="text-sm font-semibold text-white mb-1">Order Details</h3>
+        <h3 className="text-sm font-semibold text-white mb-1">{t('common.modals.transactionConfirm.orderDetails')}</h3>
         <div className="space-y-0 divide-y divide-white/5">
           {!averageTokenPrice.isZero && !averageTokenPrice.infinite && (
-            <TransactionConfirmDetailRow label="Avg. Token Price">
+            <TransactionConfirmDetailRow label={t('common.modals.transactionConfirm.avgTokenPrice')}>
               <LivePriceFormatter aePrice={averageTokenPrice} watchPrice={false} />
             </TransactionConfirmDetailRow>
           )}
 
-          <TransactionConfirmDetailRow label="Allowed Slippage">
+          <TransactionConfirmDetailRow label={t('dex.allowedSlippage')}>
             {`${Number(desiredSlippage ?? 0).toFixed(2)}%`}
           </TransactionConfirmDetailRow>
 
-          <TransactionConfirmDetailRow label="Price Impact">
+          <TransactionConfirmDetailRow label={t('dex.priceImpact')}>
             <div className={`flex items-center gap-1 ${isBuying ? 'text-green-500' : 'text-red-500'}`}>
               <span className="flex items-center">
                 {!priceImpactDiff.isZero && (isBuying ? '+' : '-')}
@@ -133,7 +138,7 @@ const TradeTransactionConfirm = ({
           </TransactionConfirmDetailRow>
 
           {isBuying && (
-            <TransactionConfirmDetailRow label="Protocol Token Reward">
+            <TransactionConfirmDetailRow label={t('dex.protocolTokenReward')}>
               {`~${Decimal.from(protocolTokenReward).prettify()}`}
             </TransactionConfirmDetailRow>
           )}
@@ -151,7 +156,7 @@ const TradeTransactionConfirm = ({
             disabled={!isAllowSelling}
             style={{ background: '#1161FE' }}
           >
-            {`Allow Use of Token${!isAllowSelling ? ' ✓' : ''}`}
+            {`${t('common.modals.transactionConfirm.allowUseOfToken')}${!isAllowSelling ? ' ✓' : ''}`}
           </AeButton>
         )}
         <AeButton
@@ -162,7 +167,7 @@ const TradeTransactionConfirm = ({
           disabled={!isBuying && isAllowSelling}
           style={{ background: '#1161FE' }}
         >
-          Place Order
+          {t('dex.placeOrder')}
         </AeButton>
         <AeButton
           variant="secondary"
@@ -170,7 +175,7 @@ const TradeTransactionConfirm = ({
           size="md"
           fullWidth
         >
-          Cancel
+          {t('common.buttons.cancel')}
         </AeButton>
       </div>
     </div>
@@ -182,6 +187,7 @@ const DefaultTransactionConfirm = ({
   onCancel,
   onClose,
 }: TransactionConfirmModalProps) => {
+  const { t } = useTranslation();
   const handleConfirm = () => {
     onConfirm();
     onClose();
@@ -195,7 +201,7 @@ const DefaultTransactionConfirm = ({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold text-white">Confirm Transaction</h2>
+        <h2 className="text-xl font-semibold text-white">{t('common.modals.transactionConfirm.confirmTransaction')}</h2>
       </div>
 
       <div className="text-center space-y-4 sm:space-y-6 py-4">
@@ -205,7 +211,7 @@ const DefaultTransactionConfirm = ({
 
         <div className="space-y-3">
           <p className="text-sm text-gray-300 leading-relaxed">
-            Please check your wallet and confirm the transaction to proceed.
+            {t('common.modals.transactionConfirm.checkWalletPrompt')}
           </p>
         </div>
 
@@ -218,7 +224,7 @@ const DefaultTransactionConfirm = ({
             className="text-sm sm:text-base"
             style={{ background: '#1161FE' }}
           >
-            Confirm in Wallet
+            {t('common.modals.transactionConfirm.confirmInWallet')}
           </AeButton>
           <AeButton
             variant="secondary"
@@ -227,7 +233,7 @@ const DefaultTransactionConfirm = ({
             fullWidth
             className="text-sm sm:text-base"
           >
-            Cancel
+            {t('common.buttons.cancel')}
           </AeButton>
         </div>
       </div>
@@ -240,6 +246,7 @@ const CreateTokenTransactionConfirm = ({
   onCancel,
   onClose,
 }: TransactionConfirmModalProps) => {
+  const { t } = useTranslation();
   const details = useAtomValue(createTokenDetailsAtom);
 
   const handleConfirm = () => { onConfirm(); onClose(); };
@@ -251,7 +258,7 @@ const CreateTokenTransactionConfirm = ({
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
-      <h2 className="text-lg font-semibold text-white">Confirm Token Creation</h2>
+      <h2 className="text-lg font-semibold text-white">{t('common.modals.transactionConfirm.confirmTokenCreation')}</h2>
 
       {/* Token identity box */}
       <div className="flex items-center gap-3 px-4 py-3 border border-white/10 rounded-md bg-white/[0.03]">
@@ -262,7 +269,7 @@ const CreateTokenTransactionConfirm = ({
           <div className="text-white font-semibold text-base leading-tight">
             {details?.tokenName ?? '—'}
           </div>
-          <div className="text-white/50 text-xs mt-0.5">New token</div>
+          <div className="text-white/50 text-xs mt-0.5">{t('common.modals.transactionConfirm.newToken')}</div>
         </div>
       </div>
 
@@ -270,12 +277,12 @@ const CreateTokenTransactionConfirm = ({
       {hasInitialBuy && (
         <div className="space-y-0 divide-y divide-white/5 border border-white/10 rounded-md px-4">
           <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider pt-3 pb-2">
-            Initial Buy
+            {t('common.modals.transactionConfirm.initialBuy')}
           </h3>
 
           {details?.inputMode === 'AE' ? (
             <>
-              <TransactionConfirmDetailRow label="You spend">
+              <TransactionConfirmDetailRow label={t('common.modals.transactionConfirm.youSpend')}>
                 <span className="flex items-center gap-1">
                   <FractionFormatter
                     fractionalPrice={formatFractionalPrice(Decimal.from(details.aeAmount ?? 0))}
@@ -285,7 +292,7 @@ const CreateTokenTransactionConfirm = ({
                 </span>
               </TransactionConfirmDetailRow>
               {details.estimatedTokens && !details.estimatedTokens.isZero && (
-                <TransactionConfirmDetailRow label="You receive ~">
+                <TransactionConfirmDetailRow label={t('common.modals.transactionConfirm.youReceiveApprox')}>
                   <span className="flex items-center gap-1">
                     <FractionFormatter
                       fractionalPrice={formatFractionalPrice(details.estimatedTokens)}
@@ -298,7 +305,7 @@ const CreateTokenTransactionConfirm = ({
             </>
           ) : (
             <>
-              <TransactionConfirmDetailRow label="You receive">
+              <TransactionConfirmDetailRow label={t('common.modals.transactionConfirm.youReceive')}>
                 <span className="flex items-center gap-1">
                   <FractionFormatter
                     fractionalPrice={formatFractionalPrice(Decimal.from(details?.tokenAmount ?? 0))}
@@ -308,7 +315,7 @@ const CreateTokenTransactionConfirm = ({
                 </span>
               </TransactionConfirmDetailRow>
               {details?.estimatedCost && !details.estimatedCost.isZero && (
-                <TransactionConfirmDetailRow label="Estimated cost ~">
+                <TransactionConfirmDetailRow label={t('common.modals.transactionConfirm.estimatedCostApprox')}>
                   <LivePriceFormatter
                     aePrice={details.estimatedCost}
                     watchPrice={false}
@@ -329,7 +336,7 @@ const CreateTokenTransactionConfirm = ({
           fullWidth
           style={{ background: '#1161FE' }}
         >
-          Confirm in Wallet
+          {t('common.modals.transactionConfirm.confirmInWallet')}
         </AeButton>
         <AeButton
           variant="secondary"
@@ -337,7 +344,7 @@ const CreateTokenTransactionConfirm = ({
           size="md"
           fullWidth
         >
-          Cancel
+          {t('common.buttons.cancel')}
         </AeButton>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { IconClose } from '@/icons';
 
 const HEIGHTS: Record<string, number> = {
@@ -16,6 +17,7 @@ interface SpotifyEmbedProps {
 }
 
 export const SpotifyEmbed = ({ spotifyType, spotifyId, onDismiss }: SpotifyEmbedProps) => {
+  const { t } = useTranslation('social');
   const height = HEIGHTS[spotifyType] ?? 152;
   const src = `https://open.spotify.com/embed/${spotifyType}/${spotifyId}?utm_source=oembed`;
 
@@ -26,7 +28,7 @@ export const SpotifyEmbed = ({ spotifyType, spotifyId, onDismiss }: SpotifyEmbed
           type="button"
           onClick={onDismiss}
           className="absolute top-2 right-2 z-10 bg-black/70 rounded-full w-7 h-7 flex items-center justify-center hover:bg-black/90 transition-colors"
-          aria-label="Dismiss embed"
+          aria-label={t('embed.dismissSpotify')}
         >
           <IconClose className="w-3.5 h-3.5 text-white" />
         </button>
@@ -38,7 +40,7 @@ export const SpotifyEmbed = ({ spotifyType, spotifyId, onDismiss }: SpotifyEmbed
         style={{ border: 'none' }}
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
-        title="Spotify embed"
+        title={t('embed.spotifyTitle')}
       />
     </div>
   );

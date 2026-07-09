@@ -52,4 +52,6 @@ export const hasBalanceAtom = atom((get) => {
 });
 
 // New Atoms
-export const walletInfoAtom = atomWithStorage<WalletInfo | undefined>('wallet:walletInfo', undefined, safeLocalJSONStorage);
+// getOnInit: hydrate synchronously so the reconnection flow can tell a previously
+// connected wallet session apart from a fresh visit on the very first render.
+export const walletInfoAtom = atomWithStorage<WalletInfo | undefined>('wallet:walletInfo', undefined, safeLocalJSONStorage, { getOnInit: true });

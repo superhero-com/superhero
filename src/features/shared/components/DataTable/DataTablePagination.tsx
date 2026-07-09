@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../../components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -31,6 +32,7 @@ export const DataTablePagination = ({
   showItemsPerPage = true,
   itemsPerPageOptions = [5, 10, 20, 50, 100],
 }: DataTablePaginationProps) => {
+  const { t } = useTranslation('common');
   const {
     totalItems,
     itemsPerPage,
@@ -70,7 +72,7 @@ export const DataTablePagination = ({
       {/* Items per page selector */}
       {showItemsPerPage && onItemsPerPageChange && (
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+          <p className="text-sm font-medium">{t('dataTable.rowsPerPage')}</p>
           <Select
             value={itemsPerPage.toString()}
             onValueChange={handleItemsPerPageChange}
@@ -93,29 +95,11 @@ export const DataTablePagination = ({
       {/* Page info */}
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page
-          {' '}
-          {currentPage}
-          {' '}
-          of
-          {' '}
-          {totalPages}
+          {t('dataTable.pageOf', { current: currentPage, total: totalPages })}
         </div>
         <div className="flex items-center space-x-2">
           <p className="text-sm text-muted-foreground">
-            Showing
-            {' '}
-            {startItem}
-            {' '}
-            to
-            {' '}
-            {endItem}
-            {' '}
-            of
-            {' '}
-            {totalItems}
-            {' '}
-            results
+            {t('dataTable.showingResults', { start: startItem, end: endItem, total: totalItems })}
           </p>
         </div>
       </div>
@@ -128,7 +112,7 @@ export const DataTablePagination = ({
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1 || isLoading}
         >
-          <span className="sr-only">Go to first page</span>
+          <span className="sr-only">{t('dataTable.goToFirstPage')}</span>
           <svg
             className="h-4 w-4"
             fill="none"
@@ -150,7 +134,7 @@ export const DataTablePagination = ({
           onClick={handlePrevious}
           disabled={currentPage === 1 || isLoading}
         >
-          <span className="sr-only">Go to previous page</span>
+          <span className="sr-only">{t('dataTable.goToPreviousPage')}</span>
           <svg
             className="h-4 w-4"
             fill="none"
@@ -172,7 +156,7 @@ export const DataTablePagination = ({
           onClick={handleNext}
           disabled={currentPage === totalPages || isLoading}
         >
-          <span className="sr-only">Go to next page</span>
+          <span className="sr-only">{t('dataTable.goToNextPage')}</span>
           <svg
             className="h-4 w-4"
             fill="none"
@@ -194,7 +178,7 @@ export const DataTablePagination = ({
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages || isLoading}
         >
-          <span className="sr-only">Go to last page</span>
+          <span className="sr-only">{t('dataTable.goToLastPage')}</span>
           <svg
             className="h-4 w-4"
             fill="none"

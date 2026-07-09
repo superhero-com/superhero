@@ -8,6 +8,8 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useCommunityFactory } from '@/hooks/useCommunityFactory';
+import { collectionLabel } from '@/utils/collection';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import {
@@ -108,6 +110,8 @@ const TokenList = () => {
   const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [collection, setCollection] = useState<string>('all');
+  const { activeFactoryCollections, loadFactorySchema } = useCommunityFactory();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
@@ -133,6 +137,18 @@ const TokenList = () => {
     { title: t('tokenList.sortOldest'), value: SORT.oldest },
     { title: t('tokenList.sortHoldersCount'), value: SORT.holdersCount },
   ], [t]);
+
+  const collectionOptions = useMemo((): SelectOptions<string> => [
+    { title: t('tokenList.collectionAll'), value: 'all' },
+    ...activeFactoryCollections.map((c: any) => ({ title: collectionLabel(c.name), value: c.name })),
+  ], [t, activeFactoryCollections]);
+
+  // Ensure the factory schema (and its collections) is loaded for the filter.
+  useEffect(() => {
+    if (!activeFactoryCollections.length) {
+      loadFactorySchema().catch(() => {});
+    }
+  }, [activeFactoryCollections.length, loadFactorySchema]);
 
   const getFallbackSubtitle = useCallback((tab: SearchTab) => {
     if (tab === 'tokens') return t('tokenList.fallbackTokens');
@@ -194,6 +210,7 @@ const TokenList = () => {
     queryFn: ({ pageParam = 1 }) => TokensService.listAll({
       orderBy: orderByMapped as any,
       orderDirection: finalOrderDirection,
+      collection,
       limit: 20,
       page: pageParam,
     }),
@@ -207,6 +224,7 @@ const TokenList = () => {
       orderBy,
       orderByMapped,
       finalOrderDirection,
+      collection,
       activeTab,
       hasSearch,
     ],
@@ -603,6 +621,22 @@ const TokenList = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {activeFactoryCollections.length > 0 && (
+                    <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
+                      <Select value={collection} onValueChange={setCollection}>
+                        <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-white/10">
+                          {collectionOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                              {option.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <Link
                     to="/trends/create"
                     className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"

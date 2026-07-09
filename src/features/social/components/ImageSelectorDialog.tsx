@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export const ImageSelectorDialog = ({
   mediaUrls,
   onMediaUrlsChange,
 }: ImageSelectorDialogProps) => {
+  const { t } = useTranslation('social');
   const [query, setQuery] = useState('');
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isFetchingRef = useRef(false);
@@ -108,21 +110,21 @@ export const ImageSelectorDialog = ({
         className="max-h-[60vh] sm:max-h-[90vh] overflow-hidden sm:max-w-[600px] bg-gray-900 border-white/12 text-white flex flex-col"
       >
         <DialogHeader>
-          <DialogTitle className="text-white">Add an Image</DialogTitle>
+          <DialogTitle className="text-white">{t('imageSelector.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 overflow-y-auto flex-1 pb-20">
           <input
             type="text"
-            placeholder="Search for an image…"
+            placeholder={t('imageSelector.searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-white/8 border border-white/16 rounded-xl p-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:!shadow-none focus:!translate-y-0"
           />
 
           <span className="text-xs text-white/60 font-medium block">
-            {isTrending && 'Trending · Openverse (CC)'}
-            {!isTrending && totalCount > 0 && `${totalCount.toLocaleString()} Results · Openverse (CC)`}
+            {isTrending && t('imageSelector.trendingOpenverse')}
+            {!isTrending && totalCount > 0 && t('imageSelector.resultsOpenverse', { total: totalCount.toLocaleString() })}
           </span>
 
           {/* Already selected images */}
@@ -135,7 +137,7 @@ export const ImageSelectorDialog = ({
                 >
                   <img
                     src={url}
-                    alt="selected"
+                    alt={t('imageSelector.selectedAlt')}
                     className="w-full h-20 object-cover block"
                   />
                   <button
@@ -158,7 +160,7 @@ export const ImageSelectorDialog = ({
 
           {error && (
             <div className="text-red-500 text-center h-[400px] flex items-center justify-center">
-              Error:
+              {t('imageSelector.errorPrefix')}
               {' '}
               {(error as Error).message}
             </div>
@@ -186,7 +188,7 @@ export const ImageSelectorDialog = ({
                   <div className="absolute inset-0 rounded-lg overflow-hidden">
                     <img
                       src={photo.thumbnail ?? photo.url}
-                      alt={photo.title ?? 'photo'}
+                      alt={photo.title ?? t('imageSelector.photoAlt')}
                       loading="lazy"
                       onError={(e) => { (e.currentTarget.closest('[role="button"]') as HTMLElement | null)?.style.setProperty('display', 'none'); }}
                       className="w-full h-full object-cover"
@@ -217,7 +219,7 @@ export const ImageSelectorDialog = ({
             onClick={() => onOpenChange(false)}
             className="w-full px-6 py-3 rounded-full bg-[#1161FE] text-white font-semibold text-sm uppercase tracking-wide transition-all duration-300 hover:bg-[#0d4fd8] hover:shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           >
-            Confirm
+            {t('imageSelector.confirm')}
             {' '}
             {mediaUrls.length > 0 && `(${mediaUrls.length})`}
           </button>

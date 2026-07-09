@@ -1,18 +1,27 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSetAtom } from 'jotai';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
-import { useModal } from '../../../hooks';
+import { useModal } from '../../../hooks/useModal';
+import {
+  profileEditModalFlowAtom,
+  profileEditModalOpenAtom,
+  profileEditModalPendingAfterConnectAtom,
+} from '../../../atoms/profileEditModalAtom';
 
 const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
+  const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
+  const setProfileEditFlow = useSetAtom(profileEditModalFlowAtom);
+  const setProfileEditPendingAfterConnect = useSetAtom(profileEditModalPendingAfterConnectAtom);
 
   useEffect(() => {
     // force theme to be dark
@@ -26,7 +35,30 @@ const WebAppHeader = () => {
 
   const sidebarItems = useMemo(() => getAppNavigationItems(activeAccount), [activeAccount]);
 
-  const handleConnect = useCallback(() => openModal({ name: 'connect-wallet' }), [openModal]);
+  const handleConnect = useCallback(() => {
+    if (activeAccount) {
+      setProfileEditOpen(true);
+      return;
+    }
+    openModal({
+      name: 'onboarding',
+      props: {
+        onConnected: () => {
+          setProfileEditFlow({
+            redirectToProfileOnClose: true,
+            showSkip: true,
+          });
+          setProfileEditPendingAfterConnect(true);
+        },
+      },
+    });
+  }, [
+    activeAccount,
+    openModal,
+    setProfileEditFlow,
+    setProfileEditOpen,
+    setProfileEditPendingAfterConnect,
+  ]);
 
   const activeNavPath = useMemo(
     () => getActiveNavigationPath(pathname, sidebarItems),
@@ -79,7 +111,6 @@ const WebAppHeader = () => {
               <AppNavigationItemAction
                 key={item.id}
                 item={item}
-                activeAccount={activeAccount}
                 isActive={isActive}
                 className={isDisconnectedAccount ? `${commonClass} text-left` : commonClass}
                 style={itemStyles}
@@ -100,7 +131,7 @@ const WebAppHeader = () => {
                 <span className="w-6 flex items-center justify-center">
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(item.labelKey, { ns: 'common' })}</span>
               </AppNavigationItemAction>
             );
           })}

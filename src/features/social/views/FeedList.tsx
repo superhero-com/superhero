@@ -21,6 +21,7 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
 import TradeActivityItem, { TradeActivityItemData } from '../components/TradeActivityItem';
 import TrendingAssetsFeedItem from '../components/TrendingAssetsFeedItem';
+import RewardsOnboarding from '../../../components/onboarding/RewardsOnboarding';
 import { PostApiResponse } from '../types';
 import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
@@ -940,10 +941,21 @@ const FeedList = ({
       }
     };
 
+    // Inline onboarding nudge, injected once near the top of the feed. The card
+    // self-hides when the user has no pending onboarding steps.
+    let onboardingInserted = false;
+    const maybeInsertOnboarding = () => {
+      if (!onboardingInserted && renderedCount === 1) {
+        onboardingInserted = true;
+        nodes.push(<RewardsOnboarding key="rewards-onboarding-feed" variant="feed" />);
+      }
+    };
+
     while (i < filteredAndSortedList.length) {
       const item = filteredAndSortedList[i];
       if (isTradeItem(item)) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         nodes.push(
           <TradeActivityItem key={item.id} item={item} />,
         );
@@ -957,6 +969,7 @@ const FeedList = ({
 
       if (!isTokenCreated) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         nodes.push(renderPostItem(item as PostDto));
         i += 1;
         renderedCount += 1;
@@ -982,6 +995,7 @@ const FeedList = ({
 
       for (let j = 0; j < visibleCount; j += 1) {
         maybeInsertTrending();
+        maybeInsertOnboarding();
         const gi = groupItems[j];
         const isLastVisible = j === visibleCount - 1;
         // on mobile, never show lines between items, only at the end
@@ -1008,7 +1022,7 @@ const FeedList = ({
             }}
             aria-expanded={!collapsed}
           >
-            {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+            {collapsed ? t('showMore', { count: groupItems.length - 3 }) : t('showLess')}
           </button>
         ) : undefined;
         nodes.push(
@@ -1040,14 +1054,14 @@ const FeedList = ({
               }}
               aria-expanded={!collapsed}
             >
-              {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+              {collapsed ? t('showMore', { count: groupItems.length - 3 }) : t('showLess')}
             </button>
           </div>,
         );
       }
     }
     return nodes;
-  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup]);
+  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup, t]);
 
   const renderHotFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];
@@ -1070,6 +1084,9 @@ const FeedList = ({
     // eslint-disable-next-line no-restricted-syntax
     for (const item of filteredAndSortedList) {
       maybeInsertTrending();
+      if (renderedCount === 1) {
+        nodes.push(<RewardsOnboarding key="rewards-onboarding-hot" variant="feed" />);
+      }
       nodes.push(renderPostItem(item as PostDto));
       renderedCount += 1;
     }
@@ -1238,16 +1255,16 @@ const FeedList = ({
 
         <div className=" flex gap-2 text-[10px] font-semibold tracking-[0.08em] uppercase bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full">
           <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          New
+          {t('feedAnnouncement.new')}
         </div>
         <span className="text-[12px] text-white min-w-0 flex-1">
-          Superhero is now available on iOS, Android &amp; AI Agents via Openclaw or Claude - the new on-chain home for AI Agents to earn real value through automated trading of trending topics, posting tamperproof content &amp; instantly receiving a self-custodial wallet.
+          {t('feedAnnouncement.text')}
           {' '}
           <a
             href="/landing"
             className="shrink-0 text-[11px] font-semibold text-pink-300 hover:text-pink-200 whitespace-nowrap transition-colors duration-150 pl-1 pr-5"
           >
-            Install Now →
+            {t('feedAnnouncement.installNow')}
           </a>
         </span>
 
@@ -1368,7 +1385,7 @@ const FeedList = ({
                 }}
                 className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
               >
-                Load more
+                {t('loadMore')}
               </AeButton>
             </div>
           )}

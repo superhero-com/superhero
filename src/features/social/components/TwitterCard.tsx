@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IconClose } from '@/icons';
 
 // Load Twitter widgets.js once globally
@@ -18,6 +19,7 @@ interface TwitterCardProps {
 }
 
 export const TwitterCard = ({ url, onDismiss }: TwitterCardProps) => {
+  const { t } = useTranslation();
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -63,7 +65,7 @@ export const TwitterCard = ({ url, onDismiss }: TwitterCardProps) => {
             type="button"
             onClick={onDismiss}
             className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-            aria-label="Dismiss"
+            aria-label={t('social.dismiss')}
           >
             <IconClose className="w-3 h-3 text-white" />
           </button>
@@ -89,7 +91,7 @@ export const TwitterCard = ({ url, onDismiss }: TwitterCardProps) => {
           type="button"
           onClick={onDismiss}
           className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-          aria-label="Dismiss"
+          aria-label={t('social.dismiss')}
         >
           <IconClose className="w-3 h-3 text-white" />
         </button>

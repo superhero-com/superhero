@@ -275,7 +275,7 @@ const ReplyToFeedItem = memo(({
       }}
       role={isActive ? undefined : 'button'}
       tabIndex={isActive ? undefined : 0}
-      aria-label={isActive ? undefined : 'Open post'}
+      aria-label={isActive ? undefined : t('common:aria.openPost')}
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (
@@ -345,7 +345,7 @@ const ReplyToFeedItem = memo(({
           {tokenHolderLabel && (
             <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
               <span className="text-[13px]" aria-hidden="true">🏅</span>
-              <span className="uppercase tracking-wide">Holder</span>
+              <span className="uppercase tracking-wide">{t('social:holder')}</span>
               <span className="text-emerald-100/80">
                 ·
                 {tokenHolderLabel}
@@ -430,9 +430,9 @@ const ReplyToFeedItem = memo(({
             >
               {media.slice(0, 4).map((m: string) => (
                 media.length === 1 ? (
-                  <AspectMedia key={`${postId}-${m}`} src={m} alt="media" />
+                  <AspectMedia key={`${postId}-${m}`} src={m} alt={t('aria.media')} />
                 ) : (
-                  <AspectMedia key={`${postId}-${m}`} src={m} alt="media" maxHeight={200} />
+                  <AspectMedia key={`${postId}-${m}`} src={m} alt={t('aria.media')} maxHeight={200} />
                 )
               ))}
             </div>
@@ -472,14 +472,14 @@ const ReplyToFeedItem = memo(({
               )}
               {childError && (
                 <div className="text-[13px] text-white/70">
-                  Error loading replies.
+                  {t('social:errorLoadingReplies')}
                   {' '}
                   <button
                     type="button"
                     className="underline"
                     onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}
                   >
-                    Retry
+                    {t('buttons.retry')}
                   </button>
                 </div>
               )}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { DexTokenDto } from '../../../api/generated';
 
 interface LiquidityPreviewProps {
@@ -26,6 +27,7 @@ const LiquidityPreview = ({
   onSuggestedAmountA,
   onSuggestedAmountB,
 }: LiquidityPreviewProps) => {
+  const { t } = useTranslation('dex');
   if (!tokenA || !tokenB) return null;
 
   return (
@@ -36,10 +38,10 @@ const LiquidityPreview = ({
     }`}
     >
       <div className="text-sm font-semibold text-standard-font-color mb-3 flex items-center gap-2">
-        <span>{hasError ? '⚠️ Ratio Warning' : 'Pool Preview'}</span>
+        <span>{hasError ? t('liquidityPreview.ratioWarning') : t('liquidityPreview.poolPreview')}</span>
         {!pairExists && !hasError && (
           <span className="text-xs px-2 py-0.5 rounded-md bg-accent-color text-white font-semibold">
-            NEW POOL
+            {t('liquidityPreview.newPool')}
           </span>
         )}
       </div>
@@ -47,7 +49,7 @@ const LiquidityPreview = ({
       <div className="grid gap-2">
         {preview.ratioBinA && preview.ratioBinA !== '-' && (
           <div className="flex justify-between items-center text-xs text-light-font-color">
-            <span>Rate</span>
+            <span>{t('liquidityPreview.rate')}</span>
             <span className="font-semibold text-standard-font-color">
               1
               {' '}
@@ -64,7 +66,7 @@ const LiquidityPreview = ({
 
         {preview.ratioAinB && preview.ratioAinB !== '-' && (
           <div className="flex justify-between items-center text-xs text-light-font-color">
-            <span>Rate</span>
+            <span>{t('liquidityPreview.rate')}</span>
             <span className="font-semibold text-standard-font-color">
               1
               {' '}
@@ -81,7 +83,7 @@ const LiquidityPreview = ({
 
         {preview.sharePct && Number(preview.sharePct) > 0 && (
           <div className="flex justify-between items-center text-xs text-light-font-color">
-            <span>Pool Share</span>
+            <span>{t('liquidityPreview.poolShare')}</span>
             <span className="font-semibold text-accent-color">
               {Number(preview.sharePct).toFixed(6)}
               %
@@ -91,7 +93,7 @@ const LiquidityPreview = ({
 
         {preview.lpMintEstimate && (
           <div className="flex justify-between items-center text-xs text-light-font-color">
-            <span>LP Tokens</span>
+            <span>{t('liquidityPreview.lpTokens')}</span>
             <span className="font-semibold text-standard-font-color">
               {Number(preview.lpMintEstimate).toFixed(8)}
             </span>
@@ -103,7 +105,7 @@ const LiquidityPreview = ({
       {(preview.suggestedAmountA || preview.suggestedAmountB) && (
         <div className="mt-4 p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
           <div className="text-xs font-semibold text-accent-color mb-2">
-            💡 Suggested Optimal Amounts
+            {t('liquidityPreview.suggestedOptimalAmounts')}
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -113,11 +115,10 @@ const LiquidityPreview = ({
                 onClick={() => onSuggestedAmountB(preview.suggestedAmountB!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
-                Use
-                {' '}
-                {Number(preview.suggestedAmountB).toFixed(6)}
-                {' '}
-                {tokenB.symbol}
+                {t('liquidityPreview.use', {
+                  amount: Number(preview.suggestedAmountB).toFixed(6),
+                  symbol: tokenB.symbol,
+                })}
               </button>
             )}
 
@@ -127,11 +128,10 @@ const LiquidityPreview = ({
                 onClick={() => onSuggestedAmountA(preview.suggestedAmountA!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
-                Use
-                {' '}
-                {Number(preview.suggestedAmountA).toFixed(6)}
-                {' '}
-                {tokenA.symbol}
+                {t('liquidityPreview.use', {
+                  amount: Number(preview.suggestedAmountA).toFixed(6),
+                  symbol: tokenA.symbol,
+                })}
               </button>
             )}
           </div>

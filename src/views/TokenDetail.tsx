@@ -10,6 +10,7 @@ import { PriceDataFormatter } from '@/features/shared/components';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import AeButton from '../components/AeButton';
 import { TokenPricePerformance } from '../features/dex/components';
@@ -44,6 +45,7 @@ interface TokenData {
 }
 
 export default function TokenDetail() {
+  const { t } = useTranslation();
   const { activeNetwork } = useAeSdk();
   const { tokenAddress } = useParams();
   const navigate = useNavigate();
@@ -66,7 +68,7 @@ export default function TokenDetail() {
     queryFn: () => getTokenWithUsd(tokenAddress as string),
     enabled: !!tokenAddress,
   });
-  const error = tokenError ? (tokenError as Error).message || 'Failed to load token data' : null;
+  const error = tokenError ? (tokenError as Error).message || t('common.views.tokenDetail.failedToLoad') : null;
 
   const { data: aex9Data } = useQuery({
     queryKey: ['Mdw.aex9', tokenAddress],
@@ -103,7 +105,7 @@ export default function TokenDetail() {
       <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
         <div className="text-center text-white/60 flex flex-col items-center gap-4">
           <Spinner className="w-8 h-8" />
-          Loading token details...
+          {t('common.views.tokenDetail.loadingTokenDetails')}
         </div>
       </div>
     );
@@ -131,7 +133,7 @@ export default function TokenDetail() {
                 !tokenDetails ? (
                   <div className="text-center text-white/60 flex flex-col items-center gap-4">
                     <Spinner className="w-8 h-8" />
-                    Loading token details...
+                    {t('common.views.tokenDetail.loadingTokenDetails')}
                   </div>
                 ) : (
                   <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
@@ -149,7 +151,7 @@ export default function TokenDetail() {
                 )
               }
               <p className="text-sm text-white/60 m-0 leading-relaxed">
-                Token details and statistics
+                {t('common.views.tokenDetail.detailsAndStatistics')}
               </p>
             </div>
 
@@ -161,7 +163,7 @@ export default function TokenDetail() {
                 size="medium"
                 className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Swap
+                {t('dex.swapButton')}
               </AeButton>
               <AeButton
                 onClick={() => navigate(`/defi/pool?from=AE&to=${tokenAddress}`)}
@@ -169,7 +171,7 @@ export default function TokenDetail() {
                 size="medium"
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Add Liquidity
+                {t('dex.addLiquidityForm.addLiquidityButton')}
               </AeButton>
               <AeButton
                 onClick={() => navigate(`/defi/explore/pools?tokenAddress=${tokenAddress}`)}
@@ -177,9 +179,7 @@ export default function TokenDetail() {
                 size="medium"
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Pools (
-                {tokenDetails?.pairs_count || 0}
-                )
+                {t('common.views.tokenDetail.pools', { count: tokenDetails?.pairs_count || 0 })}
               </AeButton>
               <AeButton
                 onClick={() => navigate(`/defi/explore/transactions?tokenAddress=${tokenAddress}`)}
@@ -187,7 +187,7 @@ export default function TokenDetail() {
                 size="medium"
                 className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Transactions
+                {t('explore.transactions')}
               </AeButton>
             </div>
 
@@ -196,12 +196,21 @@ export default function TokenDetail() {
               {/* Price Card */}
               <div className="p-5 rounded-2xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  💰 Price
+                  💰
+                  {' '}
+                  {t('explore.price')}
                 </div>
                 <div className="text-2xl font-extrabold text-white mb-1 font-mono">
-                  <PriceDataFormatter
-                    priceData={tokenDetails?.price}
-                  />
+                  {tokenDetails && tokenDetails.price?.ae == null ? (
+                    <span
+                      className="text-base font-semibold text-white/50"
+                      title="This token has no liquidity pool against AE, so an AE price can't be determined."
+                    >
+                      No AE price
+                    </span>
+                  ) : (
+                    <PriceDataFormatter priceData={tokenDetails?.price} />
+                  )}
                 </div>
                 {tokenDetails?.summary?.change?.[selectedPeriod]
                   ?.percentage && (
@@ -256,7 +265,9 @@ export default function TokenDetail() {
                     gap: 6,
                   }}
                 >
-                  🏦 Total Volume
+                  🏦
+                  {' '}
+                  {t('explore.totalVolume')}
                 </div>
                 <div
                   style={{
@@ -279,12 +290,7 @@ export default function TokenDetail() {
                     fontWeight: 500,
                   }}
                 >
-                  Across
-                  {' '}
-                  {tokenDetails?.pairs_count || 0}
-                  {' '}
-                  pool
-                  {tokenDetails?.pairs_count !== 1 ? 's' : ''}
+                  {t('common.views.tokenDetail.acrossPools', { count: tokenDetails?.pairs_count || 0 })}
                 </div>
               </div>
 
@@ -302,7 +308,11 @@ export default function TokenDetail() {
                 }}
               >
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
-                  📊 Volume
+                  <span>
+                    📊
+                    {' '}
+                    {t('explore.volume')}
+                  </span>
                   <AppSelect
                     value={selectedPeriod}
                     onValueChange={(v) => setSelectedPeriod(v as '24h' | '7d' | '30d')}
@@ -337,10 +347,10 @@ export default function TokenDetail() {
                   }}
                 >
                   {selectedPeriod === '24h'
-                    ? 'Last 24 hours'
+                    ? t('common.views.tokenDetail.last24Hours')
                     : selectedPeriod === '7d'
-                      ? 'Last 7 days'
-                      : 'Last 30 days'}
+                      ? t('common.views.tokenDetail.last7Days')
+                      : t('common.views.tokenDetail.last30Days')}
                 </div>
               </div>
             </div>
@@ -370,7 +380,9 @@ export default function TokenDetail() {
                     gap: 4,
                   }}
                 >
-                  🔒 Locked
+                  🔒
+                  {' '}
+                  {t('common.views.tokenDetail.locked')}
                 </div>
                 <div
                   style={{
@@ -389,9 +401,7 @@ export default function TokenDetail() {
                     fontWeight: 500,
                   }}
                 >
-                  {tokenDetails?.symbol}
-                  {' '}
-                  tokens
+                  {t('common.views.tokenDetail.symbolTokens', { symbol: tokenDetails?.symbol })}
                 </div>
               </div>
 
@@ -418,7 +428,9 @@ export default function TokenDetail() {
                     gap: 4,
                   }}
                 >
-                  🪙 Total Supply
+                  🪙
+                  {' '}
+                  {t('common.views.tokenDetail.totalSupply')}
                 </div>
                 <div
                   style={{
@@ -437,9 +449,7 @@ export default function TokenDetail() {
                     fontWeight: 500,
                   }}
                 >
-                  {tokenDetails?.symbol}
-                  {' '}
-                  tokens
+                  {t('common.views.tokenDetail.symbolTokens', { symbol: tokenDetails?.symbol })}
                 </div>
               </div>
 
@@ -466,7 +476,9 @@ export default function TokenDetail() {
                     gap: 4,
                   }}
                 >
-                  💎 Market Cap
+                  💎
+                  {' '}
+                  {t('explore.marketCapLabel')}
                 </div>
                 <div
                   style={{
@@ -476,9 +488,9 @@ export default function TokenDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {circulatingSupply ? (
+                  {circulatingSupply && tokenDetails?.price?.ae != null ? (
                     <>
-                      {circulatingSupply.mul(Decimal.from(tokenDetails?.price?.ae || 0)).shorten()}
+                      {circulatingSupply.mul(Decimal.from(tokenDetails.price.ae)).shorten()}
                       {' '}
                       AE
                     </>
@@ -491,7 +503,7 @@ export default function TokenDetail() {
                     fontWeight: 500,
                   }}
                 >
-                  Fully diluted value
+                  {t('common.views.tokenDetail.fullyDilutedValue')}
                 </div>
               </div>
             </div>
@@ -527,19 +539,17 @@ export default function TokenDetail() {
                   margin: 0,
                 }}
               >
-                Price Performance
+                {t('common.views.tokenDetail.pricePerformance')}
               </h3>
             </div>
 
             <div style={{ marginTop: 8 }}>
               <TokenPricePerformance
                 availableGraphTypes={[
-                  { type: 'Price', text: 'Price' },
-                  { type: 'Volume', text: 'Volume' },
-                  { type: 'TVL', text: 'Total Value Locked' },
-                  { type: 'Fees', text: 'Fees' },
+                  { type: 'Price', text: t('explore.price') },
+                  { type: 'Volume', text: t('explore.volume') },
                 ]}
-                initialChart={{ type: 'Price', text: 'Price' }}
+                initialChart={{ type: 'Price', text: t('explore.price') }}
                 initialTimeFrame="1Y"
                 tokenId={tokenAddress}
                 className="token-detail-chart"

@@ -10,23 +10,21 @@ jobs:
     name: Docker Buildx
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # needed for docker-package to be able to calculate the version
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          install: true
+        uses: docker/setup-buildx-action@v4
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ secrets.DOCKERHUB_REPO }}
@@ -35,8 +33,28 @@ jobs:
             type=ref,event=tag
           flavor: |
             latest=${{ contains(github.ref_name, '-rc.') && 'false' || 'auto' }}
+      # Collect every secret whose name starts with one of PREFIXES and emit it as a
+      # KEY=VALUE build-arg line, so new matching secrets are picked up automatically
+      # without editing this workflow. PREFIXES is a space-separated list.
+      # eg. PREFIXES: "VITE_ NEXT_PUBLIC_"
+      - name: Collect prefixed secrets as build-args
+        id: vite_args
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          PREFIXES: "VITE_"
+        run: |
+          {
+            echo 'build_args<<__BUILD_ARGS_EOF__'
+            echo "$SECRETS_JSON" | jq -r --arg prefixes "$PREFIXES" '
+              ($prefixes | split(" ") | map(select(length > 0))) as $p
+              | to_entries[]
+              | select(.key as $k | $p | any(. as $pre | $k | startswith($pre)))
+              | "\(.key)=\(.value)"
+            '
+            echo '__BUILD_ARGS_EOF__'
+          } >> "$GITHUB_OUTPUT"
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -46,9 +64,7 @@ jobs:
           secrets: |
             "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
           build-args: |
-            VITE_WALLET_CONNECT_PROJECT_ID=${{ secrets.VITE_WALLET_CONNECT_PROJECT_ID }}
-            VITE_X_OAUTH_CLIENT_ID=${{ secrets.VITE_X_OAUTH_CLIENT_ID }}
-            VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS=${{ secrets.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS }}
+            ${{ steps.vite_args.outputs.build_args }}
   deploy_develop:
     if: github.ref_name == 'develop'
     name: Develop Deploy

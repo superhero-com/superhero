@@ -101,7 +101,7 @@ const TokenTradeCard = ({
       {/* Header with Tabs */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-          Trade Token
+          {t('tradeToken')}
         </h2>
       </div>
 
@@ -119,7 +119,7 @@ const TokenTradeCard = ({
             )}
             onClick={() => switchTradeView(true)}
           >
-            Buy
+            {t('buy')}
           </Button>
           <Button
             variant={!isBuying ? 'default' : 'outline'}
@@ -132,7 +132,7 @@ const TokenTradeCard = ({
             )}
             onClick={() => switchTradeView(false)}
           >
-            Sell
+            {t('sell')}
           </Button>
         </div>
       </div>
@@ -282,11 +282,11 @@ const TokenTradeCard = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 max-w-sm w-full mx-4 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
             <h3 className="text-lg font-semibold mb-4 text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-              Settings
+              {t('settingsTitle')}
             </h3>
             <div className="mb-4">
               <label htmlFor="slippage-input" className="block text-sm font-medium text-white/60 mb-2">
-                Slippage Tolerance (%)
+                {t('slippageTolerancePercent')}
               </label>
               <input
                 id="slippage-input"
@@ -325,7 +325,7 @@ const TokenTradeCard = ({
               }}
               className="w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
             >
-              Done
+              {t('done')}
             </Button>
           </div>
         </div>

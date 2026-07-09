@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
 import Spinner from '@/components/Spinner';
 import { DexTokenDto } from '../../../api/generated';
@@ -35,6 +36,7 @@ const LiquidityConfirmation = ({
   pairPreview,
   loading,
 }: LiquidityConfirmationProps) => {
+  const { t } = useTranslation();
   if (!tokenA || !tokenB) return null;
 
   return (
@@ -45,7 +47,7 @@ const LiquidityConfirmation = ({
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <Dialog.Title className="text-xl font-bold m-0">
-              Confirm Add Liquidity
+              {t('dex.liquidityConfirmation.confirmAddLiquidity')}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -60,7 +62,7 @@ const LiquidityConfirmation = ({
           {/* Token Amounts */}
           <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 mb-6">
             <div className="text-sm font-semibold text-white/60 mb-4 text-center">
-              You will deposit
+              {t('dex.liquidityConfirmation.youWillDeposit')}
             </div>
 
             <div className="grid gap-3">
@@ -102,13 +104,13 @@ const LiquidityConfirmation = ({
           {pairPreview && (
             <div className="bg-white/[0.05] border border-white/10 rounded-xl p-4 mb-6">
               <div className="text-sm font-semibold text-white/60 mb-3">
-                Pool Details
+                {t('dex.liquidityConfirmation.poolDetails')}
               </div>
 
               <div className="grid gap-2">
                 {pairPreview.ratioBinA && pairPreview.ratioBinA !== '-' && (
                   <div className="flex justify-between text-xs text-white/60">
-                    <span>Exchange Rate</span>
+                    <span>{t('dex.liquidityConfirmation.exchangeRate')}</span>
                     <span className="text-white">
                       1
                       {' '}
@@ -125,7 +127,7 @@ const LiquidityConfirmation = ({
 
                 {pairPreview.sharePct && Number(pairPreview.sharePct) > 0 && (
                   <div className="flex justify-between text-xs text-white/60">
-                    <span>Your Pool Share</span>
+                    <span>{t('dex.liquidityConfirmation.yourPoolShare')}</span>
                     <span className="text-[#1161FE] font-semibold">
                       {Decimal.from(pairPreview.sharePct || '0').prettify()}
                       %
@@ -135,7 +137,7 @@ const LiquidityConfirmation = ({
 
                 {pairPreview.lpMintEstimate && (
                   <div className="flex justify-between text-xs text-white/60">
-                    <span>LP Tokens to Receive</span>
+                    <span>{t('dex.liquidityConfirmation.lpTokensToReceive')}</span>
                     <span className="text-white">
                       {Decimal.from(pairPreview.lpMintEstimate || '0').prettify()}
                     </span>
@@ -149,18 +151,18 @@ const LiquidityConfirmation = ({
           <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-6">
             <div className="grid gap-2 text-xs">
               <div className="flex justify-between text-white/60">
-                <span>Slippage Tolerance</span>
+                <span>{t('dex.settings.slippageTolerance')}</span>
                 <span className="text-white">
                   {slippagePct}
                   %
                 </span>
               </div>
               <div className="flex justify-between text-white/60">
-                <span>Transaction Deadline</span>
+                <span>{t('dex.settings.transactionDeadline')}</span>
                 <span className="text-white">
                   {deadlineMins}
                   {' '}
-                  minutes
+                  {t('dex.liquidityConfirmation.minutes')}
                 </span>
               </div>
             </div>
@@ -176,7 +178,7 @@ const LiquidityConfirmation = ({
                 loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0'
               }`}
             >
-              Cancel
+              {t('dex.settings.cancel')}
             </button>
             <button
               type="button"
@@ -191,9 +193,9 @@ const LiquidityConfirmation = ({
               {loading ? (
                 <>
                   <Spinner className="w-4 h-4" />
-                  Confirm in wallet…
+                  {t('common.buttons.confirmInWallet')}
                 </>
-              ) : 'Confirm Add Liquidity'}
+              ) : t('dex.liquidityConfirmation.confirmAddLiquidity')}
             </button>
           </div>
         </Dialog.Content>

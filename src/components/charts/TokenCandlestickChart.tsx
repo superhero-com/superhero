@@ -11,6 +11,7 @@ import {
 } from 'lightweight-charts';
 import { Encoded } from '@aeternity/aepp-sdk';
 import moment from 'moment';
+import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { TokenDto, TransactionHistoricalService } from '@/api/generated';
@@ -59,6 +60,7 @@ export default function TokenCandlestickChart({
   className = '',
   noBackground = false,
 }: TokenCandlestickChartProps) {
+  const { t } = useTranslation('common');
   const chartWrapper = useRef<HTMLDivElement>(null);
   const chartControls = useRef<HTMLDivElement>(null);
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
@@ -551,7 +553,7 @@ export default function TokenCandlestickChart({
               #{token?.symbol}
             </div>
             <div className="flex gap-1 pb-1 pl-2 text-xs text-muted-foreground">
-              <div>on</div>
+              <div>{t('candlestickChart.on')}</div>
               <div>æternity blockchain</div>
               <div>·</div>
               <div>{intervalBy.label}</div>
@@ -607,14 +609,14 @@ export default function TokenCandlestickChart({
               </div>
               <div className="flex gap-4">
                 <div className="text-muted-foreground">
-                  Vol
+                  {t('candlestickChart.vol')}
                   {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {currentCandleVolume ? Decimal.from(currentCandleVolume).shorten() : 0}
                   </span>
                 </div>
                 <div className="text-muted-foreground">
-                  MCap
+                  {t('candlestickChart.mcap')}
                   {' '}
                   <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
                     {currentCandleMarketCap ? Decimal.from(currentCandleMarketCap).shorten() : 0}

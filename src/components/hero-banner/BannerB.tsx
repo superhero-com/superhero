@@ -1,16 +1,21 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import BannerContent from './BannerContent';
 
-const BannerB = () => (
-  <BannerContent
-    title="Tokenize #trends. Trade the signal."
-    description="#Trends are markets. Go long on culture and let prices surface what matters."
-    chips={['Popularity signals', 'Bonding curve']}
-    primaryButtonText="Launch a #trend"
-    primaryButtonLink="/trends/create"
-    secondaryButtonText="Explore #trends"
-    secondaryButtonLink="/trends/tokens"
-  />
-);
+const BannerB = () => {
+  const { t } = useTranslation('banners');
+  const chips = t('bannerB.chips', { returnObjects: true }) as string[];
+  return (
+    <BannerContent
+      title={t('bannerB.title')}
+      description={t('bannerB.description')}
+      chips={chips}
+      primaryButtonText={t('bannerB.primaryButton')}
+      primaryButtonLink="/trends/create"
+      secondaryButtonText={t('bannerB.secondaryButton')}
+      secondaryButtonLink="/trends/tokens"
+    />
+  );
+};
 
 export default BannerB;

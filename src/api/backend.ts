@@ -52,20 +52,370 @@ export type ProfileAggregate = {
   public_name: string | null;
 };
 
-export type ProfileFeedResponse = {
-  items?: ProfileAggregate[];
-  data?: ProfileAggregate[];
-} | ProfileAggregate[];
+export type AccountLinks = {
+  x?: string | null;
+  bio?: string | null;
+  /** Linked via POST /api/address-links/prefered-aens-name */
+  prefaens?: string | null;
+  prefered_aens_name?: string | null;
+  /** Website/domain linked via POST /api/address-links/site */
+  site?: string | null;
+};
 
-export type XAttestationResponse = {
-  signer: string;
+export type AccountAggregate = {
   address: string;
-  x_username: string;
-  nonce: string;
-  expiry: number;
+  bio?: string | null;
+  chain_name?: string | null;
+  chain_name_updated_at?: string | null;
+  links?: AccountLinks | null;
+  profile?: ProfilePayload | null;
+  public_name?: string | null;
+  x_username?: string | null;
+};
+
+/** X link username from GET /api/accounts/:address (`links.x`, then profile fallback). */
+export function getLinkedXUsername(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'x_username'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.x ?? '').trim();
+  if (fromLinks) return fromLinks.replace(/^@/u, '');
+  const fromProfile = String(account?.profile?.x_username ?? '').trim();
+  if (fromProfile) return fromProfile.replace(/^@/u, '');
+  const legacy = String(account?.x_username ?? '').trim();
+  if (legacy) return legacy.replace(/^@/u, '');
+  return null;
+}
+
+export function isXLinked(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'x_username'> | null,
+): boolean {
+  return Boolean(getLinkedXUsername(account));
+}
+
+/** Bio link text from GET /api/accounts/:address (`links.bio`, then profile/account fallbacks). */
+export function getLinkedBio(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.bio ?? '').trim();
+  if (fromLinks) return fromLinks;
+  const fromProfile = String(account?.profile?.bio ?? '').trim();
+  if (fromProfile) return fromProfile;
+  const legacy = String(account?.bio ?? '').trim();
+  if (legacy) return legacy;
+  return null;
+}
+
+/** Linked website/domain from GET /api/accounts/:address (`links.site`). */
+export function getLinkedSite(
+  account?: Pick<AccountAggregate, 'links'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.site ?? '').trim();
+  if (fromLinks) return fromLinks;
+  return null;
+}
+
+const normalizePreferredAensName = (value: string) => value.trim().toLowerCase();
+
+const readPreferredAensNameFromLinks = (
+  links?: AccountLinks | Record<string, unknown> | null,
+): string => {
+  if (!links || typeof links !== 'object') return '';
+  const record = links as Record<string, unknown>;
+  return String(
+    record.prefaens
+    ?? record.prefered_aens_name
+    ?? record['prefered-aens-name']
+    ?? '',
+  ).trim();
+};
+
+/** Preferred .chain name from account links (then profile/public_name/legacy fallbacks). */
+export function getLinkedPreferredAensName(
+  account?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null,
+): string | null {
+  const fromLinks = readPreferredAensNameFromLinks(account?.links);
+  if (fromLinks) return normalizePreferredAensName(fromLinks);
+  const fromPublic = String(account?.public_name ?? '').trim();
+  if (fromPublic.includes('.')) return normalizePreferredAensName(fromPublic);
+  const fromProfile = String(account?.profile?.chain_name ?? '').trim();
+  if (fromProfile) return normalizePreferredAensName(fromProfile);
+  const legacy = String(account?.chain_name ?? '').trim();
+  if (legacy) return normalizePreferredAensName(legacy);
+  return null;
+}
+
+type ProfileSource = Pick<
+AccountAggregate,
+'address' | 'links' | 'profile' | 'bio' | 'public_name' | 'x_username' | 'chain_name'
+>;
+
+const emptyProfilePayload = (): ProfilePayload => ({
+  fullname: '',
+  bio: '',
+  avatarurl: '',
+  username: null,
+  x_username: null,
+  chain_name: null,
+  display_source: null,
+  chain_expires_at: null,
+});
+
+/** Merge account (links.bio) and profile API payloads into a single aggregate for UI cache. */
+export function profileAggregateFromSources(
+  source: ProfileSource,
+  fallback?: ProfileAggregate | ProfileSource | null,
+): ProfileAggregate {
+  const fallbackProfile = (
+    fallback && 'profile' in fallback ? fallback.profile : null
+  ) ?? ('profile' in (source || {}) ? source.profile : null);
+  const linkedBio = getLinkedBio(source);
+  const linkedPreferredAensName = getLinkedPreferredAensName(source);
+  return {
+    address: source.address,
+    public_name: linkedPreferredAensName
+      ?? source.public_name
+      ?? (fallback && 'public_name' in fallback ? fallback.public_name : null)
+      ?? null,
+    profile: {
+      ...emptyProfilePayload(),
+      ...fallbackProfile,
+      ...source.profile,
+      bio: linkedBio ?? fallbackProfile?.bio ?? '',
+      x_username: source.profile?.x_username
+        ?? source.x_username
+        ?? fallbackProfile?.x_username
+        ?? null,
+      chain_name: linkedPreferredAensName
+        ?? source.profile?.chain_name
+        ?? source.chain_name
+        ?? fallbackProfile?.chain_name
+        ?? null,
+    },
+  };
+}
+
+/** Resolve linked bio for React Query account cache after a profile save. */
+export function resolveLinkedBioForCache(
+  opts: {
+    bioChanged: boolean;
+    formBio: string;
+    updated?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null;
+    previous?: Pick<AccountAggregate, 'links' | 'profile' | 'bio'> | null;
+  },
+): string | null {
+  if (opts.bioChanged) return opts.formBio.trim() || null;
+  return getLinkedBio(opts.updated) ?? getLinkedBio(opts.previous);
+}
+
+/** Resolve linked preferred .chain name for React Query account cache after a profile save. */
+export function resolveLinkedPreferredAensNameForCache(
+  opts: {
+    chainNameChanged: boolean;
+    formChainName: string;
+    updated?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null;
+    previous?: Pick<AccountAggregate, 'links' | 'profile' | 'chain_name' | 'public_name'> | null;
+  },
+): string | null {
+  if (opts.chainNameChanged) return opts.formChainName.trim() || null;
+  return getLinkedPreferredAensName(opts.updated) ?? getLinkedPreferredAensName(opts.previous);
+}
+
+export function patchAccountCacheEntry(
+  prev: Record<string, unknown> | null | undefined,
+  opts: {
+    updatedProfile?: ProfileAggregate | null;
+    bioChanged?: boolean;
+    formBio?: string;
+    chainNameChanged?: boolean;
+    formChainName?: string;
+  },
+): Record<string, unknown> {
+  const bioChanged = Boolean(opts.bioChanged);
+  const chainNameChanged = Boolean(opts.chainNameChanged);
+  const linkedXUsername = getLinkedXUsername(opts.updatedProfile)
+    ?? getLinkedXUsername(prev as AccountAggregate | null);
+  const linkedBio = resolveLinkedBioForCache({
+    bioChanged,
+    formBio: opts.formBio ?? '',
+    updated: opts.updatedProfile,
+    previous: prev as AccountAggregate | null,
+  });
+  const linkedPreferredAensName = resolveLinkedPreferredAensNameForCache({
+    chainNameChanged,
+    formChainName: opts.formChainName ?? '',
+    updated: opts.updatedProfile,
+    previous: prev as AccountAggregate | null,
+  });
+  let bioLinkPatch: Record<string, unknown> = {};
+  if (linkedBio != null) {
+    bioLinkPatch = { bio: linkedBio };
+  } else if (bioChanged) {
+    bioLinkPatch = { bio: null };
+  }
+  let preferredNameLinkPatch: Record<string, unknown> = {};
+  if (linkedPreferredAensName != null) {
+    preferredNameLinkPatch = {
+      prefaens: linkedPreferredAensName,
+      prefered_aens_name: linkedPreferredAensName,
+    };
+  } else if (chainNameChanged) {
+    preferredNameLinkPatch = { prefaens: null, prefered_aens_name: null };
+  }
+  const profileBio = bioChanged
+    ? (linkedBio ?? '')
+    : (linkedBio ?? opts.updatedProfile?.profile?.bio);
+  const profileChainName = chainNameChanged
+    ? (linkedPreferredAensName ?? '')
+    : (linkedPreferredAensName ?? opts.updatedProfile?.profile?.chain_name);
+  return {
+    ...prev,
+    bio: bioChanged ? linkedBio : (linkedBio ?? (prev as AccountAggregate)?.bio),
+    fullname: opts.updatedProfile?.profile?.fullname ?? (prev as AccountAggregate)?.fullname,
+    avatarurl: opts.updatedProfile?.profile?.avatarurl ?? (prev as AccountAggregate)?.avatarurl,
+    username: opts.updatedProfile?.profile?.username ?? (prev as AccountAggregate)?.username,
+    chain_name: chainNameChanged
+      ? linkedPreferredAensName
+      : (linkedPreferredAensName ?? (prev as AccountAggregate)?.chain_name),
+    public_name: chainNameChanged
+      ? linkedPreferredAensName
+      : (linkedPreferredAensName ?? (prev as AccountAggregate)?.public_name),
+    x_username: linkedXUsername ?? (prev as AccountAggregate)?.x_username,
+    links: {
+      ...(prev as AccountAggregate)?.links,
+      ...(linkedXUsername ? { x: linkedXUsername } : {}),
+      ...bioLinkPatch,
+      ...preferredNameLinkPatch,
+    },
+    profile: opts.updatedProfile?.profile
+      ? {
+        ...(prev as AccountAggregate)?.profile,
+        ...opts.updatedProfile.profile,
+        bio: profileBio ?? opts.updatedProfile.profile.bio,
+        chain_name: profileChainName ?? opts.updatedProfile.profile.chain_name,
+      }
+      : (prev as AccountAggregate)?.profile,
+  };
+}
+
+export type AddressLinkClaimResponse = {
   message: string;
+  nonce: number;
+  value: string;
+  verification_token: string;
+};
+
+export type AddressLinkSubmitResponse = {
+  txHash: string;
+};
+
+export type AddressLinkUnclaimResponse = {
+  message: string;
+  nonce: number;
+};
+
+export type XAddressLinkClaimResponse = AddressLinkClaimResponse;
+export type XAddressLinkSubmitResponse = AddressLinkSubmitResponse;
+export type XAddressLinkUnclaimResponse = AddressLinkUnclaimResponse;
+
+export type ChainNameChallengeResponse = {
+  nonce: string;
+  expires_at: string | number;
+  message: string;
+};
+
+export type ChainNameClaimRequest = {
+  address: string;
+  name: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
   signature_hex: string;
-  signature_base64: string;
+};
+
+export type ChainNameClaimResponse = {
+  status: string;
+  message?: string | null;
+};
+
+export type ChainNameClaimStatusResponse = {
+  status: string;
+  name?: string | null;
+  error?: string | null;
+  preclaim_tx_hash?: string | null;
+  claim_tx_hash?: string | null;
+  update_tx_hash?: string | null;
+  transfer_tx_hash?: string | null;
+  expires_at?: string | number | null;
+  approximate_expire_time?: string | number | null;
+  approximateExpireTime?: string | number | null;
+  expire_time?: string | number | null;
+  expireTime?: string | number | null;
+};
+
+export type ChainNameSponsorshipResponse = {
+  name: string;
+  /** true when the sponsor account can fund the claim (claim is free for the user) */
+  sponsorable: boolean;
+  sponsor_configured: boolean;
+  sponsor_balance_aettos: string | null;
+  /** total estimated on-chain cost (preclaim + claim + update + transfer), in aettos */
+  required_balance_aettos: string;
+  reason: string | null;
+};
+
+/** Challenge bound to an address; the wallet signs `message` to prove ownership. */
+export type XPostingRewardChallengeResponse = {
+  nonce: string;
+  expires_at: string | number;
+  message: string;
+};
+
+export type XPostingRewardOnboardingStatus =
+  | 'not_started'
+  | 'pending'
+  | 'paid'
+  | 'failed';
+
+/** Read-only reward status (GET) and the body returned by a successful recheck. */
+export type XPostingRewardStatus = {
+  onboarding_status: XPostingRewardOnboardingStatus | string;
+  qualified_posts_count?: number;
+  tx_hash?: string | null;
+  next_check_allowed_at?: string | number | null;
+  // Fields surfaced by the rewards UI (X posting reward redesign).
+  status?: XPostingRewardOnboardingStatus | string;
+  x_username?: string | null;
+  per_post_total_paid_count?: number;
+  current_streak_days?: number;
+  tier_amount_ae?: number;
+  follower_count?: number;
+  referral_link?: string | null;
+  // Human-readable reason a reward was NOT sent, returned even on a successful
+  // (HTTP 200) recheck — e.g. below the follower minimum, the X identity is
+  // already rewarded, or the payout failed. Null when there is nothing to report.
+  error?: string | null;
+};
+
+/**
+ * Result of a recheck submit. On the 24h-cap (HTTP 429) the scan is skipped and
+ * `nextAllowedAt` carries when the next check is permitted.
+ */
+export type XPostingRewardRecheckResult =
+  | { rateLimited: false; status: XPostingRewardStatus }
+  | { rateLimited: true; nextAllowedAt: string | number | null };
+
+/** Challenge issued before a manual recheck; the wallet signs `message` to authorize the scan. */
+export type XRecheckChallengeResponse = XPostingRewardChallengeResponse;
+
+/** Signed proof of address ownership submitted with a recheck or referral-link request. */
+export type XSignedProof = {
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  signature_hex: string;
+};
+
+/** Referral link issued for a qualifying X-linked account. */
+export type XReferralLinkResponse = {
+  link: string;
 };
 
 // Superhero API client
@@ -204,7 +554,7 @@ export const SuperheroApi = {
     return this.fetchJson(`/api/topics/name/${encoded}`);
   },
   // GET /api/tokens?order_by=market_cap&order_direction=DESC
-  listTokens(params: { orderBy?: 'name'|'price'|'market_cap'|'created_at'|'holders_count'|'trending_score'; orderDirection?: 'ASC'|'DESC'; collection?: 'all'|'word'|'number'; limit?: number; page?: number; search?: string; ownerAddress?: string; creatorAddress?: string; factoryAddress?: string } = {}) {
+  listTokens(params: { orderBy?: 'name'|'price'|'market_cap'|'created_at'|'holders_count'|'trending_score'; orderDirection?: 'ASC'|'DESC'; collection?: string; limit?: number; page?: number; search?: string; ownerAddress?: string; creatorAddress?: string; factoryAddress?: string } = {}) {
     const qp = new URLSearchParams();
     if (params.orderBy) qp.set('order_by', params.orderBy);
     if (params.orderDirection) qp.set('order_direction', params.orderDirection);
@@ -310,7 +660,9 @@ export const SuperheroApi = {
     if (params.page != null) qp.set('page', String(params.page));
     return this.fetchJson(`/api/accounts?${qp.toString()}`);
   },
-  getAccount(address: string) { return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`); },
+  getAccount(address: string) {
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`) as Promise<AccountAggregate>;
+  },
   // Invitations
   listInvitations(params: { orderBy?: 'amount'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {
     const qp = new URLSearchParams();
@@ -356,8 +708,6 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     const query = qp.toString();
-    // TODO: uncomment this when the backend is ready
-    return Promise.resolve(null);
     return this.fetchJson(`/api/profile/${encodeURIComponent(address)}${query ? `?${query}` : ''}`) as Promise<ProfileAggregate>;
   },
   getProfilesByAddresses(addresses: string[], includeOnChain?: boolean) {
@@ -366,45 +716,314 @@ export const SuperheroApi = {
     if (includeOnChain != null) qp.set('includeOnChain', String(includeOnChain));
     return this.fetchJson(`/api/profile?${qp.toString()}`) as Promise<ProfileAggregate[]>;
   },
-  getProfileFeed(limit = 500, offset = 0) {
-    const qp = new URLSearchParams();
-    qp.set('limit', String(limit));
-    qp.set('offset', String(offset));
-    return Promise.resolve({ items: [], data: [] } as ProfileFeedResponse);
-    // TODO: uncomment this when the backend is ready
-    // return this.fetchJson(`/api/profile/feed?${qp.toString()}`) as Promise<ProfileFeedResponse>;
-  },
-  createXAttestation(address: string, accessToken: string) {
-    return this.fetchJson('/api/profile/x/attestation', {
+  claimXAddressLink(address: string, accessToken: string) {
+    return this.fetchJson('/api/address-links/x/claim', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         address,
-        accessToken,
+        x_access_token: accessToken,
       }),
-    }) as Promise<XAttestationResponse>;
+    }) as Promise<XAddressLinkClaimResponse>;
   },
-  /** Exchange OAuth code (from X redirect) for attestation; backend exchanges code for token and creates attestation. */
-  createXAttestationFromCode(
+  createChainNameChallenge(address: string) {
+    return this.fetchJson('/api/profile/chain-name/challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+      }),
+    }) as Promise<ChainNameChallengeResponse>;
+  },
+  claimChainName(payload: ChainNameClaimRequest) {
+    return this.fetchJson('/api/profile/chain-name/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<ChainNameClaimResponse>;
+  },
+  getChainNameClaimStatus(address: string) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/chain-name-claim`) as Promise<ChainNameClaimStatusResponse>;
+  },
+  /** Ask for a signature challenge bound to `address` for the X-posting reward recheck. */
+  createXPostingRewardRecheckChallenge(address: string) {
+    return this.fetchJson('/api/profile/x-posting-reward/recheck-challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<XPostingRewardChallengeResponse>;
+  },
+  /** Read the reward status without triggering a scan (no signature, no X-API cost). */
+  getXPostingRewardStatus(address: string) {
+    return this.fetchJson(
+      `/api/profile/${encodeURIComponent(address)}/x-posting-reward`,
+    ) as Promise<XPostingRewardStatus>;
+  },
+  /**
+   * Submit the signed challenge to run the (once-per-24h) capped X scan.
+   * Returns the reward status, or `{ rateLimited: true }` when the daily cap is hit (HTTP 429).
+   */
+  async recheckXPostingReward(payload: {
+    address: string;
+    challenge_nonce: string;
+    challenge_expires_at: string;
+    signature_hex: string;
+  }): Promise<XPostingRewardRecheckResult> {
+    const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
+    if (!base) throw new Error('SUPERHERO_API_URL not configured');
+    const { address, ...body } = payload;
+    const res = await fetch(
+      `${base}/api/profile/${encodeURIComponent(address)}/x-posting-reward/recheck`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (res.status === 429) {
+      const capBody = await res.json().catch(() => ({} as Record<string, unknown>));
+      return {
+        rateLimited: true,
+        nextAllowedAt: (capBody.nextAllowedAt as string | number | null) ?? null,
+      };
+    }
+    if (!res.ok) {
+      throw new Error(`Reward check failed with status ${res.status}`);
+    }
+    const status = (await res.json()) as XPostingRewardStatus;
+    return { rateLimited: false, status };
+  },
+  /** Check whether the sponsor account can fund a chain name claim. `name` is the label without `.chain`. */
+  checkChainNameSponsorship(name: string) {
+    return this.fetchJson(
+      `/api/profile/chain-name/sponsorship/${encodeURIComponent(name)}`,
+    ) as Promise<ChainNameSponsorshipResponse>;
+  },
+  /** Exchange OAuth code (from X redirect) for an X address-link claim; backend swaps the code for a token and creates the claim. */
+  claimXAddressLinkFromCode(
     address: string,
     code: string,
     codeVerifier: string,
     redirectUri: string,
   ) {
-    return this.fetchJson('/api/profile/x/attestation', {
+    return this.fetchJson('/api/address-links/x/claim', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         address,
-        code,
-        code_verifier: codeVerifier,
-        redirect_uri: redirectUri,
+        x_code: code,
+        x_code_verifier: codeVerifier,
+        x_redirect_uri: redirectUri,
       }),
-    }) as Promise<XAttestationResponse>;
+    }) as Promise<XAddressLinkClaimResponse>;
+  },
+  submitXAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/x/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XAddressLinkSubmitResponse>;
+  },
+  unclaimXAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/x/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<XAddressLinkUnclaimResponse>;
+  },
+  submitXAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/x/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<XAddressLinkSubmitResponse>;
+  },
+  claimBioAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/bio/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitBioAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/bio/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimBioAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/bio/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitBioAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/bio/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  claimPreferredAensNameAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitPreferredAensNameAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimPreferredAensNameAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitPreferredAensNameAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/prefered-aens-name/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  claimSiteAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/site/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitSiteAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/site/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimSiteAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/site/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitSiteAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/site/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  // X Posting Reward endpoints (recheck challenge, manual recheck, referral link).
+  // `getXPostingRewardStatus` is defined above (read-only status).
+  createXRecheckChallenge(address: string) {
+    return this.fetchJson('/api/profile/x-posting-reward/recheck-challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+    }) as Promise<XRecheckChallengeResponse>;
+  },
+  runXPostingRewardRecheck(address: string, proof: XSignedProof) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/x-posting-reward/recheck`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(proof),
+    }) as Promise<XPostingRewardStatus>;
+  },
+  getXReferralLink(address: string, proof: XSignedProof) {
+    return this.fetchJson(`/api/profile/${encodeURIComponent(address)}/x-reward/referral-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(proof),
+    }) as Promise<XReferralLinkResponse>;
   },
   /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   issueProfileChallenge(address: string, payload: ProfileEditablePayload) {
@@ -416,7 +1035,6 @@ export const SuperheroApi = {
       body: JSON.stringify(payload),
     }) as Promise<ProfileChallengeResponse>;
   },
-  /** @deprecated Legacy profile update flow; use on-chain writes instead. */
   updateProfile(
     address: string,
     payload: ProfileEditablePayload & { challenge: string; signature: string },

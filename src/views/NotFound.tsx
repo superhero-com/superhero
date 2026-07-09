@@ -1,16 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Head } from '@/seo/Head';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const NotFound = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
       <Head
-        title="Page Not Found | Superhero.com"
-        description="The page you're looking for doesn't exist."
+        title={t('common.views.notFound.pageTitle')}
+        description={t('common.views.notFound.pageDescription')}
         canonicalPath={location.pathname}
       />
 
@@ -89,7 +91,7 @@ const NotFound = () => {
 
         {/* Message */}
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-          Oops! Lost in the
+          {t('common.views.notFound.lostInThe')}
           {' '}
           <span
             style={{
@@ -99,13 +101,12 @@ const NotFound = () => {
               backgroundClip: 'text',
             }}
           >
-            blockchain
+            {t('common.views.notFound.blockchain')}
           </span>
         </h2>
 
         <p className="text-white/60 text-base sm:text-lg mb-10 leading-relaxed">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved
-          to another dimension.
+          {t('common.views.notFound.description')}
         </p>
 
         {/* Action buttons */}
@@ -133,7 +134,7 @@ const NotFound = () => {
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
             </svg>
-            Go Home
+            {t('common.views.notFound.goHome')}
           </Button>
 
           <Button
@@ -155,20 +156,20 @@ const NotFound = () => {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Go Back
+            {t('common.views.notFound.goBack')}
           </Button>
         </div>
 
         {/* Helpful links */}
         <div className="mt-12 pt-8 border-t border-white/10">
-          <p className="text-white/40 text-sm mb-4">Or explore these pages:</p>
+          <p className="text-white/40 text-sm mb-4">{t('common.views.notFound.orExplore')}</p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <button
               type="button"
               onClick={() => navigate('/trends/tokens')}
               className="text-white/60 hover:text-white transition-colors underline-offset-4 hover:underline"
             >
-              Browse Tokens
+              {t('common.views.notFound.browseTokens')}
             </button>
             <span className="text-white/20">•</span>
             <button
@@ -176,7 +177,7 @@ const NotFound = () => {
               onClick={() => navigate('/trends/create')}
               className="text-white/60 hover:text-white transition-colors underline-offset-4 hover:underline"
             >
-              Create Token
+              {t('common.views.notFound.createToken')}
             </button>
           </div>
         </div>

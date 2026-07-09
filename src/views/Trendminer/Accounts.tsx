@@ -73,8 +73,8 @@ export default function Accounts() {
           triggerClassName="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none"
           contentClassName="bg-black border-white/20"
         >
-          <AppSelectItem value="DESC">Desc</AppSelectItem>
-          <AppSelectItem value="ASC">Asc</AppSelectItem>
+          <AppSelectItem value="DESC">{t('descending')}</AppSelectItem>
+          <AppSelectItem value="ASC">{t('ascending')}</AppSelectItem>
         </AppSelect>
       </div>
       {error && <div className="text-red-400 mb-4">{error}</div>}
@@ -86,17 +86,17 @@ export default function Accounts() {
             </div>
             <div className="flex gap-4 opacity-85 text-sm text-white/85">
               <div>
-                Vol:
+                {t('volLabel')}
                 {Number(r.total_volume || 0).toLocaleString()}
                 {' '}
                 AE
               </div>
               <div>
-                Tx:
+                {t('txLabel')}
                 {r.total_tx_count || 0}
               </div>
               <div>
-                Tokens:
+                {t('tokensLabel')}
                 {r.total_created_tokens || 0}
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function Accounts() {
             disabled={loading}
             className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
-            Load more
+            {t('loadMore')}
           </button>
         </div>
       )}

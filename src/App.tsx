@@ -1,19 +1,25 @@
 import React, {
   Suspense, useEffect, useRef,
 } from 'react';
-import { useRoutes } from 'react-router-dom';
+import { useNavigate, useRoutes } from 'react-router-dom';
+import { useAtom } from 'jotai';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
 import {
   useAeSdk, useAccount, useIsMobile, useWalletConnect,
 } from './hooks';
-import { useProfileFeed } from './hooks/useProfileFeed';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import {
+  profileEditModalFlowAtom,
+  profileEditModalOpenAtom,
+  profileEditModalPendingAfterConnectAtom,
+} from './atoms/profileEditModalAtom';
+import ProfileEditModal from './components/modals/ProfileEditModal';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -34,13 +40,26 @@ const ConnectWalletModal = React.lazy(
 const TipModal = React.lazy(
   () => import('./components/modals/TipModal'),
 );
+const OnboardingModal = React.lazy(
+  () => import('./components/modals/OnboardingModal'),
+);
 
 const App = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  useProfileFeed({ refetchIntervalMs: 20_000 });
-  const { initSdk, activeAccount } = useAeSdk();
+  const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
   const { loadAccountData } = useAccount();
-  const { attemptReconnection } = useWalletConnect();
+  const {
+    attemptReconnection,
+    walletInfo,
+    connectingWallet,
+    walletConnected,
+  } = useWalletConnect();
+  const [profileEditOpen, setProfileEditOpen] = useAtom(profileEditModalOpenAtom);
+  const [profileEditFlow, setProfileEditFlow] = useAtom(profileEditModalFlowAtom);
+  const [profileEditPendingAfterConnect, setProfileEditPendingAfterConnect] = useAtom(
+    profileEditModalPendingAfterConnectAtom,
+  );
 
   // Track if we've already initialized to prevent multiple calls
   const hasInitializedRef = useRef(false);
@@ -55,15 +74,25 @@ const App = () => {
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
+    initSdk();
+  }, [initSdk]);
 
-    const initialize = async () => {
-      await initSdk();
-      // attemptReconnection will check if there's persisted wallet state and try to reconnect
-      await attemptReconnection();
-    };
-
-    initialize();
-  }, [attemptReconnection, initSdk]); // Run once per stable hook references
+  // Re-establish the extension connection for a persisted wallet session, so the
+  // SDK's onAddressChange keeps firing after a page refresh. attemptReconnection
+  // no-ops until persisted state is present and only ever attempts once.
+  // connectingWallet/walletConnected are deps so an attempt skipped because a
+  // connect was in flight is retried once that connect settles.
+  useEffect(() => {
+    if (!sdkInitialized) return;
+    attemptReconnection();
+  }, [
+    sdkInitialized,
+    activeAccount,
+    walletInfo,
+    connectingWallet,
+    walletConnected,
+    attemptReconnection,
+  ]);
 
   // Setup interval for periodic data refresh when account is active
   useEffect(() => {
@@ -81,6 +110,35 @@ const App = () => {
       clearInterval(interval);
     };
   }, [activeAccount]);
+
+  useEffect(() => {
+    if (!profileEditPendingAfterConnect || !activeAccount) return;
+    setProfileEditPendingAfterConnect(false);
+    setProfileEditOpen(true);
+  }, [
+    activeAccount,
+    profileEditPendingAfterConnect,
+    setProfileEditOpen,
+    setProfileEditPendingAfterConnect,
+  ]);
+
+  const resetProfileEditFlow = () => setProfileEditFlow({
+    redirectToProfileOnClose: false,
+    showSkip: false,
+  });
+
+  const handleProfileEditSuccess = () => {
+    setProfileEditOpen(false);
+    if (profileEditFlow.redirectToProfileOnClose && activeAccount) {
+      navigate(`/users/${encodeURIComponent(activeAccount)}`);
+    }
+    resetProfileEditFlow();
+  };
+
+  const handleProfileEditDismiss = () => {
+    setProfileEditOpen(false);
+    resetProfileEditFlow();
+  };
 
   return (
     <div className="app-container">
@@ -100,9 +158,27 @@ const App = () => {
             'transaction-confirm': TransactionConfirmModal,
             'connect-wallet': ConnectWalletModal,
             tip: TipModal,
+            onboarding: OnboardingModal,
           }}
         />
       </Suspense>
+      <ProfileEditModal
+        open={profileEditOpen}
+        onClose={(updatedProfile) => {
+          if (updatedProfile) handleProfileEditSuccess();
+          else handleProfileEditDismiss();
+        }}
+        // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
+        // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
+        // them on success. No onSaveError handler on purpose: a failed save is not a
+        // cancel, so the flags survive and the flow can resume when the user retries.
+        onHide={() => setProfileEditOpen(false)}
+        showSkip={profileEditFlow.showSkip}
+        onSkip={handleProfileEditDismiss}
+        onClaimSuccess={
+          profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
+        }
+      />
       <Suspense fallback={<div className="loading-fallback" />}>
         <div className="app-routes-container">{useRoutes(routes as any)}</div>
       </Suspense>

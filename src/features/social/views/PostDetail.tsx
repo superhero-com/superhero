@@ -81,7 +81,7 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
                     target="_blank"
                     rel="noreferrer"
                   >
-                    View
+                    {t('viewTip')}
                   </a>
                 )}
               </div>
@@ -89,10 +89,7 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
           ))}
           {tips.length > top.length && (
             <div className="text-xs text-white/50 pt-1">
-              Showing latest
-              {top.length}
-              {' '}
-              tips.
+              {t('showingLatestTips', { count: top.length })}
             </div>
           )}
         </div>

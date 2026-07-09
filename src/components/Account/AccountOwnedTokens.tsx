@@ -54,7 +54,7 @@ const AccountOwnedTokens = ({
             )}
             title={t('titles.sortByBalance')}
           >
-            Balance
+            {t('labels.balance')}
             {' '}
             {ownedOrderDirection === 'DESC' ? '↓' : '↑'}
           </button>

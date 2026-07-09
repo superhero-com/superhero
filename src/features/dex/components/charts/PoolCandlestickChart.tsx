@@ -12,6 +12,7 @@ import moment from 'moment';
 import {
   useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import AeButton from '../../../../components/AeButton';
 import { TokenChip } from '../../../../components/TokenChip';
 import { useChart } from '../../../../hooks/useChart';
@@ -54,6 +55,7 @@ export const PoolCandlestickChart = ({
   className = '',
   fromTokenAddress,
 }: PoolCandlestickChartProps) => {
+  const { t } = useTranslation();
   const { data: pair } = useQuery({
     queryKey: ['pair', pairAddress],
     queryFn: () => DexPairService.getPairByAddress({ address: pairAddress }),
@@ -666,14 +668,14 @@ export const PoolCandlestickChart = ({
     return (
       <div className={`${className} w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col items-center justify-center text-center`} style={{ height }}>
         <div className="text-base text-red-400 mb-4 font-medium">
-          Failed to load chart data
+          {t('dex.candlestickChart.failedToLoadChartData')}
         </div>
         <AeButton
           variant="primary"
           size="medium"
           onClick={fetchHistoricalData}
         >
-          Retry
+          {t('dex.candlestickChart.retry')}
         </AeButton>
       </div>
     );
@@ -697,7 +699,7 @@ export const PoolCandlestickChart = ({
                 type="button"
                 onClick={handleFlipPair}
                 className="bg-white/10 border border-border rounded-lg px-2 py-0 text-muted-foreground text-xs font-medium cursor-pointer backdrop-blur-sm transition-all duration-200 ease-in-out flex items-center gap-1 hover:bg-white/15 hover:scale-105"
-                title="Flip trading pair"
+                title={t('dex.candlestickChart.flipTradingPair')}
               >
                 🔄
               </button>
@@ -784,7 +786,7 @@ export const PoolCandlestickChart = ({
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
             <div className="text-foreground text-base font-medium">
-              Loading chart data...
+              {t('dex.candlestickChart.loadingChartData')}
             </div>
           </div>
         )}

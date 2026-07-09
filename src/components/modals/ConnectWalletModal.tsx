@@ -1,12 +1,19 @@
-import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import React, {
+  useCallback, useEffect, useMemo, useRef,
+} from 'react';
 import { Link } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
-import { useWalletConnect } from '@/hooks';
+import { useAeSdk, useWalletConnect } from '@/hooks';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
 
-type Props = { onClose: () => void };
+type Props = {
+  onClose: () => void;
+  onConnected?: (address: string) => void;
+};
 
 const ChromeIcon: React.FC<{ className?: string }> = ({ className }) => (
   <img src={chromeLogoUrl} className={className} alt="Chrome" />
@@ -15,7 +22,7 @@ const FirefoxIcon: React.FC<{ className?: string }> = ({ className }) => (
   <img src={firefoxLogoUrl} className={className} alt="Firefox" />
 );
 
-function getInstallItems() {
+function getInstallItems(t: TFunction) {
   const ua = navigator.userAgent || '';
 
   const isAndroid = /Android/i.test(ua);
@@ -35,58 +42,78 @@ function getInstallItems() {
 
   if (isMobile) {
     const item = isAndroid
-      ? { label: 'Download from Google Play', href: LINKS.android }
-      : { label: 'Download from App Store', href: LINKS.ios };
-    return { kind: 'mobile' as const, title: 'Get the wallet app:', items: [item as any] };
+      ? { label: t('common.modals.connectWallet.downloadGooglePlay'), href: LINKS.android }
+      : { label: t('common.modals.connectWallet.downloadAppStore'), href: LINKS.ios };
+    return { kind: 'mobile' as const, title: t('common.modals.connectWallet.getWalletApp'), items: [item as any] };
   }
 
   // Desktop logic: show only the detected browser; otherwise show both
   if (isChromeFamily) {
-    return { kind: 'desktop' as const, title: 'Get the browser extension', items: [{ label: 'Get extension for Chrome', href: LINKS.chrome, Icon: ChromeIcon }] };
+    return { kind: 'desktop' as const, title: t('common.modals.connectWallet.getBrowserExtension'), items: [{ label: t('common.modals.connectWallet.getExtensionChrome'), href: LINKS.chrome, Icon: ChromeIcon }] };
   }
   if (isFirefox) {
-    return { kind: 'desktop' as const, title: 'Get the browser extension', items: [{ label: 'Get extension for Firefox', href: LINKS.firefox, Icon: FirefoxIcon }] };
+    return { kind: 'desktop' as const, title: t('common.modals.connectWallet.getBrowserExtension'), items: [{ label: t('common.modals.connectWallet.getExtensionFirefox'), href: LINKS.firefox, Icon: FirefoxIcon }] };
   }
   return {
     kind: 'desktop' as const,
-    title: 'Get the browser extension',
+    title: t('common.modals.connectWallet.getBrowserExtension'),
     items: [
-      { label: 'Get extension for Chrome', href: LINKS.chrome, Icon: ChromeIcon },
-      { label: 'Get extension for Firefox', href: LINKS.firefox, Icon: FirefoxIcon },
+      { label: t('common.modals.connectWallet.getExtensionChrome'), href: LINKS.chrome, Icon: ChromeIcon },
+      { label: t('common.modals.connectWallet.getExtensionFirefox'), href: LINKS.firefox, Icon: FirefoxIcon },
     ],
   };
 }
 
-const ConnectWalletModal = ({ onClose }: Props) => {
+const ConnectWalletModal = ({ onClose, onConnected }: Props) => {
+  const { t } = useTranslation();
   const { connectWallet, connectingWallet } = useWalletConnect();
+  const { activeAccount } = useAeSdk();
 
-  const install = useMemo(() => getInstallItems(), []);
+  const install = useMemo(() => getInstallItems(t), [t]);
+  const connectRequestedRef = useRef(false);
+  const didAdvanceRef = useRef(false);
+
+  const advanceAfterConnect = useCallback((account: string) => {
+    if (didAdvanceRef.current) return;
+    didAdvanceRef.current = true;
+    connectRequestedRef.current = false;
+    onClose();
+    onConnected?.(account);
+  }, [onClose, onConnected]);
+
+  useEffect(() => {
+    if (!connectRequestedRef.current || !activeAccount) return;
+    advanceAfterConnect(activeAccount);
+  }, [activeAccount, advanceAfterConnect]);
 
   async function handleConnect() {
-    await connectWallet();
-    onClose();
+    connectRequestedRef.current = true;
+    didAdvanceRef.current = false;
+    const connectedAccount = await connectWallet();
+    if (!connectedAccount) return;
+    advanceAfterConnect(connectedAccount);
   }
 
   return (
     <div className="text-foreground p-2 sm:p-0 text-center sm:text-left">
       {/* Desktop/tablet: top-wide notice */}
       <div className="hidden sm:block w-full text-center text-[12px] text-white/60 leading-relaxed mb-3">
-        By connecting your wallet you agree to the
+        {t('common.modals.connectWallet.agreePrefix')}
         {' '}
         <Link
           to="/terms"
           className="no-underline text-[var(--primary-color)] hover:opacity-90"
         >
-          Terms of Use
+          {t('common.layout.termsOfUse')}
         </Link>
         {' '}
-        and
+        {t('common.modals.connectWallet.and')}
         {' '}
         <Link
           to="/privacy"
           className="no-underline text-[var(--primary-color)] hover:opacity-90"
         >
-          Privacy Policy
+          {t('common.layout.privacyPolicy')}
         </Link>
         .
       </div>
@@ -98,22 +125,22 @@ const ConnectWalletModal = ({ onClose }: Props) => {
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-3 sm:gap-2">
           {/* Mobile-only notice above button with larger gap */}
           <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed px-2">
-            By connecting your wallet you agree to the
+            {t('common.modals.connectWallet.agreePrefix')}
             {' '}
             <Link
               to="/terms"
               className="no-underline text-[var(--primary-color)] hover:opacity-90"
             >
-              Terms of Use
+              {t('common.layout.termsOfUse')}
             </Link>
             {' '}
-            and
+            {t('common.modals.connectWallet.and')}
             {' '}
             <Link
               to="/privacy"
               className="no-underline text-[var(--primary-color)] hover:opacity-90"
             >
-              Privacy Policy
+              {t('common.layout.privacyPolicy')}
             </Link>
             .
           </div>
@@ -124,7 +151,7 @@ const ConnectWalletModal = ({ onClose }: Props) => {
             loading={connectingWallet}
             disabled={connectingWallet}
           >
-            {connectingWallet ? 'Connecting…' : 'CONNECT WALLET'}
+            {connectingWallet ? t('common.buttons.connecting') : t('common.buttons.connectWalletDex')}
           </AeButton>
         </div>
       </div>

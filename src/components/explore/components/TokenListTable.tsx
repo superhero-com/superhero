@@ -3,6 +3,7 @@ import { performanceChartTimeframeAtom } from '@/features/trending/atoms';
 import PerformanceTimeframeSelector from '@/features/trending/components/PerformanceTimeframeSelector';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 /* eslint-disable */
 import { useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
@@ -56,6 +57,7 @@ export const TokenListTable = ({
   onSearchChange,
   loading,
 }: TokenListTableProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
@@ -106,7 +108,7 @@ export const TokenListTable = ({
           }}
         >
           <Spinner className="w-10 h-10" />
-          Loading tokens...
+          {t('explore.tokenListTable.loadingTokens')}
         </div>
       </div>
     );
@@ -170,7 +172,7 @@ export const TokenListTable = ({
                   backgroundClip: 'text',
                 }}
               >
-                Filter & Sort
+                {t('explore.tokenListTable.filterAndSort')}
               </span>
             </div>
 
@@ -189,16 +191,16 @@ export const TokenListTable = ({
                   onValueChange={(v) => handleSort(v as any)}
                   triggerClassName="py-1.5 pl-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px]"
                 >
-                  <AppSelectItem value="pairs_count">Pools</AppSelectItem>
-                  <AppSelectItem value="price">Price</AppSelectItem>
-                  <AppSelectItem value="tvl">TVL</AppSelectItem>
-                  <AppSelectItem value="24hchange">24h Change</AppSelectItem>
-                  <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
-                  <AppSelectItem value="7dchange">7d Change</AppSelectItem>
-                  <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
-                  <AppSelectItem value="30dchange">30d Change</AppSelectItem>
-                  <AppSelectItem value="30dvolume">30d Volume</AppSelectItem>
-                  <AppSelectItem value="created_at">Created At</AppSelectItem>
+                  <AppSelectItem value="pairs_count">{t('explore.pools')}</AppSelectItem>
+                  <AppSelectItem value="price">{t('explore.price')}</AppSelectItem>
+                  <AppSelectItem value="tvl">{t('explore.tokenListTable.tvl')}</AppSelectItem>
+                  <AppSelectItem value="24hchange">{t('explore.tokenListTable.change24h')}</AppSelectItem>
+                  <AppSelectItem value="24hvolume">{t('explore.tokenListTable.volume24h')}</AppSelectItem>
+                  <AppSelectItem value="7dchange">{t('explore.tokenListTable.change7d')}</AppSelectItem>
+                  <AppSelectItem value="7dvolume">{t('explore.tokenListTable.volume7d')}</AppSelectItem>
+                  <AppSelectItem value="30dchange">{t('explore.tokenListTable.change30d')}</AppSelectItem>
+                  <AppSelectItem value="30dvolume">{t('explore.tokenListTable.volume30d')}</AppSelectItem>
+                  <AppSelectItem value="created_at">{t('explore.tokenListTable.createdAt')}</AppSelectItem>
                 </AppSelect>
               </div>
 
@@ -240,7 +242,7 @@ export const TokenListTable = ({
                   e.currentTarget.style.transform = 'translateY(0) scale(1)';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
-                title={sort.asc ? 'Sort Ascending' : 'Sort Descending'}
+                title={sort.asc ? t('explore.tokenListTable.sortAscending') : t('explore.tokenListTable.sortDescending')}
               >
                 {sort.asc ? '↑' : '↓'}
               </button>
@@ -272,7 +274,7 @@ export const TokenListTable = ({
               🔍
             </div>
             <input
-              placeholder="Search tokens..."
+              placeholder={t('explore.tokenListTable.searchTokens')}
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               style={{
@@ -332,7 +334,7 @@ export const TokenListTable = ({
                   e.currentTarget.style.color = 'var(--light-font-color)';
                   e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                 }}
-                title="Clear search"
+                title={t('explore.tokenListTable.clearSearch')}
               >
                 ✕
               </button>
@@ -368,9 +370,7 @@ export const TokenListTable = ({
                 fontWeight: 600,
               }}
             >
-              {tokens.length}
-              {' '}
-              {tokens.length === 1 ? 'token' : 'tokens'}
+              {t('explore.tokenListTable.tokenCount', { count: tokens.length })}
             </span>
           </div>
         </div>
@@ -396,7 +396,7 @@ export const TokenListTable = ({
                 opacity: 0.8,
               }}
             >
-              Active:
+              {t('explore.tokenListTable.activeLabel')}
             </span>
             {search && (
               <div
@@ -413,7 +413,8 @@ export const TokenListTable = ({
                 }}
               >
                 <span>
-                  Search: "
+                  {t('explore.tokenListTable.searchLabel')}
+                  {' "'}
                   {search.length > 15
                     ? `${search.substring(0, 15)}...`
                     : search}
@@ -457,7 +458,7 @@ export const TokenListTable = ({
                 }}
               >
                 <span>
-                  Sort:
+                  {t('explore.tokenListTable.sortLabel')}
                   {' '}
                   {sort.key}
                   {' '}
@@ -517,7 +518,7 @@ export const TokenListTable = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                Name
+                {t('explore.tokenListTable.name')}
               </th>
               <th
                 style={{
@@ -529,7 +530,7 @@ export const TokenListTable = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                Pools
+                {t('explore.pools')}
               </th>
               <th
                 style={{
@@ -541,7 +542,7 @@ export const TokenListTable = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                Price
+                {t('explore.price')}
               </th>
               <th
                 style={{
@@ -554,7 +555,7 @@ export const TokenListTable = ({
                 }}
               >
                 <div className="flex items-center gap-2">
-                  Volume
+                  {t('explore.volume')}
                   <div className="flex items-center justify-center w-auto flex-shrink-0">
                     <PerformanceTimeframeSelector />
                   </div>
@@ -571,7 +572,7 @@ export const TokenListTable = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                Total Volume
+                {t('explore.totalVolume')}
               </th>
               <th
                 style={{
@@ -583,7 +584,7 @@ export const TokenListTable = ({
                   letterSpacing: '0.5px',
                 }}
               >
-                Actions
+                {t('explore.actions')}
               </th>
             </tr>
           </thead>
@@ -731,7 +732,7 @@ export const TokenListTable = ({
                         e.currentTarget.style.color = 'var(--standard-font-color)';
                       }}
                     >
-                      Swap
+                      {t('explore.swap')}
                     </button>
                     <button
                       onClick={(e) => {
@@ -761,7 +762,7 @@ export const TokenListTable = ({
                         e.currentTarget.style.color = 'var(--standard-font-color)';
                       }}
                     >
-                      Add
+                      {t('explore.add')}
                     </button>
                   </div>
                 </td>
@@ -791,7 +792,7 @@ export const TokenListTable = ({
               marginBottom: 8,
             }}
           >
-            No tokens found
+            {t('explore.tokenListTable.noTokensFound')}
           </div>
           <div
             style={{
@@ -800,7 +801,7 @@ export const TokenListTable = ({
               opacity: 0.7,
             }}
           >
-            Try adjusting your search criteria
+            {t('explore.tokenListTable.tryAdjustingSearch')}
           </div>
         </div>
       )}

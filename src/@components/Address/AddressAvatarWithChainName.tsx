@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AddressAvatar from '@/components/AddressAvatar';
 import { AddressFormatted } from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
@@ -42,6 +43,7 @@ export const AddressAvatarWithChainName = memo(({
   contentClassName,
   variant = 'default',
 }: AddressAvatarWithChainNameProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const resolvedShowBalanceInHover = showBalanceInHover ?? (variant === 'feed' ? showBalance : true);
 
@@ -287,15 +289,15 @@ export const AddressAvatarWithChainName = memo(({
                 {/* AE Balance */}
                 {resolvedShowBalanceInHover && (
                 <div className="text-xs text-muted-foreground mb-2">
-                  <span className="font-semibold">AE Balance: </span>
-                  <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
+                  <span className="font-semibold">{t('common.account.aeBalanceLabel')}</span>
+                  <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : t('common.dataTable.loading')}</span>
                 </div>
                 )}
 
                 {/* Top 3 Token Holdings */}
                 {aex9Balances.length > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  <div className="font-semibold mb-1">Tokens Holdings:</div>
+                  <div className="font-semibold mb-1">{t('common.account.tokenHoldings')}</div>
                   {aex9Balances
                     .sort((a, b) => {
                       // Calculate decimal values for comparison using Decimal library
@@ -321,7 +323,7 @@ export const AddressAvatarWithChainName = memo(({
                           className="flex justify-between items-center py-0.5"
                         >
                           <span className="font-medium max-w-[150px] overflow-hidden text-ellipsis">
-                            {token.symbol || token.token_symbol || token.token_name || 'Unknown'}
+                            {token.symbol || token.token_symbol || token.token_name || t('common.views.tokenSummary.unknown')}
                           </span>
                           <span className="font-mono text-xs">{balance}</span>
                         </div>
@@ -329,11 +331,7 @@ export const AddressAvatarWithChainName = memo(({
                     })}
                   {aex9Balances.length > 3 && (
                   <div className="text-xs text-muted-foreground/60 mt-1">
-                    +
-                    {' '}
-                    {aex9Balances.length - 3}
-                    {' '}
-                    more...
+                    {t('common.account.moreTokens', { count: aex9Balances.length - 3 })}
                   </div>
                   )}
                 </div>

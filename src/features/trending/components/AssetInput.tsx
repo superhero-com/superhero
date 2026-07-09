@@ -3,6 +3,7 @@ import { formatFractionalPrice } from '@/utils/common';
 import React, {
   forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/ui/button';
 import { useCurrencies } from '../../../hooks/useCurrencies';
 import { cn } from '../../../lib/utils';
@@ -51,6 +52,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   aeValue = Decimal.ZERO,
   className = '',
 }, ref) => {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const { getFiat, currentCurrencyInfo } = useCurrencies();
 
@@ -204,7 +206,10 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
             ) : (
               <div className="flex items-center gap-2 text-sm text-white/70">
                 <div>
-                  <span className="opacity-60">Balance:&nbsp;</span>
+                  <span className="opacity-60">
+                    {t('trending.assetInput.balanceLabel')}
+                    &nbsp;
+                  </span>
                   <span>{Decimal.from(tokenBalance).prettify()}</span>
                 </div>
                 {!aeValue.isZero && (
@@ -226,7 +231,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
                 className="px-2 h-6 text-xs rounded-xl bg-white/10 border-white/20 text-white hover:bg-white/20"
                 onClick={handleMaxClick}
               >
-                Max
+                {t('trending.assetInput.max')}
               </Button>
             )}
           </div>

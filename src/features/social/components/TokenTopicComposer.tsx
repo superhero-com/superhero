@@ -27,7 +27,7 @@ const TokenTopicComposer = ({
       postId={isReply ? postId : undefined}
       onSuccess={onSuccess}
       requiredHashtag={canonical}
-      placeholder={isReply ? 'Write a reply...' : placeholder}
+      placeholder={isReply ? t('writeReply') : placeholder}
       className="mt-2"
     />
   );

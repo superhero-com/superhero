@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AeButton } from '../../../components/ui/ae-button';
 import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 
@@ -13,23 +14,24 @@ interface EmptyStateProps {
 const EmptyState = memo(({
   type, error, hasSearch, onRetry,
 }: EmptyStateProps) => {
+  const { t } = useTranslation();
   const getContent = () => {
     switch (type) {
       case 'error':
         return {
-          title: 'Failed to load posts',
-          subtitle: error instanceof Error ? error.message : 'An error occurred while fetching posts',
+          title: t('social.emptyState.failedToLoadPosts'),
+          subtitle: error instanceof Error ? error.message : t('social.emptyState.errorFetchingPosts'),
           showRetry: true,
         };
       case 'empty':
         return {
-          title: hasSearch ? 'No posts found matching your search.' : 'No posts found.',
-          subtitle: hasSearch ? 'Try adjusting your search terms or filters.' : undefined,
+          title: hasSearch ? t('social.emptyState.noPostsMatchingSearch') : t('social.emptyState.noPostsFound'),
+          subtitle: hasSearch ? t('social.emptyState.tryAdjustingSearch') : undefined,
           showRetry: false,
         };
       case 'loading':
         return {
-          title: 'Loading posts...',
+          title: t('social.emptyState.loadingPosts'),
           subtitle: undefined,
           showRetry: false,
         };
@@ -70,7 +72,7 @@ const EmptyState = memo(({
             size="sm"
             className="mt-4"
           >
-            Retry
+            {t('social.retry')}
           </AeButton>
         )}
       </AeCardContent>

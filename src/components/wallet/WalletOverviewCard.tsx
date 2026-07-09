@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
@@ -67,6 +68,7 @@ const WalletOverviewCard = ({
   prices = null,
   className,
 }: WalletOverviewCardProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
   const { decimalBalance } = useAccountBalances(activeAccount);
@@ -128,7 +130,7 @@ const WalletOverviewCard = ({
       >
         <div className="py-1">
           <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">
-            AE Price
+            {t('common.wallet.aePrice')}
           </div>
           <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
             {prices?.[selectedCurrency]
@@ -138,7 +140,7 @@ const WalletOverviewCard = ({
         </div>
         <div className="flex justify-between items-center py-2 border-t border-white/5">
           <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-            Node Connection
+            {t('common.wallet.nodeConnection')}
           </span>
           <span
             className={`text-[12px] font-semibold ${
@@ -147,13 +149,13 @@ const WalletOverviewCard = ({
                 : 'text-[var(--neon-pink)]'
             }`}
           >
-            {isOnline ? '🟢 Connected' : '🔴 Offline'}
+            {isOnline ? t('common.layout.connected') : t('common.layout.offline')}
           </span>
         </div>
         {currentBlockHeight != null && (
           <div className="flex justify-between items-center py-2">
             <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-              Block
+              {t('common.wallet.block')}
             </span>
             <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
               #
@@ -172,7 +174,7 @@ const WalletOverviewCard = ({
         <div className="flex items-center justify-between mb-1">
           <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
             <span className="text-base" aria-hidden="true">👛</span>
-            <span>Your Wallet</span>
+            <span>{t('common.wallet.yourWallet')}</span>
           </div>
           <div className="flex gap-1">
             <button
@@ -180,11 +182,11 @@ const WalletOverviewCard = ({
               onClick={() => navigate(`/users/${activeAccount}`)}
               className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
             >
-              VIEW PROFILE
+              {t('common.wallet.viewProfile')}
             </button>
             <button
               type="button"
-              aria-label={open ? 'Collapse wallet' : 'Expand wallet'}
+              aria-label={open ? t('common.wallet.collapseWallet') : t('common.wallet.expandWallet')}
               aria-expanded={open}
               className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
               onClick={(e) => {
@@ -234,7 +236,7 @@ const WalletOverviewCard = ({
                   ? 'text-[var(--neon-green)]'
                   : 'text-[var(--neon-pink)]'
               }`}
-              title={isOnline ? 'Connected' : 'Offline'}
+              title={isOnline ? t('common.wallet.connected') : t('common.wallet.offline')}
               role="status"
               aria-live="polite"
             >
@@ -265,24 +267,28 @@ const WalletOverviewCard = ({
                 }
               }}
             >
-              📋 Copy address
+              📋
+              {' '}
+              {t('common.wallet.copyAddress')}
             </button>
             <button
               type="button"
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
               onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
             >
-              🔗 Open on aeScan
+              🔗
+              {' '}
+              {t('common.wallet.openOnAescan')}
             </button>
           </div>
 
           <Separator className="my-3" />
 
           <div className="grid gap-2">
-            <div className="text-xs text-white/70 font-medium">Owned Trends</div>
+            <div className="text-xs text-white/70 font-medium">{t('explore:ownedTrends')}</div>
             {topHoldings.length === 0 ? (
               <div className="text-xs text-white/60">
-                No holdings found. Explore trending tokens to get started.
+                {t('common.wallet.noHoldings')}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -310,7 +316,7 @@ const WalletOverviewCard = ({
                     className="self-start mt-1 text-[11px] text-white/70 hover:text-white/90 hover:underline"
                     onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
                   >
-                    Show more
+                    {t('common.wallet.showMore')}
                   </button>
                 )}
               </div>

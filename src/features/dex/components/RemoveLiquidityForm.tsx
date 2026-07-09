@@ -47,10 +47,10 @@ const RemoveLiquidityForm = () => {
           💧
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">
-          Select a Position
+          {t('removeLiquidity.selectAPosition')}
         </h3>
         <p className="text-sm text-white/60">
-          Choose a liquidity position from the list to remove liquidity
+          {t('removeLiquidity.selectAPositionHint')}
         </p>
       </div>
     );
@@ -59,7 +59,7 @@ const RemoveLiquidityForm = () => {
   if (!address) {
     return (
       <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.1)] text-center">
-        <ConnectWalletButton label="CONNECT WALLET" variant="dex" className="text-sm" />
+        <ConnectWalletButton label={t('buttons.connectWalletDex')} variant="dex" className="text-sm" />
       </div>
     );
   }
@@ -149,10 +149,10 @@ const RemoveLiquidityForm = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold m-0">
-                Confirm Removal
+                {t('removeLiquidity.confirmRemoval')}
               </h2>
               <p className="text-xs text-white/60 mt-0.5">
-                Review your transaction
+                {t('removeLiquidity.reviewYourTransaction')}
               </p>
             </div>
           </div>
@@ -170,7 +170,7 @@ const RemoveLiquidityForm = () => {
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-white/60">
-                Removing from Pool
+                {t('removeLiquidity.removingFromPool')}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ const RemoveLiquidityForm = () => {
           <div className="grid grid-cols-2 gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/10">
             <div>
               <div className="text-xs text-white/60 mb-1">
-                LP Tokens to Remove
+                {t('removeLiquidity.lpTokensToRemove')}
               </div>
               <div className="text-base font-semibold text-white">
                 {percentage === 100 && !useCustomAmount
@@ -195,7 +195,7 @@ const RemoveLiquidityForm = () => {
             </div>
             <div>
               <div className="text-xs text-white/60 mb-1">
-                Percentage
+                {t('removeLiquidity.percentage')}
               </div>
               <div className="text-base font-semibold text-[#4ecdc4]">
                 {useCustomAmount
@@ -208,7 +208,7 @@ const RemoveLiquidityForm = () => {
           {estimatedValueUsd && (
             <div className="mt-3 p-3 bg-gradient-to-r from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20 text-center">
               <div className="text-xs text-white/60 mb-0.5">
-                Estimated Value
+                {t('removeLiquidity.estimatedValue')}
               </div>
               <div className="text-lg font-bold text-green-400">
                 $
@@ -225,7 +225,7 @@ const RemoveLiquidityForm = () => {
             onClick={() => setShowConfirm(false)}
             className="flex-1 px-6 py-4 rounded-2xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
           >
-            Cancel
+            {t('buttons.cancel')}
           </button>
           <button
             type="button"
@@ -239,9 +239,9 @@ const RemoveLiquidityForm = () => {
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <Spinner className="w-4 h-4" />
-                Removing...
+                {t('removeLiquidity.removing')}
               </div>
-            ) : '🔥 Remove Liquidity'}
+            ) : `🔥 ${t('removeLiquidity.removeLiquidity')}`}
           </button>
         </div>
       </div>
@@ -258,10 +258,10 @@ const RemoveLiquidityForm = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold m-0">
-              Remove Liquidity
+              {t('removeLiquidity.removeLiquidity')}
             </h2>
             <p className="text-xs text-white/60 mt-0.5">
-              Remove tokens from pool
+              {t('removeLiquidity.removeTokensFromPool')}
             </p>
           </div>
         </div>
@@ -278,7 +278,7 @@ const RemoveLiquidityForm = () => {
       <div className="p-4 bg-white/[0.05] rounded-2xl border border-white/10 mb-6 backdrop-blur-[10px]">
         <div className="flex flex-row flex-wrap justify-between items-center mb-3">
           <span className="text-sm text-white/60">
-            Position
+            {t('removeLiquidity.position')}
           </span>
           <div className="flex items-center gap-2">
             <TokenChip address={selectedPosition.token0} />
@@ -290,7 +290,7 @@ const RemoveLiquidityForm = () => {
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div>
             <div className="text-white/60 mb-0.5">
-              LP Balance
+              {t('removeLiquidity.lpBalance')}
             </div>
             <div className="text-white font-semibold">
               {lpAmount.prettify()}
@@ -299,7 +299,7 @@ const RemoveLiquidityForm = () => {
           {selectedPosition.valueUsd && (
             <div>
               <div className="text-white/60 mb-0.5">
-                Total Value
+                {t('account.totalValue')}
               </div>
               <div className="text-green-400 font-semibold">
                 $
@@ -314,7 +314,7 @@ const RemoveLiquidityForm = () => {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <label className="text-sm font-semibold text-white">
-            Amount to Remove
+            {t('removeLiquidity.amountToRemove')}
           </label>
           <div className="flex gap-2">
             <button
@@ -364,7 +364,7 @@ const RemoveLiquidityForm = () => {
             <div className="p-4 bg-white/[0.02] rounded-xl border border-white/10">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-white/60">
-                  Slide to adjust
+                  {t('removeLiquidity.slideToAdjust')}
                 </span>
                 <span className="text-base font-bold text-[#4ecdc4]">
                   {percentage}
@@ -389,7 +389,7 @@ const RemoveLiquidityForm = () => {
           <div className="p-4 bg-white/[0.02] rounded-xl border border-white/10">
             <div className="mb-2">
               <span className="text-xs text-white/60">
-                LP Tokens to Remove
+                {t('removeLiquidity.lpTokensToRemove')}
               </span>
             </div>
             <input
@@ -402,7 +402,7 @@ const RemoveLiquidityForm = () => {
             />
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-white/60">
-                Max:
+                {t('removeLiquidity.max')}
                 {' '}
                 {lpAmount.prettify()}
               </span>
@@ -411,7 +411,7 @@ const RemoveLiquidityForm = () => {
                 onClick={() => setCustomAmount(lpAmount.toString())}
                 className="px-2 py-1 rounded-md border border-[#4ecdc4] bg-transparent text-[#4ecdc4] cursor-pointer text-xs font-medium hover:bg-[#4ecdc4] hover:text-white transition-all duration-200"
               >
-                MAX
+                {t('removeLiquidity.maxButton')}
               </button>
             </div>
           </div>
@@ -446,7 +446,7 @@ const RemoveLiquidityForm = () => {
         {estimatedValueUsd && (
           <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
             <div className="text-xs text-white/60 mb-1">
-              Estimated Value
+              {t('removeLiquidity.estimatedValue')}
             </div>
             <div className="text-xl font-bold text-green-400">
               $
@@ -468,13 +468,13 @@ const RemoveLiquidityForm = () => {
           : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
-        💧 Remove
+        💧
         {' '}
-        {useCustomAmount
-          ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
-          : `${percentage}%`}
-        {' '}
-        Liquidity
+        {t('removeLiquidity.removeButton', {
+          pct: useCustomAmount
+            ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
+            : `${percentage}%`,
+        })}
       </button>
     </div>
   );

@@ -185,7 +185,7 @@ const TokenListTable = ({
               onSort={onSort}
               className="cell cell-name text-xs opacity-50 text-left py-1 px-3 whitespace-nowrap"
             >
-              Name
+              {t('tokenListTable.name', { ns: 'trending' })}
             </SortableColumnHeader>
 
             {/* Price */}
@@ -196,22 +196,22 @@ const TokenListTable = ({
               onSort={onSort}
               className="cell cell-price text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
-              {isCompactTable ? 'Price (30d)' : 'Price'}
+              {isCompactTable ? t('tokenListTable.price30d', { ns: 'trending' }) : t('tokenListTable.price', { ns: 'trending' })}
             </SortableColumnHeader>
 
             {/* 24h % — hidden on mobile */}
             <th className="cell cell-change24h text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
-              24h %
+              {t('tokenListTable.change24h', { ns: 'trending' })}
             </th>
 
             {/* 7d % — hidden on mobile */}
             <th className="cell cell-change7d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
-              7d %
+              {t('tokenListTable.change7d', { ns: 'trending' })}
             </th>
 
             {/* 30d % — hidden on mobile and sm */}
             <th className="cell cell-change30d text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
-              30d %
+              {t('tokenListTable.change30d', { ns: 'trending' })}
             </th>
 
             {/* Market Cap */}
@@ -222,22 +222,22 @@ const TokenListTable = ({
               onSort={onSort}
               className="cell cell-market-cap text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap"
             >
-              <span>Market Cap</span>
+              <span>{t('tokenListTable.marketCap', { ns: 'trending' })}</span>
             </SortableColumnHeader>
 
             {/* Volume (30d) — xl+ only */}
             <th className="cell cell-volume text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
-              Volume (30d)
+              {t('tokenListTable.volume30d', { ns: 'trending' })}
             </th>
 
             {/* Circulating Supply — xl+ only */}
             <th className="cell cell-supply text-xs opacity-50 text-right py-1 px-3 whitespace-nowrap">
-              Circ. Supply
+              {t('tokenListTable.circSupply', { ns: 'trending' })}
             </th>
 
             {/* Sparkline */}
             <th className="cell cell-chart text-xs text-right opacity-50 py-1 pl-3 pr-2 whitespace-nowrap">
-              {isCompactTable ? null : <span>All Time</span>}
+              {isCompactTable ? null : <span>{t('tokenListTable.allTime', { ns: 'trending' })}</span>}
             </th>
 
             <th className="cell-link">{/* Links placeholder */}</th>

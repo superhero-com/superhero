@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DexService } from '../../../api/generated';
 import { TokenListCards } from '../../../components/explore/components/TokenListCards';
 import { TokenListTable } from '../../../components/explore/components/TokenListTable';
@@ -15,6 +16,7 @@ interface PaginatedResponse<T> {
 }
 
 const DexExploreTokens = () => {
+  const { t } = useTranslation();
   const [sort, setSort] = useState<'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume'>(
     '30dvolume',
   );
@@ -55,11 +57,10 @@ const DexExploreTokens = () => {
         {/* Header Card */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3">
-            Explore Tokens
+            {t('dex.exploreTokens.title')}
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
-            Browse and interact with all available tokens on the æternity
-            ecosystem.
+            {t('dex.exploreTokens.description')}
           </p>
         </div>
 
@@ -92,17 +93,11 @@ const DexExploreTokens = () => {
             {/* Pagination Info */}
             <div className="flex items-center gap-2 order-2 md:order-1">
               <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                Showing
-                {' '}
-                {(page - 1) * limit + 1}
-                -
-                {Math.min(page * limit, data.meta.totalItems)}
-                {' '}
-                of
-                {' '}
-                {data.meta.totalItems}
-                {' '}
-                tokens
+                {t('dex.exploreTokens.showingRange', {
+                  from: (page - 1) * limit + 1,
+                  to: Math.min(page * limit, data.meta.totalItems),
+                  total: data.meta.totalItems,
+                })}
               </span>
             </div>
 
@@ -117,9 +112,9 @@ const DexExploreTokens = () => {
                   ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                   : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
                 }`}
-                title="Previous page"
+                title={t('dex.exploreTokens.previousPage')}
               >
-                ← Prev
+                {t('dex.exploreTokens.prev')}
               </button>
 
               {/* Page Number Display */}
@@ -128,9 +123,7 @@ const DexExploreTokens = () => {
                   {page}
                 </span>
                 <span className="text-sm text-[var(--light-font-color)]">
-                  of
-                  {' '}
-                  {Math.ceil(data.meta.totalItems / limit)}
+                  {t('dex.exploreTokens.ofPages', { pages: Math.ceil(data.meta.totalItems / limit) })}
                 </span>
               </div>
 
@@ -143,9 +136,9 @@ const DexExploreTokens = () => {
                   ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
                   : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
                 }`}
-                title="Next page"
+                title={t('dex.exploreTokens.nextPage')}
               >
-                Next →
+                {t('dex.exploreTokens.next')}
               </button>
             </div>
           </div>
@@ -154,10 +147,10 @@ const DexExploreTokens = () => {
         {data?.items.length === 0 && !isLoading && (
           <div className="text-center py-15 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] mt-5">
             <div className="text-[var(--light-font-color)] text-base font-medium mb-2">
-              No tokens found
+              {t('dex.noTokensFound')}
             </div>
             <div className="text-[var(--light-font-color)] text-sm opacity-70">
-              Try adjusting your search criteria
+              {t('dex.exploreTokens.tryAdjustingSearch')}
             </div>
           </div>
         )}

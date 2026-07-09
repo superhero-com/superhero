@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IconClose } from '@/icons';
 
 interface RepoData {
@@ -37,6 +38,7 @@ const LANG_COLORS: Record<string, string> = {
 export const GitHubCard = ({
   owner, repo, url, onDismiss,
 }: GitHubCardProps) => {
+  const { t } = useTranslation();
   const [data, setData] = useState<RepoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -87,7 +89,7 @@ export const GitHubCard = ({
             type="button"
             onClick={onDismiss}
             className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-            aria-label="Dismiss"
+            aria-label={t('social.dismiss')}
           >
             <IconClose className="w-3 h-3 text-white" />
           </button>
@@ -120,7 +122,7 @@ export const GitHubCard = ({
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(); }}
           className="absolute top-2 right-2 z-10 bg-black/60 rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors"
-          aria-label="Dismiss"
+          aria-label={t('social.dismiss')}
         >
           <IconClose className="w-3 h-3 text-white" />
         </button>

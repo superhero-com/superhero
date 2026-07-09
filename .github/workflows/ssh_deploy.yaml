@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run deploy script
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1
         env:
           VERSION: "${{ inputs.VERSION }}"
           SHA: "${{ github.sha }}"

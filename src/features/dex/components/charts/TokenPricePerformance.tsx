@@ -4,10 +4,13 @@ import React, {
 import {
   createChart, IChartApi, ISeriesApi, ColorType, LineSeries, HistogramSeries, MismatchDirection,
 } from 'lightweight-charts';
+import { useTranslation } from 'react-i18next';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import { formatFractionalPrice } from '@/utils/common';
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
 import { AeCard } from '../../../../components/ui/ae-card';
+import { Decimal } from '../../../../libs/decimal';
 
 interface ChartType {
   type: string;
@@ -36,6 +39,15 @@ type TimeFrame = keyof typeof TIME_FRAMES;
 
 const BAR_CHART_TYPES = ['TVL', 'Volume', 'Fees', 'Locked'];
 
+// Price series can hold values far below the axis' fixed step (e.g. 0.0000001032),
+// which lightweight-charts' fixed-precision formatter renders as a flat
+// "0.0000000". Reuse the same compressed-zeros style used for the token's own
+// price ("0.0 (7) 1032") so tiny prices stay distinguishable on axis/crosshair.
+const formatChartPrice = (price: number): string => {
+  const formatted = formatFractionalPrice(Decimal.from(price));
+  return formatted.value ?? formatted.number;
+};
+
 const TokenPricePerformance = ({
   availableGraphTypes,
   initialChart,
@@ -44,6 +56,7 @@ const TokenPricePerformance = ({
   tokenId,
   className = '',
 }: TokenPricePerformanceProps) => {
+  const { t } = useTranslation('dex');
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
@@ -52,14 +65,20 @@ const TokenPricePerformance = ({
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>(initialTimeFrame as TimeFrame);
   const [selectedChart, setSelectedChart] = useState<ChartType>(initialChart);
   const [loading, setLoading] = useState(false);
+  // Tracks whether the currently selected timeframe actually has points to plot,
+  // so the "No data" overlay reflects what's on screen rather than the raw,
+  // pre-filter response.
+  const [hasPlottedData, setHasPlottedData] = useState(false);
   const [chartData, setChartData] = useState<{
     labels: number[];
     data: number[];
     graphType: string;
+    unit: string | null;
   }>({
     labels: [],
     data: [],
     graphType: '',
+    unit: null,
   });
 
   const isBarChart = BAR_CHART_TYPES.includes(selectedChart.type);
@@ -69,7 +88,8 @@ const TokenPricePerformance = ({
     if (!chartContainerRef.current) return () => {};
 
     const chart = createChart(chartContainerRef.current, {
-      height: 400,
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#ffffff',
@@ -101,11 +121,13 @@ const TokenPricePerformance = ({
 
     chartRef.current = chart;
 
-    // Handle resize
+    // Handle resize - keep both width and height in sync with the container so
+    // the time (date) axis is never clipped by the card's fixed height/padding.
     const handleResize = () => {
       if (chartContainerRef.current && chart) {
         chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
         });
       }
     };
@@ -224,14 +246,24 @@ const TokenPricePerformance = ({
   }, []);
 
   const updateChartData = useCallback(() => {
-    if (!seriesRef.current || !chartData.labels.length) return;
+    if (!seriesRef.current || !chartData.labels.length) {
+      setHasPlottedData(false);
+      // Clear any series carried over from a previous chart type/timeframe so
+      // the canvas actually goes empty behind the "No data" overlay.
+      seriesRef.current?.setData([]);
+      return;
+    }
 
-    const now = Date.now() / 1000;
     const timeFrameHours = TIME_FRAMES[selectedTimeFrame];
-    const minTime = timeFrameHours === Infinity ? 0 : now - (timeFrameHours * 3600);
+
+    // lightweight-charts rejects series values outside ±(MAX_SAFE_INTEGER/100)
+    // and throws, which crashes the whole page. Degenerate DEX data (e.g. a
+    // dust-state transaction in a near-empty pool) can yield absurd prices like
+    // 5e17, so drop out-of-range / non-finite points instead of plotting them.
+    const CHART_VALUE_LIMIT = 90071992547409.91;
 
     // Convert data format - TradingView expects Unix timestamps in seconds
-    const rawData = chartData.labels
+    const valuePoints = chartData.labels
       .map((timestamp, index) => {
         // Ensure timestamp is in seconds (not milliseconds)
         const timeInSeconds = timestamp > 1e10 ? Math.floor(timestamp / 1000) : timestamp;
@@ -240,6 +272,20 @@ const TokenPricePerformance = ({
           value: Number(chartData.data[index]) || 0,
         };
       })
+      .filter(
+        (item) => Number.isFinite(item.value) && Math.abs(item.value) < CHART_VALUE_LIMIT,
+      );
+
+    // Anchor the visible window to the most recent available data point instead
+    // of the wall-clock now. Otherwise a token whose latest trade is older than
+    // the selected window (e.g. a 1Y window for a token last traded 13 months
+    // ago) filters out every point and renders an empty chart.
+    const latestTime = valuePoints.length
+      ? valuePoints.reduce((max, item) => (item.time > max ? item.time : max), valuePoints[0].time)
+      : Date.now() / 1000;
+    const minTime = timeFrameHours === Infinity ? 0 : latestTime - (timeFrameHours * 3600);
+
+    const rawData = valuePoints
       .filter((item) => timeFrameHours === Infinity || item.time >= minTime)
       .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
 
@@ -264,6 +310,8 @@ const TokenPricePerformance = ({
       }
     });
 
+    setHasPlottedData(formattedData.length > 0);
+
     if (formattedData.length > 0) {
       seriesRef.current.setData(formattedData);
 
@@ -271,6 +319,10 @@ const TokenPricePerformance = ({
       if (chartRef.current) {
         chartRef.current.timeScale().fitContent();
       }
+    } else {
+      // Clear any series left over from a previous timeframe/chart type so the
+      // canvas matches the (empty) "No data" state.
+      seriesRef.current.setData([]);
     }
   }, [chartData, selectedTimeFrame]);
 
@@ -289,13 +341,29 @@ const TokenPricePerformance = ({
     }
 
     // Create new series based on chart type
+    const precision = ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6;
     const seriesOptions = {
       color: 'rgb(0, 255, 157)',
-      priceFormat: {
-        type: 'price' as const,
-        precision: ['TVL', 'Fees', 'Volume'].includes(selectedChart.type) ? 2 : 6,
-        minMove: 0.01,
-      },
+      priceFormat: selectedChart.type === 'Price'
+        ? {
+          // Custom formatter keeps sub-step prices readable instead of rounding
+          // them to a flat "0.0000000" (see formatChartPrice). The formatter
+          // receives the raw price, so the crosshair stays exact regardless of
+          // minMove. Keep minMove at 1e-9 (not 1e-18): the tick builder computes
+          // price / minMove, and a 1e-18 step overflows MAX_SAFE_INTEGER for
+          // ordinary prices (0.25 / 1e-18 = 2.5e17), which NaNs the price scale
+          // and renders nothing. 1e-9 still resolves very small prices.
+          type: 'custom' as const,
+          formatter: formatChartPrice,
+          minMove: 1 / 10 ** 9,
+        }
+        : {
+          type: 'price' as const,
+          precision,
+          // minMove must match the precision, otherwise tiny token prices
+          // (e.g. 0.00005) get rounded to the nearest 0.01 and render as 0.000000.
+          minMove: 1 / 10 ** precision,
+        },
     };
 
     if (isBarChart) {
@@ -335,11 +403,28 @@ const TokenPricePerformance = ({
           labels: result.labels?.map((l: any) => Number(l)) || [],
           data: result.data?.map((d: any) => Number(d)) || [],
           graphType: result.graphType || selectedChart.type,
+          unit: result.unit ?? null,
+        });
+      } else {
+        // getGraph returns null for chart types the backend has no series for
+        // (e.g. TVL/Fees/Locked). Without resetting here, chartData keeps the
+        // previous selection's points and the canvas would keep rendering the
+        // old series (e.g. Price) under the new selection with no "No data" overlay.
+        setChartData({
+          labels: [],
+          data: [],
+          graphType: selectedChart.type,
+          unit: null,
         });
       }
     } catch (error) {
       console.error('Failed to fetch chart data:', error);
-      setChartData({ labels: [], data: [], graphType: selectedChart.type });
+      setChartData({
+        labels: [],
+        data: [],
+        graphType: selectedChart.type,
+        unit: null,
+      });
     } finally {
       setLoading(false);
     }
@@ -358,10 +443,27 @@ const TokenPricePerformance = ({
     setSelectedChart(chartType);
   };
 
-  const showNoData = !chartData.data.length || chartData.data.every((d) => d === 0);
+  // Reflect what's actually plotted for the selected timeframe, not the raw
+  // pre-filter response — otherwise a window that filters out every point would
+  // render a blank canvas with no overlay.
+  const showNoData = !loading && !hasPlottedData;
 
   return (
     <div className={`${className}`}>
+      {/* Denomination — make the price chart's unit explicit, and clearly warn
+          when the series is NOT in AE (the token has no AE pool, so 0.25 here
+          means 0.25 of another token, not 0.25 AE). */}
+      {selectedChart.type === 'Price' && chartData.unit && (
+        <div
+          className={`mb-2 text-xs font-medium ${
+            chartData.unit === 'ae' ? 'text-white/50' : 'text-amber-400'
+          }`}
+        >
+          {chartData.unit === 'ae'
+            ? 'Price in AE'
+            : `Price in ${chartData.unit} — no AE pool, so this is not an AE price`}
+        </div>
+      )}
       {/* Chart Type Selector */}
       {availableGraphTypes.length > 1 && (
         <div className="flex gap-2 mb-3">
@@ -382,7 +484,7 @@ const TokenPricePerformance = ({
           {/* Mobile dropdown */}
           <div className="md:hidden border border-border rounded-xl p-2">
             <label htmlFor="chart-select" className="sr-only">
-              Select Chart Type
+              {t('tokenPricePerformance.selectChartType')}
             </label>
             <AppSelect
               value={selectedChart.type}
@@ -413,14 +515,14 @@ const TokenPricePerformance = ({
         {/* Loading Overlay */}
         {loading && (
           <div className="absolute inset-0 flex justify-center items-center text-3xl bg-background/20 rounded-xl">
-            <div className="text-foreground">Loading...</div>
+            <div className="text-foreground">{t('tokenPricePerformance.loading')}</div>
           </div>
         )}
 
         {/* No Data Overlay */}
-        {showNoData && !loading && (
+        {showNoData && (
           <div className="absolute inset-0 flex justify-center items-center text-3xl text-muted-foreground">
-            No Data
+            {t('tokenPricePerformance.noData')}
           </div>
         )}
       </AeCard>

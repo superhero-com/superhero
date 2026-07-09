@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import TokenTopicFeed from '@/features/social/components/TokenTopicFeed';
 import TokenTopicComposer from '@/features/social/components/TokenTopicComposer';
+import { useTranslation } from 'react-i18next';
 
 type TokenFeedTabProps = {
   token: TokenDto;
@@ -22,6 +23,7 @@ export const TokenFeedTab = ({
   showTradePanels,
   setShowTradePanels,
 }: TokenFeedTabProps) => {
+  const { t } = useTranslation('trending');
   const holdersOnly = useMemo(
     () => _holdersOnly && !!token.sale_address,
     [_holdersOnly, token.sale_address],
@@ -32,8 +34,7 @@ export const TokenFeedTab = ({
       <div className="flex items-center justify-between gap-2 flex-wrap px-1">
         {!isMobile && (
           <h3 className="m-0 text-white/90 font-semibold">
-            Posts for #
-            {String(token.name || token.symbol || '').toUpperCase()}
+            {t('feedTab.postsForHashtag', { name: String(token.name || token.symbol || '').toUpperCase() })}
           </h3>
         )}
         {(!isMobile && token.sale_address) && (
@@ -47,7 +48,7 @@ export const TokenFeedTab = ({
                 : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md'
               }`}
             >
-              {showTradePanels ? 'Hide graphs' : 'Trade'}
+              {showTradePanels ? t('feedTab.hideGraphs') : t('feedTab.trade')}
             </button>
           </div>
         )}
@@ -69,7 +70,7 @@ export const TokenFeedTab = ({
                   : 'bg-transparent text-white/65 hover:text-white'
                 }`}
               >
-                Holders only
+                {t('feedTab.holdersOnly')}
               </button>
             )
           }
@@ -81,7 +82,7 @@ export const TokenFeedTab = ({
               : 'bg-transparent text-white/65 hover:text-white'
             }`}
           >
-            All posts
+            {t('feedTab.allPosts')}
           </button>
         </div>
       </div>

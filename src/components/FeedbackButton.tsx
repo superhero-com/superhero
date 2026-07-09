@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks';
 
 const FeedbackButton = () => {
+  const { t } = useTranslation('common');
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
   const isMobile = useIsMobile();
@@ -30,8 +32,8 @@ const FeedbackButton = () => {
           background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
           color: '#0a0a0f',
         }}
-        aria-label="Send Feedback"
-        title="Send Feedback"
+        aria-label={t('buttons.sendFeedback')}
+        title={t('buttons.sendFeedback')}
       >
         <MessageSquare
           className={`w-5 h-5 transition-transform duration-300 ${isHovered ? 'rotate-12' : ''}`}
@@ -42,7 +44,7 @@ const FeedbackButton = () => {
             className="text-sm font-semibold whitespace-nowrap animate-in fade-in slide-in-from-right-2 duration-300"
             style={{ color: '#0a0a0f' }}
           >
-            Send Feedback
+            {t('buttons.sendFeedback')}
           </span>
         )}
       </button>
@@ -53,7 +55,7 @@ const FeedbackButton = () => {
           <button
             type="button"
             className="absolute inset-0 cursor-default"
-            aria-label="Close feedback modal"
+            aria-label={t('feedback.closeOverlayAria')}
             onClick={() => setShowMobilePopup(false)}
           />
           <div
@@ -66,7 +68,7 @@ const FeedbackButton = () => {
               type="button"
               onClick={() => setShowMobilePopup(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"
-              aria-label="Close"
+              aria-label={t('buttons.close')}
             >
               <X className="w-5 h-5 text-white" />
             </button>
@@ -81,15 +83,15 @@ const FeedbackButton = () => {
                 <MessageSquare className="w-6 h-6" style={{ color: '#0a0a0f' }} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Send Feedback</h3>
-                <p className="text-sm text-white/70">Help us improve Superhero</p>
+                <h3 className="text-lg font-bold text-white">{t('buttons.sendFeedback')}</h3>
+                <p className="text-sm text-white/70">{t('feedback.subtitle')}</p>
               </div>
             </div>
 
             <p className="text-sm text-white/80 mb-6">
-              Found a bug or have a suggestion?
+              {t('feedback.line1')}
               <br />
-              Click below to report it on GitHub and help us make Superhero better!
+              {t('feedback.line2')}
             </p>
 
             <div className="flex gap-3">
@@ -98,7 +100,7 @@ const FeedbackButton = () => {
                 onClick={() => setShowMobilePopup(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
-                Cancel
+                {t('buttons.cancel')}
               </button>
               <button
                 type="button"
@@ -112,7 +114,7 @@ const FeedbackButton = () => {
                   color: '#0a0a0f',
                 }}
               >
-                Open GitHub
+                {t('feedback.openGitHub')}
               </button>
             </div>
           </div>

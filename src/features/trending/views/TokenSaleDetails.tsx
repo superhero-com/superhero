@@ -14,6 +14,8 @@ import {
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
+import { collectionLabel } from '@/utils/collection';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -81,6 +83,7 @@ function mobileTabBtnClass(tokenDoesNotExist: boolean, isActive: boolean): strin
 }
 
 const TokenSaleDetails = () => {
+  const { t } = useTranslation();
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -337,9 +340,9 @@ const TokenSaleDetails = () => {
     const target = tokenSaleAddress || tokenAddressValue;
     if (!target) return false;
 
-    return ownedTokens.some((t: any) => {
-      const addr = String(t?.address || '').toLowerCase();
-      const sale = String(t?.sale_address || '').toLowerCase();
+    return ownedTokens.some((owned: any) => {
+      const addr = String(owned?.address || '').toLowerCase();
+      const sale = String(owned?.sale_address || '').toLowerCase();
       return addr === target || sale === target;
     });
   }, [token, ownedTokens]);
@@ -384,19 +387,19 @@ const TokenSaleDetails = () => {
               <div className="flex items-center gap-4 min-w-max">
                 {[
                   {
-                    id: TAB_CHAT, label: 'Feed', Icon: Flame, requiresToken: false,
+                    id: TAB_CHAT, label: t('trending.tokenSale.tabFeed'), Icon: Flame, requiresToken: false,
                   },
                   {
-                    id: TAB_TRADE, label: 'Trade', Icon: BarChart3, requiresToken: true,
+                    id: TAB_TRADE, label: t('trending.tokenSale.tabTrade'), Icon: BarChart3, requiresToken: true,
                   },
                   {
-                    id: TAB_DETAILS, label: 'Info', Icon: Info, requiresToken: false,
+                    id: TAB_DETAILS, label: t('trending.tokenSale.tabInfo'), Icon: Info, requiresToken: false,
                   },
                   {
-                    id: TAB_TRANSACTIONS, label: 'Transactions', Icon: TrendingUp, requiresToken: true,
+                    id: TAB_TRANSACTIONS, label: t('trending.tokenSale.tabTransactions'), Icon: TrendingUp, requiresToken: true,
                   },
                   {
-                    id: TAB_HOLDERS, label: 'Holders', Icon: Users, requiresToken: true,
+                    id: TAB_HOLDERS, label: t('trending.tokenSale.tabHolders'), Icon: Users, requiresToken: true,
                   },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -414,7 +417,7 @@ const TokenSaleDetails = () => {
                         setActiveTab(tab.id as TabType);
                       }}
                       className={`pb-1 transition-colors ${tabBorderClass(isDisabled, isActive)}`}
-                      title={isDisabled ? 'Create the token to unlock this feature' : undefined}
+                      title={isDisabled ? t('trending.tokenSale.createTokenToUnlock') : undefined}
                     >
                       <span className="flex items-center gap-1">
                         {isDisabled ? (
@@ -444,10 +447,10 @@ const TokenSaleDetails = () => {
             </div>
             <div>
               <h3 className="font-semibold text-green-400">
-                Token Deployed Successfully!
+                {t('trending.tokenSale.tokenDeployedSuccessfully')}
               </h3>
               <p className="text-green-300/70 text-sm">
-                Your token is now live on the blockchain.
+                {t('trending.tokenSale.tokenNowLive')}
               </p>
             </div>
           </div>
@@ -479,12 +482,20 @@ const TokenSaleDetails = () => {
                     </h1>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      {collectionLabel((token as any)?.collection) && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-white/10 text-white/70 text-xs font-medium px-2.5 py-1 rounded-full border-0"
+                        >
+                          {collectionLabel((token as any)?.collection)}
+                        </Badge>
+                      )}
                       {tokenDoesNotExist ? (
                         <Badge
                           variant="secondary"
                           className="bg-gradient-to-r from-orange-600/80 to-red-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
                         >
-                          NOT CREATED
+                          {t('trending.tokenSale.badgeNotCreated')}
                         </Badge>
                       ) : (
                         <>
@@ -493,13 +504,12 @@ const TokenSaleDetails = () => {
                               variant="secondary"
                               className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
                             >
-                              RANK #
-                              {token.rank}
+                              {t('trending.tokenSale.badgeRank', { rank: token.rank })}
                             </Badge>
                           )}
                           {ownsThisToken && (
                             <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
-                              OWNED
+                              {t('trending.tokenSale.badgeOwned')}
                             </Badge>
                           )}
                         </>
@@ -539,14 +549,14 @@ const TokenSaleDetails = () => {
                         onClick={() => setDescriptionExpanded(!descriptionExpanded)}
                         className="text-purple-400 hover:text-white ml-2 p-0 h-auto font-medium underline-offset-2 hover:underline"
                       >
-                        {descriptionExpanded ? 'Show Less' : 'Show More'}
+                        {descriptionExpanded ? t('trending.tokenSale.showLess') : t('trending.tokenSale.showMore')}
                       </Button>
                     )}
                   </div>
                 )}
                 {tokenDoesNotExist && (
                   <div className="text-white/50 text-sm leading-relaxed mt-3 max-w-[720px] italic">
-                    This token hasn&apos;t been created yet. You can be the first to create it and share what it&apos;s all about!
+                    {t('trending.tokenSale.tokenNotCreatedHeaderHint')}
                   </div>
                 )}
               </div>
@@ -574,7 +584,7 @@ const TokenSaleDetails = () => {
                 )}
               >
                 <span className="flex items-center justify-center gap-1.5">
-                  Posts
+                  {t('trending.tokenSale.tabPosts')}
                 </span>
               </button>
               <button
@@ -582,11 +592,11 @@ const TokenSaleDetails = () => {
                 disabled={tokenDoesNotExist}
                 onClick={() => !tokenDoesNotExist && setActiveTab(TAB_TRANSACTIONS)}
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${mobileTabBtnClass(tokenDoesNotExist, activeTab === TAB_TRANSACTIONS)}`}
-                title={tokenDoesNotExist ? 'Create the token to unlock this feature' : undefined}
+                title={tokenDoesNotExist ? t('trending.tokenSale.createTokenToUnlock') : undefined}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   {tokenDoesNotExist && <Lock className="h-3 w-3" />}
-                  Transactions
+                  {t('trending.tokenSale.tabTransactions')}
                 </span>
               </button>
               <button
@@ -594,11 +604,11 @@ const TokenSaleDetails = () => {
                 disabled={tokenDoesNotExist}
                 onClick={() => !tokenDoesNotExist && setActiveTab(TAB_HOLDERS)}
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${mobileTabBtnClass(tokenDoesNotExist, activeTab === TAB_HOLDERS)}`}
-                title={tokenDoesNotExist ? 'Create the token to unlock this feature' : undefined}
+                title={tokenDoesNotExist ? t('trending.tokenSale.createTokenToUnlock') : undefined}
               >
                 <span className="flex items-center justify-center gap-1.5">
                   {tokenDoesNotExist && <Lock className="h-3 w-3" />}
-                  Holders
+                  {t('trending.tokenSale.tabHolders')}
                   {!tokenDoesNotExist && ` (${token?.holders_count || 0})`}
                 </span>
               </button>
@@ -633,10 +643,10 @@ const TokenSaleDetails = () => {
                       </svg>
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">
-                      Token Not Created Yet
+                      {t('trending.tokenSale.tokenNotCreatedYet')}
                     </h3>
                     <p className="text-white/60 text-sm mb-4">
-                      This token doesn&apos;t exist yet. Be the first to create it and start building a community!
+                      {t('trending.tokenSale.tokenNotCreatedYetHint')}
                     </p>
                     <Button
                       size="lg"
@@ -651,7 +661,7 @@ const TokenSaleDetails = () => {
                         border: 'none',
                       }}
                     >
-                      Create This Token
+                      {t('trending.tokenSale.createThisToken')}
                     </Button>
                   </div>
                 </Card>
@@ -666,10 +676,10 @@ const TokenSaleDetails = () => {
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
-                      Trading Not Available
+                      {t('trending.tokenSale.tradingNotAvailable')}
                     </h3>
                     <p className="text-white/60 text-sm mb-4">
-                      Create the token first to enable trading.
+                      {t('trending.tokenSale.tradingNotAvailableHint')}
                     </p>
                   </div>
                 </Card>
@@ -706,10 +716,10 @@ const TokenSaleDetails = () => {
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
-                      No Transactions Yet
+                      {t('trending.tokenSale.noTransactionsYet')}
                     </h3>
                     <p className="text-white/60 text-sm mb-4">
-                      Create the token first to see transactions.
+                      {t('trending.tokenSale.noTransactionsYetHint')}
                     </p>
                   </div>
                 </Card>
@@ -724,10 +734,10 @@ const TokenSaleDetails = () => {
                   <div className="text-center">
                     <Lock className="w-16 h-16 mx-auto mb-4 text-white/20" />
                     <h3 className="text-lg font-bold text-white mb-2">
-                      No Holders Yet
+                      {t('trending.tokenSale.noHoldersYet')}
                     </h3>
                     <p className="text-white/60 text-sm mb-4">
-                      Create the token first to see holders.
+                      {t('trending.tokenSale.noHoldersYetHint')}
                     </p>
                   </div>
                 </Card>
@@ -768,10 +778,10 @@ const TokenSaleDetails = () => {
                         </svg>
                       </div>
                       <h3 className="text-lg font-bold text-white mb-2">
-                        Create Token
+                        {t('trending.tokenSale.createToken')}
                       </h3>
                       <p className="text-white/60 text-sm mb-4">
-                        This token doesn&apos;t exist yet. Be the first to create it!
+                        {t('trending.tokenSale.createTokenSidebarHint')}
                       </p>
                       <Button
                         size="lg"
@@ -855,12 +865,12 @@ const TokenSaleDetails = () => {
             background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
             color: '#0a0a0f',
           }}
-          aria-label="Add new post"
-          title="Add new post"
+          aria-label={t('trending.tokenSale.addNewPost')}
+          title={t('trending.tokenSale.addNewPost')}
         >
           <Plus className="w-5 h-5" style={{ color: '#0a0a0f' }} />
           <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#0a0a0f' }}>
-            Add new post
+            {t('trending.tokenSale.addNewPost')}
           </span>
         </button>
       )}

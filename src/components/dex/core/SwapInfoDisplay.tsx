@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DexTokenDto } from '../../../api/generated';
 import { useDex } from '../../../hooks';
 import { CONFIG } from '../../../config';
@@ -29,6 +30,7 @@ export default function SwapInfoDisplay({
   tokens,
   isExactIn,
 }: SwapInfoDisplayProps) {
+  const { t } = useTranslation('dex');
   const { slippagePct } = useDex();
 
   // Calculate minimum received amount
@@ -95,7 +97,7 @@ export default function SwapInfoDisplay({
         {minimumReceived && (
         <div className="flex justify-between items-center py-1">
           <span className="text-sm text-white/70 font-medium">
-            Minimum Received
+            {t('minimumReceived')}
           </span>
           <div className="text-right">
             <div className="text-sm font-semibold text-white">
@@ -112,7 +114,7 @@ export default function SwapInfoDisplay({
         {formattedPriceImpact && (
         <div className="flex justify-between items-center py-1">
           <span className="text-sm text-white/70 font-medium">
-            Price Impact
+            {t('priceImpact')}
           </span>
           <span className={`text-sm font-semibold ${routeInfo.priceImpact && routeInfo.priceImpact > 10 ? 'text-red-400'
             : routeInfo.priceImpact && routeInfo.priceImpact > 5 ? 'text-yellow-400'

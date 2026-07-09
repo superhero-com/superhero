@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy } from 'lucide-react';
 import { copyToClipboard } from '../../../utils/address';
 
@@ -8,6 +9,7 @@ interface InlineCopyButtonProps {
 }
 
 const InlineCopyButton = ({ value, className = '' }: InlineCopyButtonProps) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -28,8 +30,8 @@ const InlineCopyButton = ({ value, className = '' }: InlineCopyButtonProps) => {
         copied ? 'text-emerald-300' : '',
         className,
       ].join(' ')}
-      aria-label={copied ? 'Copied address' : 'Copy address'}
-      title={copied ? 'Copied' : 'Copy address'}
+      aria-label={copied ? t('social.copiedAddress') : t('common.wallet.copyAddress')}
+      title={copied ? t('common.buttons.copied') : t('common.wallet.copyAddress')}
     >
       <Copy className="h-3.5 w-3.5" />
     </button>

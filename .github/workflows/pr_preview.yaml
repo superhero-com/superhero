@@ -1,0 +1,187 @@
+name: Preview PR
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+
+env:
+  ENV: "stg"
+  APP: "superhero"
+
+concurrency: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    name: build
+    concurrency:
+      group: build-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+      cancel-in-progress: true
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
+    outputs:
+      branch_slug: ${{ steps.slug.outputs.branch_slug }}
+      pr_number: ${{ steps.slug.outputs.pr_number }}
+      short_sha: ${{ steps.slug.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Resolve slug (PR number if available, else branch name)
+        id: slug
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          SLUG=""
+          PR_NUM=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+            SLUG="pr-${PR_NUM}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            SLUG="$(echo '${{ github.ref_name }}' | sed 's|/|-|g')"
+          else
+            PR_NUM="$(gh pr list --repo ${{ github.repository }} --head '${{ github.ref_name }}' --state open --json number --jq '.[0].number // ""' || true)"
+            if [ -n "$PR_NUM" ]; then
+              SLUG="pr-${PR_NUM}"
+            else
+              SLUG="$(echo '${{ github.ref_name }}' | sed 's|/|-|g')"
+            fi
+          fi
+          if [ -z "$SLUG" ]; then
+            echo "::error::Could not resolve a non-empty branch slug for event '${{ github.event_name }}' ref '${{ github.ref_name }}'"
+            exit 1
+          fi
+          echo "branch_slug=${SLUG}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUM}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHA:0:7}" >> $GITHUB_OUTPUT
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata for docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_REPO }}
+          tags: |
+            type=raw,value=${{ steps.slug.outputs.branch_slug }}
+
+      # Collect every secret whose name starts with one of PREFIXES and emit it as a
+      # KEY=VALUE build-arg line, so new matching secrets are picked up automatically
+      # without editing this workflow. PREFIXES is a space-separated list.
+      # eg. PREFIXES: "VITE_ NEXT_PUBLIC_"
+      - name: Collect prefixed secrets as build-args
+        id: vite_args
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          PREFIXES: "VITE_"
+        run: |
+          {
+            echo 'build_args<<__BUILD_ARGS_EOF__'
+            echo "$SECRETS_JSON" | jq -r --arg prefixes "$PREFIXES" '
+              ($prefixes | split(" ") | map(select(length > 0))) as $p
+              | to_entries[]
+              | select(.key as $k | $p | any(. as $pre | $k | startswith($pre)))
+              | "\(.key)=\(.value)"
+            '
+            echo '__BUILD_ARGS_EOF__'
+          } >> "$GITHUB_OUTPUT"
+      - name: Build and push docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          provenance: false
+          no-cache: ${{ github.event_name == 'workflow_dispatch' || github.run_attempt > 1 }}
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
+          build-args: |
+            ${{ steps.vite_args.outputs.build_args }}
+
+  stg_deploy:
+    runs-on: ubuntu-latest
+    name: PR deploy
+    concurrency:
+      group: preview-deploy-${{ github.event.pull_request.head.ref || github.ref_name }}
+      cancel-in-progress: false
+    needs: main
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    env:
+      BRANCH_SLUG: ${{ needs.main.outputs.branch_slug }}
+      PR_NUMBER: ${{ needs.main.outputs.pr_number }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: aeternity/gitops-apps-superhero
+          ref: stg
+          token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Check the initial PR deployment status
+        continue-on-error: true
+        id: status
+        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        with:
+          url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          timeout: 10
+
+      - name: Staging deploy
+        id: deploy
+        if: steps.status.outputs.status_code != '200'
+        uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
+        with:
+          url-prefix: ${{ env.BRANCH_SLUG }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+          domain: service.aepps.com
+          git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Staging PR Sync
+        id: sync
+        if: steps.status.outputs.status_code == '200'
+        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
+        with:
+          git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
+          url-prefix: ${{ env.BRANCH_SLUG }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+          domain: service.aepps.com
+
+      - name: Push changes
+        if: steps.deploy.outcome == 'success' || steps.sync.outcome == 'success'
+        run: git pull --rebase origin stg && git push origin stg
+
+      - name: Print PR url
+        uses: peter-evans/create-or-update-comment@v5
+        if: github.event.action == 'opened'
+        with:
+          issue-number: ${{ env.PR_NUMBER }}
+          body: |
+            ### 🔎️ Preview Link for Commit: `${{ needs.main.outputs.short_sha }}`
+            https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+
+      - name: Wait for the deployment to go live
+        continue-on-error: true
+        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        with:
+          url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
+          timeout: 300
+          interval: 5

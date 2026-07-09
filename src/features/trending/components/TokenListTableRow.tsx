@@ -2,6 +2,7 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Decimal } from '../../../libs/decimal';
 import { TokenLineChart } from './TokenLineChart';
@@ -42,6 +43,7 @@ const TokenListTableRow = ({
   useCollectionRank = false,
   rank,
 }: TokenListTableRowProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const tokenAddress = useMemo(() => token.address, [token.address]);
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
@@ -106,7 +108,7 @@ const TokenListTableRow = ({
         onKeyDown={handleRowKeyDown}
         tabIndex={0}
         role="link"
-        aria-label={`View ${tokenLabel}`}
+        aria-label={t('common.aria.viewToken', { token: tokenLabel })}
       >
         {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />
@@ -118,9 +120,11 @@ const TokenListTableRow = ({
 
         {/* Name + Market Cap */}
         <td className="cell cell-name py-3 pl-2 pr-1 align-middle">
-          <div className="text-[13px] font-bold text-white truncate">
-            <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-            {token.symbol || token.name}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="text-[13px] font-bold text-white truncate">
+              <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+              {token.symbol || token.name}
+            </div>
           </div>
           <div className="text-[11px] text-white/40 mt-0.5 tabular-nums">
             <PriceDataFormatter
@@ -167,7 +171,7 @@ const TokenListTableRow = ({
         onKeyDown={handleRowKeyDown}
         tabIndex={0}
         role="link"
-        aria-label={`View ${tokenLabel}`}
+        aria-label={t('common.aria.viewToken', { token: tokenLabel })}
       >
         {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
         <td className="cell-fake" />
@@ -181,9 +185,11 @@ const TokenListTableRow = ({
         <td className="cell cell-name px-3">
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 flex-1">
-              <div className="token-name text-sm font-bold text-white truncate">
-                <span className="text-white/40 text-[.85em] mr-0.5">#</span>
-                {token.symbol || token.name}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="token-name text-sm font-bold text-white truncate">
+                  <span className="text-white/40 text-[.85em] mr-0.5">#</span>
+                  {token.symbol || token.name}
+                </div>
               </div>
               {token.name && token.symbol && token.name !== token.symbol && (
                 <div className="text-[11px] text-white/40 truncate leading-3 mt-0.5">

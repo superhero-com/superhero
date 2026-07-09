@@ -105,9 +105,9 @@ const DaoVoteDetailsContent = ({
   };
 
   const getVoteStatusText = () => {
-    if (!isOpen) return 'Closed';
-    if (voteYesPercentage && voteYesPercentage > 0.5) return 'Passing';
-    return 'Open';
+    if (!isOpen) return t('voteStatus.closed');
+    if (voteYesPercentage && voteYesPercentage > 0.5) return t('voteStatus.passing');
+    return t('voteStatus.open');
   };
 
   if (isLoading) {
@@ -124,7 +124,7 @@ const DaoVoteDetailsContent = ({
   if (error) {
     return (
       <div className="text-red-400 p-4">
-        Error loading token:
+        {t('errorLoadingToken')}
         {' '}
         {error.message}
       </div>
@@ -159,7 +159,7 @@ const DaoVoteDetailsContent = ({
                   to={`/trends/dao/${saleAddress}`}
                   className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
                 >
-                  ← Back to Treasury
+                  {t('backToTreasury')}
                 </Link>
               </div>
 
@@ -170,8 +170,7 @@ const DaoVoteDetailsContent = ({
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xl font-semibold text-white">
-                        Vote #
-                        {voteId}
+                        {t('voteNumber', { voteId })}
                       </CardTitle>
                       <Badge
                         variant="secondary"
@@ -254,14 +253,14 @@ const DaoVoteDetailsContent = ({
                       <div className="space-y-3">
                         {voteState?.metadata?.link && (
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-                            <span className="text-white/60 font-medium min-w-[120px]">Link:</span>
+                            <span className="text-white/60 font-medium min-w-[120px]">{t('linkLabel')}</span>
                             <a
                               href={voteState.metadata.link}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-400 hover:text-blue-300 underline"
                             >
-                              View Proposal
+                              {t('viewProposal')}
                             </a>
                           </div>
                         )}
@@ -292,29 +291,17 @@ const DaoVoteDetailsContent = ({
                       <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                         <div className="text-center space-y-4">
                           <div className="text-yellow-400 font-medium">
-                            You need
-                            {' '}
-                            {token.symbol}
-                            {' '}
-                            tokens to participate in this vote
+                            {t('needTokensToVote', { symbol: token.symbol })}
                           </div>
                           <div className="text-white/80 text-sm">
-                            Get
-                            {' '}
-                            {token.symbol}
-                            {' '}
-                            tokens to vote on this proposal
+                            {t('getTokensToVote', { symbol: token.symbol })}
                           </div>
                           <Link
                             to={`/trends/tokens/${token.symbol}`}
                             className="inline-block"
                           >
                             <Button variant="outline" size="sm" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20">
-                              Get
-                              {' '}
-                              {token.symbol}
-                              {' '}
-                              Tokens
+                              {t('getTokensButton', { symbol: token.symbol })}
                             </Button>
                           </Link>
                         </div>
@@ -332,7 +319,7 @@ const DaoVoteDetailsContent = ({
                             disabled={actionLoading}
                             className="border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
                           >
-                            Vote Yes
+                            {t('voteYes')}
                           </Button>
                           <Button
                             variant="outline"
@@ -341,7 +328,7 @@ const DaoVoteDetailsContent = ({
                             disabled={actionLoading}
                             className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
                           >
-                            Vote No
+                            {t('voteNo')}
                           </Button>
                         </div>
                       )}
@@ -354,7 +341,7 @@ const DaoVoteDetailsContent = ({
                           disabled={actionLoading}
                           className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
                         >
-                          Revoke Vote
+                          {t('revokeVote')}
                         </Button>
                       )}
 
@@ -366,7 +353,7 @@ const DaoVoteDetailsContent = ({
                           disabled={actionLoading}
                           className="border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
                         >
-                          Withdraw
+                          {t('withdraw')}
                         </Button>
                       )}
 
@@ -377,7 +364,7 @@ const DaoVoteDetailsContent = ({
                           disabled={actionLoading}
                           className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
                         >
-                          Apply
+                          {t('apply')}
                         </Button>
                       )}
 
@@ -396,7 +383,7 @@ const DaoVoteDetailsContent = ({
 
                 <Card className="bg-white/[0.02] border-white/10">
                   <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-white">Voters</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-white">{t('voters.title')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <VotersTable voteState={voteState} token={token} />

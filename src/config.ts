@@ -15,8 +15,6 @@ type CommonConfig = {
   POPULAR_FEED_ENABLED: boolean;
   /** X (Twitter) OAuth 2.0 client id for "Connect X" (PKCE flow). If unset, Connect X is hidden. */
   X_OAUTH_CLIENT_ID?: string;
-  /** Profile registry contract used for profile writes/reads. */
-  PROFILE_REGISTRY_CONTRACT_ADDRESS?: Encoded.ContractAddress;
 };
 
 /**
@@ -72,11 +70,6 @@ export const COMMON_CONFIG = {
   TESTNET_DEX_BACKEND_URL: 'https://dex-backend-testnet.prd.service.aepps.com',
   POPULAR_FEED_ENABLED: true,
   X_OAUTH_CLIENT_ID: (process.env as any).VITE_X_OAUTH_CLIENT_ID ?? '',
-  PROFILE_REGISTRY_CONTRACT_ADDRESS: (
-    (import.meta as any)?.env?.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS
-    || (typeof process !== 'undefined' && (process as any).env?.VITE_PROFILE_REGISTRY_CONTRACT_ADDRESS)
-    || ''
-  ) as Encoded.ContractAddress,
 } satisfies CommonConfig;
 
 export const NETWORKS: Record<Network, NetworkDefinition> = {

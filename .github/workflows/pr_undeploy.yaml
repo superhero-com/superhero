@@ -1,0 +1,63 @@
+name: Preview PR Cleanup on Close
+
+on:
+  pull_request:
+    types: [closed]
+  delete:
+
+env:
+  ENV: "stg"
+  APP: "superhero"
+
+jobs:
+  stg_undeploy:
+    runs-on: ubuntu-latest
+    name: PR undeploy on close or branch delete
+    if: github.event_name == 'pull_request' || (github.event_name == 'delete' && github.event.ref_type == 'branch')
+    concurrency:
+      group: preview-deploy-${{ github.event.pull_request.head.ref || github.event.ref }}
+      cancel-in-progress: false
+    env:
+      BRANCH_SLUG: ""
+
+    steps:
+      - name: Compute branch slug
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SLUG="pr-${{ github.event.pull_request.number }}"
+          else
+            PR="$(gh pr list --repo ${{ github.repository }} --head '${{ github.event.ref }}' --state all --json number --jq '.[0].number // ""' || true)"
+            if [ -n "$PR" ]; then
+              SLUG="pr-${PR}"
+            else
+              SLUG="$(echo '${{ github.event.ref }}' | sed 's|/|-|g')"
+            fi
+          fi
+          if [ -z "$SLUG" ]; then
+            echo "::error::Could not resolve a non-empty branch slug for event '${{ github.event_name }}'"
+            exit 1
+          fi
+          echo "BRANCH_SLUG=${SLUG}" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v6
+        with:
+          repository: aeternity/gitops-apps-superhero
+          ref: stg
+          token: ${{ secrets.NPM_GITHUB_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Staging undeploy
+        id: undeploy
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
+        with:
+          url-prefix: ${{ env.BRANCH_SLUG }}
+          env: ${{ env.ENV }}
+          app: ${{ env.APP }}
+          domain: service.aepps.com
+
+      - name: Push changes
+        if: steps.undeploy.conclusion == 'success'
+        run: git pull --rebase origin stg && git push origin stg

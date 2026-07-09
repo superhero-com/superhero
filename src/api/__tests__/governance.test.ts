@@ -2,9 +2,12 @@ import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { GovernanceApi } from '../governance';
+import { CONFIG } from '../../config';
 
 const mockFetch = vi.fn();
-const GOVERNANCE_API_URL = 'https://governance-server-mainnet.prd.service.aepps.com';
+// Derive from the active config (mainnet vs testnet via VITE_NETWORK) the same way
+// the client does, so these path/options assertions hold on either network.
+const GOVERNANCE_API_URL = CONFIG.GOVERNANCE_API_URL.replace(/\/$/, '');
 
 describe('GovernanceApi', () => {
   beforeEach(() => {

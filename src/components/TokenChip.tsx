@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useAeSdk } from '../hooks';
 import { copyToClipboard } from '../utils/address';
@@ -30,6 +31,7 @@ export const TokenChip = ({
   showAddress = false,
   showName = true,
 }: TokenChipProps) => {
+  const { t } = useTranslation();
   const { activeNetwork } = useAeSdk();
   const [textCopied, setTextCopied] = useState(false);
 
@@ -86,7 +88,7 @@ export const TokenChip = ({
       )}
       style={style}
       onClick={handleChipClick}
-      title={copyable ? 'Click to copy token address' : data?.name || address}
+      title={copyable ? t('common.titles.clickToCopyTokenAddress') : data?.name || address}
     >
       {/* Token Symbol */}
       <span className={cn(
@@ -129,7 +131,7 @@ export const TokenChip = ({
       {/* Copied feedback */}
       {textCopied && (
         <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
-          Copied!
+          {t('common.messages.copiedExclaim')}
         </div>
       )}
     </Badge>

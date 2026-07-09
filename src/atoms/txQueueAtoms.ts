@@ -3,13 +3,82 @@ import { atom, SetStateAction } from 'jotai';
 
 export type TxQueueEntry = {
   status: string;
-  tx: Encoded.Transaction;
   signUrl: string;
+  tx?: Encoded.Transaction;
   transaction?: Encoded.Transaction;
+  message?: string;
+  signature?: string;
+};
+
+export type MessageSignRequest = {
+  type: 'address-link-x-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-x-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
+  type: 'address-link-bio-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-bio-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
+  type: 'address-link-prefaens-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-prefaens-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
+  type: 'address-link-site-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-site-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
+  type: 'profile-update';
+  address: string;
+  payload: Record<string, string>;
+  // The signed challenge string. Required so the tx-queue callback can submit the PATCH
+  // itself when the wallet returns in a standalone tab with no opener polling.
+  message: string;
+} | {
+  type: 'profile-chain-name-claim';
+  address: string;
+  name: string;
+  challenge_nonce: string;
+  challenge_expires_at: string;
+  // The signed challenge string, so the tx-queue callback can submit the sponsored claim
+  // itself when the wallet returns in a standalone tab with no opener polling.
+  message: string;
 };
 
 export const TX_QUEUE_ACK_CHANNEL = 'txQueue:ack';
 export const TX_QUEUE_RESULT_PREFIX = 'txQueue:result:';
+export const TX_QUEUE_REQUEST_PREFIX = 'txQueue:request:';
 
 // atomWithBroadcast implementation for cross-tab communication
 function atomWithBroadcast<Value>(key: string, initialValue: Value) {

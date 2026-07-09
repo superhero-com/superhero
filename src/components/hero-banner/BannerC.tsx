@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import BannerContent from './BannerContent';
+import BannerDaoCard from './BannerDaoCard';
 
 const BannerC = () => {
   const { t } = useTranslation('banners');
@@ -14,6 +15,7 @@ const BannerC = () => {
       primaryButtonLink="/trends/create"
       secondaryButtonText={t('bannerC.secondaryButton')}
       secondaryButtonLink="/trends/daos"
+      visual={<BannerDaoCard />}
     />
   );
 };

@@ -142,11 +142,12 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 
 /* Typography */
 .banner-h1 {
-  font-size: clamp(26px, 4.4vw, 48px);
+  font-size: clamp(22px, 2.2vw, 31px);
   font-weight: 800;
-  line-height: 1.04;
-  margin: 4px 0 2px;
+  line-height: 1.08;
+  margin: 2px 0;
   letter-spacing: -0.01em;
+  text-wrap: balance;
   color: #ffffff !important;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
@@ -316,43 +317,45 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 }
 
 /* ===== Hero token-card showcase (reference-2 style, flagship 3D floating card) ===== */
-.banner-token-card {
-  position: absolute;
-  right: clamp(20px, 3vw, 56px);
-  top: 50%;
-  width: clamp(300px, 26vw, 380px);
-  transform: translateY(-50%) perspective(1400px) rotateY(-9deg) rotateX(3deg);
-  transform-origin: center right;
+.banner-copy { display: grid; gap: 8px; min-width: 0; }
+
+.banner-slide-card {
+  flex: 0 0 300px;
+  width: 300px;
   z-index: 3;
   pointer-events: none;
+  transform: perspective(1400px) rotateY(-8deg) rotateX(3deg);
+  transform-origin: center center;
   animation: btcFloat 7s ease-in-out infinite;
 }
-@media (max-width: 1100px) {
-  .banner-token-card { display: none; }
+/* Card is hidden until the banner column is wide enough (the banner lives in the ~700px feed column) */
+@media (max-width: 1200px) {
+  .banner-slide-card { display: none; }
 }
-/* Reserve the right side for the card so the headline never sits under it */
-@media (min-width: 1101px) {
-  .hero-banner__inner { margin: 0; max-width: 100%; padding-right: clamp(360px, 30vw, 460px); }
+/* Desktop: text + card side by side — flex adapts to the column width (not viewport vw) */
+@media (min-width: 1201px) {
+  .hero-banner__inner { display: flex; align-items: center; gap: 22px; max-width: 100%; margin: 0; padding-right: 24px; }
+  .banner-copy { flex: 1 1 0; }
   .banner-lede { padding-right: 0; }
-  /* The floating token card is the focal visual on desktop — dim the planet so it doesn't clash. */
-  .banner-planet { opacity: 0.38; }
+  /* The floating card is the focal visual — dim the planet so it doesn't clash. */
+  .banner-planet { opacity: 0.3; }
 }
 
-.banner-token-card__inner {
-  padding: 18px;
+.banner-slide-card__inner {
+  padding: 16px;
   display: grid;
-  gap: 12px;
+  gap: 11px;
   border-radius: var(--radius-xl, 14px);
 }
 
 @keyframes btcFloat {
-  0%, 100% { transform: translateY(-50%) perspective(1400px) rotateY(-9deg) rotateX(3deg); }
-  50% { transform: translateY(calc(-50% - 8px)) perspective(1400px) rotateY(-7deg) rotateX(2deg); }
+  0%, 100% { transform: perspective(1400px) rotateY(-8deg) rotateX(3deg) translateY(0); }
+  50% { transform: perspective(1400px) rotateY(-6deg) rotateX(2deg) translateY(-8px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .banner-token-card { animation: none; }
+  .banner-slide-card { animation: none; }
 }
-html.ios-webkit .banner-token-card { animation: none; transform: translateY(-50%); }
+html.ios-webkit .banner-slide-card { animation: none; transform: none; }
 
 .btc-head { display: flex; align-items: center; gap: 12px; }
 .btc-logo {
@@ -387,6 +390,46 @@ html.ios-webkit .banner-token-card { animation: none; transform: translateY(-50%
 .btc-stat-v { font-weight: 800; font-size: 17px; color: #fff; }
 .btc-stat-sub { font-size: 10px; font-weight: 700; color: var(--color-bull, #22c55e); }
 .btc-stat-sub--muted { color: var(--banner-muted, #cbd2ff); }
+
+/* ===== Slide A — social post + inline tip card ===== */
+.bpc-head { display: flex; align-items: center; gap: 10px; }
+.bpc-avatar { width: 40px; height: 40px; border-radius: 999px; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 16px; color: #fff; background: var(--gradient-brand-135); box-shadow: var(--glow-brand); }
+.bpc-id { display: grid; gap: 2px; min-width: 0; }
+.bpc-name { display: inline-flex; align-items: center; gap: 5px; font-weight: 800; font-size: 14px; color: #fff; }
+.bpc-sub { font-size: 11px; color: var(--banner-muted, #cbd2ff); }
+.bpc-chain { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--color-bull, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35); background: rgba(34, 197, 94, 0.08); padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.bpc-text { margin: 2px 0 0; font-size: 13px; line-height: 1.45; color: #eaf1ff; }
+.bpc-tag { color: #a78bfa; font-weight: 700; }
+.bpc-tip { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: var(--radius-btn, 8px); background: rgba(34, 197, 94, 0.10); border: 1px solid rgba(34, 197, 94, 0.28); }
+.bpc-tip-left { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #d7f5e3; }
+.bpc-tip-amt { font-weight: 800; font-size: 15px; color: var(--color-bull, #22c55e); }
+.bpc-receipt { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--banner-muted, #cbd2ff); }
+.bpc-receipt svg { color: var(--color-bull, #22c55e); }
+.bpc-stats { display: flex; gap: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px; }
+.bpc-stat { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--banner-muted, #cbd2ff); }
+.bpc-stat--bull { color: var(--color-bull, #22c55e); }
+
+/* ===== Slide C — Purpose-DAO treasury + vote card ===== */
+.bdc-head { display: flex; align-items: center; gap: 12px; }
+.bdc-logo { width: 44px; height: 44px; border-radius: 12px; flex: none; display: grid; place-items: center; background: var(--gradient-brand-135); box-shadow: var(--glow-brand); }
+.bdc-id { display: grid; gap: 3px; }
+.bdc-name { font-weight: 800; font-size: 16px; color: #fff; }
+.bdc-sub { font-size: 12px; color: var(--banner-muted, #cbd2ff); }
+.bdc-treasury { display: grid; gap: 2px; }
+.bdc-treasury-v { font-weight: 800; font-size: 30px; letter-spacing: -0.02em; color: #fff; }
+.bdc-treasury-usd { font-size: 11px; color: var(--banner-muted, #cbd2ff); }
+.bdc-prop { display: grid; gap: 8px; padding: 12px; border-radius: var(--radius-md, 10px); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); }
+.bdc-prop-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bdc-prop-title { font-size: 13px; font-weight: 700; color: #fff; }
+.bdc-prop-pill { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-bull, #22c55e); border: 1px solid var(--color-bull, #22c55e); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.bdc-bar { height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.10); overflow: hidden; }
+.bdc-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #22c55e, #4ade80); }
+.bdc-prop-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--banner-muted, #cbd2ff); }
+.bdc-for { color: var(--color-bull, #22c55e); font-weight: 700; }
+.bdc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px; }
+.bdc-stat { display: grid; gap: 3px; }
+.bdc-stat-lbl { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--banner-muted, #cbd2ff); }
+.bdc-stat-v { font-weight: 800; font-size: 17px; color: #fff; }
 
 .banner-micro {
   margin-top: 8px;

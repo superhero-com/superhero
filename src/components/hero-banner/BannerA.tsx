@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import BannerContent from './BannerContent';
+import BannerPostCard from './BannerPostCard';
 
 interface BannerAProps {
   onStartPosting?: () => void;
@@ -18,6 +19,7 @@ const BannerA = ({ onStartPosting }: BannerAProps) => {
       primaryButtonOnClick={onStartPosting}
       secondaryButtonText={t('bannerA.secondaryButton')}
       secondaryButtonLink="/faq"
+      visual={<BannerPostCard />}
     />
   );
 };

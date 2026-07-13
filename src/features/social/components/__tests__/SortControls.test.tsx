@@ -178,11 +178,12 @@ describe('SortControls', () => {
       matchMediaSpy.mockRestore();
     });
 
-    it('renders all 8 weight labels', () => {
+    it('renders all 10 weight labels', () => {
       renderControls();
       const expectedLabels = [
         'Comments', 'Tip Amount', 'Tip Count', 'Unique Tippers',
         'Trending Boost', 'Content Quality', 'Reads', 'Activity Rate',
+        'Freshness', 'Daily Shuffle',
       ];
       expectedLabels.forEach((label) => {
         expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
@@ -191,9 +192,9 @@ describe('SortControls', () => {
 
     it('renders low/med/high toggles for each weight', () => {
       renderControls();
-      expect(screen.getAllByText('low').length).toBeGreaterThanOrEqual(8);
-      expect(screen.getAllByText('med').length).toBeGreaterThanOrEqual(8);
-      expect(screen.getAllByText('high').length).toBeGreaterThanOrEqual(8);
+      expect(screen.getAllByText('low').length).toBeGreaterThanOrEqual(10);
+      expect(screen.getAllByText('med').length).toBeGreaterThanOrEqual(10);
+      expect(screen.getAllByText('high').length).toBeGreaterThanOrEqual(10);
     });
 
     it('calls onPopularWeightsChange when clicking a weight value', () => {

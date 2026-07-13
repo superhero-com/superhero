@@ -65,6 +65,8 @@ describe('SuperheroApi.listPopularPosts', () => {
         contentQuality: 'med',
         reads: 'high',
         interactionsPerHour: 'low',
+        freshness: 'high',
+        randomness: 'med',
       },
     });
     const url = getCalledUrl();
@@ -76,6 +78,8 @@ describe('SuperheroApi.listPopularPosts', () => {
     expect(url).toContain('contentQuality=med');
     expect(url).toContain('reads=high');
     expect(url).toContain('interactionsPerHour=low');
+    expect(url).toContain('freshness=high');
+    expect(url).toContain('randomness=med');
   });
 
   it('skips undefined weight values', async () => {

@@ -1714,7 +1714,9 @@
         "trendingBoost": "Trending Boost",
         "contentQuality": "Content Quality",
         "reads": "Reads",
-        "interactionsPerHour": "Activity Rate"
+        "interactionsPerHour": "Activity Rate",
+        "freshness": "Freshness",
+        "randomness": "Daily Shuffle"
       },
       "customizePopularFeedAria": "Customize popular feed"
     },

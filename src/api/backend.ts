@@ -511,7 +511,7 @@ export const SuperheroApi = {
     page?: number;
     limit?: number;
     weights?: Partial<Record<
-      'comments'|'tipsAmountAE'|'tipsCount'|'uniqueTippers'|'trendingBoost'|'contentQuality'|'reads'|'interactionsPerHour',
+      'comments'|'tipsAmountAE'|'tipsCount'|'uniqueTippers'|'trendingBoost'|'contentQuality'|'reads'|'interactionsPerHour'|'freshness'|'randomness',
       'low'|'med'|'high'
     >>;
   } = {}) {

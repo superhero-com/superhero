@@ -28,7 +28,9 @@ export type WeightKey =
   | 'trendingBoost'
   | 'contentQuality'
   | 'reads'
-  | 'interactionsPerHour';
+  | 'interactionsPerHour'
+  | 'freshness'
+  | 'randomness';
 
 export type WeightValue = 'low' | 'med' | 'high';
 
@@ -43,6 +45,8 @@ const WEIGHT_LABEL_KEYS: Record<WeightKey, string> = {
   contentQuality: 'social.sortControls.weights.contentQuality',
   reads: 'social.sortControls.weights.reads',
   interactionsPerHour: 'social.sortControls.weights.interactionsPerHour',
+  freshness: 'social.sortControls.weights.freshness',
+  randomness: 'social.sortControls.weights.randomness',
 };
 
 const WEIGHT_KEYS = Object.keys(WEIGHT_LABEL_KEYS) as WeightKey[];

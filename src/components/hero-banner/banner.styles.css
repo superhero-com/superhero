@@ -784,7 +784,13 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
 }
 
 .hero-collapsed__text.is-marquee .hero-collapsed__text-inner {
-  animation: collapsedMarquee 11s ease-in-out infinite;
+  animation-name: collapsedMarquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  /* !important + specificity beat the global mobile `* { animation-duration:
+     0.2s !important }` in mobile-optimizations.scss, which would otherwise
+     make the marquee whip across in a fraction of a second. */
+  animation-duration: var(--marquee-duration, 18s) !important;
 }
 
 @keyframes collapsedMarquee {

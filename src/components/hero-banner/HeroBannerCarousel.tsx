@@ -42,11 +42,18 @@ const MarqueeText = ({ text }: { text: string }) => {
     return () => ro.disconnect();
   }, [text]);
 
+  // Constant, readable scroll speed (~45px/s). The travel occupies ~41% of the
+  // cycle each way, so scale the whole cycle with the overflow distance.
+  const duration = Math.min(80, Math.max(16, Math.round(distance / 18)));
+
   return (
     <span
       ref={outerRef}
       className={`hero-collapsed__text ${distance ? 'is-marquee' : ''}`}
-      style={distance ? ({ '--marquee-x': `-${distance}px` } as React.CSSProperties) : undefined}
+      style={distance ? ({
+        '--marquee-x': `-${distance}px`,
+        '--marquee-duration': `${duration}s`,
+      } as React.CSSProperties) : undefined}
     >
       <span ref={innerRef} className="hero-collapsed__text-inner">{text}</span>
     </span>
@@ -65,7 +72,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   }, []);
 
   const autoplayPlugin = React.useRef(
-    isIOSWebKit ? null : Autoplay({ delay: 8000, stopOnInteraction: false }),
+    isIOSWebKit ? null : Autoplay({ delay: 10000, stopOnInteraction: false }),
   );
 
   const emblaPlugins = React.useMemo(() => (
@@ -84,13 +91,13 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   );
 
   // Separate carousel instance for the dismissed / collapsed one-line state,
-  // so it keeps its own autoplay + swipe just like the expanded version.
-  // NB: loop is intentionally off here — in loop mode Embla re-inits (when the
-  // feed below finishes loading) and rests the first slide a few px off, which
-  // reveals a sliver of the next line. trimSnaps keeps every snap flush, and
-  // Autoplay rewinds to the first slide at the end, so it still auto-advances.
+  // so it keeps its own autoplay + swipe just like the expanded version. It
+  // loops (stable with the centered peek layout) and dwells long enough on
+  // each card to read the title before advancing.
   const collapsedAutoplay = React.useRef(
-    isIOSWebKit ? null : Autoplay({ delay: 6000, stopOnInteraction: false, stopOnLastSnap: false }),
+    isIOSWebKit
+      ? null
+      : Autoplay({ delay: 12000, stopOnInteraction: false, stopOnLastSnap: false }),
   );
   const collapsedPlugins = React.useMemo(() => (
     collapsedAutoplay.current ? [collapsedAutoplay.current] : []

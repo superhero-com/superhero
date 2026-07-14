@@ -689,7 +689,8 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   opacity: 0.65;
 }
 
-/* Collapsed one-line announcement bar (shown after Dismiss) */
+/* Collapsed one-line bar (shown after Dismiss) — itself a swipeable,
+   auto-playing carousel: one line per slide (title + primary action). */
 .hero-collapsed {
   width: 100%;
   display: flex;
@@ -699,6 +700,25 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   border-radius: 16px;
   background: linear-gradient(90deg, rgba(122, 92, 255, 0.14), rgba(122, 92, 255, 0.02));
   border: 1px solid rgba(122, 92, 255, 0.26);
+}
+
+.hero-collapsed__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hero-collapsed__container {
+  display: flex;
+  width: 100%;
+}
+
+.hero-collapsed__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .hero-collapsed__badge {
@@ -739,6 +759,16 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.15s ease;
+  /* reset button appearance so <button> matches the <a> variant */
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.hero-collapsed__link::after {
+  content: " →";
 }
 
 .hero-collapsed__link:hover {

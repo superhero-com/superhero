@@ -21,6 +21,7 @@ interface HeroBannerCarouselProps {
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const { t } = useTranslation();
   const { t: tSocial } = useTranslation('social');
+  const { t: tBanners } = useTranslation('banners');
   const [collapsed, setCollapsed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isIOSWebKit = React.useMemo(() => {
@@ -46,6 +47,61 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     emblaOptions,
     emblaPlugins,
   );
+
+  // Separate carousel instance for the dismissed / collapsed one-line state,
+  // so it keeps its own autoplay + swipe just like the expanded version.
+  // NB: loop is intentionally off here — in loop mode Embla re-inits (when the
+  // feed below finishes loading) and rests the first slide a few px off, which
+  // reveals a sliver of the next line. trimSnaps keeps every snap flush, and
+  // Autoplay rewinds to the first slide at the end, so it still auto-advances.
+  const collapsedAutoplay = React.useRef(
+    isIOSWebKit ? null : Autoplay({ delay: 6000, stopOnInteraction: false, stopOnLastSnap: false }),
+  );
+  const collapsedPlugins = React.useMemo(() => (
+    collapsedAutoplay.current ? [collapsedAutoplay.current] : []
+  ), []);
+  const collapsedOptions = React.useMemo(() => ({
+    loop: false,
+    duration: isIOSWebKit ? 16 : 20,
+    align: 'start' as const,
+    containScroll: 'trimSnaps' as const,
+  }), [isIOSWebKit]);
+  const [collapsedEmblaRef] = useEmblaCarousel(collapsedOptions, collapsedPlugins);
+
+  // One-line version of every slide: title + its primary action as a text link.
+  const collapsedSlides = [
+    {
+      key: 'new',
+      badge: tSocial('feedAnnouncement.new'),
+      text: tSocial('feedAnnouncement.text'),
+      cta: 'Install now',
+      link: '/landing',
+    },
+    {
+      key: 'a',
+      text: tBanners('bannerA.title'),
+      cta: tBanners('bannerA.primaryButton'),
+      onClick: onStartPosting,
+    },
+    {
+      key: 'b',
+      text: tBanners('bannerB.title'),
+      cta: tBanners('bannerB.primaryButton'),
+      link: '/trends/create',
+    },
+    {
+      key: 'c',
+      text: tBanners('bannerC.title'),
+      cta: tBanners('bannerC.primaryButton'),
+      link: '/trends/create',
+    },
+    {
+      key: 'd',
+      text: 'Create or buy a #trend. Then make it move.',
+      cta: 'Tokenize #trend',
+      link: '/trends/create',
+    },
+  ];
 
   // Check if banner was dismissed (collapsed to the one-line bar)
   useEffect(() => {
@@ -90,6 +146,14 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     }
   }, []);
 
+  const handleCollapsedMouseEnter = useCallback(() => {
+    if (collapsedAutoplay.current) collapsedAutoplay.current.stop();
+  }, []);
+
+  const handleCollapsedMouseLeave = useCallback(() => {
+    if (collapsedAutoplay.current) collapsedAutoplay.current.play();
+  }, []);
+
   const handleDismiss = () => {
     try {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -129,15 +193,39 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
 
   if (collapsed) {
     return (
-      <div className="hero-collapsed">
-        <span className="hero-collapsed__badge">
-          <Sparkles aria-hidden="true" />
-          {tSocial('feedAnnouncement.new')}
-        </span>
-        <span className="hero-collapsed__text">{tSocial('feedAnnouncement.text')}</span>
-        <a href="/landing" className="hero-collapsed__link">
-          {tSocial('feedAnnouncement.installNow')}
-        </a>
+      <div
+        className="hero-collapsed"
+        onMouseEnter={handleCollapsedMouseEnter}
+        onMouseLeave={handleCollapsedMouseLeave}
+      >
+        <div className="hero-collapsed__viewport" ref={collapsedEmblaRef}>
+          <div className="hero-collapsed__container">
+            {collapsedSlides.map((slide) => (
+              <div className="hero-collapsed__slide" key={slide.key}>
+                {slide.badge && (
+                  <span className="hero-collapsed__badge">
+                    <Sparkles aria-hidden="true" />
+                    {slide.badge}
+                  </span>
+                )}
+                <span className="hero-collapsed__text">{slide.text}</span>
+                {slide.onClick ? (
+                  <button
+                    type="button"
+                    onClick={slide.onClick}
+                    className="hero-collapsed__link"
+                  >
+                    {slide.cta}
+                  </button>
+                ) : (
+                  <a href={slide.link} className="hero-collapsed__link">
+                    {slide.cta}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
         <button
           type="button"
           onClick={handleExpand}

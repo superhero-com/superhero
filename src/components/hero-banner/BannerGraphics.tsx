@@ -58,9 +58,6 @@ export const AvailabilityGraphic = () => (
         <span className="bmini__list-v">Openclaw / Claude</span>
       </li>
     </ul>
-    <div className="bmini__row">
-      <span className="bmini__chip">Self-custodial wallet</span>
-    </div>
   </div>
 );
 

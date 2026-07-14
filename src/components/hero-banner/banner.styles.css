@@ -20,8 +20,8 @@
 
 .hero-banner {
   position: relative;
-  min-height: 380px;
-  padding: clamp(16px, 2vw, 24px);
+  min-height: 300px;
+  padding: clamp(12px, 1.5vw, 18px);
   display: grid;
   align-items: center;
   isolation: isolate;
@@ -119,7 +119,7 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
 }
 
 .banner-layout__graphic {
@@ -995,14 +995,15 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
     display: none;
   }
 
-  /* Increase title font size on mobile */
+  /* Title size on mobile; keep first line clear of the Dismiss control */
   .banner-h1 {
-    font-size: clamp(24px, 5vw, 42px);
+    font-size: clamp(20px, 4.4vw, 27px);
+    padding-right: 92px;
   }
 
   /* Reduce banner height on mobile */
   .hero-banner {
-    min-height: 280px;
+    min-height: 220px;
     animation-duration: 45s !important;
   }
 

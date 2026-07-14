@@ -5,10 +5,10 @@
   background: rgba(10, 12, 30, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  padding: 12px;
+  padding: 11px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   backdrop-filter: blur(12px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.15s;

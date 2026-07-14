@@ -1,0 +1,308 @@
+/* BannerD – "Create or buy a #trend" slide */
+
+.banner-d {
+  display: flex;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 40px;
+  position: relative;
+  z-index: 4;
+  align-items: flex-start;
+}
+
+/* Left column */
+.banner-d__left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banner-d__title {
+  font-size: clamp(20px, 3.5vw, 34px);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+  color: #ffffff !important;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  animation: fadeUp 0.9s ease both 0.05s;
+}
+
+.banner-d__accent {
+  font-style: italic;
+  background: linear-gradient(90deg, #38ffb3, #00e5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.banner-d__desc {
+  max-width: 50ch;
+  color: var(--banner-muted);
+  font-size: clamp(13px, 1.8vw, 15px);
+  line-height: 1.4;
+  margin: 4px 0;
+  animation: fadeUp 0.9s ease both 0.12s;
+}
+
+/* Pipeline steps */
+.banner-d__pipeline {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 4px;
+  animation: fadeUp 0.9s ease both 0.2s;
+}
+
+.banner-d__step {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.banner-d__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--banner-pu);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.banner-d__badge--start {
+  background: linear-gradient(90deg, #38ffb3, #00e5ff);
+  color: #0a1820;
+}
+
+.banner-d__step-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.banner-d__step-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #eaf1ff;
+  line-height: 1.2;
+  white-space: pre-line;
+}
+
+.banner-d__step-desc {
+  font-size: 9px;
+  color: var(--banner-muted);
+  line-height: 1.25;
+  opacity: 0.8;
+}
+
+/* Footer */
+.banner-d__footer {
+  font-size: 12px;
+  color: var(--banner-muted);
+  line-height: 1.4;
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeUp 0.9s ease both 0.28s;
+}
+
+.banner-d__bolt {
+  color: var(--banner-cy);
+  font-weight: 800;
+}
+
+.banner-d__footer-highlight {
+  color: var(--banner-gr);
+  font-weight: 600;
+}
+
+/* Right column – market card */
+.banner-d__right {
+  flex: 0 0 280px;
+  max-width: 280px;
+}
+
+.banner-d__card {
+  background: rgba(10, 12, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+  animation: fadeUp 0.9s ease both 0.15s;
+}
+
+.banner-d__card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.banner-d__card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7a5cff, #38ffb3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+}
+
+.banner-d__card-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.banner-d__card-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+}
+
+.banner-d__card-sub {
+  font-size: 10px;
+  color: var(--banner-muted);
+  opacity: 0.7;
+}
+
+.banner-d__card-actions {
+  display: flex;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.banner-d__card-star,
+.banner-d__card-dots {
+  cursor: default;
+}
+
+.banner-d__card-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.banner-d__card-change {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--banner-gr);
+}
+
+.banner-d__card-chart {
+  width: 100%;
+  height: 60px;
+  margin: 4px 0;
+}
+
+.banner-d__card-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Stats grid */
+.banner-d__card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.banner-d__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.banner-d__stat-label {
+  font-size: 9px;
+  color: var(--banner-muted);
+  opacity: 0.7;
+}
+
+.banner-d__stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.banner-d__stat-delta {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.banner-d__stat-delta--up {
+  color: var(--banner-gr);
+}
+
+.banner-d__stat-delta--live {
+  color: var(--banner-cy);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .banner-d {
+    flex-direction: column;
+    padding: 0;
+    gap: 16px;
+  }
+
+  .banner-d__right {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .banner-d__title {
+    font-size: clamp(22px, 5vw, 36px);
+  }
+
+  .banner-d__pipeline {
+    gap: 3px;
+  }
+
+  .banner-d__step-desc {
+    display: none;
+  }
+
+  .banner-d__card {
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-d__title,
+  .banner-d__desc,
+  .banner-d__pipeline,
+  .banner-d__footer,
+  .banner-d__card {
+    animation: none !important;
+  }
+}

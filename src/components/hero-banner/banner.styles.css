@@ -170,19 +170,30 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   .banner-layout {
     padding: 4px 4px 22px;
     align-items: stretch;
+    height: 100%;
   }
 
   .banner-layout__top {
+    flex: 1 1 auto;
+    min-height: 0;
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
 
+  /* Graphic fills the whole remaining space below the text/buttons */
   .banner-layout__graphic {
-    flex: none;
+    flex: 1 1 auto;
+    min-height: 0;
     width: 100%;
-    max-width: 320px;
-    align-self: center;
+    max-width: none;
+    align-self: stretch;
+    display: flex;
+  }
+
+  .banner-layout__graphic .bmini {
+    height: 100%;
+    justify-content: center;
   }
 
   .banner-layout__actions {

@@ -183,7 +183,7 @@ describe('SortControls', () => {
       const expectedLabels = [
         'Comments', 'Tip Amount', 'Tip Count', 'Unique Tippers',
         'Trending Boost', 'Content Quality', 'Reads', 'Activity Rate',
-        'Freshness', 'Daily Shuffle',
+        'Freshness', 'Shuffle',
       ];
       expectedLabels.forEach((label) => {
         expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);

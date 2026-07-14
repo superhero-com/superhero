@@ -510,6 +510,7 @@ export const SuperheroApi = {
   listPopularPosts(params: {
     page?: number;
     limit?: number;
+    seed?: number;
     weights?: Partial<Record<
       'comments'|'tipsAmountAE'|'tipsCount'|'uniqueTippers'|'trendingBoost'|'contentQuality'|'reads'|'interactionsPerHour'|'freshness'|'randomness',
       'low'|'med'|'high'
@@ -518,6 +519,7 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (params.page != null) qp.set('page', String(params.page));
     if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.seed != null) qp.set('seed', String(params.seed));
     if (params.weights) {
       Object.entries(params.weights).forEach(([key, value]) => {
         if (value) qp.set(key, value);

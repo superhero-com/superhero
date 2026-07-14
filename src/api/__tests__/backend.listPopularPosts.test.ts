@@ -115,4 +115,23 @@ describe('SuperheroApi.listPopularPosts', () => {
     const params = new URL(url).searchParams;
     expect([...params.keys()]).toEqual(['page', 'limit']);
   });
+
+  it('appends seed param when provided', async () => {
+    await SuperheroApi.listPopularPosts({
+      page: 1,
+      limit: 10,
+      seed: 123456789,
+    });
+    const url = getCalledUrl();
+    expect(url).toContain('seed=123456789');
+  });
+
+  it('does not append seed when not provided', async () => {
+    await SuperheroApi.listPopularPosts({
+      page: 1,
+      limit: 10,
+    });
+    const url = getCalledUrl();
+    expect(url).not.toContain('seed=');
+  });
 });

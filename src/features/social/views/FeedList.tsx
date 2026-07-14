@@ -119,6 +119,7 @@ const FeedList = ({
 
   const [popularWeights, setPopularWeights] = useState<PopularWeights>({});
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
+  const shuffleSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -399,12 +400,13 @@ const FeedList = ({
     refetch: refetchPopular,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot',
-    queryKey: ['popular-posts', { limit: 10, weights: popularWeights }],
+    queryKey: ['popular-posts', { limit: 10, weights: popularWeights, seed: shuffleSeed.current }],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await SuperheroApi.listPopularPosts({
         page: pageParam as number,
         limit: 10,
         weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
+        seed: shuffleSeed.current,
       });
       return response as PostApiResponse;
     },

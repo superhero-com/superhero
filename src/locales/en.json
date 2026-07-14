@@ -1716,7 +1716,7 @@
         "reads": "Reads",
         "interactionsPerHour": "Activity Rate",
         "freshness": "Freshness",
-        "randomness": "Daily Shuffle"
+        "randomness": "Shuffle"
       },
       "customizePopularFeedAria": "Customize popular feed"
     },

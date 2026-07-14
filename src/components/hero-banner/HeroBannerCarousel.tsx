@@ -18,6 +18,41 @@ interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
 }
 
+/**
+ * One line of collapsed text. When the text is too long to fit it slowly
+ * scrolls to the end and back (ping-pong), with both edges faded so it reads
+ * as "…text…". Short text that fits shows statically.
+ */
+const MarqueeText = ({ text }: { text: string }) => {
+  const outerRef = React.useRef<HTMLSpanElement>(null);
+  const innerRef = React.useRef<HTMLSpanElement>(null);
+  const [distance, setDistance] = useState(0);
+
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return undefined;
+    const measure = () => {
+      const overflow = inner.scrollWidth - outer.clientWidth;
+      setDistance(overflow > 6 ? overflow : 0);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, [text]);
+
+  return (
+    <span
+      ref={outerRef}
+      className={`hero-collapsed__text ${distance ? 'is-marquee' : ''}`}
+      style={distance ? ({ '--marquee-x': `-${distance}px` } as React.CSSProperties) : undefined}
+    >
+      <span ref={innerRef} className="hero-collapsed__text-inner">{text}</span>
+    </span>
+  );
+};
+
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const { t } = useTranslation();
   const { t: tSocial } = useTranslation('social');
@@ -61,10 +96,10 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     collapsedAutoplay.current ? [collapsedAutoplay.current] : []
   ), []);
   const collapsedOptions = React.useMemo(() => ({
-    loop: false,
+    loop: !isIOSWebKit,
     duration: isIOSWebKit ? 16 : 20,
     align: 'center' as const,
-    containScroll: 'trimSnaps' as const,
+    containScroll: false as const,
   }), [isIOSWebKit]);
   const [collapsedEmblaRef, collapsedEmblaApi] = useEmblaCarousel(
     collapsedOptions,
@@ -73,20 +108,8 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   const [collapsedIndex, setCollapsedIndex] = useState(0);
 
   // One-line version of every slide: title + its primary action as a text link.
+  // Order mirrors the expanded carousel (last three slides moved to the front).
   const collapsedSlides = [
-    {
-      key: 'new',
-      badge: tSocial('feedAnnouncement.new'),
-      text: tSocial('feedAnnouncement.text'),
-      cta: 'Install now',
-      link: '/landing',
-    },
-    {
-      key: 'a',
-      text: tBanners('bannerA.title'),
-      cta: tBanners('bannerA.primaryButton'),
-      onClick: onStartPosting,
-    },
     {
       key: 'b',
       text: tBanners('bannerB.title'),
@@ -104,6 +127,19 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       text: 'Create or buy a #trend. Then make it move.',
       cta: 'Tokenize #trend',
       link: '/trends/create',
+    },
+    {
+      key: 'new',
+      badge: tSocial('feedAnnouncement.new'),
+      text: tSocial('feedAnnouncement.text'),
+      cta: 'Install now',
+      link: '/landing',
+    },
+    {
+      key: 'a',
+      text: tBanners('bannerA.title'),
+      cta: tBanners('bannerA.primaryButton'),
+      onClick: onStartPosting,
     },
   ];
 
@@ -228,7 +264,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
                     {slide.badge}
                   </span>
                 )}
-                <span className="hero-collapsed__text">{slide.text}</span>
+                <MarqueeText text={slide.text} />
                 {slide.onClick ? (
                   <button
                     type="button"
@@ -292,12 +328,6 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
         <div className="hero-banner__viewport" ref={emblaRef}>
           <div className="hero-banner__container">
             <div className="hero-banner__slide">
-              <BannerNew />
-            </div>
-            <div className="hero-banner__slide">
-              <BannerA onStartPosting={onStartPosting} />
-            </div>
-            <div className="hero-banner__slide">
               <BannerB />
             </div>
             <div className="hero-banner__slide">
@@ -305,6 +335,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
             </div>
             <div className="hero-banner__slide">
               <BannerD />
+            </div>
+            <div className="hero-banner__slide">
+              <BannerNew />
+            </div>
+            <div className="hero-banner__slide">
+              <BannerA onStartPosting={onStartPosting} />
             </div>
           </div>
         </div>

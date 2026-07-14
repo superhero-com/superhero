@@ -18,8 +18,32 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
-// Hashtags like #TOKEN, #TREND-123, #ROCK-N-ROLL; allow letters, numbers, and dashes only
-const HASHTAG_REGEX = /#([A-Za-z0-9-]{1,50})/g;
+// A hashtag "word": '#' at the start of the text or right after whitespace (so we don't hijack
+// URL fragments like "example.com/page#section"), followed by the full run of non-whitespace
+// characters. Word-initial only — matches how hashtags are written in practice.
+const HASHTAG_WORD_REGEX = /(^|\s)#(\S+)/g;
+// Fallback token-name character class when no live collection data is available (e.g. before
+// the BCL factory schema has loaded): letters, numbers, and dashes only.
+const DEFAULT_HASHTAG_CHARS_PATTERN = 'A-Za-z0-9\\-';
+// Regexes are rebuilt per distinct `hashtagAllowedChars` pattern (collections load once and
+// rarely change), so a tiny cache avoids recompiling the same regex on every render.
+const hashtagTokenRegexCache = new Map<string, RegExp>();
+function getHashtagTokenRegex(extraCharsPattern?: string): RegExp {
+  const pattern = extraCharsPattern
+    ? `${DEFAULT_HASHTAG_CHARS_PATTERN}${extraCharsPattern}`
+    : DEFAULT_HASHTAG_CHARS_PATTERN;
+  let regex = hashtagTokenRegexCache.get(pattern);
+  if (!regex) {
+    // The token-name-valid prefix of a hashtag word. Notably excludes '.', so "#emoter.ai"
+    // only captures "emoter" as the token name — anything after the valid prefix (e.g. ".ai")
+    // is not a valid token and is left as plain, inert text. The 'u' flag makes the {1,50}
+    // length cap and the character class count by Unicode code point, not UTF-16 code unit,
+    // so multi-byte collection alphabets (Chinese, Arabic, Russian, ...) are handled correctly.
+    regex = new RegExp(`^[${pattern}]{1,50}`, 'u');
+    hashtagTokenRegexCache.set(pattern, regex);
+  }
+  return regex;
+}
 
 export function linkify(
   text: string,
@@ -27,10 +51,19 @@ export function linkify(
     knownChainNames?: Set<string>;
     hashtagVariant?: 'post-inline';
     trendMentions?: TrendMention[];
+    /**
+     * Regex character-class body (e.g. from `mergedCollectionNameCharsPattern`) covering the
+     * name characters allowed by every known BCL token collection, in addition to the default
+     * A-Z/0-9/'-'. Pass this so hashtag detection for non-Latin collections (Chinese, Arabic,
+     * Russian, and any collection added later) stays in sync with the live factory schema
+     * without requiring changes here.
+     */
+    hashtagAllowedChars?: string;
   },
 ): React.ReactNode[] {
   if (!text) return [];
   let raw = String(text);
+  const hashtagTokenRegex = getHashtagTokenRegex(options?.hashtagAllowedChars);
 
   // Decode HTML entities first (in case content is HTML-encoded)
   // Use a safe method that works in both browser and SSR contexts
@@ -66,32 +99,115 @@ export function linkify(
   // 5. Carriage return alone: \r -> \n
   raw = raw.replace(/\r/g, '\n');
 
+  // Renders a single '#token' as a link, per the `hashtagVariant` option. `keyPos` is the
+  // absolute offset of the '#' in `raw`, used to keep React keys unique across the whole text.
+  const renderHashtagNode = (tokenName: string, keyPos: number): React.ReactNode => (
+    options?.hashtagVariant === 'post-inline' ? (
+      <PostHashtagLink
+        tag={tokenName}
+        label={`#${tokenName}`}
+        trendMentions={options?.trendMentions}
+        variant="inline"
+        key={`hashtag-${tokenName}-${keyPos}`}
+      />
+    ) : (
+      <Link
+        to={`/trends/tokens/${encodeURIComponent(tokenName.toUpperCase())}`}
+        key={`hashtag-${tokenName}-${keyPos}`}
+        className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {`#${tokenName}`}
+      </Link>
+    )
+  );
+
+  // Pass 0: Hashtags → router link to trending tokens page (/trends/tokens/<UPPERCASE>).
+  // Runs first (on the raw text) so that a hashtag's invalid trailing characters (e.g. the
+  // ".ai/" in "#emoter.ai/") are consumed here and marked inert, before the AENS/account/URL
+  // passes below get a chance to mistake them for a domain, chain name, or account mention.
+  //
+  // A single non-whitespace run can contain more than one hashtag with no separator between
+  // them (e.g. "#one#two", or a stray "##foo"), so the whole run (including the leading '#'
+  // that HASHTAG_WORD_REGEX matched separately) is walked char-by-char: each '#' followed by
+  // valid token characters becomes its own link, and any characters that aren't part of a
+  // valid token (e.g. ".ai/", or a '#' not followed by a valid token) are left as inert plain
+  // text until the next '#' is found, so parsing can resume from there.
+  const hashtagLinked: React.ReactNode[] = [];
+  let hLast = 0;
+  raw.replace(HASHTAG_WORD_REGEX, (m: string, lead: string, word: string, offset: number) => {
+    const hashStart = offset + lead.length;
+    const fullRun = `#${word}`;
+    let i = 0;
+    let matchedAny = false;
+    const nodes: React.ReactNode[] = [];
+    while (i < fullRun.length) {
+      const tokenMatch = fullRun[i] === '#'
+        ? fullRun.slice(i + 1).match(hashtagTokenRegex)
+        : null;
+      if (tokenMatch) {
+        nodes.push(renderHashtagNode(tokenMatch[0], hashStart + i));
+        i += 1 + tokenMatch[0].length;
+        matchedAny = true;
+      } else {
+        // Inert stretch: not a valid token start. Consume up to (not including) the next '#'
+        // so the loop can retry hashtag parsing from there.
+        let j = i + 1;
+        while (j < fullRun.length && fullRun[j] !== '#') j++;
+        const inertChunk = fullRun.slice(i, j);
+        // Wrapped so later passes (which skip non-string nodes) don't try to re-linkify it
+        // as a URL/AENS/account.
+        nodes.push(<React.Fragment key={`hashtag-rest-${hashStart + i}`}>{inertChunk}</React.Fragment>);
+        i = j;
+      }
+    }
+
+    if (!matchedAny) {
+      // No '#' in this run ever led to a valid token — not a hashtag, leave untouched for
+      // later passes to evaluate normally.
+      return m;
+    }
+
+    if (hashStart > hLast) hashtagLinked.push(raw.slice(hLast, hashStart));
+    hashtagLinked.push(...nodes);
+    hLast = offset + m.length;
+    return m;
+  });
+  if (hLast < raw.length) hashtagLinked.push(raw.slice(hLast));
+
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];
-  let last = 0;
-  raw.replace(AENS_TAG_REGEX, (match: string, offset: number) => {
-    if (offset > last) aensLinked.push(raw.slice(last, offset));
-    const name = match.startsWith('@') ? match.slice(1) : match; // strip optional '@'
-    const normalized = name.toLowerCase();
-    const isKnown = options?.knownChainNames?.has(normalized) ?? false;
-    if (isKnown) {
-      aensLinked.push(
-        <a
-          href={`/users/${name}`}
-          key={`aens-${name}-${offset}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-        >
-          {match}
-        </a>,
-      );
-    } else {
-      // Unknown name → keep as plain text
-      aensLinked.push(match);
+  hashtagLinked.forEach((node, nodeIdx) => {
+    if (typeof node !== 'string') {
+      aensLinked.push(node);
+      return;
     }
-    last = offset + match.length;
-    return match;
+    const segment = node as string;
+    let last = 0;
+    segment.replace(AENS_TAG_REGEX, (match: string, offset: number) => {
+      if (offset > last) aensLinked.push(segment.slice(last, offset));
+      const name = match.startsWith('@') ? match.slice(1) : match; // strip optional '@'
+      const normalized = name.toLowerCase();
+      const isKnown = options?.knownChainNames?.has(normalized) ?? false;
+      if (isKnown) {
+        aensLinked.push(
+          <a
+            href={`/users/${name}`}
+            key={`aens-${name}-${nodeIdx}-${offset}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          >
+            {match}
+          </a>,
+        );
+      } else {
+        // Unknown name → keep as plain text
+        aensLinked.push(match);
+      }
+      last = offset + match.length;
+      return match;
+    });
+    if (last < segment.length) aensLinked.push(segment.slice(last));
   });
-  if (last < raw.length) aensLinked.push(raw.slice(last));
 
   // Pass 2a: Within remaining plain text segments, convert ak_ address mentions
   const accountLinked: React.ReactNode[] = [];
@@ -167,51 +283,13 @@ export function linkify(
     if (segLast < segment.length) urlLinkedParts.push(segment.slice(segLast));
   });
 
-  // Pass 3: Hashtags → router link to trending tokens page (/trends/tokens/<UPPERCASE>)
-  const finalParts: React.ReactNode[] = [];
-  urlLinkedParts.forEach((node, idx) => {
-    if (typeof node !== 'string') {
-      finalParts.push(node);
-      return;
-    }
-    const segment = node as string;
-    let last = 0;
-    segment.replace(HASHTAG_REGEX, (m: string, tag: string, off: number) => {
-      if (off > last) finalParts.push(segment.slice(last, off));
-      const target = `/trends/tokens/${tag.toUpperCase()}`;
-      finalParts.push(
-        options?.hashtagVariant === 'post-inline' ? (
-          <PostHashtagLink
-            tag={tag}
-            label={m}
-            trendMentions={options?.trendMentions}
-            variant="inline"
-            key={`hashtag-${tag}-${idx}-${off}`}
-          />
-        ) : (
-          <Link
-            to={target}
-            key={`hashtag-${tag}-${idx}-${off}`}
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {m}
-          </Link>
-        ),
-      );
-      last = off + m.length;
-      return m;
-    });
-    if (last < segment.length) finalParts.push(segment.slice(last));
-  });
-
   // Pass 4: Handle line breaks - split by \n and insert <br /> elements
   // Multiple consecutive line breaks collapse to a single line break
   const withLineBreaks: React.ReactNode[] = [];
   let brKeyCounter = 0; // Counter to ensure unique keys for <br /> elements
   let previousNodeWasNonString = false; // Track if previous node was a React element (link, etc.)
 
-  finalParts.forEach((node, idx) => {
+  urlLinkedParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
       // Non-string node (link, etc.) - push it and mark that we had a non-string
       withLineBreaks.push(node);

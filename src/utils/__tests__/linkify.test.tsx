@@ -1,0 +1,233 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect } from 'vitest';
+import { linkify } from '../linkify';
+import { mergedCollectionNameCharsPattern } from '../collectionNameChars';
+import type { ICollectionData } from '../types';
+
+function renderLinkify(text: string, options?: Parameters<typeof linkify>[1]) {
+  return render(
+    <MemoryRouter>
+      <div data-testid="content">{linkify(text, options)}</div>
+    </MemoryRouter>,
+  );
+}
+
+// Mirrors the non-Latin BCL collections deployed on mainnet.
+const CHINESE_COLLECTION: ICollectionData = {
+  id: 'CHINESE-ak_2vmVWHYLRaqdoyLdWEUBi1NodQ3MA1bFuqqRe9A5DgNv3qoDuV',
+  name: 'CHINESE',
+  allowed_name_length: '20',
+  allowed_name_chars: [{ SingleChar: [45] }, { CharRangeFromTo: [19968, 40959] }],
+};
+const ARABIC_COLLECTION: ICollectionData = {
+  id: 'ARABIC-ak_2vmVWHYLRaqdoyLdWEUBi1NodQ3MA1bFuqqRe9A5DgNv3qoDuV',
+  name: 'ARABIC',
+  allowed_name_length: '20',
+  allowed_name_chars: [{ SingleChar: [45] }, { CharRangeFromTo: [1569, 1610] }],
+};
+const RUSSIAN_COLLECTION: ICollectionData = {
+  id: 'RUSSIAN-ak_2vmVWHYLRaqdoyLdWEUBi1NodQ3MA1bFuqqRe9A5DgNv3qoDuV',
+  name: 'RUSSIAN',
+  allowed_name_length: '20',
+  allowed_name_chars: [
+    { SingleChar: [45] },
+    { SingleChar: [1025] },
+    { CharRangeFromTo: [1040, 1071] },
+  ],
+};
+const BCL_COLLECTIONS = [CHINESE_COLLECTION, ARABIC_COLLECTION, RUSSIAN_COLLECTION];
+
+describe('linkify hashtag parsing', () => {
+  it('parses "#emoter.ai/" as the hashtag "#emoter" followed by plain text ".ai/"', () => {
+    renderLinkify("What's up people? #emoter.ai/ is the future :)");
+
+    const link = screen.getByRole('link', { name: '#emoter' });
+    expect(link).toHaveAttribute('href', '/trends/tokens/EMOTER');
+
+    // The dot-prefixed remainder must not be turned into an external link.
+    expect(screen.queryByRole('link', { name: /emoter\.ai/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe(
+      "What's up people? #emoter.ai/ is the future :)",
+    );
+  });
+
+  it('does not allow dots inside the parsed token name', () => {
+    renderLinkify('check out #foo.bar.baz now');
+
+    expect(screen.getByRole('link', { name: '#foo' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /foo\.bar/i })).not.toBeInTheDocument();
+  });
+
+  it('links a plain hashtag to the uppercased trending tokens route', () => {
+    renderLinkify('gm #ROCK-N-ROLL fam');
+
+    const link = screen.getByRole('link', { name: '#ROCK-N-ROLL' });
+    expect(link).toHaveAttribute('href', '/trends/tokens/ROCK-N-ROLL');
+  });
+
+  it('parses multiple hashtags in the same message independently', () => {
+    renderLinkify('#one and #two are both tokens');
+
+    expect(screen.getByRole('link', { name: '#one' })).toHaveAttribute('href', '/trends/tokens/ONE');
+    expect(screen.getByRole('link', { name: '#two' })).toHaveAttribute('href', '/trends/tokens/TWO');
+  });
+
+  it('does not let an AENS-style suffix swallow the hashtag ("#foo.chain")', () => {
+    renderLinkify('shoutout #foo.chain today');
+
+    expect(screen.getByRole('link', { name: '#foo' })).toBeInTheDocument();
+    // ".chain" is not a known chain name here, so it should stay plain text, not
+    // be consumed by the AENS matcher as part of a stolen token.
+    expect(screen.getByTestId('content').textContent).toBe('shoutout #foo.chain today');
+  });
+
+  it('does not let an account-style suffix swallow the hashtag ("#ak_123abc")', () => {
+    renderLinkify('gm #ak_123abc gm');
+
+    expect(screen.getByRole('link', { name: '#ak' })).toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #ak_123abc gm');
+  });
+
+  it('still linkifies ordinary URLs that are not preceded by a hashtag', () => {
+    renderLinkify('visit https://example.com/page#section for more');
+
+    const link = screen.getByRole('link', { name: /example\.com\/page/i });
+    expect(link).toHaveAttribute('href', 'https://example.com/page#section');
+  });
+
+  it('still linkifies bare domains that are not preceded by a hashtag', () => {
+    renderLinkify('the future is emoter.ai/ now');
+
+    expect(screen.getByRole('link', { name: /emoter\.ai/i })).toBeInTheDocument();
+  });
+
+  it('still linkifies known AENS names that are not preceded by a hashtag', () => {
+    renderLinkify('say hi to bob.chain', { knownChainNames: new Set(['bob.chain']) });
+
+    const link = screen.getByRole('link', { name: 'bob.chain' });
+    expect(link).toHaveAttribute('href', '/users/bob.chain');
+  });
+
+  it('still linkifies ak_ account mentions that are not preceded by a hashtag', () => {
+    renderLinkify('sent to ak_123abc456');
+
+    const link = screen.getByRole('link', { name: /ak_123abc456/i });
+    expect(link).toHaveAttribute('href', '/users/ak_123abc456');
+  });
+
+  it('treats a lone "#" with no following token characters as plain text', () => {
+    renderLinkify('price went up # nice');
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('price went up # nice');
+  });
+
+  it('links every hashtag in a run with no separator ("#one#two")', () => {
+    renderLinkify('gm #one#two gm');
+
+    expect(screen.getByRole('link', { name: '#one' })).toHaveAttribute('href', '/trends/tokens/ONE');
+    expect(screen.getByRole('link', { name: '#two' })).toHaveAttribute('href', '/trends/tokens/TWO');
+    expect(screen.getByTestId('content').textContent).toBe('gm #one#two gm');
+  });
+
+  it('links three chained hashtags with no separators ("#one#two#three")', () => {
+    renderLinkify('#one#two#three');
+
+    expect(screen.getByRole('link', { name: '#one' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '#two' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '#three' })).toBeInTheDocument();
+  });
+
+  it('links hashtags separated by punctuation with no space ("#one,#two")', () => {
+    renderLinkify('#one,#two');
+
+    expect(screen.getByRole('link', { name: '#one' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '#two' })).toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#one,#two');
+  });
+
+  it('resumes hashtag parsing after an invalid dotted remainder ("#emoter.ai/#foo")', () => {
+    renderLinkify('#emoter.ai/#foo');
+
+    expect(screen.getByRole('link', { name: '#emoter' })).toHaveAttribute('href', '/trends/tokens/EMOTER');
+    expect(screen.getByRole('link', { name: '#foo' })).toHaveAttribute('href', '/trends/tokens/FOO');
+    expect(screen.getByTestId('content').textContent).toBe('#emoter.ai/#foo');
+  });
+
+  it('treats a stray leading "#" as inert text but still links a later valid tag ("##foo")', () => {
+    renderLinkify('##foo');
+
+    const link = screen.getByRole('link', { name: '#foo' });
+    expect(link).toHaveAttribute('href', '/trends/tokens/FOO');
+    expect(screen.getByTestId('content').textContent).toBe('##foo');
+  });
+
+  it('leaves a run with no valid token anywhere fully untouched ("#_bad_stuff")', () => {
+    renderLinkify('gm #_bad_stuff gm');
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #_bad_stuff gm');
+  });
+
+  it('does not treat a URL fragment as a hashtag when chained after a real hashtag word', () => {
+    renderLinkify('see #emoter then visit https://example.com/page#section');
+
+    expect(screen.getByRole('link', { name: '#emoter' })).toBeInTheDocument();
+    const urlLink = screen.getByRole('link', { name: /example\.com\/page/i });
+    expect(urlLink).toHaveAttribute('href', 'https://example.com/page#section');
+    expect(screen.queryByRole('link', { name: '#section' })).not.toBeInTheDocument();
+  });
+});
+
+describe('linkify hashtag parsing — non-Latin BCL collections', () => {
+  const hashtagAllowedChars = mergedCollectionNameCharsPattern(BCL_COLLECTIONS);
+
+  it('does not link a non-Latin token name when no collection data is provided (pre-load default)', () => {
+    renderLinkify('gm #你好 gm');
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #你好 gm');
+  });
+
+  it('links a Chinese token name once the Chinese collection is known', () => {
+    renderLinkify('gm #你好 gm', { hashtagAllowedChars });
+
+    const link = screen.getByRole('link', { name: '#你好' });
+    expect(link).toHaveAttribute('href', `/trends/tokens/${encodeURIComponent('你好')}`);
+  });
+
+  it('links an Arabic token name once the Arabic collection is known', () => {
+    renderLinkify('#مرحبا is trending', { hashtagAllowedChars });
+
+    expect(screen.getByRole('link', { name: '#مرحبا' })).toBeInTheDocument();
+  });
+
+  it('links an uppercase Russian token name (including Ё) once the Russian collection is known', () => {
+    renderLinkify('#ПРИВЕТЁ is trending', { hashtagAllowedChars });
+
+    expect(screen.getByRole('link', { name: '#ПРИВЕТЁ' })).toBeInTheDocument();
+  });
+
+  it('still stops a non-Latin token name at an invalid trailing character', () => {
+    renderLinkify('#你好.link is trending', { hashtagAllowedChars });
+
+    expect(screen.getByRole('link', { name: '#你好' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /你好\.link/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#你好.link is trending');
+  });
+
+  it('still links plain Latin hashtags when collection chars are provided alongside them', () => {
+    renderLinkify('gm #ROCK-N-ROLL and #你好', { hashtagAllowedChars });
+
+    expect(screen.getByRole('link', { name: '#ROCK-N-ROLL' })).toHaveAttribute('href', '/trends/tokens/ROCK-N-ROLL');
+    expect(screen.getByRole('link', { name: '#你好' })).toBeInTheDocument();
+  });
+
+  it('does not link characters that belong to no known collection', () => {
+    renderLinkify('gm #こんにちは gm', { hashtagAllowedChars });
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+});

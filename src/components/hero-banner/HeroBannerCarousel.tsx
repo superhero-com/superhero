@@ -63,10 +63,14 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   const collapsedOptions = React.useMemo(() => ({
     loop: false,
     duration: isIOSWebKit ? 16 : 20,
-    align: 'start' as const,
+    align: 'center' as const,
     containScroll: 'trimSnaps' as const,
   }), [isIOSWebKit]);
-  const [collapsedEmblaRef] = useEmblaCarousel(collapsedOptions, collapsedPlugins);
+  const [collapsedEmblaRef, collapsedEmblaApi] = useEmblaCarousel(
+    collapsedOptions,
+    collapsedPlugins,
+  );
+  const [collapsedIndex, setCollapsedIndex] = useState(0);
 
   // One-line version of every slide: title + its primary action as a text link.
   const collapsedSlides = [
@@ -132,6 +136,19 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
+
+  // Track the centered slide in the collapsed carousel (for the active/dim state)
+  useEffect(() => {
+    if (!collapsedEmblaApi) {
+      return () => {};
+    }
+    const onSelect = () => setCollapsedIndex(collapsedEmblaApi.selectedScrollSnap());
+    collapsedEmblaApi.on('select', onSelect);
+    onSelect();
+    return () => {
+      collapsedEmblaApi.off('select', onSelect);
+    };
+  }, [collapsedEmblaApi]);
 
   // Pause on hover
   const handleMouseEnter = useCallback(() => {
@@ -200,8 +217,11 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       >
         <div className="hero-collapsed__viewport" ref={collapsedEmblaRef}>
           <div className="hero-collapsed__container">
-            {collapsedSlides.map((slide) => (
-              <div className="hero-collapsed__slide" key={slide.key}>
+            {collapsedSlides.map((slide, index) => (
+              <div
+                className={`hero-collapsed__slide ${index === collapsedIndex ? 'is-active' : ''}`}
+                key={slide.key}
+              >
                 {slide.badge && (
                   <span className="hero-collapsed__badge">
                     <Sparkles aria-hidden="true" />

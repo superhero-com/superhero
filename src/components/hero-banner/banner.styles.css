@@ -689,36 +689,47 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   opacity: 0.65;
 }
 
-/* Collapsed one-line bar (shown after Dismiss) — itself a swipeable,
-   auto-playing carousel: one line per slide (title + primary action). */
+/* Collapsed bar (shown after Dismiss) — a Spotify-style peek carousel:
+   each slide is its own ~90%-wide card, centered, with the previous/next
+   cards peeking at the edges. Auto-plays and swipes back/forward. */
 .hero-collapsed {
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  border-radius: 16px;
-  background: linear-gradient(90deg, rgba(122, 92, 255, 0.14), rgba(122, 92, 255, 0.02));
-  border: 1px solid rgba(122, 92, 255, 0.26);
+  gap: 8px;
 }
 
 .hero-collapsed__viewport {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  /* let the peeking neighbours fade out toward the edges */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
 
 .hero-collapsed__container {
   display: flex;
-  width: 100%;
+  gap: 10px;
 }
 
 .hero-collapsed__slide {
-  flex: 0 0 100%;
+  flex: 0 0 90%;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 9px 14px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(122, 92, 255, 0.16), rgba(122, 92, 255, 0.04));
+  border: 1px solid rgba(122, 92, 255, 0.26);
+  opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+
+.hero-collapsed__slide.is-active {
+  opacity: 1;
 }
 
 .hero-collapsed__badge {

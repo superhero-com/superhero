@@ -92,16 +92,68 @@ html.ios-webkit .hero-banner--ios-safe .banner-dismiss {
   }
 }
 
-/* Apply right padding only to the lede paragraph to avoid planet overlap */
-@media (min-width: 769px) {
-  .banner-lede {
-    padding-right: clamp(120px, 14vmax, 320px);
-  }
+/* ---------- Shared slide layout ----------
+   Text top-left, themed graphic top-right, CTA buttons pinned bottom-right.
+   Used by every slide via BannerContent so the carousel is consistent. */
+.banner-layout {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 40px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 4;
+}
+
+.banner-layout__top {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.banner-layout__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.banner-layout__graphic {
+  flex: 0 0 clamp(200px, 40%, 260px);
+  min-width: 0;
+  align-self: flex-start;
+}
+
+/* Buttons pinned to the bottom, floated to the right */
+.banner-layout__actions {
+  justify-content: flex-end;
 }
 
 @media (max-width: 768px) {
-  .banner-lede {
-    padding-right: clamp(72px, 26vw, 160px);
+  .banner-layout {
+    padding: 0 0 24px;
+    gap: 12px;
+  }
+
+  .banner-layout__top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  /* Keep the graphic a small square on the right/top on mobile */
+  .banner-layout__graphic {
+    flex: none;
+    width: 220px;
+    max-width: 100%;
+    align-self: flex-end;
+  }
+
+  .banner-layout__actions {
+    justify-content: flex-end;
   }
 }
 

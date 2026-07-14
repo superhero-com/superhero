@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import { Sparkles } from 'lucide-react';
 import SpaceEffects from './SpaceEffects';
+import BannerNew from './BannerNew';
 import BannerA from './BannerA';
 import BannerB from './BannerB';
 import BannerC from './BannerC';
@@ -10,6 +12,7 @@ import BannerD from './BannerD';
 import './banner.styles.css';
 
 const DISMISS_KEY = 'hero_banner_dismissed_until';
+const SLIDE_COUNT = 5;
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
@@ -17,7 +20,8 @@ interface HeroBannerCarouselProps {
 
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const { t } = useTranslation();
-  const [hidden, setHidden] = useState(false);
+  const { t: tSocial } = useTranslation('social');
+  const [collapsed, setCollapsed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isIOSWebKit = React.useMemo(() => {
     if (typeof document === 'undefined') return false;
@@ -43,13 +47,13 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     emblaPlugins,
   );
 
-  // Check if banner was dismissed
+  // Check if banner was dismissed (collapsed to the one-line bar)
   useEffect(() => {
     try {
       const until = localStorage.getItem(DISMISS_KEY);
       if (!until) return;
       const ts = Date.parse(until);
-      if (!Number.isNaN(ts) && ts > Date.now()) setHidden(true);
+      if (!Number.isNaN(ts) && ts > Date.now()) setCollapsed(true);
     } catch {
       // Ignore localStorage read failures
     }
@@ -93,9 +97,19 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     } catch {
       // Ignore localStorage write failures
     }
-    setHidden(true);
+    setCollapsed(true);
     // Dispatch custom event so parent components can react
     window.dispatchEvent(new CustomEvent('heroBannerDismissed'));
+  };
+
+  const handleExpand = () => {
+    try {
+      localStorage.removeItem(DISMISS_KEY);
+    } catch {
+      // Ignore localStorage write failures
+    }
+    setCollapsed(false);
+    window.dispatchEvent(new CustomEvent('heroBannerExpanded'));
   };
 
   const scrollPrev = useCallback(() => {
@@ -113,7 +127,40 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     [emblaApi],
   );
 
-  if (hidden) return null;
+  if (collapsed) {
+    return (
+      <div className="hero-collapsed">
+        <span className="hero-collapsed__badge">
+          <Sparkles aria-hidden="true" />
+          {tSocial('feedAnnouncement.new')}
+        </span>
+        <span className="hero-collapsed__text">{tSocial('feedAnnouncement.text')}</span>
+        <a href="/landing" className="hero-collapsed__link">
+          {tSocial('feedAnnouncement.installNow')}
+        </a>
+        <button
+          type="button"
+          onClick={handleExpand}
+          className="hero-collapsed__expand"
+          aria-label={t('common.heroBanner.expandAria', 'Show banner')}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -137,6 +184,9 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
         <div className="hero-banner__viewport" ref={emblaRef}>
           <div className="hero-banner__container">
             <div className="hero-banner__slide">
+              <BannerNew />
+            </div>
+            <div className="hero-banner__slide">
               <BannerA onStartPosting={onStartPosting} />
             </div>
             <div className="hero-banner__slide">
@@ -152,27 +202,14 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
         </div>
       </section>
 
-      {/* Dismiss button */}
+      {/* Dismiss — text link (collapses to a one-line announcement) */}
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t('common.heroBanner.dismissAria')}
         className="banner-dismiss"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
+        {t('common.heroBanner.dismiss', 'Dismiss')}
       </button>
 
       {/* Navigation arrows */}
@@ -217,7 +254,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
 
       {/* Dot indicators */}
       <div className="carousel-controls">
-        {[0, 1, 2, 3].map((index) => (
+        {Array.from({ length: SLIDE_COUNT }, (_, i) => i).map((index) => (
           <button
             type="button"
             key={index}

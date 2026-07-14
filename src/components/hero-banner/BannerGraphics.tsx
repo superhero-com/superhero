@@ -30,7 +30,38 @@ const Sparkline = ({ id }: { id: string }) => (
       strokeWidth="2"
       fill="none"
     />
+    <circle cx="220" cy="4" r="3" fill="#00e5ff" />
   </svg>
+);
+
+/* Slide 0 – NEW: Superhero now available across platforms */
+export const AvailabilityGraphic = () => (
+  <div className="bmini">
+    <div className="bmini__head">
+      <span className="bmini__diamond" aria-hidden="true" />
+      <div className="bmini__meta">
+        <span className="bmini__name">Superhero</span>
+        <span className="bmini__sub">Now available</span>
+      </div>
+    </div>
+    <ul className="bmini__list">
+      <li className="bmini__list-row">
+        <span className="bmini__list-k">iOS</span>
+        <span className="bmini__list-v">App Store</span>
+      </li>
+      <li className="bmini__list-row">
+        <span className="bmini__list-k">Android</span>
+        <span className="bmini__list-v">Google Play</span>
+      </li>
+      <li className="bmini__list-row">
+        <span className="bmini__list-k">AI agents</span>
+        <span className="bmini__list-v">Openclaw / Claude</span>
+      </li>
+    </ul>
+    <div className="bmini__row">
+      <span className="bmini__chip">Self-custodial wallet</span>
+    </div>
+  </div>
 );
 
 /* Slide A – Post on-chain / tip instantly */

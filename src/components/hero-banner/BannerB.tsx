@@ -5,12 +5,10 @@ import { SignalGraphic } from './BannerGraphics';
 
 const BannerB = () => {
   const { t } = useTranslation('banners');
-  const chips = t('bannerB.chips', { returnObjects: true }) as string[];
   return (
     <BannerContent
       title={t('bannerB.title')}
       description={t('bannerB.description')}
-      chips={chips}
       graphic={<SignalGraphic />}
       primaryButtonText={t('bannerB.primaryButton')}
       primaryButtonLink="/trends/create"

@@ -5,12 +5,10 @@ import { TreasuryGraphic } from './BannerGraphics';
 
 const BannerC = () => {
   const { t } = useTranslation('banners');
-  const chips = t('bannerC.chips', { returnObjects: true }) as string[];
   return (
     <BannerContent
       title={t('bannerC.title')}
       description={t('bannerC.description')}
-      chips={chips}
       graphic={<TreasuryGraphic />}
       primaryButtonText={t('bannerC.primaryButton')}
       primaryButtonLink="/trends/create"

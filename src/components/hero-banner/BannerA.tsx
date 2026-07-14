@@ -9,12 +9,10 @@ interface BannerAProps {
 
 const BannerA = ({ onStartPosting }: BannerAProps) => {
   const { t } = useTranslation('banners');
-  const chips = t('bannerA.chips', { returnObjects: true }) as string[];
   return (
     <BannerContent
       title={t('bannerA.title')}
       description={t('bannerA.description')}
-      chips={chips}
       graphic={<PostTipGraphic />}
       primaryButtonText={t('bannerA.primaryButton')}
       primaryButtonOnClick={onStartPosting}

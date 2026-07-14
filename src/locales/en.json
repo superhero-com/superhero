@@ -404,7 +404,9 @@
     },
     "heroBanner": {
       "bannerAria": "Superhero banner",
+      "dismiss": "Dismiss",
       "dismissAria": "Dismiss banner",
+      "expandAria": "Show banner",
       "previousSlide": "Previous slide",
       "nextSlide": "Next slide",
       "goToSlide": "Go to slide {{number}}"

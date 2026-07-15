@@ -15,6 +15,7 @@ import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
@@ -94,6 +95,10 @@ const ReplyToFeedItem = memo(({
   const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
   const hasDisplayName = Boolean(displayName);
   const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
+
+  // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
+  // token name may contain. New collections the backend adds are picked up automatically.
+  const hashtagAllowedChars = useHashtagAllowedChars();
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -398,6 +403,7 @@ const ReplyToFeedItem = memo(({
                     ),
                     hashtagVariant: 'post-inline',
                     trendMentions: (parent as any)?.trend_mentions,
+                    hashtagAllowedChars,
                   })}
               </div>
               <div className="mt-1 text-[11px] text-white/70">{t('showPost')}</div>
@@ -412,6 +418,7 @@ const ReplyToFeedItem = memo(({
               ),
               hashtagVariant: 'post-inline',
               trendMentions: (item as any)?.trend_mentions,
+              hashtagAllowedChars,
             })}
           </div>
 

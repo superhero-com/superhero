@@ -45,6 +45,7 @@ vi.mock('@/hooks/useCommunityFactory', () => ({
     activeFactoryCollections: [],
     loadFactorySchema: vi.fn().mockResolvedValue({ collections: {} }),
   }),
+  useEnsureFactorySchemaLoaded: () => [],
 }));
 
 vi.mock('../../../../seo/Head', () => ({

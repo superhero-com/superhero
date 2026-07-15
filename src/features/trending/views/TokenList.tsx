@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useCommunityFactory } from '@/hooks/useCommunityFactory';
+import { useEnsureFactorySchemaLoaded } from '@/hooks/useCommunityFactory';
 import { collectionLabel } from '@/utils/collection';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
@@ -111,7 +111,7 @@ const TokenList = () => {
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [collection, setCollection] = useState<string>('all');
-  const { activeFactoryCollections, loadFactorySchema } = useCommunityFactory();
+  const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
@@ -142,13 +142,6 @@ const TokenList = () => {
     { title: t('tokenList.collectionAll'), value: 'all' },
     ...activeFactoryCollections.map((c: any) => ({ title: collectionLabel(c.name), value: c.name })),
   ], [t, activeFactoryCollections]);
-
-  // Ensure the factory schema (and its collections) is loaded for the filter.
-  useEffect(() => {
-    if (!activeFactoryCollections.length) {
-      loadFactorySchema().catch(() => {});
-    }
-  }, [activeFactoryCollections.length, loadFactorySchema]);
 
   const getFallbackSubtitle = useCallback((tab: SearchTab) => {
     if (tab === 'tokens') return t('tokenList.fallbackTokens');

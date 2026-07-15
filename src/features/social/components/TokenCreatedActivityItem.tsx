@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import type { PostDto } from '../../../api/generated';
 import { compactTime } from '../../../utils/time';
 import { formatAddress } from '../../../utils/address';
@@ -53,6 +54,10 @@ const TokenCreatedActivityItem = memo(({
   const tokenName = useTokenName(item);
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
+  // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
+  // token name may contain. New collections the backend adds are picked up automatically.
+  const hashtagAllowedChars = useHashtagAllowedChars();
+
   const onOpen = useCallback(() => {
     if (tokenLink) navigate(tokenLink);
   }, [navigate, tokenLink]);
@@ -82,7 +87,7 @@ const TokenCreatedActivityItem = memo(({
             <span className="text-white/70 shrink-0">{t('created')}</span>
             {tokenName && (
               <span className="truncate max-w-[24ch] text-white/90">
-                {linkify(`#${tokenName}`, { hashtagVariant: 'post-inline' })}
+                {linkify(`#${tokenName}`, { hashtagVariant: 'post-inline', hashtagAllowedChars })}
               </span>
             )}
             <span className="text-white/50 shrink-0">·</span>

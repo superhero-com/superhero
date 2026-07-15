@@ -18,10 +18,13 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
-// A hashtag "word": '#' at the start of the text or right after whitespace (so we don't hijack
-// URL fragments like "example.com/page#section"), followed by the full run of non-whitespace
-// characters. Word-initial only — matches how hashtags are written in practice.
-const HASHTAG_WORD_REGEX = /(^|\s)#(\S+)/g;
+// A hashtag "word": '#' at the start of the text, or anywhere NOT immediately preceded by a
+// domain/path-forming character (word char, '.', or '/'), followed by the full run of
+// non-whitespace characters. The exclusion specifically protects URL fragments like
+// "example.com/page#section" (preceded by 'e', a word char) without requiring whitespace before
+// every hashtag — CJK text, punctuation, and other non-Latin scripts commonly butt right up
+// against a following "#tag" with no space (e.g. "支持#你好", "see,#TOKEN").
+const HASHTAG_WORD_REGEX = /(^|[^\w./])#(\S+)/g;
 // Fallback token-name character class when no live collection data is available (e.g. before
 // the BCL factory schema has loaded): letters, numbers, and dashes only.
 const DEFAULT_HASHTAG_CHARS_PATTERN = 'A-Za-z0-9\\-';

@@ -179,6 +179,34 @@ describe('linkify hashtag parsing', () => {
     expect(urlLink).toHaveAttribute('href', 'https://example.com/page#section');
     expect(screen.queryByRole('link', { name: '#section' })).not.toBeInTheDocument();
   });
+
+  it('links a hashtag immediately after punctuation with no space ("see,#TOKEN")', () => {
+    renderLinkify('see,#TOKEN');
+
+    expect(screen.getByRole('link', { name: '#TOKEN' })).toHaveAttribute('href', '/trends/tokens/TOKEN');
+    expect(screen.getByTestId('content').textContent).toBe('see,#TOKEN');
+  });
+
+  it('links a hashtag immediately after CJK text with no space ("支持#TOKEN")', () => {
+    renderLinkify('支持#TOKEN');
+
+    expect(screen.getByRole('link', { name: '#TOKEN' })).toHaveAttribute('href', '/trends/tokens/TOKEN');
+    expect(screen.getByTestId('content').textContent).toBe('支持#TOKEN');
+  });
+
+  it('still protects a URL fragment with no path segment ("example.com#section")', () => {
+    renderLinkify('check example.com#section out');
+
+    expect(screen.queryByRole('link', { name: '#section' })).not.toBeInTheDocument();
+  });
+
+  it('still protects a root-URL fragment right after a slash ("https://example.com/#top")', () => {
+    renderLinkify('go to https://example.com/#top now');
+
+    expect(screen.queryByRole('link', { name: '#top' })).not.toBeInTheDocument();
+    const urlLink = screen.getByRole('link', { name: /example\.com/i });
+    expect(urlLink).toHaveAttribute('href', 'https://example.com/#top');
+  });
 });
 
 describe('linkify hashtag parsing — non-Latin BCL collections', () => {
@@ -196,6 +224,14 @@ describe('linkify hashtag parsing — non-Latin BCL collections', () => {
 
     const link = screen.getByRole('link', { name: '#你好' });
     expect(link).toHaveAttribute('href', `/trends/tokens/${encodeURIComponent('你好')}`);
+  });
+
+  it('links a Chinese token name immediately preceded by other CJK text with no space', () => {
+    renderLinkify('支持#你好', { hashtagAllowedChars });
+
+    const link = screen.getByRole('link', { name: '#你好' });
+    expect(link).toHaveAttribute('href', `/trends/tokens/${encodeURIComponent('你好')}`);
+    expect(screen.getByTestId('content').textContent).toBe('支持#你好');
   });
 
   it('links an Arabic token name once the Arabic collection is known', () => {

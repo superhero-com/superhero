@@ -1,16 +1,13 @@
-import {
-  memo, useMemo, useCallback, useEffect,
-} from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
-import { useCommunityFactory } from '../../../hooks/useCommunityFactory';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import type { PostDto } from '../../../api/generated';
 import { compactTime } from '../../../utils/time';
 import { formatAddress } from '../../../utils/address';
-import { mergedCollectionNameCharsPattern } from '../../../utils/collectionNameChars';
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
@@ -58,16 +55,8 @@ const TokenCreatedActivityItem = memo(({
   const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
 
   // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
-  // token name may contain. Loaded once and reused so new collections the backend adds are
-  // picked up automatically, with no changes needed here.
-  const { activeFactoryCollections, loadFactorySchema } = useCommunityFactory();
-  useEffect(() => {
-    if (!activeFactoryCollections.length) loadFactorySchema().catch(() => {});
-  }, [activeFactoryCollections.length, loadFactorySchema]);
-  const hashtagAllowedChars = useMemo(
-    () => mergedCollectionNameCharsPattern(activeFactoryCollections),
-    [activeFactoryCollections],
-  );
+  // token name may contain. New collections the backend adds are picked up automatically.
+  const hashtagAllowedChars = useHashtagAllowedChars();
 
   const onOpen = useCallback(() => {
     if (tokenLink) navigate(tokenLink);

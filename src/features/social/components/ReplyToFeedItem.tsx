@@ -10,13 +10,12 @@ import { AspectMedia } from '@/components/AspectMedia';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
-import { mergedCollectionNameCharsPattern } from '../../../utils/collectionNameChars';
 import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
-import { useCommunityFactory } from '../../../hooks/useCommunityFactory';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { useStorePostSenderChainNames } from '../../../hooks/useChainName';
 import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
@@ -98,16 +97,8 @@ const ReplyToFeedItem = memo(({
   const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
 
   // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
-  // token name may contain. Loaded once and reused so new collections the backend adds are
-  // picked up automatically, with no changes needed here.
-  const { activeFactoryCollections, loadFactorySchema } = useCommunityFactory();
-  useEffect(() => {
-    if (!activeFactoryCollections.length) loadFactorySchema().catch(() => {});
-  }, [activeFactoryCollections.length, loadFactorySchema]);
-  const hashtagAllowedChars = useMemo(
-    () => mergedCollectionNameCharsPattern(activeFactoryCollections),
-    [activeFactoryCollections],
-  );
+  // token name may contain. New collections the backend adds are picked up automatically.
+  const hashtagAllowedChars = useHashtagAllowedChars();
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);

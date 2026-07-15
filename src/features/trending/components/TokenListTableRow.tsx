@@ -1,6 +1,8 @@
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import { Badge } from '@/components/ui/badge';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { toAe } from '@/utils/bondingCurve';
+import { isNonEnglishToken, tokenCollectionLabel } from '@/utils/collection';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +13,7 @@ interface TokenListTableRowProps {
   token: TokenDto;
   useCollectionRank?: boolean;
   rank: number;
+  showCollectionColumn?: boolean;
 }
 
 const PercentChange = ({
@@ -42,6 +45,7 @@ const TokenListTableRow = ({
   token,
   useCollectionRank = false,
   rank,
+  showCollectionColumn = true,
 }: TokenListTableRowProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,6 +63,8 @@ const TokenListTableRow = ({
 
   const tokenHref = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
   const tokenLabel = token.name || token.symbol || token.address;
+  const showCollectionBadge = showCollectionColumn && isNonEnglishToken(token);
+  const collectionLabelText = showCollectionBadge ? tokenCollectionLabel(token) : '';
 
   const handleRowClick = useCallback(
     (event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -125,6 +131,14 @@ const TokenListTableRow = ({
               <span className="text-white/40 text-[.85em] mr-0.5">#</span>
               {token.symbol || token.name}
             </div>
+            {showCollectionBadge && (
+              <Badge
+                variant="secondary"
+                className="shrink-0 bg-white/10 text-white/70 text-[9px] font-medium px-1.5 py-0 rounded-full border-0"
+              >
+                {collectionLabelText}
+              </Badge>
+            )}
           </div>
           <div className="text-[11px] text-white/40 mt-0.5 tabular-nums">
             <PriceDataFormatter
@@ -199,6 +213,20 @@ const TokenListTableRow = ({
             </div>
           </div>
         </td>
+
+        {/* Collection */}
+        {showCollectionColumn && (
+          <td className="cell cell-collection px-3">
+            {showCollectionBadge && (
+              <Badge
+                variant="secondary"
+                className="bg-white/10 text-white/70 text-[11px] font-medium px-2 py-0.5 rounded-full border-0"
+              >
+                {collectionLabelText}
+              </Badge>
+            )}
+          </td>
+        )}
 
         {/* Price */}
         <td className="cell cell-price px-3 text-right">

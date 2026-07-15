@@ -2230,6 +2230,7 @@
     },
     "tokenListTable": {
       "name": "名称",
+      "collection": "合集",
       "price": "价格",
       "price30d": "价格（30 天）",
       "change24h": "24 小时 %",

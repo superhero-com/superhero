@@ -2230,6 +2230,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Sammlung",
       "price": "Preis",
       "price30d": "Preis (30d)",
       "change24h": "24h %",

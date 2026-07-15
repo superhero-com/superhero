@@ -86,10 +86,11 @@ interface TokenListTableProps {
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
   rankOffset?: number;
+  showCollectionColumn?: boolean;
 }
 
 const TokenListTable = ({
-  pages, loading, orderBy, orderDirection, onSort, rankOffset = 0,
+  pages, loading, orderBy, orderDirection, onSort, rankOffset = 0, showCollectionColumn = true,
 }: TokenListTableProps) => {
   const { t } = useTranslation('common');
 
@@ -188,6 +189,13 @@ const TokenListTable = ({
               {t('tokenListTable.name', { ns: 'trending' })}
             </SortableColumnHeader>
 
+            {/* Collection — hidden on mobile/narrow, only populated for non-English collections */}
+            {showCollectionColumn && (
+              <th className="cell cell-collection text-xs opacity-50 text-left py-1 px-3 whitespace-nowrap">
+                {t('tokenListTable.collection', { ns: 'trending' })}
+              </th>
+            )}
+
             {/* Price */}
             <SortableColumnHeader
               sortKey="price"
@@ -257,6 +265,7 @@ const TokenListTable = ({
                 key={token.address}
                 token={token}
                 rank={rankOffset + index + 1}
+                showCollectionColumn={showCollectionColumn}
               />
             ))}
           </tbody>
@@ -359,6 +368,7 @@ const TokenListTable = ({
 
         /* --- Container-width-based column visibility --- */
         /* Default: hide all optional columns (narrow container / mobile) */
+        .bctsl-token-list-table .cell-collection,
         .bctsl-token-list-table .cell-change24h,
         .bctsl-token-list-table .cell-change7d,
         .bctsl-token-list-table .cell-change30d,
@@ -369,7 +379,8 @@ const TokenListTable = ({
           display: none;
         }
 
-        /* ≥ 768px container: show 24h%, 7d%, Market Cap, link */
+        /* ≥ 768px container: show collection, 24h%, 7d%, Market Cap, link */
+        .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-collection,
         .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-change24h,
         .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-change7d,
         .bctsl-token-list-container[data-container-md="true"] .bctsl-token-list-table .cell-market-cap,
@@ -383,6 +394,7 @@ const TokenListTable = ({
         }
 
         .bctsl-token-list-container[data-container-lg="true"] .cell-rank { width: 52px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-collection { width: 100px; }
         .bctsl-token-list-container[data-container-lg="true"] .cell-price { width: 145px; }
         .bctsl-token-list-container[data-container-lg="true"] .cell-change24h { width: 110px; }
         .bctsl-token-list-container[data-container-lg="true"] .cell-change7d { width: 110px; }

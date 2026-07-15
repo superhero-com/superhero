@@ -2277,6 +2277,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Collection",
       "price": "Price",
       "price30d": "Price (30d)",
       "change24h": "24h %",

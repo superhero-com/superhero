@@ -2230,6 +2230,7 @@
     },
     "tokenListTable": {
       "name": "الاسم",
+      "collection": "المجموعة",
       "price": "السعر",
       "price30d": "السعر (30 يومًا)",
       "change24h": "24 ساعة %",

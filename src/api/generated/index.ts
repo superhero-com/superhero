@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ChangeData } from './models/ChangeData';
+export type { CollectionInfoDto } from './models/CollectionInfoDto';
 export type { CreateAffiliationDto } from './models/CreateAffiliationDto';
 export type { CreateTrendingTagsDto } from './models/CreateTrendingTagsDto';
 export type { DailyMarketCapSumDto } from './models/DailyMarketCapSumDto';

@@ -38,10 +38,22 @@ const jsonPlugin = (): Plugin => ({
   // Don't override load - let Vite's JSON plugin handle it
 });
 
+// Only these prefixes are app-facing (kept in sync with `envPrefix` below). Never pass an
+// empty prefix to `loadEnv` — `key.startsWith('')` is always true, so it would copy the
+// ENTIRE build-machine `process.env` (secrets included) into the client bundle via `define`
+// below (security-baseline §1.3: no secrets in client bundles).
+const APP_ENV_PREFIXES = ['VITE_', 'VUE_APP_'];
+
 export default defineConfig(({ mode }) => {
-  // Load all envs from the app directory (where .env is located)
+  // Load only app-facing envs (VITE_*/VUE_APP_*) from the app directory (where .env is located).
   const envDir = __dirname;
-  const env = loadEnv(mode, envDir, '');
+  const env = loadEnv(mode, envDir, APP_ENV_PREFIXES);
+  // `loadEnv` never returns NODE_ENV (even with a matching prefix) — Vite treats it specially.
+  // Re-add it explicitly: our own dev-only branches (e.g. src/hooks/usePortfolioValue.ts) and
+  // several bundled dependencies branch on `process.env.NODE_ENV`. By the time this factory
+  // runs, Vite has already set process.env.NODE_ENV (e.g. 'production' for `vite build`), so
+  // this preserves prior behavior without re-exposing the rest of the host environment.
+  env.NODE_ENV = process.env.NODE_ENV as string;
   return {
     plugins: [react(), svgr(), jsonPlugin()],
     ssr: {
@@ -59,7 +71,9 @@ export default defineConfig(({ mode }) => {
     // Vite will automatically expose VITE_* vars to import.meta.env
     envDir,
     define: {
-      // Define process.env for compatibility - use object mapping to allow runtime access
+      // Define process.env for compatibility - use object mapping to allow runtime access.
+      // `env` is restricted to VITE_*/VUE_APP_* keys + NODE_ENV above — never the full
+      // build-machine environment.
       'process.env': env,
     },
     build: {
@@ -130,7 +144,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     // Accept both prefixes in import.meta.env
-    envPrefix: ['VITE_', 'VUE_APP_'],
+    envPrefix: APP_ENV_PREFIXES,
     test: {
       globals: true,
       environment: 'jsdom',

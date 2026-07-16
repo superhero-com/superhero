@@ -3,6 +3,7 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { collectionLabel } from '@/utils/collection';
+import { allowedNameCharsToPattern } from '@/utils/collectionNameChars';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -41,6 +42,30 @@ interface TokenMetaInfo {
   twitter: string;
 }
 
+/**
+ * Tests if a string contains only characters allowed by a collection's rules.
+ * Returns true if valid, false if contains disallowed characters.
+ */
+const isValidForCollection = (str: string, collection: ICollectionData): boolean => {
+  if (!str || !collection?.allowed_name_chars) return false;
+  const pattern = allowedNameCharsToPattern(collection.allowed_name_chars);
+  if (!pattern) return false;
+  // Create regex that matches ALLOWED characters (not invalid ones)
+  const allowedRegex = new RegExp(`^[${pattern}]+$`);
+  return allowedRegex.test(str);
+};
+
+/**
+ * Detects which collections match the input string based on allowed characters.
+ */
+const detectMatchingCollections = (
+  str: string,
+  collections: ICollectionData[],
+): ICollectionData[] => {
+  if (!str) return [];
+  return collections.filter((collection) => isValidForCollection(str, collection));
+};
+
 const CreateTokenView = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -50,6 +75,9 @@ const CreateTokenView = () => {
   const [, setCreateTokenDetails] = useAtom(createTokenDetailsAtom);
   const { notifySubmitted, notifyPendingTx, notifyError } = useTransactionNotification();
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
+  
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -59,17 +87,16 @@ const CreateTokenView = () => {
 
   // Parse URL query params
   const searchParams = new URLSearchParams(location.search);
-  const initialTokenName = String(searchParams.get('tokenName') || '').toUpperCase().replace(/ /g, '-').replace(/[^A-Z0-9-]/g, '');
+  const initialTokenName = String(searchParams.get('tokenName') || '').toUpperCase().replace(/ /g, '-');
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);
-  // Token count (used in TOKEN mode)
   const [initialBuyVolume, setInitialBuyVolume] = useState<string>('');
-  // AE-first input mode and amounts
   const [inputMode, setInputMode] = useState<'AE' | 'TOKEN'>('AE');
   const [aeAmount, setAeAmount] = useState<string>('');
   const [aeAmountDisplay, setAeAmountDisplay] = useState<string>('');
   const [collectionModel, setCollectionModel] = useState<CollectionId>();
+  const [detectedCollections, setDetectedCollections] = useState<ICollectionData[]>([]);
   const [tokenMetaInfo] = useState<TokenMetaInfo>({
     collection: 'word',
     description: '',
@@ -82,11 +109,9 @@ const CreateTokenView = () => {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [alreadyRegisteredName, setAlreadyRegisteredName] = useState<string>();
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState<string>();
-  // Advanced options removed
   const [loadingPrice, setLoadingPrice] = useState(false);
   const [price, setPrice] = useState(Decimal.ZERO);
-  // Name availability check state
-  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'unsupported'>('idle');
   const [foundToken, setFoundToken] = useState<{
     address: string;
     sale_address?: string;
@@ -95,14 +120,13 @@ const CreateTokenView = () => {
     holders?: number;
   } | null>(null);
 
-  // Factory and collections state
   const [loading, setLoading] = useState(true);
 
   const initialBuyVolumeDebounced = useDebouncedValue(initialBuyVolume, 300);
   const aeAmountDebounced = useDebouncedValue(aeAmount, 300);
   const tokenNameDebounced = useDebouncedValue(tokenName, 400);
 
-  // Computed values - use from the hook
+  // Computed values
   const activeFactoryCollectionsArr = useMemo(
     () => activeFactoryCollections,
     [activeFactoryCollections],
@@ -112,6 +136,18 @@ const CreateTokenView = () => {
     (): ICollectionData => (activeFactorySchema?.collections || {})[collectionModel!],
     [activeFactorySchema, collectionModel],
   );
+
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target as Node)) {
+        setShowLanguageDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Load factory schema on mount
   useEffect(() => {
@@ -129,16 +165,40 @@ const CreateTokenView = () => {
     initializeFactory();
   }, [loadFactorySchema]);
 
-  // Set initial collection when factory loads
+  // Auto-detect language from input and set collection
   useEffect(() => {
-    if (activeFactorySchema && !collectionModel && activeFactoryCollectionsArr.length > 0) {
-      const firstCollection = activeFactoryCollectionsArr[0] as any;
-      setCollectionModel(firstCollection?.id);
-    }
-  }, [activeFactorySchema, collectionModel, activeFactoryCollectionsArr]);
+    if (!activeFactoryCollectionsArr.length) return;
 
-  // Price/estimate calculation effects
-  // TOKEN mode: estimate AE cost from token count
+    const trimmed = tokenName.trim();
+    
+    if (!trimmed) {
+      // No input - set to first available collection (default to English/WORDS)
+      if (!collectionModel) {
+        const firstCollection = activeFactoryCollectionsArr[0] as any;
+        setCollectionModel(firstCollection?.id);
+      }
+      setDetectedCollections([]);
+      return;
+    }
+
+    // Detect matching collections based on character patterns
+    const matches = detectMatchingCollections(trimmed, activeFactoryCollectionsArr);
+    setDetectedCollections(matches);
+
+    if (matches.length === 1) {
+      // Exactly one match - auto-select it
+      setCollectionModel(matches[0].id);
+    } else if (matches.length > 1) {
+      // Multiple matches - keep current selection if valid, otherwise pick first
+      const currentStillValid = matches.some(c => c.id === collectionModel);
+      if (!currentStillValid) {
+        setCollectionModel(matches[0].id);
+      }
+    }
+    // If matches.length === 0, keep current collection but mark as unsupported
+  }, [tokenName, activeFactoryCollectionsArr, collectionModel]);
+
+  // Price calculation effects
   useEffect(() => {
     if (inputMode !== 'TOKEN') return;
     const run = async () => {
@@ -168,7 +228,6 @@ const CreateTokenView = () => {
     run();
   }, [inputMode, initialBuyVolumeDebounced]);
 
-  // AE mode: estimate tokens from AE amount
   const [estimatedTokens, setEstimatedTokens] = useState<Decimal>(Decimal.ZERO);
   useEffect(() => {
     if (inputMode !== 'AE') return;
@@ -192,63 +251,23 @@ const CreateTokenView = () => {
     run();
   }, [inputMode, aeAmountDebounced]);
 
-  // Validation functions
-  const convertRulesToRegex = (rules: IAllowedNameChars[]): RegExp => {
-    const regexParts = rules.map((rule) => {
-      if (rule.SingleChar) {
-        return rule.SingleChar.map((code) => String.fromCharCode(code))
-          .map((char) => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-          .join('|');
-      } if (rule.CharRangeFromTo) {
-        const [start, end] = rule.CharRangeFromTo;
-        return `${String.fromCharCode(start)}-${String.fromCharCode(end)}`;
-      }
-      return '';
-    });
-
-    const regexPattern = `[^${regexParts.join('')}-]`;
-    return new RegExp(regexPattern);
-  };
-
+  // Validation
   const validateStringWithCustomErrors = useCallback((str: string): string | true => {
     if (!selectedCollection?.allowed_name_chars) return true;
-
-    const regex = convertRulesToRegex(selectedCollection.allowed_name_chars);
-
-    if (!regex.test(str)) {
+    
+    if (isValidForCollection(str, selectedCollection)) {
       return true;
     }
 
-    const errorMessages = selectedCollection.allowed_name_chars
-      .map((rule) => {
-        if (rule.SingleChar) {
-          return rule.SingleChar.map((code) => String.fromCharCode(code)).join(', ');
-        } if (rule.CharRangeFromTo) {
-          const [start, end] = rule.CharRangeFromTo;
-          return `${String.fromCharCode(start)}-${String.fromCharCode(end)}`;
-        }
-        return null;
-      })
-      .filter((msg) => !!msg);
-
-    if (!errorMessages.length) return true;
-
-    const chars = errorMessages.join(', ');
-    return t('trending.createToken.errors.allowedCharsRange', { chars });
-  }, [selectedCollection?.allowed_name_chars, t]);
+    const pattern = allowedNameCharsToPattern(selectedCollection.allowed_name_chars);
+    return t('trending.createToken.errors.allowedCharsRange', { chars: pattern });
+  }, [selectedCollection, t]);
 
   const normalizeTokenName = useCallback((value: string): string => {
-    if (!selectedCollection?.allowed_name_chars) return value;
-    const regex = convertRulesToRegex(selectedCollection.allowed_name_chars);
-    // Global flag so ALL disallowed chars are stripped, not just the first.
-    const stripRegex = new RegExp(regex.source, 'g');
-    return value.toUpperCase().replace(/ /g, '-').replace(stripRegex, '');
-  }, [selectedCollection?.allowed_name_chars]);
+    // During composition (e.g. Chinese IME), don't normalize
+    return value.toUpperCase().replace(/ /g, '-');
+  }, []);
 
-  // While an IME composition is active (e.g. typing Chinese via pinyin), do NOT
-  // transform the value — uppercasing / stripping mid-composition feeds a changed
-  // value back into the controlled input and aborts the composition, so only the
-  // Latin pinyin survives. We normalize once the composition commits instead.
   const isComposingName = useRef(false);
 
   const onNameUpdate = (value: string) => {
@@ -265,10 +284,11 @@ const CreateTokenView = () => {
 
   const onNameCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
     isComposingName.current = false;
-    setTokenName(normalizeTokenName(e.currentTarget.value));
+    const normalized = normalizeTokenName(e.currentTarget.value);
+    setTokenName(normalized);
   };
 
-  // Debounced name availability check
+  // Name availability check
   const nameCheckSeqRef = useRef(0);
   useEffect(() => {
     let cancelled = false;
@@ -277,18 +297,28 @@ const CreateTokenView = () => {
       setAlreadyRegisteredAs(undefined);
       setAlreadyRegisteredName(undefined);
       const trimmed = (tokenNameDebounced || '').trim();
+      
       if (!trimmed) {
         setNameStatus('idle');
         return;
       }
+
+      // Check if characters are supported
+      if (detectedCollections.length === 0 && trimmed) {
+        setNameStatus('unsupported');
+        return;
+      }
+
       const validation = validateStringWithCustomErrors(trimmed);
       if (validation !== true) {
         setNameStatus('invalid');
         return;
       }
+      
       setNameStatus('checking');
       nameCheckSeqRef.current += 1;
       const mySeq = nameCheckSeqRef.current;
+      
       try {
         const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
@@ -316,7 +346,6 @@ const CreateTokenView = () => {
         }
       } catch {
         if (cancelled) return;
-        // On error, do not block user; treat as idle to avoid false negatives
         setNameStatus('idle');
       }
     };
@@ -324,26 +353,23 @@ const CreateTokenView = () => {
     return () => {
       cancelled = true;
     };
-  }, [tokenNameDebounced, validateStringWithCustomErrors]);
+  }, [tokenNameDebounced, validateStringWithCustomErrors, detectedCollections]);
 
-  // Keep focus in the name input when a taken state is detected
+  // Keep focus when taken
   useEffect(() => {
     if (nameStatus === 'taken' && nameInputRef.current) {
-      // Restore focus and keep caret at end
       const input = nameInputRef.current;
       input.focus();
       const len = input.value.length;
       try {
         input.setSelectionRange(len, len);
       } catch {
-        // Ignore selection errors
+        // Ignore
       }
     }
   }, [nameStatus]);
 
-  // Sparkline removed per request; no history fetching to avoid extra network calls
-
-  // Formatting helpers (thousands separator while preserving decimals typing)
+  // Formatting helpers
   const sanitizeNumeric = (value: string): string => {
     let sanitized = value.replace(/,/g, '').replace(/[^0-9.]/g, '');
     const parts = sanitized.split('.');
@@ -376,7 +402,7 @@ const CreateTokenView = () => {
     return { display, sanitized };
   };
 
-  // Focus and select Trend token name on mount
+  // Focus on mount
   useEffect(() => {
     if (nameInputRef.current) {
       nameInputRef.current.focus();
@@ -416,7 +442,6 @@ const CreateTokenView = () => {
         throw new Error('SDK not available');
       }
 
-      // Determine initial buy token count from selected mode
       let initialBuyCount: number = 0;
       if (inputMode === 'AE') {
         const ae = Number(aeAmount || 0);
@@ -445,8 +470,6 @@ const CreateTokenView = () => {
       );
 
       notifyPendingTx(notificationPayload, txHash);
-
-      // Navigate to token details
       navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
@@ -464,7 +487,7 @@ const CreateTokenView = () => {
             searchItems.find(({ name }: any) => name === tokenName)?.address,
           );
         } catch {
-          // ignore search error
+          // ignore
         }
       }
       setErrorMessage(t('trending.createToken.errors.somethingWentWrong', { message }));
@@ -544,7 +567,7 @@ const CreateTokenView = () => {
         variant="primary"
         size="lg"
         type="submit"
-        disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid'}
+        disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid' || nameStatus === 'unsupported'}
         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3"
       >
         {t('trending.createToken.submit.createToken')}
@@ -556,7 +579,6 @@ const CreateTokenView = () => {
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
         <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
-          {/* Hero heading — visible on mobile/tablet above the form; hidden on xl (shown in left column instead) */}
           <div className="xl:hidden px-2 pt-2 pb-2 text-center">
             <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3">
               {t('trending.createToken.hero.line1')}
@@ -573,8 +595,6 @@ const CreateTokenView = () => {
           </div>
 
           <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
-            {/* Form — rendered first in DOM so it appears at top on mobile/tablet.
-                On xl screens xl:order-2 moves it visually to the right column. */}
             <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2">
               <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
                 {!activeFactorySchema ? (
@@ -587,7 +607,6 @@ const CreateTokenView = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Error Messages */}
                     {!alreadyRegisteredAs && errorMessage && (
                       <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
                         <h3 className="font-semibold mb-2">{t('trending.createToken.oops')}</h3>
@@ -595,67 +614,15 @@ const CreateTokenView = () => {
                       </div>
                     )}
 
-                    {/* Collection Selector */}
-                    {activeFactoryCollectionsArr.length > 1 && (
-                      <div>
-                        <div className="block text-sm font-medium text-white/80 mb-2">
-                          {t('trending.createToken.collection')}
-                        </div>
-                        <div
-                          role="radiogroup"
-                          aria-label={t('trending.createToken.collection')}
-                          className="grid grid-cols-2 gap-2"
-                        >
-                          {activeFactoryCollectionsArr.map((collection: any) => {
-                            const selected = collectionModel === collection.id;
-                            return (
-                              <button
-                                key={collection.id}
-                                type="button"
-                                role="radio"
-                                aria-checked={selected}
-                                onClick={() => setCollectionModel(collection.id as CollectionId)}
-                                className={`group relative flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 ${
-                                  selected
-                                    ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_0_1px_rgba(16,185,129,0.25)]'
-                                    : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07]'
-                                }`}
-                              >
-                                <span
-                                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                                    selected
-                                      ? 'border-emerald-400'
-                                      : 'border-white/30 group-hover:border-white/50'
-                                  }`}
-                                >
-                                  {selected && (
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                  )}
-                                </span>
-                                <span
-                                  className={`min-w-0 truncate text-sm font-semibold ${
-                                    selected ? 'text-white' : 'text-white/90'
-                                  }`}
-                                >
-                                  {collectionLabel(collection.name)}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Trend token name */}
+                    {/* Token Name Input with Inline Language Selector */}
                     <div>
-                      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                       <label
                         htmlFor="trend-token-name"
                         className="block text-sm font-medium text-white/80 mb-2"
                       >
                         {t('trending.createToken.trendTokenName')}
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30 relative">
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
                         <Input
                           id="trend-token-name"
@@ -669,34 +636,93 @@ const CreateTokenView = () => {
                           required
                           className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
                         />
-                        {/* Inline status icon */}
-                        {nameStatus === 'checking' && (
-                          <Spinner />
-                        )}
-                        {nameStatus === 'available' && (
-                          <VerifiedIcon className="w-5 h-5 text-emerald-400" />
-                        )}
-                        {nameStatus === 'taken' && (
-                          <NotVerifiedIcon className="w-5 h-5 text-red-400" />
-                        )}
+                        
+                        {/* Right side indicators */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {nameStatus === 'checking' && <Spinner />}
+                          {nameStatus === 'available' && <VerifiedIcon className="w-5 h-5 text-emerald-400" />}
+                          {nameStatus === 'taken' && <NotVerifiedIcon className="w-5 h-5 text-red-400" />}
+                          
+                          {/* Language chip with dropdown */}
+                          {tokenName && detectedCollections.length > 0 && (
+                            <div className="relative" ref={languageDropdownRef}>
+                              <button
+                                type="button"
+                                onClick={() => detectedCollections.length > 1 && setShowLanguageDropdown(!showLanguageDropdown)}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                                  detectedCollections.length === 1
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 cursor-default'
+                                    : 'bg-purple-500/20 text-purple-300 border border-purple-400/30 hover:bg-purple-500/30 cursor-pointer'
+                                }`}
+                                disabled={detectedCollections.length === 1}
+                              >
+                                {selectedCollection && collectionLabel(selectedCollection.name)}
+                                {detectedCollections.length > 1 && (
+                                  <svg 
+                                    className={`w-3 h-3 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`}
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke="currentColor"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                )}
+                              </button>
+                              
+                              {showLanguageDropdown && detectedCollections.length > 1 && (
+                                <div className="absolute right-0 top-full mt-1 bg-gray-900/95 border border-white/10 rounded-lg shadow-xl z-50 min-w-[120px] overflow-hidden">
+                                  {detectedCollections.map((collection) => (
+                                    <button
+                                      key={collection.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setCollectionModel(collection.id);
+                                        setShowLanguageDropdown(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                                        collection.id === collectionModel
+                                          ? 'bg-purple-500/20 text-white font-medium'
+                                          : 'text-white/80 hover:bg-white/5'
+                                      }`}
+                                    >
+                                      {collectionLabel(collection.name)}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Unsupported indicator */}
+                          {tokenName && detectedCollections.length === 0 && (
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-400/30">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                              Unsupported
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {/* Helper/status text - fixed height, no layout jumps */}
+                      
                       <div className="text-xs text-white/60 mt-1 flex items-center justify-between min-h-[20px]" aria-live="polite">
                         <span>
                           {t('trending.createToken.charactersCount', { count: tokenName.length, max: 20 })}
                         </span>
                         <span className="opacity-80" dir="auto">
-                          {nameStatus === 'invalid' ? t('trending.createToken.invalidCharacters') : (selectedCollection?.description || t('trending.createToken.allowedCharsHint'))}
+                          {nameStatus === 'unsupported' 
+                            ? 'These characters are not supported yet' 
+                            : nameStatus === 'invalid' 
+                            ? t('trending.createToken.invalidCharacters') 
+                            : (selectedCollection?.description || t('trending.createToken.allowedCharsHint'))
+                          }
                         </span>
                       </div>
                     </div>
 
-                    {/* Positive taken CTA is rendered below (replacing amount section) */}
-
-                    {/* If taken, show richer Live box above */}
+                    {/* Trading live box when taken */}
                     {nameStatus === 'taken' && (foundToken || alreadyRegisteredAs) && (
                       <div className="mt-20 text-xs bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
-                        {/* Row 1: Badge + Name + Price + Holders (left) · Sparkline (right) */}
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-3 flex-wrap w-full">
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/30">
@@ -728,10 +754,7 @@ const CreateTokenView = () => {
                               )}
                             </div>
                           </div>
-                          {/* Sparkline removed */}
                         </div>
-
-                        {/* Row 2: Full-width Buy button */}
                         <AeButton
                           type="button"
                           size="md"
@@ -744,14 +767,13 @@ const CreateTokenView = () => {
                       </div>
                     )}
 
-                    {/* Initial Buy - AE-first with toggle (always shown; greyed out when taken) */}
+                    {/* Initial Buy Amount */}
                     <div className={nameStatus === 'taken' ? 'opacity-40 pointer-events-none select-none' : ''} aria-disabled={nameStatus === 'taken'}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="block text-sm font-medium text-white/80">
                             {inputMode === 'AE' ? t('trending.createToken.amountToSpend') : t('trending.createToken.tokensToBuy')}
                           </div>
-                          {/* Tooltip */}
                           <div className="relative group inline-block align-middle">
                             <button
                               type="button"
@@ -786,31 +808,35 @@ const CreateTokenView = () => {
                               inputMode="decimal"
                               value={aeAmountDisplay}
                               onChange={(e) => {
-                                const { display, sanitized } = formatDisplayPreserveRaw(
-                                  e.target.value,
-                                );
+                                const { display, sanitized } = formatDisplayPreserveRaw(e.target.value);
                                 setAeAmountDisplay(display);
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
-                              title={t('trending.createToken.prebuyTooltipAe')}
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('500'); setAeAmountDisplay('500'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
-                            <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
+                            {['1', '10', '100', '500', '100000'].map((val, idx) => (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => {
+                                  setAeAmount(val);
+                                  setAeAmountDisplay(idx === 4 ? '100,000' : val);
+                                }}
+                                className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+                              >
+                                {idx === 4 ? '100K AE' : `${val} AE`}
+                              </button>
+                            ))}
                           </div>
                           <div className="text-sm text-white/70">
                             {t('trending.createToken.estimatedTokensReceive')}
                             {' '}
                             <span className="text-white">{estimatedTokens.prettify()}</span>
                           </div>
-
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -826,11 +852,16 @@ const CreateTokenView = () => {
                             <div className="text-white font-extrabold text-2xl leading-none">{t('trending.createToken.tokensUnitUpper')}</div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('10000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10M</button>
-                            <button type="button" onClick={() => setInitialBuyVolume('100000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100M</button>
+                            {['500000', '1000000', '5000000', '10000000', '100000000'].map((val) => (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => setInitialBuyVolume(val)}
+                                className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors"
+                              >
+                                {Number(val) >= 1000000 ? `${Number(val) / 1000000}M` : `${Number(val) / 1000}K`}
+                              </button>
+                            ))}
                           </div>
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
@@ -846,7 +877,6 @@ const CreateTokenView = () => {
                           </div>
                         </div>
                       )}
-                      {/* Shared explanatory note (tooltip carries the AE explanation now) */}
                       <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
                         <div className="text-white text-sm md:text-md">
                           {t('trending.createToken.note.tradingAvailable')}
@@ -857,10 +887,7 @@ const CreateTokenView = () => {
                       </div>
                     </div>
 
-                    {/* Advanced options removed */}
-                    {/* Note consolidated above with input explanatory block */}
-
-                    {/* Submit Section (shown even when taken, but greyed out/inactive) */}
+                    {/* Submit */}
                     <div className={`md:pt-4 ${nameStatus === 'taken' ? 'opacity-40 pointer-events-none select-none' : ''}`} aria-disabled={nameStatus === 'taken'}>
                       {renderSubmitContent()}
                     </div>
@@ -869,11 +896,9 @@ const CreateTokenView = () => {
               </div>
             </div>
 
-            {/* Banner / explainer — rendered second in DOM (below form on mobile/tablet).
-                On xl screens xl:order-1 moves it visually to the left column. */}
+            {/* Explainer */}
             <div className="min-w-0 flex-1 md:pt-2 xl:order-1">
               <div className="xl:text-left">
-                {/* Desktop-only heading - mobile version is rendered above the flex container */}
                 <div className="hidden xl:block mb-6">
                   <div className="text-5xl font-bold leading-tight text-white mb-4">
                     {t('trending.createToken.hero.line1')}
@@ -889,7 +914,6 @@ const CreateTokenView = () => {
                   </p>
                 </div>
 
-                {/* Explainer Section */}
                 <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
                     {t('trending.createToken.explainer.title')}
@@ -897,9 +921,7 @@ const CreateTokenView = () => {
                   <div className="space-y-4 text-white/80 text-sm leading-relaxed">
                     <div>
                       <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
-                      <p>
-                        {t('trending.createToken.explainer.priceDiscoveryBody')}
-                      </p>
+                      <p>{t('trending.createToken.explainer.priceDiscoveryBody')}</p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.mathTitle')}</h4>
@@ -919,9 +941,7 @@ const CreateTokenView = () => {
                         {' '}
                         {t('trending.createToken.explainer.supplyDescription')}
                       </p>
-                      <p>
-                        {t('trending.createToken.explainer.thisMeans')}
-                      </p>
+                      <p>{t('trending.createToken.explainer.thisMeans')}</p>
                       <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
                         <li>{t('trending.createToken.explainer.bullet1')}</li>
                         <li>{t('trending.createToken.explainer.bullet2')}</li>
@@ -931,15 +951,11 @@ const CreateTokenView = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
-                      <p>
-                        {t('trending.createToken.explainer.daoTreasuryBody')}
-                      </p>
+                      <p>{t('trending.createToken.explainer.daoTreasuryBody')}</p>
                     </div>
                     <div>
                       <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.feesTitle')}</h4>
-                      <p>
-                        {t('trending.createToken.explainer.feesBody')}
-                      </p>
+                      <p>{t('trending.createToken.explainer.feesBody')}</p>
                     </div>
                   </div>
                 </div>

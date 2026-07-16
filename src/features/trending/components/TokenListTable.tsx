@@ -255,7 +255,7 @@ const TokenListTable = ({
         {loading && !allItems?.length ? (
           <tbody className="token-list-skeleton">
             {skeletonRows.map((rowKey) => (
-              <TokenRowSkeleton key={rowKey} />
+              <TokenRowSkeleton key={rowKey} showCollectionColumn={showCollectionColumn} />
             ))}
           </tbody>
         ) : (

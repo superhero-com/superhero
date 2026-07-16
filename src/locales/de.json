@@ -2017,6 +2017,8 @@
       "trendTokenName": "Trend-Token-Name",
       "charactersCount": "{{count}}/{{max}} Zeichen",
       "invalidCharacters": "Ungültige Zeichen",
+      "unsupportedBadge": "Nicht unterstützt",
+      "unsupportedCharacters": "Diese Zeichen werden noch nicht unterstützt",
       "allowedCharsHint": "Erlaubt: A–Z, 0–9 und -",
       "tradingLive": "Handel live",
       "token": "Token",

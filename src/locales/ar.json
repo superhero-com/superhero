@@ -2017,6 +2017,8 @@
       "trendTokenName": "اسم رمز الترند",
       "charactersCount": "{{count}}/{{max}} حرف",
       "invalidCharacters": "أحرف غير صالحة",
+      "unsupportedBadge": "غير مدعوم",
+      "unsupportedCharacters": "هذه الأحرف غير مدعومة بعد",
       "allowedCharsHint": "المسموح: A–Z و0–9 و-",
       "tradingLive": "التداول مباشر",
       "token": "الرمز",

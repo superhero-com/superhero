@@ -15,7 +15,7 @@ const BannerD = () => (
         <span className="banner-d__accent">make it move.</span>
       </>
     )}
-    description="Post the thesis. Build attention. Trade the hashtag market. Holders govern the DAO."
+    description="Expand and spread trends and tokens with unknown speed by using AI agents. Let them post, trade, and grow the market 24/7."
     graphic={<MarketGraphic />}
     primaryButtonText="Tokenize #trend"
     primaryButtonLink="/trends/create"

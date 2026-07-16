@@ -2607,7 +2607,7 @@
     "keyFeatures": "Key features",
     "bannerA": {
       "title": "Post on‑chain. Tip instantly.",
-      "description": "Share posts that settle on‑chain. Readers tip inline; creators get receipts automatically.",
+      "description": "Post about trends and ideas — tip or get tipped for the best posts.",
       "chips": [
         "Inline tipping",
         "On‑chain receipts"
@@ -2616,8 +2616,8 @@
       "secondaryButton": "How it works"
     },
     "bannerC": {
-      "title": "From signal → treasury: Purpose‑DAOs.",
-      "description": "Buy fees on #trends auto‑seed DAOs so the best ideas get budgets and milestones.",
+      "title": "From buys → treasury: Purpose‑DAOs.",
+      "description": "Buying fees automatically fund DAOs of trend tokens, so the best ideas get budgets to create and grow. Invite people, post about trends, and build the community.",
       "chips": [
         "Fees → Treasury",
         "Creator payouts"
@@ -2626,8 +2626,8 @@
       "secondaryButton": "See DAOs"
     },
     "bannerB": {
-      "title": "Tokenize #trends. Trade the signal.",
-      "description": "#Trends are markets. Go long on culture and let prices surface what matters.",
+      "title": "Tokenize #trends. Let prices decide.",
+      "description": "#Trends are markets. Go long on culture and let prices decide which trends matter.",
       "chips": [
         "Popularity signals",
         "Bonding curve"

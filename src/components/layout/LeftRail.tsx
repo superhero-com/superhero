@@ -11,20 +11,89 @@ interface TrendingTag {
   source?: string;
 }
 
+// Isolated so its 1s tick doesn't re-render the rest of LeftRail
+// (trending tags, market stats, block height) every second.
+const LiveClockDisplay = React.memo(({ currentBlockHeight }: { currentBlockHeight: number | null }) => {
+  const { t } = useTranslation('common');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const hour = currentTime.getHours();
+  let timeEmoji = '🌅';
+  if (hour >= 6 && hour < 12) timeEmoji = '🌅';
+  else if (hour >= 12 && hour < 17) timeEmoji = '☀️';
+  else if (hour >= 17 && hour < 20) timeEmoji = '🌆';
+  else timeEmoji = '🌙';
+
+  const timeString = currentTime.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+
+  const dateString = currentTime.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  return (
+    <div className="relative z-10">
+      {/* Time Emoji and Label */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-base text-[var(--neon-teal)] font-semibold uppercase tracking-wider">
+          {t('layout.currentTime')}
+        </span>
+        <span className="text-xl drop-shadow-[0_0_8px_rgba(78,205,196,0.5)]">
+          {timeEmoji}
+        </span>
+      </div>
+
+      {/* Main Time Display */}
+      <div className="text-center mb-1.5">
+        <div className="text-lg text-white font-extrabold font-mono text-shadow-[0_0_10px_rgba(78,205,196,0.5)] tracking-wide">
+          {timeString}
+        </div>
+      </div>
+
+      {/* Date Display */}
+      <div className="text-center mb-2">
+        <div className="text-[11px] text-[var(--neon-blue)] font-semibold uppercase tracking-wider">
+          {dateString}
+        </div>
+      </div>
+
+      {/* Block Height (if available) */}
+      {currentBlockHeight !== null && (
+        <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white/5 rounded-lg border border-white/10">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
+          <span className="text-[10px] text-[var(--neon-green)] font-semibold font-mono">
+            {t('layout.blockNumber')}
+            {currentBlockHeight.toLocaleString()}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+});
+
 const LeftRail = () => {
   const { t } = useTranslation('common');
   const { currentBlockHeight } = useAeSdk();
   const navigate = useNavigate();
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showTips, setShowTips] = useState(false);
   const [trendingTags, setTrendingTags] = useState<TrendingTag[]>([]);
   const [marketStats, setMarketStats] = useState<any>(null);
   // Removed local API status (moved to footer)
 
-  // Timer, online status, and block height
+  // Online status
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -32,36 +101,10 @@ const LeftRail = () => {
     window.addEventListener('offline', handleOffline);
 
     return () => {
-      clearInterval(timer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  // Enhanced time formatting with emoji and block height
-  const formatTime = (date: Date) => {
-    const hour = date.getHours();
-    let timeEmoji = '🌅';
-    if (hour >= 6 && hour < 12) timeEmoji = '🌅';
-    else if (hour >= 12 && hour < 17) timeEmoji = '☀️';
-    else if (hour >= 17 && hour < 20) timeEmoji = '🌆';
-    else timeEmoji = '🌙';
-
-    const timeString = date.toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-
-    const dateString = date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-
-    return { timeEmoji, timeString, dateString };
-  };
 
   // Load trending data
   useEffect(() => {
@@ -200,42 +243,7 @@ const LeftRail = () => {
             {/* Animated background effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-500/5 to-transparent animate-[shimmer_3s_infinite] z-0" />
 
-            <div className="relative z-10">
-              {/* Time Emoji and Label */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-base text-[var(--neon-teal)] font-semibold uppercase tracking-wider">
-                  {t('layout.currentTime')}
-                </span>
-                <span className="text-xl drop-shadow-[0_0_8px_rgba(78,205,196,0.5)]">
-                  {formatTime(currentTime).timeEmoji}
-                </span>
-              </div>
-
-              {/* Main Time Display */}
-              <div className="text-center mb-1.5">
-                <div className="text-lg text-white font-extrabold font-mono text-shadow-[0_0_10px_rgba(78,205,196,0.5)] tracking-wide">
-                  {formatTime(currentTime).timeString}
-                </div>
-              </div>
-
-              {/* Date Display */}
-              <div className="text-center mb-2">
-                <div className="text-[11px] text-[var(--neon-blue)] font-semibold uppercase tracking-wider">
-                  {formatTime(currentTime).dateString}
-                </div>
-              </div>
-
-              {/* Block Height (if available) */}
-              {currentBlockHeight !== null && (
-                <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white/5 rounded-lg border border-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
-                  <span className="text-[10px] text-[var(--neon-green)] font-semibold font-mono">
-                    {t('layout.blockNumber')}
-                    {currentBlockHeight.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </div>
+            <LiveClockDisplay currentBlockHeight={currentBlockHeight} />
           </div>
 
           {marketStats && (

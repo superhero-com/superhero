@@ -9,7 +9,9 @@ import { Link } from 'react-router-dom';
 import {
   Shield, TrendingUp, Users, Fingerprint, Smartphone,
   MessageCircle, ArrowRight, ChevronDown, Sparkles, Globe, BarChart3, Coins,
+  Download, MonitorSmartphone, Share,
 } from 'lucide-react';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 
 /* ------------------------------------------------------------------ */
 /*  Floating orb component for ambient background                     */
@@ -49,6 +51,58 @@ function FeatureCard({
         <h3 className="text-[15px] font-semibold text-white/90 mb-2 leading-snug">{title}</h3>
         <p className="text-[13px] text-white/50 leading-relaxed">{description}</p>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PWA install affordance                                            */
+/*  Platform-aware: Chromium gets a real Install button wired to the  */
+/*  captured `beforeinstallprompt`; iOS/iPadOS Safari has no install   */
+/*  API and gets hand-authored Share -> Add to Home Screen             */
+/*  instructions instead; everything else (e.g. Firefox) and already-  */
+/*  installed sessions render nothing.                                */
+/* ------------------------------------------------------------------ */
+function PwaInstallCta() {
+  const { t } = useTranslation();
+  const {
+    canPrompt, promptInstall, isIOS, isInstalled,
+  } = usePwaInstall();
+
+  if (isInstalled || (!canPrompt && !isIOS)) return null;
+
+  return (
+    <div className="max-w-xl mx-auto mb-16 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl px-6 py-5 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start">
+      <div className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
+        <MonitorSmartphone className="w-5 h-5 text-pink-400" aria-hidden="true" />
+      </div>
+
+      <div className="flex-1">
+        <p className="text-[14px] font-semibold text-white/90 leading-snug">
+          {t('common.views.landing.pwaInstall.title')}
+        </p>
+        {isIOS ? (
+          <p className="flex items-center justify-center sm:justify-start gap-1.5 text-[13px] text-white/50 leading-relaxed mt-1">
+            <Share className="w-3.5 h-3.5 text-white/70 shrink-0" aria-hidden="true" />
+            {t('common.views.landing.pwaInstall.iosInstruction')}
+          </p>
+        ) : (
+          <p className="text-[13px] text-white/50 leading-relaxed mt-1">
+            {t('common.views.landing.pwaInstall.description')}
+          </p>
+        )}
+      </div>
+
+      {!isIOS && (
+        <button
+          type="button"
+          onClick={promptInstall}
+          className="shrink-0 group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[14px] px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
+        >
+          <Download className="w-4 h-4" />
+          {t('common.views.landing.pwaInstall.installButton')}
+        </button>
+      )}
     </div>
   );
 }
@@ -135,7 +189,7 @@ export default function Landing() {
             </a>
           </div>
           <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
           >
             <Link
               to="/"
@@ -146,6 +200,9 @@ export default function Landing() {
             </Link>
 
           </div>
+
+          {/* PWA install — hidden entirely when there is no install path or already installed */}
+          <PwaInstallCta />
 
           {/* Video */}
           <div

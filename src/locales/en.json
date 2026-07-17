@@ -964,6 +964,12 @@
         "downloadOnMobile": "Download on Mobile",
         "openclawOrClaude": "Openclaw or Claude",
         "continueOnWeb": "Continue on Web",
+        "pwaInstall": {
+          "title": "Install the Superhero app",
+          "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
+          "installButton": "Install",
+          "iosInstruction": "Tap Share, then \"Add to Home Screen\""
+        },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",
         "whatIsTitleLine2": "for social trends",

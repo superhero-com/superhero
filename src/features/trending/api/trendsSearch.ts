@@ -1,5 +1,6 @@
 import type { PostDto, TokenDto } from '@/api/generated';
 import { SuperheroApi } from '@/api/backend';
+import { SearchService } from '@/api/generated/services/SearchService';
 import {
   fetchLeaderboard,
   type LeaderboardItem,
@@ -111,28 +112,22 @@ function settledValue<T>(
 async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   const term = search.trim();
 
-  const [tokens, users, posts] = await Promise.allSettled([
-    SuperheroApi.listTokens({
-      search: term,
-      limit,
-      page: 1,
-      orderBy: 'market_cap',
-      orderDirection: 'DESC',
-    }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
+  // Tokens + posts come from the unified endpoint (one request instead of
+  // two). Users still need the richer /api/accounts search — the unified
+  // endpoint's account result is a thin {address, chain_name} pair meant for
+  // typeahead, not the volume/tx-count/created-tokens stats shown on user
+  // result cards.
+  const [combined, users] = await Promise.allSettled([
+    SearchService.search({ q: term, limit }),
     fetchAccountSearch(limit, term),
-    SuperheroApi.listPosts({
-      search: term,
-      limit,
-      page: 1,
-      orderBy: 'created_at',
-      orderDirection: 'DESC',
-    }) as Promise<PaginatedApiResponse<TrendPostItem>>,
   ]);
 
+  const combinedValue = settledValue(combined);
+
   return {
-    tokens: normalizeSection(settledValue(tokens)),
+    tokens: normalizeSection(combinedValue?.tokens as TrendTokenItem[] | undefined),
     users: normalizeSection(settledValue(users)),
-    posts: normalizeSection(settledValue(posts)),
+    posts: normalizeSection(combinedValue?.posts as TrendPostItem[] | undefined),
   };
 }
 

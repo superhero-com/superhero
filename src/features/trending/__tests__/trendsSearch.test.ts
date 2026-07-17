@@ -47,6 +47,32 @@ describe('trendsSearch api helpers', () => {
     expect(SuperheroApi.fetchJson).not.toHaveBeenCalled();
   });
 
+  it('falls back to listTokens/listPosts directly for single-character terms (unified search requires 2+ chars)', async () => {
+    vi.mocked(SuperheroApi.listTokens).mockResolvedValueOnce({
+      items: [{ address: 'ct_a', sale_address: 'cs_a', name: 'A' }],
+      meta: { totalItems: 1, totalPages: 1, currentPage: 1 },
+    } as any);
+    vi.mocked(SuperheroApi.fetchJson).mockResolvedValueOnce({
+      items: [],
+      meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+    } as any);
+    vi.mocked(SuperheroApi.listPosts).mockResolvedValueOnce({
+      items: [],
+      meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+    } as any);
+
+    const result = await fetchTrendSearchPreview('a');
+
+    expect(SearchService.search).not.toHaveBeenCalled();
+    expect(SuperheroApi.listTokens).toHaveBeenCalledWith({
+      search: 'a', limit: 3, page: 1, orderBy: 'market_cap', orderDirection: 'DESC',
+    });
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith({
+      search: 'a', limit: 3, page: 1, orderBy: 'created_at', orderDirection: 'DESC',
+    });
+    expect(result.tokens.items[0].name).toBe('A');
+  });
+
   it('fetchFeedRailSearchItems requests the unified search and accounts endpoints with rail limit and trimmed term', async () => {
     vi.mocked(SearchService.search).mockResolvedValueOnce({ tokens: [], accounts: [], posts: [] } as any);
     vi.mocked(SuperheroApi.fetchJson).mockResolvedValueOnce({ items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } } as any);
@@ -80,7 +106,7 @@ describe('trendsSearch api helpers', () => {
       meta: { totalItems: 1, totalPages: 1, currentPage: 1 },
     } as any);
 
-    const result = await fetchFeedRailSearchItems('q');
+    const result = await fetchFeedRailSearchItems('qq');
 
     expect(result.map((r) => r.type)).toEqual(['token', 'user', 'post']);
   });
@@ -98,7 +124,7 @@ describe('trendsSearch api helpers', () => {
       meta: { totalItems: 6, totalPages: 1, currentPage: 1 },
     } as any);
 
-    const result = await fetchFeedRailSearchItems('q');
+    const result = await fetchFeedRailSearchItems('qq');
 
     expect(result).toHaveLength(FEED_RAIL_SEARCH_LIMIT);
     expect(result.map((r) => r.type)).toEqual([
@@ -134,7 +160,7 @@ describe('trendsSearch api helpers', () => {
       meta: { totalItems: 10, totalPages: 1, currentPage: 1 },
     } as any);
 
-    const result = await fetchFeedRailSearchItems('q');
+    const result = await fetchFeedRailSearchItems('qq');
 
     expect(result).toHaveLength(FEED_RAIL_SEARCH_LIMIT);
     expect(result.map((r) => r.type)).toEqual([
@@ -155,7 +181,7 @@ describe('trendsSearch api helpers', () => {
       meta: { totalItems: 10, totalPages: 1, currentPage: 1 },
     } as any);
 
-    const result = await fetchFeedRailSearchItems('x');
+    const result = await fetchFeedRailSearchItems('xx');
 
     expect(result).toHaveLength(10);
     expect(result.map((r) => r.type)).toEqual(Array(10).fill('user'));

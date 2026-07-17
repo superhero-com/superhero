@@ -109,8 +109,40 @@ function settledValue<T>(
   return result.status === 'fulfilled' ? result.value : undefined;
 }
 
+// The unified endpoint returns empty tokens/posts for terms shorter than
+// this (matching its documented `q` minimum) — listTokens/listPosts have no
+// such minimum, so short terms fall back to calling them directly to avoid
+// silently losing real matches for e.g. a single-character search.
+const UNIFIED_SEARCH_MIN_LENGTH = 2;
+
 async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   const term = search.trim();
+
+  if (term.length < UNIFIED_SEARCH_MIN_LENGTH) {
+    const [tokens, users, posts] = await Promise.allSettled([
+      SuperheroApi.listTokens({
+        search: term,
+        limit,
+        page: 1,
+        orderBy: 'market_cap',
+        orderDirection: 'DESC',
+      }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
+      fetchAccountSearch(limit, term),
+      SuperheroApi.listPosts({
+        search: term,
+        limit,
+        page: 1,
+        orderBy: 'created_at',
+        orderDirection: 'DESC',
+      }) as Promise<PaginatedApiResponse<TrendPostItem>>,
+    ]);
+
+    return {
+      tokens: normalizeSection(settledValue(tokens)),
+      users: normalizeSection(settledValue(users)),
+      posts: normalizeSection(settledValue(posts)),
+    };
+  }
 
   // Tokens + posts come from the unified endpoint (one request instead of
   // two). Users still need the richer /api/accounts search — the unified

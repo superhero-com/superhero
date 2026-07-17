@@ -13,49 +13,6 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class AnalyticsService {
     /**
-     * Returns the count of tokens created per day
-     * @returns DailyTokenCountDto Returns the count of tokens created per day
-     * @throws ApiError
-     */
-    public static listDailyCreatedTokensCount({
-        startDate,
-        endDate,
-    }: {
-        startDate?: string,
-        endDate?: string,
-    }): CancelablePromise<Array<DailyTokenCountDto>> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/analytics/daily-created-tokens-count',
-            query: {
-                'start_date': startDate,
-                'end_date': endDate,
-            },
-        });
-    }
-    /**
-     * Returns the sum of market caps for all tokens
-     * @returns MarketCapSumDto Returns the sum of market caps for all tokens
-     * @throws ApiError
-     */
-    public static getTotalMarketCap(): CancelablePromise<MarketCapSumDto> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/analytics/total-market-cap',
-        });
-    }
-    /**
-     * Returns the total number of tokens created
-     * @returns number Returns the total number of tokens created
-     * @throws ApiError
-     */
-    public static getTotalCreatedTokens(): CancelablePromise<number> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/analytics/total-created-tokens',
-        });
-    }
-    /**
      * Returns the daily trade volume for a given token or account
      * @returns DailyTradeVolumeResultDto Returns daily trade volume data
      * @throws ApiError
@@ -170,6 +127,85 @@ export class AnalyticsService {
         });
     }
     /**
+     * Returns the count of tokens created per day
+     * @returns DailyTokenCountDto Returns the count of tokens created per day
+     * @throws ApiError
+     */
+    public static listDailyCreatedTokensCount({
+        startDate,
+        endDate,
+    }: {
+        startDate?: string,
+        endDate?: string,
+    }): CancelablePromise<Array<DailyTokenCountDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/daily-created-tokens-count',
+            query: {
+                'start_date': startDate,
+                'end_date': endDate,
+            },
+        });
+    }
+    /**
+     * Returns the sum of market caps for all tokens
+     * @returns MarketCapSumDto Returns the sum of market caps for all tokens
+     * @throws ApiError
+     */
+    public static getTotalMarketCap(): CancelablePromise<MarketCapSumDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/total-market-cap',
+        });
+    }
+    /**
+     * Returns the total number of tokens created
+     * @returns number Returns the total number of tokens created
+     * @throws ApiError
+     */
+    public static getTotalCreatedTokens(): CancelablePromise<number> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/total-created-tokens',
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static getChallengeAnalytics({
+        addresses,
+        startDate,
+        endDate,
+    }: {
+        /**
+         * Comma-separated list of account addresses (max 10)
+         */
+        addresses: string,
+        startDate?: string,
+        endDate?: string,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/challenge',
+            query: {
+                'addresses': addresses,
+                'start_date': startDate,
+                'end_date': endDate,
+            },
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static challengeAnalyticsControllerPreview(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/challenge/preview',
+        });
+    }
+    /**
      * @returns any
      * @throws ApiError
      */
@@ -177,10 +213,12 @@ export class AnalyticsService {
         startDate,
         endDate,
         forcePull,
+        address,
     }: {
         startDate?: string,
         endDate?: string,
         forcePull?: boolean,
+        address?: string,
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -189,6 +227,7 @@ export class AnalyticsService {
                 'start_date': startDate,
                 'end_date': endDate,
                 'force_pull': forcePull,
+                'address': address,
             },
         });
     }
@@ -196,10 +235,40 @@ export class AnalyticsService {
      * @returns any
      * @throws ApiError
      */
-    public static getPast24HoursAnalytics(): CancelablePromise<any> {
+    public static getAnalyticsSummary({
+        startDate,
+        endDate,
+        address,
+    }: {
+        startDate?: string,
+        endDate?: string,
+        address?: string,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/analytics/summary',
+            query: {
+                'start_date': startDate,
+                'end_date': endDate,
+                'address': address,
+            },
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static getPast24HoursAnalytics({
+        address,
+    }: {
+        address?: string,
+    }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/analytics/past-24-hours',
+            query: {
+                'address': address,
+            },
         });
     }
     /**

@@ -3,9 +3,18 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CollectionInfoDto = {
+    /**
+     * Full collection id, "<NAME>-ak_<deployer>"
+     */
     id: string;
+    /**
+     * Human-readable collection name (badge label)
+     */
     name: string;
-    description?: string;
-    allowed_name_length?: string;
+    description?: string | null;
+    /**
+     * Max token name length allowed in this collection
+     */
+    allowed_name_length: string;
 };
 

@@ -5,7 +5,7 @@
 import type { PriceDto } from './PriceDto';
 export type TransactionDto = {
     id: number;
-    address: string;
+    account: string;
     tx_hash: string;
     tx_type: string;
     spent_amount: string;

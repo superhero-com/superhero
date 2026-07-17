@@ -43,8 +43,8 @@ export class TopicsService {
         });
     }
     /**
-     * Get topic by ID
-     * Retrieve a specific topic by its unique identifier
+     * Get topic by ID or name
+     * Retrieve a specific topic by its unique identifier (UUID) or name
      * @returns Topic Topic retrieved successfully
      * @throws ApiError
      */
@@ -52,7 +52,7 @@ export class TopicsService {
         id,
     }: {
         /**
-         * Topic ID
+         * Topic ID or name
          */
         id: string,
     }): CancelablePromise<Topic> {

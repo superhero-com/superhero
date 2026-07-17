@@ -96,6 +96,12 @@ const FeedList = ({
         { kind: 'token-created' },
       ],
       sender_address: creatorAddress || saleAddress || '',
+      sender: {
+        address: creatorAddress || saleAddress || '',
+        public_name: '',
+        bio: '',
+        avatarurl: '',
+      },
       contract_address: saleAddress || '',
       type: 'TOKEN_CREATED',
       content,

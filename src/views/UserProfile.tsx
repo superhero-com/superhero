@@ -288,6 +288,12 @@ export default function UserProfile({
               { kind: 'token-created' },
             ],
             sender_address: payload?.creator_address || effectiveAddress || '',
+            sender: {
+              address: payload?.creator_address || effectiveAddress || '',
+              public_name: '',
+              bio: '',
+              avatarurl: '',
+            },
             contract_address: saleAddress || '',
             type: 'TOKEN_CREATED',
             content: '',

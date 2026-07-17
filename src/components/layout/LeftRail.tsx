@@ -13,7 +13,8 @@ interface TrendingTag {
 
 // Isolated so its 1s tick doesn't re-render the rest of LeftRail
 // (trending tags, market stats, block height) every second.
-const LiveClockDisplay = React.memo(({ currentBlockHeight }: { currentBlockHeight: number | null }) => {
+type LiveClockDisplayProps = { currentBlockHeight: number | null };
+const LiveClockDisplay = React.memo(({ currentBlockHeight }: LiveClockDisplayProps) => {
   const { t } = useTranslation('common');
   const [currentTime, setCurrentTime] = useState(new Date());
 

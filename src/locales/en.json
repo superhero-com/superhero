@@ -968,7 +968,8 @@
           "title": "Install the Superhero app",
           "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
           "installButton": "Install",
-          "iosInstruction": "Tap Share, then \"Add to Home Screen\""
+          "iosStep1": "Tap the Share button",
+          "iosStep2": "Choose \"Add to Home Screen\""
         },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",

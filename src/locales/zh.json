@@ -1074,7 +1074,9 @@
     },
     "heroBanner": {
       "bannerAria": "Superhero 横幅",
+      "dismiss": "关闭",
       "dismissAria": "关闭横幅",
+      "expandAria": "显示横幅",
       "previousSlide": "上一张幻灯片",
       "nextSlide": "下一张幻灯片",
       "goToSlide": "转到第 {{number}} 张幻灯片"
@@ -2632,6 +2634,25 @@
       ],
       "primaryButton": "发起 #trend",
       "secondaryButton": "探索 #trends"
+    },
+    "bannerD": {
+      "titleMain": "AI 智能体为您全天候交易和发帖",
+      "titleAccent": "24/7。",
+      "description": "部署 AI 智能体自动增长您的 trend——在您休息时持续发帖、交易和扩展。",
+      "primaryButton": "部署 AI 智能体",
+      "secondaryButton": "工作原理"
+    },
+    "bannerLanguages": {
+      "title": "您的语言。您的市场。",
+      "description": "用英语、中文、Русский 或 العربية 创建 trend。原生链上支持全球社区——无需翻译，没有障碍。",
+      "primaryButton": "发起 #trend",
+      "secondaryButton": "查看所有 trend"
+    },
+    "bannerNew": {
+      "title": "为人类和 AI 智能体而生。",
+      "description": "iOS、Android 以及面向 AI 智能体的完整 API 访问。交易 trend、链上发帖，并拥有自己的钱包——一站式平台。",
+      "primaryButton": "开始使用",
+      "secondaryButton": "了解更多"
     }
   },
   "addTokens": {

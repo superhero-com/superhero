@@ -4,7 +4,6 @@ import React, {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { Sparkles } from 'lucide-react';
 import { PostsService } from '../../../api/generated';
 import type { PostDto } from '../../../api/generated';
 import { SuperheroApi } from '../../../api/backend';
@@ -58,47 +57,6 @@ const FeedList = ({
 
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === '/';
-
-  // Check if banner is dismissed (same logic as HeroBannerCarousel)
-  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
-  useEffect(() => {
-    const DISMISS_KEY = 'hero_banner_dismissed_until';
-    const checkBannerDismissed = () => {
-      try {
-        const until = localStorage.getItem(DISMISS_KEY);
-        if (!until) {
-          setIsBannerDismissed(false);
-          return;
-        }
-        const ts = Date.parse(until);
-        setIsBannerDismissed(!Number.isNaN(ts) && ts > Date.now());
-      } catch {
-        setIsBannerDismissed(false);
-      }
-    };
-
-    // Check on mount
-    checkBannerDismissed();
-
-    // Listen for custom event when banner is dismissed
-    const handleBannerDismissed = () => {
-      checkBannerDismissed();
-    };
-    window.addEventListener('heroBannerDismissed', handleBannerDismissed);
-
-    // Also listen for storage changes (for cross-tab scenarios)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === DISMISS_KEY) {
-        checkBannerDismissed();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('heroBannerDismissed', handleBannerDismissed);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -1251,25 +1209,7 @@ const FeedList = ({
         />
       )}
 
-      <div className="w-full mb-3 flex items-center gap-2.5 px-3.5 py-2 rounded-[20px] bg-gradient-to-r from-purple-500/[0.09] to-transparent border border-purple-500/[0.18]">
-
-        <div className=" flex gap-2 text-[10px] font-semibold tracking-[0.08em] uppercase bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full">
-          <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          {t('feedAnnouncement.new')}
-        </div>
-        <span className="text-[12px] text-white min-w-0 flex-1">
-          {t('feedAnnouncement.text')}
-          {' '}
-          <a
-            href="/landing"
-            className="shrink-0 text-[11px] font-semibold text-pink-300 hover:text-pink-200 whitespace-nowrap transition-colors duration-150 pl-1 pr-5"
-          >
-            {t('feedAnnouncement.installNow')}
-          </a>
-        </span>
-
-      </div>
-      {!standalone && !isBannerDismissed && (
+      {!standalone && (
         <div className="mb-3 md:mb-4">
           <HeroBannerCarousel
             onStartPosting={() => createPostRef.current?.focus()}

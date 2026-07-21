@@ -40,6 +40,18 @@ function createSeededRandom(seed: number) {
   };
 }
 
+// Fisher-Yates shuffle seeded so the order is stable within a session but
+// changes on every fresh page load (a new seed is generated per mount).
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const rng = createSeededRandom(seed);
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 const FeedList = ({
   standalone = true,
 }: { standalone?: boolean } = {}) => {
@@ -77,6 +89,9 @@ const FeedList = ({
 
   const [popularWeights, setPopularWeights] = useState<PopularWeights>({});
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
+  // Re-generated on every mount (i.e. every page refresh) so the popular
+  // feed's ranking order is shuffled on each visit instead of being static.
+  const popularShuffleSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -369,8 +384,15 @@ const FeedList = ({
         page: pageParam as number,
         limit: 10,
         weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
-      });
-      return response as PostApiResponse;
+      }) as PostApiResponse;
+      const items = (response as any)?.items;
+      if (Array.isArray(items) && items.length > 1) {
+        return {
+          ...response,
+          items: seededShuffle(items, popularShuffleSeed.current + (pageParam as number)),
+        } as PostApiResponse;
+      }
+      return response;
     },
     getNextPageParam: (lastPage: any, allPages: any[]) => {
       // Continue pagination if we have totalPages and haven't reached it yet

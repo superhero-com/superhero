@@ -25,8 +25,49 @@
   display: grid;
   align-items: center;
   isolation: isolate;
-  background-size: 100% 100%, 100% 100%, 220% 220%;
-  animation: bgShift 26s ease-in-out infinite;
+  overflow: hidden;
+}
+
+/* The backdrop is split across two pseudo-elements so the drifting base
+   gradient can be moved with a compositor-only transform. It used to be a
+   `background-position` animation on this element, which repainted (and
+   re-uploaded) the entire banner background every single frame — the biggest
+   remaining cost on mobile.
+
+   Layer order is preserved exactly: ::before (z-index -2) is the drifting
+   gradient that was the *bottom* background layer, ::after (z-index -1) holds
+   the two static radial washes that sat on top of it. Both stay below
+   .banner-space (z-index 0) and the slide content (z-index 4). */
+.hero-banner::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  /* 220% tall, pulled up 60% — equivalent to background-position Y of 50%. */
+  top: -60%;
+  width: 220%;
+  height: 220%;
+  z-index: -2;
+  background: linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28);
+  animation: bgPan 26s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+      1100px 520px at 85% -20%,
+      rgba(0, 229, 255, 0.24),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 520px at -10% 80%,
+      rgba(0, 229, 255, 0.18),
+      transparent 60%
+    );
+  pointer-events: none;
 }
 
 .hero-banner__viewport {
@@ -34,6 +75,14 @@
   width: 100%;
 }
 
+/* Do NOT add `will-change: transform` (or any other containing-block-creating
+   property) to this container or to .hero-banner__viewport. Embla measures
+   slide positions with `offsetLeft`, which is relative to each node's
+   `offsetParent`. Making the container a containing block turns it into the
+   slides' offsetParent while the container itself still measures against
+   .hero-banner — mixing two coordinate systems and offsetting every scroll
+   snap by .hero-banner's padding. That misaligns the resting slide and breaks
+   the loop wrap, so the carousel scrolls through every intermediate slide. */
 .hero-banner__container {
   display: flex;
   width: 100%;
@@ -45,10 +94,34 @@
   max-width: 100%;
 }
 
-/* iOS Safari crash-safe variant for the feed hero banner */
-html.ios-webkit .hero-banner--ios-safe {
+/* Embla animates the track itself, frame by frame, by writing `transform`
+   directly — it must never have a CSS transition on top of that.
+   `styles/mobile-optimizations.scss` sets `* { transition-duration: .2s
+   !important }` for mobile, and because CSS's default transition-property is
+   `all`, that lands on these elements too. The visible damage is at the loop
+   boundary: to wrap from the last slide to the first, Embla relocates a slide
+   to the opposite end of the track with a single instantaneous transform of a
+   full content width. With a transition attached, that jump is animated
+   instead — the slide glides the entire width of the track, sweeping past
+   every slide in between, which is exactly the "scrolls through every slide"
+   glitch. Class specificity beats `*`, so this wins while both are
+   !important. */
+.hero-banner__container,
+.hero-banner__slide,
+.hero-collapsed__container,
+.hero-collapsed__slide {
+  transition: none !important;
+}
+
+/* iOS Safari crash-safe variant for the feed hero banner.
+   Pins the drifting layer to a static, element-sized gradient — the exact
+   equivalent of the old `animation: none` + `background-size: auto` reset. */
+html.ios-webkit .hero-banner--ios-safe::before {
+  top: 0;
+  width: 100%;
+  height: 100%;
   animation: none !important;
-  background-size: auto !important;
+  transform: none !important;
 }
 
 html.ios-webkit .hero-banner--ios-safe .banner-stars {
@@ -882,15 +955,17 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 }
 
 /* Animations */
-@keyframes bgShift {
-  0% {
-    background-position: 0% 0%, 0% 0%, 0% 50%;
+/* Pans the base gradient the same distance the old `bgShift` did: a
+   background-position sweep of 0%->100% across a 220%-wide image travels
+   120% of the banner's width, which is 120/220 = 54.5455% of this
+   element's own width. */
+@keyframes bgPan {
+  0%,
+  100% {
+    transform: translateX(0);
   }
   50% {
-    background-position: 0% 0%, 0% 0%, 100% 50%;
-  }
-  100% {
-    background-position: 0% 0%, 0% 0%, 0% 50%;
+    transform: translateX(-54.5455%);
   }
 }
 
@@ -1012,7 +1087,14 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-banner,
+  /* top: 0 reproduces the static frame this used to rest on, where the
+     un-animated `background-position` fell back to its initial 0% 0%. */
+  .hero-banner::before {
+    top: 0;
+    animation: none !important;
+    transform: none !important;
+  }
+
   .banner-diamond,
   .banner-chip,
   .banner-btn,
@@ -1047,6 +1129,9 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
   /* Reduce banner height on mobile */
   .hero-banner {
     min-height: 220px;
+  }
+
+  .hero-banner::before {
     animation-duration: 45s !important;
   }
 

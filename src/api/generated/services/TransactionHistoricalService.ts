@@ -95,7 +95,7 @@ export class TransactionHistoricalService {
          * Token address or name
          */
         address: string,
-        interval?: '1d' | '7d' | '30d' | '90d' | '180d',
+        interval?: '1d' | '7d' | '30d' | '90d' | '180d' | 'all-time',
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -105,6 +105,43 @@ export class TransactionHistoricalService {
             },
             query: {
                 'interval': interval,
+            },
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static getSparklineSvg({
+        address,
+        interval,
+        background,
+        height,
+        width,
+    }: {
+        /**
+         * Token address or name
+         */
+        address: string,
+        interval?: '1d' | '7d' | '30d' | '90d' | '180d' | 'all-time',
+        /**
+         * CSS fill for background rect, e.g. "#f5f5f5" or "none"
+         */
+        background?: string,
+        height?: number,
+        width?: number,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/tokens/preview/{address}/sparkline.svg',
+            path: {
+                'address': address,
+            },
+            query: {
+                'interval': interval,
+                'background': background,
+                'height': height,
+                'width': width,
             },
         });
     }

@@ -24,8 +24,11 @@ export class TokensService {
         factoryAddress,
         search,
     }: {
-        orderBy?: 'name' | 'price' | 'market_cap' | 'created_at' | 'holders_count' | 'treasury',
+        orderBy?: 'name' | 'price' | 'market_cap' | 'created_at' | 'holders_count' | 'rank' | 'treasury' | 'trending_score',
         orderDirection?: 'ASC' | 'DESC',
+        /**
+         * Filter by collection. 'all' (default) returns every collection; otherwise pass a collection name (e.g. 'WORDS', 'CHINESE') or a full collection id (e.g. 'CHINESE-ak_...').
+         */
         collection?: string,
         limit?: number,
         page?: number,
@@ -47,6 +50,26 @@ export class TokensService {
                 'creator_address': creatorAddress,
                 'factory_address': factoryAddress,
                 'search': search,
+            },
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static getTrendingEligibility({
+        address,
+    }: {
+        /**
+         * Token address or name
+         */
+        address: string,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/tokens/{address}/trending-eligibility',
+            path: {
+                'address': address,
             },
         });
     }
@@ -161,6 +184,28 @@ export class TokensService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/tokens/{address}/performance',
+            path: {
+                'address': address,
+            },
+        });
+    }
+    /**
+     * Get token performance (alias for /performance)
+     * Returns performance data using database view. This endpoint is kept for backward compatibility.
+     * @returns TokenPriceMovementDto
+     * @throws ApiError
+     */
+    public static performanceRaw({
+        address,
+    }: {
+        /**
+         * Token address or name
+         */
+        address: string,
+    }): CancelablePromise<TokenPriceMovementDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/tokens/{address}/performance-raw',
             path: {
                 'address': address,
             },

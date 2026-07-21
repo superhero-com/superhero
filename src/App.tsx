@@ -101,13 +101,25 @@ const App = () => {
     // Load data immediately
     loadAccountDataRef.current();
 
-    // Then set up periodic refresh (wallet reconnection is handled in useWalletConnect)
+    // Then set up periodic refresh (wallet reconnection is handled in useWalletConnect).
+    // Skip refreshes while the tab is hidden — a background tab doesn't need
+    // account data updated every 10s.
     const interval = setInterval(() => {
+      if (document.hidden) return;
       loadAccountDataRef.current();
     }, 10000);
 
+    // The interval skips ticks while hidden, so refresh once immediately when
+    // the tab becomes visible again — otherwise account/wallet UI can show data
+    // that hasn't been refreshed since the last visible poll for up to 10s.
+    const handleVisibilityChange = () => {
+      if (!document.hidden) loadAccountDataRef.current();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [activeAccount]);
 

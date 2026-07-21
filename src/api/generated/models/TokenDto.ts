@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CollectionInfoDto } from './CollectionInfoDto';
 import type { PriceDto } from './PriceDto';
 import type { TokenPriceMovementDto } from './TokenPriceMovementDto';
 export type TokenDto = {
@@ -14,6 +15,7 @@ export type TokenDto = {
     beneficiary_address: string;
     bonding_curve_address: string;
     collection: string;
+    collection_info?: CollectionInfoDto | null;
     metaInfo: Record<string, any>;
     address: string;
     name: string;

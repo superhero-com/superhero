@@ -2017,6 +2017,8 @@
       "trendTokenName": "Nom du jeton de tendance",
       "charactersCount": "{{count}}/{{max}} caractères",
       "invalidCharacters": "Caractères invalides",
+      "unsupportedBadge": "Non pris en charge",
+      "unsupportedCharacters": "Ces caractères ne sont pas encore pris en charge",
       "allowedCharsHint": "Autorisés : A–Z, 0–9 et -",
       "tradingLive": "Trading en direct",
       "token": "Jeton",
@@ -2230,6 +2232,7 @@
     },
     "tokenListTable": {
       "name": "Nom",
+      "collection": "Collection",
       "price": "Prix",
       "price30d": "Prix (30 j)",
       "change24h": "24 h %",

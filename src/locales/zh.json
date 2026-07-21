@@ -2017,6 +2017,8 @@
       "trendTokenName": "趋势代币名称",
       "charactersCount": "{{count}}/{{max}} 个字符",
       "invalidCharacters": "无效字符",
+      "unsupportedBadge": "不支持",
+      "unsupportedCharacters": "暂不支持这些字符",
       "allowedCharsHint": "允许：A–Z、0–9 和 -",
       "tradingLive": "交易进行中",
       "token": "代币",
@@ -2230,6 +2232,7 @@
     },
     "tokenListTable": {
       "name": "名称",
+      "collection": "合集",
       "price": "价格",
       "price30d": "价格（30 天）",
       "change24h": "24 小时 %",

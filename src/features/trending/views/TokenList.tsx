@@ -207,11 +207,11 @@ const TokenList = () => {
       limit: 20,
       page: pageParam,
     }),
-    getNextPageParam: (lastPage: any, _allPages, lastPageParam) => (
-      lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
-        ? undefined
-        : lastPageParam + 1
-    ),
+    getNextPageParam: (lastPage: any, _allPages, lastPageParam) => {
+      const totalPages = lastPage?.meta?.totalPages ?? 0;
+      const currentPage = lastPage?.meta?.currentPage ?? lastPageParam;
+      return totalPages > 0 && currentPage < totalPages ? lastPageParam + 1 : undefined;
+    },
     queryKey: [
       'TokensService.listAll',
       orderBy,

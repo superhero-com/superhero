@@ -2055,6 +2055,8 @@
       "trendTokenName": "Trend token name",
       "charactersCount": "{{count}}/{{max}} characters",
       "invalidCharacters": "Invalid characters",
+      "unsupportedBadge": "Unsupported",
+      "unsupportedCharacters": "These characters aren't supported yet",
       "allowedCharsHint": "Allowed: A–Z, 0–9, and -",
       "tradingLive": "Trading live",
       "token": "Token",
@@ -2277,6 +2279,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Collection",
       "price": "Price",
       "price30d": "Price (30d)",
       "change24h": "24h %",

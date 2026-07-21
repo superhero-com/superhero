@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import {
   fireEvent,
   render,
@@ -38,12 +39,12 @@ const TOKEN = {
 
 const EXPECTED_HREF = '/trending/tokens/Alpha%20Token';
 
-function renderRow() {
+function renderRow(props: Partial<ComponentProps<typeof TokenListTableRow>> = {}) {
   return render(
     <MemoryRouter>
       <table>
         <tbody>
-          <TokenListTableRow token={TOKEN} rank={1} />
+          <TokenListTableRow token={TOKEN} rank={1} {...props} />
         </tbody>
       </table>
     </MemoryRouter>,
@@ -130,5 +131,30 @@ describe('TokenListTableRow', () => {
       'noopener',
     );
     spy.mockRestore();
+  });
+
+  it('shows a collection badge for a non-English collection', () => {
+    const { getAllByText } = renderRow({
+      token: { ...TOKEN, collection: 'CHINESE-ak_test', collection_info: { name: 'CHINESE' } },
+    });
+
+    expect(getAllByText('Chinese').length).toBeGreaterThan(0);
+  });
+
+  it('hides the collection badge for the default English collection', () => {
+    const { queryByText } = renderRow({
+      token: { ...TOKEN, collection: 'WORDS-ak_test', collection_info: { name: 'WORDS' } },
+    });
+
+    expect(queryByText('English')).not.toBeInTheDocument();
+  });
+
+  it('hides the collection badge when showCollectionColumn is false', () => {
+    const { queryByText } = renderRow({
+      token: { ...TOKEN, collection: 'CHINESE-ak_test', collection_info: { name: 'CHINESE' } },
+      showCollectionColumn: false,
+    });
+
+    expect(queryByText('Chinese')).not.toBeInTheDocument();
   });
 });

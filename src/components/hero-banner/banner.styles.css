@@ -379,6 +379,13 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
   pointer-events: none;
 }
 
+/* mix-blend-mode makes every frame of this sweep read back the backdrop, so
+   only run it on the slides in view — offscreen slides are clipped, and their
+   sweep was pure cost. */
+.hero-banner__slide:not(.hero-banner__slide--near) .banner-btn--primary::before {
+  animation-play-state: paused;
+}
+
 .banner-btn--ghost {
   border: 2px solid rgba(255, 255, 255, 0.7);
   color: #ffffff !important;
@@ -427,6 +434,9 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  /* ~80 twinkling star circles repaint constantly; keep those invalidations
+     from escaping into the slide content above them. */
+  contain: paint;
 }
 
 .banner-stars {
@@ -574,7 +584,10 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
     linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 40px 40px;
   opacity: 0.06;
-  animation: gridMove 26s linear infinite;
+  /* Deliberately not animated: the two layers are horizontal and vertical
+     stripes, each uniform along the axis the old `gridMove` shifted it in, so
+     the animation produced no visible motion while repainting the whole banner
+     background every frame (expensive on mobile). */
 }
 
 /* Comet sweep */
@@ -978,15 +991,6 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
   }
 }
 
-@keyframes gridMove {
-  from {
-    background-position: 0 0, 0 0;
-  }
-  to {
-    background-position: 40px 0, 0 40px;
-  }
-}
-
 @keyframes comet {
   0% {
     transform: translateX(0) rotate(12deg);
@@ -1076,10 +1080,6 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 
   .banner-supernova {
     animation-duration: 24s !important;
-  }
-
-  .banner-grid {
-    animation-duration: 45s !important;
   }
 
   .banner-comet {

@@ -323,6 +323,22 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     [emblaApi],
   );
 
+  // Marks the slides that are actually on screen (current + both neighbours,
+  // wrapping since the carousel loops). Expensive per-frame effects inside a
+  // slide — the graphic card's backdrop blur, the primary button's blended
+  // shine — are scoped to this class so the four clipped slides stop paying
+  // for them. Purely a cost cut: what the user sees is unchanged.
+  const isNearSlide = (index: number) => {
+    const last = SLIDE_COUNT - 1;
+    const prev = selectedIndex === 0 ? last : selectedIndex - 1;
+    const next = selectedIndex === last ? 0 : selectedIndex + 1;
+    return index === selectedIndex || index === prev || index === next;
+  };
+
+  const slideClass = (index: number) => (
+    `hero-banner__slide${isNearSlide(index) ? ' hero-banner__slide--near' : ''}`
+  );
+
   if (collapsed) {
     return (
       <div
@@ -406,22 +422,22 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
 
         <div className="hero-banner__viewport" ref={emblaRef}>
           <div className="hero-banner__container">
-            <div className="hero-banner__slide">
+            <div className={slideClass(0)}>
               <BannerB />
             </div>
-            <div className="hero-banner__slide">
+            <div className={slideClass(1)}>
               <BannerA onStartPosting={onStartPosting} />
             </div>
-            <div className="hero-banner__slide">
+            <div className={slideClass(2)}>
               <BannerC />
             </div>
-            <div className="hero-banner__slide">
+            <div className={slideClass(3)}>
               <BannerD />
             </div>
-            <div className="hero-banner__slide">
+            <div className={slideClass(4)}>
               <BannerLanguages />
             </div>
-            <div className="hero-banner__slide">
+            <div className={slideClass(5)}>
               <BannerNew />
             </div>
           </div>

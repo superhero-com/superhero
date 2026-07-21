@@ -9,9 +9,19 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  backdrop-filter: blur(12px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.15s;
+}
+
+/* The frosted backdrop is only rendered for the slides the user can actually
+   see (current + immediate neighbours). The hero background animates
+   continuously, so a visible backdrop-filter is re-blurred every frame —
+   keeping all six slides blurred paid that cost six times over for five cards
+   clipped out of view, which is what made the expanded banner lag on mobile.
+   Neighbours are included so a card is never un-frosted mid-swipe. */
+.hero-banner__slide--near .bmini {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .bmini__head {

@@ -59,16 +59,18 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Lay the platforms out in a row (wrapping when tight) instead of a tall
+     vertical stack, so the Availability slide stays as short as the others. */
   display: flex;
-  flex-direction: column;
+  flex-flow: row wrap;
   gap: 6px;
 }
 
 .bmini__list-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
   padding: 6px 9px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -154,6 +156,34 @@
   width: 100%;
   height: 36px;
   display: block;
+}
+
+/* Graph slides (Signal, Market): sit the sparkline in a row beside the price
+   instead of stacking it underneath, so the card is one row shorter. */
+.bmini__graphrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bmini__graphrow .bmini__priceline {
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.bmini__graphrow .bmini__spark {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+}
+
+.bmini__graphrow .bmini__flow {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .bmini__row {

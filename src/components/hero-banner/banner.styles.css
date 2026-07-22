@@ -174,7 +174,7 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
   max-width: 920px;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(8px, 2vw, 20px) clamp(24px, 5vw, 56px);
+  padding: clamp(8px, 2vw, 20px) clamp(16px, 3vw, 32px);
   display: flex;
   align-items: center;
   position: relative;
@@ -183,7 +183,7 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 
 .banner-layout__top {
   display: flex;
-  gap: clamp(20px, 4vw, 44px);
+  gap: clamp(16px, 2.5vw, 28px);
   align-items: center;
   width: 100%;
 }

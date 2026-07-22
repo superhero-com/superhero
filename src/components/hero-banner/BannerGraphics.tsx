@@ -93,14 +93,16 @@ export const SignalGraphic = () => (
         <span className="bmini__sub">Tokenized signal</span>
       </div>
     </div>
-    <div className="bmini__priceline">
-      <span className="bmini__price">$1.24</span>
-      <span className="bmini__delta bmini__delta--up">
-        +8.2%
-        ↗
-      </span>
+    <div className="bmini__graphrow">
+      <div className="bmini__priceline">
+        <span className="bmini__price">$1.24</span>
+        <span className="bmini__delta bmini__delta--up">
+          +8.2%
+          ↗
+        </span>
+      </div>
+      <Sparkline id="sig" />
     </div>
-    <Sparkline id="sig" />
     <div className="bmini__row">
       <span className="bmini__chip">Bonding curve</span>
       <span className="bmini__chip">Live</span>
@@ -118,14 +120,16 @@ export const TreasuryGraphic = () => (
         <span className="bmini__sub">Treasury</span>
       </div>
     </div>
-    <div className="bmini__priceline">
-      <span className="bmini__price">$128.4k</span>
-      <span className="bmini__delta bmini__delta--up">+37.8%</span>
-    </div>
-    <div className="bmini__flow">
-      <span className="bmini__flow-tag">Fees</span>
-      <span className="bmini__flow-arrow">→</span>
-      <span className="bmini__flow-tag bmini__flow-tag--gr">Treasury</span>
+    <div className="bmini__graphrow">
+      <div className="bmini__priceline">
+        <span className="bmini__price">$128.4k</span>
+        <span className="bmini__delta bmini__delta--up">+37.8%</span>
+      </div>
+      <div className="bmini__flow">
+        <span className="bmini__flow-tag">Fees</span>
+        <span className="bmini__flow-arrow">→</span>
+        <span className="bmini__flow-tag bmini__flow-tag--gr">Treasury</span>
+      </div>
     </div>
     <div className="bmini__row">
       <span className="bmini__stat-k">Creator payouts</span>
@@ -144,14 +148,16 @@ export const MarketGraphic = () => (
         <span className="bmini__sub">Hashtag market</span>
       </div>
     </div>
-    <div className="bmini__priceline">
-      <span className="bmini__price">$0.84</span>
-      <span className="bmini__delta bmini__delta--up">
-        +24.6%
-        ↗
-      </span>
+    <div className="bmini__graphrow">
+      <div className="bmini__priceline">
+        <span className="bmini__price">$0.84</span>
+        <span className="bmini__delta bmini__delta--up">
+          +24.6%
+          ↗
+        </span>
+      </div>
+      <Sparkline id="mkt" />
     </div>
-    <Sparkline id="mkt" />
     <div className="bmini__stats">
       <div className="bmini__stat">
         <span className="bmini__stat-k">Holders</span>

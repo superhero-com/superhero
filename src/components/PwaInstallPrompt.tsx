@@ -42,7 +42,7 @@ export function PwaInstallPrompt() {
         className="fixed bottom-20 right-4 z-40"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl overflow-hidden transition-all duration-300">
+        <div className={`bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-300 ${isExpanded ? 'rounded-lg' : 'rounded-full'}`}>
           {/* Collapsed state - compact circular button */}
           {!isExpanded && (
             <button
@@ -61,7 +61,7 @@ export function PwaInstallPrompt() {
 
           {/* Expanded state - slim rounded card */}
           {isExpanded && (
-            <div className="w-72 rounded-lg p-3">
+            <div className="w-72 p-3">
               {/* Header with minimize and close buttons */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

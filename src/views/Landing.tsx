@@ -3,18 +3,13 @@
   react/no-unescaped-entities,
   max-len
 */
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   Shield, TrendingUp, Users, Fingerprint, Smartphone,
   MessageCircle, ArrowRight, ChevronDown, Sparkles, Globe, BarChart3, Coins,
-  Download, MonitorSmartphone, Share,
 } from 'lucide-react';
-import { usePwaInstall } from '@/hooks/usePwaInstall';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
 
 /* ------------------------------------------------------------------ */
 /*  Floating orb component for ambient background                     */
@@ -58,118 +53,6 @@ function FeatureCard({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  PWA install affordance                                            */
-/*  Platform-aware: Chromium gets a real Install button wired to the  */
-/*  captured `beforeinstallprompt`; iOS/iPadOS Safari (and iOS Chrome/ */
-/*  Firefox, which share the same manual install path since iOS 16.4) */
-/*  has no install API, so the title becomes a button that opens a    */
-/*  dialog with the Share -> Add to Home Screen steps; everything     */
-/*  else (e.g. desktop Firefox) and already-installed sessions render */
-/*  nothing.                                                          */
-/* ------------------------------------------------------------------ */
-function PwaInstallCta() {
-  const { t } = useTranslation();
-  const {
-    canPrompt, promptInstall, isIOS, isInstalled,
-  } = usePwaInstall();
-  const [open, setOpen] = useState(false);
-  // The dialog is used in controlled mode without a `DialogTrigger` (mirroring
-  // ImageSelectorDialog's convention), so Radix's automatic "return focus to
-  // trigger" — which relies on a `DialogTrigger`-populated ref — never fires.
-  // Restore it ourselves via `onCloseAutoFocus`.
-  const iosTriggerRef = useRef<HTMLButtonElement>(null);
-
-  if (isInstalled || (!canPrompt && !isIOS)) return null;
-
-  return (
-    <div className="max-w-xl mx-auto mb-16 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl px-6 py-5">
-      <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-start">
-        <div className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
-          <MonitorSmartphone className="w-5 h-5 text-pink-400" aria-hidden="true" />
-        </div>
-
-        <div className="flex-1">
-          {isIOS ? (
-            <button
-              ref={iosTriggerRef}
-              type="button"
-              onClick={() => setOpen(true)}
-              className="w-full inline-flex items-center justify-center sm:justify-start gap-1.5 text-[14px] font-semibold text-white/90 leading-snug rounded-md hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/50"
-            >
-              {t('common.views.landing.pwaInstall.title')}
-            </button>
-          ) : (
-            <p className="text-[14px] font-semibold text-white/90 leading-snug">
-              {t('common.views.landing.pwaInstall.title')}
-            </p>
-          )}
-
-          {!isIOS && (
-            <p className="text-[13px] text-white/50 leading-relaxed mt-1">
-              {t('common.views.landing.pwaInstall.description')}
-            </p>
-          )}
-        </div>
-
-        {!isIOS && (
-          <button
-            type="button"
-            onClick={promptInstall}
-            className="shrink-0 group inline-flex items-center gap-2 bg-white/[0.05] border border-white/[0.1] text-white/80 font-medium text-[14px] px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15] hover:-translate-y-0.5"
-          >
-            <Download className="w-4 h-4" />
-            {t('common.views.landing.pwaInstall.installButton')}
-          </button>
-        )}
-      </div>
-
-      {isIOS && (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent
-            className="bg-gray-900 border-white/12 text-white sm:max-w-[420px]"
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              iosTriggerRef.current?.focus();
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-white">
-                {t('common.views.landing.pwaInstall.title')}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-3 text-start">
-              <p className="flex items-center gap-2 text-[13px] text-white/70 leading-relaxed">
-                <span
-                  className="flex items-center justify-center w-5 h-5 shrink-0 rounded-full bg-white/[0.06] text-[10px] font-mono text-white/50"
-                  aria-hidden="true"
-                >
-                  1
-                </span>
-                <Share className="w-3.5 h-3.5 text-white/70 shrink-0" aria-hidden="true" />
-                <span>{t('common.views.landing.pwaInstall.iosStep1')}</span>
-              </p>
-              <p className="flex items-center gap-2 text-[13px] text-white/70 leading-relaxed">
-                <span
-                  className="flex items-center justify-center w-5 h-5 shrink-0 rounded-full bg-white/[0.06] text-[10px] font-mono text-white/50"
-                  aria-hidden="true"
-                >
-                  2
-                </span>
-                <span>{t('common.views.landing.pwaInstall.iosStep2')}</span>
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Main Product Page                                                 */
-/* ------------------------------------------------------------------ */
 export default function Landing() {
   const { t } = useTranslation();
   return (
@@ -261,8 +144,6 @@ export default function Landing() {
 
           </div>
 
-          {/* PWA install — hidden entirely when there is no install path or already installed */}
-          <PwaInstallCta />
 
           {/* Video */}
           <div

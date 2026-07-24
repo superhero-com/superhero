@@ -20,6 +20,7 @@ import {
   profileEditModalPendingAfterConnectAtom,
 } from './atoms/profileEditModalAtom';
 import ProfileEditModal from './components/modals/ProfileEditModal';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -184,6 +185,8 @@ const App = () => {
       </Suspense>
       {/* TODO: Disable feedback button on mobile for now */}
       {!isMobile && <FeedbackButton />}
+      {/* PWA install prompt - floating bottom-right, above bottom nav */}
+      <PwaInstallPrompt />
     </div>
   );
 };

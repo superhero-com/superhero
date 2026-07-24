@@ -80,7 +80,11 @@ function PwaInstallCta() {
   // Restore it ourselves via `onCloseAutoFocus`.
   const iosTriggerRef = useRef<HTMLButtonElement>(null);
 
-  if (isInstalled || (!canPrompt && !isIOS)) return null;
+  // DEBUG: Always show on iOS for testing
+  const shouldShow = isIOS || canPrompt;
+  console.log('[PWA Debug]', { isIOS, canPrompt, isInstalled, shouldShow });
+
+  if (isInstalled || !shouldShow) return null;
 
   return (
     <div className="max-w-xl mx-auto mb-16 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl px-6 py-5">

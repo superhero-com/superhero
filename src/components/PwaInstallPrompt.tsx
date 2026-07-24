@@ -85,12 +85,21 @@ export function PwaInstallPrompt() {
                 </div>
               </div>
 
-              {/* Description text - only show if not iOS */}
-              {!isIOS && (
-                <p className="text-xs text-white/50 mb-2 leading-relaxed">
-                  Quick access, full-screen experience
-                </p>
-              )}
+              {/* Feature bullets */}
+              <ul className="space-y-1 mb-3 ml-1">
+                <li className="flex items-center gap-1.5 text-xs text-white/70">
+                  <span className="w-1 h-1 rounded-full bg-pink-400 shrink-0" />
+                  Saves to homescreen
+                </li>
+                <li className="flex items-center gap-1.5 text-xs text-white/70">
+                  <span className="w-1 h-1 rounded-full bg-purple-400 shrink-0" />
+                  Integrated wallet
+                </li>
+                <li className="flex items-center gap-1.5 text-xs text-white/70">
+                  <span className="w-1 h-1 rounded-full bg-blue-400 shrink-0" />
+                  Push notifications
+                </li>
+              </ul>
 
               {/* Action button */}
               {isIOS ? (

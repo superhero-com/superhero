@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Download, MonitorSmartphone, Share, X, ChevronDown, ChevronUp,
+  Download, MonitorSmartphone, Share, X, ChevronDown,
 } from 'lucide-react';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import {
@@ -13,7 +13,7 @@ import {
  * Displays above the bottom navigation bar with expandable/collapsible states.
  * Platform-aware: shows native install button on Chromium, manual instructions on iOS.
  */
-export function PwaInstallPrompt() {
+export const PwaInstallPrompt = () => {
   const { t } = useTranslation();
   const {
     canPrompt, promptInstall, isIOS, isInstalled,
@@ -22,15 +22,6 @@ export function PwaInstallPrompt() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [iosDialogOpen, setIosDialogOpen] = useState(false);
   const iosTriggerRef = useRef<HTMLButtonElement>(null);
-
-  // Debug logging
-  console.log('[PwaInstallPrompt]', {
-    isInstalled,
-    canPrompt,
-    isIOS,
-    isDismissed,
-    willShow: !isInstalled && (canPrompt || isIOS) && !isDismissed,
-  });
 
   // Don't render if already installed, not installable, or dismissed
   if (isInstalled || (!canPrompt && !isIOS) || isDismissed) return null;
@@ -172,7 +163,11 @@ export function PwaInstallPrompt() {
                       {t('common.views.landing.pwaInstall.iosStep1')}
                     </p>
                     <p className="text-xs text-white/60">
-                      Tap the <Share className="inline w-3.5 h-3.5 mx-0.5" /> icon in Safari&apos;s toolbar
+                      Tap the
+                      {' '}
+                      <Share className="inline w-3.5 h-3.5 mx-0.5" />
+                      {' '}
+                      icon in Safari&apos;s toolbar
                     </p>
                   </div>
                 </div>
@@ -197,4 +192,4 @@ export function PwaInstallPrompt() {
       )}
     </>
   );
-}
+};

@@ -144,7 +144,6 @@ export default function Landing() {
 
           </div>
 
-
           {/* Video */}
           <div
             className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"

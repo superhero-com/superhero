@@ -23,6 +23,15 @@ export function PwaInstallPrompt() {
   const [iosDialogOpen, setIosDialogOpen] = useState(false);
   const iosTriggerRef = useRef<HTMLButtonElement>(null);
 
+  // Debug logging
+  console.log('[PwaInstallPrompt]', {
+    isInstalled,
+    canPrompt,
+    isIOS,
+    isDismissed,
+    willShow: !isInstalled && (canPrompt || isIOS) && !isDismissed,
+  });
+
   // Don't render if already installed, not installable, or dismissed
   if (isInstalled || (!canPrompt && !isIOS) || isDismissed) return null;
 

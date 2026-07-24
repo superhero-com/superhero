@@ -52,7 +52,7 @@ export function PwaInstallPrompt() {
 
           {/* Expanded state - slim rounded card */}
           {isExpanded && (
-            <div className="w-72 rounded-2xl p-3">
+            <div className="w-72 rounded-full p-3">
               {/* Header with minimize and close buttons */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

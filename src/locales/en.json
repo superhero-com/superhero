@@ -1004,7 +1004,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "Decentralized identity,",
           "titleLine2": "W3C standard",
           "description": "A DID (decentralized identifier) that links your social accounts to your wallet. Your identity is verifiable, portable, and censorship-resistant — following the W3C standard for decentralized identifiers.",
@@ -1012,7 +1012,7 @@
           "point1": "W3C DID standard compliant",
           "point2": "Links wallet, chain names, and X handle",
           "point3": "Self-sovereign — you control your data",
-          "imageAlt": "Superhero ID visual mockup"
+          "imageAlt": "SuperheroID visual mockup"
         },
         "mobile": {
           "eyebrow": "Mobile App",
@@ -1108,7 +1108,7 @@
       "dao": "DAO",
       "earnRewards": "Earn Rewards",
       "getAe": "Get AE",
-      "superheroId": "Superhero ID",
+      "superheroId": "SuperheroID",
       "account": "Account"
     },
     "transactionNotification": {

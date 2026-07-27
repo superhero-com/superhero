@@ -9,6 +9,9 @@ import { getAffiliationTreasury } from '@/libs/affiliation';
 import { Decimal } from '@/libs/decimal';
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import Spinner from '@/components/Spinner';
+import TrophyIcon from '@/svg/iconTrophy.svg?react';
+import StarIcon from '@/svg/iconStar.svg?react';
+import CelebrationIcon from '@/svg/iconCelebration.svg?react';
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
@@ -252,19 +255,23 @@ const CollectRewardsCard = () => {
   }, [collectingReward, thresholdReached, accumulatedRewardsAe, t]);
 
   return (
-    <div className="bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+    <div className="bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden animate-scaleIn hover-lift">
+      {/* Animated background glow */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl animate-float" />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5">
-        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-          <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
-            <path d="M12 18V6" />
-          </svg>
+        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 animate-pulseGlow">
+          <TrophyIcon className="w-5 h-5 text-cyan-400 animate-float" />
         </div>
+        {isEligibleForRewards && (
+          <div className="animate-bounce">
+            <StarIcon className="w-6 h-6 text-yellow-400 animate-sparkle" />
+          </div>
+        )}
       </div>
 
-      <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2">
+      <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2 animate-slideDown">
         {t('collectRewards.title')}
       </h3>
 
@@ -300,9 +307,16 @@ const CollectRewardsCard = () => {
             </div>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-cyan-500 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${progressPercentage}%` }}
-              />
+                className="h-full bg-cyan-500 rounded-full transition-all duration-700 ease-out relative"
+                style={{
+                  width: `${progressPercentage}%`,
+                  animation: progressPercentage > 0 ? 'progressFill 1s ease-out' : 'none',
+                }}
+              >
+                {progressPercentage > 0 && (
+                  <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                )}
+              </div>
             </div>
             <div className="font-medium text-white/40 text-xs">
               {thresholdReached
@@ -334,9 +348,16 @@ const CollectRewardsCard = () => {
                     </div>
                     <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${item.reached ? 'bg-emerald-400' : 'bg-cyan-500'}`}
-                        style={{ width: `${item.progressPct}%` }}
-                      />
+                        className={`h-full rounded-full relative ${item.reached ? 'bg-emerald-400' : 'bg-cyan-500'}`}
+                        style={{
+                          width: `${item.progressPct}%`,
+                          animation: item.progressPct > 0 ? 'progressFill 1s ease-out' : 'none',
+                        }}
+                      >
+                        {item.progressPct > 0 && (
+                          <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -373,12 +394,19 @@ const CollectRewardsCard = () => {
               type="button"
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
-              className={`w-full p-3 md:p-4 text-sm font-semibold uppercase tracking-wider rounded-lg transition-all duration-200 ${isEligibleForRewards
-                ? 'bg-cyan-500 hover:bg-cyan-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25'
+              className={`w-full p-3 md:p-4 text-sm font-semibold uppercase tracking-wider rounded-lg transition-all duration-200 relative overflow-hidden group ${isEligibleForRewards
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25 animate-pulseGlow'
                 : 'opacity-50 cursor-not-allowed bg-white/5 text-white/30'
               }`}
             >
-              {collectButtonContent}
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isEligibleForRewards && <CelebrationIcon className="w-5 h-5 animate-sparkle" />}
+                {collectButtonContent}
+                {isEligibleForRewards && <TrophyIcon className="w-5 h-5 group-hover:animate-bounce" />}
+              </span>
+              {isEligibleForRewards && (
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              )}
             </button>
           </div>
         </div>

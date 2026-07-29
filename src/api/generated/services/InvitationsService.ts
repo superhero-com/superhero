@@ -13,11 +13,16 @@ export class InvitationsService {
     public static listAll({
         orderBy,
         orderDirection,
+        inviter,
         limit,
         page,
     }: {
         orderBy?: 'amount' | 'created_at',
         orderDirection?: 'ASC' | 'DESC',
+        /**
+         * Filter to invitations sent by this address; each item includes its claim status (claimed, claimer_address, claimed_at, claim_tx_hash) so callers no longer need a per-invitee middleware lookup.
+         */
+        inviter?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<any> {
@@ -27,6 +32,7 @@ export class InvitationsService {
             query: {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
+                'inviter': inviter,
                 'limit': limit,
                 'page': page,
             },

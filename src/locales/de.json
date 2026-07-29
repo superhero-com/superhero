@@ -1074,7 +1074,9 @@
     },
     "heroBanner": {
       "bannerAria": "Superhero-Banner",
+      "dismiss": "Schließen",
       "dismissAria": "Banner schließen",
+      "expandAria": "Banner anzeigen",
       "previousSlide": "Vorherige Folie",
       "nextSlide": "Nächste Folie",
       "goToSlide": "Zu Folie {{number}} gehen"
@@ -2015,6 +2017,8 @@
       "trendTokenName": "Trend-Token-Name",
       "charactersCount": "{{count}}/{{max}} Zeichen",
       "invalidCharacters": "Ungültige Zeichen",
+      "unsupportedBadge": "Nicht unterstützt",
+      "unsupportedCharacters": "Diese Zeichen werden noch nicht unterstützt",
       "allowedCharsHint": "Erlaubt: A–Z, 0–9 und -",
       "tradingLive": "Handel live",
       "token": "Token",
@@ -2228,6 +2232,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Sammlung",
       "price": "Preis",
       "price30d": "Preis (30d)",
       "change24h": "24h %",
@@ -2632,6 +2637,25 @@
       ],
       "primaryButton": "Einen #Trend starten",
       "secondaryButton": "#Trends erkunden"
+    },
+    "bannerD": {
+      "titleMain": "KI-Agenten handeln und posten für Sie",
+      "titleAccent": "rund um die Uhr.",
+      "description": "Setzen Sie KI-Agenten ein, um Ihre Trends automatisch wachsen zu lassen – sie posten, handeln und skalieren, während Sie schlafen.",
+      "primaryButton": "KI-Agent einsetzen",
+      "secondaryButton": "So funktioniert's"
+    },
+    "bannerLanguages": {
+      "title": "Ihre Sprache. Ihr Markt.",
+      "description": "Erstellen Sie Trends auf Englisch, 中文, Русский oder العربية. Native On-Chain-Unterstützung für globale Communities – keine Übersetzung, keine Barrieren.",
+      "primaryButton": "Einen #Trend starten",
+      "secondaryButton": "Alle Trends ansehen"
+    },
+    "bannerNew": {
+      "title": "Gemacht für Menschen und KI-Agenten.",
+      "description": "iOS, Android und vollständiger API-Zugriff für KI-Agenten. Trends handeln, on-chain posten und Ihre eigene Wallet besitzen – alles auf einer Plattform.",
+      "primaryButton": "Loslegen",
+      "secondaryButton": "Mehr erfahren"
     }
   },
   "addTokens": {

@@ -55,6 +55,95 @@ export class PostsService {
         });
     }
     /**
+     * Popular posts
+     * Returns all-time popular posts with a temporary freshness boost for new posts. Optional scale params let clients personalize signal importance.
+     * @returns any
+     * @throws ApiError
+     */
+    public static popular({
+        window,
+        page = 1,
+        limit = 50,
+        debug,
+        comments,
+        tipsAmountAe,
+        tipsCount,
+        uniqueTippers,
+        trendingBoost,
+        contentQuality,
+        reads,
+        interactionsPerHour,
+    }: {
+        /**
+         * Deprecated. Popular ranking is now all-time; this value is accepted for backwards compatibility and ignored.
+         * @deprecated
+         */
+        window?: '24h' | '7d' | 'all',
+        /**
+         * Page number
+         */
+        page?: number,
+        /**
+         * Page size
+         */
+        limit?: number,
+        /**
+         * Return debug info when set to 1
+         */
+        debug?: number,
+        /**
+         * Scale for comment impact (low = reduce, med = default, high = boost)
+         */
+        comments?: 'low' | 'med' | 'high',
+        /**
+         * Scale for tipped amount impact (low = reduce, med = default, high = boost)
+         */
+        tipsAmountAe?: 'low' | 'med' | 'high',
+        /**
+         * Scale for tip count impact (low = reduce, med = default, high = boost)
+         */
+        tipsCount?: 'low' | 'med' | 'high',
+        /**
+         * Scale for unique tippers impact (low = reduce, med = default, high = boost)
+         */
+        uniqueTippers?: 'low' | 'med' | 'high',
+        /**
+         * Scale for trending topic boost (low = reduce, med = default, high = boost)
+         */
+        trendingBoost?: 'low' | 'med' | 'high',
+        /**
+         * Scale for content quality impact (low = reduce, med = default, high = boost)
+         */
+        contentQuality?: 'low' | 'med' | 'high',
+        /**
+         * Scale for reads impact (low = reduce, med = default, high = boost)
+         */
+        reads?: 'low' | 'med' | 'high',
+        /**
+         * Scale for active-engagement velocity using comments, tips, and unique tippers per hour (low = reduce, med = default, high = boost)
+         */
+        interactionsPerHour?: 'low' | 'med' | 'high',
+    }): CancelablePromise<Pagination> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/posts/popular',
+            query: {
+                'window': window,
+                'page': page,
+                'limit': limit,
+                'debug': debug,
+                'comments': comments,
+                'tipsAmountAE': tipsAmountAe,
+                'tipsCount': tipsCount,
+                'uniqueTippers': uniqueTippers,
+                'trendingBoost': trendingBoost,
+                'contentQuality': contentQuality,
+                'reads': reads,
+                'interactionsPerHour': interactionsPerHour,
+            },
+        });
+    }
+    /**
      * Get post by ID
      * Retrieve a specific post by its unique identifier
      * @returns PostDto Post retrieved successfully

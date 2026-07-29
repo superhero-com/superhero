@@ -34,11 +34,15 @@ export type DexTokenDto = {
      */
     is_ae: boolean;
     /**
+     * Whether the token is officially listed/featured by the DEX
+     */
+    listed: boolean;
+    /**
      * Price Data
      */
     price: PriceDto;
     /**
-     * Aggregated volume and price change summary across all pools for this token
+     * Aggregated volume and price change summary across all pools for this token. Null when the token has no computed summary (LEFT JOIN).
      */
     summary: DexTokenSummaryDto | null;
 };

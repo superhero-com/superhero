@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PostSenderDto } from './PostSenderDto';
+import type { PostTrendMentionDto } from './PostTrendMentionDto';
 export type PostDto = {
     /**
      * Unique identifier for the post
@@ -20,6 +22,10 @@ export type PostDto = {
      */
     sender_address: string;
     /**
+     * Minimal sender profile info
+     */
+    sender: PostSenderDto;
+    /**
      * Address of the smart contract
      */
     contract_address: string;
@@ -32,9 +38,9 @@ export type PostDto = {
      */
     content: string;
     /**
-     * Array of topics/hashtags associated with the post
+     * Trend mentions extracted from #trendName in content
      */
-    topics: Array<string>;
+    trend_mentions?: Array<PostTrendMentionDto>;
     /**
      * Array of media URLs associated with the post
      */

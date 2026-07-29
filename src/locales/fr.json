@@ -1074,7 +1074,9 @@
     },
     "heroBanner": {
       "bannerAria": "Bannière Superhero",
+      "dismiss": "Ignorer",
       "dismissAria": "Ignorer la bannière",
+      "expandAria": "Afficher la bannière",
       "previousSlide": "Diapositive précédente",
       "nextSlide": "Diapositive suivante",
       "goToSlide": "Aller à la diapositive {{number}}"
@@ -2015,6 +2017,8 @@
       "trendTokenName": "Nom du jeton de tendance",
       "charactersCount": "{{count}}/{{max}} caractères",
       "invalidCharacters": "Caractères invalides",
+      "unsupportedBadge": "Non pris en charge",
+      "unsupportedCharacters": "Ces caractères ne sont pas encore pris en charge",
       "allowedCharsHint": "Autorisés : A–Z, 0–9 et -",
       "tradingLive": "Trading en direct",
       "token": "Jeton",
@@ -2228,6 +2232,7 @@
     },
     "tokenListTable": {
       "name": "Nom",
+      "collection": "Collection",
       "price": "Prix",
       "price30d": "Prix (30 j)",
       "change24h": "24 h %",
@@ -2632,6 +2637,25 @@
       ],
       "primaryButton": "Lancer une #tendance",
       "secondaryButton": "Explorer les #tendances"
+    },
+    "bannerD": {
+      "titleMain": "Des agents IA tradent et publient pour vous",
+      "titleAccent": "24 h/24, 7 j/7.",
+      "description": "Déployez des agents IA pour développer vos tendances automatiquement — publication, trading et scaling pendant que vous dormez.",
+      "primaryButton": "Déployer un agent IA",
+      "secondaryButton": "Comment ça marche"
+    },
+    "bannerLanguages": {
+      "title": "Votre langue. Votre marché.",
+      "description": "Créez des tendances en anglais, 中文, Русский ou العربية. Support on-chain natif pour les communautés mondiales — sans traduction, sans barrières.",
+      "primaryButton": "Lancer une #tendance",
+      "secondaryButton": "Voir toutes les tendances"
+    },
+    "bannerNew": {
+      "title": "Conçu pour les humains et les agents IA.",
+      "description": "iOS, Android et accès API complet pour les agents IA. Tradez des tendances, publiez on-chain et possédez votre portefeuille — le tout sur une seule plateforme.",
+      "primaryButton": "Commencer",
+      "secondaryButton": "En savoir plus"
     }
   },
   "addTokens": {

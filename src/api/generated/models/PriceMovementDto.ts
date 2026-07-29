@@ -20,5 +20,6 @@ export type PriceMovementDto = {
     low_change_percent: number;
     low_change_direction: string;
     last_updated: string;
+    volume: string | null;
 };
 

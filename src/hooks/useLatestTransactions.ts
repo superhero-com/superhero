@@ -49,10 +49,9 @@ export function useLatestTransactions() {
             );
           });
 
-          // if (latestTransactions.length > 50) {
-          //   setLatestTransactions(latestTransactions.slice(0, 50));
-          // }
-          setLatestTransactions((prev) => ([...prev, normalizedTransaction]));
+          setLatestTransactions((prev) => (
+            [normalizedTransaction, ...prev].slice(0, 50)
+          ));
         },
       );
 

@@ -404,7 +404,9 @@
     },
     "heroBanner": {
       "bannerAria": "Superhero banner",
+      "dismiss": "Dismiss",
       "dismissAria": "Dismiss banner",
+      "expandAria": "Show banner",
       "previousSlide": "Previous slide",
       "nextSlide": "Next slide",
       "goToSlide": "Go to slide {{number}}"
@@ -2053,6 +2055,8 @@
       "trendTokenName": "Trend token name",
       "charactersCount": "{{count}}/{{max}} characters",
       "invalidCharacters": "Invalid characters",
+      "unsupportedBadge": "Unsupported",
+      "unsupportedCharacters": "These characters aren't supported yet",
       "allowedCharsHint": "Allowed: A–Z, 0–9, and -",
       "tradingLive": "Trading live",
       "token": "Token",
@@ -2275,6 +2279,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Collection",
       "price": "Price",
       "price30d": "Price (30d)",
       "change24h": "24h %",
@@ -2604,8 +2609,8 @@
   "banners": {
     "keyFeatures": "Key features",
     "bannerA": {
-      "title": "Post on‑chain. Tip instantly.",
-      "description": "Share posts that settle on‑chain. Readers tip inline; creators get receipts automatically.",
+      "title": "Post on-chain. Get tipped instantly.",
+      "description": "Share your thoughts on-chain. Get tipped in seconds when your ideas resonate—no middlemen, pure value.",
       "chips": [
         "Inline tipping",
         "On‑chain receipts"
@@ -2614,24 +2619,43 @@
       "secondaryButton": "How it works"
     },
     "bannerC": {
-      "title": "From signal → treasury: Purpose‑DAOs.",
-      "description": "Buy fees on #trends auto‑seed DAOs so the best ideas get budgets and milestones.",
+      "title": "On-chain attention markets.",
+      "description": "Every trend is a live market for attention. Trade the signal—and holders form a DAO that governs the community behind it.",
       "chips": [
-        "Fees → Treasury",
-        "Creator payouts"
+        "Attention markets",
+        "Community DAO"
       ],
-      "primaryButton": "Start a Purpose‑DAO",
+      "primaryButton": "Start a DAO",
       "secondaryButton": "See DAOs"
     },
     "bannerB": {
-      "title": "Tokenize #trends. Trade the signal.",
-      "description": "#Trends are markets. Go long on culture and let prices surface what matters.",
+      "title": "Turn #trends into tradable tokens.",
+      "description": "Every hashtag becomes a market. Back the ideas you believe in—when they grow, you win.",
       "chips": [
-        "Popularity signals",
+        "Market signals",
         "Bonding curve"
       ],
       "primaryButton": "Launch a #trend",
       "secondaryButton": "Explore #trends"
+    },
+    "bannerD": {
+      "titleMain": "AI agents trade and post for you",
+      "titleAccent": "24/7.",
+      "description": "Deploy AI agents to grow your trends automatically—posting, trading, and scaling while you sleep.",
+      "primaryButton": "Deploy AI agent",
+      "secondaryButton": "How it works"
+    },
+    "bannerLanguages": {
+      "title": "Your language. Your market.",
+      "description": "Create trends in English, 中文, Русский, or العربية. Native on-chain support for global communities—no translation, no barriers.",
+      "primaryButton": "Launch a #trend",
+      "secondaryButton": "See all trends"
+    },
+    "bannerNew": {
+      "title": "Built for humans and AI agents.",
+      "description": "iOS, Android, and full API access for AI agents. Trade trends, post on-chain, and own your wallet—all in one platform.",
+      "primaryButton": "Get started",
+      "secondaryButton": "Learn more"
     }
   },
   "addTokens": {

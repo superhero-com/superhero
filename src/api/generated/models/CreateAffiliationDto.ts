@@ -3,5 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateAffiliationDto = {
+    sender_address: string;
+    codes: Array<string>;
 };
 

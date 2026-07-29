@@ -278,6 +278,27 @@ describe('TokenList search experience', () => {
     expect(screen.queryByRole('button', { name: 'Tokens' })).toBeInTheDocument();
   });
 
+  it('does not offer to load more when a collection filter has zero tokens', async () => {
+    tokenServiceMocks.listAll.mockReset();
+    tokenServiceMocks.listAll.mockResolvedValue({
+      items: [],
+      meta: { currentPage: 1, totalPages: 0 },
+    });
+
+    renderView();
+
+    await waitFor(() => {
+      expect(tokenServiceMocks.listAll).toHaveBeenCalled();
+    });
+
+    expect(await screen.findByText('No token sales are available right now.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Load More' })).not.toBeInTheDocument();
+
+    // Give any runaway effect a chance to re-fetch before asserting it settled.
+    await new Promise((resolve) => { setTimeout(resolve, 50); });
+    expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(1);
+  });
+
   it('shows error panel when search preview fails', async () => {
     searchApiMocks.fetchTrendSearchPreview.mockRejectedValue(
       new Error('Network error'),

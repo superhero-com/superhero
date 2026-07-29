@@ -162,7 +162,12 @@ const FooterSection = ({ compact = false }: { compact?: boolean }) => {
             align={compact ? 'center' : 'end'}
             options={SUPPORTED_LANGUAGES.map((l) => ({
               value: l.code,
-              label: `${l.flag}  ${l.label}`,
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-block w-[1.4em] text-center shrink-0 leading-none">{l.flag}</span>
+                  <span>{l.label}</span>
+                </span>
+              ),
             }))}
             triggerClassName="min-w-[150px] bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-[var(--light-font-color)] hover:bg-white/[0.05] focus:outline-none"
             contentClassName="bg-gray-900 border border-white/10 text-white"

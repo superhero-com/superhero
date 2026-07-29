@@ -1,0 +1,10 @@
+/* BannerD keeps only its gradient italic accent; layout is shared via
+   BannerContent (.banner-layout) like every other slide. */
+
+.banner-d__accent {
+  font-style: italic;
+  background: linear-gradient(90deg, #38ffb3, #00e5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

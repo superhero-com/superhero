@@ -88,7 +88,7 @@ export default function UserProfile({
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
-  const { getProfile, canEdit } = useProfile(effectiveAddress);
+  const { canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
@@ -105,7 +105,10 @@ export default function UserProfile({
     enabled: !!effectiveAddress,
   });
 
-  // Account info (bio, chain name, totals) from backend
+  // Account info (bio, chain name, totals, embedded profile) from backend.
+  // getAccount already embeds the profile (profile/public_name), so a separate
+  // SuperheroApi.getProfile poll is redundant — see patchAccountCacheEntry below,
+  // which keeps this cache entry in sync with profile edits directly.
   const { data: accountInfo, refetch: refetchAccount } = useQuery({
     queryKey: ['AccountsService.getAccount', effectiveAddress],
     queryFn: () => AccountsService.getAccount({
@@ -114,15 +117,7 @@ export default function UserProfile({
     enabled: !!effectiveAddress,
     staleTime: 10_000,
   });
-  const { data: profileInfo, refetch: refetchProfile } = useQuery({
-    queryKey: ['SuperheroApi.getProfile', effectiveAddress],
-    queryFn: () => SuperheroApi.getProfile(effectiveAddress),
-    enabled: !!effectiveAddress,
-    staleTime: 10_000,
-    refetchInterval: 10_000,
-  });
 
-  const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editInitialSection, setEditInitialSection] = useState<'profile' | 'x'>('profile');
 
@@ -176,49 +171,15 @@ export default function UserProfile({
     }
   }, [searchParams]);
 
-  const { data: ownedTokensResp } = useQuery({
-    queryKey: [
-      'AccountTokensService.listTokenHolders-counter',
-      effectiveAddress,
-    ],
-    queryFn: () => AccountTokensService.listTokenHolders({
-      address: effectiveAddress,
-      orderBy: 'balance',
-      limit: 1,
-      page: 1,
-    }) as unknown as Promise<{ items: any[]; meta?: any }>,
-    enabled: !!effectiveAddress,
-    staleTime: 60_000,
-  });
-
-  // Fetch created tokens count for stats display
-  const { data: createdTokensResp } = useQuery({
-    queryKey: [
-      'TokensService.listAll',
-      'created-count',
-      effectiveAddress,
-    ],
-    queryFn: () => TokensService.listAll({
-      creatorAddress: effectiveAddress,
-      orderBy: 'created_at',
-      orderDirection: 'DESC',
-      limit: 1,
-      page: 1,
-    }) as unknown as Promise<{ items: any[]; meta?: any }>,
-    enabled: !!effectiveAddress,
-    staleTime: 60_000,
-  });
+  // Owned/created token counts come from the account aggregate
+  // (holdings_count/total_created_tokens) — no separate list-count queries needed.
 
   // Get posts from the query data
   const posts = data?.items || [];
 
-  const bioText = getLinkedBio(accountInfo)
-    || getLinkedBio(profileInfo)
-    || (profile?.profile?.bio || '').trim()
-    || '';
-  const linkedPreferredName = getLinkedPreferredAensName(accountInfo)
-    || getLinkedPreferredAensName(profileInfo);
-  const displayName = (linkedPreferredName || profileInfo?.public_name || chainName || '').trim()
+  const bioText = getLinkedBio(accountInfo) || '';
+  const linkedPreferredName = getLinkedPreferredAensName(accountInfo);
+  const displayName = (linkedPreferredName || accountInfo?.public_name || chainName || '').trim()
     || formatAddress(effectiveAddress, 6, true);
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
@@ -229,10 +190,6 @@ export default function UserProfile({
     window.scrollTo(0, 0);
     // Note: loadAccountData() is automatically called by useAccountBalances hook
     // when effectiveAddress changes, so no manual call is needed here
-    (async () => {
-      const p = await getProfile();
-      setProfile(p);
-    })();
   }, [effectiveAddress]);
 
   // Prefetch all tab data in the background so switching tabs is instant
@@ -288,6 +245,12 @@ export default function UserProfile({
               { kind: 'token-created' },
             ],
             sender_address: payload?.creator_address || effectiveAddress || '',
+            sender: {
+              address: payload?.creator_address || effectiveAddress || '',
+              public_name: '',
+              bio: '',
+              avatarurl: '',
+            },
             contract_address: saleAddress || '',
             type: 'TOKEN_CREATED',
             content: '',
@@ -542,7 +505,7 @@ export default function UserProfile({
               {t('explore:ownedTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
+              {(accountInfo?.holdings_count ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
             </div>
           </button>
           <button
@@ -553,7 +516,7 @@ export default function UserProfile({
               {t('explore:createdTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {((createdTokensResp as any)?.meta?.totalItems ?? accountInfo?.total_created_tokens ?? 0).toLocaleString()}
+              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
             </div>
           </button>
           <button
@@ -617,7 +580,6 @@ export default function UserProfile({
     setEditOpen(false);
     setEditInitialSection('profile');
     if (updatedProfile) {
-      queryClient.setQueryData(['SuperheroApi.getProfile', effectiveAddress], updatedProfile);
       queryClient.setQueryData(['AccountsService.getAccount', effectiveAddress], (oldData: any) => {
         const bioChanged = getLinkedBio(updatedProfile) !== getLinkedBio(oldData);
         const chainNameChanged = getLinkedPreferredAensName(updatedProfile)
@@ -630,13 +592,11 @@ export default function UserProfile({
           formChainName: updatedProfile?.profile?.chain_name ?? '',
         });
       });
-      setProfile(updatedProfile);
     }
     // Always refetch on close — X linking (and other link flows) can complete out-of-band
     // via the OAuth redirect / wallet deep link, so the cached account that drives the
     // "Link your X account" prompt may be stale even when no in-modal save happened.
     refetchAccount();
-    refetchProfile();
   };
 
   const profileModals = (
@@ -655,7 +615,6 @@ export default function UserProfile({
       // refetch to restore server truth without running the dismiss logic above.
       onSaveError={() => {
         refetchAccount();
-        refetchProfile();
       }}
       address={effectiveAddress}
       initialBio={bioText}

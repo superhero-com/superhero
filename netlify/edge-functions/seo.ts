@@ -27,6 +27,40 @@ function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, '&#39;');
 }
 
+// Safe-for-`<script type="application/ld+json">` JSON serializer.
+// `JSON.stringify` does not escape `<`, `>`, or `/`, so a post/bio/token field containing
+// `</script><script>alert(1)</script>` would close the JSON-LD script element early and let
+// the attacker-controlled remainder execute as a new, unrestricted <script> -- a stored XSS.
+// HTML entities (`&lt;`) do NOT help here: the browser's HTML tokenizer scans raw script text
+// for the literal `</script` byte sequence *before* any entity decoding happens, so `&lt;`
+// would render as a literal `&lt;` string inside the JSON payload -- breaking valid-JSON
+// round-tripping while doing nothing to stop the breakout. Instead we substitute JSON/JS
+// `\uXXXX` escapes, which `JSON.parse` decodes back to the original character but which the
+// HTML parser never recognizes as tag syntax. We also escape the LINE SEPARATOR (U+2028) and
+// PARAGRAPH SEPARATOR (U+2029): valid in JSON strings but treated as line terminators by some
+// JS parsers, which can break `eval`/script contexts consuming this payload as JavaScript.
+//
+// The backslash and the two separator code points below are built via `String.fromCharCode`
+// rather than written as `\`-escape syntax in a string/regex literal: a JS unicode escape
+// like that is resolved by the parser *at parse time* back into the very character it names,
+// so naively "replacing with an escape sequence" written that way would silently be a no-op
+// (replacing the character with itself). `fromCharCode` sidesteps that ambiguity entirely.
+// A bare U+2028/U+2029 also cannot appear unescaped inside a `/regex/` literal at all (it is
+// a LineTerminator per the ECMAScript grammar), so those two are matched via `new RegExp(...)`
+// built from `fromCharCode` rather than a `/.../ ` literal.
+const BACKSLASH = String.fromCharCode(0x5c);
+const LINE_SEPARATOR_RE = new RegExp(String.fromCharCode(0x2028), 'g');
+const PARAGRAPH_SEPARATOR_RE = new RegExp(String.fromCharCode(0x2029), 'g');
+
+export function jsonLdSafe(schema: Record<string, unknown>): string {
+  return JSON.stringify(schema)
+    .replace(/</g, `${BACKSLASH}u003C`)
+    .replace(/>/g, `${BACKSLASH}u003E`)
+    .replace(/\//g, `${BACKSLASH}u002F`)
+    .replace(LINE_SEPARATOR_RE, `${BACKSLASH}u2028`)
+    .replace(PARAGRAPH_SEPARATOR_RE, `${BACKSLASH}u2029`);
+}
+
 function absolutize(url?: string, origin?: string): string | undefined {
   if (!url) return undefined;
   if (/^https?:\/\//i.test(url)) return url;
@@ -42,7 +76,7 @@ async function fetchPostBySegment(baseApi: string, seg: string): Promise<any | n
   return null;
 }
 
-function injectHead(html: string, meta: Meta, origin: string): string {
+export function injectHead(html: string, meta: Meta, origin: string): string {
   const parts: string[] = [];
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
@@ -74,7 +108,7 @@ function injectHead(html: string, meta: Meta, origin: string): string {
     jsonLdArray = [meta.jsonLd];
   }
   jsonLdArray.forEach((schema) => {
-    parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+    parts.push(`<script type="application/ld+json">${jsonLdSafe(schema)}</script>`);
   });
 
   const injection = parts.join('\n');

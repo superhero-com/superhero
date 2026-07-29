@@ -8,7 +8,7 @@
       /* Prevent slow color/fill/stroke fades on first paint (iOS Safari) */
       html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
     </style>
-    <script>
+    <script nonce="__CSP_NONCE__">
       (function () {
         try {
           var ua = navigator.userAgent || '';
@@ -95,7 +95,7 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
+    <script nonce="__CSP_NONCE__">
       // Synchronous runtime configuration injected at container start via envsubst
       window.__SUPERCONFIG__ = {
         BACKEND_URL: '$BACKEND_URL',
@@ -114,8 +114,8 @@
         EXPLORER_URL: '$EXPLORER_URL',
       };
     </script>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
+    <script type="module" src="/src/main.tsx" nonce="__CSP_NONCE__"></script>
+    <script nonce="__CSP_NONCE__">
       // Re-enable transitions after first paint
       window.addEventListener('load', function () {
         requestAnimationFrame(function () {

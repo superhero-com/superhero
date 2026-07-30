@@ -27,7 +27,10 @@ type Step =
 
 const defaultStore = createIndexedDbVaultStore();
 
-const card = 'w-full max-w-md mx-auto bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6';
+// Aligned to the app's AeCard `glass` variant tokens (bg-glass-bg / border-glass-border /
+// shadow-glass / backdrop-blur-card) so the onboarding card matches the rest of the design system.
+const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
+  + 'border-glass-border shadow-glass backdrop-blur-card p-6';
 const primaryBtn = 'w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium '
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-pink-500/25';
 const ghostBtn = 'w-full py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '

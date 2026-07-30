@@ -147,6 +147,13 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     }
   }, [store, importText, mnemonic, pass, step, onComplete]);
 
+  // Focus the step's primary field on entry — programmatic (callback ref), matching the
+  // app's own pattern and avoiding the jsx-a11y/no-autofocus DOM attribute. Fires on each
+  // step's keyed remount; called with null on unmount (no-op).
+  const focusOnMount = useCallback((el: HTMLInputElement | HTMLTextAreaElement | null) => {
+    el?.focus();
+  }, []);
+
   const overlay = (
     // Focused full-screen takeover: covers the app header, bottom tabs, and the
     // app-wide Install-App prompt so a secret-phrase / passphrase step is private
@@ -248,8 +255,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     id={`vw${n}`}
                     className={input}
                     value={verifyIn[n]}
+                    ref={n === 0 ? focusOnMount : undefined}
                     autoCapitalize="none"
                     autoCorrect="off"
+                    spellCheck={false}
                     onChange={(e) => setVerifyIn((prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]))}
                   />
                 </div>
@@ -269,8 +278,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 className={`${input} font-mono mb-2`}
                 rows={3}
                 value={importText}
+                ref={focusOnMount}
                 autoCapitalize="none"
                 autoCorrect="off"
+                spellCheck={false}
                 placeholder="word1 word2 word3 …"
                 onChange={(e) => setImportText(e.target.value)}
               />
@@ -288,9 +299,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <p className="text-sm text-muted-foreground mb-4">
                 This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
               </p>
-              <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
+              <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
               <p className={`text-xs mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
-              <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
+              <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
               {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
               {error && <p className="text-xs text-rose-400 mb-3">{error}</p>}
               <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>

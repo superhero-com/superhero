@@ -120,7 +120,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       className="fixed inset-0 z-[1200] bg-[#0a0a0f] text-white overflow-y-auto"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="min-h-full flex items-center justify-center p-4">
+      <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
         {step === 'exists' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-2">Wallet already set up</h2>

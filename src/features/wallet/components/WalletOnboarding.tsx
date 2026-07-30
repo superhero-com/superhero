@@ -219,8 +219,8 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'exists' && (
             <div className={card}>
               <IconChip icon={Wallet} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-2">Wallet already set up</h2>
-              <p className="text-sm text-muted-foreground mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Wallet already set up</h2>
+              <p className="text-sm text-muted-foreground mb-4">A wallet already exists on this device. Unlocking is the next screen.</p>
               <button
                 type="button"
                 className={cn(ghostBtn, 'flex items-center justify-center gap-2 border-rose-500/30 text-rose-300 hover:bg-rose-500/10')}
@@ -235,8 +235,8 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'choose' && (
             <div className={card}>
               <IconChip icon={ShieldCheck} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1">Set up your wallet</h2>
-              <p className="text-sm text-muted-foreground mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Set up your wallet</h2>
+              <p className="text-sm text-muted-foreground mb-4">Your keys stay on this device, encrypted. Superhero never sees them.</p>
               <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
               <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
             </div>
@@ -245,7 +245,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'create-show' && (
             <div className={card}>
               <IconChip icon={KeyRound} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1">Write down your recovery phrase</h2>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Write down your recovery phrase</h2>
               <p className="text-sm text-amber-300/90 mb-4">
                 These 12 words are the only way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
               </p>
@@ -264,8 +264,8 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'create-verify' && (
             <div className={card}>
               <IconChip icon={CircleCheck} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1">Confirm your backup</h2>
-              <p className="text-sm text-muted-foreground mb-5">Type the requested words to confirm you saved them.</p>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Confirm your backup</h2>
+              <p className="text-sm text-muted-foreground mb-4">Type the requested words to confirm you saved them.</p>
               {[0, 1].map((n) => (
                 <div key={verifyIdx[n]} className="mb-3">
                   <label className="block text-xs text-muted-foreground mb-1" htmlFor={`vw${n}`}>{`Word #${verifyIdx[n] + 1}`}</label>
@@ -290,7 +290,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'import-enter' && (
             <div className={card}>
               <IconChip icon={Download} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1">Import your wallet</h2>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Import your wallet</h2>
               <p className="text-sm text-muted-foreground mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
               <textarea
                 className={`${input} font-mono mb-2`}
@@ -313,7 +313,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'passphrase' && (
             <div className={card}>
               <IconChip icon={Lock} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1">Set a passphrase</h2>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Set a passphrase</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
               </p>
@@ -334,7 +334,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'creating' && (
             <div className={card}>
               <IconChip icon={Loader2} spin />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-2">Encrypting your wallet…</h2>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Encrypting your wallet…</h2>
               <p className="text-sm text-muted-foreground">Deriving your key (Argon2id). This takes a moment.</p>
             </div>
             )}
@@ -342,7 +342,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {step === 'done' && (
             <div className={card}>
               <IconChip icon={CircleCheck} tone="success" />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-2">Wallet ready 🎉</h2>
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Wallet ready 🎉</h2>
               <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
               <p className="text-xs font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
               <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>

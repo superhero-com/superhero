@@ -25,6 +25,7 @@ import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
 import RocketIcon from '../../../svg/iconRocket.svg?react';
 import SparkleIcon from '../../../svg/iconSparkle.svg?react';
+import PageSpaceHero from '../../../components/hero-banner/PageSpaceHero';
 import { SuperheroApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -571,20 +572,23 @@ const CreateTokenView = () => {
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
         <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
-          <div className="xl:hidden px-2 pt-2 pb-2 text-center animate-fadeIn">
-            <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3 animate-slideDown">
+          <PageSpaceHero
+            className="mb-6 px-6 py-10 md:px-10 md:py-14 text-center xl:text-left"
+            supernovaColor="rgba(255,94,188,.5)"
+          >
+            <h3 className="text-3xl md:text-5xl font-bold leading-tight text-white mb-3 animate-slideDown">
               {t('trending.createToken.hero.line1')}
               <br />
               {t('trending.createToken.hero.line2')}
               <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift inline-block">
                 {t('trending.createToken.hero.line3')}
               </span>
             </h3>
-            <p className="hidden md:block text-white/75 text-base leading-relaxed animate-slideUp animate-delay-200">
+            <p className="text-white/75 text-base md:text-lg leading-relaxed animate-slideUp animate-delay-200 max-w-2xl mx-auto xl:mx-0">
               {t('trending.createToken.hero.subtitle')}
             </p>
-          </div>
+          </PageSpaceHero>
 
           <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
             <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2 animate-scaleIn animate-delay-200">
@@ -897,21 +901,6 @@ const CreateTokenView = () => {
             {/* Explainer */}
             <div className="min-w-0 flex-1 md:pt-2 xl:order-1">
               <div className="xl:text-left">
-                <div className="hidden xl:block mb-6 animate-fadeIn">
-                  <div className="text-5xl font-bold leading-tight text-white mb-4 animate-slideDown">
-                    {t('trending.createToken.hero.line1')}
-                    <br />
-                    {t('trending.createToken.hero.line2')}
-                    <br />
-                    <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift inline-block">
-                      {t('trending.createToken.hero.line3')}
-                    </span>
-                  </div>
-                  <p className="text-white/75 text-lg leading-relaxed animate-slideUp animate-delay-200">
-                    {t('trending.createToken.hero.subtitle')}
-                  </p>
-                </div>
-
                 <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover-lift animate-scaleIn animate-delay-300">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
                     {t('trending.createToken.explainer.title')}

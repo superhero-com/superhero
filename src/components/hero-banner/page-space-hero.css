@@ -1,0 +1,31 @@
+/* Standalone hero panel that hosts the shared cosmic <SpaceEffects> backdrop.
+   Mirrors the expanded hero banner's framing so pages that opt in feel part of
+   the same visual family. The `.banner-*` effect classes and their keyframes
+   come from banner.styles.css (imported alongside this file). */
+
+.page-space-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(120% 120% at 15% 0%, rgba(122, 92, 255, 0.18), rgba(0, 0, 0, 0) 55%),
+    radial-gradient(120% 120% at 100% 100%, rgba(0, 229, 255, 0.12), rgba(0, 0, 0, 0) 55%),
+    linear-gradient(135deg, rgba(18, 14, 38, 0.85), rgba(10, 10, 15, 0.75));
+  /* Isolate so the star repaints and blend modes stay inside the panel. */
+  isolation: isolate;
+}
+
+/* Content sits above .banner-space (z-index 0) and its children (z-index 1). */
+.page-space-hero__content {
+  position: relative;
+  z-index: 4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-space-hero {
+    background:
+      radial-gradient(120% 120% at 15% 0%, rgba(122, 92, 255, 0.14), rgba(0, 0, 0, 0) 55%),
+      linear-gradient(135deg, rgba(18, 14, 38, 0.85), rgba(10, 10, 15, 0.75));
+  }
+}

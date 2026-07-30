@@ -47,13 +47,30 @@ export interface InlineSdkAccountOpts {
 
 /**
  * Structural `AccountBase`-shaped account the SDK's `addAccount()` accepts —
- * mirrors `createDelegatedSignerAccount`'s surface exactly.
+ * mirrors `createDelegatedSignerAccount`'s live surface (address +
+ * signTransaction + signMessage), plus the rest of the `AccountBase` sign
+ * surface as loud, labelled throwers.
+ *
+ * The SDK's `addAccount` does no shape validation and calls account methods by
+ * direct passthrough. The app's flows only ever call signTransaction /
+ * signMessage today (same as the delegated account), but a future SDK entrypoint
+ * (JWT `unsafeSign`, typed-data, AENS/oracle `signDelegation`) would otherwise
+ * hit an uncaught `TypeError: … is not a function`. These stubs fail loud and
+ * labelled instead — matching the P1 `EncryptedHdAccount`'s defensive posture.
  */
 export interface InlineSdkAccount {
   readonly address: Encoded.AccountAddress;
   signTransaction(tx: Encoded.Transaction, options?: SignOptions): Promise<Encoded.Transaction>;
   signMessage(message: string): Promise<Uint8Array>;
+  unsafeSign(): Promise<never>;
+  sign(): Promise<never>;
+  signTypedData(): Promise<never>;
+  signDelegation(): Promise<never>;
 }
+
+const notSupported = (method: string): never => {
+  throw new Error(`inline wallet: ${method}() is not supported`);
+};
 
 export function createInlineSdkAccount(opts: InlineSdkAccountOpts): InlineSdkAccount {
   // Load the encrypted vault fresh and build the (stateless) signer per call.
@@ -79,5 +96,9 @@ export function createInlineSdkAccount(opts: InlineSdkAccountOpts): InlineSdkAcc
     async signMessage(message) {
       return (await signerNow()).signMessage(message);
     },
+    async unsafeSign() { return notSupported('unsafeSign'); },
+    async sign() { return notSupported('sign'); },
+    async signTypedData() { return notSupported('signTypedData'); },
+    async signDelegation() { return notSupported('signDelegation'); },
   };
 }

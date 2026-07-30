@@ -91,4 +91,52 @@ describe('createInlineSdkAccount (SDK adapter)', () => {
     });
     await expect(acc.signMessage('x')).rejects.toThrow();
   });
+
+  it('REFUSES to sign when the derived key does not match the advertised address', async () => {
+    // Store holds MNEMONIC's vault (derives GOLDEN0 at index 0), but the account
+    // was installed advertising GOLDEN0 while asking to sign under index 1 — a
+    // stand-in for a vault swap / mismatched (address,index). Must never sign.
+    const acc = createInlineSdkAccount({
+      address: GOLDEN0, index: 1, store: await seededStore(), unlock: passphraseUnlock('pw'),
+    });
+    await expect(acc.signMessage('x')).rejects.toThrow(/does not match the expected account address/i);
+  });
+
+  it('binds the unlock ceremony to the exact payload being signed (WYSIWYS)', async () => {
+    const unlock = vi.fn(passphraseUnlock('pw'));
+    const acc = createInlineSdkAccount({
+      address: GOLDEN0, index: 0, store: await seededStore(), unlock,
+    });
+    await acc.signMessage('hello world');
+    expect(unlock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ kind: 'message', payload: 'hello world' }),
+    );
+  });
+
+  it('signTransaction runs UV bound to the transaction payload + network', async () => {
+    const unlock = vi.fn(passphraseUnlock('pw'));
+    // index 1 vs advertised GOLDEN0 → the address-binding check throws AFTER unlock,
+    // letting us assert the SigningContext without a fully-valid signable tx.
+    const acc = createInlineSdkAccount({
+      address: GOLDEN0, index: 1, store: await seededStore(), unlock,
+    });
+    await expect(
+      acc.signTransaction('tx_unsignedplaceholder' as never, { networkId: 'ae_test' }),
+    ).rejects.toThrow();
+    expect(unlock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ kind: 'transaction', payload: 'tx_unsignedplaceholder', networkId: 'ae_test' }),
+    );
+  });
+
+  it('exposes the rest of the AccountBase surface as labelled throwers', async () => {
+    const acc = createInlineSdkAccount({
+      address: GOLDEN0, index: 0, store: await seededStore(), unlock: passphraseUnlock('pw'),
+    });
+    await expect(acc.unsafeSign()).rejects.toThrow(/not supported/i);
+    await expect(acc.sign()).rejects.toThrow(/not supported/i);
+    await expect(acc.signTypedData()).rejects.toThrow(/not supported/i);
+    await expect(acc.signDelegation()).rejects.toThrow(/not supported/i);
+  });
 });

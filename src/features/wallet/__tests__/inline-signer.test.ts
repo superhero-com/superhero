@@ -76,4 +76,26 @@ describe('InlineWalletSigner (P4 core)', () => {
     // sanity: the signer honors its index (index 1 != index 0 golden address)
     expect(deriveAccount(MNEMONIC, 1).address).not.toBe(GOLDEN0);
   });
+
+  it('REFUSES to sign when the derived key does not match the advertised address', async () => {
+    // advertise GOLDEN0 but derive index 1 → address mismatch → must throw, never sign
+    const record = await createVault(MNEMONIC, await passphraseEnrollment('pw'), 1);
+    const signer = createInlineWalletSigner({
+      address: GOLDEN0, index: 1, record, unlock: passphraseUnlock('pw'),
+    });
+    await expect(signer.signMessage('x')).rejects.toThrow(/does not match the expected account address/i);
+  });
+
+  it('binds user-verification to the payload (passes SigningContext to the provider)', async () => {
+    const record = await createVault(MNEMONIC, await passphraseEnrollment('pw'), 1);
+    const unlock = vi.fn(passphraseUnlock('pw'));
+    const signer = createInlineWalletSigner({
+      address: GOLDEN0, index: 0, record, unlock,
+    });
+    await signer.signMessage('confirm me');
+    expect(unlock).toHaveBeenCalledWith(
+      record,
+      expect.objectContaining({ kind: 'message', payload: 'confirm me' }),
+    );
+  });
 });

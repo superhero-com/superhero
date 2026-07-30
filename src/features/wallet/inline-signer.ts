@@ -22,11 +22,27 @@ import { deriveSigner } from './derivation';
 import { unlockVault, type VaultRecord } from './vault-record';
 
 /**
+ * What the signer is about to sign, handed to the UnlockProvider so the confirm
+ * UI can show the exact payload (WYSIWYS) and bind the user-verification to THIS
+ * signature — not merely to "a signature". (threat-model R-02 / adr-0003.)
+ */
+export interface SigningContext {
+  kind: 'transaction' | 'message';
+  /** the exact bytes being signed: the `tx_…` string, or the message text. */
+  payload: string;
+  networkId?: string;
+}
+
+/**
  * Performs user-verification and returns the KEK for one of the vault's factors.
  * Implementations: passphrase prompt (kekFromPassphrase) or WebAuthn PRF
- * (evaluatePrf → kekFromHighEntropy). MUST re-verify on every call.
+ * (evaluatePrf → kekFromHighEntropy). MUST re-verify on every call, and MUST
+ * show `context` to the user before releasing a KEK.
  */
-export type UnlockProvider = (record: VaultRecord) => Promise<{ factorId: string; kek: CryptoKey }>;
+export type UnlockProvider = (
+  record: VaultRecord,
+  context: SigningContext,
+) => Promise<{ factorId: string; kek: CryptoKey }>;
 
 export interface InlineWalletSignerOpts {
   /** the active account's public address (cleartext manifest data). */
@@ -63,28 +79,53 @@ export class InlineWalletSigner {
   }
 
   /**
-   * Run one UV ceremony, derive the signing key transiently, hand it to `use`,
-   * and drop it. Every public sign method goes through here → UV-per-signature.
+   * Run one UV ceremony (bound to `context`), derive the signing key transiently,
+   * assert it matches the advertised address, hand it to `use`, and drop it.
+   * Every public sign method goes through here → UV-per-signature.
    */
-  async #withSigningAccount<T>(use: (account: ReturnType<typeof deriveSigner>) => Promise<T>): Promise<T> {
-    const { factorId, kek } = await this.#unlock(this.#record); // ← USER VERIFICATION, every call
-    const { mnemonic } = await unlockVault(this.#record, factorId, kek);
-    let account: ReturnType<typeof deriveSigner> | undefined = deriveSigner(mnemonic, this.#index);
+  async #withSigningAccount<T>(
+    context: SigningContext,
+    use: (account: ReturnType<typeof deriveSigner>) => Promise<T>,
+  ): Promise<T> {
+    // ← USER VERIFICATION, every call, bound to THIS payload (the confirm UI in
+    //   the provider sees `context` and must show it before returning a KEK).
+    const { factorId, kek } = await this.#unlock(this.#record, context);
+    let mnemonic: string | undefined;
+    let account: ReturnType<typeof deriveSigner> | undefined;
     try {
+      ({ mnemonic } = await unlockVault(this.#record, factorId, kek));
+      account = deriveSigner(mnemonic, this.#index);
+      // Bind advertised address ↔ signing key: REFUSE to sign under a key that
+      // does not derive `this.address`. Guards a vault swap between account
+      // install and this signature (the device's single RECORD_KEY='vault' can
+      // be overwritten by a restore/import) or a mismatched (address, index) —
+      // either would otherwise emit a valid signature the SDK/WYSIWYS
+      // misattributes to `this.address`.
+      if (account.address !== this.address) {
+        throw new Error(
+          'inline wallet: derived key does not match the expected account address — refusing to sign',
+        );
+      }
       return await use(account);
     } finally {
       account = undefined; // drop the key-bearing account; no cache survives this scope
+      mnemonic = undefined; // drop the decrypted-seed reference (R-05: best-effort)
     }
   }
 
   async signTransaction(tx: Encoded.Transaction, options?: SignOptions): Promise<Encoded.Transaction> {
+    const networkId = options?.networkId ?? this.#networkId;
     return this.#withSigningAccount(
+      { kind: 'transaction', payload: tx, networkId },
       (account) => account.signTransaction(tx, { networkId: this.#networkId, ...options }),
     );
   }
 
   async signMessage(message: string): Promise<Uint8Array> {
-    return this.#withSigningAccount((account) => account.signMessage(message));
+    return this.#withSigningAccount(
+      { kind: 'message', payload: message },
+      (account) => account.signMessage(message),
+    );
   }
 }
 

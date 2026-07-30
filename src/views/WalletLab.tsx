@@ -26,6 +26,15 @@ const store = createIndexedDbVaultStore();
 const TEST_MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
   + 'abandon abandon abandon about';
 
+// Known-good addresses for TEST_MNEMONIC from the SDK factory (verified in node +
+// the golden-vector CI test). If the browser derives anything else for this exact
+// mnemonic, cross-environment derivation is BROKEN (funds-critical).
+const GOLDEN: Record<number, string> = {
+  0: 'ak_21SBPc3yHP7bpQDvD1KMKzZZEgLtSXpDsK97LTjVwjiskra6Ka',
+  1: 'ak_iV7sCUsuKZytEEBEsX9N2K37m26X132LegogrgJEWzzPVjmmS',
+  2: 'ak_2D8fAoXC3dweJkpstEp89uXQby7i4RU6HeXyPNmyCjXLGH6pPz',
+};
+
 const toHex = (u: Uint8Array) => Array.from(u, (b) => b.toString(16).padStart(2, '0')).join('');
 
 const WalletLab = () => {
@@ -56,6 +65,18 @@ const WalletLab = () => {
     if (!record) throw new Error('no vault — import one first');
     return record;
   };
+
+  const onSelfCheck = () => run('golden-vector self-check (uses the HARDCODED test mnemonic)', async () => {
+    let allOk = true;
+    [0, 1, 2].forEach((i) => {
+      const got = deriveAccount(TEST_MNEMONIC, i).address;
+      const ok = got === GOLDEN[i];
+      allOk = allOk && ok;
+      say(`  idx${i} ${ok ? 'PASS' : 'FAIL'} · got=${got}${ok ? '' : ` · expected=${GOLDEN[i]}`}`);
+    });
+    if (!allOk) throw new Error('BROWSER DERIVATION DIFFERS FROM NODE — do not proceed');
+    say('browser derivation matches node exactly ✓');
+  });
 
   const onImport = () => run('import mnemonic → create vault (incl. one Argon2id)', async () => {
     await store.clear();
@@ -139,6 +160,7 @@ const WalletLab = () => {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+        <button type="button" className={`${btn} sm:col-span-2 bg-pink-500/15 border-pink-500/30`} disabled={busy} onClick={onSelfCheck}>0 · Golden-vector self-check (run this first)</button>
         <button type="button" className={btn} disabled={busy} onClick={onImport}>1 · Import + create vault</button>
         <button type="button" className={btn} disabled={busy} onClick={onUnlockSign}>2 · Unlock (passphrase) + sign</button>
         <button type="button" className={btn} disabled={busy} onClick={onCheckPasskey}>3 · Check passkey support</button>

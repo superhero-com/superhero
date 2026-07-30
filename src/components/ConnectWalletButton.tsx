@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
+import { isStandalone } from '@/utils/displayMode';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
+
+// Inline PWA onboarding, lazy-loaded so its crypto stack (bip39/argon2/…) never
+// enters this button's chunk. The branch that renders it is gated on
+// `INLINE_WALLET_ENABLED && isStandalone()` — a hard `false` in production
+// (mirrors makeSigner's gate), so this chunk is never fetched in prod and every
+// real user keeps the existing external connect flow.
+const WalletOnboarding = React.lazy(
+  () => import('@/features/wallet/components/WalletOnboarding'),
+);
 
 type Props = {
   label?: string;
@@ -21,6 +32,14 @@ export const ConnectWalletButton = ({
   const { activeAccount } = useAeSdk();
   const { connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
+  const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
+
+  // In an installed PWA, route connect to the in-page onboarding instead of the
+  // external wallet — ONLY when the inline wallet is enabled. Gate mirrors
+  // makeSigner exactly (INLINE_WALLET_ENABLED && isStandalone()); with the flag
+  // off this is dead, so real users keep the external flow. NEVER gate on
+  // isStandalone() alone — the flag guards the signer, not this seed-import UI.
+  const useInlineOnboarding = INLINE_WALLET_ENABLED && isStandalone();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
@@ -57,25 +76,37 @@ export const ConnectWalletButton = ({
   const buttonClasses = cn(resolvedBaseClasses, className);
 
   return (
-    <AeButton
-      type="button"
-      onClick={() => openModal({ name: 'connect-wallet' })}
-      disabled={connectingWallet}
-      loading={connectingWallet}
-      variant="ghost"
-      size={variant === 'dex' ? 'default' : 'default'}
-      fullWidth={block}
-      className={buttonClasses}
-      style={style}
-    >
-      <span className="hidden sm:inline-flex items-center gap-2">
-        <Favicon className="w-4 h-4" />
-        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-      </span>
-      <span className="sm:hidden">
-        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-      </span>
-    </AeButton>
+    <>
+      <AeButton
+        type="button"
+        onClick={() => (useInlineOnboarding
+          ? setShowInlineOnboarding(true)
+          : openModal({ name: 'connect-wallet' }))}
+        disabled={connectingWallet}
+        loading={connectingWallet}
+        variant="ghost"
+        size={variant === 'dex' ? 'default' : 'default'}
+        fullWidth={block}
+        className={buttonClasses}
+        style={style}
+      >
+        <span className="hidden sm:inline-flex items-center gap-2">
+          <Favicon className="w-4 h-4" />
+          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+        </span>
+        <span className="sm:hidden">
+          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+        </span>
+      </AeButton>
+      {showInlineOnboarding && (
+        <Suspense fallback={null}>
+          {/* onComplete only closes the overlay here; making the app actually
+              use the created inline account (activeAccount + signing) is the
+              gated signer integration, not this routing. */}
+          <WalletOnboarding onComplete={() => setShowInlineOnboarding(false)} />
+        </Suspense>
+      )}
+    </>
   );
 };
 

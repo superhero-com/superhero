@@ -1,0 +1,220 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
+import { assessPassphrase } from '../passphrase';
+import { importWallet } from '../wallet-lifecycle';
+import { deriveAccount } from '../derivation';
+import { createIndexedDbVaultStore } from '../vault-store';
+import type { VaultStore } from '../vault-store';
+import type { VaultRecord } from '../vault-record';
+
+/**
+ * P4/P3 — the inline-wallet onboarding flow (create / import + set passphrase).
+ * Uses the tested crypto core via wallet-lifecycle. Forced-backup verification is
+ * built in for the create path (the threat model R-04). No mnemonic/passphrase is
+ * persisted in the clear — importWallet builds the encrypted vault.
+ */
+
+type Step =
+  | 'exists'
+  | 'choose'
+  | 'create-show'
+  | 'create-verify'
+  | 'import-enter'
+  | 'passphrase'
+  | 'creating'
+  | 'done';
+
+const defaultStore = createIndexedDbVaultStore();
+
+const card = 'w-full max-w-md mx-auto bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6';
+const primaryBtn = 'w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium '
+  + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-pink-500/25';
+const ghostBtn = 'w-full py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
+  + 'hover:bg-white/[0.08] transition-colors';
+const input = 'w-full p-3 rounded-xl bg-white/5 border border-white/10 text-[13px] text-white';
+
+/** field-status colour: neutral while empty, green when ok, red when invalid. */
+const fieldClass = (empty: boolean, ok: boolean): string => {
+  if (empty) return 'text-white/40';
+  return ok ? 'text-emerald-400' : 'text-rose-400';
+};
+
+interface Props {
+  store?: VaultStore;
+  onComplete?: (record: VaultRecord, firstAddress: string) => void;
+}
+
+const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
+  const [step, setStep] = useState<Step>('choose');
+  const [mnemonic, setMnemonic] = useState('');
+  const [importText, setImportText] = useState('');
+  const [verifyIdx, setVerifyIdx] = useState<[number, number]>([0, 1]);
+  const [verifyIn, setVerifyIn] = useState<[string, string]>(['', '']);
+  const [pass, setPass] = useState('');
+  const [pass2, setPass2] = useState('');
+  const [error, setError] = useState('');
+  const [firstAddr, setFirstAddr] = useState('');
+
+  useEffect(() => {
+    store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
+  }, [store]);
+
+  const startCreate = useCallback(() => {
+    const m = generateMnemonic(12);
+    setMnemonic(m);
+    const a = Math.floor(Math.random() * 12);
+    let b = Math.floor(Math.random() * 12);
+    if (b === a) b = (b + 1) % 12;
+    setVerifyIdx([Math.min(a, b), Math.max(a, b)]);
+    setVerifyIn(['', '']);
+    setStep('create-show');
+  }, []);
+
+  const importedOk = isValidMnemonic(importText);
+  const passInfo = assessPassphrase(pass);
+  const passesMatch = pass.length > 0 && pass === pass2;
+
+  let importMsg = 'Your phrase is checked locally on this device.';
+  if (importText.length > 0) {
+    importMsg = importedOk ? '✓ Valid recovery phrase' : '✗ Not a valid recovery phrase (check spelling / word count)';
+  }
+
+  const verifyOk = (() => {
+    const words = mnemonic.split(' ');
+    return normalizeMnemonic(verifyIn[0]) === words[verifyIdx[0]]
+      && normalizeMnemonic(verifyIn[1]) === words[verifyIdx[1]];
+  })();
+
+  const doCreate = useCallback(async () => {
+    setError('');
+    setStep('creating');
+    try {
+      const phrase = normalizeMnemonic(step === 'import-enter' ? importText : mnemonic);
+      const record = await importWallet(store, { mnemonic: phrase, passphrase: pass, now: Date.now() });
+      const { address } = deriveAccount(phrase, 0);
+      setFirstAddr(address);
+      setStep('done');
+      onComplete?.(record, address);
+    } catch (e) {
+      setError((e as Error).message);
+      setStep('passphrase');
+    }
+  }, [store, importText, mnemonic, pass, step, onComplete]);
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
+      {step === 'exists' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-2">Wallet already set up</h2>
+          <p className="text-[13px] text-white/60 mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
+          <button type="button" className={ghostBtn} onClick={() => { store.clear().then(() => setStep('choose')); }}>
+            Reset (dev) — clear this device&apos;s wallet
+          </button>
+        </div>
+      )}
+
+      {step === 'choose' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-1">Set up your wallet</h2>
+          <p className="text-[13px] text-white/60 mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
+          <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
+          <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
+        </div>
+      )}
+
+      {step === 'create-show' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-1">Write down your recovery phrase</h2>
+          <p className="text-[13px] text-amber-300/90 mb-4">
+            These 12 words are the ONLY way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            {mnemonic.split(' ').map((w, i) => (
+              <div key={w + String(i)} className="px-2 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px]">
+                <span className="text-white/30 mr-1">{i + 1}</span>
+                {w}
+              </div>
+            ))}
+          </div>
+          <button type="button" className={primaryBtn} onClick={() => setStep('create-verify')}>I&apos;ve written them down</button>
+        </div>
+      )}
+
+      {step === 'create-verify' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-1">Confirm your backup</h2>
+          <p className="text-[13px] text-white/60 mb-5">Type the requested words to confirm you saved them.</p>
+          {[0, 1].map((n) => (
+            <div key={verifyIdx[n]} className="mb-3">
+              <label className="block text-[12px] text-white/60 mb-1" htmlFor={`vw${n}`}>{`Word #${verifyIdx[n] + 1}`}</label>
+              <input
+                id={`vw${n}`}
+                className={input}
+                value={verifyIn[n]}
+                autoCapitalize="none"
+                autoCorrect="off"
+                onChange={(e) => setVerifyIn((prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]))}
+              />
+            </div>
+          ))}
+          <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => setStep('passphrase')}>
+            {verifyOk ? 'Continue' : 'Words don’t match yet'}
+          </button>
+        </div>
+      )}
+
+      {step === 'import-enter' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-1">Import your wallet</h2>
+          <p className="text-[13px] text-white/60 mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
+          <textarea
+            className={`${input} font-mono mb-2`}
+            rows={3}
+            value={importText}
+            autoCapitalize="none"
+            autoCorrect="off"
+            placeholder="word1 word2 word3 …"
+            onChange={(e) => setImportText(e.target.value)}
+          />
+          <p className={`text-[12px] mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
+            {importMsg}
+          </p>
+          <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => setStep('passphrase')}>Continue</button>
+        </div>
+      )}
+
+      {step === 'passphrase' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-1">Set a passphrase</h2>
+          <p className="text-[13px] text-white/60 mb-4">
+            This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
+          </p>
+          <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
+          <p className={`text-[12px] mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
+          <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
+          {pass2.length > 0 && !passesMatch && <p className="text-[12px] text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
+          {error && <p className="text-[12px] text-rose-400 mb-3">{error}</p>}
+          <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>
+        </div>
+      )}
+
+      {step === 'creating' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-2">Encrypting your wallet…</h2>
+          <p className="text-[13px] text-white/60">Deriving your key (Argon2id). This takes a moment.</p>
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className={card}>
+          <h2 className="text-lg font-semibold mb-2">Wallet ready 🎉</h2>
+          <p className="text-[13px] text-white/60 mb-1">Your first account:</p>
+          <p className="text-[12px] font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
+          <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WalletOnboarding;

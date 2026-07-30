@@ -102,8 +102,15 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   }, [store, importText, mnemonic, pass, step, onComplete]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-4">
-      {step === 'exists' && (
+    // Focused full-screen takeover: covers the app header, bottom tabs, and the
+    // app-wide Install-App prompt (all lower z) so a secret-phrase / passphrase
+    // step is private and native-feeling. Safe-area padding for the notch/home bar.
+    <div
+      className="fixed inset-0 z-[100] bg-[#0a0a0f] text-white overflow-y-auto"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      <div className="min-h-full flex items-center justify-center p-4">
+        {step === 'exists' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-2">Wallet already set up</h2>
           <p className="text-[13px] text-white/60 mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
@@ -111,18 +118,18 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             Reset (dev) — clear this device&apos;s wallet
           </button>
         </div>
-      )}
+        )}
 
-      {step === 'choose' && (
+        {step === 'choose' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-1">Set up your wallet</h2>
           <p className="text-[13px] text-white/60 mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
           <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
           <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
         </div>
-      )}
+        )}
 
-      {step === 'create-show' && (
+        {step === 'create-show' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-1">Write down your recovery phrase</h2>
           <p className="text-[13px] text-amber-300/90 mb-4">
@@ -138,9 +145,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           </div>
           <button type="button" className={primaryBtn} onClick={() => setStep('create-verify')}>I&apos;ve written them down</button>
         </div>
-      )}
+        )}
 
-      {step === 'create-verify' && (
+        {step === 'create-verify' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-1">Confirm your backup</h2>
           <p className="text-[13px] text-white/60 mb-5">Type the requested words to confirm you saved them.</p>
@@ -161,9 +168,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             {verifyOk ? 'Continue' : 'Words don’t match yet'}
           </button>
         </div>
-      )}
+        )}
 
-      {step === 'import-enter' && (
+        {step === 'import-enter' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-1">Import your wallet</h2>
           <p className="text-[13px] text-white/60 mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
@@ -181,9 +188,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           </p>
           <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => setStep('passphrase')}>Continue</button>
         </div>
-      )}
+        )}
 
-      {step === 'passphrase' && (
+        {step === 'passphrase' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-1">Set a passphrase</h2>
           <p className="text-[13px] text-white/60 mb-4">
@@ -196,23 +203,24 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           {error && <p className="text-[12px] text-rose-400 mb-3">{error}</p>}
           <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>
         </div>
-      )}
+        )}
 
-      {step === 'creating' && (
+        {step === 'creating' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-2">Encrypting your wallet…</h2>
           <p className="text-[13px] text-white/60">Deriving your key (Argon2id). This takes a moment.</p>
         </div>
-      )}
+        )}
 
-      {step === 'done' && (
+        {step === 'done' && (
         <div className={card}>
           <h2 className="text-lg font-semibold mb-2">Wallet ready 🎉</h2>
           <p className="text-[13px] text-white/60 mb-1">Your first account:</p>
           <p className="text-[12px] font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
           <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

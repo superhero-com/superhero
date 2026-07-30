@@ -56,6 +56,7 @@ const STEP_PROGRESS: Partial<Record<Step, number>> = {
   'import-enter': 0.34,
   passphrase: 0.75,
   creating: 0.9,
+  done: 1,
 };
 
 /** field-status colour: neutral while empty, green when ok, red when invalid. */

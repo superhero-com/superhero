@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, type LucideIcon,
+} from 'lucide-react';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
 import { importWallet } from '../wallet-lifecycle';
@@ -58,6 +61,14 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
   if (empty) return 'text-white/40';
   return ok ? 'text-emerald-400' : 'text-rose-400';
 };
+
+// Brand icon chip above each step heading — design-system lucide-react (h-5 w-5) in a
+// gradient-tinted rounded tile, so every step leads with a native onboarding-style glyph.
+const IconChip = ({ icon: Icon, spin = false }: { icon: LucideIcon; spin?: boolean }) => (
+  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-pink-500/15 to-purple-500/15">
+    <Icon className={spin ? 'h-5 w-5 animate-spin text-pink-400' : 'h-5 w-5 text-pink-400'} />
+  </div>
+);
 
 interface Props {
   store?: VaultStore;
@@ -158,6 +169,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           <div key={step} className="animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
             {step === 'exists' && (
             <div className={card}>
+              <IconChip icon={Wallet} />
               <h2 className="text-lg font-semibold tracking-tight mb-2">Wallet already set up</h2>
               <p className="text-sm text-muted-foreground mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
               <button type="button" className={ghostBtn} onClick={() => { store.clear().then(() => setStep('choose')); }}>
@@ -168,6 +180,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'choose' && (
             <div className={card}>
+              <IconChip icon={ShieldCheck} />
               <h2 className="text-lg font-semibold tracking-tight mb-1">Set up your wallet</h2>
               <p className="text-sm text-muted-foreground mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
               <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
@@ -177,6 +190,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'create-show' && (
             <div className={card}>
+              <IconChip icon={KeyRound} />
               <h2 className="text-lg font-semibold tracking-tight mb-1">Write down your recovery phrase</h2>
               <p className="text-sm text-amber-300/90 mb-4">
                 These 12 words are the ONLY way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
@@ -195,6 +209,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'create-verify' && (
             <div className={card}>
+              <IconChip icon={CircleCheck} />
               <h2 className="text-lg font-semibold tracking-tight mb-1">Confirm your backup</h2>
               <p className="text-sm text-muted-foreground mb-5">Type the requested words to confirm you saved them.</p>
               {[0, 1].map((n) => (
@@ -218,6 +233,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'import-enter' && (
             <div className={card}>
+              <IconChip icon={Download} />
               <h2 className="text-lg font-semibold tracking-tight mb-1">Import your wallet</h2>
               <p className="text-sm text-muted-foreground mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
               <textarea
@@ -238,6 +254,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'passphrase' && (
             <div className={card}>
+              <IconChip icon={Lock} />
               <h2 className="text-lg font-semibold tracking-tight mb-1">Set a passphrase</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
@@ -253,6 +270,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'creating' && (
             <div className={card}>
+              <IconChip icon={Loader2} spin />
               <h2 className="text-lg font-semibold tracking-tight mb-2">Encrypting your wallet…</h2>
               <p className="text-sm text-muted-foreground">Deriving your key (Argon2id). This takes a moment.</p>
             </div>
@@ -260,6 +278,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'done' && (
             <div className={card}>
+              <IconChip icon={CircleCheck} />
               <h2 className="text-lg font-semibold tracking-tight mb-2">Wallet ready 🎉</h2>
               <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
               <p className="text-xs font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>

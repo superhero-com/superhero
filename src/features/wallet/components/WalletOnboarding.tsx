@@ -37,7 +37,7 @@ const defaultStore = createIndexedDbVaultStore();
 const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
   + 'border-glass-border shadow-glass backdrop-blur-card p-6';
 // min-h-[44px] guarantees the Apple/Material minimum tap target on every interactive element.
-const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium '
+const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 text-white font-medium '
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-blue-500/25';
 const ghostBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
   + 'hover:bg-white/[0.08] transition-colors';
@@ -70,7 +70,7 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
 const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
 { icon: LucideIcon; spin?: boolean; tone?: 'brand' | 'success' }) => {
   const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-sky-500/15 to-blue-600/15';
-  const color = tone === 'success' ? 'text-emerald-400' : 'text-sky-400';
+  const color = tone === 'success' ? 'text-emerald-400' : 'text-neon-blue';
   return (
     <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${tint}`}>
       <Icon className={`h-5 w-5 ${color}${spin ? ' animate-spin' : ''}`} />
@@ -211,7 +211,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           {progress > 0 && (
           <div className="mb-3 h-1 w-full rounded-full bg-white/10 overflow-hidden" aria-hidden="true">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-sky-600 to-blue-700 transition-[width] duration-300 ease-out"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>

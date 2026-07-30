@@ -36,12 +36,21 @@ export interface SigningContext {
 /**
  * Performs user-verification and returns the KEK for one of the vault's factors.
  * Implementations: passphrase prompt (kekFromPassphrase) or WebAuthn PRF
- * (evaluatePrf → kekFromHighEntropy). MUST re-verify on every call, and MUST
- * show `context` to the user before releasing a KEK.
+ * (evaluatePrf → kekFromHighEntropy). MUST re-verify on every call.
+ *
+ * `context` is present ONLY for a signature (the signing path —
+ * `InlineWalletSigner` — always provides it); it is absent for non-signing
+ * unlocks (factor enrollment / recovery). When `context` is present the provider
+ * MUST show it to the user (WYSIWYS) before releasing a KEK. NOTE (P4/SR):
+ * showing the payload and binding the KEK release to it is enforced only by the
+ * provider — the core cannot attest UV happened or that this payload was shown.
+ * The passkey provider SHOULD make this binding cryptographic (WebAuthn PRF
+ * challenge = H(payload, networkId)) so a KEK obtained for payload A cannot sign
+ * payload B. Tracked as a requirement on the P4 UnlockProvider + its SR review.
  */
 export type UnlockProvider = (
   record: VaultRecord,
-  context: SigningContext,
+  context?: SigningContext,
 ) => Promise<{ factorId: string; kek: CryptoKey }>;
 
 export interface InlineWalletSignerOpts {
@@ -114,10 +123,12 @@ export class InlineWalletSigner {
   }
 
   async signTransaction(tx: Encoded.Transaction, options?: SignOptions): Promise<Encoded.Transaction> {
+    // Resolve once, so the network shown to the provider (WYSIWYS) is EXACTLY the
+    // one handed to the SDK — even if a caller passes networkId: undefined.
     const networkId = options?.networkId ?? this.#networkId;
     return this.#withSigningAccount(
       { kind: 'transaction', payload: tx, networkId },
-      (account) => account.signTransaction(tx, { networkId: this.#networkId, ...options }),
+      (account) => account.signTransaction(tx, { ...options, networkId }),
     );
   }
 

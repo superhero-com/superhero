@@ -592,7 +592,7 @@ const CreateTokenView = () => {
 
           <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
             <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2 animate-scaleIn animate-delay-200">
-              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl hover-glow transition-all duration-300" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+              <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative transition-all duration-300 p-5 md:p-8 shadow-2xl hover-lift">
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -899,9 +899,9 @@ const CreateTokenView = () => {
             </div>
 
             {/* Explainer */}
-            <div className="min-w-0 flex-1 md:pt-2 xl:order-1">
+            <div className="min-w-0 flex-1 xl:order-1">
               <div className="xl:text-left">
-                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover-lift animate-scaleIn animate-delay-300">
+                <div className="mt-8 md:mt-12 xl:mt-0 bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
                   <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
                     {t('trending.createToken.explainer.title')}
                   </h3>

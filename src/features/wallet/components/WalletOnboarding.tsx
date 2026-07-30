@@ -35,7 +35,11 @@ const primaryBtn = 'w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-pur
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-pink-500/25';
 const ghostBtn = 'w-full py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
   + 'hover:bg-white/[0.08] transition-colors';
-const input = 'w-full p-3 rounded-xl bg-white/5 border border-white/10 text-[13px] text-white';
+// Aligned to the app's shadcn Input tokens (border-input / ring-ring / muted placeholder) so fields
+// match the rest of the app and get a proper focus ring; subtle bg for legibility on the dark overlay.
+const input = 'w-full rounded-lg border border-input bg-white/[0.04] px-3 py-2.5 text-[13px] text-white '
+  + 'shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none '
+  + 'focus-visible:ring-1 focus-visible:ring-ring';
 
 /** field-status colour: neutral while empty, green when ok, red when invalid. */
 const fieldClass = (empty: boolean, ok: boolean): string => {

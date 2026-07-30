@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, type LucideIcon,
+  ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
+  type LucideIcon,
 } from 'lucide-react';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
@@ -85,6 +86,8 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [pass2, setPass2] = useState('');
   const [error, setError] = useState('');
   const [firstAddr, setFirstAddr] = useState('');
+  // Which path reached the passphrase step, so Back returns to the right previous screen.
+  const [fromImport, setFromImport] = useState(false);
 
   useEffect(() => {
     store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
@@ -105,6 +108,12 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const passInfo = assessPassphrase(pass);
   const passesMatch = pass.length > 0 && pass === pass2;
   const progress = STEP_PROGRESS[step] ?? 0;
+  // Back-nav target per step (null = no back: root, terminal, or in-flight). passphrase
+  // returns to whichever path led here. choose/exists/creating/done have no back.
+  let backTarget: Step | null = null;
+  if (step === 'create-show' || step === 'import-enter') backTarget = 'choose';
+  else if (step === 'create-verify') backTarget = 'create-show';
+  else if (step === 'passphrase') backTarget = fromImport ? 'import-enter' : 'create-verify';
 
   let importMsg = 'Your phrase is checked locally on this device.';
   if (importText.length > 0) {
@@ -153,6 +162,21 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     >
       <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
         <div className="w-full max-w-md mx-auto">
+          {/* Persistent Back nav — native multi-step affordance. Sibling of the keyed
+            card so it doesn't remount; hidden on root/terminal/in-flight steps. Clears
+            any error on the way back. */}
+          {backTarget && (
+          <button
+            type="button"
+            aria-label="Go back"
+            onClick={() => { setError(''); setStep(backTarget as Step); }}
+            className={'mb-2 -ml-2 inline-flex min-h-[44px] items-center gap-1 rounded-lg px-2 text-sm '
+              + 'text-muted-foreground transition-colors hover:text-white'}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </button>
+          )}
           {/* Persistent stepper progress bar — sits above the card and animates its
             width across steps (DESIGN-03). Sibling of the keyed card so it doesn't
             remount, giving a smooth fill instead of a jump. */}
@@ -225,7 +249,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   />
                 </div>
               ))}
-              <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => setStep('passphrase')}>
+              <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => { setFromImport(false); setStep('passphrase'); }}>
                 {verifyOk ? 'Continue' : 'Words don’t match yet'}
               </button>
             </div>
@@ -248,7 +272,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <p className={`text-xs mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
                 {importMsg}
               </p>
-              <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => setStep('passphrase')}>Continue</button>
+              <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => { setFromImport(true); setStep('passphrase'); }}>Continue</button>
             </div>
             )}
 

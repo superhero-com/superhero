@@ -37,8 +37,8 @@ const defaultStore = createIndexedDbVaultStore();
 const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
   + 'border-glass-border shadow-glass backdrop-blur-card p-6';
 // min-h-[44px] guarantees the Apple/Material minimum tap target on every interactive element.
-const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium '
-  + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-pink-500/25';
+const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-medium '
+  + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-blue-500/25';
 const ghostBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
   + 'hover:bg-white/[0.08] transition-colors';
 // Aligned to the app's shadcn Input tokens (border-input / ring-ring / muted placeholder) so fields
@@ -69,8 +69,8 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
 // gradient-tinted rounded tile, so every step leads with a native onboarding-style glyph.
 const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
 { icon: LucideIcon; spin?: boolean; tone?: 'brand' | 'success' }) => {
-  const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-pink-500/15 to-purple-500/15';
-  const color = tone === 'success' ? 'text-emerald-400' : 'text-pink-400';
+  const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-sky-500/15 to-blue-600/15';
+  const color = tone === 'success' ? 'text-emerald-400' : 'text-sky-400';
   return (
     <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${tint}`}>
       <Icon className={`h-5 w-5 ${color}${spin ? ' animate-spin' : ''}`} />
@@ -148,7 +148,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     setError('');
     setStep('creating');
     try {
-      const phrase = normalizeMnemonic(step === 'import-enter' ? importText : mnemonic);
+      // Select the phrase by the path that led here (fromImport), NOT `step` — by the time
+      // Create is pressed `step` is 'passphrase', so keying off it always took the create
+      // branch and made the import path fail with "Invalid mnemonic".
+      const phrase = normalizeMnemonic(fromImport ? importText : mnemonic);
       const record = await importWallet(store, { mnemonic: phrase, passphrase: pass, now: Date.now() });
       const { address } = deriveAccount(phrase, 0);
       setFirstAddr(address);
@@ -158,7 +161,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       setError((e as Error).message);
       setStep('passphrase');
     }
-  }, [store, importText, mnemonic, pass, step, onComplete]);
+  }, [store, importText, mnemonic, pass, fromImport, onComplete]);
 
   // Focus the step's primary field on entry — programmatic (callback ref), matching the
   // app's own pattern and avoiding the jsx-a11y/no-autofocus DOM attribute. Fires on each
@@ -208,7 +211,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
           {progress > 0 && (
           <div className="mb-3 h-1 w-full rounded-full bg-white/10 overflow-hidden" aria-hidden="true">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 transition-[width] duration-300 ease-out"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>

@@ -41,6 +41,17 @@ const input = 'w-full rounded-lg border border-input bg-white/[0.04] px-3 py-2.5
   + 'shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none '
   + 'focus-visible:ring-1 focus-visible:ring-ring';
 
+// Stepper progress affordance (DESIGN-03). Monotonic along each path — create:
+// show → verify → passphrase; import: enter → passphrase. Approximate fractions;
+// drives the persistent top progress bar. choose/exists/done have no bar.
+const STEP_PROGRESS: Partial<Record<Step, number>> = {
+  'create-show': 0.25,
+  'create-verify': 0.5,
+  'import-enter': 0.34,
+  passphrase: 0.75,
+  creating: 0.9,
+};
+
 /** field-status colour: neutral while empty, green when ok, red when invalid. */
 const fieldClass = (empty: boolean, ok: boolean): string => {
   if (empty) return 'text-white/40';
@@ -81,6 +92,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const importedOk = isValidMnemonic(importText);
   const passInfo = assessPassphrase(pass);
   const passesMatch = pass.length > 0 && pass === pass2;
+  const progress = STEP_PROGRESS[step] ?? 0;
 
   let importMsg = 'Your phrase is checked locally on this device.';
   if (importText.length > 0) {
@@ -121,116 +133,133 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
-        {step === 'exists' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-2">Wallet already set up</h2>
-          <p className="text-[13px] text-white/60 mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
-          <button type="button" className={ghostBtn} onClick={() => { store.clear().then(() => setStep('choose')); }}>
-            Reset (dev) — clear this device&apos;s wallet
-          </button>
-        </div>
-        )}
-
-        {step === 'choose' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-1">Set up your wallet</h2>
-          <p className="text-[13px] text-white/60 mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
-          <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
-          <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
-        </div>
-        )}
-
-        {step === 'create-show' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-1">Write down your recovery phrase</h2>
-          <p className="text-[13px] text-amber-300/90 mb-4">
-            These 12 words are the ONLY way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
-          </p>
-          <div className="grid grid-cols-3 gap-2 mb-5">
-            {mnemonic.split(' ').map((w, i) => (
-              <div key={w + String(i)} className="px-2 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px]">
-                <span className="text-white/30 mr-1">{i + 1}</span>
-                {w}
-              </div>
-            ))}
+        <div className="w-full max-w-md mx-auto">
+          {/* Persistent stepper progress bar — sits above the card and animates its
+            width across steps (DESIGN-03). Sibling of the keyed card so it doesn't
+            remount, giving a smooth fill instead of a jump. */}
+          {progress > 0 && (
+          <div className="mb-3 h-1 w-full rounded-full bg-white/10 overflow-hidden" aria-hidden="true">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 transition-[width] duration-300 ease-out"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
           </div>
-          <button type="button" className={primaryBtn} onClick={() => setStep('create-verify')}>I&apos;ve written them down</button>
-        </div>
-        )}
+          )}
+          {/* Keyed on `step` so each step remounts and replays the sheet-rise entrance —
+            the app's own motion primitives (animate-in/fade/slide, matching dialog.tsx). */}
+          <div key={step} className="animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
+            {step === 'exists' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-2">Wallet already set up</h2>
+              <p className="text-[13px] text-white/60 mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
+              <button type="button" className={ghostBtn} onClick={() => { store.clear().then(() => setStep('choose')); }}>
+                Reset (dev) — clear this device&apos;s wallet
+              </button>
+            </div>
+            )}
 
-        {step === 'create-verify' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-1">Confirm your backup</h2>
-          <p className="text-[13px] text-white/60 mb-5">Type the requested words to confirm you saved them.</p>
-          {[0, 1].map((n) => (
-            <div key={verifyIdx[n]} className="mb-3">
-              <label className="block text-[12px] text-white/60 mb-1" htmlFor={`vw${n}`}>{`Word #${verifyIdx[n] + 1}`}</label>
-              <input
-                id={`vw${n}`}
-                className={input}
-                value={verifyIn[n]}
+            {step === 'choose' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-1">Set up your wallet</h2>
+              <p className="text-[13px] text-white/60 mb-6">Your keys stay on this device, encrypted. Superhero never sees them.</p>
+              <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
+              <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
+            </div>
+            )}
+
+            {step === 'create-show' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-1">Write down your recovery phrase</h2>
+              <p className="text-[13px] text-amber-300/90 mb-4">
+                These 12 words are the ONLY way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
+              </p>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {mnemonic.split(' ').map((w, i) => (
+                  <div key={w + String(i)} className="px-2 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px]">
+                    <span className="text-white/30 mr-1">{i + 1}</span>
+                    {w}
+                  </div>
+                ))}
+              </div>
+              <button type="button" className={primaryBtn} onClick={() => setStep('create-verify')}>I&apos;ve written them down</button>
+            </div>
+            )}
+
+            {step === 'create-verify' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-1">Confirm your backup</h2>
+              <p className="text-[13px] text-white/60 mb-5">Type the requested words to confirm you saved them.</p>
+              {[0, 1].map((n) => (
+                <div key={verifyIdx[n]} className="mb-3">
+                  <label className="block text-[12px] text-white/60 mb-1" htmlFor={`vw${n}`}>{`Word #${verifyIdx[n] + 1}`}</label>
+                  <input
+                    id={`vw${n}`}
+                    className={input}
+                    value={verifyIn[n]}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    onChange={(e) => setVerifyIn((prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]))}
+                  />
+                </div>
+              ))}
+              <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => setStep('passphrase')}>
+                {verifyOk ? 'Continue' : 'Words don’t match yet'}
+              </button>
+            </div>
+            )}
+
+            {step === 'import-enter' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-1">Import your wallet</h2>
+              <p className="text-[13px] text-white/60 mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
+              <textarea
+                className={`${input} font-mono mb-2`}
+                rows={3}
+                value={importText}
                 autoCapitalize="none"
                 autoCorrect="off"
-                onChange={(e) => setVerifyIn((prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]))}
+                placeholder="word1 word2 word3 …"
+                onChange={(e) => setImportText(e.target.value)}
               />
+              <p className={`text-[12px] mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
+                {importMsg}
+              </p>
+              <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => setStep('passphrase')}>Continue</button>
             </div>
-          ))}
-          <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => setStep('passphrase')}>
-            {verifyOk ? 'Continue' : 'Words don’t match yet'}
-          </button>
-        </div>
-        )}
+            )}
 
-        {step === 'import-enter' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-1">Import your wallet</h2>
-          <p className="text-[13px] text-white/60 mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
-          <textarea
-            className={`${input} font-mono mb-2`}
-            rows={3}
-            value={importText}
-            autoCapitalize="none"
-            autoCorrect="off"
-            placeholder="word1 word2 word3 …"
-            onChange={(e) => setImportText(e.target.value)}
-          />
-          <p className={`text-[12px] mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
-            {importMsg}
-          </p>
-          <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => setStep('passphrase')}>Continue</button>
-        </div>
-        )}
+            {step === 'passphrase' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-1">Set a passphrase</h2>
+              <p className="text-[13px] text-white/60 mb-4">
+                This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
+              </p>
+              <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
+              <p className={`text-[12px] mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
+              <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
+              {pass2.length > 0 && !passesMatch && <p className="text-[12px] text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
+              {error && <p className="text-[12px] text-rose-400 mb-3">{error}</p>}
+              <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>
+            </div>
+            )}
 
-        {step === 'passphrase' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-1">Set a passphrase</h2>
-          <p className="text-[13px] text-white/60 mb-4">
-            This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
-          </p>
-          <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
-          <p className={`text-[12px] mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
-          <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
-          {pass2.length > 0 && !passesMatch && <p className="text-[12px] text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
-          {error && <p className="text-[12px] text-rose-400 mb-3">{error}</p>}
-          <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>
-        </div>
-        )}
+            {step === 'creating' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-2">Encrypting your wallet…</h2>
+              <p className="text-[13px] text-white/60">Deriving your key (Argon2id). This takes a moment.</p>
+            </div>
+            )}
 
-        {step === 'creating' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-2">Encrypting your wallet…</h2>
-          <p className="text-[13px] text-white/60">Deriving your key (Argon2id). This takes a moment.</p>
+            {step === 'done' && (
+            <div className={card}>
+              <h2 className="text-lg font-semibold mb-2">Wallet ready 🎉</h2>
+              <p className="text-[13px] text-white/60 mb-1">Your first account:</p>
+              <p className="text-[12px] font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
+              <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>
+            </div>
+            )}
+          </div>
         </div>
-        )}
-
-        {step === 'done' && (
-        <div className={card}>
-          <h2 className="text-lg font-semibold mb-2">Wallet ready 🎉</h2>
-          <p className="text-[13px] text-white/60 mb-1">Your first account:</p>
-          <p className="text-[12px] font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
-          <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>
-        </div>
-        )}
       </div>
     </div>
   );

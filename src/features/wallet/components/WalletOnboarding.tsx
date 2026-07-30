@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import {
   ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
-  CircleAlert, type LucideIcon,
+  CircleAlert, Trash2, type LucideIcon,
 } from 'lucide-react';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
@@ -221,7 +221,12 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <IconChip icon={Wallet} />
               <h2 className="text-lg font-semibold tracking-tight leading-none mb-2">Wallet already set up</h2>
               <p className="text-sm text-muted-foreground mb-5">A wallet already exists on this device. Unlocking is the next screen.</p>
-              <button type="button" className={ghostBtn} onClick={() => { store.clear().then(() => setStep('choose')); }}>
+              <button
+                type="button"
+                className={cn(ghostBtn, 'flex items-center justify-center gap-2 border-rose-500/30 text-rose-300 hover:bg-rose-500/10')}
+                onClick={() => { store.clear().then(() => setStep('choose')); }}
+              >
+                <Trash2 className="h-4 w-4" />
                 Reset (dev) — clear this device&apos;s wallet
               </button>
             </div>

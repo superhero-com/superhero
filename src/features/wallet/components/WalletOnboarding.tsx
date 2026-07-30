@@ -31,13 +31,14 @@ const defaultStore = createIndexedDbVaultStore();
 // shadow-glass / backdrop-blur-card) so the onboarding card matches the rest of the design system.
 const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
   + 'border-glass-border shadow-glass backdrop-blur-card p-6';
-const primaryBtn = 'w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium '
+// min-h-[44px] guarantees the Apple/Material minimum tap target on every interactive element.
+const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium '
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-pink-500/25';
-const ghostBtn = 'w-full py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
+const ghostBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
   + 'hover:bg-white/[0.08] transition-colors';
 // Aligned to the app's shadcn Input tokens (border-input / ring-ring / muted placeholder) so fields
 // match the rest of the app and get a proper focus ring; subtle bg for legibility on the dark overlay.
-const input = 'w-full rounded-lg border border-input bg-white/[0.04] px-3 py-2.5 text-sm text-white '
+const input = 'w-full min-h-[44px] rounded-lg border border-input bg-white/[0.04] px-3 py-3 text-sm text-white '
   + 'shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none '
   + 'focus-visible:ring-1 focus-visible:ring-ring';
 
@@ -129,8 +130,15 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     // notch / home indicator. z-[1200] sits above the app's mobile-app-header /
     // mobile-app-footer (both z-[1100]).
     <div
-      className="fixed inset-0 z-[1200] bg-[#0a0a0f] text-white overflow-y-auto"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed inset-0 z-[1200] bg-[#0a0a0f] text-white overflow-y-auto touch-manipulation"
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        // Native-feel: kill the iOS grey tap flash, stop the rubber-band/pull-to-refresh
+        // that reveals the page behind, and (touch-manipulation) drop the 300ms double-tap delay.
+        WebkitTapHighlightColor: 'transparent',
+        overscrollBehavior: 'contain',
+      }}
     >
       <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
         <div className="w-full max-w-md mx-auto">

@@ -65,11 +65,16 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
 
 // Brand icon chip above each step heading — design-system lucide-react (h-5 w-5) in a
 // gradient-tinted rounded tile, so every step leads with a native onboarding-style glyph.
-const IconChip = ({ icon: Icon, spin = false }: { icon: LucideIcon; spin?: boolean }) => (
-  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-pink-500/15 to-purple-500/15">
-    <Icon className={spin ? 'h-5 w-5 animate-spin text-pink-400' : 'h-5 w-5 text-pink-400'} />
-  </div>
-);
+const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
+{ icon: LucideIcon; spin?: boolean; tone?: 'brand' | 'success' }) => {
+  const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-pink-500/15 to-purple-500/15';
+  const color = tone === 'success' ? 'text-emerald-400' : 'text-pink-400';
+  return (
+    <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${tint}`}>
+      <Icon className={`h-5 w-5 ${color}${spin ? ' animate-spin' : ''}`} />
+    </div>
+  );
+};
 
 interface Props {
   store?: VaultStore;
@@ -302,7 +307,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
             {step === 'done' && (
             <div className={card}>
-              <IconChip icon={CircleCheck} />
+              <IconChip icon={CircleCheck} tone="success" />
               <h2 className="text-lg font-semibold tracking-tight mb-2">Wallet ready 🎉</h2>
               <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
               <p className="text-xs font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>

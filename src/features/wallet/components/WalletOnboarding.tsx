@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
 import { importWallet } from '../wallet-lifecycle';
@@ -101,12 +102,15 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     }
   }, [store, importText, mnemonic, pass, step, onComplete]);
 
-  return (
+  const overlay = (
     // Focused full-screen takeover: covers the app header, bottom tabs, and the
-    // app-wide Install-App prompt (all lower z) so a secret-phrase / passphrase
-    // step is private and native-feeling. Safe-area padding for the notch/home bar.
+    // app-wide Install-App prompt so a secret-phrase / passphrase step is private
+    // and native-feeling. Portalled to <body> (below) so it escapes the app's
+    // stacking context and truly sits above ALL chrome. Safe-area padding for the
+    // notch / home indicator. z-[1200] sits above the app's mobile-app-header /
+    // mobile-app-footer (both z-[1100]).
     <div
-      className="fixed inset-0 z-[100] bg-[#0a0a0f] text-white overflow-y-auto"
+      className="fixed inset-0 z-[1200] bg-[#0a0a0f] text-white overflow-y-auto"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="min-h-full flex items-center justify-center p-4">
@@ -223,6 +227,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       </div>
     </div>
   );
+
+  // Portal to <body> so the overlay escapes any transformed/stacking ancestor and
+  // covers the app header + bottom tabs (SSR-safe: render inline if no document).
+  return typeof document === 'undefined' ? overlay : createPortal(overlay, document.body);
 };
 
 export default WalletOnboarding;

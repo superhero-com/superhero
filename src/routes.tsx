@@ -31,6 +31,8 @@ const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Wallet = lazy(() => import('./views/Wallet'));
+// DEV/LAB — inline-wallet device diagnostic (gate/remove before production merge)
+const WalletLab = lazy(() => import('./views/WalletLab'));
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
@@ -272,6 +274,9 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '/branding', element: <Branding /> },
+  // DEV/LAB — inline-wallet device diagnostic. Not linked from any UI; reach it
+  // directly at /wallet-lab. Gate behind INLINE_WALLET_ENABLED or remove before merge.
+  { path: '/wallet-lab', element: <WalletLab /> },
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },

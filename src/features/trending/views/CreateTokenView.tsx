@@ -18,6 +18,9 @@ import {
 } from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  TrendingUp, Sigma, Landmark, Coins,
+} from 'lucide-react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';

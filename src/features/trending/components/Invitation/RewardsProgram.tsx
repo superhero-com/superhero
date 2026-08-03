@@ -5,6 +5,10 @@ import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
+import {
+  Gift, CheckCircle2, Check, AlertTriangle, Lock, Loader2,
+  ArrowRight, Target, PartyPopper, RefreshCw, Clock, UserCheck, Send,
+} from 'lucide-react';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 import CelebrationIcon from '../../../../svg/iconCelebration.svg?react';
@@ -64,8 +68,8 @@ const RewardsProgram = () => {
   const totalEarned = (isOnboardingPaid ? 50 : 0) + rewardedPostCount * tierAe;
 
   const verifySteps = [
-    { text: t('rewardsProgram.milestone1.step1'), done: isXLinked },
-    { text: t('rewardsProgram.milestone1.step2'), done: isOnboardingPaid },
+    { text: t('rewardsProgram.milestone1.step1'), done: isXLinked, Icon: UserCheck },
+    { text: t('rewardsProgram.milestone1.step2'), done: isOnboardingPaid, Icon: Send },
   ];
   const verifyDone = verifySteps.filter((s) => s.done).length;
   const verifyTotal = verifySteps.length;
@@ -109,6 +113,12 @@ const RewardsProgram = () => {
   const showCheckButton = isXLinked;
   const checkButtonDisabled = !canCheck || checkLoading || !activeAccount;
 
+  const renderCheckIcon = () => {
+    if (checkLoading) return <Loader2 className="w-4 h-4 animate-spin" />;
+    if (!canCheck && nextCheckAt) return <Clock className="w-4 h-4" />;
+    return <RefreshCw className="w-4 h-4" />;
+  };
+
   return (
     <div className="mb-10">
 
@@ -128,7 +138,7 @@ const RewardsProgram = () => {
               <h2 className="text-2xl md:text-3xl font-bold text-white m-0">
                 {t('rewardsProgram.aeEarned', { amount: totalEarned })}
               </h2>
-              <span className="text-3xl animate-bounce">🎉</span>
+              <PartyPopper className="w-8 h-8 text-emerald-400 animate-bounce" />
             </div>
             <p className="text-sm text-white/50 m-0 max-w-lg animate-fadeIn animate-delay-200">
               {t('rewardsProgram.rewardsSentAutomatically')}
@@ -140,7 +150,7 @@ const RewardsProgram = () => {
       {/* Error Banner */}
       {error && (
         <div className="mb-6 flex items-center gap-3 px-5 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          <span>⚠</span>
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}
@@ -165,18 +175,23 @@ const RewardsProgram = () => {
                     : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/25',
                 )}
               >
-                <span className="text-base">{verifyStatus === 'completed' ? '✅' : '🎁'}</span>
+                {verifyStatus === 'completed'
+                  ? <CheckCircle2 className="w-4 h-4" />
+                  : <Gift className="w-4 h-4" />}
                 {t('rewardsProgram.milestone1.earnBadge')}
               </span>
             </div>
             <div className="mb-4">
               <span
                 className={cn(
-                  'inline-block text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
+                  'inline-flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
                   verifyStatus === 'completed' && 'bg-emerald-500/20 text-emerald-400',
                   verifyStatus === 'in_progress' && 'bg-cyan-500/15 text-cyan-400',
                 )}
               >
+                {verifyStatus === 'completed'
+                  ? <CheckCircle2 className="w-3 h-3" />
+                  : <Loader2 className="w-3 h-3 animate-spin" />}
                 {verifyStatus === 'completed' ? t('rewardsProgram.status.completed') : t('rewardsProgram.status.inProgress')}
               </span>
             </div>
@@ -220,10 +235,11 @@ const RewardsProgram = () => {
                         step.done ? 'bg-emerald-500/30 text-emerald-400' : 'bg-white/5 border border-white/10 text-white/50',
                       )}
                     >
-                      {step.done ? '✓' : i + 1}
+                      {step.done ? <Check className="w-4 h-4" /> : i + 1}
                     </div>
-                    <div className={cn('leading-relaxed text-sm flex-1 min-w-0 pt-0.5', step.done ? 'text-emerald-300/80' : 'text-white/80')}>
-                      {step.text}
+                    <div className={cn('leading-relaxed text-sm flex-1 min-w-0 pt-0.5 flex items-start gap-2', step.done ? 'text-emerald-300/80' : 'text-white/80')}>
+                      <step.Icon className={cn('w-4 h-4 flex-shrink-0 mt-0.5', step.done ? 'text-emerald-400/70' : 'text-cyan-400/70')} />
+                      <span className="flex-1 min-w-0">{step.text}</span>
                     </div>
                   </div>
                 ))}
@@ -247,6 +263,7 @@ const RewardsProgram = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <Target className={cn('w-5 h-5', verifyCompleted ? 'text-emerald-400' : 'text-cyan-400/80')} />
                 <span className="text-2xl font-bold text-white">{verifyDone}</span>
                 <span className="text-sm text-white/30">
                   /
@@ -259,7 +276,7 @@ const RewardsProgram = () => {
                     className="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25"
                   >
                     {verifyActionLabel}
-                    <span className="text-base">→</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
                 {!verifyCompleted && showCheckButton && (
@@ -275,6 +292,7 @@ const RewardsProgram = () => {
                         : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white',
                     )}
                   >
+                    {renderCheckIcon()}
                     {checkLabel(checkLoading, !canCheck, nextCheckAt, t)}
                   </button>
                 )}
@@ -312,19 +330,24 @@ const RewardsProgram = () => {
                     : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/25',
                 )}
               >
-                <span className="text-base">{postStatus === 'completed' ? '✅' : '🎁'}</span>
+                {postStatus === 'completed'
+                  ? <CheckCircle2 className="w-4 h-4" />
+                  : <Gift className="w-4 h-4" />}
                 {t('rewardsProgram.milestone2.earnBadge')}
               </span>
             </div>
             <div className="mb-4">
               <span
                 className={cn(
-                  'inline-block text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
+                  'inline-flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
                   postStatus === 'completed' && 'bg-emerald-500/20 text-emerald-400',
                   postStatus === 'in_progress' && 'bg-cyan-500/15 text-cyan-400',
                   postStatus === 'locked' && 'bg-white/10 text-white/40',
                 )}
               >
+                {postStatus === 'completed' && <CheckCircle2 className="w-3 h-3" />}
+                {postStatus === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
+                {postStatus === 'locked' && <Lock className="w-3 h-3" />}
                 {postStatus === 'completed' && t('rewardsProgram.status.completed')}
                 {postStatus === 'in_progress' && t('rewardsProgram.status.inProgress')}
                 {postStatus === 'locked' && t('rewardsProgram.status.locked')}
@@ -367,7 +390,9 @@ const RewardsProgram = () => {
                       : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/25',
                   )}
                 >
-                  <span className="text-base">{postStatus === 'completed' ? '✅' : '🎁'}</span>
+                  {postStatus === 'completed'
+                  ? <CheckCircle2 className="w-4 h-4" />
+                  : <Gift className="w-4 h-4" />}
                   {t('rewardsProgram.milestone2.streakBadge')}
                 </span>
               </div>
@@ -398,6 +423,7 @@ const RewardsProgram = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <Target className={cn('w-5 h-5', postCompleted ? 'text-emerald-400' : 'text-cyan-400/80')} />
                 <span className="text-2xl font-bold text-white">{rewardedPostCount}</span>
                 <span className="text-sm text-white/30">
                   /
@@ -417,7 +443,7 @@ const RewardsProgram = () => {
                       )}
                     >
                       {linkLoading ? t('rewardsProgram.milestone2.openingWallet') : t('rewardsProgram.milestone2.postOnX')}
-                      {!linkLoading && <span className="text-base">→</span>}
+                      {!linkLoading && <ArrowRight className="w-4 h-4" />}
                     </button>
                     {showCheckButton && (
                       <button

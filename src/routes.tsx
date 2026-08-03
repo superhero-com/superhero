@@ -2,6 +2,7 @@ import React, { lazy } from 'react';
 import { RouteObject, Navigate, useParams } from 'react-router-dom';
 import SocialLayout from './components/layout/SocialLayout';
 import { postDetailPath } from './features/notifications/notificationNavigation';
+import { INLINE_WALLET_ENABLED } from './features/wallet/config';
 
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const NotFound = lazy(() => import('./views/NotFound'));
@@ -31,9 +32,8 @@ const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Wallet = lazy(() => import('./views/Wallet'));
-// DEV/LAB — inline-wallet device diagnostic (gate/remove before production merge)
+// Inline-wallet dev surfaces — only routed when INLINE_WALLET_ENABLED (see below).
 const WalletLab = lazy(() => import('./views/WalletLab'));
-// DEV — inline-wallet onboarding flow (create/import). Gate behind INLINE_WALLET_ENABLED before merge.
 const WalletOnboarding = lazy(() => import('./features/wallet/components/WalletOnboarding'));
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
@@ -276,10 +276,16 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '/branding', element: <Branding /> },
-  // DEV/LAB — inline-wallet device diagnostic. Not linked from any UI; reach it
-  // directly at /wallet-lab. Gate behind INLINE_WALLET_ENABLED or remove before merge.
-  { path: '/wallet-lab', element: <WalletLab /> },
-  { path: '/wallet-onboarding', element: <WalletOnboarding /> },
+  // Inline-wallet dev surfaces, gated on INLINE_WALLET_ENABLED. Not linked from
+  // any UI. Ungated they are a production footgun: /wallet-onboarding would let
+  // any visitor create a REAL encrypted seed vault on their device that nothing
+  // can then sign with (the signer is behind the same flag), and /wallet-lab
+  // exposes the crypto diagnostic. With the flag false these entries are
+  // constant-folded away entirely.
+  ...(INLINE_WALLET_ENABLED ? [
+    { path: '/wallet-lab', element: <WalletLab /> },
+    { path: '/wallet-onboarding', element: <WalletOnboarding /> },
+  ] : []),
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },

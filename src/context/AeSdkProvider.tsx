@@ -1,6 +1,9 @@
 import WebSocketClient from '@/libs/WebSocketClient';
 import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
-import { createEncryptedHdAccount } from '@/features/wallet/EncryptedHdAccount';
+import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
+import { indexForAddress } from '@/features/wallet/manifest-store';
+import { requestUnlock } from '@/features/wallet/unlock-broker';
+import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 import { isStandalone } from '@/utils/displayMode';
 import {
   AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
@@ -8,6 +11,8 @@ import {
 import { useAtom } from 'jotai';
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -90,18 +95,42 @@ const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
   .map((byte) => byte.toString(16).padStart(2, '0'))
   .join('');
 
+/** Device vault for the inline wallet. Lazy per call — no IndexedDB is opened until a signature. */
+const inlineVaultStore = createIndexedDbVaultStore();
+
 /**
- * Signer-factory swap point — build-plan.md §3.4 / §8 phase P1 ("prove the
- * SDK swap"). Installs the in-page `EncryptedHdAccount` skeleton ONLY when
- * the inline wallet is explicitly enabled (`INLINE_WALLET_ENABLED`, a hard
- * off-by-default const — see `features/wallet/config.ts`) AND the app is
- * running as an installed PWA (`isStandalone()` — a UX gate only, never a
- * security boundary). Otherwise it returns the existing delegated
- * (`superhero://` deep-link + relay) account object, completely unchanged.
+ * The in-page unlock + WYSIWYS confirmation surface the inline signer blocks on.
+ * Lazy-loaded so its crypto stack never enters the main chunk, and rendered only
+ * when `INLINE_WALLET_ENABLED` — with the flag off (production today) it is
+ * never mounted and never fetched.
+ */
+const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
+
+/**
+ * Signer-factory swap point — build-plan.md §3.4 / §8 phase P4. Installs the
+ * in-page inline signer instead of the delegated (`superhero://` deep-link +
+ * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when all three of
+ * these hold:
  *
- * With `INLINE_WALLET_ENABLED === false` (today, and until a later gated
- * phase flips it), this is a no-op passthrough to `createDelegatedAccount`
- * for every caller — the inline path is dead code in production.
+ *  1. `INLINE_WALLET_ENABLED` — a hard off-by-default literal const (see
+ *     `features/wallet/config.ts`). False in production today, which alone makes
+ *     this whole branch dead code for every real user.
+ *  2. `isStandalone()` — the app is running as an installed PWA. This is a UX
+ *     gate ONLY, never a security boundary: it is documented-spoofable, and
+ *     under same-origin custody forcing the inline path in a plain browser tab
+ *     changes nothing about the security story (build-plan §3.4).
+ *  3. The address is a known inline account in the cleartext manifest. This is
+ *     what keeps a user who connected an EXTERNAL wallet (extension,
+ *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
+ *     the installed PWA — we must never claim to sign for a key we don't hold.
+ *
+ * Any of the three false → the existing delegated account object, completely
+ * unchanged. Browser (non-standalone) mode is untouched in every case.
+ *
+ * The returned account signs in-page: user-verification + WYSIWYS confirm on
+ * EVERY signature via `requestUnlock` (`unlock-broker.ts` → `WalletSignPrompt`),
+ * then unseal → derive → sign → drop. No unlocked seed is cached between
+ * signatures — see `inline-signer.ts`.
  *
  * Exported as a plain function (not a hook) so it can be unit-tested in
  * isolation from React lifecycle / SDK initialization.
@@ -109,11 +138,15 @@ const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
 export const makeSigner = (
   address: string,
   createDelegatedAccount: (addr: string) => unknown,
-): unknown => (
-  INLINE_WALLET_ENABLED && isStandalone()
-    ? createEncryptedHdAccount(address)
-    : createDelegatedAccount(address)
-);
+  networkId?: string,
+): unknown => {
+  if (!(INLINE_WALLET_ENABLED && isStandalone())) return createDelegatedAccount(address);
+  const index = indexForAddress(address);
+  if (index === null) return createDelegatedAccount(address);
+  return createInlineSdkAccount({
+    address, index, store: inlineVaultStore, unlock: requestUnlock, networkId,
+  });
+};
 
 const normalizeSignatureResult = (signature: any): string => {
   if (typeof signature === 'string') return signature;
@@ -311,8 +344,8 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   /**
    * Builds the existing delegated (deep-link + relay) signing account object —
    * UNCHANGED behavior, only extracted into its own callback so `makeSigner`
-   * (P1, see above) can choose between this and the inline `EncryptedHdAccount`
-   * skeleton without altering this logic.
+   * (see above) can choose between this and the inline in-page signer without
+   * altering this logic.
    */
   const createDelegatedSignerAccount = useCallback((address: string) => ({
     address,
@@ -521,10 +554,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     setActiveAccount(address);
     staticAeSdkRef.current.addAccount(
-      makeSigner(address, createDelegatedSignerAccount) as any,
+      makeSigner(address, createDelegatedSignerAccount, activeNetwork.networkId) as any,
       { select: true },
     );
-  }, [setActiveAccount, createDelegatedSignerAccount]);
+  }, [setActiveAccount, createDelegatedSignerAccount, activeNetwork.networkId]);
 
   const initSdk = useCallback(async () => {
     // Prevent re-initialization if already initialized
@@ -652,6 +685,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AeSdkContext.Provider value={contextValue}>
       {children}
+      {/* Mounted app-wide (not inside a wallet screen) because a signature can be
+          requested from anywhere; the signer fails closed if it is absent. */}
+      {INLINE_WALLET_ENABLED && (
+        <Suspense fallback={null}>
+          <WalletSignPrompt />
+        </Suspense>
+      )}
     </AeSdkContext.Provider>
   );
 };

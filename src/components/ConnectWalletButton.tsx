@@ -29,7 +29,7 @@ export const ConnectWalletButton = ({
   label, block, style, className, variant = 'default', muted = false,
 }: Props) => {
   const { t } = useTranslation('common');
-  const { activeAccount } = useAeSdk();
+  const { activeAccount, addStaticAccount } = useAeSdk();
   const { connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
   const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
@@ -100,10 +100,17 @@ export const ConnectWalletButton = ({
       </AeButton>
       {showInlineOnboarding && (
         <Suspense fallback={null}>
-          {/* onComplete only closes the overlay here; making the app actually
-              use the created inline account (activeAccount + signing) is the
-              gated signer integration, not this routing. */}
-          <WalletOnboarding onComplete={() => setShowInlineOnboarding(false)} />
+          {/* Adopt the freshly-onboarded account: `addStaticAccount` sets it as
+              the active account AND installs the signer through `makeSigner`,
+              which — because onboarding has just written the address into the
+              cleartext manifest — resolves to the inline in-page signer. From
+              here on, signing happens in the PWA behind the per-signature
+              unlock + confirm prompt. */}
+          <WalletOnboarding onComplete={(_record, address) => {
+            setShowInlineOnboarding(false);
+            if (address) addStaticAccount(address);
+          }}
+          />
         </Suspense>
       )}
     </>

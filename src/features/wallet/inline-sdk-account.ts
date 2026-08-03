@@ -21,13 +21,17 @@
  * per-signature UV + WYSIWYS confirm UI lives; this adapter stays UI-agnostic
  * and unit-testable.
  *
- * GATED: nothing installs this yet. `AeSdkProvider.makeSigner` still returns the
- * throwing `EncryptedHdAccount` stub while `INLINE_WALLET_ENABLED === false`.
- * Wiring this in (+ the unlock/confirm modal) is the next increment and is
- * gated on the P0 security prerequisites + SR review.
+ * GATED: `AeSdkProvider.makeSigner` installs this only when
+ * `INLINE_WALLET_ENABLED && isStandalone()` AND the address is a known inline
+ * account in the cleartext manifest — all three false in production today, so
+ * this is dead code for every real user. The per-signature UV + WYSIWYS confirm
+ * it depends on lives in `components/WalletSignPrompt.tsx`, reached through
+ * `unlock-broker.ts`. Flipping the flag on for real users remains a separate
+ * gated decision (build-plan §8 P5: device matrix + SR G4 review + CSP
+ * enforced), NOT authorized by this wiring.
  */
 import { type Encoded } from '@aeternity/aepp-sdk';
-import { createInlineWalletSigner, type UnlockProvider } from './inline-signer';
+import type { UnlockProvider } from './inline-signer';
 import type { VaultStore } from './vault-store';
 
 interface SignOptions { networkId?: string; innerTx?: boolean; [k: string]: unknown }
@@ -76,9 +80,17 @@ export function createInlineSdkAccount(opts: InlineSdkAccountOpts): InlineSdkAcc
   // Load the encrypted vault fresh and build the (stateless) signer per call.
   // The record is only ciphertext; UV + unseal + derive + sign + drop all happen
   // inside InlineWalletSigner, once per signature.
+  //
+  // `inline-signer` is imported DYNAMICALLY on purpose: this adapter is
+  // constructed from `AeSdkProvider`'s synchronous signer factory, which every
+  // user loads, whereas the signer pulls in the crypto stack (argon2id/hkdf via
+  // @noble, the vault envelope). Deferring it to the first signature keeps that
+  // stack out of the app's main chunk — the same discipline
+  // `ConnectWalletButton` applies to the onboarding screen.
   async function signerNow() {
     const record = await opts.store.load();
     if (!record) throw new Error('inline wallet: no vault found on this device');
+    const { createInlineWalletSigner } = await import('./inline-signer');
     return createInlineWalletSigner({
       address: opts.address,
       index: opts.index,

@@ -3,21 +3,34 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import {
   ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
-  CircleAlert, Trash2, type LucideIcon,
+  CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, type LucideIcon,
 } from 'lucide-react';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
-import { importWallet } from '../wallet-lifecycle';
+import {
+  addPasskeyFactor, addRecoveryCodeFactor, importWalletWithDek, recordMnemonicBackedUp,
+} from '../wallet-lifecycle';
+import { isPlatformAuthenticatorAvailable } from '../webauthn';
+import { clearManifest, manifestForFirstAccount, saveManifest } from '../manifest-store';
 import { deriveAccount } from '../derivation';
 import { createIndexedDbVaultStore } from '../vault-store';
 import type { VaultStore } from '../vault-store';
 import type { VaultRecord } from '../vault-record';
 
 /**
- * P4/P3 — the inline-wallet onboarding flow (create / import + set passphrase).
- * Uses the tested crypto core via wallet-lifecycle. Forced-backup verification is
- * built in for the create path (threat-model R-04). No mnemonic/passphrase is
- * persisted in the clear — importWallet builds the encrypted vault.
+ * P4/P3 — the inline-wallet onboarding flow.
+ *
+ * Order is load-bearing, not cosmetic (build-plan §4.6): the written mnemonic is
+ * shown and VERIFIED before any vault exists, then the passphrase factor creates
+ * it, then the optional device passkey and the MANDATORY recovery code are
+ * enrolled onto the already-unlocked DEK. Backup precedes custody because
+ * IndexedDB eviction, a lost passphrase and Apple's PRF-rekey bug are each
+ * individually unrecoverable if the only copy of the seed is the wrapped one
+ * (threat-model R-04).
+ *
+ * Nothing here persists a mnemonic, passphrase, recovery code, or DEK in the
+ * clear — `importWalletWithDek` builds the encrypted envelope, and the transient
+ * DEK held in component state for the enrollment steps is dropped at `done`.
  */
 
 type Step =
@@ -28,6 +41,8 @@ type Step =
   | 'import-enter'
   | 'passphrase'
   | 'creating'
+  | 'protect'
+  | 'recovery'
   | 'done';
 
 const defaultStore = createIndexedDbVaultStore();
@@ -51,11 +66,13 @@ const input = 'w-full min-h-[44px] rounded-lg border border-input bg-white/[0.04
 // show → verify → passphrase; import: enter → passphrase. Approximate fractions;
 // drives the persistent top progress bar. choose/exists/done have no bar.
 const STEP_PROGRESS: Partial<Record<Step, number>> = {
-  'create-show': 0.25,
-  'create-verify': 0.5,
-  'import-enter': 0.34,
-  passphrase: 0.75,
-  creating: 0.9,
+  'create-show': 0.15,
+  'create-verify': 0.3,
+  'import-enter': 0.2,
+  passphrase: 0.45,
+  creating: 0.6,
+  protect: 0.75,
+  recovery: 0.9,
   done: 1,
 };
 
@@ -95,6 +112,19 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [firstAddr, setFirstAddr] = useState('');
   // Which path reached the passphrase step, so Back returns to the right previous screen.
   const [fromImport, setFromImport] = useState(false);
+  // Enrollment state. `dek` is the transient unlocked Data-Encryption-Key: adding
+  // any factor requires it by construction (vault-record.addFactor), and it is
+  // held ONLY for the protect/recovery steps and dropped at `done`. It is never
+  // persisted and must never be reused as a session unlock — the signer re-runs
+  // user-verification on every signature (adr-0003 / threat-model R-02).
+  const [record, setRecord] = useState<VaultRecord | null>(null);
+  const [dek, setDek] = useState<CryptoKey | null>(null);
+  const [deviceUnlockAvailable, setDeviceUnlockAvailable] = useState(false);
+  const [passkeyEnrolled, setPasskeyEnrolled] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [recoverySaved, setRecoverySaved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
@@ -152,16 +182,99 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       // Create is pressed `step` is 'passphrase', so keying off it always took the create
       // branch and made the import path fail with "Invalid mnemonic".
       const phrase = normalizeMnemonic(fromImport ? importText : mnemonic);
-      const record = await importWallet(store, { mnemonic: phrase, passphrase: pass, now: Date.now() });
+      const now = Date.now();
+      const created = await importWalletWithDek(store, { mnemonic: phrase, passphrase: pass, now });
+      // The written backup is verified before we ever get here — on the create
+      // path by re-entering two random words, on the import path because the
+      // user supplied the phrase from their own existing backup. Either way the
+      // seed demonstrably exists off this device, which is what the flag means.
+      const backed = await recordMnemonicBackedUp(store, created.record, now);
       const { address } = deriveAccount(phrase, 0);
+      // Cleartext manifest — public addresses only. This is what lets
+      // `AeSdkProvider.makeSigner` recognise the account as an inline one and
+      // install the in-page signer for it.
+      saveManifest(manifestForFirstAccount(address));
+      setRecord(backed);
+      setDek(created.dek);
       setFirstAddr(address);
-      setStep('done');
-      onComplete?.(record, address);
+      // Feature-detect only, never UA-sniff: this boolean says "some
+      // user-verifying platform authenticator exists", NOT which sensor it is.
+      setDeviceUnlockAvailable(await isPlatformAuthenticatorAvailable());
+      setStep('protect');
     } catch (e) {
       setError((e as Error).message);
       setStep('passphrase');
     }
-  }, [store, importText, mnemonic, pass, fromImport, onComplete]);
+  }, [store, importText, mnemonic, pass, fromImport]);
+
+  /**
+   * Generate the MANDATORY recovery code and enroll it as a factor. It is the
+   * only unlock that survives both total device loss and an Apple PRF rekey, so
+   * onboarding cannot reach `done` without it.
+   */
+  const goToRecovery = useCallback(async (current: VaultRecord) => {
+    if (!dek) return;
+    setError('');
+    setBusy(true);
+    try {
+      const added = await addRecoveryCodeFactor(store, current, dek, Date.now());
+      setRecord(added.record);
+      setRecoveryCode(added.code);
+      setStep('recovery');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [store, dek]);
+
+  /**
+   * DEVICE-GATED. Enroll a platform passkey and use its PRF output as a second
+   * KEK for the same DEK. The OS decides which verification it shows — Face ID,
+   * Touch ID, fingerprint or the device passcode — and the web platform gives us
+   * no way to know or choose which, so the copy must never promise a named one.
+   */
+  const enrollDeviceUnlock = useCallback(async () => {
+    if (!record || !dek) return;
+    setError('');
+    setBusy(true);
+    try {
+      const updated = await addPasskeyFactor(store, record, dek, {
+        userId: crypto.getRandomValues(new Uint8Array(16)),
+        // Shown in the OS passkey picker. The account address is public data —
+        // never put anything else identifying here.
+        userName: firstAddr,
+        label: 'This device',
+        now: Date.now(),
+      });
+      setRecord(updated);
+      setPasskeyEnrolled(true);
+      await goToRecovery(updated);
+    } catch (e) {
+      // Not fatal: the passphrase factor still protects the wallet, and this
+      // device may simply not support PRF. Say so and let the user continue.
+      setError(`Couldn’t set up device unlock: ${(e as Error).message}`);
+      setBusy(false);
+    }
+  }, [store, record, dek, firstAddr, goToRecovery]);
+
+  /**
+   * Enrollment is complete. Drop every transient secret this component held —
+   * the unlocked DEK, the mnemonic, the passphrase, the recovery code — so the
+   * only place they exist afterwards is the encrypted vault (and, for the
+   * mnemonic and recovery code, wherever the user wrote them down). The `done`
+   * screen needs none of them. R-05's caveat still applies: dropping a JS string
+   * reference is not zeroization.
+   */
+  const finish = useCallback(() => {
+    setDek(null);
+    setMnemonic('');
+    setImportText('');
+    setPass('');
+    setPass2('');
+    setRecoveryCode('');
+    setStep('done');
+  }, []);
 
   // Focus the step's primary field on entry — programmatic (callback ref), matching the
   // app's own pattern and avoiding the jsx-a11y/no-autofocus DOM attribute. Fires on each
@@ -227,7 +340,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <button
                 type="button"
                 className={cn(ghostBtn, 'flex items-center justify-center gap-2 border-rose-500/30 text-rose-300 hover:bg-rose-500/10')}
-                onClick={() => { store.clear().then(() => setStep('choose')); }}
+                // Clear BOTH halves: leaving the cleartext manifest behind would
+                // leave `makeSigner` installing an inline signer for an address
+                // whose vault no longer exists.
+                onClick={() => { store.clear().then(() => { clearManifest(); setStep('choose'); }); }}
               >
                 <Trash2 className="h-4 w-4" />
                 Reset (dev) — clear this device&apos;s wallet
@@ -342,13 +458,95 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             </div>
             )}
 
+            {step === 'protect' && (
+            <div className={card}>
+              <IconChip icon={Fingerprint} />
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Unlock with this device</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add your device&apos;s own security as a second way to unlock — so you don&apos;t
+                type your passphrase for every signature. We can&apos;t tell which sensor your
+                device uses; the device decides (Face ID, Touch ID, fingerprint, or your passcode).
+              </p>
+              {deviceUnlockAvailable ? (
+                <button type="button" className={`${primaryBtn} mb-3 flex items-center justify-center gap-2`} disabled={busy} onClick={enrollDeviceUnlock}>
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                  Set up device unlock
+                </button>
+              ) : (
+                <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-muted-foreground">
+                  <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    This device doesn&apos;t offer a built-in unlock we can use. Your passphrase
+                    stays your way in — it works everywhere.
+                  </span>
+                </div>
+              )}
+              {error && (
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+              )}
+              <button type="button" className={ghostBtn} disabled={busy} onClick={() => record && goToRecovery(record)}>
+                {deviceUnlockAvailable ? 'Skip — use my passphrase' : 'Continue'}
+              </button>
+            </div>
+            )}
+
+            {step === 'recovery' && (
+            <div className={card}>
+              <IconChip icon={LifeBuoy} />
+              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Save your recovery code</h2>
+              <p className="text-sm text-amber-300/90 mb-4">
+                Shown once, now. It unlocks your wallet if you forget your passphrase or lose this
+                device. Store it somewhere other than this device.
+              </p>
+              <p className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-3 font-mono text-sm break-all text-center text-white mb-2">
+                {recoveryCode}
+              </p>
+              <button
+                type="button"
+                className={`${ghostBtn} mb-4 flex items-center justify-center gap-2`}
+                onClick={() => {
+                  navigator.clipboard?.writeText(recoveryCode)
+                    .then(() => setCopied(true))
+                    .catch(() => setError('Couldn’t copy — write the code down instead.'));
+                }}
+              >
+                {copied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'Copied' : 'Copy code'}
+              </button>
+              <label className="mb-4 flex items-start gap-2 text-sm text-white/80" htmlFor="recovery-saved">
+                <input
+                  id="recovery-saved"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-sky-600"
+                  checked={recoverySaved}
+                  onChange={(e) => setRecoverySaved(e.target.checked)}
+                />
+                <span>I&apos;ve saved my recovery code somewhere safe.</span>
+              </label>
+              {error && (
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+              )}
+              <button type="button" className={primaryBtn} disabled={!recoverySaved} onClick={finish}>Finish setup</button>
+            </div>
+            )}
+
             {step === 'done' && (
             <div className={card}>
               <IconChip icon={CircleCheck} tone="success" />
               <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Wallet ready 🎉</h2>
               <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
-              <p className="text-xs font-mono break-all text-emerald-400 mb-5">{firstAddr}</p>
-              <button type="button" className={primaryBtn} onClick={() => onComplete?.(undefined as never, firstAddr)}>Open wallet</button>
+              <p className="text-xs font-mono break-all text-emerald-400 mb-4">{firstAddr}</p>
+              <p className="text-xs text-muted-foreground mb-5">
+                {`Unlocks with your ${passkeyEnrolled ? 'device, your passphrase, or your recovery code' : 'passphrase or your recovery code'}. `}
+                You&apos;ll confirm every transaction.
+              </p>
+              <button type="button" className={primaryBtn} onClick={() => onComplete?.(record as VaultRecord, firstAddr)}>Open wallet</button>
             </div>
             )}
           </div>

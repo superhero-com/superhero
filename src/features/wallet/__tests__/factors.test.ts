@@ -101,8 +101,9 @@ describe('factor → KEK layer (wrap/unwrap the DEK)', () => {
     await expect(unwrapDek(forged, kek)).rejects.toThrow();
   });
 
-  it('DEFAULT_ARGON2ID meets the OWASP argon2id minimum (m>=19456, t>=2)', () => {
-    expect(DEFAULT_ARGON2ID.m).toBeGreaterThanOrEqual(19456);
-    expect(DEFAULT_ARGON2ID.t).toBeGreaterThanOrEqual(2);
+  it('DEFAULT_ARGON2ID meets the build-plan §4.3 target (m>=64 MiB, t>=3, p=1)', () => {
+    expect(DEFAULT_ARGON2ID.m).toBeGreaterThanOrEqual(65536); // 64 MiB memory floor — never lower
+    expect(DEFAULT_ARGON2ID.t).toBeGreaterThanOrEqual(3);
+    expect(DEFAULT_ARGON2ID.p).toBe(1);
   });
 });

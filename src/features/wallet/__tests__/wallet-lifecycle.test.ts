@@ -10,19 +10,46 @@ import {
   addRecoveryCodeFactor, importWallet, passphraseUnlockProvider, recoveryUnlockProvider,
 } from '../wallet-lifecycle';
 import { createInMemoryVaultStore } from '../vault-store';
-import { unlockVault } from '../vault-record';
+import { createVault, unlockVault, type FactorEnrollment } from '../vault-record';
+import {
+  DEFAULT_ARGON2ID, kekFromPassphrase, type Argon2idKdf,
+} from '../factors';
 import { createInlineWalletSigner } from '../inline-signer';
 import { deriveSigner } from '../derivation';
 
 const MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
   + 'abandon abandon abandon about';
 const GOLDEN0 = 'ak_21SBPc3yHP7bpQDvD1KMKzZZEgLtSXpDsK97LTjVwjiskra6Ka';
+const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
 
 describe('wallet lifecycle', () => {
   it('import → persist → unlock with the passphrase provider yields the mnemonic', async () => {
     const store = createInMemoryVaultStore();
     const record = await importWallet(store, { mnemonic: MNEMONIC, passphrase: 'pw', now: 1 });
     expect(await store.load()).toEqual(record);
+
+    const { factorId, kek } = await passphraseUnlockProvider('pw')(record);
+    const { mnemonic } = await unlockVault(record, factorId, kek);
+    expect(mnemonic).toBe(MNEMONIC);
+  });
+
+  it('opens a vault enrolled under the OLD (pre-raise) Argon2id params', async () => {
+    // A vault written before the KDF was raised carries its own (lower) params in
+    // the envelope. Unlock must derive the KEK from those STORED params, never from
+    // the current DEFAULT_ARGON2ID — otherwise raising the default would brick it.
+    const old: Argon2idKdf = {
+      alg: 'argon2id', salt: b64(crypto.getRandomValues(new Uint8Array(16))), m: 19456, t: 2, p: 1,
+    };
+    expect(old.m).toBeLessThan(DEFAULT_ARGON2ID.m); // guard: these really are lower than today's default
+    const enrollment: FactorEnrollment = {
+      id: crypto.randomUUID(),
+      type: 'passphrase',
+      label: 'Passphrase',
+      createdAt: 1,
+      kdf: old,
+      kek: await kekFromPassphrase('pw', old),
+    };
+    const record = await createVault(MNEMONIC, enrollment, 1);
 
     const { factorId, kek } = await passphraseUnlockProvider('pw')(record);
     const { mnemonic } = await unlockVault(record, factorId, kek);

@@ -66,10 +66,13 @@ export interface WrappedFactor {
 }
 
 /**
- * OWASP argon2id minimum (m = 19 MiB, t = 2, p = 1). Pure-JS @noble is slower
- * than WASM — benchmark on target devices (P5) and raise where the UX allows.
+ * Argon2id defaults — build-plan §4.3, for the seed-phrase asset class (an
+ * offline, unlimited-time target once a device/backup is exfiltrated). `m` is a
+ * FLOOR: never drop below 64 MiB — memory-hardness is what defeats GPU/ASIC
+ * attackers; `t` is the tunable dial if unlock latency ever forces a cut.
+ * Stored per-factor in the envelope, so raising these never strands an old vault.
  */
-export const DEFAULT_ARGON2ID = { m: 19456, t: 2, p: 1 } as const;
+export const DEFAULT_ARGON2ID = { m: 65536, t: 3, p: 1 } as const;
 
 const bs = (u: Uint8Array): BufferSource => u as unknown as BufferSource;
 const utf8 = (s: string) => new TextEncoder().encode(s);

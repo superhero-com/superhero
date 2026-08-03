@@ -14,6 +14,7 @@ import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import { NotificationsProvider } from './features/notifications';
 import {
   profileEditModalFlowAtom,
   profileEditModalOpenAtom,
@@ -154,52 +155,54 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
+    <NotificationsProvider>
+      <div className="app-container">
 
-      <GlobalNewAccountEducation />
-      <AppHeader />
-      <div className="app-content">
-        <CollectInvitationLinkCard />
-      </div>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <ModalProvider
-          registry={{
-            'cookies-dialog': CookiesDialog,
-            'token-select': TokenSelectModal,
-            'image-gallery': ImageGallery,
-            alert: AlertModal,
-            'transaction-confirm': TransactionConfirmModal,
-            'connect-wallet': ConnectWalletModal,
-            tip: TipModal,
-            onboarding: OnboardingModal,
+        <GlobalNewAccountEducation />
+        <AppHeader />
+        <div className="app-content">
+          <CollectInvitationLinkCard />
+        </div>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <ModalProvider
+            registry={{
+              'cookies-dialog': CookiesDialog,
+              'token-select': TokenSelectModal,
+              'image-gallery': ImageGallery,
+              alert: AlertModal,
+              'transaction-confirm': TransactionConfirmModal,
+              'connect-wallet': ConnectWalletModal,
+              tip: TipModal,
+              onboarding: OnboardingModal,
+            }}
+          />
+        </Suspense>
+        <ProfileEditModal
+          open={profileEditOpen}
+          onClose={(updatedProfile) => {
+            if (updatedProfile) handleProfileEditSuccess();
+            else handleProfileEditDismiss();
           }}
-        />
-      </Suspense>
-      <ProfileEditModal
-        open={profileEditOpen}
-        onClose={(updatedProfile) => {
-          if (updatedProfile) handleProfileEditSuccess();
-          else handleProfileEditDismiss();
-        }}
         // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
         // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
         // them on success. No onSaveError handler on purpose: a failed save is not a
         // cancel, so the flags survive and the flow can resume when the user retries.
-        onHide={() => setProfileEditOpen(false)}
-        showSkip={profileEditFlow.showSkip}
-        onSkip={handleProfileEditDismiss}
-        onClaimSuccess={
+          onHide={() => setProfileEditOpen(false)}
+          showSkip={profileEditFlow.showSkip}
+          onSkip={handleProfileEditDismiss}
+          onClaimSuccess={
           profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
         }
-      />
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
-      {/* TODO: Disable feedback button on mobile for now */}
-      {!isMobile && <FeedbackButton />}
-      {/* PWA install prompt - floating bottom-right, above bottom nav */}
-      <PwaInstallPrompt />
-    </div>
+        />
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        </Suspense>
+        {/* TODO: Disable feedback button on mobile for now */}
+        {!isMobile && <FeedbackButton />}
+        {/* PWA install prompt - floating bottom-right, above bottom nav */}
+        <PwaInstallPrompt />
+      </div>
+    </NotificationsProvider>
   );
 };
 

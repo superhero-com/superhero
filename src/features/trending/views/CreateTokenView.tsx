@@ -901,51 +901,114 @@ const CreateTokenView = () => {
               </div>
             </div>
 
-            {/* Explainer */}
+            {/* Explainer - Step by Step Guide */}
             <div className="min-w-0 flex-1 xl:order-1">
               <div className="xl:text-left">
                 <div className="mt-8 md:mt-12 xl:mt-0 bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
-                  <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
+                  <h3 className="text-xl font-bold text-white mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
                     {t('trending.createToken.explainer.title')}
                   </h3>
-                  <div className="space-y-4 text-white/80 text-sm leading-relaxed">
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.priceDiscoveryBody')}</p>
+                  
+                  {/* Step-by-step flow */}
+                  <div className="space-y-4">
+                    {/* Step 1: Price Discovery */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                        <TrendingUp className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                            Step 1
+                          </span>
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.priceDiscoveryBody')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.mathTitle')}</h4>
-                      <p className="mb-2">
-                        {t('trending.createToken.explainer.formulaIntro')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
-                      </p>
-                      <p className="mb-2">
-                        {t('trending.createToken.explainer.whereLabel')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
-                        {' '}
-                        {t('trending.createToken.explainer.constantAnd')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
-                        {' '}
-                        {t('trending.createToken.explainer.supplyDescription')}
-                      </p>
-                      <p>{t('trending.createToken.explainer.thisMeans')}</p>
-                      <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                        <li>{t('trending.createToken.explainer.bullet1')}</li>
-                        <li>{t('trending.createToken.explainer.bullet2')}</li>
-                        <li>{t('trending.createToken.explainer.bullet3')}</li>
-                        <li>{t('trending.createToken.explainer.bullet4')}</li>
-                      </ul>
+
+                    {/* Step 2: Bonding Curve Math */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/5 border border-purple-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                        <Sigma className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                            Step 2
+                          </span>
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.mathTitle')}</h4>
+                        </div>
+                        <div className="space-y-3 text-white/70 text-sm leading-relaxed">
+                          <p>
+                            {t('trending.createToken.explainer.formulaIntro')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
+                          </p>
+                          <p>
+                            {t('trending.createToken.explainer.whereLabel')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
+                            {' '}
+                            {t('trending.createToken.explainer.constantAnd')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
+                            {' '}
+                            {t('trending.createToken.explainer.supplyDescription')}
+                          </p>
+                          <p className="font-medium text-white/80">{t('trending.createToken.explainer.thisMeans')}</p>
+                          <div className="space-y-2 pl-4 border-l-2 border-purple-500/30">
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet1')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet2')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet3')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet4')}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.daoTreasuryBody')}</p>
+
+                    {/* Step 3: DAO Treasury */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
+                        <Landmark className="w-5 h-5 text-orange-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-400/30">
+                            Step 3
+                          </span>
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.daoTreasuryBody')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.feesTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.feesBody')}</p>
+
+                    {/* Step 4: Fees */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                        <Coins className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                            Step 4
+                          </span>
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.feesTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.feesBody')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>

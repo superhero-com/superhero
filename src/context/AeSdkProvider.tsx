@@ -98,13 +98,23 @@ const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
 /** Device vault for the inline wallet. Lazy per call — no IndexedDB is opened until a signature. */
 const inlineVaultStore = createIndexedDbVaultStore();
 
+/** Stand-in for the sign prompt while the flag is off. Never mounted. */
+const NO_COMPONENT: React.ComponentType<any> = () => null;
+
 /**
  * The in-page unlock + WYSIWYS confirmation surface the inline signer blocks on.
  * Lazy-loaded so its crypto stack never enters the main chunk, and rendered only
  * when `INLINE_WALLET_ENABLED` — with the flag off (production today) it is
  * never mounted and never fetched.
+ *
+ * The `lazy()` call sits INSIDE the flag ternary: unconditionally it is an opaque
+ * call Rollup must keep, so the chunk was still EMITTED (and listed in
+ * `__vite__mapDeps`) with the flag off. Behind the literal it folds away and no
+ * chunk exists — enforced by `scripts/verify-no-wallet-chunks.cjs`.
  */
-const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
+const WalletSignPrompt: React.ComponentType<any> = INLINE_WALLET_ENABLED
+  ? lazy(() => import('@/features/wallet/components/WalletSignPrompt'))
+  : NO_COMPONENT;
 
 /**
  * Signer-factory swap point — build-plan.md §3.4 / §8 phase P4. Installs the

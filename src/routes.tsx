@@ -4,6 +4,9 @@ import SocialLayout from './components/layout/SocialLayout';
 import { postDetailPath } from './features/notifications/notificationNavigation';
 import { INLINE_WALLET_ENABLED } from './features/wallet/config';
 
+/** Stand-in for an inline-wallet surface while the flag is off. Never rendered. */
+const NO_COMPONENT: React.ComponentType<any> = () => null;
+
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const NotFound = lazy(() => import('./views/NotFound'));
 const TokenList = lazy(() => import('./features/trending/views/TokenList'));
@@ -33,8 +36,17 @@ const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Wallet = lazy(() => import('./views/Wallet'));
 // Inline-wallet dev surfaces — only routed when INLINE_WALLET_ENABLED (see below).
-const WalletLab = lazy(() => import('./views/WalletLab'));
-const WalletOnboarding = lazy(() => import('./features/wallet/components/WalletOnboarding'));
+// The `lazy()` calls sit INSIDE the flag ternary, not outside it: an unconditional
+// `lazy(() => import(...))` is an opaque call to Rollup, so it keeps the arrow and
+// therefore emits the chunk even when every route referencing it is folded away.
+// Behind the literal the whole branch folds and no chunk is emitted at all — which
+// is what `scripts/verify-no-wallet-chunks.cjs` enforces.
+const WalletLab = INLINE_WALLET_ENABLED
+  ? lazy(() => import('./views/WalletLab'))
+  : NO_COMPONENT;
+const WalletOnboarding = INLINE_WALLET_ENABLED
+  ? lazy(() => import('./features/wallet/components/WalletOnboarding'))
+  : NO_COMPONENT;
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));

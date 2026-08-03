@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "node ./scripts/generate-sitemap.cjs && vite build",
+    "build": "node ./scripts/generate-sitemap.cjs && vite build && node ./scripts/verify-no-wallet-chunks.cjs",
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "test:e2e:host": "playwright test",
@@ -20,6 +20,7 @@
     "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts",
     "generate:pwa-icons": "node ./scripts/generate-pwa-icons.cjs",
     "verify:pwa-assets": "node ./scripts/verify-pwa-assets.cjs",
+    "verify:no-wallet-chunks": "node ./scripts/verify-no-wallet-chunks.cjs",
     "release": "standard-version",
     "postinstall": "node ./scripts/update-package-type.cjs"
   },

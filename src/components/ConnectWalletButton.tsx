@@ -7,14 +7,24 @@ import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
 
+/** Stand-in for the onboarding surface while the flag is off. Never rendered. */
+const NO_COMPONENT: React.ComponentType<any> = () => null;
+
 // Inline PWA onboarding, lazy-loaded so its crypto stack (bip39/argon2/…) never
 // enters this button's chunk. The branch that renders it is gated on
 // `INLINE_WALLET_ENABLED && isStandalone()` — a hard `false` in production
 // (mirrors makeSigner's gate), so this chunk is never fetched in prod and every
 // real user keeps the existing external connect flow.
-const WalletOnboarding = React.lazy(
-  () => import('@/features/wallet/components/WalletOnboarding'),
-);
+//
+// The `React.lazy()` call sits INSIDE the flag ternary rather than above it:
+// unconditionally, `lazy(() => import(...))` is an opaque call Rollup must keep,
+// so the onboarding chunk was still EMITTED (and listed in `__vite__mapDeps`)
+// with the flag off even though nothing fetched it. Behind the literal the whole
+// branch folds and no chunk exists — enforced by
+// `scripts/verify-no-wallet-chunks.cjs`.
+const WalletOnboarding: React.ComponentType<any> = INLINE_WALLET_ENABLED
+  ? React.lazy(() => import('@/features/wallet/components/WalletOnboarding'))
+  : NO_COMPONENT;
 
 type Props = {
   label?: string;

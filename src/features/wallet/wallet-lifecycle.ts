@@ -14,7 +14,8 @@
  *    factor without first proving you can unlock.
  */
 import {
-  addFactor, createVault, type FactorEnrollment, type VaultRecord,
+  addFactor, createVault, markMnemonicBackedUp, unlockVault,
+  type FactorEnrollment, type VaultRecord,
 } from './vault-record';
 import {
   DEFAULT_ARGON2ID, kekFromHighEntropy, kekFromPassphrase,
@@ -37,16 +38,46 @@ async function passphraseEnrollment(passphrase: string, label: string, now: numb
 
 /**
  * Import (or create) a wallet from a mnemonic, protected by a first passphrase
+ * factor, and persist it — returning the freshly-unlocked DEK alongside the
+ * record. Refuses if a vault already exists on this device.
+ *
+ * The DEK is returned because enrolling any FURTHER factor (recovery code,
+ * device passkey) requires an already-unlocked DEK by construction
+ * (`addFactor`), and onboarding enrolls all three back-to-back. Re-deriving it
+ * would mean running Argon2id a second time (~1s of the user's onboarding) for
+ * no security gain — the caller already proved knowledge of the passphrase by
+ * choosing it a moment earlier.
+ *
+ * CALLER CONTRACT: the DEK is transient. Use it for the enrollments that
+ * immediately follow and then drop the reference. It must never be persisted,
+ * cached across signatures, or held for the session — a session-cached DEK
+ * collapses the UV-per-signature custody model (the custody decision / the threat model R-02).
+ */
+export async function importWalletWithDek(
+  store: VaultStore,
+  opts: { mnemonic: string; passphrase: string; now: number },
+): Promise<{ record: VaultRecord; dek: CryptoKey }> {
+  if (await store.load()) throw new Error('wallet: a vault already exists on this device');
+  const enrollment = await passphraseEnrollment(opts.passphrase, 'Passphrase', opts.now);
+  const record = await createVault(opts.mnemonic, enrollment, opts.now);
+  await store.save(record);
+  // Unwrap through the record we just wrote, so the DEK we hand back is proven
+  // to be the one the persisted passphrase factor actually opens — this is the
+  // enroll-time lock→unlock round-trip the build plan §4.6 requires, not a
+  // shortcut around it.
+  const { dek } = await unlockVault(record, enrollment.id, enrollment.kek);
+  return { record, dek };
+}
+
+/**
+ * Import (or create) a wallet from a mnemonic, protected by a first passphrase
  * factor, and persist it. Refuses if a vault already exists on this device.
  */
 export async function importWallet(
   store: VaultStore,
   opts: { mnemonic: string; passphrase: string; now: number },
 ): Promise<VaultRecord> {
-  if (await store.load()) throw new Error('wallet: a vault already exists on this device');
-  const record = await createVault(opts.mnemonic, await passphraseEnrollment(opts.passphrase, 'Passphrase', opts.now), opts.now);
-  await store.save(record);
-  return record;
+  return (await importWalletWithDek(store, opts)).record;
 }
 
 /** The passphrase UnlockProvider (UV = the passphrase prompt the UI shows). */
@@ -116,6 +147,27 @@ export async function addPasskeyFactor(
   const updated = await addFactor(record, dek, enrollment);
   await store.save(updated);
   return updated;
+}
+
+/**
+ * Record that the user completed a VERIFIED written-mnemonic backup and persist
+ * it (the wallet build plan §4.6, the threat model R-04). IndexedDB is evictable — this flag is
+ * the only durable evidence the seed exists outside the device, so it is written
+ * from the flow that actually made the user re-enter words, never optimistically.
+ */
+export async function recordMnemonicBackedUp(
+  store: VaultStore,
+  record: VaultRecord,
+  now: number,
+): Promise<VaultRecord> {
+  const updated = markMnemonicBackedUp(record, now);
+  await store.save(updated);
+  return updated;
+}
+
+/** Whether the vault has an enrolled factor of `type` (drives which unlocks the UI offers). */
+export function hasFactor(record: VaultRecord, type: FactorEnrollment['type']): boolean {
+  return record.factors.some((f) => f.type === type);
 }
 
 /** DEVICE-GATED. The passkey UnlockProvider (UV = the WebAuthn PRF ceremony). */

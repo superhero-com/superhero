@@ -262,11 +262,11 @@ const CollectRewardsCard = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 animate-pulseGlow">
-          <TrophyIcon className="w-5 h-5 text-cyan-400 animate-float" />
+          <TrophyIcon className="w-5 h-5 text-cyan-400" />
         </div>
         {isEligibleForRewards && (
           <div className="animate-bounce">
-            <StarIcon className="w-6 h-6 text-yellow-400 animate-sparkle" />
+            <StarIcon className="w-6 h-6 text-yellow-400" />
           </div>
         )}
       </div>

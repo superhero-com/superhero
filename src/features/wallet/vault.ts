@@ -8,7 +8,8 @@
  * seal/unseal and DEK lifecycle. WebCrypto only; no third-party crypto deps.
  *
  * Custody rules this module observes (the threat model / the custody decision):
- *  - Never persists plaintext. Only `SealedBox` (iv + ciphertext) is storable.
+ *  - Never persists plaintext. Only `SealedBox` (self-describing: alg + iv +
+ *    ciphertext + aad) is storable.
  *  - The mnemonic transits as a JS `string` (R-05: an immutable string cannot be
  *    truly zeroed — an inherent JS-platform limit, not a design defect). Callers
  *    must minimise its lifetime and MUST NOT cache an unlocked DEK or plaintext
@@ -22,12 +23,25 @@ const ALG = 'AES-GCM';
 const IV_BYTES = 12; // 96-bit IV, the GCM standard/nonce size
 const DEFAULT_AAD = 'superhero-vault-v1';
 
-/** Ciphertext at rest. No key material. Safe to store in the vault record. */
+/**
+ * Ciphertext at rest. No key material. Safe to store in the vault record.
+ *
+ * Self-describing (the wallet build plan §4.1): the box records the `alg` and `aad` it was
+ * sealed under, so open reads them back from the box instead of from the current
+ * code constants — the same property the factor layer's KDF recipe already has
+ * (`factors.ts`), which is what makes an algorithm/AAD change forward-compatible
+ * rather than a format migration. `alg`/`aad` are optional so a legacy `{iv,ct}`
+ * box still opens via the constant fallback.
+ */
 export interface SealedBox {
+  /** AEAD algorithm this box was sealed under. Absent on legacy `{iv,ct}` boxes. */
+  alg?: string;
   /** base64 of the 96-bit random IV. */
   iv: string;
   /** base64 of AES-GCM ciphertext (includes the 128-bit auth tag). */
   ct: string;
+  /** AAD bound at seal time, read back on open. Absent on legacy `{iv,ct}` boxes. */
+  aad?: string;
 }
 
 const enc = new TextEncoder();
@@ -72,17 +86,26 @@ export async function seal(plaintext: string, dek: CryptoKey, aad: string = DEFA
     dek,
     bs(enc.encode(plaintext)),
   ));
-  return { iv: toB64(iv), ct: toB64(ct) };
+  return {
+    alg: ALG, iv: toB64(iv), ct: toB64(ct), aad,
+  };
 }
 
 /**
- * Unseal a `SealedBox` back to the plaintext. Throws (GCM auth failure) if the
- * DEK, IV, ciphertext, or AAD is wrong or tampered — there is no silent
- * corruption path.
+ * Unseal a `SealedBox` back to the plaintext. The `alg` and `aad` are read from
+ * the box (constant fallback for legacy `{iv,ct}` boxes), never from the current
+ * code constants. Pass `expectedAad` to assert the box's context — a mismatch
+ * fails closed before decrypt. Throws (GCM auth failure) if the DEK, IV,
+ * ciphertext, or recorded AAD is wrong or tampered — no silent corruption path.
  */
-export async function unseal(box: SealedBox, dek: CryptoKey, aad: string = DEFAULT_AAD): Promise<string> {
+export async function unseal(box: SealedBox, dek: CryptoKey, expectedAad?: string): Promise<string> {
+  const alg = box.alg ?? ALG;
+  const aad = box.aad ?? DEFAULT_AAD;
+  if (expectedAad !== undefined && expectedAad !== aad) {
+    throw new Error('vault: sealed box AAD does not match the expected context');
+  }
   const pt = await crypto.subtle.decrypt(
-    { name: ALG, iv: bs(fromB64(box.iv)), additionalData: bs(enc.encode(aad)) },
+    { name: alg, iv: bs(fromB64(box.iv)), additionalData: bs(enc.encode(aad)) },
     dek,
     bs(fromB64(box.ct)),
   );

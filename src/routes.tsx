@@ -2,10 +2,6 @@ import React, { lazy } from 'react';
 import { RouteObject, Navigate, useParams } from 'react-router-dom';
 import SocialLayout from './components/layout/SocialLayout';
 import { postDetailPath } from './features/notifications/notificationNavigation';
-import { INLINE_WALLET_ENABLED } from './features/wallet/config';
-
-/** Stand-in for an inline-wallet surface while the flag is off. Never rendered. */
-const NO_COMPONENT: React.ComponentType<any> = () => null;
 
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const NotFound = lazy(() => import('./views/NotFound'));
@@ -35,18 +31,10 @@ const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Wallet = lazy(() => import('./views/Wallet'));
-// Inline-wallet dev surfaces — only routed when INLINE_WALLET_ENABLED (see below).
-// The `lazy()` calls sit INSIDE the flag ternary, not outside it: an unconditional
-// `lazy(() => import(...))` is an opaque call to Rollup, so it keeps the arrow and
-// therefore emits the chunk even when every route referencing it is folded away.
-// Behind the literal the whole branch folds and no chunk is emitted at all — which
-// is what `scripts/verify-no-wallet-chunks.cjs` enforces.
-const WalletLab = INLINE_WALLET_ENABLED
-  ? lazy(() => import('./views/WalletLab'))
-  : NO_COMPONENT;
-const WalletOnboarding = INLINE_WALLET_ENABLED
-  ? lazy(() => import('./features/wallet/components/WalletOnboarding'))
-  : NO_COMPONENT;
+// Inline-wallet dev surfaces. Lazy-loaded so their crypto stack stays in its own
+// chunk, fetched on demand. Not linked from any UI (see the route comment below).
+const WalletLab = lazy(() => import('./views/WalletLab'));
+const WalletOnboarding = lazy(() => import('./features/wallet/components/WalletOnboarding'));
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
@@ -288,16 +276,12 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '/branding', element: <Branding /> },
-  // Inline-wallet dev surfaces, gated on INLINE_WALLET_ENABLED. Not linked from
-  // any UI. Ungated they are a production footgun: /wallet-onboarding would let
-  // any visitor create a REAL encrypted seed vault on their device that nothing
-  // can then sign with (the signer is behind the same flag), and /wallet-lab
-  // exposes the crypto diagnostic. With the flag false these entries are
-  // constant-folded away entirely.
-  ...(INLINE_WALLET_ENABLED ? [
-    { path: '/wallet-lab', element: <WalletLab /> },
-    { path: '/wallet-onboarding', element: <WalletOnboarding /> },
-  ] : []),
+  // Inline-wallet dev surfaces. Not linked from any UI; reachable only by direct
+  // URL. The onboarding surface is inert outside a standalone PWA — makeSigner
+  // installs no inline signer in a plain browser tab, so a vault created here
+  // can't be signed with. /wallet-lab is a crypto capability diagnostic.
+  { path: '/wallet-lab', element: <WalletLab /> },
+  { path: '/wallet-onboarding', element: <WalletOnboarding /> },
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },

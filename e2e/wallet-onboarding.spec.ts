@@ -1,7 +1,6 @@
 import {
   test, expect, Page, TestInfo,
 } from '@playwright/test';
-import { INLINE_WALLET_ENABLED } from '../src/features/wallet/config';
 
 /**
  * Inline-wallet onboarding — mobile screenshot baseline (design loop DESIGN-01/05).
@@ -30,14 +29,8 @@ async function attach(page: Page, testInfo: TestInfo, name: string) {
 test.describe('wallet-onboarding screenshots @ mobile', () => {
   test.use({ viewport: MOBILE });
 
-  // The /wallet-onboarding route only exists when INLINE_WALLET_ENABLED (see
-  // `src/routes.tsx`) — flip the flag locally to regenerate these captures.
-  // Skipping is correct here: the route being absent in a production build is
-  // the intended state, not a regression.
-  test.skip(
-    !INLINE_WALLET_ENABLED,
-    'inline wallet is disabled — /wallet-onboarding is not routed',
-  );
+  // The /wallet-onboarding dev route is always registered now (see `src/routes.tsx`);
+  // it is not linked from any UI and is design-scope only.
 
   test('create path — choose + show-phrase', async ({ page }, testInfo) => {
     const response = await page.goto('/wallet-onboarding');

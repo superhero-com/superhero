@@ -1,4 +1,4 @@
-import { AeButton } from '@/components/ui/ae-button';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/ae-dropdown-menu';
@@ -14,10 +14,8 @@ import { HeaderLogo } from '../../../icons';
 import { NotificationBell } from '../../../features/notifications';
 import { TokensService } from '../../../api/generated/services/TokensService';
 import { toTokenLookupParam } from '../../../utils/address';
-import { useModal } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import Favicon from '../../../svg/favicon.svg?react';
 
 const MobileAppHeader = () => {
   const { t } = useTranslation('common');
@@ -25,9 +23,7 @@ const MobileAppHeader = () => {
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
   const { disconnectWallet } = useWalletConnect();
-  const { openModal } = useModal();
 
-  const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = async () => {
     await disconnectWallet();
     window.location.reload();
@@ -163,16 +159,11 @@ const MobileAppHeader = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <AeButton
-                type="button"
-                onClick={handleConnect}
-                size="sm"
-                noShadow
+              <ConnectWalletButton
+                variant="dex"
+                label={t('buttons.connectWalletDex')}
                 className="h-10 rounded-full px-4 text-xs normal-case tracking-normal"
-              >
-                <Favicon className="h-4 w-4" />
-                {t('buttons.connectWalletDex')}
-              </AeButton>
+              />
             )}
           </>
         )}

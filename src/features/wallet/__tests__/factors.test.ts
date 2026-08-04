@@ -101,6 +101,25 @@ describe('factor → KEK layer (wrap/unwrap the DEK)', () => {
     await expect(unwrapDek(forged, kek)).rejects.toThrow();
   });
 
+  it('wrapDek writes a SELF-DESCRIBING box — records alg and the factor-bound aad', async () => {
+    const dek = await generateDek();
+    const kdf = fastArgon(salt16());
+    const factor = await makeFactor(dek, 'passphrase', await kekFromPassphrase('pw', kdf), kdf);
+    expect(factor.wrap.alg).toBe('AES-GCM');
+    expect(factor.wrap.aad).toBe(`wrap:${factor.id}:passphrase`);
+  });
+
+  it('unwraps a LEGACY { iv, ct } wrap blob (no alg/aad) via the derived binding', async () => {
+    // the shape this envelope replaces — the migration must not strand it.
+    const dek = await generateDek();
+    const sealed = await seal(MNEMONIC, dek);
+    const kdf = fastArgon(salt16());
+    const factor = await makeFactor(dek, 'passphrase', await kekFromPassphrase('pw', kdf), kdf);
+    const legacy: WrappedFactor = { ...factor, wrap: { iv: factor.wrap.iv, ct: factor.wrap.ct } };
+    const dek2 = await unwrapDek(legacy, await kekFromPassphrase('pw', kdf));
+    expect(await unseal(sealed, dek2)).toBe(MNEMONIC);
+  });
+
   it('DEFAULT_ARGON2ID meets the build-plan §4.3 target (m>=64 MiB, t>=3, p=1)', () => {
     expect(DEFAULT_ARGON2ID.m).toBeGreaterThanOrEqual(65536); // 64 MiB memory floor — never lower
     expect(DEFAULT_ARGON2ID.t).toBeGreaterThanOrEqual(3);

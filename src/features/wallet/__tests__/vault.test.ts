@@ -59,4 +59,28 @@ describe('vault inner envelope (DEK seals the mnemonic)', () => {
     const box = await seal(MNEMONIC, dek, 'superhero-vault-v1');
     await expect(unseal(box, dek, 'some-other-context')).rejects.toThrow();
   });
+
+  it('seals a SELF-DESCRIBING box — records the alg and the bound aad', async () => {
+    const dek = await generateDek();
+    const box = await seal(MNEMONIC, dek);
+    expect(box.alg).toBe('AES-GCM');
+    expect(box.aad).toBe('superhero-vault-v1');
+  });
+
+  it('open reads alg+aad FROM the box, not the current constant', async () => {
+    // a box sealed under a future/non-default aad opens without the caller
+    // passing it — proof that unseal reads the box, not DEFAULT_AAD.
+    const dek = await generateDek();
+    const box = await seal(MNEMONIC, dek, 'superhero-vault-v2');
+    expect(box.aad).toBe('superhero-vault-v2');
+    expect(await unseal(box, dek)).toBe(MNEMONIC);
+  });
+
+  it('opens a LEGACY { iv, ct } box (no alg/aad) via the constant fallback', async () => {
+    // the shape this envelope replaces — the migration must not strand it.
+    const dek = await generateDek();
+    const box = await seal(MNEMONIC, dek);
+    const legacy: SealedBox = { iv: box.iv, ct: box.ct };
+    expect(await unseal(legacy, dek)).toBe(MNEMONIC);
+  });
 });

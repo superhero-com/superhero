@@ -96,26 +96,41 @@ export async function kekFromHighEntropy(secret: Uint8Array, params: HkdfKdf): P
   return importKek(raw);
 }
 
+/** The AAD that binds a wrap blob to the exact factor it is filed under. */
+function wrapAad(factorId: string, type: FactorType): string {
+  return `wrap:${factorId}:${type}`;
+}
+
 /** Wrap the DEK under a KEK (AES-256-GCM), binding the factor id+type as AAD. */
 export async function wrapDek(dek: CryptoKey, kek: CryptoKey, factorId: string, type: FactorType): Promise<SealedBox> {
   const iv = crypto.getRandomValues(new Uint8Array(WRAP_IV_BYTES));
+  const aad = wrapAad(factorId, type);
   const wrapped = new Uint8Array(await crypto.subtle.wrapKey('raw', dek, kek, {
-    name: WRAP_ALG, iv, additionalData: bs(utf8(`wrap:${factorId}:${type}`)),
+    name: WRAP_ALG, iv, additionalData: bs(utf8(aad)),
   } as AesGcmParams));
-  return { iv: toB64(iv), ct: toB64(wrapped) };
+  return {
+    alg: WRAP_ALG, iv: toB64(iv), ct: toB64(wrapped), aad,
+  };
 }
 
 /**
- * Unwrap the DEK from a WrappedFactor's blob using the factor's KEK. Throws
- * (GCM auth failure) on a wrong KEK / tampered blob / mismatched factor binding.
- * The returned DEK is extractable so it can be re-wrapped when adding a factor.
+ * Unwrap the DEK from a WrappedFactor's blob using the factor's KEK. `alg`/`aad`
+ * are read from the box (constant/derived fallback for legacy `{iv,ct}` blobs),
+ * never from the current code constants. The recorded AAD must still name the
+ * factor it is filed under, so a blob moved to a different factor id/type fails
+ * closed before decrypt. Throws (GCM auth failure) on a wrong KEK or tampered
+ * blob. The returned DEK is extractable so it can be re-wrapped when adding a factor.
  */
 export async function unwrapDek(factor: WrappedFactor, kek: CryptoKey): Promise<CryptoKey> {
+  const alg = factor.wrap.alg ?? WRAP_ALG;
+  const bound = wrapAad(factor.id, factor.type);
+  const aad = factor.wrap.aad ?? bound;
+  if (aad !== bound) throw new Error('vault: wrapped-factor AAD does not bind this factor');
   return crypto.subtle.unwrapKey(
     'raw',
     bs(fromB64(factor.wrap.ct)),
     kek,
-    { name: WRAP_ALG, iv: bs(fromB64(factor.wrap.iv)), additionalData: bs(utf8(`wrap:${factor.id}:${factor.type}`)) } as AesGcmParams,
+    { name: alg, iv: bs(fromB64(factor.wrap.iv)), additionalData: bs(utf8(aad)) } as AesGcmParams,
     { name: 'AES-GCM', length: 256 },
     true,
     ['encrypt', 'decrypt'],

@@ -21,14 +21,13 @@
  * per-signature UV + WYSIWYS confirm UI lives; this adapter stays UI-agnostic
  * and unit-testable.
  *
- * GATED: `AeSdkProvider.makeSigner` installs this only when
- * `INLINE_WALLET_ENABLED && isStandalone()` AND the address is a known inline
- * account in the cleartext manifest — all three false in production today, so
- * this is dead code for every real user. The per-signature UV + WYSIWYS confirm
- * it depends on lives in `components/WalletSignPrompt.tsx`, reached through
- * `unlock-broker.ts`. Flipping the flag on for real users remains a separate
- * gated decision (build-plan §8 P5: device matrix + SR G4 review + CSP
- * enforced), NOT authorized by this wiring.
+ * GATED: `AeSdkProvider.makeSigner` installs this only when `isStandalone()`
+ * (the app is running as an installed PWA) AND the address is a known inline
+ * account in the cleartext manifest — so in a plain browser tab this is never
+ * reached. The per-signature UV + WYSIWYS confirm it depends on lives in
+ * `components/WalletSignPrompt.tsx`, reached through `unlock-broker.ts`.
+ * Exposing this to real users remains a separate gated decision at merge time
+ * (build-plan §8 P5: device matrix + SR G4 review + CSP enforced).
  */
 import { type Encoded } from '@aeternity/aepp-sdk';
 import type { UnlockProvider } from './inline-signer';

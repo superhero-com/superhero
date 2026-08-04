@@ -1,5 +1,4 @@
 import WebSocketClient from '@/libs/WebSocketClient';
-import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
 import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
 import { indexForAddress } from '@/features/wallet/manifest-store';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
@@ -98,44 +97,41 @@ const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
 /** Device vault for the inline wallet. Lazy per call — no IndexedDB is opened until a signature. */
 const inlineVaultStore = createIndexedDbVaultStore();
 
-/** Stand-in for the sign prompt while the flag is off. Never mounted. */
-const NO_COMPONENT: React.ComponentType<any> = () => null;
-
 /**
  * The in-page unlock + WYSIWYS confirmation surface the inline signer blocks on.
- * Lazy-loaded so its crypto stack never enters the main chunk, and rendered only
- * when `INLINE_WALLET_ENABLED` — with the flag off (production today) it is
- * never mounted and never fetched.
- *
- * The `lazy()` call sits INSIDE the flag ternary: unconditionally it is an opaque
- * call Rollup must keep, so the chunk was still EMITTED (and listed in
- * `__vite__mapDeps`) with the flag off. Behind the literal it folds away and no
- * chunk exists — enforced by `scripts/verify-no-wallet-chunks.cjs`.
+ * Lazy-loaded so its crypto stack stays in its own chunk and is fetched on demand
+ * — only ever reached when the inline signer actually installs (standalone PWA +
+ * a known inline account), so a plain browser tab never fetches it.
  */
-const WalletSignPrompt: React.ComponentType<any> = INLINE_WALLET_ENABLED
-  ? lazy(() => import('@/features/wallet/components/WalletSignPrompt'))
-  : NO_COMPONENT;
+const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
 
 /**
  * Signer-factory swap point — build-plan.md §3.4 / §8 phase P4. Installs the
  * in-page inline signer instead of the delegated (`superhero://` deep-link +
- * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when all three of
- * these hold:
+ * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when BOTH of these
+ * hold:
  *
- *  1. `INLINE_WALLET_ENABLED` — a hard off-by-default literal const (see
- *     `features/wallet/config.ts`). False in production today, which alone makes
- *     this whole branch dead code for every real user.
- *  2. `isStandalone()` — the app is running as an installed PWA. This is a UX
- *     gate ONLY, never a security boundary: it is documented-spoofable, and
- *     under same-origin custody forcing the inline path in a plain browser tab
- *     changes nothing about the security story (build-plan §3.4).
- *  3. The address is a known inline account in the cleartext manifest. This is
+ *  1. `isStandalone()` — the app is running as an installed PWA. This is the
+ *     sole feature gate now (the old `INLINE_WALLET_ENABLED` literal is gone).
+ *     It is a UX gate ONLY, never a security boundary: it is documented-spoofable,
+ *     and under same-origin custody forcing the inline path in a plain browser
+ *     tab changes nothing about the security story (build-plan §3.4).
+ *  2. The address is a known inline account in the cleartext manifest. This is
  *     what keeps a user who connected an EXTERNAL wallet (extension,
  *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
  *     the installed PWA — we must never claim to sign for a key we don't hold.
  *
- * Any of the three false → the existing delegated account object, completely
- * unchanged. Browser (non-standalone) mode is untouched in every case.
+ * Either false → the existing delegated account object, completely unchanged.
+ * Browser (non-standalone) mode is untouched in every case.
+ *
+ * SECURITY POSTURE (was the docblock on the now-deleted `config.ts`): the inline
+ * signer sits in front of real seed custody. Turning it on for real users is a
+ * merge-time decision — the security gates it depended on are still open at the
+ * time of writing: strict CSP is Report-Only not enforced (HARDEN-04), the iOS
+ * on-device matrix (PRF availability, IndexedDB survival past the 7-day ITP
+ * window) is unrun, and there has been no red-team pass or independent review of
+ * the seed-vault code (ZIX-319–324, 329, 341). With the flag removed, the merge
+ * to a real-user deploy is the only backstop left in front of that code.
  *
  * The returned account signs in-page: user-verification + WYSIWYS confirm on
  * EVERY signature via `requestUnlock` (`unlock-broker.ts` → `WalletSignPrompt`),
@@ -150,7 +146,7 @@ export const makeSigner = (
   createDelegatedAccount: (addr: string) => unknown,
   networkId?: string,
 ): unknown => {
-  if (!(INLINE_WALLET_ENABLED && isStandalone())) return createDelegatedAccount(address);
+  if (!isStandalone()) return createDelegatedAccount(address);
   const index = indexForAddress(address);
   if (index === null) return createDelegatedAccount(address);
   return createInlineSdkAccount({
@@ -696,12 +692,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     <AeSdkContext.Provider value={contextValue}>
       {children}
       {/* Mounted app-wide (not inside a wallet screen) because a signature can be
-          requested from anywhere; the signer fails closed if it is absent. */}
-      {INLINE_WALLET_ENABLED && (
-        <Suspense fallback={null}>
-          <WalletSignPrompt />
-        </Suspense>
-      )}
+          requested from anywhere; the signer fails closed if it is absent. It
+          only ever renders anything once the inline signer requests an unlock,
+          which only happens in standalone mode — inert in a plain browser tab. */}
+      <Suspense fallback={null}>
+        <WalletSignPrompt />
+      </Suspense>
     </AeSdkContext.Provider>
   );
 };

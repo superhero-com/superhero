@@ -163,8 +163,14 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [copied, setCopied] = useState(false);
   // Re-render trigger only: assessPassphrase reads the estimator's own module state,
-  // so we just need a state change to re-run it once the dictionaries land.
-  const [, setEstimatorReady] = useState(isEstimatorReady());
+  // so we just need a state change to re-run it once the load resolves OR fails.
+  const [, bumpEstimator] = useState(0);
+  const warmEstimator = useCallback(() => {
+    if (isEstimatorReady()) return;
+    loadPassphraseEstimator()
+      .catch(() => {}) // failure is surfaced through assessPassphrase's `failed` state
+      .finally(() => bumpEstimator((n) => n + 1));
+  }, []);
 
   useEffect(() => {
     store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
@@ -173,12 +179,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   // Warm the strength estimator as soon as onboarding opens — its dictionaries are a
   // separate lazy chunk, so this fetches them off the modal shell while the user is
   // still on the mnemonic/import steps, and the passphrase meter is live on arrival.
-  useEffect(() => {
-    if (isEstimatorReady()) return undefined;
-    let alive = true;
-    loadPassphraseEstimator().then(() => { if (alive) setEstimatorReady(true); }).catch(() => {});
-    return () => { alive = false; };
-  }, []);
+  useEffect(() => { warmEstimator(); }, [warmEstimator]);
 
   const startCreate = useCallback(() => {
     const m = generateMnemonic(12);
@@ -549,10 +550,18 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 <span className="h-px flex-1 bg-border" />
               </div>
               <Input className={cn(field, 'mb-2')} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => { setPass(e.target.value); setGenerated(''); }} />
-              {pass.length > 0 && (
+              {pass.length > 0 && !passInfo.failed && (
                 <StrengthMeter score={passInfo.score} pending={passInfo.pending} />
               )}
-              <p className={`text-xs mb-3 ${passInfo.pending ? 'text-muted-foreground' : fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? 'Use several random words — not a short PIN or a common password.' : passInfo.message}</p>
+              {passInfo.failed ? (
+                <p className="text-xs mb-3 text-amber-500">
+                  {passInfo.message}
+                  {' '}
+                  <button type="button" className="underline" onClick={warmEstimator}>Retry</button>
+                </p>
+              ) : (
+                <p className={`text-xs mb-3 ${passInfo.pending ? 'text-muted-foreground' : fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? 'Use several random words — not a short PIN or a common password.' : passInfo.message}</p>
+              )}
               <Input className={cn(field, 'mb-2')} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
               {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
               {error && (

@@ -17,8 +17,16 @@
 // Naming both — and nothing else — in the `trusted-types` directive also forbids an injected
 // script from minting its own pass-through policy.
 //
+// `require-trusted-types-for 'script'` guards TWO sink families, not one. Besides the HTML sinks
+// above it guards TrustedScriptURL sinks — `ServiceWorkerContainer.register()`, `new Worker()`,
+// `importScripts()`. A policy that implements only `createHTML` does not merely fail to protect
+// those, it makes them THROW: Chrome raises `TypeError: … requires 'TrustedScriptURL' assignment
+// and no 'default' policy for 'TrustedScriptURL' has been defined`. Both policies therefore also
+// implement `createScriptURL`, restricted to same-origin URLs — first-party workers load, an
+// injected cross-origin script URL still throws.
+//
 // Browsers without Trusted Types (Firefox, Safari) ignore `require-trusted-types-for`, so the
-// raw string is already safe there and `trustedHtml` is a no-op.
+// raw string is already safe there and both helpers are no-ops.
 
 const POLICY_NAME = 'superhero-dom';
 
@@ -26,6 +34,10 @@ const passthrough = (input: string): string => input;
 
 // Implicit sinks only ever carry first-party CSS/text here (see `default` above). A string with
 // no `<` cannot introduce an element or script, so it is safe to pass; drop anything else.
+//
+// A drop is SILENT to the CSP layer: the policy ran and returned a value, so no
+// `securitypolicyviolation` event fires (measured, Chrome 2026-08). This warning is the only
+// signal that markup vanished — e2e/csp.spec.ts fails the soak on it.
 function denyMarkup(input: string): string {
   if (input.indexOf('<') === -1) return input;
   // eslint-disable-next-line no-console
@@ -33,18 +45,43 @@ function denyMarkup(input: string): string {
   return '';
 }
 
+// Script URLs are same-origin only. Throwing (rather than returning '') is deliberate: an empty
+// script URL resolves to the current document, which a worker would then try to execute.
+function sameOriginScriptUrl(input: string): string {
+  const { origin } = window.location;
+  let resolved: URL;
+  try {
+    resolved = new URL(input, origin);
+  } catch {
+    throw new TypeError(`[trusted-types] refused an unparseable script URL: ${input}`);
+  }
+  if (resolved.origin !== origin) {
+    throw new TypeError(`[trusted-types] refused a cross-origin script URL: ${input}`);
+  }
+  return resolved.href;
+}
+
+type DomPolicy = {
+  createHTML: (input: string) => string;
+  createScriptURL: (input: string) => string;
+};
+
 const factory = (globalThis as { trustedTypes?: TrustedTypePolicyFactory }).trustedTypes;
 const ttEnabled = !!factory && typeof factory.createPolicy === 'function';
 
-const policy: { createHTML: (input: string) => string } = ttEnabled
-  ? (factory!.createPolicy(POLICY_NAME, { createHTML: passthrough }) as unknown as {
-    createHTML: (input: string) => string;
-  })
-  : { createHTML: passthrough };
+const policy: DomPolicy = ttEnabled
+  ? (factory!.createPolicy(POLICY_NAME, {
+    createHTML: passthrough,
+    createScriptURL: sameOriginScriptUrl,
+  }) as unknown as DomPolicy)
+  : { createHTML: passthrough, createScriptURL: passthrough };
 
 if (ttEnabled) {
-  // Registering `default` makes the browser route every implicit string sink through denyMarkup.
-  factory!.createPolicy('default', { createHTML: denyMarkup });
+  // Registering `default` makes the browser route every implicit sink through these callbacks.
+  factory!.createPolicy('default', {
+    createHTML: denyMarkup,
+    createScriptURL: sameOriginScriptUrl,
+  });
 }
 
 /**
@@ -54,4 +91,12 @@ if (ttEnabled) {
  */
 export function trustedHtml(input: string): string {
   return policy.createHTML(input);
+}
+
+/**
+ * Mint a value assignable to a script-URL sink (`serviceWorker.register`, `new Worker`) under the
+ * enforcing CSP. Same-origin only; throws otherwise. Typed as `string` for call-site ergonomics.
+ */
+export function trustedScriptUrl(input: string): string {
+  return policy.createScriptURL(input);
 }

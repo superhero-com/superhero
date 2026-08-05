@@ -1,11 +1,16 @@
-import { test, expect, Page } from '@playwright/test';
+import {
+  test, expect, devices, Page,
+} from '@playwright/test';
 
 /**
  * Profile Send / Receive.
  *
- * The pair is an installed-PWA surface, so every test forces standalone
- * display-mode the same way `wallet-onboarding.spec.ts` does — Playwright cannot
- * emulate `display-mode` natively.
+ * The pair is an installed-PWA-on-mobile surface, so it needs two things to
+ * show: standalone display-mode, forced here the same way
+ * `wallet-onboarding.spec.ts` does because Playwright cannot emulate
+ * `display-mode` natively, and a mobile device, supplied by the `iPhone 13`
+ * descriptor's user agent. A desktop viewport is NOT a substitute — the gate is
+ * `isMobileDevice()`, a device test, so shrinking the window changes nothing.
  *
  * The connected account is seeded through `account:activeAccount`, the storage
  * key behind `activeAccountAtom` (`getOnInit: true`, so it is read on the first
@@ -68,8 +73,15 @@ async function capture(page: Page, testInfo: any, name: string) {
   await testInfo.attach(`${name}.png`, { body, contentType: 'image/png' });
 }
 
-test.describe('profile send/receive @ mobile', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+// `devices['iPhone 13']` names webkit as its default browser; that key is
+// dropped because setting it inside a describe forces a new worker, and it is
+// irrelevant here — the configured project is chromium and the gate reads the
+// user agent, not the engine.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { defaultBrowserType, ...IPHONE } = devices['iPhone 13'];
+
+test.describe('profile send/receive @ mobile PWA', () => {
+  test.use(IPHONE);
 
   test('own profile offers both actions and opens each sheet', async ({ page }, testInfo) => {
     await prepare(page);
@@ -116,7 +128,7 @@ test.describe('profile send/receive @ mobile', () => {
     await expect(page.getByLabel('Recipient')).toHaveValue(OTHER);
   });
 
-  test('a plain browser tab shows neither action', async ({ page }) => {
+  test('a mobile browser tab shows neither action', async ({ page }) => {
     await prepare(page, { standalone: false });
     await openProfile(page, ACCOUNT);
 
@@ -136,12 +148,23 @@ test.describe('profile send/receive @ mobile', () => {
 test.describe('profile send/receive @ desktop', () => {
   test.use({ viewport: { width: 1280, height: 900 } });
 
-  test('renders the action pair beside the profile header', async ({ page }, testInfo) => {
+  test('an installed desktop PWA shows neither action', async ({ page }, testInfo) => {
+    // Standalone but not a phone — mobile-only, per Badi on.
     await prepare(page);
     await openProfile(page, ACCOUNT);
 
-    await expect(page.getByTestId('profile-send-button')).toBeVisible();
-    await expect(page.getByTestId('profile-receive-button')).toBeVisible();
-    await capture(page, testInfo, 'profile-actions-desktop');
+    await expect(page.getByTestId('profile-send-button')).toHaveCount(0);
+    await expect(page.getByTestId('profile-receive-button')).toHaveCount(0);
+    await capture(page, testInfo, 'profile-desktop-no-actions');
+  });
+
+  test('a narrowed desktop window is still not a phone', async ({ page }) => {
+    // The gate is a device test, not a breakpoint — a 390px-wide desktop window
+    // must stay just as empty as a full-width one.
+    await prepare(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openProfile(page, ACCOUNT);
+
+    await expect(page.getByTestId('profile-send-button')).toHaveCount(0);
   });
 });

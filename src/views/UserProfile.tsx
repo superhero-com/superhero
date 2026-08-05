@@ -53,7 +53,7 @@ import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
 import { IconDiamond, IconLink } from '../icons';
 import { formatAddress } from '../utils/address';
-import { isStandalone } from '../utils/displayMode';
+import { isMobileDevice, isStandalone } from '../utils/displayMode';
 
 const XVerifiedBadge = ({ username }: { username?: string | null }) => {
   const { t } = useTranslation('common');
@@ -96,14 +96,15 @@ export default function UserProfile({
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
-  // Send/Receive is the installed-PWA wallet surface (ZIX-561): in a plain
-  // browser tab the wallet lives in the extension/mobile app, which already owns
-  // these actions. Resolved after mount rather than during render because the
-  // server has no `display-mode` to read — deciding at render time would make
-  // the hydrated tree disagree with the SSR'd one.
+  // Send/Receive is the installed-PWA-on-mobile wallet surface (ZIX-561, scoped
+  // to mobile by Badi): in a plain browser tab, and on a desktop that merely has
+  // the app installed, the wallet lives in the extension and already owns these
+  // actions. Resolved after mount rather than during render because the server
+  // has no `display-mode` or user agent of its own to read — deciding at render
+  // time would make the hydrated tree disagree with the SSR'd one.
   const [walletActionsEnabled, setWalletActionsEnabled] = useState(false);
   useEffect(() => {
-    setWalletActionsEnabled(isStandalone());
+    setWalletActionsEnabled(isStandalone() && isMobileDevice());
   }, []);
 
   const isOwnProfile = !!activeAccount && activeAccount === effectiveAddress;
@@ -450,8 +451,8 @@ export default function UserProfile({
         </div>
       </div>
 
-      {/* Wallet actions — installed PWA only. On your own profile this is the
-          wallet home pair; on someone else's it is a pre-addressed Send. */}
+      {/* Wallet actions — installed PWA on mobile only. On your own profile this
+          is the wallet home pair; on someone else's it is a pre-addressed Send. */}
       {showWalletActions && (
         <div className="mb-4 md:mb-4 flex gap-2.5 md:max-w-[420px]">
           <button

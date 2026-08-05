@@ -112,8 +112,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
+          # The WebAuthn RP ID must be a registrable suffix of the origin serving
+          # the preview, and every preview lives under stg.service.aepps.com. It is
+          # set here rather than as a VITE_ repo secret on purpose: the collected
+          # secrets above are shared with dockerhub.yaml, which builds the
+          # production image, so a repo-wide secret would pin production to the
+          # staging RP ID. This line comes after the collected args, so it wins.
           build-args: |
             ${{ steps.vite_args.outputs.build_args }}
+            VITE_WEBAUTHN_RP_ID=stg.service.aepps.com
 
   stg_deploy:
     runs-on: ubuntu-latest

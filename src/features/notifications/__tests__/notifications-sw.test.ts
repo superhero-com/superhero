@@ -83,6 +83,31 @@ async function click(
   return { close };
 }
 
+describe('notifications service worker — no request interception', () => {
+  // The worker shares an origin with the inline wallet, so its origin-wide scope
+  // is only safe because it never intercepts requests. A `fetch` handler would
+  // hand a script with control over every navigation and asset request — wallet
+  // routes included — a foothold next to the seed vault. Guard against one being
+  // added, whether via addEventListener('fetch') or self.onfetch.
+  it('registers no fetch event listener', () => {
+    const { handlers } = loadSw();
+    expect(handlers.fetch).toBeUndefined();
+  });
+
+  it('sets no onfetch handler on the global', () => {
+    const { swSelf } = loadSw();
+    expect((swSelf as { onfetch?: unknown }).onfetch).toBeUndefined();
+  });
+
+  it('never references fetch interception in its source', () => {
+    const source = readFileSync(SW_PATH, 'utf8');
+    // Belt to the behavioural checks above: catches a fetch handler wired up
+    // conditionally or on a path loadSw() would not evaluate.
+    expect(source).not.toMatch(/addEventListener\(\s*['"`]fetch['"`]/);
+    expect(source).not.toMatch(/\bonfetch\b\s*=/);
+  });
+});
+
 describe('notifications service worker — notificationclick', () => {
   let sw: ReturnType<typeof loadSw>;
 

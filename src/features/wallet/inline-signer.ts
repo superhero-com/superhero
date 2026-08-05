@@ -16,6 +16,15 @@
  * is also where the WYSIWYS transaction confirmation must be shown to the user
  * before it returns a KEK (the confirm UI lives in the provider, wired at P4
  * integration; this core stays UI-agnostic and unit-testable).
+ *
+ * SCOPE of "no session-cached seed" (the chat-key exception): that rule governs the
+ * MNEMONIC and the AE SPENDING key — this signer and the vault they flow through
+ * are untouched by the chat work and still cache nothing. A SEPARATE, nostr-ONLY
+ * key derived from the same seed MAY be session-cached for chat, behind the chat-key exception's
+ * fenced exception (`features/chat/identity/nostr-session.ts`,
+ * `features/wallet/nostr-key.ts`). That exception returns a nostr-only handle and
+ * never a spending key, so it does not weaken anything above. Do NOT read it as
+ * license to add a session cache on THIS path.
  */
 import { type Encoded } from '@aeternity/aepp-sdk';
 import { deriveSigner } from './derivation';

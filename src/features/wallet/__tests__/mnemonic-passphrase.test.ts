@@ -1,7 +1,11 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import {
+  beforeAll, describe, expect, it,
+} from 'vitest';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
-import { assessPassphrase, generatePassphrase, MIN_SCORE } from '../passphrase';
+import {
+  assessPassphrase, generatePassphrase, loadPassphraseEstimator, MIN_SCORE,
+} from '../passphrase';
 import { deriveAccount } from '../derivation';
 
 const GOLDEN_MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
@@ -36,6 +40,10 @@ describe('mnemonic helpers', () => {
 });
 
 describe('passphrase gate (weakest-factor rule)', () => {
+  // The estimator's dictionaries are dynamically imported (a lazy chunk in the app),
+  // so load them once before scoring — the empty/numeric early returns need no load.
+  beforeAll(() => loadPassphraseEstimator());
+
   it('rejects empty, numeric PIN, and short strings', () => {
     expect(assessPassphrase('').ok).toBe(false);
     expect(assessPassphrase('1234').ok).toBe(false);

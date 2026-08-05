@@ -113,19 +113,29 @@ interface KnownFn {
   argRows: (args: unknown[]) => (TxSummaryRow | null)[];
 }
 
+type ArgType = (v: unknown) => boolean;
+
 /** FATE `address` decodes to an `ak_…` account string; reject anything else. */
-const isAddressArg = (v: unknown): boolean => typeof v === 'string' && /^ak_[1-9A-HJ-NP-Za-km-z]+$/.test(v);
+const isAddressArg: ArgType = (v) => typeof v === 'string' && /^ak_[1-9A-HJ-NP-Za-km-z]+$/.test(v);
 /** FATE `int` decodes to a bigint, a safe-integer number, or a signed digit string. */
-const isIntArg = (v: unknown): boolean => (
+const isIntArg: ArgType = (v) => (
   typeof v === 'bigint'
   || (typeof v === 'number' && Number.isInteger(v))
   || (typeof v === 'string' && /^-?\d+$/.test(v))
 );
+/** FATE `list(_)` decodes to a JS array — e.g. a DEX swap's token path. */
+const isListArg: ArgType = (v) => Array.isArray(v);
+/** FATE `option(_)` decodes to a variant object: `None` → {0:[]}, `Some` → {1:[v]}. */
+const isOptionArg: ArgType = (v) => (
+  typeof v === 'object' && v !== null && !Array.isArray(v)
+  && ('0' in (v as Record<string, unknown>) || '1' in (v as Record<string, unknown>))
+);
 
 /** Exact positional-shape match: right arity, every arg the expected type. */
-const argsMatchShape = (fn: KnownFn, args: unknown[]): boolean => (
-  args.length === fn.argTypes.length && fn.argTypes.every((ok, i) => ok(args[i]))
+const argsMatchTypes = (types: readonly ArgType[], args: unknown[]): boolean => (
+  args.length === types.length && types.every((ok, i) => ok(args[i]))
 );
+const argsMatchShape = (fn: KnownFn, args: unknown[]): boolean => argsMatchTypes(fn.argTypes, args);
 
 const stringify = (value: unknown): string => {
   if (typeof value === 'bigint') return value.toString();
@@ -181,16 +191,29 @@ const KNOWN_FUNCTIONS: Record<string, KnownFn> = {
   },
 };
 
-// DEX router swaps: named, but their arguments (token paths, deadlines) are shown
-// by the generic renderer rather than positionally labelled.
-const SWAP_FUNCTIONS = new Set([
-  'swap_exact_tokens_for_tokens',
-  'swap_tokens_for_exact_tokens',
-  'swap_exact_ae_for_tokens',
-  'swap_tokens_for_exact_ae',
-  'swap_exact_tokens_for_ae',
-  'swap_ae_for_exact_tokens',
-]);
+// DEX router swaps, each with the exact positional shape the aeternity DEX router
+// (AedexV2Router) uses. "Swap tokens" is claimed ONLY when the decoded calldata
+// has that shape — a token-path list, a recipient address, a deadline and the
+// amount(s), plus the router's trailing `option` callback. A selector-name match
+// with any other shape is not a router swap and is downgraded to the caution
+// path, which renders every argument and claims no DEX behaviour. Arguments are
+// shown by the generic renderer rather than positionally labelled.
+// (amountA, amountB, path, to, deadline, callback) — two amounts when a token is the input.
+const TOKEN_IN_SWAP: readonly ArgType[] = [
+  isIntArg, isIntArg, isListArg, isAddressArg, isIntArg, isOptionArg,
+];
+// (amount, path, to, deadline, callback) — AE input arrives as the call value, so one amount.
+const AE_IN_SWAP: readonly ArgType[] = [
+  isIntArg, isListArg, isAddressArg, isIntArg, isOptionArg,
+];
+const SWAP_FUNCTIONS: Record<string, readonly ArgType[]> = {
+  swap_exact_tokens_for_tokens: TOKEN_IN_SWAP,
+  swap_tokens_for_exact_tokens: TOKEN_IN_SWAP,
+  swap_exact_tokens_for_ae: TOKEN_IN_SWAP,
+  swap_tokens_for_exact_ae: TOKEN_IN_SWAP,
+  swap_exact_ae_for_tokens: AE_IN_SWAP,
+  swap_ae_for_exact_tokens: AE_IN_SWAP,
+};
 
 // Pure Uint8Array → hex: the browser bundle has no Node `Buffer` global, and a
 // module-level `Buffer` reference would throw on import and break lazy loading.
@@ -200,7 +223,7 @@ const bytesToHex = (bytes: ArrayLike<number>): string => Array.from(bytes)
 /** hex(blake2b(name)[0..4]) → name, for every function we can name from its calldata selector. */
 const SELECTOR_TO_NAME: Map<string, string> = (() => {
   const map = new Map<string, string>();
-  const names = [...Object.keys(KNOWN_FUNCTIONS), ...SWAP_FUNCTIONS];
+  const names = [...Object.keys(KNOWN_FUNCTIONS), ...Object.keys(SWAP_FUNCTIONS)];
   names.forEach((name) => {
     map.set(bytesToHex(hash(name).subarray(0, 4)), name);
   });
@@ -243,8 +266,14 @@ function summarizeContractCall(u: Unpacked): TxSummary | null {
   // that function must have. A selector-name match with the wrong arity or types
   // is NOT that function — treat it as an unrecognised call and show every arg.
   const known = knownDef && argsMatchShape(knownDef, args) ? knownDef : undefined;
-  const shapeMismatch = knownDef !== undefined && known === undefined;
-  const isSwap = name ? SWAP_FUNCTIONS.has(name) : false;
+  // A DEX swap effect is only claimed when the calldata is the router's exact
+  // shape — a selector-name match alone does not defend "this is a token swap".
+  const swapTypes = name ? SWAP_FUNCTIONS[name] : undefined;
+  const isSwap = swapTypes !== undefined && argsMatchTypes(swapTypes, args);
+  // A recognised value-moving or swap name whose decoded calldata is the wrong
+  // shape is NOT that function; claim nothing and fall to the caution path.
+  const shapeMismatch = (knownDef !== undefined && known === undefined)
+    || (swapTypes !== undefined && !isSwap);
 
   const envelopeRows: (TxSummaryRow | null)[] = [
     textRow('Contract', u.contractId),

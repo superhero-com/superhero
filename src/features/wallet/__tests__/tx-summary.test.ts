@@ -57,7 +57,7 @@ const encodeCall = (fn: string, args: unknown[]): `cb_${string}` => new Encoder(
 // forges exactly that: a value-moving name over an arbitrary argument shape.
 const forgeCall = (
   fn: string,
-  argDefs: { name: string; type: string }[],
+  argDefs: { name: string; type: unknown }[],
   args: unknown[],
 ): `cb_${string}` => new Encoder([{
   contract: {
@@ -254,6 +254,69 @@ describe('summarizeTransaction — recognised contract calls are shape-safe (WYS
     expect(summary!.caution).toBeUndefined();
     expect(rowMap(summary).To).toBe(RECIPIENT);
     expect(rowMap(summary).Amount).toBe('5 (raw token units)');
+  });
+});
+
+// A swap-named selector is not proof of a DEX swap either. "Swap tokens" and its
+// DEX effect are only claimed when the calldata is the router's exact shape; any
+// other shape downgrades to the caution path with no DEX behaviour asserted.
+describe('summarizeTransaction — DEX swaps are shape-safe (no selector-only DEX claim)', () => {
+  // The aeternity router signature for the exact-in token→token swap.
+  const SWAP_ARG_DEFS = [
+    { name: 'amountIn', type: 'int' },
+    { name: 'amountOutMin', type: 'int' },
+    { name: 'path', type: { list: ['address'] } },
+    { name: 'to', type: 'address' },
+    { name: 'deadline', type: 'int' },
+    { name: 'callback', type: { option: ['int'] } },
+  ];
+
+  it('names a correctly-shaped router swap and shows every argument', () => {
+    const summary = summarizeTransaction(contractCallTx(forgeCall(
+      'swap_exact_tokens_for_tokens',
+      SWAP_ARG_DEFS,
+      [1n, 2n, [RECIPIENT, SENDER], RECIPIENT, 999n, undefined],
+    )));
+    expect(summary!.title).toBe('Swap tokens');
+    expect(summary!.effect).toMatch(/decentralised exchange/i);
+    expect(summary!.caution).toBeUndefined();
+    const rows = rowMap(summary);
+    // All six decoded arguments are rendered — nothing signed unseen.
+    expect(rows['Argument 1']).toBe('1');
+    expect(rows['Argument 4']).toBe(RECIPIENT);
+    expect(rows['Argument 6']).toBeDefined();
+  });
+
+  it('downgrades a swap-named call with a malformed signature — no DEX claim', () => {
+    // `swap_exact_tokens_for_tokens(string)` — the reviewer's reproduction.
+    const cd = forgeCall('swap_exact_tokens_for_tokens', [{ name: 'x', type: 'string' }], ['hello']);
+    const summary = summarizeTransaction(contractCallTx(cd));
+    expect(summary).not.toBeNull();
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.title).not.toBe('Swap tokens');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+    const rows = rowMap(summary);
+    expect(rows.Function).toMatch(/swap_exact_tokens_for_tokens — unexpected argument shape/);
+    expect(rows['Argument 1']).toBe('hello');
+  });
+
+  it('downgrades a swap whose recipient slot is not an address', () => {
+    // Correct arity, but `to` is an int rather than an ak_ address.
+    const badToDefs = [
+      { name: 'amountIn', type: 'int' },
+      { name: 'amountOutMin', type: 'int' },
+      { name: 'path', type: { list: ['address'] } },
+      { name: 'to', type: 'int' },
+      { name: 'deadline', type: 'int' },
+      { name: 'callback', type: { option: ['int'] } },
+    ];
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('swap_exact_tokens_for_tokens', badToDefs, [1n, 2n, [RECIPIENT], 5n, 999n, undefined]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
   });
 });
 

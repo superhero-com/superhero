@@ -97,14 +97,35 @@ type Unpacked = Record<string, unknown> & { tag: Tag };
 
 /**
  * A recognised contract-call function whose value-moving effect can be named.
- * `argRows` maps the decoded, positional FATE arguments to labelled rows;
- * anything it does not consume is still shown by the generic argument renderer.
+ * `argTypes` is the exact positional shape we require before we are willing to
+ * make that claim — its length is the required arity, and every decoded arg must
+ * satisfy its predicate. Only on an exact match do we name the effect and render
+ * with `argRows`, which consumes every argument. Extra, missing or wrong-typed
+ * arguments fail the match and the call is downgraded to the unrecognised-contract
+ * caution path, where every decoded argument is rendered raw — so we never sign a
+ * value-moving effect the prompt did not display, and never claim AEX-9/DEX
+ * semantics from a selector name the calldata shape does not defend.
  */
 interface KnownFn {
   title: string;
   effect: string;
+  argTypes: ReadonlyArray<(v: unknown) => boolean>;
   argRows: (args: unknown[]) => (TxSummaryRow | null)[];
 }
+
+/** FATE `address` decodes to an `ak_…` account string; reject anything else. */
+const isAddressArg = (v: unknown): boolean => typeof v === 'string' && /^ak_[1-9A-HJ-NP-Za-km-z]+$/.test(v);
+/** FATE `int` decodes to a bigint, a safe-integer number, or a signed digit string. */
+const isIntArg = (v: unknown): boolean => (
+  typeof v === 'bigint'
+  || (typeof v === 'number' && Number.isInteger(v))
+  || (typeof v === 'string' && /^-?\d+$/.test(v))
+);
+
+/** Exact positional-shape match: right arity, every arg the expected type. */
+const argsMatchShape = (fn: KnownFn, args: unknown[]): boolean => (
+  args.length === fn.argTypes.length && fn.argTypes.every((ok, i) => ok(args[i]))
+);
 
 const stringify = (value: unknown): string => {
   if (typeof value === 'bigint') return value.toString();
@@ -131,26 +152,31 @@ const KNOWN_FUNCTIONS: Record<string, KnownFn> = {
   transfer: {
     title: 'Send tokens',
     effect: 'Transfers tokens from your account to another account.',
+    argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('To', a[0]), tokenAmountRow('Amount', a[1])],
   },
   transfer_allowance: {
     title: 'Move tokens using an allowance',
     effect: 'Moves tokens between accounts using a spending allowance.',
+    argTypes: [isAddressArg, isAddressArg, isIntArg],
     argRows: (a) => [addressRow('From', a[0]), addressRow('To', a[1]), tokenAmountRow('Amount', a[2])],
   },
   create_allowance: {
     title: 'Approve token spending',
     effect: 'Lets another account spend your tokens up to this amount.',
+    argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('Spender', a[0]), tokenAmountRow('Approved amount', a[1])],
   },
   change_allowance: {
     title: 'Change token spending approval',
     effect: 'Increases or decreases how many of your tokens another account may spend.',
+    argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('Spender', a[0]), tokenAmountRow('Amount change', a[1])],
   },
   reset_allowance: {
     title: 'Revoke token spending approval',
     effect: 'Removes another account’s permission to spend your tokens.',
+    argTypes: [isAddressArg],
     argRows: (a) => [addressRow('Spender', a[0])],
   },
 };
@@ -212,7 +238,12 @@ function summarizeContractCall(u: Unpacked): TxSummary | null {
   if (selector === null) return null;
 
   const name = SELECTOR_TO_NAME.get(selector);
-  const known = name ? KNOWN_FUNCTIONS[name] : undefined;
+  const knownDef = name ? KNOWN_FUNCTIONS[name] : undefined;
+  // Only name a value-moving effect when the decoded calldata is the exact shape
+  // that function must have. A selector-name match with the wrong arity or types
+  // is NOT that function — treat it as an unrecognised call and show every arg.
+  const known = knownDef && argsMatchShape(knownDef, args) ? knownDef : undefined;
+  const shapeMismatch = knownDef !== undefined && known === undefined;
   const isSwap = name ? SWAP_FUNCTIONS.has(name) : false;
 
   const envelopeRows: (TxSummaryRow | null)[] = [
@@ -236,10 +267,19 @@ function summarizeContractCall(u: Unpacked): TxSummary | null {
     semanticRows = args.map((arg, i) => ({ label: `Argument ${i + 1}`, value: stringify(arg) }));
   } else {
     title = 'Call a contract';
-    caution = 'This calls a contract function that is not a recognised standard one. '
-      + 'Only approve it if you started this action and trust this contract.';
+    caution = shapeMismatch
+      ? `This calls a function named ${name}, but its arguments are not the shape that `
+        + 'function should have, so its effect cannot be trusted from the name. Only approve '
+        + 'it if you started this action and fully trust this contract.'
+      : 'This calls a contract function that is not a recognised standard one. '
+        + 'Only approve it if you started this action and trust this contract.';
     semanticRows = [
-      { label: 'Function', value: `unrecognised (0x${selector})` },
+      {
+        label: 'Function',
+        value: shapeMismatch
+          ? `${name} — unexpected argument shape (0x${selector})`
+          : `unrecognised (0x${selector})`,
+      },
       ...args.map((arg, i) => ({ label: `Argument ${i + 1}`, value: stringify(arg) })),
     ];
   }

@@ -223,11 +223,15 @@ async function buildMeta(pathname, origin){
   return { title: 'Superhero', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
 }
 
-// --- HARDEN-04: Content-Security-Policy (Report-Only) ----------------------------------
-// Report-Only for now — see @agency/products/superhero/tasks/HARDEN-04-csp-trusted-types.md.
-// This collects violation telemetry without breaking any route; nothing here blocks a
-// response. Do NOT flip the header name to the enforcing `Content-Security-Policy` until a
-// violation-collection pass has driven reports to zero (tracked as a follow-up).
+// --- HARDEN-04: Content-Security-Policy (enforcing) -------------------------------------
+// Enforcing — see @agency/products/superhero/tasks/HARDEN-04-csp-trusted-types.md. The policy
+// blocks non-nonce'd scripts (`script-src 'strict-dynamic' 'nonce-…'`, no unsafe-inline) and,
+// via `require-trusted-types-for 'script'` + `trusted-types superhero-dom`, forces every
+// innerHTML-class write through the one audited policy in src/utils/trustedTypes.ts. No report
+// sink was ever wired (no report-uri/report-to header, no Reporting-Endpoints, no listener —
+// grep-confirmed), so nothing here collected telemetry; enforcement is instead gated by the
+// zero-violation Playwright soak in e2e/csp.spec.ts (npm run test:e2e:csp), which walks the
+// routes under this exact header and fails on any `securitypolicyviolation`.
 
 function originOf(url) {
   try { return new URL(url).origin; } catch { return null; }
@@ -294,7 +298,7 @@ function buildCsp(nonce) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https: data: blob:",
     "media-src 'self' https: data: blob:",
-    "font-src 'self'",
+    "font-src 'self' data:",
     "manifest-src 'self'",
     `connect-src ${buildConnectSrc()}`,
     `frame-src ${buildFrameSrc()}`,
@@ -303,6 +307,9 @@ function buildCsp(nonce) {
     "frame-ancestors 'none'",
     "form-action 'self'",
     "require-trusted-types-for 'script'",
+    // superhero-dom: the audited first-party writer; default: the deny-markup safety net for
+    // implicit third-party sinks (e.g. Radix Select's static <style>). See src/utils/trustedTypes.ts.
+    'trusted-types superhero-dom default',
     'upgrade-insecure-requests',
   ].join('; ');
 }
@@ -324,7 +331,7 @@ app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends',
   // HARDEN-04: fresh per-response nonce, matched into the CSP header and into every
   // nonce="__CSP_NONCE__" placeholder in the served document (see indexHtml patch above).
   const nonce = crypto.randomBytes(16).toString('base64');
-  res.setHeader('Content-Security-Policy-Report-Only', buildCsp(nonce));
+  res.setHeader('Content-Security-Policy', buildCsp(nonce));
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
     const meta = await buildMeta(req.path, origin);
@@ -341,7 +348,7 @@ app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends',
 app.get('*', async (req, res) => {
   // HARDEN-04: see the equivalent block on the route above for the nonce/CSP mechanism.
   const nonce = crypto.randomBytes(16).toString('base64');
-  res.setHeader('Content-Security-Policy-Report-Only', buildCsp(nonce));
+  res.setHeader('Content-Security-Policy', buildCsp(nonce));
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
     const meta = await buildMeta(req.path, origin);

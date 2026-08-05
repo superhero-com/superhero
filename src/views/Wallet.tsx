@@ -10,6 +10,7 @@ import {
   Layers, Link2, Download, HelpCircle, ChevronUp, Wallet as WalletIcon, Monitor,
   KeyRound, Users, Fingerprint, BookUser, QrCode,
 } from 'lucide-react';
+import { trustedHtml } from '../utils/trustedTypes';
 
 /* ------------------------------------------------------------------ */
 /*  Floating orb component for ambient background                     */
@@ -437,7 +438,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
           <p
             className="text-[13px] text-white/50 leading-relaxed whitespace-pre-line"
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: answer.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white/70">$1</strong>') }}
+            dangerouslySetInnerHTML={{ __html: trustedHtml(answer.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white/70">$1</strong>')) }}
           />
         </div>
       )}
@@ -579,7 +580,7 @@ export default function Wallet() {
               <p
                 className="max-w-xl text-sm md:text-base lg:text-[15px] xl:text-base text-white/40 leading-relaxed mb-8"
                 // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{ __html: t('common.views.wallet.hero.subtitle').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') }}
+                dangerouslySetInnerHTML={{ __html: trustedHtml(t('common.views.wallet.hero.subtitle').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')) }}
               />
 
               {/* CTAs */}

@@ -42,6 +42,20 @@ vi.mock('../../wallet-lifecycle', () => ({
   recoveryUnlockProvider: (code: string) => () => recoveryProvider(code),
 }));
 
+// The prompt fails closed on a transaction it cannot decode: no unlock
+// controls at all, only Cancel. These tests are about layering, not decoding,
+// so the fixture payload gets a canned summary — otherwise there would be no
+// Approve button and no passphrase field to assert on.
+vi.mock('../../tx-summary', () => ({
+  summarizeTransaction: (payload: string) => (payload === 'tx_spend_3ae' ? {
+    title: 'Send AE',
+    rows: [
+      { label: 'To', value: 'ak_11111111111111111111111111111111273Yts', emphasis: true },
+      { label: 'Amount', value: '3 AE', emphasis: true },
+    ],
+  } : null),
+}));
+
 const { requestUnlock, resetUnlockBroker } = await import('../../unlock-broker');
 const { default: WalletSignPrompt } = await import('../WalletSignPrompt');
 
@@ -49,7 +63,7 @@ const KEK = { fake: 'kek' } as unknown as CryptoKey;
 const RECORD = { v: 1, factors: [{ id: 'f0', type: 'passphrase' }] } as never;
 const SPEND_CONTEXT = {
   kind: 'transaction' as const,
-  payload: 'tx_someopaquebase64payload',
+  payload: 'tx_spend_3ae',
   networkId: 'ae_uat',
 };
 

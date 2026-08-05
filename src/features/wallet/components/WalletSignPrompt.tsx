@@ -12,7 +12,7 @@ import {
 import {
   hasFactor, passkeyUnlockProvider, passphraseUnlockProvider, recoveryUnlockProvider,
 } from '../wallet-lifecycle';
-import { summarizeTransaction } from '../tx-summary';
+import { summarizeTransaction, type TxSummary } from '../tx-summary';
 import type { UnlockProvider } from '../inline-signer';
 
 /**
@@ -53,6 +53,47 @@ const input = 'w-full min-h-[44px] rounded-lg border border-input bg-white/[0.04
 
 /** Which unlock the user is currently typing into (the passkey needs no field). */
 type Mode = 'passphrase' | 'recovery';
+
+/**
+ * Renders one decoded transaction (or, recursively, the inner transaction a
+ * `PayingForTx` pays for). It renders only what `summarizeTransaction` could
+ * decode; the fail-closed decision — whether the user is allowed to approve at
+ * all — is made by the prompt, not here.
+ */
+const SummaryBlock = ({ summary, nested = false }: { summary: TxSummary; nested?: boolean }) => (
+  <div className={nested ? 'mt-2 rounded-lg border border-white/10 bg-white/[0.03] p-2.5' : ''}>
+    <p className="text-sm font-medium mb-1">{summary.title}</p>
+    {summary.effect && <p className="text-xs text-white/70 mb-2">{summary.effect}</p>}
+    {summary.caution && (
+      <div className="mb-2 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-2 text-xs text-amber-300">
+        <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>{summary.caution}</span>
+      </div>
+    )}
+    <dl className="space-y-1.5">
+      {summary.rows.map((row) => (
+        <div key={row.label} className="flex items-start justify-between gap-3">
+          <dt className="text-xs text-muted-foreground shrink-0">{row.label}</dt>
+          <dd className={cn(
+            'text-xs font-mono break-all text-right',
+            row.emphasis ? 'text-white' : 'text-white/70',
+          )}
+          >
+            {row.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+    {summary.inner && (
+      <div className="mt-2">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
+          Transaction being paid for
+        </p>
+        <SummaryBlock summary={summary.inner} nested />
+      </div>
+    )}
+  </div>
+);
 
 const WalletSignPrompt = () => {
   const [queue, setQueue] = useState<UnlockRequest[]>([]);
@@ -126,6 +167,11 @@ const WalletSignPrompt = () => {
   const canRecovery = hasFactor(record, 'recovery-code');
   const summary = context?.kind === 'transaction' ? summarizeTransaction(context.payload) : null;
 
+  // Fail closed: a transaction we could not decode cannot be explained, so it
+  // cannot be approved here. No user-verification controls are offered — only
+  // Cancel — so there is no "show raw bytes and click anyway" path.
+  const blockApproval = context?.kind === 'transaction' && !summary;
+
   let heading = 'Confirm it’s you';
   if (context?.kind === 'transaction') heading = 'Confirm this transaction';
   else if (context?.kind === 'message') heading = 'Sign this message';
@@ -193,31 +239,14 @@ const WalletSignPrompt = () => {
                 {/* ---------- WYSIWYS: exactly what is about to be signed ---------- */}
                 {context && (
                   <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                    {summary && (
-                      <>
-                        <p className="text-sm font-medium mb-2">{summary.title}</p>
-                        <dl className="space-y-1.5">
-                          {summary.rows.map((row) => (
-                            <div key={row.label} className="flex items-start justify-between gap-3">
-                              <dt className="text-xs text-muted-foreground shrink-0">{row.label}</dt>
-                              <dd className={cn(
-                                'text-xs font-mono break-all text-right',
-                                row.emphasis ? 'text-white' : 'text-white/70',
-                              )}
-                              >
-                                {row.value}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </>
-                    )}
+                    {summary && <SummaryBlock summary={summary} />}
                     {context.kind === 'transaction' && !summary && (
                       <div className="flex items-start gap-2 text-xs text-amber-300">
                         <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>
-                          This transaction could not be decoded, so its contents can&apos;t be
-                          shown. Do not approve it unless you know exactly what it is.
+                          This transaction could not be decoded, so its contents can&apos;t be shown —
+                          and it can&apos;t be approved here. Cancel it, and only retry from a source you
+                          trust.
                         </span>
                       </div>
                     )}
@@ -248,14 +277,16 @@ const WalletSignPrompt = () => {
                 )}
 
                 {/* ---------- User verification ---------- */}
-                {canPasskey && (
+                {/* Suppressed entirely when approval is blocked (undecodable tx): the
+                    only action then is Cancel. */}
+                {!blockApproval && canPasskey && (
                   <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(passkeyUnlockProvider())}>
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
                     Unlock with this device
                   </button>
                 )}
 
-                {(canPassphrase || canRecovery) && (
+                {!blockApproval && (canPassphrase || canRecovery) && (
                   <>
                     <label className="block text-xs text-muted-foreground mb-1" htmlFor="wallet-unlock-secret">
                       {mode === 'recovery' ? 'Recovery code' : 'Passphrase'}
@@ -281,7 +312,7 @@ const WalletSignPrompt = () => {
                   </>
                 )}
 
-                {canRecovery && canPassphrase && (
+                {!blockApproval && canRecovery && canPassphrase && (
                   <button
                     type="button"
                     className="mb-2 inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-white/80 transition-colors"

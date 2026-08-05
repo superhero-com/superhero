@@ -25,6 +25,7 @@
     "postinstall": "node ./scripts/update-package-type.cjs"
   },
   "dependencies": {
+    "@aeternity/aepp-calldata": "^1.9.1",
     "@aeternity/aepp-sdk": "^14.1.0",
     "@ethersproject/bignumber": "^5.8.0",
     "@multiavatar/multiavatar": "^1.0.7",

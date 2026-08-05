@@ -10,7 +10,7 @@ import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 import { deriveAccount } from '@/features/wallet/derivation';
 import { unlockVault, type VaultRecord } from '@/features/wallet/vault-record';
 import { createInlineWalletSigner } from '@/features/wallet/inline-signer';
-import { isPlatformAuthenticatorAvailable, resolveRpId } from '@/features/wallet/webauthn';
+import { isPlatformAuthenticatorAvailable, RP_ID } from '@/features/wallet/webauthn';
 import { isStandalone, isIOSWebKit } from '@/utils/displayMode';
 
 /**
@@ -96,7 +96,7 @@ const WalletLab = () => {
 
   const onCheckPasskey = () => run('check platform authenticator', async () => {
     const ok = await isPlatformAuthenticatorAvailable();
-    say(`platform authenticator available: ${ok} · rpId=${resolveRpId()}`);
+    say(`platform authenticator available: ${ok} · rpId=${RP_ID}`);
   });
 
   const onEnrollPasskey = () => run('enroll passkey (PRF) — DEVICE TEST', async () => {

@@ -1,5 +1,6 @@
 import * as jdenticon from 'jdenticon';
 import React, { useMemo } from 'react';
+import { trustedHtml } from '../utils/trustedTypes';
 
 interface AddressAvatarProps {
   address: string;
@@ -86,7 +87,7 @@ const AddressAvatar = ({
         <span
           className="custom-address w-full h-full object-cover"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: avatarSvg }}
+          dangerouslySetInnerHTML={{ __html: trustedHtml(avatarSvg) }}
         />
       ) : (
         <div

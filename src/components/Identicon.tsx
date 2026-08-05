@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 // @ts-ignore - multiavatar doesn't have types but works fine
 import multiavatar from '@multiavatar/multiavatar';
+import { trustedHtml } from '../utils/trustedTypes';
 
 type IdenticonProps = {
   address: string;
@@ -24,7 +25,7 @@ const Identicon = ({ address, size = 32, name }: IdenticonProps) => {
         }}
         className="identicon-img"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: svgString }}
+        dangerouslySetInnerHTML={{ __html: trustedHtml(svgString) }}
       />
       <style>
         {`

@@ -10,6 +10,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
+import { trustedHtml } from '@/utils/trustedTypes';
 import { formatAddress } from './address';
 
 // URL matcher (external links)
@@ -73,7 +74,7 @@ export function linkify(
   const decodeHtmlEntities = (str: string): string => {
     if (typeof document !== 'undefined') {
       const textarea = document.createElement('textarea');
-      textarea.innerHTML = str;
+      textarea.innerHTML = trustedHtml(str);
       return textarea.value;
     }
     // Fallback for SSR: decode common entities manually

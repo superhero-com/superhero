@@ -35,10 +35,17 @@ export const GENERATED_WORDS = 5;
 // Kept as a narrow structural type so `import type` stays elided from the bundle.
 let estimator: { check(pw: string): ZxcvbnResult } | null = null;
 let loadPromise: Promise<void> | null = null;
+let loadFailed = false;
 
 /** True once the estimator's dictionaries have loaded and scoring is live. */
 export function isEstimatorReady(): boolean {
   return estimator !== null;
+}
+
+/** True once a load attempt has failed and no retry is in flight — the caller
+ *  should offer a retry rather than wait on a pulse that will never resolve. */
+export function hasEstimatorFailed(): boolean {
+  return loadFailed;
 }
 
 /**
@@ -46,21 +53,33 @@ export function isEstimatorReady(): boolean {
  * and de-duplicated: concurrent callers share one in-flight load. The three
  * `import()`s are what split the ~840 kB of dictionaries into their own chunk,
  * off the onboarding shell. Call this when a passphrase step becomes reachable.
+ *
+ * Retry-capable by construction: a failed load (offline blip, or a hashed chunk
+ * pruned by a redeploy mid-session) clears the latch and flips `loadFailed`, so
+ * the next call re-attempts and the gate can report the failure instead of
+ * pulsing forever. Re-throws so the caller's await still rejects.
  */
 export async function loadPassphraseEstimator(): Promise<void> {
   if (estimator) return;
   if (!loadPromise) {
+    loadFailed = false;
     loadPromise = (async () => {
-      const [{ ZxcvbnFactory }, zxcvbnCommon, zxcvbnEn] = await Promise.all([
-        import('@zxcvbn-ts/core'),
-        import('@zxcvbn-ts/language-common'),
-        import('@zxcvbn-ts/language-en'),
-      ]);
-      estimator = new ZxcvbnFactory({
-        dictionary: { ...zxcvbnCommon.dictionary, ...zxcvbnEn.dictionary },
-        graphs: zxcvbnCommon.adjacencyGraphs,
-        translations: zxcvbnEn.translations,
-      });
+      try {
+        const [{ ZxcvbnFactory }, zxcvbnCommon, zxcvbnEn] = await Promise.all([
+          import('@zxcvbn-ts/core'),
+          import('@zxcvbn-ts/language-common'),
+          import('@zxcvbn-ts/language-en'),
+        ]);
+        estimator = new ZxcvbnFactory({
+          dictionary: { ...zxcvbnCommon.dictionary, ...zxcvbnEn.dictionary },
+          graphs: zxcvbnCommon.adjacencyGraphs,
+          translations: zxcvbnEn.translations,
+        });
+      } catch (err) {
+        loadPromise = null;
+        loadFailed = true;
+        throw err;
+      }
     })();
   }
   await loadPromise;
@@ -76,24 +95,35 @@ export interface PassphraseAssessment {
   /** True while the estimator is still loading: `score` is not yet meaningful, so
    *  the caller must show a loading (not empty/weak) meter and keep submit disabled. */
   pending: boolean;
+  /** True when the estimator failed to load: distinct from `pending` so the UI can
+   *  offer a retry instead of hanging. Still `ok: false` — the gate fails closed and
+   *  never falls back to a length rule. */
+  failed: boolean;
 }
 
 export function assessPassphrase(pw: string): PassphraseAssessment {
   if (pw.length === 0) {
     return {
-      ok: false, score: 0, message: 'Enter a passphrase.', pending: false,
+      ok: false, score: 0, message: 'Enter a passphrase.', pending: false, failed: false,
     };
   }
   // A numeric-only string is a PIN by any other name; these two checks need no
   // estimator, so they give a clear message even before the dictionaries land.
   if (/^\d+$/.test(pw)) {
     return {
-      ok: false, score: 0, message: 'A numeric PIN is not allowed — use a high-entropy passphrase.', pending: false,
+      ok: false, score: 0, message: 'A numeric PIN is not allowed — use a high-entropy passphrase.', pending: false, failed: false,
     };
   }
   if (!estimator) {
+    // Fails closed: a failed estimator load keeps Create disabled and asks for a
+    // retry — it never falls open to a length rule, which is the thing ZIX-321 fixed.
+    if (loadFailed) {
+      return {
+        ok: false, score: 0, message: "Couldn't check passphrase strength. Check your connection and retry.", pending: false, failed: true,
+      };
+    }
     return {
-      ok: false, score: 0, message: 'Checking strength…', pending: true,
+      ok: false, score: 0, message: 'Checking strength…', pending: true, failed: false,
     };
   }
 
@@ -107,12 +137,12 @@ export function assessPassphrase(pw: string): PassphraseAssessment {
       || result.feedback.suggestions[0]
       || 'Too easy to guess — use several random words, or generate one below.';
     return {
-      ok: false, score, message, pending: false,
+      ok: false, score, message, pending: false, failed: false,
     };
   }
 
   return {
-    ok: true, score, message: score >= 4 ? 'Strong.' : 'OK — longer is stronger.', pending: false,
+    ok: true, score, message: score >= 4 ? 'Strong.' : 'OK — longer is stronger.', pending: false, failed: false,
   };
 }
 

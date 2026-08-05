@@ -29,14 +29,17 @@ export function useNostrLinkCheck(
   deriveIdentity: DeriveLinkIdentity = deriveInlineLinkIdentity,
 ) {
   const [status, setStatus] = useAtom(nostrLinkStatusAtom);
-  const hasChecked = useRef(false);
+  // The account the current status reflects. Re-check when it changes so a
+  // second wallet never inherits the first's `linked` state; a plain boolean
+  // "checked once" would skip the recheck and hide the prompt on switch.
+  const checkedAccount = useRef<string | null>(null);
 
   const { activeAccount, signMessage } = useAeSdk();
   const { notifyError } = useTransactionNotification();
 
   useEffect(() => {
-    if (!activeAccount || hasChecked.current) return;
-    hasChecked.current = true;
+    if (!activeAccount || checkedAccount.current === activeAccount) return;
+    checkedAccount.current = activeAccount;
 
     (async () => {
       setStatus('checking');

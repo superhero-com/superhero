@@ -45,6 +45,12 @@ const TipModal = React.lazy(
 const OnboardingModal = React.lazy(
   () => import('./components/modals/OnboardingModal'),
 );
+const SendModal = React.lazy(
+  () => import('./components/modals/SendModal'),
+);
+const ReceiveModal = React.lazy(
+  () => import('./components/modals/ReceiveModal'),
+);
 
 const App = () => {
   const navigate = useNavigate();
@@ -174,6 +180,8 @@ const App = () => {
               'connect-wallet': ConnectWalletModal,
               tip: TipModal,
               onboarding: OnboardingModal,
+              send: SendModal,
+              receive: ReceiveModal,
             }}
           />
         </Suspense>

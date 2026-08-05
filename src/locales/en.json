@@ -33,7 +33,9 @@
       "trade": "Trade",
       "getChainName": "+ Get .chain name",
       "claimChainName": "Claim",
-      "linkAccount": "Link account"
+      "linkAccount": "Link account",
+      "send": "Send",
+      "receive": "Receive"
     },
     "labels": {
       "superheroHome": "Superhero Home",
@@ -484,6 +486,29 @@
         "tagline": "Trade tokenized hashtags & social trends — the web3 attention market.",
         "getStarted": "Get Started",
         "continueAsGuest": "Continue as guest"
+      },
+      "send": {
+        "title": "Send AE",
+        "subtitle": "Transfer AE from your wallet",
+        "recipient": "Recipient",
+        "recipientPlaceholder": "ak_… or name.chain",
+        "resolvingName": "Looking up name…",
+        "nameNotFound": "That .chain name doesn't point to an account.",
+        "invalidRecipient": "Enter a valid ak_ address or .chain name.",
+        "sendingToSelf": "This is your own address — you'd only pay the fee.",
+        "amountAe": "Amount (AE)",
+        "max": "Max",
+        "confirmInWallet": "Confirm in wallet…",
+        "sentSuccessfully": "{{amount}} AE sent.",
+        "failedToSend": "Failed to send AE."
+      },
+      "receive": {
+        "title": "Receive AE",
+        "subtitle": "Scan or copy your address",
+        "qrAlt": "QR code of your wallet address",
+        "copyAddress": "Copy address",
+        "share": "Share",
+        "networkWarning": "Only æternity (AE) assets can be sent to this address. Anything sent from another chain is lost."
       }
     },
     "trendminer": {

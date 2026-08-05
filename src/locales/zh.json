@@ -33,7 +33,9 @@
       "save": "保存",
       "getChainName": "+ 获取 .chain 名称",
       "claimChainName": "申领",
-      "linkAccount": "关联账户"
+      "linkAccount": "关联账户",
+      "send": "发送",
+      "receive": "接收"
     },
     "labels": {
       "superheroHome": "Superhero 首页",
@@ -1002,6 +1004,29 @@
         "tagline": "交易代币化的话题标签与社交趋势——web3 注意力市场。",
         "getStarted": "开始使用",
         "continueAsGuest": "以访客身份继续"
+      },
+      "send": {
+        "title": "发送 AE",
+        "subtitle": "从你的钱包转出 AE",
+        "recipient": "接收方",
+        "recipientPlaceholder": "ak_… 或 name.chain",
+        "resolvingName": "正在解析名称…",
+        "nameNotFound": "该 .chain 名称未指向任何账户。",
+        "invalidRecipient": "请输入有效的 ak_ 地址或 .chain 名称。",
+        "sendingToSelf": "这是你自己的地址 —— 你只会支付手续费。",
+        "amountAe": "金额（AE）",
+        "max": "最大",
+        "confirmInWallet": "请在钱包中确认…",
+        "sentSuccessfully": "已发送 {{amount}} AE。",
+        "failedToSend": "AE 发送失败。"
+      },
+      "receive": {
+        "title": "接收 AE",
+        "subtitle": "扫描或复制你的地址",
+        "qrAlt": "你的钱包地址二维码",
+        "copyAddress": "复制地址",
+        "share": "分享",
+        "networkWarning": "此地址仅能接收 æternity（AE）资产。从其他链发送的资产将会丢失。"
       }
     },
     "wallet": {

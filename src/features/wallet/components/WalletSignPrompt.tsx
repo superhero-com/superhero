@@ -136,10 +136,11 @@ const WalletSignPrompt = () => {
 
   const overlay = (
     <div
-      // Above the app chrome (mobile header/footer are z-[1100]) and above the
-      // onboarding overlay's own z-[1200], because a signature can be requested
-      // while another wallet surface is open.
-      className="fixed inset-0 z-[1300] bg-[#0a0a0f]/95 text-white overflow-y-auto touch-manipulation"
+      // Above every other surface, because a signature can be requested from any
+      // of them: app chrome is z-[1100], the onboarding overlay z-[1200], and
+      // ModalProvider's dialogs z-[2001]/z-[2002] — a Send sheet that stays open
+      // across the signature would otherwise cover this prompt.
+      className="fixed inset-0 z-[2100] bg-[#0a0a0f]/95 text-white overflow-y-auto touch-manipulation"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',

@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+  render, screen, waitFor, fireEvent,
+} from '@testing-library/react';
 import { Provider, createStore, useAtomValue } from 'jotai';
 import {
   beforeEach, describe, expect, it, vi,
@@ -9,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   activeAccount: 'ak_first' as string | undefined,
   signMessage: vi.fn(async () => 'deadbeef'),
   notifyError: vi.fn(),
-  fetchNostrLink: vi.fn(async (address: string) => (address === 'ak_first' ? 'npub-linked' : null)),
+  fetchNostrLink: vi.fn(),
 }));
 
 vi.mock('@/hooks/useAeSdk', () => ({
@@ -31,14 +33,23 @@ import { useNostrLinkCheck } from '../useNostrLinkCheck';
 import { nostrLinkStatusAtom } from '../state';
 
 const Harness = () => {
-  useNostrLinkCheck();
+  const { dismiss } = useNostrLinkCheck();
   const status = useAtomValue(nostrLinkStatusAtom);
-  return <div data-testid="status">{status}</div>;
+  return (
+    <div>
+      <div data-testid="status">{status}</div>
+      <button type="button" data-testid="dismiss" onClick={dismiss}>dismiss</button>
+    </div>
+  );
 };
 
 beforeEach(() => {
   mocks.activeAccount = 'ak_first';
-  mocks.fetchNostrLink.mockClear();
+  mocks.fetchNostrLink.mockReset();
+  // Default: first account already linked, everyone else unlinked.
+  mocks.fetchNostrLink.mockImplementation(
+    async (address: string) => (address === 'ak_first' ? 'npub-linked' : null),
+  );
   localStorage.clear();
 });
 
@@ -69,5 +80,24 @@ describe('useNostrLinkCheck — account switch', () => {
     rerender(<Provider store={store}><Harness /></Provider>);
 
     expect(mocks.fetchNostrLink).toHaveBeenCalledTimes(1);
+  });
+
+  it('a dismissal on one account does not suppress the prompt on another', async () => {
+    // Both accounts unlinked, so only the per-account dismissal cooldown decides
+    // whether the prompt shows.
+    mocks.fetchNostrLink.mockImplementation(async () => null);
+
+    const store = createStore();
+    const { rerender } = render(<Provider store={store}><Harness /></Provider>);
+
+    // Account A: unlinked, not dismissed → prompt. Dismiss it → done.
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('prompt'));
+    fireEvent.click(screen.getByTestId('dismiss'));
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('done'));
+
+    // Switch to account B: also unlinked, never dismissed → must still prompt.
+    mocks.activeAccount = 'ak_second';
+    rerender(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('prompt'));
   });
 });

@@ -5,6 +5,11 @@ import {
   ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
   CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, type LucideIcon,
 } from 'lucide-react';
+import AeButton, { type AeButtonProps } from '@/components/AeButton';
+import { Button } from '@/components/ui/button';
+import { AeCard } from '@/components/ui/ae-card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import { assessPassphrase } from '../passphrase';
 import {
@@ -47,20 +52,19 @@ type Step =
 
 const defaultStore = createIndexedDbVaultStore();
 
-// Aligned to the app's AeCard `glass` variant tokens (bg-glass-bg / border-glass-border /
-// shadow-glass / backdrop-blur-card) so the onboarding card matches the rest of the design system.
-const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
-  + 'border-glass-border shadow-glass backdrop-blur-card p-6';
-// min-h-[44px] guarantees the Apple/Material minimum tap target on every interactive element.
-const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 text-white font-medium '
-  + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-blue-500/25';
-const ghostBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
-  + 'hover:bg-white/[0.08] transition-colors';
-// Aligned to the app's shadcn Input tokens (border-input / ring-ring / muted placeholder) so fields
-// match the rest of the app and get a proper focus ring; subtle bg for legibility on the dark overlay.
-const input = 'w-full min-h-[44px] rounded-lg border border-input bg-white/[0.04] px-3 py-3 text-sm text-white '
-  + 'shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none '
-  + 'focus-visible:ring-1 focus-visible:ring-ring';
+// Onboarding CTA colour, read off the shipped app (ZIX-411): the primary/connect action is a
+// solid #1161FE blue — SortControls "Tokenize Trend", PostForm's post button, the home page
+// "CONNECT WALLET" bar — not a gradient and not --neon-blue. Kept in one place and matching the
+// app's own bg-[#1161FE] convention; radius, hover-lift, focus ring, disabled and sizing all come
+// from the AeButton design-system component.
+const WALLET_CTA = 'bg-[#1161FE] text-white hover:bg-[#0e50d8]';
+
+/** Full-width primary CTA — the DS AeButton wearing the app's #1161FE blue. */
+const PrimaryButton = ({ className, children, ...props }: AeButtonProps) => (
+  <AeButton variant="primary" fullWidth className={cn(WALLET_CTA, className)} {...props}>
+    {children}
+  </AeButton>
+);
 
 // Stepper progress affordance (DESIGN-03). Monotonic along each path — create:
 // show → verify → passphrase; import: enter → passphrase. Approximate fractions;
@@ -78,7 +82,7 @@ const STEP_PROGRESS: Partial<Record<Step, number>> = {
 
 /** field-status colour: neutral while empty, green when ok, red when invalid. */
 const fieldClass = (empty: boolean, ok: boolean): string => {
-  if (empty) return 'text-white/40';
+  if (empty) return 'text-muted-foreground';
   return ok ? 'text-emerald-400' : 'text-rose-400';
 };
 
@@ -86,14 +90,19 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
 // gradient-tinted rounded tile, so every step leads with a native onboarding-style glyph.
 const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
 { icon: LucideIcon; spin?: boolean; tone?: 'brand' | 'success' }) => {
-  const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-sky-500/15 to-blue-600/15';
+  const tint = tone === 'success' ? 'from-emerald-500/15 to-green-500/15' : 'from-neon-blue/15 to-neon-blue/5';
   const color = tone === 'success' ? 'text-emerald-400' : 'text-neon-blue';
   return (
-    <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${tint}`}>
+    <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-glass-border bg-gradient-to-br ${tint}`}>
       <Icon className={`h-5 w-5 ${color}${spin ? ' animate-spin' : ''}`} />
     </div>
   );
 };
+
+// Shared heading + description tokens. text-xl gives the flow a confident, professional
+// step title (DESIGN-02 type scale); descriptions use the muted-foreground token.
+const heading = 'text-xl font-bold tracking-tight leading-none mb-1.5';
+const description = 'text-sm text-muted-foreground mb-4';
 
 interface Props {
   store?: VaultStore;
@@ -283,6 +292,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     el?.focus();
   }, []);
 
+  // Shared field styling on the dark overlay: DS Input/Textarea tokens + a 44px tap target
+  // and a faint muted fill so fields stay legible on the glass card.
+  const field = 'min-h-[44px] bg-muted/40';
+
   const overlay = (
     // Focused full-screen takeover: covers the app header, bottom tabs, and the
     // app-wide Install-App prompt so a secret-phrase / passphrase step is private
@@ -291,7 +304,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     // notch / home indicator. z-[1200] sits above the app's mobile-app-header /
     // mobile-app-footer (both z-[1100]).
     <div
-      className="fixed inset-0 z-[1200] bg-[#0a0a0f] text-white overflow-y-auto touch-manipulation"
+      className="fixed inset-0 z-[1200] bg-background text-foreground overflow-y-auto touch-manipulation"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -307,24 +320,24 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             card so it doesn't remount; hidden on root/terminal/in-flight steps. Clears
             any error on the way back. */}
           {backTarget && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
             aria-label="Go back"
             onClick={() => { setError(''); setStep(backTarget as Step); }}
-            className={'mb-2 -ml-2 inline-flex min-h-[44px] items-center gap-1 rounded-lg px-2 text-sm '
-              + 'text-muted-foreground transition-colors hover:text-white'}
+            className="mb-2 -ml-2 h-auto min-h-[44px] gap-1 px-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
-          </button>
+          </Button>
           )}
           {/* Persistent stepper progress bar — sits above the card and animates its
             width across steps (DESIGN-03). Sibling of the keyed card so it doesn't
             remount, giving a smooth fill instead of a jump. */}
           {progress > 0 && (
-          <div className="mb-3 h-1 w-full rounded-full bg-white/10 overflow-hidden" aria-hidden="true">
+          <div className="mb-3 h-1 w-full rounded-full bg-muted overflow-hidden" aria-hidden="true">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-sky-600 to-blue-700 transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-[#1161FE] transition-[width] duration-300 ease-out"
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>
@@ -333,13 +346,16 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
             the app's own motion primitives (animate-in/fade/slide, matching dialog.tsx). */}
           <div key={step} className="animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
             {step === 'exists' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={Wallet} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Wallet already set up</h2>
-              <p className="text-sm text-muted-foreground mb-4">A wallet already exists on this device. Unlocking is the next screen.</p>
-              <button
-                type="button"
-                className={cn(ghostBtn, 'flex items-center justify-center gap-2 border-rose-500/30 text-rose-300 hover:bg-rose-500/10')}
+              <h2 className={heading}>Wallet already set up</h2>
+              <p className={description}>
+                A wallet already exists on this device. Unlocking is the next screen.
+              </p>
+              <AeButton
+                variant="ghost"
+                fullWidth
+                className="border-rose-500/30 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200"
                 // Clear BOTH halves: leaving the cleartext manifest behind would
                 // leave `makeSigner` installing an inline signer for an address
                 // whose vault no longer exists.
@@ -347,72 +363,79 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               >
                 <Trash2 className="h-4 w-4" />
                 Reset (dev) — clear this device&apos;s wallet
-              </button>
-            </div>
+              </AeButton>
+            </AeCard>
             )}
 
             {step === 'choose' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={ShieldCheck} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Set up your wallet</h2>
-              <p className="text-sm text-muted-foreground mb-4">Your keys stay on this device, encrypted. Superhero never sees them.</p>
-              <button type="button" className={`${primaryBtn} mb-3`} onClick={startCreate}>Create a new wallet</button>
-              <button type="button" className={ghostBtn} onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</button>
-            </div>
+              <h2 className={heading}>Set up your wallet</h2>
+              <p className={description}>
+                Your keys stay on this device, encrypted. Superhero never sees them.
+              </p>
+              <PrimaryButton className="mb-3" onClick={startCreate}>Create a new wallet</PrimaryButton>
+              <AeButton variant="ghost" fullWidth onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+            </AeCard>
             )}
 
             {step === 'create-show' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={KeyRound} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Write down your recovery phrase</h2>
+              <h2 className={heading}>Write down your recovery phrase</h2>
               <p className="text-sm text-amber-300/90 mb-4">
-                These 12 words are the only way to recover your wallet. Write them on paper, in order. Never share them or store them digitally.
+                These 12 words are the only way to recover your wallet. Write them on paper,
+                in order. Never share them or store them digitally.
               </p>
-              <div className="grid grid-cols-3 gap-2 mb-5">
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 {mnemonic.split(' ').map((w, i) => (
-                  <div key={w + String(i)} className="px-2 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">
-                    <span className="text-white/30 mr-1">{i + 1}</span>
+                  <div key={w + String(i)} className="px-2 py-2 rounded-lg bg-muted/60 border border-border text-sm">
+                    <span className="text-muted-foreground mr-1">{i + 1}</span>
                     {w}
                   </div>
                 ))}
               </div>
-              <button type="button" className={primaryBtn} onClick={() => setStep('create-verify')}>I&apos;ve written them down</button>
-            </div>
+              <PrimaryButton onClick={() => setStep('create-verify')}>I&apos;ve written them down</PrimaryButton>
+            </AeCard>
             )}
 
             {step === 'create-verify' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={CircleCheck} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Confirm your backup</h2>
-              <p className="text-sm text-muted-foreground mb-4">Type the requested words to confirm you saved them.</p>
+              <h2 className={heading}>Confirm your backup</h2>
+              <p className={description}>Type the requested words to confirm you saved them.</p>
               {[0, 1].map((n) => (
                 <div key={verifyIdx[n]} className="mb-3">
                   <label className="block text-xs text-muted-foreground mb-1" htmlFor={`vw${n}`}>{`Word #${verifyIdx[n] + 1}`}</label>
-                  <input
+                  <Input
                     id={`vw${n}`}
-                    className={cn(input, wordBorder(n))}
+                    className={cn(field, wordBorder(n))}
                     value={verifyIn[n]}
                     ref={n === 0 ? focusOnMount : undefined}
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
-                    onChange={(e) => setVerifyIn((prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]))}
+                    onChange={(e) => setVerifyIn(
+                      (prev) => (n === 0 ? [e.target.value, prev[1]] : [prev[0], e.target.value]),
+                    )}
                   />
                 </div>
               ))}
-              <button type="button" className={`${primaryBtn} mt-2`} disabled={!verifyOk} onClick={() => { setFromImport(false); setStep('passphrase'); }}>
+              <PrimaryButton className="mt-2" disabled={!verifyOk} onClick={() => { setFromImport(false); setStep('passphrase'); }}>
                 {verifyOk ? 'Continue' : 'Words don’t match yet'}
-              </button>
-            </div>
+              </PrimaryButton>
+            </AeCard>
             )}
 
             {step === 'import-enter' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={Download} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Import your wallet</h2>
-              <p className="text-sm text-muted-foreground mb-4">Enter your 12- or 24-word recovery phrase, separated by spaces.</p>
-              <textarea
-                className={`${input} font-mono mb-2`}
+              <h2 className={heading}>Import your wallet</h2>
+              <p className={description}>
+                Enter your 12- or 24-word recovery phrase, separated by spaces.
+              </p>
+              <Textarea
+                className={cn(field, 'font-mono mb-2')}
                 rows={3}
                 value={importText}
                 ref={focusOnMount}
@@ -425,20 +448,21 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <p className={`text-xs mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
                 {importMsg}
               </p>
-              <button type="button" className={primaryBtn} disabled={!importedOk} onClick={() => { setFromImport(true); setStep('passphrase'); }}>Continue</button>
-            </div>
+              <PrimaryButton disabled={!importedOk} onClick={() => { setFromImport(true); setStep('passphrase'); }}>Continue</PrimaryButton>
+            </AeCard>
             )}
 
             {step === 'passphrase' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={Lock} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Set a passphrase</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                This encrypts your wallet on this device. Use a long, high-entropy passphrase — not a short PIN. You&apos;ll enter it to sign.
+              <h2 className={heading}>Set a passphrase</h2>
+              <p className={description}>
+                This encrypts your wallet on this device. Use a long, high-entropy passphrase —
+                not a short PIN. You&apos;ll enter it to sign.
               </p>
-              <input className={`${input} mb-2`} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
+              <Input className={cn(field, 'mb-2')} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
               <p className={`text-xs mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
-              <input className={`${input} mb-2`} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
+              <Input className={cn(field, 'mb-2')} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
               {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
               {error && (
               <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
@@ -446,34 +470,34 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 <span>{error}</span>
               </div>
               )}
-              <button type="button" className={`${primaryBtn} mt-2`} disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</button>
-            </div>
+              <PrimaryButton className="mt-2" disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</PrimaryButton>
+            </AeCard>
             )}
 
             {step === 'creating' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={Loader2} spin />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Encrypting your wallet…</h2>
+              <h2 className={heading}>Encrypting your wallet…</h2>
               <p className="text-sm text-muted-foreground">Deriving your key (Argon2id). This takes a moment.</p>
-            </div>
+            </AeCard>
             )}
 
             {step === 'protect' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={Fingerprint} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Unlock with this device</h2>
-              <p className="text-sm text-muted-foreground mb-4">
+              <h2 className={heading}>Unlock with this device</h2>
+              <p className={description}>
                 Add your device&apos;s own security as a second way to unlock — so you don&apos;t
                 type your passphrase for every signature. We can&apos;t tell which sensor your
                 device uses; the device decides (Face ID, Touch ID, fingerprint, or your passcode).
               </p>
               {deviceUnlockAvailable ? (
-                <button type="button" className={`${primaryBtn} mb-3 flex items-center justify-center gap-2`} disabled={busy} onClick={enrollDeviceUnlock}>
+                <PrimaryButton className="mb-3" disabled={busy} onClick={enrollDeviceUnlock}>
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
                   Set up device unlock
-                </button>
+                </PrimaryButton>
               ) : (
-                <div className="mb-3 flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-muted-foreground">
+                <div className="mb-3 flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
                   <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>
                     This device doesn&apos;t offer a built-in unlock we can use. Your passphrase
@@ -487,26 +511,27 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 <span>{error}</span>
               </div>
               )}
-              <button type="button" className={ghostBtn} disabled={busy} onClick={() => record && goToRecovery(record)}>
+              <AeButton variant="ghost" fullWidth disabled={busy} onClick={() => record && goToRecovery(record)}>
                 {deviceUnlockAvailable ? 'Skip — use my passphrase' : 'Continue'}
-              </button>
-            </div>
+              </AeButton>
+            </AeCard>
             )}
 
             {step === 'recovery' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={LifeBuoy} />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Save your recovery code</h2>
+              <h2 className={heading}>Save your recovery code</h2>
               <p className="text-sm text-amber-300/90 mb-4">
                 Shown once, now. It unlocks your wallet if you forget your passphrase or lose this
                 device. Store it somewhere other than this device.
               </p>
-              <p className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-3 font-mono text-sm break-all text-center text-white mb-2">
+              <p className="rounded-xl border border-border bg-muted/60 px-3 py-3 font-mono text-sm break-all text-center text-foreground mb-2">
                 {recoveryCode}
               </p>
-              <button
-                type="button"
-                className={`${ghostBtn} mb-4 flex items-center justify-center gap-2`}
+              <AeButton
+                variant="ghost"
+                fullWidth
+                className="mb-4"
                 onClick={() => {
                   navigator.clipboard?.writeText(recoveryCode)
                     .then(() => setCopied(true))
@@ -515,12 +540,12 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               >
                 {copied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'Copied' : 'Copy code'}
-              </button>
-              <label className="mb-4 flex items-start gap-2 text-sm text-white/80" htmlFor="recovery-saved">
+              </AeButton>
+              <label className="mb-4 flex items-start gap-2 text-sm text-foreground" htmlFor="recovery-saved">
                 <input
                   id="recovery-saved"
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-sky-600"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#1161FE]"
                   checked={recoverySaved}
                   onChange={(e) => setRecoverySaved(e.target.checked)}
                 />
@@ -532,22 +557,24 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 <span>{error}</span>
               </div>
               )}
-              <button type="button" className={primaryBtn} disabled={!recoverySaved} onClick={finish}>Finish setup</button>
-            </div>
+              <PrimaryButton disabled={!recoverySaved} onClick={finish}>Finish setup</PrimaryButton>
+            </AeCard>
             )}
 
             {step === 'done' && (
-            <div className={card}>
+            <AeCard variant="glass" hover={false} className="w-full p-6">
               <IconChip icon={CircleCheck} tone="success" />
-              <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">Wallet ready 🎉</h2>
+              <h2 className={heading}>Wallet ready 🎉</h2>
               <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
               <p className="text-xs font-mono break-all text-emerald-400 mb-4">{firstAddr}</p>
               <p className="text-xs text-muted-foreground mb-5">
                 {`Unlocks with your ${passkeyEnrolled ? 'device, your passphrase, or your recovery code' : 'passphrase or your recovery code'}. `}
                 You&apos;ll confirm every transaction.
               </p>
-              <button type="button" className={primaryBtn} onClick={() => onComplete?.(record as VaultRecord, firstAddr)}>Open wallet</button>
-            </div>
+              <PrimaryButton onClick={() => onComplete?.(record as VaultRecord, firstAddr)}>
+                Open wallet
+              </PrimaryButton>
+            </AeCard>
             )}
           </div>
         </div>

@@ -314,10 +314,42 @@ function buildCsp(nonce) {
   ].join('; ');
 }
 
+// HARDEN-04: the single place the SPA document is rendered. Every path that returns
+// index.html goes through here, so the nonce, the enforcing CSP header and the
+// `__CSP_NONCE__` substitution can never drift apart between routes.
+async function sendSpaDocument(req, res) {
+  // Fresh per-response nonce, matched into the CSP header and into every
+  // nonce="__CSP_NONCE__" placeholder in the served document (see indexHtml patch above).
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.setHeader('Content-Security-Policy', buildCsp(nonce));
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  try {
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const meta = await buildMeta(req.path, origin);
+    res.send(injectHead(envInject(indexHtml), meta).replaceAll('__CSP_NONCE__', nonce));
+  } catch (e) {
+    res.send(indexHtml.replaceAll('__CSP_NONCE__', nonce));
+  }
+}
+
 const app = express();
 app.use('/assets', express.static(path.join(DIST_DIR, 'assets'), { immutable: true, maxAge: '1y' }));
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
-// `index: false` — CSP hardening fix: express.static's default `index: 'index.html'` option was
+
+// HARDEN-04 bypass fix: `index: false` on the static mount below only disables the *implicit*
+// directory index, so a literal `GET /index.html` still hit express.static and returned the SPA
+// document with no CSP header at all and the raw `__CSP_NONCE__` placeholders — the same
+// application document without the custody-boundary control. Route every literal *.html request
+// to the document handler *before* express.static ever sees it. Matched by suffix rather than by
+// exact path on purpose: it also covers `/./index.html` and, on a case-insensitive filesystem,
+// `/INDEX.HTML`. dist/index.html is the only *.html file the build emits (verified), so nothing
+// legitimate is diverted.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!/\.html?$/i.test(req.path)) return next();
+  return sendSpaDocument(req, res);
+});
+// `index: false` — HARDEN-04 fix: express.static's default `index: 'index.html'` option was
 // auto-serving the raw dist/index.html file for GET `/` (a directory-style request), which
 // silently short-circuited BOTH the SEO injectHead route below (head hardening — title/canonical/
 // JSON-LD never actually reached `/`, the highest-traffic route) AND this CSP header (it was
@@ -327,39 +359,10 @@ app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png'))
 // fallback for directory-style paths is disabled so those always reach the route handlers.
 app.use(express.static(DIST_DIR, { maxAge: '1d', index: false }));
 
-app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], async (req, res) => {
-  // CSP hardening: fresh per-response nonce, matched into the CSP header and into every
-  // nonce="__CSP_NONCE__" placeholder in the served document (see indexHtml patch above).
-  const nonce = crypto.randomBytes(16).toString('base64');
-  res.setHeader('Content-Security-Policy', buildCsp(nonce));
-  try {
-    const origin = `${req.protocol}://${req.get('host')}`;
-    const meta = await buildMeta(req.path, origin);
-    const html = injectHead(envInject(indexHtml), meta).replaceAll('__CSP_NONCE__', nonce);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (e) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(indexHtml.replaceAll('__CSP_NONCE__', nonce));
-  }
-});
+app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], sendSpaDocument);
 
 // Catch-all: serve SPA with basic SEO
-app.get('*', async (req, res) => {
-  // CSP hardening: see the equivalent block on the route above for the nonce/CSP mechanism.
-  const nonce = crypto.randomBytes(16).toString('base64');
-  res.setHeader('Content-Security-Policy', buildCsp(nonce));
-  try {
-    const origin = `${req.protocol}://${req.get('host')}`;
-    const meta = await buildMeta(req.path, origin);
-    const html = injectHead(envInject(indexHtml), meta).replaceAll('__CSP_NONCE__', nonce);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (e) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(indexHtml.replaceAll('__CSP_NONCE__', nonce));
-  }
-});
+app.get('*', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);

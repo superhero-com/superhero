@@ -167,7 +167,10 @@ VIEWPORTS.forEach((vp) => {
       await page.getByText('Import your wallet').waitFor({ state: 'visible' });
       await snap(page, vp.name, 'import-enter');
 
-      await page.locator('textarea').fill(GOLDEN_MNEMONIC);
+      // Scope to the overlay's phrase field by placeholder — a bare `textarea`
+      // selector is ambiguous now that the flow starts from `/`, where the feed
+      // post-composer's textarea is also in the document.
+      await page.getByPlaceholder('word1 word2 word3 …').fill(GOLDEN_MNEMONIC);
       await page.getByRole('button', { name: 'Continue' }).click();
       await page.getByText('Set a passphrase').waitFor({ state: 'visible' });
       await snap(page, vp.name, 'import-passphrase');

@@ -49,7 +49,7 @@ export function useNostrLinkCheck(
           setStatus('linked');
           return;
         }
-        if (wasDismissedRecently()) {
+        if (wasDismissedRecently(activeAccount)) {
           setStatus('done');
           return;
         }
@@ -71,7 +71,7 @@ export function useNostrLinkCheck(
       await linkNostrIdentity({
         address: activeAccount, npub, identity, signMessage,
       });
-      clearDismissal();
+      clearDismissal(activeAccount);
       setStatus('done');
     } catch (err) {
       notifyError(err instanceof Error ? err.message : 'Failed to link Nostr identity.');
@@ -80,9 +80,9 @@ export function useNostrLinkCheck(
   }, [activeAccount, signMessage, deriveIdentity, notifyError, setStatus]);
 
   const dismiss = useCallback(() => {
-    markDismissed();
+    if (activeAccount) markDismissed(activeAccount);
     setStatus('done');
-  }, [setStatus]);
+  }, [activeAccount, setStatus]);
 
   const retry = useCallback(() => {
     setStatus('prompt');

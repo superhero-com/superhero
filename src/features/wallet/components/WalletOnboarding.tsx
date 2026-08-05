@@ -11,7 +11,9 @@ import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
-import { assessPassphrase, generatePassphrase } from '../passphrase';
+import {
+  assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
+} from '../passphrase';
 import {
   addPasskeyFactor, addRecoveryCodeFactor, importWalletWithDek, recordMnemonicBackedUp,
 } from '../wallet-lifecycle';
@@ -90,14 +92,21 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
 // take a colour band as the estimate climbs, so the weak-passphrase reject state is
 // visible before the user submits rather than only as an error on the button.
 const STRENGTH_FILL = ['bg-rose-500', 'bg-rose-500', 'bg-amber-500', 'bg-[#1161FE]', 'bg-emerald-500'];
-const StrengthMeter = ({ score }: { score: 0 | 1 | 2 | 3 | 4 }) => (
+type StrengthMeterProps = { score: 0 | 1 | 2 | 3 | 4; pending?: boolean };
+const StrengthMeter = ({ score, pending = false }: StrengthMeterProps) => (
   <div className="mb-2 flex gap-1" aria-hidden="true">
-    {[0, 1, 2, 3].map((i) => (
-      <div
-        key={i}
-        className={cn('h-1 flex-1 rounded-full transition-colors', i < score ? STRENGTH_FILL[score] : 'bg-muted')}
-      />
-    ))}
+    {[0, 1, 2, 3].map((i) => {
+      // While the estimator loads, pulse a neutral fill — an empty meter reads as
+      // "weak" and would wrongly push the user to retype a fine passphrase.
+      const fill = pending ? 'bg-muted animate-pulse' : STRENGTH_FILL[score];
+      const active = pending || i < score;
+      return (
+        <div
+          key={i}
+          className={cn('h-1 flex-1 rounded-full transition-colors', active ? fill : 'bg-muted')}
+        />
+      );
+    })}
   </div>
 );
 
@@ -153,10 +162,23 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Re-render trigger only: assessPassphrase reads the estimator's own module state,
+  // so we just need a state change to re-run it once the dictionaries land.
+  const [, setEstimatorReady] = useState(isEstimatorReady());
 
   useEffect(() => {
     store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
   }, [store]);
+
+  // Warm the strength estimator as soon as onboarding opens — its dictionaries are a
+  // separate lazy chunk, so this fetches them off the modal shell while the user is
+  // still on the mnemonic/import steps, and the passphrase meter is live on arrival.
+  useEffect(() => {
+    if (isEstimatorReady()) return undefined;
+    let alive = true;
+    loadPassphraseEstimator().then(() => { if (alive) setEstimatorReady(true); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   const startCreate = useCallback(() => {
     const m = generateMnemonic(12);
@@ -527,8 +549,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 <span className="h-px flex-1 bg-border" />
               </div>
               <Input className={cn(field, 'mb-2')} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => { setPass(e.target.value); setGenerated(''); }} />
-              {pass.length > 0 && <StrengthMeter score={passInfo.score} />}
-              <p className={`text-xs mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? 'Use several random words — not a short PIN or a common password.' : passInfo.message}</p>
+              {pass.length > 0 && (
+                <StrengthMeter score={passInfo.score} pending={passInfo.pending} />
+              )}
+              <p className={`text-xs mb-3 ${passInfo.pending ? 'text-muted-foreground' : fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? 'Use several random words — not a short PIN or a common password.' : passInfo.message}</p>
               <Input className={cn(field, 'mb-2')} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
               {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
               {error && (

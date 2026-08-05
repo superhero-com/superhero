@@ -29,19 +29,30 @@ export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   }
 }
 
+/** Default RP ID when no build-time value is configured — the production host. */
+export const DEFAULT_RP_ID = 'superhero.com';
+
 /**
- * The RP ID for wallet passkeys. Same-origin custody → the app origin's
- * registrable domain. In production this is `superhero.com`; on localhost/dev we
- * fall back to the hostname so the ceremony is runnable. NEVER a value an
- * attacker origin could also assert (that is the whole point of the boundary).
+ * Pure resolver for the pinned RP ID: a non-empty configured value wins,
+ * otherwise the production default. Exported so the pinning contract is
+ * unit-testable without a real build, and NEVER reads `window.location`.
  */
-export function resolveRpId(): string {
-  if (typeof window === 'undefined') return 'superhero.com';
-  const { hostname } = window.location;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') return hostname;
-  // eTLD+1 for *.superhero.com; otherwise the hostname itself.
-  return hostname.endsWith('superhero.com') ? 'superhero.com' : hostname;
+export function pinnedRpId(env?: { VITE_WEBAUTHN_RP_ID?: string }): string {
+  const configured = env?.VITE_WEBAUTHN_RP_ID;
+  if (typeof configured === 'string' && configured.trim() !== '') return configured.trim();
+  return DEFAULT_RP_ID;
 }
+
+/**
+ * The RP ID for wallet passkeys — the custody boundary — decided ONCE at build
+ * time from `VITE_WEBAUTHN_RP_ID` (statically inlined by Vite) and baked into
+ * the artifact. It is NEVER derived from `window.location` at runtime, so a
+ * bundle served from an unexpected host cannot silently mint host-scoped
+ * credentials. Production ships the default (`superhero.com`); preview/staging/
+ * dev builds set their own value — which must be a registrable suffix of that
+ * build's origin — so the ceremony stays runnable there.
+ */
+export const RP_ID: string = pinnedRpId(import.meta.env);
 
 /**
  * Validate + extract the 32-byte PRF output from a credential's extension
@@ -80,7 +91,7 @@ export async function evaluatePrf(opts: {
 }): Promise<Uint8Array> {
   const assertion = await navigator.credentials.get({
     publicKey: {
-      rpId: resolveRpId(),
+      rpId: RP_ID,
       challenge: bs(randomChallenge()),
       allowCredentials: [{ type: 'public-key', id: bs(opts.credentialId) }],
       userVerification: 'required',
@@ -101,7 +112,7 @@ export async function enrollPrfCredential(opts: {
   userName: string;
   prfSalt: Uint8Array;
 }): Promise<{ credentialId: Uint8Array; prfOutput: Uint8Array; rpId: string }> {
-  const rpId = resolveRpId();
+  const rpId = RP_ID;
   const cred = await navigator.credentials.create({
     publicKey: {
       rp: { id: rpId, name: 'Superhero' },

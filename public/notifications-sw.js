@@ -10,6 +10,22 @@
  *
  * Registered on demand from the app when the user enables browser push, with an
  * explicit scope of '/' so it can receive pushes for the whole origin.
+ *
+ * SCOPE SAFETY — this worker shares an origin with the inline wallet, so an
+ * origin-wide scope is only acceptable because the worker CANNOT intercept
+ * requests: it registers NO `fetch` handler (and no `onfetch`), so navigation
+ * and asset requests — wallet routes included — never pass through it. That is
+ * not a comment to trust; __tests__/notifications-sw.test.ts fails if a `fetch`
+ * listener is ever added here. Do not add one: it would put a script with
+ * control over every request on the same origin as the seed vault.
+ *
+ * UPDATE PATH — this file is served unhashed from public/ (netlify passthrough,
+ * moderate TTL). Browsers re-fetch and byte-compare it on every service-worker
+ * update check and replace already-registered copies when it changes, so a
+ * change here supersedes existing registrations without any re-registration
+ * step. What it serves is therefore controlled by whoever can deploy the
+ * superhero repo (a merge to the deployed branch) — the same trust boundary as
+ * the rest of the client bundle, no wider.
  */
 
 self.addEventListener('install', () => {

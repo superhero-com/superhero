@@ -67,7 +67,7 @@ module.exports = {
         '**/*.spec.{ts,tsx}',
         'vitest.setup.ts',
         'vite.config.ts',
-        'playwright.config.ts',
+        'playwright*.config.ts',
         'tsconfig*.json',
         'scripts/**',
       ],

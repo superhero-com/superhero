@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
-import { assessPassphrase } from '../passphrase';
+import { assessPassphrase, generatePassphrase, MIN_SCORE } from '../passphrase';
 import { deriveAccount } from '../derivation';
 
 const GOLDEN_MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon '
@@ -43,12 +43,45 @@ describe('passphrase gate (weakest-factor rule)', () => {
     expect(assessPassphrase('abc').ok).toBe(false);
   });
 
-  it('accepts a long passphrase or a multi-word one', () => {
+  // The old length-only gate accepted every one of these — a 12-char non-numeric
+  // string or any 4-word input passed. They are exactly the offline-crackable
+  // vaults ZIX-321 is about, so the entropy gate MUST now reject them.
+  it('rejects low-entropy strings the old length gate let through', () => {
+    [
+      'passwordpassword', // 16 chars, all one dictionary word repeated
+      'aaaaaaaaaaaa', // 12 chars, single repeat
+      'qwertyuiopas', // 12 chars, keyboard walk
+      'passw0rd1234', // 12 chars, breached password + l33t + sequence
+      'Password1234', // 12 chars, capital+digits does not add real entropy
+      'letmein letmein letmein letmein', // 4 words, but a breached password repeated
+    ].forEach((weak) => {
+      expect(assessPassphrase(weak).ok, weak).toBe(false);
+    });
+  });
+
+  it('surfaces a reason for a breached / patterned passphrase', () => {
+    // Not a bare "too short" — the message must explain the weakness.
+    expect(assessPassphrase('password').message.length).toBeGreaterThan(0);
+    expect(assessPassphrase('password').ok).toBe(false);
+  });
+
+  it('accepts a genuinely high-entropy passphrase', () => {
     expect(assessPassphrase('correct horse battery staple').ok).toBe(true);
     expect(assessPassphrase('a-fairly-long-passphrase!').ok).toBe(true);
+    const a = assessPassphrase('correct horse battery staple');
+    expect(a.score).toBeGreaterThanOrEqual(MIN_SCORE);
   });
 
   it('rates a clearly strong passphrase "Strong"', () => {
     expect(assessPassphrase('correct horse battery staple plum').message).toBe('Strong.');
+  });
+
+  it('generatePassphrase produces a strong, distinct passphrase every call', () => {
+    const g1 = generatePassphrase();
+    const g2 = generatePassphrase();
+    expect(g1.split(' ')).toHaveLength(5);
+    expect(g1).not.toBe(g2); // CSPRNG-drawn; collision is astronomically unlikely
+    expect(assessPassphrase(g1).ok).toBe(true);
+    expect(assessPassphrase(g1).score).toBeGreaterThanOrEqual(MIN_SCORE);
   });
 });

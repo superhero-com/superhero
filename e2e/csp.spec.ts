@@ -24,7 +24,10 @@ import { test, expect } from '@playwright/test';
 // Routes chosen to exercise the audited DOM sinks and the full script surface under the header:
 // home + feed (linkify, jdenticon/multiavatar avatars), trends (token identicons), the wallet
 // landing (two **bold** i18n sinks in src/views/Wallet.tsx), and static copy routes.
-const ROUTES = ['/', '/trends', '/wallet', '/faq', '/terms'];
+// `/index.html` is the literal-document entry point: it used to be served by express.static
+// ahead of the CSP route handlers, returning the SPA with no header at all — an attacker who
+// walked a wallet user in through it got the application without the custody-boundary control.
+const ROUTES = ['/', '/index.html', '/trends', '/wallet', '/faq', '/terms'];
 
 type CspViolation = {
   directive: string;
@@ -75,6 +78,44 @@ test.describe('enforcing CSP + Trusted Types', () => {
       );
       expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
       expect(drops, `default policy silently dropped markup at ${route}`).toEqual([]);
+    });
+  });
+
+  // Header assertion, separate from the violation walk above. A route can raise zero violations
+  // simply because it carries no policy at all — which is exactly how `/index.html` passed while
+  // bypassing enforcement. Assert the header itself on the raw response, per route.
+  ROUTES.forEach((route) => {
+    test(`serves an enforcing CSP and a substituted nonce at ${route}`, async ({ request }) => {
+      const response = await request.get(route);
+      expect(response.status()).toBe(200);
+
+      const headers = response.headers();
+      const csp = headers['content-security-policy'];
+      expect(csp, `no enforcing Content-Security-Policy at ${route}`).toBeTruthy();
+      expect(
+        headers['content-security-policy-report-only'],
+        `${route} fell back to report-only`,
+      ).toBeUndefined();
+      expect(csp).toContain("require-trusted-types-for 'script'");
+      expect(csp).toContain('trusted-types superhero-dom default');
+      // Scoped to script-src on purpose: `style-src 'unsafe-inline'` is deliberate (Radix and
+      // the chart libs write inline styles), but an inline *script* escape hatch would undo
+      // the nonce entirely.
+      const scriptSrc = csp.split(';').find((d) => d.trim().startsWith('script-src')) ?? '';
+      expect(scriptSrc, `no script-src at ${route}`).toBeTruthy();
+      expect(scriptSrc).not.toContain('unsafe-inline');
+      expect(scriptSrc).not.toContain('unsafe-eval');
+
+      // The nonce must actually reach the document: an unsubstituted `__CSP_NONCE__` means the
+      // response skipped the render path, and every inline script would be blocked (or, as in
+      // the bypass, not gated at all).
+      const body = await response.text();
+      expect(body, `${route} served raw __CSP_NONCE__ placeholders`).not.toContain('__CSP_NONCE__');
+      const nonce = csp.match(/'nonce-([^']+)'/)?.[1];
+      expect(nonce, `no nonce in the CSP header at ${route}`).toBeTruthy();
+      expect(body, `header nonce absent from the document at ${route}`).toContain(
+        `nonce="${nonce}"`,
+      );
     });
   });
 

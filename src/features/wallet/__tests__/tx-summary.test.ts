@@ -50,6 +50,30 @@ const AEX9_ACI = [{
 const encodeCall = (fn: string, args: unknown[]): `cb_${string}` => new Encoder(AEX9_ACI)
   .encode('Token', fn, args);
 
+// The FATE calldata selector is blake2b(function_name)[0..4] — it is derived from
+// the NAME alone, independent of argument types. So a contract can expose a
+// function literally named `transfer` with a different, hostile signature and its
+// calldata will still resolve to the recognised `transfer` selector. This helper
+// forges exactly that: a value-moving name over an arbitrary argument shape.
+const forgeCall = (
+  fn: string,
+  argDefs: { name: string; type: string }[],
+  args: unknown[],
+): `cb_${string}` => new Encoder([{
+  contract: {
+    name: 'Evil',
+    kind: 'contract_main',
+    typedefs: [],
+    state: { record: [] },
+    functions: [{
+      name: fn, arguments: argDefs, returns: 'unit', stateful: true, payable: false,
+    }],
+  },
+}]).encode('Evil', fn, args);
+
+const ADDR = { name: 'a', type: 'address' };
+const INT = { name: 'n', type: 'int' };
+
 const contractCallTx = (callData: `cb_${string}`, amount: bigint | number = 0): string => buildTx({
   tag: Tag.ContractCallTx,
   callerId: SENDER,
@@ -162,6 +186,77 @@ describe('summarizeTransaction — contract calls (WYSIWYS decode of function + 
   });
 });
 
+// A selector-name match is not proof the call is that function: an attacker can
+// name a hostile function `transfer` and hide an extra argument the recognised
+// summary would never display. A recognised value-moving effect is only named
+// when the decoded calldata is the EXACT expected shape; otherwise the call is
+// downgraded to the unrecognised-contract caution path with every decoded
+// argument rendered, so the user always sees everything they are signing.
+describe('summarizeTransaction — recognised contract calls are shape-safe (WYSIWYS)', () => {
+  it('downgrades a transfer with an EXTRA argument and shows every decoded arg', () => {
+    // `transfer(address, int, address)` — same selector as AEX-9 transfer, one hidden arg.
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('transfer', [ADDR, INT, ADDR], [RECIPIENT, 5n, SENDER]),
+    ));
+    expect(summary).not.toBeNull();
+    // NOT named as a token transfer, and no value-moving effect claimed.
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+    const rows = rowMap(summary);
+    // All three decoded arguments are rendered — nothing is signed unseen.
+    expect(rows['Argument 1']).toBe(RECIPIENT);
+    expect(rows['Argument 2']).toBe('5');
+    expect(rows['Argument 3']).toBe(SENDER);
+    expect(rows.Function).toMatch(/transfer — unexpected argument shape/);
+    // The misleading positional labels are gone.
+    expect(rows.To).toBeUndefined();
+    expect(rows.Amount).toBeUndefined();
+  });
+
+  it('downgrades a transfer with a MISSING argument — no blank amount', () => {
+    // `transfer(address)` previously produced "Amount: (raw token units)".
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('transfer', [ADDR], [RECIPIENT]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    const rows = rowMap(summary);
+    expect(rows.Amount).toBeUndefined();
+    expect(rows['Argument 1']).toBe(RECIPIENT);
+  });
+
+  it('downgrades a transfer whose arguments are the WRONG type', () => {
+    // `transfer(int, int)` — recipient slot is not an address.
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('transfer', [INT, INT], [1n, 2n]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+    const rows = rowMap(summary);
+    expect(rows['Argument 1']).toBe('1');
+    expect(rows['Argument 2']).toBe('2');
+  });
+
+  it('downgrades an allowance with the wrong arity', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('create_allowance', [ADDR], [RECIPIENT]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.rows.find((r) => r.label === 'Approved amount')).toBeUndefined();
+    expect(rowMap(summary)['Argument 1']).toBe(RECIPIENT);
+  });
+
+  it('still names a correctly-shaped transfer — the downgrade does not over-trigger', () => {
+    const summary = summarizeTransaction(contractCallTx(encodeCall('transfer', [RECIPIENT, 5n])));
+    expect(summary!.title).toBe('Send tokens');
+    expect(summary!.caution).toBeUndefined();
+    expect(rowMap(summary).To).toBe(RECIPIENT);
+    expect(rowMap(summary).Amount).toBe('5 (raw token units)');
+  });
+});
+
 describe('summarizeTransaction — PayingForTx surfaces the inner transaction', () => {
   const wrap = (innerTx: string): string => {
     const signed = buildTx({ tag: Tag.SignedTx, encodedTx: innerTx, signatures: [] });
@@ -186,5 +281,18 @@ describe('summarizeTransaction — PayingForTx surfaces the inner transaction', 
   it('fails closed when the inner transaction cannot be explained', () => {
     const garbage = encode(new Uint8Array([9, 9, 9, 9]), Encoding.Bytearray);
     expect(summarizeTransaction(wrap(contractCallTx(garbage)))).toBeNull();
+  });
+
+  it('downgrades a shape-mismatched inner contract call through the wrapper', () => {
+    // The hidden-arg transfer must not be laundered into a clean "Send tokens"
+    // just because it is wrapped in a PayingForTx.
+    const inner = contractCallTx(forgeCall('transfer', [ADDR, INT, ADDR], [RECIPIENT, 5n, SENDER]));
+    const summary = summarizeTransaction(wrap(inner));
+    expect(summary!.title).toBe('Pay fees for another transaction');
+    expect(summary!.inner).toBeDefined();
+    expect(summary!.inner!.title).toBe('Call a contract');
+    expect(summary!.inner!.effect).toBeUndefined();
+    expect(summary!.inner!.caution).toMatch(/not the shape that function should have/i);
+    expect(rowMap(summary!.inner!)['Argument 3']).toBe(SENDER);
   });
 });

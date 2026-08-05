@@ -226,8 +226,8 @@ async function buildMeta(pathname, origin){
 // --- HARDEN-04: Content-Security-Policy (enforcing) -------------------------------------
 // Enforcing — see @agency/products/superhero/tasks/HARDEN-04-csp-trusted-types.md. The policy
 // blocks non-nonce'd scripts (`script-src 'strict-dynamic' 'nonce-…'`, no unsafe-inline) and,
-// via `require-trusted-types-for 'script'` + `trusted-types superhero-dom`, forces every
-// innerHTML-class write through the one audited policy in src/utils/trustedTypes.ts. No report
+// via `require-trusted-types-for 'script'` + `trusted-types superhero-dom default`, forces every
+// innerHTML-class write and script-URL sink through src/utils/trustedTypes.ts. No report
 // sink was ever wired (no report-uri/report-to header, no Reporting-Endpoints, no listener —
 // grep-confirmed), so nothing here collected telemetry; enforcement is instead gated by the
 // zero-violation Playwright soak in e2e/csp.spec.ts (npm run test:e2e:csp), which walks the

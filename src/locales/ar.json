@@ -33,7 +33,9 @@
       "save": "حفظ",
       "getChainName": "+ احصل على اسم ‎.chain",
       "claimChainName": "مطالبة",
-      "linkAccount": "ربط الحساب"
+      "linkAccount": "ربط الحساب",
+      "send": "إرسال",
+      "receive": "استلام"
     },
     "labels": {
       "superheroHome": "الصفحة الرئيسية لـ Superhero",
@@ -1002,6 +1004,29 @@
         "tagline": "تداول الوسوم المحوّلة إلى رموز والترندات الاجتماعية — سوق الانتباه في Web3.",
         "getStarted": "ابدأ الآن",
         "continueAsGuest": "المتابعة كضيف"
+      },
+      "send": {
+        "title": "إرسال AE",
+        "subtitle": "حوِّل AE من محفظتك",
+        "recipient": "المستلم",
+        "recipientPlaceholder": "‎ak_… أو name.chain",
+        "resolvingName": "جارٍ البحث عن الاسم…",
+        "nameNotFound": "اسم ‎.chain هذا لا يشير إلى أي حساب.",
+        "invalidRecipient": "أدخل عنوان ‎ak_ صالحًا أو اسم ‎.chain.",
+        "sendingToSelf": "هذا عنوانك أنت — لن تدفع سوى الرسوم.",
+        "amountAe": "المبلغ (AE)",
+        "max": "الحد الأقصى",
+        "confirmInWallet": "أكِّد في المحفظة…",
+        "sentSuccessfully": "تم إرسال {{amount}} AE.",
+        "failedToSend": "تعذّر إرسال AE."
+      },
+      "receive": {
+        "title": "استلام AE",
+        "subtitle": "امسح عنوانك أو انسخه",
+        "qrAlt": "رمز QR لعنوان محفظتك",
+        "copyAddress": "نسخ العنوان",
+        "share": "مشاركة",
+        "networkWarning": "لا يمكن إرسال سوى أصول æternity ‏(AE) إلى هذا العنوان. أي شيء يُرسل من سلسلة أخرى يُفقد."
       }
     },
     "wallet": {

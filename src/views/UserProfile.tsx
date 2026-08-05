@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AccountCreatedToken from '@/components/Account/AccountCreatedToken';
 import AccountFeed from '@/components/Account/AccountFeed';
@@ -49,8 +50,10 @@ import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { CONFIG } from '../config';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
+import { useAeSdk } from '../hooks/useAeSdk';
 import { IconDiamond, IconLink } from '../icons';
 import { formatAddress } from '../utils/address';
+import { isStandalone } from '../utils/displayMode';
 
 const XVerifiedBadge = ({ username }: { username?: string | null }) => {
   const { t } = useTranslation('common');
@@ -89,8 +92,22 @@ export default function UserProfile({
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
+  const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
+
+  // Send/Receive is the installed-PWA wallet surface: in a plain
+  // browser tab the wallet lives in the extension/mobile app, which already owns
+  // these actions. Resolved after mount rather than during render because the
+  // server has no `display-mode` to read — deciding at render time would make
+  // the hydrated tree disagree with the SSR'd one.
+  const [walletActionsEnabled, setWalletActionsEnabled] = useState(false);
+  useEffect(() => {
+    setWalletActionsEnabled(isStandalone());
+  }, []);
+
+  const isOwnProfile = !!activeAccount && activeAccount === effectiveAddress;
+  const showWalletActions = walletActionsEnabled && !!activeAccount && !!effectiveAddress;
 
   const { data, refetch: refetchPosts } = useQuery({
     queryKey: ['PostsService.listAll', address],
@@ -432,6 +449,40 @@ export default function UserProfile({
           </div>
         </div>
       </div>
+
+      {/* Wallet actions — installed PWA only. On your own profile this is the
+          wallet home pair; on someone else's it is a pre-addressed Send. */}
+      {showWalletActions && (
+        <div className="mb-4 md:mb-4 flex gap-2.5 md:max-w-[420px]">
+          <button
+            type="button"
+            data-testid="profile-send-button"
+            onClick={() => openModal({
+              name: 'send',
+              props: isOwnProfile ? {} : { toAddress: effectiveAddress },
+            })}
+            className="group flex-1 min-w-0 inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border border-solid border-[#1161FE]/40 bg-[#1161FE]/10 px-4 text-sm font-semibold text-white transition-colors hover:bg-[#1161FE]/20 hover:border-[#1161FE]/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE]/60"
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#1161FE]/25">
+              <ArrowUpRight className="h-4 w-4 text-[#8ab6ff]" />
+            </span>
+            <span className="truncate">{t('buttons.send')}</span>
+          </button>
+          {isOwnProfile && (
+            <button
+              type="button"
+              data-testid="profile-receive-button"
+              onClick={() => openModal({ name: 'receive', props: { address: effectiveAddress } })}
+              className="group flex-1 min-w-0 inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border border-solid border-[rgba(0,255,157,0.35)] bg-[rgba(0,255,157,0.08)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[rgba(0,255,157,0.16)] hover:border-[rgba(0,255,157,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(0,255,157,0.6)]"
+            >
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[rgba(0,255,157,0.2)]">
+                <ArrowDownLeft className="h-4 w-4 text-[var(--neon-teal)]" />
+              </span>
+              <span className="truncate">{t('buttons.receive')}</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {canEdit && !isXVerified && (
         <button

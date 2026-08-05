@@ -96,12 +96,12 @@ export default function UserProfile({
   const { openModal } = useModal();
   const queryClient = useQueryClient();
 
-  // Send/Receive is the installed-PWA-on-mobile wallet surface (scoped
-  // to mobile by Badi): in a plain browser tab, and on a desktop that merely has
-  // the app installed, the wallet lives in the extension and already owns these
-  // actions. Resolved after mount rather than during render because the server
-  // has no `display-mode` or user agent of its own to read — deciding at render
-  // time would make the hydrated tree disagree with the SSR'd one.
+  // Send/Receive is the installed-PWA-on-mobile wallet surface: in a plain
+  // browser tab, and on a desktop that merely has the app installed, the wallet
+  // lives in the extension and already owns these actions. Resolved after mount
+  // rather than during render because the server has no `display-mode` or user
+  // agent of its own to read — deciding at render time would make the hydrated
+  // tree disagree with the SSR'd one.
   const [walletActionsEnabled, setWalletActionsEnabled] = useState(false);
   useEffect(() => {
     setWalletActionsEnabled(isStandalone() && isMobileDevice());

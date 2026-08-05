@@ -149,7 +149,7 @@ test.describe('profile send/receive @ desktop', () => {
   test.use({ viewport: { width: 1280, height: 900 } });
 
   test('an installed desktop PWA shows neither action', async ({ page }, testInfo) => {
-    // Standalone but not a phone — mobile-only, per Badi on.
+    // Standalone but not a phone — the surface is deliberately mobile-only.
     await prepare(page);
     await openProfile(page, ACCOUNT);
 

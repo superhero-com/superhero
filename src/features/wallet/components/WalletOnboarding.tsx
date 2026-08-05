@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import {
   ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
-  CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, type LucideIcon,
+  CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, Sparkles, type LucideIcon,
 } from 'lucide-react';
 import AeButton, { type AeButtonProps } from '@/components/AeButton';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
-import { assessPassphrase } from '../passphrase';
+import { assessPassphrase, generatePassphrase } from '../passphrase';
 import {
   addPasskeyFactor, addRecoveryCodeFactor, importWalletWithDek, recordMnemonicBackedUp,
 } from '../wallet-lifecycle';
@@ -86,6 +86,21 @@ const fieldClass = (empty: boolean, ok: boolean): string => {
   return ok ? 'text-emerald-400' : 'text-rose-400';
 };
 
+// Four-segment strength meter driven by the zxcvbn score (0–4). Segments fill and
+// take a colour band as the estimate climbs, so the weak-passphrase reject state is
+// visible before the user submits rather than only as an error on the button.
+const STRENGTH_FILL = ['bg-rose-500', 'bg-rose-500', 'bg-amber-500', 'bg-[#1161FE]', 'bg-emerald-500'];
+const StrengthMeter = ({ score }: { score: 0 | 1 | 2 | 3 | 4 }) => (
+  <div className="mb-2 flex gap-1" aria-hidden="true">
+    {[0, 1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className={cn('h-1 flex-1 rounded-full transition-colors', i < score ? STRENGTH_FILL[score] : 'bg-muted')}
+      />
+    ))}
+  </div>
+);
+
 // Brand icon chip above each step heading — design-system lucide-react (h-5 w-5) in a
 // gradient-tinted rounded tile, so every step leads with a native onboarding-style glyph.
 const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
@@ -117,6 +132,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [verifyIn, setVerifyIn] = useState<[string, string]>(['', '']);
   const [pass, setPass] = useState('');
   const [pass2, setPass2] = useState('');
+  // Set when the user takes the recommended path and generates a passphrase, so it
+  // can be shown in the clear for them to record (mirrors the mnemonic/recovery UX).
+  const [generated, setGenerated] = useState('');
+  const [genCopied, setGenCopied] = useState(false);
   const [error, setError] = useState('');
   const [firstAddr, setFirstAddr] = useState('');
   // Which path reached the passphrase step, so Back returns to the right previous screen.
@@ -148,6 +167,17 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     setVerifyIdx([Math.min(a, b), Math.max(a, b)]);
     setVerifyIn(['', '']);
     setStep('create-show');
+  }, []);
+
+  // Recommended path: fill both fields with a fresh strong passphrase and reveal it
+  // so the user can write it down. Manual typing (below) clears the reveal.
+  const handleGenerate = useCallback(() => {
+    const g = generatePassphrase();
+    setPass(g);
+    setPass2(g);
+    setGenerated(g);
+    setGenCopied(false);
+    setError('');
   }, []);
 
   const importedOk = isValidMnemonic(importText);
@@ -281,6 +311,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     setImportText('');
     setPass('');
     setPass2('');
+    setGenerated('');
     setRecoveryCode('');
     setStep('done');
   }, []);
@@ -457,11 +488,47 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
               <IconChip icon={Lock} />
               <h2 className={heading}>Set a passphrase</h2>
               <p className={description}>
-                This encrypts your wallet on this device. Use a long, high-entropy passphrase —
-                not a short PIN. You&apos;ll enter it to sign.
+                This encrypts your wallet on this device — you&apos;ll enter it to sign. The
+                strongest choice is a generated passphrase; tap below, then write it down.
               </p>
-              <Input className={cn(field, 'mb-2')} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass(e.target.value)} />
-              <p className={`text-xs mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? '4+ words, or 12+ characters.' : passInfo.message}</p>
+              {/* Recommended path first: the default action produces a strong secret. */}
+              <PrimaryButton className="mb-3" onClick={handleGenerate}>
+                <Sparkles className="h-4 w-4" />
+                Generate a strong passphrase
+              </PrimaryButton>
+              {generated && (
+              <div className="mb-3">
+                <p className="rounded-xl border border-border bg-muted/60 px-3 py-3 font-mono text-sm break-all text-center text-foreground mb-2">
+                  {generated}
+                </p>
+                <div className="flex items-center gap-2">
+                  <AeButton
+                    variant="ghost"
+                    className="flex-1"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(generated)
+                        .then(() => setGenCopied(true))
+                        .catch(() => setError('Couldn’t copy — write the passphrase down instead.'));
+                    }}
+                  >
+                    {genCopied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                    {genCopied ? 'Copied' : 'Copy'}
+                  </AeButton>
+                </div>
+                <p className="mt-2 text-xs text-amber-300/90">
+                  Write this down and keep it safe — it unlocks your wallet and signs every
+                  transaction. Never store it digitally.
+                </p>
+              </div>
+              )}
+              <div className="my-3 flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                or set your own
+                <span className="h-px flex-1 bg-border" />
+              </div>
+              <Input className={cn(field, 'mb-2')} type="password" value={pass} placeholder="passphrase" ref={focusOnMount} autoComplete="new-password" autoCapitalize="none" onChange={(e) => { setPass(e.target.value); setGenerated(''); }} />
+              {pass.length > 0 && <StrengthMeter score={passInfo.score} />}
+              <p className={`text-xs mb-3 ${fieldClass(pass.length === 0, passInfo.ok)}`}>{pass.length === 0 ? 'Use several random words — not a short PIN or a common password.' : passInfo.message}</p>
               <Input className={cn(field, 'mb-2')} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
               {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
               {error && (

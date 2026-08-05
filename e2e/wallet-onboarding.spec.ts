@@ -16,8 +16,12 @@ import {
  * flip the baseline every run. The transient `creating` (Argon2id) step is a
  * sub-second loader with no stable frame, so it is intentionally not baselined.
  *
- * The flow lives behind the /wallet-onboarding dev route and is design-scope only —
- * driving it here does not enable wallet signing / custody.
+ * The onboarding overlay is reached through its real entry point — the Connect
+ * Wallet button — not a standalone route. There is no public /wallet-onboarding
+ * route; in an installed PWA the button opens this inline flow, so the test forces
+ * standalone display-mode (see `forceStandalone`) and clicks Connect Wallet. The
+ * overlay is a `fixed inset-0` takeover portalled to <body>, so the captured frame
+ * is the same one users see. Driving it here does not enable wallet signing / custody.
  *
  * Set SNAP_DIR=<before|after> to instead write raw per-step PNGs to
  * design/screenshots/<dir>/ (used to produce before/after review montages); in that
@@ -30,6 +34,37 @@ const VIEWPORTS = [
   { name: 'iphone-13', width: 390, height: 844 },
   { name: 'desktop', width: 1280, height: 800 },
 ] as const;
+
+// Make `isStandalone()` (src/utils/displayMode.ts) report an installed PWA by
+// stubbing the `(display-mode: standalone)` media query — Playwright can't emulate
+// display-mode natively. Runs before the app bundle so ConnectWalletButton reads it
+// as standalone on first render and routes Connect Wallet to inline onboarding.
+async function forceStandalone(page: Page) {
+  await page.addInitScript(() => {
+    const orig = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) => (
+      query.includes('display-mode: standalone')
+        ? ({
+          matches: true,
+          media: query,
+          onchange: null,
+          addListener() {},
+          removeListener() {},
+          addEventListener() {},
+          removeEventListener() {},
+          dispatchEvent() { return false; },
+        } as unknown as MediaQueryList)
+        : orig(query)
+    );
+  });
+}
+
+// Open the inline onboarding overlay through the app's real entry point.
+async function openOnboarding(page: Page) {
+  await page.goto('/');
+  await page.getByRole('button', { name: /connect wallet/i })
+    .filter({ visible: true }).first().click();
+}
 
 // A valid BIP-39 phrase (all-`abandon` + `about`) so the import path reaches the
 // passphrase step deterministically without depending on generated state.
@@ -57,10 +92,10 @@ async function snap(page: Page, vp: string, name: string, mask: Locator[] = []) 
 VIEWPORTS.forEach((vp) => {
   test.describe(`wallet-onboarding @ ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
+    test.beforeEach(async ({ page }) => { await forceStandalone(page); });
 
     test('create path — choose -> done -> exists', async ({ page }) => {
-      const res = await page.goto('/wallet-onboarding');
-      expect(res?.status(), '/wallet-onboarding should return HTTP 200').toBe(200);
+      await openOnboarding(page);
 
       // choose
       await page.getByText('Set up your wallet').waitFor({ state: 'visible' });
@@ -114,15 +149,18 @@ VIEWPORTS.forEach((vp) => {
       await page.getByText('Wallet ready').waitFor({ state: 'visible' });
       await snap(page, vp.name, 'done', [page.locator('p.font-mono')]);
 
-      // exists — the vault now persists; a reload lands on the unlock hand-off.
+      // exists — the vault now persists; reopening onboarding lands on the unlock
+      // hand-off. The account was never adopted (we didn't click "Open wallet"),
+      // so the Connect Wallet button is still present to reopen the overlay.
       await page.reload();
+      await page.getByRole('button', { name: /connect wallet/i })
+        .filter({ visible: true }).first().click();
       await page.getByText('Wallet already set up').waitFor({ state: 'visible' });
       await snap(page, vp.name, 'exists');
     });
 
     test('import path — choose -> import-enter', async ({ page }) => {
-      const res = await page.goto('/wallet-onboarding');
-      expect(res?.status(), '/wallet-onboarding should return HTTP 200').toBe(200);
+      await openOnboarding(page);
       await page.getByText('Set up your wallet').waitFor({ state: 'visible' });
 
       await page.getByRole('button', { name: 'Import an existing wallet' }).click();

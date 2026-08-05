@@ -31,10 +31,6 @@ const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Wallet = lazy(() => import('./views/Wallet'));
-// Inline-wallet dev surfaces. Lazy-loaded so their crypto stack stays in its own
-// chunk, fetched on demand. Not linked from any UI (see the route comment below).
-const WalletLab = lazy(() => import('./views/WalletLab'));
-const WalletOnboarding = lazy(() => import('./features/wallet/components/WalletOnboarding'));
 const Conference = lazy(() => import('./views/Conference'));
 const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
@@ -111,6 +107,17 @@ export const NavigatePostComment = () => {
   // `_v3` rule cannot drift between the two.
   return <Navigate to={postDetailPath(id || slug || '')} replace />;
 };
+
+// Dev-only wallet lab. It clears and rewrites the real on-device vault store, so
+// it must never reach a shipped bundle. `import.meta.env.DEV` is statically `false`
+// under `vite build`, so this whole block — the WalletLab element and its
+// dynamically-imported chunk — is dead-code-eliminated from production `dist`,
+// while `npm run dev` keeps the diagnostic reachable at /wallet-lab.
+const devRoutes: RouteObject[] = [];
+if (import.meta.env.DEV) {
+  const WalletLab = lazy(() => import('./views/WalletLab'));
+  devRoutes.push({ path: '/wallet-lab', element: <WalletLab /> });
+}
 
 export const routes: RouteObject[] = [
   {
@@ -276,15 +283,10 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '/branding', element: <Branding /> },
-  // Inline-wallet dev surfaces. Not linked from any UI; reachable only by direct
-  // URL. The onboarding surface is inert outside a standalone PWA — makeSigner
-  // installs no inline signer in a plain browser tab, so a vault created here
-  // can't be signed with. /wallet-lab is a crypto capability diagnostic.
-  { path: '/wallet-lab', element: <WalletLab /> },
-  { path: '/wallet-onboarding', element: <WalletOnboarding /> },
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },
+  ...devRoutes,
   {
     path: '*',
     element: <NotFound />,

@@ -1,7 +1,7 @@
 import React, {
   useCallback, useEffect, useRef, useState,
 } from 'react';
-import { createPortal } from 'react-dom';
+import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
 import {
   CircleAlert, Fingerprint, Loader2, Lock, LifeBuoy, ShieldCheck,
@@ -180,142 +180,170 @@ const WalletSignPrompt = () => {
     mode === 'recovery' ? recoveryUnlockProvider(secret) : passphraseUnlockProvider(secret),
   );
 
-  const overlay = (
-    <div
-      // Above every other surface, because a signature can be requested from any
-      // of them: app chrome is z-[1100], the onboarding overlay z-[1200], and
-      // ModalProvider's dialogs z-[2001]/z-[2002] — a Send sheet that stays open
-      // across the signature would otherwise cover this prompt.
-      className="fixed inset-0 z-[2100] bg-[#0a0a0f]/95 text-white overflow-y-auto touch-manipulation"
-      style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        WebkitTapHighlightColor: 'transparent',
-        overscrollBehavior: 'contain',
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={heading}
+  return (
+    // A Radix `Dialog`, not a bare `createPortal`, because a signature is
+    // routinely requested FROM a modal — the Send sheet (ModalProvider) stays
+    // open across it to show the receipt. Radix modals do four things to
+    // everything outside their own content: `pointer-events: none` on <body>,
+    // a trapped focus scope, `aria-hidden` on siblings, and a scroll lock. A
+    // prompt portalled to <body> as a mere sibling is subject to all four, and
+    // renders on top while being completely dead to taps, typing and scrolling
+    // (ZIX-725). Raising z-index does not help — the problem is layer identity,
+    // not paint order. Joining the same layer stack as the topmost member is
+    // what makes this the surface that owns the pointer, the focus and the
+    // scroll for as long as a signature is pending.
+    <Dialog.Root
+      open
+      modal
+      onOpenChange={(next) => { if (!next) cancel(); }}
     >
-      <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
-        <div key={active.id} className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
-          <div className={card}>
-            <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-sky-500/15 to-blue-600/15">
-              <ShieldCheck className="h-5 w-5 text-neon-blue" />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight leading-none mb-1.5">{heading}</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Your wallet unlocks for this one signature only — nothing is kept unlocked afterwards.
-            </p>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[2100] bg-[#0a0a0f]/95" />
+        <Dialog.Content
+          // Above every other surface, because a signature can be requested from
+          // any of them: app chrome is z-[1100], the onboarding overlay z-[1200],
+          // and ModalProvider's dialogs z-[2001]/z-[2002].
+          className="fixed inset-0 z-[2100] text-white overflow-y-auto touch-manipulation outline-none"
+          style={{
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            WebkitTapHighlightColor: 'transparent',
+            overscrollBehavior: 'contain',
+          }}
+          // Escape is the only dismissal, and it means Cancel — which rejects
+          // the signature. Mid-verification it is ignored rather than tearing
+          // down a ceremony that is already in flight.
+          onEscapeKeyDown={(e) => { if (busy) e.preventDefault(); }}
+          // There is no "outside": this covers the viewport. Anything Radix
+          // would read as an outside interaction is a stray event from the
+          // sheet underneath, and must never cancel a signature.
+          onInteractOutside={(e) => e.preventDefault()}
+          // Let the sheet's own (now resumed) focus scope decide where focus
+          // lands once the prompt goes away.
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          <div className="min-h-full flex flex-col items-center justify-start px-4 pt-[9vh] pb-8">
+            <div key={active.id} className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
+              <div className={card}>
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-sky-500/15 to-blue-600/15">
+                  <ShieldCheck className="h-5 w-5 text-neon-blue" />
+                </div>
+                <Dialog.Title className="text-lg font-semibold tracking-tight leading-none mb-1.5">
+                  {heading}
+                </Dialog.Title>
+                <Dialog.Description className="text-sm text-muted-foreground mb-4">
+                  Your wallet unlocks for this one signature only — nothing is kept unlocked
+                  afterwards.
+                </Dialog.Description>
 
-            {/* ---------- WYSIWYS: exactly what is about to be signed ---------- */}
-            {context && (
-              <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                {summary && <SummaryBlock summary={summary} />}
-                {context.kind === 'transaction' && !summary && (
-                  <div className="flex items-start gap-2 text-xs text-amber-300">
-                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>
-                      This transaction could not be decoded, so its contents can&apos;t be shown —
-                      and it can&apos;t be approved here. Cancel it, and only retry from a source you
-                      trust.
-                    </span>
+                {/* ---------- WYSIWYS: exactly what is about to be signed ---------- */}
+                {context && (
+                  <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                    {summary && <SummaryBlock summary={summary} />}
+                    {context.kind === 'transaction' && !summary && (
+                      <div className="flex items-start gap-2 text-xs text-amber-300">
+                        <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>
+                          This transaction could not be decoded, so its contents can&apos;t
+                          be shown — and it can&apos;t be approved here. Cancel it, and only
+                          retry from a source you trust.
+                        </span>
+                      </div>
+                    )}
+                    {context.kind === 'message' && (
+                      <>
+                        <p className="text-sm font-medium mb-2">Message</p>
+                        <p className="text-xs font-mono break-all whitespace-pre-wrap text-white">{context.payload}</p>
+                      </>
+                    )}
+                    {context.networkId && (
+                      <p className="mt-2 pt-2 border-t border-white/10 text-[11px] text-muted-foreground">
+                        Network:
+                        {' '}
+                        {context.networkId}
+                      </p>
+                    )}
+                    {/* The exact bytes, always available — the summary is a convenience,
+                        this is the ground truth the signature covers. */}
+                    {context.kind === 'transaction' && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-[11px] text-muted-foreground hover:text-white/80">
+                          Show raw transaction
+                        </summary>
+                        <p className="mt-1 text-[10px] font-mono break-all text-white/50">{context.payload}</p>
+                      </details>
+                    )}
                   </div>
                 )}
-                {context.kind === 'message' && (
+
+                {/* ---------- User verification ---------- */}
+                {/* Suppressed entirely when approval is blocked (undecodable tx): the
+                    only action then is Cancel. */}
+                {!blockApproval && canPasskey && (
+                  <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(passkeyUnlockProvider())}>
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                    Unlock with this device
+                  </button>
+                )}
+
+                {!blockApproval && (canPassphrase || canRecovery) && (
                   <>
-                    <p className="text-sm font-medium mb-2">Message</p>
-                    <p className="text-xs font-mono break-all whitespace-pre-wrap text-white">{context.payload}</p>
+                    <label className="block text-xs text-muted-foreground mb-1" htmlFor="wallet-unlock-secret">
+                      {mode === 'recovery' ? 'Recovery code' : 'Passphrase'}
+                    </label>
+                    <input
+                      id="wallet-unlock-secret"
+                      className={`${input} mb-2 ${mode === 'recovery' ? 'font-mono' : ''}`}
+                      type={mode === 'recovery' ? 'text' : 'password'}
+                      value={secret}
+                      disabled={busy}
+                      autoComplete={mode === 'recovery' ? 'off' : 'current-password'}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      placeholder={mode === 'recovery' ? 'XXXX-XXXX-…' : 'passphrase'}
+                      onChange={(e) => setSecret(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && secret.length > 0 && !busy) submitSecret(); }}
+                    />
+                    <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || secret.length === 0} onClick={submitSecret}>
+                      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                      {context ? 'Approve & sign' : 'Unlock'}
+                    </button>
                   </>
                 )}
-                {context.networkId && (
-                  <p className="mt-2 pt-2 border-t border-white/10 text-[11px] text-muted-foreground">
-                    Network:
-                    {' '}
-                    {context.networkId}
+
+                {!blockApproval && canRecovery && canPassphrase && (
+                  <button
+                    type="button"
+                    className="mb-2 inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-white/80 transition-colors"
+                    onClick={() => { setMode(mode === 'recovery' ? 'passphrase' : 'recovery'); setSecret(''); setError(''); }}
+                  >
+                    <LifeBuoy className="h-3.5 w-3.5" />
+                    {mode === 'recovery' ? 'Use my passphrase instead' : 'Use my recovery code instead'}
+                  </button>
+                )}
+
+                {error && (
+                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button type="button" className={ghostBtn} disabled={busy} onClick={cancel}>Cancel</button>
+
+                {queue.length > 1 && (
+                  <p className="mt-3 text-center text-[11px] text-muted-foreground">
+                    {`${queue.length - 1} more request${queue.length > 2 ? 's' : ''} waiting`}
                   </p>
                 )}
-                {/* The exact bytes, always available — the summary is a convenience,
-                    this is the ground truth the signature covers. */}
-                {context.kind === 'transaction' && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-[11px] text-muted-foreground hover:text-white/80">
-                      Show raw transaction
-                    </summary>
-                    <p className="mt-1 text-[10px] font-mono break-all text-white/50">{context.payload}</p>
-                  </details>
-                )}
               </div>
-            )}
-
-            {/* ---------- User verification ---------- */}
-            {/* Suppressed entirely when approval is blocked (undecodable tx): the
-                only action then is Cancel. */}
-            {!blockApproval && canPasskey && (
-              <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(passkeyUnlockProvider())}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                Unlock with this device
-              </button>
-            )}
-
-            {!blockApproval && (canPassphrase || canRecovery) && (
-              <>
-                <label className="block text-xs text-muted-foreground mb-1" htmlFor="wallet-unlock-secret">
-                  {mode === 'recovery' ? 'Recovery code' : 'Passphrase'}
-                </label>
-                <input
-                  id="wallet-unlock-secret"
-                  className={`${input} mb-2 ${mode === 'recovery' ? 'font-mono' : ''}`}
-                  type={mode === 'recovery' ? 'text' : 'password'}
-                  value={secret}
-                  disabled={busy}
-                  autoComplete={mode === 'recovery' ? 'off' : 'current-password'}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder={mode === 'recovery' ? 'XXXX-XXXX-…' : 'passphrase'}
-                  onChange={(e) => setSecret(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && secret.length > 0 && !busy) submitSecret(); }}
-                />
-                <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || secret.length === 0} onClick={submitSecret}>
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                  {context ? 'Approve & sign' : 'Unlock'}
-                </button>
-              </>
-            )}
-
-            {!blockApproval && canRecovery && canPassphrase && (
-              <button
-                type="button"
-                className="mb-2 inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-white/80 transition-colors"
-                onClick={() => { setMode(mode === 'recovery' ? 'passphrase' : 'recovery'); setSecret(''); setError(''); }}
-              >
-                <LifeBuoy className="h-3.5 w-3.5" />
-                {mode === 'recovery' ? 'Use my passphrase instead' : 'Use my recovery code instead'}
-              </button>
-            )}
-
-            {error && (
-              <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button type="button" className={ghostBtn} disabled={busy} onClick={cancel}>Cancel</button>
-
-            {queue.length > 1 && (
-              <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                {`${queue.length - 1} more request${queue.length > 2 ? 's' : ''} waiting`}
-              </p>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
-
-  return typeof document === 'undefined' ? overlay : createPortal(overlay, document.body);
 };
 
 export default WalletSignPrompt;

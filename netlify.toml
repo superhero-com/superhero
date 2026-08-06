@@ -55,7 +55,7 @@ for = "/og-default.png"
 
 # Unhashed `public/` passthrough -- moderate TTL, never `immutable`. A 1-year
 # immutable response would strand a bad manifest/icon on this origin for a
-# year with no way to force a refresh (see adr-0001-pwa-installability.md).
+# year with no way to force a refresh (see the PWA installability decision).
 [[headers]]
 for = "/manifest.webmanifest"
   [headers.values]

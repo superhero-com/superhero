@@ -108,6 +108,17 @@ export const NavigatePostComment = () => {
   return <Navigate to={postDetailPath(id || slug || '')} replace />;
 };
 
+// Dev-only wallet lab. It clears and rewrites the real on-device vault store, so
+// it must never reach a shipped bundle. `import.meta.env.DEV` is statically `false`
+// under `vite build`, so this whole block — the WalletLab element and its
+// dynamically-imported chunk — is dead-code-eliminated from production `dist`,
+// while `npm run dev` keeps the diagnostic reachable at /wallet-lab.
+const devRoutes: RouteObject[] = [];
+if (import.meta.env.DEV) {
+  const WalletLab = lazy(() => import('./views/WalletLab'));
+  devRoutes.push({ path: '/wallet-lab', element: <WalletLab /> });
+}
+
 export const routes: RouteObject[] = [
   {
     path: '/',
@@ -275,6 +286,7 @@ export const routes: RouteObject[] = [
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },
+  ...devRoutes,
   {
     path: '*',
     element: <NotFound />,

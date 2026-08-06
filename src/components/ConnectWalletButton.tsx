@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { isStandalone } from '@/utils/displayMode';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
+
+// Inline PWA onboarding, lazy-loaded so its crypto stack (bip39/argon2/…) never
+// enters this button's chunk. It is only reached when `isStandalone()` — i.e.
+// the app is running as an installed PWA — so a plain browser tab never fetches
+// the onboarding chunk and keeps the existing external connect flow.
+const WalletOnboarding = React.lazy(() => import('@/features/wallet/components/WalletOnboarding'));
 
 type Props = {
   label?: string;
@@ -18,9 +25,15 @@ export const ConnectWalletButton = ({
   label, block, style, className, variant = 'default', muted = false,
 }: Props) => {
   const { t } = useTranslation('common');
-  const { activeAccount } = useAeSdk();
+  const { activeAccount, addStaticAccount } = useAeSdk();
   const { connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
+  const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
+
+  // In an installed PWA, route connect to the in-page onboarding instead of the
+  // external wallet. `isStandalone()` is the sole gate now, mirroring
+  // makeSigner: standalone → inline onboarding, plain browser tab → external flow.
+  const useInlineOnboarding = isStandalone();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
@@ -57,25 +70,44 @@ export const ConnectWalletButton = ({
   const buttonClasses = cn(resolvedBaseClasses, className);
 
   return (
-    <AeButton
-      type="button"
-      onClick={() => openModal({ name: 'connect-wallet' })}
-      disabled={connectingWallet}
-      loading={connectingWallet}
-      variant="ghost"
-      size={variant === 'dex' ? 'default' : 'default'}
-      fullWidth={block}
-      className={buttonClasses}
-      style={style}
-    >
-      <span className="hidden sm:inline-flex items-center gap-2">
-        <Favicon className="w-4 h-4" />
-        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-      </span>
-      <span className="sm:hidden">
-        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-      </span>
-    </AeButton>
+    <>
+      <AeButton
+        type="button"
+        onClick={() => (useInlineOnboarding
+          ? setShowInlineOnboarding(true)
+          : openModal({ name: 'connect-wallet' }))}
+        disabled={connectingWallet}
+        loading={connectingWallet}
+        variant="ghost"
+        size={variant === 'dex' ? 'default' : 'default'}
+        fullWidth={block}
+        className={buttonClasses}
+        style={style}
+      >
+        <span className="hidden sm:inline-flex items-center gap-2">
+          <Favicon className="w-4 h-4" />
+          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+        </span>
+        <span className="sm:hidden">
+          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+        </span>
+      </AeButton>
+      {showInlineOnboarding && (
+        <Suspense fallback={null}>
+          {/* Adopt the freshly-onboarded account: `addStaticAccount` sets it as
+              the active account AND installs the signer through `makeSigner`,
+              which — because onboarding has just written the address into the
+              cleartext manifest — resolves to the inline in-page signer. From
+              here on, signing happens in the PWA behind the per-signature
+              unlock + confirm prompt. */}
+          <WalletOnboarding onComplete={(_record, address) => {
+            setShowInlineOnboarding(false);
+            if (address) addStaticAccount(address);
+          }}
+          />
+        </Suspense>
+      )}
+    </>
   );
 };
 

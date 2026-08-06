@@ -362,6 +362,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [syncDone, refreshData]);
 
+  // Push relay-set edits (from the settings screen) into the running client so
+  // subsequent reads/writes use them without a session restart. No-op until the
+  // client exists; startup already seeds the client from the same atom.
+  useEffect(() => { clientRef.current?.updateRelays(relays); }, [relays]);
+
   // Teardown on unmount.
   useEffect(() => () => { clientRef.current?.destroy(); }, []);
 

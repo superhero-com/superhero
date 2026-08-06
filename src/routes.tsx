@@ -65,8 +65,9 @@ const PoolDetail = lazy(() => import('./features/dex/views/PoolDetail'));
 const AddTokens = lazy(() => import('./views/AddTokens'));
 const ProfileXCallback = lazy(() => import('./views/ProfileXCallback'));
 
-// Token-gated rooms (Communities)
-const Communities = lazy(() => import('./features/chat/views/CommunitiesView'));
+// Chat — inbox (All / Communities / DMs), DM threads, and token-gated rooms
+const ChatInbox = lazy(() => import('./features/chat/views/InboxView'));
+const DmThread = lazy(() => import('./features/chat/views/DmThreadView'));
 const ChatRoom = lazy(() => import('./features/chat/views/RoomView'));
 const ChatRoomInfo = lazy(() => import('./features/chat/views/RoomInfoView'));
 
@@ -170,8 +171,10 @@ export const routes: RouteObject[] = [
     element: <NavigateUserProfile />,
   },
   { path: '/profile/x/callback', element: <ProfileXCallback /> },
-  // Token-gated rooms (Communities)
-  { path: '/chat', element: <Communities /> },
+  // Chat — inbox, DM threads (2-segment `dm/` never collides with the 1-segment
+  // room `:saleAddress`), and token-gated rooms.
+  { path: '/chat', element: <ChatInbox /> },
+  { path: '/chat/dm/:address', element: <DmThread /> },
   { path: '/chat/:saleAddress', element: <ChatRoom /> },
   { path: '/chat/:saleAddress/info', element: <ChatRoomInfo /> },
   { path: '/landing', element: <Landing /> },

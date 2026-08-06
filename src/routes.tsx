@@ -70,6 +70,7 @@ const ChatInbox = lazy(() => import('./features/chat/views/InboxView'));
 const DmThread = lazy(() => import('./features/chat/views/DmThreadView'));
 const ChatRoom = lazy(() => import('./features/chat/views/RoomView'));
 const ChatRoomInfo = lazy(() => import('./features/chat/views/RoomInfoView'));
+const ChatRelaySettings = lazy(() => import('./features/chat/views/RelaySettingsView'));
 
 // Redirect helpers for legacy /trending/* paths
 const NavigateTrendingToken = () => {
@@ -174,6 +175,9 @@ export const routes: RouteObject[] = [
   // Chat — inbox, DM threads (2-segment `dm/` never collides with the 1-segment
   // room `:saleAddress`), and token-gated rooms.
   { path: '/chat', element: <ChatInbox /> },
+  // Two-segment literal `settings/relays` outranks and never collides with the
+  // 1-segment room `:saleAddress`.
+  { path: '/chat/settings/relays', element: <ChatRelaySettings /> },
   { path: '/chat/dm/:address', element: <DmThread /> },
   { path: '/chat/:saleAddress', element: <ChatRoom /> },
   { path: '/chat/:saleAddress/info', element: <ChatRoomInfo /> },

@@ -6,7 +6,9 @@
  */
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, MessageSquarePlus, UserRoundPen } from 'lucide-react';
+import {
+  Lock, MessageSquarePlus, Settings, UserRoundPen,
+} from 'lucide-react';
 
 import Spinner from '@/components/Spinner';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,16 @@ const InboxView = () => {
       <header className="mb-4 flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-foreground">Chat</h1>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            aria-label="Relay settings"
+          >
+            <Link to="/chat/settings/relays">
+              <Settings className="h-4 w-4" />
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

@@ -28,6 +28,7 @@ import { Head } from '../../../seo/Head';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import TokenChange from '../../../components/Trendminer/TokenChange';
 import TokenChat from '../../../components/Trendminer/TokenChat';
+import TokenCommunityChatButton from '../../chat/components/TokenCommunityChatButton';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import {
@@ -813,6 +814,11 @@ const TokenSaleDetails = () => {
                     token={token}
                   />
                   <TokenRanking token={token} />
+                  {/* Communities (Nostr) — beside the Matrix feed, not replacing it. */}
+                  <TokenCommunityChatButton
+                    saleAddress={token.sale_address}
+                    symbol={token.symbol}
+                  />
                   {/* Quali.chat CTA - old design cards */}
                   <TokenChat
                     token={{

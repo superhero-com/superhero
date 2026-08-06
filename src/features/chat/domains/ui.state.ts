@@ -8,11 +8,22 @@
  * in-memory atom seeded from `DEFAULT_RELAYS` (all `wss://`).
  */
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+import { safeLocalJSONStorage } from '@/utils/jotaiSafeLocalStorage';
 import type { ChatStatus, RelayDict } from '../core/types';
 import { DEFAULT_RELAYS } from '../core/constants';
 
-/** Active relay config (in-memory; defaults to the wss:// set). */
-export const relaysAtom = atom<RelayDict>({ ...DEFAULT_RELAYS });
+/**
+ * Active relay config. Persisted to localStorage so relay edits from the
+ * settings screen survive a reload — relays are not secret, so this is the
+ * localStorage lane (`safeLocalJSONStorage`), never the encrypted chat store
+ * that holds message history. Defaults to the wss:// set on first load.
+ */
+export const relaysAtom = atomWithStorage<RelayDict>(
+  'chat:relays',
+  { ...DEFAULT_RELAYS },
+  safeLocalJSONStorage,
+);
 
 /** Transport status. */
 export const chatStatusAtom = atom<ChatStatus>({

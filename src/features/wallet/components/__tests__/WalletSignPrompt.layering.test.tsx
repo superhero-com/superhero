@@ -9,8 +9,8 @@ import {
 } from 'vitest';
 
 /**
- * ZIX-725 — the sign prompt must stay usable while a `ModalProvider` sheet is
- * open behind it.
+ * The sign prompt must stay usable while a `ModalProvider` sheet is open
+ * behind it.
  *
  * A signature is requested FROM a modal (Send), and that modal is a Radix
  * `Dialog` with `modal` defaulting to true. Radix then does four things to
@@ -87,7 +87,7 @@ const request = (context?: Parameters<typeof requestUnlock>[1]) => {
   return pending;
 };
 
-describe('WalletSignPrompt over an open ModalProvider sheet (ZIX-725)', () => {
+describe('WalletSignPrompt over an open ModalProvider sheet', () => {
   beforeEach(() => {
     resetUnlockBroker();
     passphraseProvider.mockReset().mockResolvedValue({ factorId: 'f0', kek: KEK });

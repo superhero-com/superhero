@@ -134,6 +134,22 @@ describe('SendModal', () => {
     expect(mockLoadAccountData).toHaveBeenCalled();
   });
 
+  it('will not send the same transfer twice', async () => {
+    render(<SendModal onClose={() => {}} />);
+
+    typeRecipient(RECIPIENT);
+    typeAmount('1');
+    fireEvent.click(screen.getByTestId('send-submit'));
+
+    expect(await screen.findByText(/1 AE sent\./)).toBeInTheDocument();
+    // The recipient and amount are still filled in, so nothing but the state
+    // stops a second tap from broadcasting again.
+    const send = screen.getByTestId('send-submit');
+    expect(send).toBeDisabled();
+    fireEvent.click(send);
+    expect(mockSpend).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the wallet error and returns to an editable form', async () => {
     mockSpend.mockRejectedValue(new Error('Rejected by user'));
     render(<SendModal onClose={() => {}} />);

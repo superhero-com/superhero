@@ -141,8 +141,8 @@ const WalletSignPrompt = () => {
     // everything outside their own content: `pointer-events: none` on <body>,
     // a trapped focus scope, `aria-hidden` on siblings, and a scroll lock. A
     // prompt portalled to <body> as a mere sibling is subject to all four, and
-    // renders on top while being completely dead to taps, typing and scrolling
-    // (ZIX-725). Raising z-index does not help — the problem is layer identity,
+    // renders on top while being completely dead to taps, typing and
+    // scrolling. Raising z-index does not help — the problem is layer identity,
     // not paint order. Joining the same layer stack as the topmost member is
     // what makes this the surface that owns the pointer, the focus and the
     // scroll for as long as a signature is pending.

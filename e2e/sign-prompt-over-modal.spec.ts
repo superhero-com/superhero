@@ -3,7 +3,7 @@ import {
 } from '@playwright/test';
 
 /**
- * ZIX-725 — the sign prompt must be usable while the Send sheet is open behind it.
+ * The sign prompt must be usable while the Send sheet is open behind it.
  *
  * This drives the reported path end to end in a real browser: onboard a real
  * inline wallet, open the profile Send sheet, enter an address and an amount,

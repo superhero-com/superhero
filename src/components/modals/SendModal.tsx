@@ -109,11 +109,14 @@ const SendModal = ({
     return t('common.modals.send.invalidRecipient');
   })();
 
+  // `state !== 'idle'`, not just `'signing'`: once a spend has gone through, the
+  // form still holds a valid recipient and amount, and a second tap would
+  // broadcast the same transfer again. A sent sheet is a receipt, not a form.
   const disabled = !activeAccount
     || !recipientValid
     || !amountValid
     || insufficient
-    || state === 'signing';
+    || state !== 'idle';
 
   const handleSend = async () => {
     if (disabled) return;

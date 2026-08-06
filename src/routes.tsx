@@ -65,6 +65,11 @@ const PoolDetail = lazy(() => import('./features/dex/views/PoolDetail'));
 const AddTokens = lazy(() => import('./views/AddTokens'));
 const ProfileXCallback = lazy(() => import('./views/ProfileXCallback'));
 
+// Token-gated rooms (Communities)
+const Communities = lazy(() => import('./features/chat/views/CommunitiesView'));
+const ChatRoom = lazy(() => import('./features/chat/views/RoomView'));
+const ChatRoomInfo = lazy(() => import('./features/chat/views/RoomInfoView'));
+
 // Redirect helpers for legacy /trending/* paths
 const NavigateTrendingToken = () => {
   const { tokenName } = useParams();
@@ -165,6 +170,10 @@ export const routes: RouteObject[] = [
     element: <NavigateUserProfile />,
   },
   { path: '/profile/x/callback', element: <ProfileXCallback /> },
+  // Token-gated rooms (Communities)
+  { path: '/chat', element: <Communities /> },
+  { path: '/chat/:saleAddress', element: <ChatRoom /> },
+  { path: '/chat/:saleAddress/info', element: <ChatRoomInfo /> },
   { path: '/landing', element: <Landing /> },
   { path: '/wallet', element: <Wallet /> },
   { path: '/meet/:room?', element: <Conference /> },

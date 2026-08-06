@@ -6,18 +6,17 @@
  * small on/off/emit event surface. Verbose `console.*` diagnostics from the app
  * are removed for the web build's no-console rule; behaviour is unchanged.
  *
- * NOTE (custody, stage 3+): this class currently takes raw `UserKeys` and signs
- * with `keys.privateKey`, matching the app. In the web build the signing key
- * must flow through `NostrIdentityProvider` (see `../identity`) instead of a raw
- * key — the refactor to publish via the provider lands with the chat transport
- * in a later stage.
+ * Custody: the signing key flows through a revocable
+ * `NostrIdentityProvider` (see `../identity`), never a raw `UserKeys`. Publishing
+ * signs via `identity.signEvent`, so once the session is locked the provider
+ * rejects and this client can no longer sign — no retained private key.
  */
 import { SimplePool } from 'nostr-tools/pool';
-import { finalizeEvent, type EventTemplate, type VerifiedEvent } from 'nostr-tools/pure';
-import { hexToBytes } from '@noble/hashes/utils';
+import type { EventTemplate, VerifiedEvent } from 'nostr-tools/pure';
 import type {
-  NostrEvent, NostrFilter, UserKeys, RelayDict,
+  NostrEvent, NostrFilter, RelayDict,
 } from '../core/types';
+import type { NostrIdentityProvider } from '../identity/nostr-identity';
 
 export type NostrClientEvents = {
   event: (event: NostrEvent) => void;
@@ -74,7 +73,7 @@ function firstResolved<T>(promises: Promise<T>[]): Promise<T> {
 export class NostrClient {
   private pool: SimplePool;
 
-  private keys: UserKeys;
+  private identity: NostrIdentityProvider;
 
   private relays: RelayDict;
 
@@ -82,8 +81,8 @@ export class NostrClient {
 
   private eventHandlers: Map<keyof NostrClientEvents, Set<(...args: unknown[]) => void>>;
 
-  constructor(keys: UserKeys, relays: RelayDict) {
-    this.keys = keys;
+  constructor(identity: NostrIdentityProvider, relays: RelayDict) {
+    this.identity = identity;
     this.relays = relays;
     this.pool = new SimplePool();
     this.subscriptions = new Map();
@@ -114,11 +113,6 @@ export class NostrClient {
         // a throwing listener must not break fan-out to the others
       }
     });
-  }
-
-  /** Replace the signing/identity keys. */
-  updateKeys(keys: UserKeys): void {
-    this.keys = keys;
   }
 
   /** Replace the relay set. */
@@ -181,11 +175,11 @@ export class NostrClient {
     }
   }
 
-  /** Finalize (sign) and publish an event to the write relays. Returns its id. */
+  /** Sign (via the revocable identity) and publish an event. Returns its id. */
   async publishEvent(eventTemplate: EventTemplate): Promise<string> {
     const writeRelays = this.getWriteRelays();
-    const event = finalizeEvent(eventTemplate, hexToBytes(this.keys.privateKey));
-    await firstResolved(this.pool.publish(writeRelays, event as VerifiedEvent));
+    const event = await this.identity.signEvent(eventTemplate);
+    await firstResolved(this.pool.publish(writeRelays, event as unknown as VerifiedEvent));
     return event.id;
   }
 

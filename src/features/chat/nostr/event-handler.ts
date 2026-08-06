@@ -6,10 +6,10 @@
  * Verbose `console.*` diagnostics are removed for the web build's no-console
  * rule; the debounce, dedup and dispatch behaviour are unchanged.
  */
-import type { NostrEvent, UserKeys, Profile } from '../core/types';
+import type { NostrEvent, Profile } from '../core/types';
 import { NostrKind, Timing } from '../core/constants';
-import { decryptMessage } from './crypto';
 import { eventToProfile } from '../utils/converters';
+import type { NostrIdentityProvider } from '../identity/nostr-identity';
 
 export type EventHandlerCallbacks = {
   onDirectMessage: (event: NostrEvent, decrypted: string, otherPubkey: string) => void;
@@ -19,7 +19,7 @@ export type EventHandlerCallbacks = {
 };
 
 export class NostrEventHandler {
-  private keys: UserKeys;
+  private identity: NostrIdentityProvider;
 
   private callbacks: EventHandlerCallbacks;
 
@@ -33,14 +33,9 @@ export class NostrEventHandler {
 
   private seenEvents: Set<string> = new Set();
 
-  constructor(keys: UserKeys, callbacks: EventHandlerCallbacks) {
-    this.keys = keys;
+  constructor(identity: NostrIdentityProvider, callbacks: EventHandlerCallbacks) {
+    this.identity = identity;
     this.callbacks = callbacks;
-  }
-
-  /** Replace the identity keys used for DM decryption. */
-  updateKeys(keys: UserKeys): void {
-    this.keys = keys;
   }
 
   /** Queue an event for debounced processing, de-duplicated by event id. */
@@ -107,7 +102,8 @@ export class NostrEventHandler {
 
   /** Decrypt a kind-4 DM and dispatch. */
   private async handleDirectMessage(event: NostrEvent): Promise<void> {
-    const isFromMe = event.pubkey === this.keys.publicKey;
+    const myPubkey = await this.identity.getPublicKey();
+    const isFromMe = event.pubkey === myPubkey;
     const otherPubkey = isFromMe
       ? event.tags.find((t) => t[0] === 'p')?.[1]
       : event.pubkey;
@@ -116,7 +112,7 @@ export class NostrEventHandler {
       return;
     }
 
-    const decrypted = await decryptMessage(this.keys.privateKey, otherPubkey, event.content);
+    const decrypted = await this.identity.nip04Decrypt(otherPubkey, event.content);
     this.callbacks.onDirectMessage(event, decrypted, otherPubkey);
   }
 

@@ -59,13 +59,14 @@ export const StorageKeys = {
 /**
  * Default relay configuration.
  *
- * NOTE (stage 3+): the app ships a plaintext `ws://` relay. A PWA served over
- * `https://` cannot open an insecure `ws://` socket (mixed-content), so the web
- * relay set must be `wss://` before chat transport lands. Kept here as the
- * app-parity default only.
+ * The web relay set is `wss://`: a PWA served over `https://` cannot
+ * open a plaintext `ws://` socket — the browser blocks it as mixed content — so
+ * the app's `ws://` default is upgraded to TLS here before any transport lands.
+ * Relay URLs resolved at runtime (e.g. `getRoomConfig().relay_url`) are guarded
+ * by `ensureSecureRelayUrl` (see `../nostr/relay-url`).
  */
 export const DEFAULT_RELAYS = {
-  'ws://136.243.173.251:8080': { read: true, write: true },
+  'wss://136.243.173.251:8080': { read: true, write: true },
 } as const;
 
 /** Timing constants. */

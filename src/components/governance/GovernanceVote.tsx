@@ -4,6 +4,7 @@ import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { safeHref } from '@/utils/safeHref';
 import Spinner from '@/components/Spinner';
 import { AddressChip } from '../AddressChip';
 import AeButton from '../AeButton';
@@ -38,6 +39,11 @@ export default function GovernanceVote({
   const { data: results } = usePollResults(pollAddress);
 
   const [votingFor, setVotingFor] = useState<number | null>(null);
+
+  // `poll.pollState.metadata.link` is free-text supplied by whoever created the poll — no scheme
+  // validation happens on-chain, so a `javascript:`/`data:` payload must be rejected here before
+  // it can ever reach an `href`.
+  const proposalLink = safeHref(poll?.pollState.metadata.link);
 
   const handleVote = async (option: number) => {
     if (votingFor != null) return;
@@ -78,14 +84,14 @@ export default function GovernanceVote({
                 <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
                   {poll?.pollState.metadata.description || t('vote.defaultPollDescription')}
                 </p>
-                {poll?.pollState.metadata.link && (
+                {proposalLink && (
                   <a
-                    href={poll.pollState.metadata.link}
+                    href={proposalLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-block text-blue-400 hover:text-blue-300 hover:underline break-all"
                   >
-                    {poll.pollState.metadata.link}
+                    {proposalLink}
                   </a>
                 )}
                 {poll?.pollState.author && (

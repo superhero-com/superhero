@@ -52,3 +52,17 @@ for = "/assets/*"
 for = "/og-default.png"
   [headers.values]
     Cache-Control = "public, max-age=86400"
+
+# Unhashed `public/` passthrough -- moderate TTL, never `immutable`. A 1-year
+# immutable response would strand a bad manifest/icon on this origin for a
+# year with no way to force a refresh (see the PWA installability decision).
+[[headers]]
+for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

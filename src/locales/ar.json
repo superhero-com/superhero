@@ -739,7 +739,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "هوية لامركزية،",
           "titleLine2": "بمعيار W3C",
           "description": "معرّف لامركزي (DID) يربط حساباتك الاجتماعية بمحفظتك. هويتك قابلة للتحقّق وللنقل ومقاومة للرقابة — وفق معيار W3C للمعرّفات اللامركزية.",
@@ -747,7 +747,7 @@
           "point1": "متوافق مع معيار W3C DID",
           "point2": "يربط المحفظة وأسماء ‎.chain وحساب X",
           "point3": "سيادة ذاتية — أنت تتحكّم في بياناتك",
-          "imageAlt": "نموذج مرئي لـ Superhero ID"
+          "imageAlt": "نموذج مرئي لـ SuperheroID"
         },
         "mobile": {
           "eyebrow": "تطبيق الجوال",

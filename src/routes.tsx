@@ -1,6 +1,7 @@
 import React, { lazy } from 'react';
 import { RouteObject, Navigate, useParams } from 'react-router-dom';
 import SocialLayout from './components/layout/SocialLayout';
+import { postDetailPath } from './features/notifications/notificationNavigation';
 
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const NotFound = lazy(() => import('./views/NotFound'));
@@ -95,6 +96,29 @@ const NavigateUserProfile = () => {
   return <Navigate to={`/users/${encodeURIComponent(address || '')}`} replace />;
 };
 
+// Legacy /post/:slug/comment/:id — emitted by older post-comment notifications.
+// A comment is itself a post, so the canonical way to focus one is /post/:id
+// (PostDetail renders the ancestor chain above it). Without this the nested path
+// rendered PostDetail on the *parent* slug and the comment was never focused.
+export const NavigatePostComment = () => {
+  const { slug, id } = useParams();
+  // The comment is the target; the parent slug is only a fallback for a link that
+  // arrived without one. `postDetailPath` is shared with the in-app bell so the
+  // `_v3` rule cannot drift between the two.
+  return <Navigate to={postDetailPath(id || slug || '')} replace />;
+};
+
+// Dev-only wallet lab. It clears and rewrites the real on-device vault store, so
+// it must never reach a shipped bundle. `import.meta.env.DEV` is statically `false`
+// under `vite build`, so this whole block — the WalletLab element and its
+// dynamically-imported chunk — is dead-code-eliminated from production `dist`,
+// while `npm run dev` keeps the diagnostic reachable at /wallet-lab.
+const devRoutes: RouteObject[] = [];
+if (import.meta.env.DEV) {
+  const WalletLab = lazy(() => import('./views/WalletLab'));
+  devRoutes.push({ path: '/wallet-lab', element: <WalletLab /> });
+}
+
 export const routes: RouteObject[] = [
   {
     path: '/',
@@ -103,10 +127,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <FeedList standalone={false} /> },
       // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
       { path: 'post/:slug', element: <PostDetail standalone={false} /> },
-      {
-        path: 'post/:slug/comment/:id',
-        element: <PostDetail standalone={false} />,
-      },
+      { path: 'post/:slug/comment/:id', element: <NavigatePostComment /> },
       { path: 'users/:address', element: <UserProfile standalone={false} /> },
     ],
   },
@@ -265,6 +286,7 @@ export const routes: RouteObject[] = [
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
   { path: '/whitepaper', element: <Whitepaper /> },
+  ...devRoutes,
   {
     path: '*',
     element: <NotFound />,

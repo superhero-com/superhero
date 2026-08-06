@@ -739,7 +739,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "Dezentrale Identität,",
           "titleLine2": "W3C-Standard",
           "description": "Eine dezentrale DID, die Ihre sozialen Konten mit Ihrer Wallet verknüpft. Ihre Identität ist überprüfbar, portabel und zensurresistent – nach dem W3C-Standard für dezentrale Identifikatoren.",
@@ -747,7 +747,7 @@
           "point1": "Konform mit dem W3C-DID-Standard",
           "point2": "Verknüpft Wallet, Chain-Namen und X-Handle",
           "point3": "Selbstbestimmt – Sie kontrollieren Ihre Daten",
-          "imageAlt": "Visuelles Mockup der Superhero ID"
+          "imageAlt": "Visuelles Mockup der SuperheroID"
         },
         "mobile": {
           "eyebrow": "Mobile App",
@@ -1101,7 +1101,7 @@
       "dao": "DAO",
       "earnRewards": "Prämien verdienen",
       "getAe": "AE erhalten",
-      "superheroId": "Superhero ID",
+      "superheroId": "SuperheroID",
       "account": "Konto"
     },
     "transactionNotification": {

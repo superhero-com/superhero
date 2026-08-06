@@ -99,6 +99,8 @@ Defined in `package.json`:
 - `test:e2e:update-snapshots` — update screenshot baselines in Docker (writes to `e2e/` on the host)
 - `test:e2e:host` — run e2e tests on the host (starts dev server if needed)
 - `test:e2e:host:update-snapshots` — update screenshot baselines on the host (visual regression)
+- `generate:pwa-icons` — regenerate `public/icons/*.png` from the shared native-app icon master (on demand only, not part of `build`; see the script's header comment for details)
+- `verify:pwa-assets` — CI/pre-deploy gate: verifies the manifest + icons are served with the correct `Content-Type` from a running origin, e.g. `npm run verify:pwa-assets -- http://localhost:5174`
 
 ## End-to-end tests
 

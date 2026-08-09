@@ -1,14 +1,14 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { cn } from '../../../../lib/utils';
-import { useXPostingReward } from '../../../../hooks/useXPostingReward';
-import { useAeSdk } from '../../../../hooks/useAeSdk';
-import { openXComposeIntent } from '../../../../utils/openXLink';
 import {
   Gift, CheckCircle2, Check, AlertTriangle, Lock, Loader2,
   ArrowRight, Target, PartyPopper, RefreshCw, Clock, UserCheck, Send,
 } from 'lucide-react';
+import { cn } from '../../../../lib/utils';
+import { useXPostingReward } from '../../../../hooks/useXPostingReward';
+import { useAeSdk } from '../../../../hooks/useAeSdk';
+import { openXComposeIntent } from '../../../../utils/openXLink';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 import CelebrationIcon from '../../../../svg/iconCelebration.svg?react';
@@ -391,8 +391,8 @@ const RewardsProgram = () => {
                   )}
                 >
                   {postStatus === 'completed'
-                  ? <CheckCircle2 className="w-4 h-4" />
-                  : <Gift className="w-4 h-4" />}
+                    ? <CheckCircle2 className="w-4 h-4" />
+                    : <Gift className="w-4 h-4" />}
                   {t('rewardsProgram.milestone2.streakBadge')}
                 </span>
               </div>

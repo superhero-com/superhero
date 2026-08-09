@@ -18,6 +18,7 @@
  * See superhero-api/docs/notifications-web-feed.md for the protocol.
  */
 import { io as realIo, type Socket } from 'socket.io-client';
+import { trustedScriptUrl } from '@/utils/trustedTypes';
 import { ClientLifecycle } from './client-lifecycle';
 import { RecoveryLadder } from './recovery-ladder';
 import { SingleFlight } from './single-flight';
@@ -759,7 +760,9 @@ export class NotificationFeedClient {
     // useNotifications discards results from a client it no longer holds.
     if (this.stopped) throw new Error('notifications client stopped before push subscribe');
 
-    const reg = await navigator.serviceWorker.register('/notifications-sw.js', {
+    // `register` is a TrustedScriptURL sink: under the enforcing CSP a bare string here throws
+    // rather than registering, which would kill push for every user who granted permission.
+    const reg = await navigator.serviceWorker.register(trustedScriptUrl('/notifications-sw.js'), {
       scope: '/',
     });
     await navigator.serviceWorker.ready;

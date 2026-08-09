@@ -33,7 +33,9 @@
       "save": "Enregistrer",
       "getChainName": "+ Obtenir un nom .chain",
       "claimChainName": "Réclamer",
-      "linkAccount": "Lier le compte"
+      "linkAccount": "Lier le compte",
+      "send": "Envoyer",
+      "receive": "Recevoir"
     },
     "labels": {
       "superheroHome": "Accueil Superhero",
@@ -1002,6 +1004,29 @@
         "tagline": "Échangez des hashtags tokenisés et des tendances sociales — le marché de l'attention du web3.",
         "getStarted": "Commencer",
         "continueAsGuest": "Continuer en tant qu'invité"
+      },
+      "send": {
+        "title": "Envoyer des AE",
+        "subtitle": "Transférer des AE depuis votre portefeuille",
+        "recipient": "Destinataire",
+        "recipientPlaceholder": "ak_… ou nom.chain",
+        "resolvingName": "Recherche du nom…",
+        "nameNotFound": "Ce nom .chain ne pointe vers aucun compte.",
+        "invalidRecipient": "Saisissez une adresse ak_ ou un nom .chain valide.",
+        "sendingToSelf": "C’est votre propre adresse — vous ne paieriez que les frais.",
+        "amountAe": "Montant (AE)",
+        "max": "Max",
+        "confirmInWallet": "Confirmez dans le portefeuille…",
+        "sentSuccessfully": "{{amount}} AE envoyés.",
+        "failedToSend": "Échec de l’envoi des AE."
+      },
+      "receive": {
+        "title": "Recevoir des AE",
+        "subtitle": "Scannez ou copiez votre adresse",
+        "qrAlt": "QR code de votre adresse de portefeuille",
+        "copyAddress": "Copier l’adresse",
+        "share": "Partager",
+        "networkWarning": "Seuls les actifs æternity (AE) peuvent être envoyés à cette adresse. Tout envoi depuis une autre chaîne est perdu."
       }
     },
     "wallet": {

@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import {
+  describe, it, expect, vi,
+} from 'vitest';
 
 import { NostrKeySession } from '../identity/nostr-session';
 import {
@@ -68,5 +70,54 @@ describe('revocable nostr identity', () => {
     // Re-unlocking the same session revives the SAME provider handle.
     session.unlock(generateKeys());
     await expect(identity.getPublicKey()).resolves.toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('fires onActivity on message ops (sign / encrypt / decrypt) but not on getPublicKey', async () => {
+    const session = new NostrKeySession();
+    session.unlock(generateKeys());
+    const onActivity = vi.fn();
+    const identity = createRevocableNostrIdentity(() => session.identity(), { onActivity });
+
+    await identity.getPublicKey();
+    expect(onActivity).not.toHaveBeenCalled();
+
+    await identity.signEvent({
+      kind: 1, created_at: 0, tags: [], content: 'x',
+    });
+    expect(onActivity).toHaveBeenCalledTimes(1);
+
+    const otherPubkey = generateKeys().publicKey;
+    const ciphertext = await identity.nip04Encrypt(otherPubkey, 'hi');
+    expect(onActivity).toHaveBeenCalledTimes(2);
+
+    await identity.nip04Decrypt(otherPubkey, ciphertext);
+    expect(onActivity).toHaveBeenCalledTimes(3);
+  });
+
+  it('activity through the identity re-arms the session idle timer (an active chat stays unlocked)', async () => {
+    vi.useFakeTimers();
+    try {
+      const session = new NostrKeySession({ idleTimeoutMs: 1000 });
+      const identity = createRevocableNostrIdentity(
+        () => session.identity(),
+        { onActivity: () => session.touch() },
+      );
+      session.unlock(generateKeys());
+
+      vi.advanceTimersByTime(800);
+      // A message signed 800ms in is chat activity — it must reset the idle window,
+      // exactly what the never-reset-timer defect broke.
+      await identity.signEvent({
+        kind: 1, created_at: 0, tags: [], content: 'active',
+      });
+
+      vi.advanceTimersByTime(800); // 1600ms since unlock, only 800ms since activity
+      expect(session.isUnlocked).toBe(true);
+
+      vi.advanceTimersByTime(200); // 1000ms since activity — now it idles out
+      expect(session.isUnlocked).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

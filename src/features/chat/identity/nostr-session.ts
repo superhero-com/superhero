@@ -6,7 +6,9 @@
  * mnemonic, no AE spending key, no DEK. The key is cached in memory ONLY (never
  * localStorage / sessionStorage / IndexedDB) and is cleared on:
  *   - explicit `lock()` (user locks, or the app tears the session down);
- *   - tab / context teardown (`bindNostrSessionTeardown` → `pagehide`);
+ *   - real tab / context teardown (`bindNostrSessionTeardown` → `pagehide` with
+ *     `persisted === false`; a bfcache stash is a suspend, not a teardown, and
+ *     the key survives the restore);
  *   - `idleTimeoutMs` with no `touch()` — default 30 minutes. The Security
  *     Reviewer may TIGHTEN this, not loosen it.
  *
@@ -97,23 +99,36 @@ export class NostrKeySession {
   }
 }
 
+/** The minimal `pagehide` event shape `bindNostrSessionTeardown` reads. */
+export interface PageHideLike {
+  /** True when the page is being stashed into the bfcache and will be restored. */
+  readonly persisted: boolean;
+}
+
 /** The minimal event-target surface `bindNostrSessionTeardown` needs. */
 export interface PageLifecycleTarget {
-  addEventListener(type: string, listener: () => void): void;
-  removeEventListener(type: string, listener: () => void): void;
+  addEventListener(type: string, listener: (event: PageHideLike) => void): void;
+  removeEventListener(type: string, listener: (event: PageHideLike) => void): void;
 }
 
 /**
- * Clear the session on tab/context teardown. Adds a `pagehide` listener (fires
- * on tab close, navigation, and bfcache stash) and returns an unbind function.
- * Belt-and-suspenders over the fact that memory is dropped on real teardown
- * anyway — this makes the clear explicit and observable.
+ * Clear the session on real tab/context teardown, but NOT on a bfcache stash.
+ * `pagehide` fires both on genuine teardown (tab close, navigation away) and on
+ * a bfcache suspend — backgrounding a mobile PWA, the lock screen, a back/forward
+ * navigation — after which the same page is restored from cache with no reload
+ * and its in-memory session intact. Disposing on a stash would drop the key on
+ * every such suspend and force a re-unlock on resume; `event.persisted` is how
+ * the two are told apart (true = stash-and-restore, keep the key; false = real
+ * teardown, drop it). Returns an unbind function.
  */
 export function bindNostrSessionTeardown(
   session: NostrKeySession,
   target: PageLifecycleTarget = window,
 ): () => void {
-  const onPageHide = () => session.dispose();
+  const onPageHide = (event: PageHideLike) => {
+    if (event.persisted) return;
+    session.dispose();
+  };
   target.addEventListener('pagehide', onPageHide);
   return () => target.removeEventListener('pagehide', onPageHide);
 }

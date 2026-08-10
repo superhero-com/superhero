@@ -294,7 +294,10 @@ function buildFrameSrc() {
 function buildCsp(nonce) {
   return [
     "default-src 'none'",
-    `script-src 'strict-dynamic' 'nonce-${nonce}'`,
+    // 'wasm-unsafe-eval' lets the wallet KDF instantiate its Argon2id WASM (hash-wasm).
+    // It is a keyword source, so 'strict-dynamic' does NOT drop it; it does NOT re-enable
+    // 'unsafe-eval' / arbitrary JS eval, so the ZIX-319 hardening stands. See ZIX-1408.
+    `script-src 'strict-dynamic' 'nonce-${nonce}' 'wasm-unsafe-eval'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https: data: blob:",
     "media-src 'self' https: data: blob:",

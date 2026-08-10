@@ -103,8 +103,13 @@ test.describe('enforcing CSP + Trusted Types', () => {
       // the nonce entirely.
       const scriptSrc = csp.split(';').find((d) => d.trim().startsWith('script-src')) ?? '';
       expect(scriptSrc, `no script-src at ${route}`).toBeTruthy();
-      expect(scriptSrc).not.toContain('unsafe-inline');
-      expect(scriptSrc).not.toContain('unsafe-eval');
+      // Token-exact, not substring: 'wasm-unsafe-eval' is deliberate (ZIX-1408 — the wallet KDF
+      // instantiates its Argon2id WASM) and it does NOT re-enable arbitrary JS eval. The bare
+      // 'unsafe-eval' and 'unsafe-inline' escape hatches must still be absent.
+      const scriptSrcTokens = scriptSrc.trim().split(/\s+/);
+      expect(scriptSrcTokens).not.toContain("'unsafe-inline'");
+      expect(scriptSrcTokens).not.toContain("'unsafe-eval'");
+      expect(scriptSrcTokens).toContain("'wasm-unsafe-eval'");
 
       // The nonce must actually reach the document: an unsubstituted `__CSP_NONCE__` means the
       // response skipped the render path, and every inline script would be blocked (or, as in

@@ -32,6 +32,18 @@ export class NostrIdentityLockedError extends Error {
  */
 export type NostrIdentitySource = () => NostrIdentityProvider | null;
 
+export interface RevocableNostrIdentityOptions {
+  /**
+   * Fired after each successful message operation (`signEvent` / `nip04Encrypt`
+   * / `nip04Decrypt`) — the "chat activity" signal ADR-0004 condition 3 watches.
+   * Every DM and room transport signs and (de)crypts through this one provider,
+   * so a single hook here re-arms the session idle timer on any real chat use,
+   * across DMs and communities alike. `getPublicKey` is a passive read of public
+   * material (used by NIP-42 AUTH handshakes) and deliberately does NOT count.
+   */
+  onActivity?: () => void;
+}
+
 /**
  * Wrap a late-resolving {@link NostrIdentitySource} as a `NostrIdentityProvider`.
  * The returned provider is safe to hand to a service that outlives a lock: after
@@ -39,6 +51,7 @@ export type NostrIdentitySource = () => NostrIdentityProvider | null;
  */
 export function createRevocableNostrIdentity(
   source: NostrIdentitySource,
+  { onActivity }: RevocableNostrIdentityOptions = {},
 ): NostrIdentityProvider {
   const resolve = (): NostrIdentityProvider => {
     const identity = source();
@@ -50,13 +63,19 @@ export function createRevocableNostrIdentity(
       return resolve().getPublicKey();
     },
     async signEvent(template: EventTemplate): Promise<NostrEvent> {
-      return resolve().signEvent(template);
+      const event = await resolve().signEvent(template);
+      onActivity?.();
+      return event;
     },
     async nip04Encrypt(recipientPubkey: string, plaintext: string): Promise<string> {
-      return resolve().nip04Encrypt(recipientPubkey, plaintext);
+      const ciphertext = await resolve().nip04Encrypt(recipientPubkey, plaintext);
+      onActivity?.();
+      return ciphertext;
     },
     async nip04Decrypt(senderPubkey: string, ciphertext: string): Promise<string> {
-      return resolve().nip04Decrypt(senderPubkey, ciphertext);
+      const plaintext = await resolve().nip04Decrypt(senderPubkey, ciphertext);
+      onActivity?.();
+      return plaintext;
     },
   };
 }

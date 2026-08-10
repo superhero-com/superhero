@@ -90,14 +90,25 @@ describe('NostrKeySession — memory-only custody cache', () => {
     expect(session.isUnlocked).toBe(false);
   });
 
+  // A fake page-lifecycle target that captures the bound listener so a test can
+  // fire it with a chosen `persisted` value.
+  const fakeLifecycleTarget = () => {
+    const listeners: Record<string, (event: PageHideLike) => void> = {};
+    return {
+      listeners,
+      target: {
+        addEventListener: (type: string, cb: (event: PageHideLike) => void) => {
+          listeners[type] = cb;
+        },
+        removeEventListener: (type: string) => { delete listeners[type]; },
+      },
+    };
+  };
+
   it('bindNostrSessionTeardown clears on a real pagehide and unbinds cleanly', () => {
     const session = new NostrKeySession();
     session.unlock(KEYS);
-    const listeners: Record<string, (event: PageHideLike) => void> = {};
-    const target = {
-      addEventListener: (type: string, cb: (event: PageHideLike) => void) => { listeners[type] = cb; },
-      removeEventListener: (type: string) => { delete listeners[type]; },
-    };
+    const { listeners, target } = fakeLifecycleTarget();
     const unbind = bindNostrSessionTeardown(session, target);
     listeners.pagehide({ persisted: false });
     expect(session.isUnlocked).toBe(false);
@@ -108,11 +119,7 @@ describe('NostrKeySession — memory-only custody cache', () => {
   it('keeps the key on a bfcache stash (pagehide persisted) so the restored page stays unlocked', () => {
     const session = new NostrKeySession();
     session.unlock(KEYS);
-    const listeners: Record<string, (event: PageHideLike) => void> = {};
-    const target = {
-      addEventListener: (type: string, cb: (event: PageHideLike) => void) => { listeners[type] = cb; },
-      removeEventListener: (type: string) => { delete listeners[type]; },
-    };
+    const { listeners, target } = fakeLifecycleTarget();
     bindNostrSessionTeardown(session, target);
     // Backgrounding a mobile PWA / lock screen / back-forward nav — the page is
     // stashed and will be restored from bfcache with no reload.

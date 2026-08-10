@@ -1,7 +1,12 @@
 import {
   describe, expect, it, vi, beforeEach, afterEach,
 } from 'vitest';
-import { NostrKeySession, bindNostrSessionTeardown, DEFAULT_NOSTR_IDLE_TIMEOUT_MS } from '../identity/nostr-session';
+import {
+  NostrKeySession,
+  bindNostrSessionTeardown,
+  DEFAULT_NOSTR_IDLE_TIMEOUT_MS,
+  type PageHideLike,
+} from '../identity/nostr-session';
 import type { UserKeys } from '../core/types';
 
 const KEYS: UserKeys = {
@@ -85,18 +90,34 @@ describe('NostrKeySession — memory-only custody cache', () => {
     expect(session.isUnlocked).toBe(false);
   });
 
-  it('bindNostrSessionTeardown clears on pagehide and unbinds cleanly', () => {
+  it('bindNostrSessionTeardown clears on a real pagehide and unbinds cleanly', () => {
     const session = new NostrKeySession();
     session.unlock(KEYS);
-    const listeners: Record<string, () => void> = {};
+    const listeners: Record<string, (event: PageHideLike) => void> = {};
     const target = {
-      addEventListener: (type: string, cb: () => void) => { listeners[type] = cb; },
+      addEventListener: (type: string, cb: (event: PageHideLike) => void) => { listeners[type] = cb; },
       removeEventListener: (type: string) => { delete listeners[type]; },
     };
     const unbind = bindNostrSessionTeardown(session, target);
-    listeners.pagehide();
+    listeners.pagehide({ persisted: false });
     expect(session.isUnlocked).toBe(false);
     unbind();
     expect(listeners.pagehide).toBeUndefined();
+  });
+
+  it('keeps the key on a bfcache stash (pagehide persisted) so the restored page stays unlocked', () => {
+    const session = new NostrKeySession();
+    session.unlock(KEYS);
+    const listeners: Record<string, (event: PageHideLike) => void> = {};
+    const target = {
+      addEventListener: (type: string, cb: (event: PageHideLike) => void) => { listeners[type] = cb; },
+      removeEventListener: (type: string) => { delete listeners[type]; },
+    };
+    bindNostrSessionTeardown(session, target);
+    // Backgrounding a mobile PWA / lock screen / back-forward nav — the page is
+    // stashed and will be restored from bfcache with no reload.
+    listeners.pagehide({ persisted: true });
+    expect(session.isUnlocked).toBe(true);
+    expect(session.keys).toEqual(KEYS);
   });
 });

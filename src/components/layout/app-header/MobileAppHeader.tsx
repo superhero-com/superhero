@@ -4,8 +4,9 @@ import {
 } from '@/components/ui/ae-dropdown-menu';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { formatNumber } from '@/utils/number';
+import { TRENDING_ENABLED } from '@/config';
 import { useQuery } from '@tanstack/react-query';
-import { LogOut, User } from 'lucide-react';
+import { Gift, LogOut, User } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -135,6 +136,16 @@ const MobileAppHeader = () => {
               <HeaderLogo className="h-7 w-auto" />
             </Link>
             <div className="flex-grow" />
+            {TRENDING_ENABLED && (
+              <Link
+                to="/trends/invite"
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--standard-font-color)] transition-colors duration-200 hover:bg-white/10 no-underline hover:no-underline"
+                style={{ textDecoration: 'none' }}
+                aria-label={t('nav.earnRewards')}
+              >
+                <Gift className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            )}
             <NotificationBell />
             {activeAccount ? (
               <DropdownMenu>

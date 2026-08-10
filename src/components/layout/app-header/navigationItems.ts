@@ -1,6 +1,6 @@
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark,
+  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -46,6 +46,13 @@ const REFER_EARN_ITEM: NavigationItem = {
   icon: Gift,
 };
 
+const CHAT_ITEM: NavigationItem = {
+  id: 'chat',
+  labelKey: 'nav.chat',
+  path: '/chat',
+  icon: MessageCircle,
+};
+
 const GET_AE_ITEM: NavigationItem = {
   id: 'get-ae',
   labelKey: 'nav.getAe',
@@ -80,7 +87,7 @@ export const getMobileFooterNavigationItems = (
 ): NavigationItem[] => [
   HOME_ITEM,
   ...(TRENDING_ENABLED ? [EXPLORE_ITEM] : []),
-  ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
+  CHAT_ITEM,
   {
     id: 'account',
     labelKey: 'nav.superheroId',

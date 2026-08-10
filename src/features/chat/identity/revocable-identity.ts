@@ -34,12 +34,17 @@ export type NostrIdentitySource = () => NostrIdentityProvider | null;
 
 export interface RevocableNostrIdentityOptions {
   /**
-   * Fired after each successful message operation (`signEvent` / `nip04Encrypt`
-   * / `nip04Decrypt`) — the "chat activity" signal ADR-0004 condition 3 watches.
-   * Every DM and room transport signs and (de)crypts through this one provider,
-   * so a single hook here re-arms the session idle timer on any real chat use,
-   * across DMs and communities alike. `getPublicKey` is a passive read of public
-   * material (used by NIP-42 AUTH handshakes) and deliberately does NOT count.
+   * Fired after each successful LOCALLY-INITIATED message operation — `signEvent`
+   * (posting / sending) and `nip04Encrypt` (composing an outgoing DM) — the "chat
+   * activity" signal ADR-0004 condition 3 watches. Every DM and room transport
+   * signs and encrypts through this one provider, so a single hook here re-arms
+   * the session idle timer on real chat use across DMs and communities alike.
+   *
+   * `getPublicKey` (a passive read of public material, used by NIP-42 AUTH) and
+   * `nip04Decrypt` deliberately do NOT count: inbound decryption is driven by
+   * relay delivery, not local user action, so counting it would let a remote
+   * sender keep the key resident indefinitely by trickling in DMs — turning the
+   * idle window into a remote-input-controlled one (SR change request, ZIX-1414).
    */
   onActivity?: () => void;
 }
@@ -73,9 +78,8 @@ export function createRevocableNostrIdentity(
       return ciphertext;
     },
     async nip04Decrypt(senderPubkey: string, ciphertext: string): Promise<string> {
-      const plaintext = await resolve().nip04Decrypt(senderPubkey, ciphertext);
-      onActivity?.();
-      return plaintext;
+      // No onActivity: inbound decryption is relay-driven, not local user action.
+      return resolve().nip04Decrypt(senderPubkey, ciphertext);
     },
   };
 }

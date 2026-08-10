@@ -3041,5 +3041,58 @@
       "disconnect": "Disconnect",
       "connectEthereumWallet": "Connect Ethereum Wallet"
     }
+  },
+  "components": {
+    "pwaInstallGuide": {
+      "title": "Install Superhero",
+      "subtitleIos": "Follow these steps in Safari",
+      "subtitleAndroid": "Follow these steps in Chrome",
+      "installedTitle": "Already installed",
+      "alreadyInstalled": "Superhero is already running as an installed app.",
+      "desktopHint": "On desktop, use the install button in your browser's address bar.",
+      "triggerLocation": "Install the app to enable location sharing — iOS Safari requires standalone mode.",
+      "triggerChat": "Install the app for the full chat experience, including offline support.",
+      "back": "Back",
+      "next": "Next →",
+      "done": "Done!",
+      "fabLabel": "Install App",
+      "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
+      "ios": {
+        "step1": {
+          "title": "Tap the Share button",
+          "description": "Find the Share icon at the bottom of Safari — the box with an arrow pointing up."
+        },
+        "step2": {
+          "title": "Add to Home Screen",
+          "description": "Scroll down in the share sheet and tap \"Add to Home Screen\"."
+        },
+        "step3": {
+          "title": "Tap Add",
+          "description": "Confirm by tapping \"Add\" in the top right — the icon appears on your home screen."
+        },
+        "step4": {
+          "title": "Open from home screen",
+          "description": "Launch from your home screen icon — location sharing and offline mode now work."
+        }
+      },
+      "android": {
+        "step1": {
+          "title": "Open browser menu",
+          "description": "Tap the three-dot menu (⋮) in the top right of Chrome."
+        },
+        "step2": {
+          "title": "Add to Home screen",
+          "description": "Tap \"Add to Home screen\" or \"Install app\" from the menu."
+        },
+        "step3": {
+          "title": "Confirm install",
+          "description": "Tap \"Install\" on the prompt that appears."
+        },
+        "step4": {
+          "title": "Open from home screen",
+          "description": "Launch from your home screen — location and offline mode work perfectly."
+        }
+      }
+    }
   }
 }

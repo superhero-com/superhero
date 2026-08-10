@@ -23,6 +23,8 @@ import {
 } from './atoms/profileEditModalAtom';
 import ProfileEditModal from './components/modals/ProfileEditModal';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
+import { usePwaInstall } from './hooks/usePwaInstall';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -57,6 +59,8 @@ const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
+  const { canPrompt, promptInstall, isIOS } = usePwaInstall();
+  const [installGuideOpen, setInstallGuideOpen] = React.useState(false);
   const { loadAccountData } = useAccount();
   const {
     attemptReconnection,
@@ -211,6 +215,18 @@ const App = () => {
           {!isMobile && <FeedbackButton />}
           {/* PWA install prompt - floating bottom-right, above bottom nav */}
           <PwaInstallPrompt />
+          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable */}
+          {isMobile && (isIOS || !canPrompt) && (
+            <PwaInstallFab
+              canNativePrompt={canPrompt}
+              onNativePrompt={promptInstall}
+              onOpenGuide={() => setInstallGuideOpen(true)}
+            />
+          )}
+          <PwaInstallGuide
+            open={installGuideOpen}
+            onOpenChange={setInstallGuideOpen}
+          />
         </div>
       </ChatProvider>
     </NotificationsProvider>

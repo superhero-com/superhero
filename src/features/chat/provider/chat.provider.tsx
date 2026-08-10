@@ -370,6 +370,17 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   // Teardown on unmount.
   useEffect(() => () => { clientRef.current?.destroy(); }, []);
 
+  // Register the chat offline service worker (scoped to /chat only —
+  // never interferes with the notifications SW or the inline wallet).
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker
+      .register('/chat-offline-sw.js', { scope: '/chat' })
+      .catch(() => {
+        // Non-fatal: offline caching won't work, but the app still functions.
+      });
+  }, []);
+
   const value = useMemo<ChatContextValue>(() => ({
     isConnected: status.isConnected,
     isInitializing: status.isInitializing,

@@ -12,6 +12,7 @@ import {
 import {
   hasFactor, passkeyUnlockProvider, passphraseUnlockProvider, recoveryUnlockProvider,
 } from '../wallet-lifecycle';
+import { prewarmArgon2Engine } from '../argon2-engine';
 import { summarizeTransaction, type TxSummary } from '../tx-summary';
 import type { UnlockProvider } from '../inline-signer';
 
@@ -129,6 +130,14 @@ const WalletSignPrompt = () => {
     setError('');
     setBusy(false);
     setMode(active && hasFactor(active.record, 'passphrase') ? 'passphrase' : 'recovery');
+    // Warm the Argon2id WASM module (fetch/compile/instantiate) off the unlock
+    // path while the user reads the summary and types — so the first passphrase
+    // unlock pays steady-state cost, not cold start. Fire-and-forget: it swallows
+    // failure and reports it, and unlock falls back to pure-JS regardless.
+    if (active && hasFactor(active.record, 'passphrase')) {
+      // Never rejects — it catches and reports internally — so no handler is needed.
+      prewarmArgon2Engine();
+    }
   }, [active]);
 
   const dequeue = useCallback(() => {

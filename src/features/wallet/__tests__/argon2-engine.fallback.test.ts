@@ -47,6 +47,55 @@ describe('Argon2id engine: pure-JS fallback when WASM is unavailable (AC2)', () 
     await expect(prewarmArgon2Engine()).resolves.toBe(false);
   });
 
+  it('argon2idRawWithEngine names the engine as noble on fallback (return variant is observable)', async () => {
+    const { argon2idRawWithEngine } = await import('../argon2-engine');
+    const { bytes, engine } = await argon2idRawWithEngine(utf8('pw'), fill(16, 0x07), {
+      m: 512, t: 2, p: 1, dkLen: 32,
+    });
+    expect(engine).toBe('noble');
+    expect(bytes).toHaveLength(32);
+  });
+
+  it('a registered observer is notified on fallback — with no secret material', async () => {
+    const { argon2idRaw, setArgon2FallbackObserver } = await import('../argon2-engine');
+    const events: unknown[] = [];
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    setArgon2FallbackObserver((e) => events.push(e));
+    try {
+      const password = utf8('super secret passphrase');
+      const salt = fill(16, 0x07);
+      await argon2idRaw(password, salt, {
+        m: 512, t: 2, p: 1, dkLen: 32,
+      });
+
+      expect(events).toEqual([{ engine: 'noble', cause: 'Error' }]);
+      // The reported cause is a type name only, never caller input.
+      const serialized = JSON.stringify(events);
+      expect(serialized).not.toContain('super secret passphrase');
+      expect(serialized).not.toContain(hex(salt));
+      // Baseline console signal fired too — a fallback is never fully silent.
+      expect(warn).toHaveBeenCalled();
+    } finally {
+      setArgon2FallbackObserver(null);
+      warn.mockRestore();
+    }
+  });
+
+  it('a throwing observer cannot break derivation', async () => {
+    const { argon2idRaw, setArgon2FallbackObserver } = await import('../argon2-engine');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    setArgon2FallbackObserver(() => { throw new Error('observer blew up'); });
+    try {
+      const out = await argon2idRaw(utf8('pw'), fill(16, 0x07), {
+        m: 512, t: 2, p: 1, dkLen: 32,
+      });
+      expect(out).toHaveLength(32);
+    } finally {
+      setArgon2FallbackObserver(null);
+      warn.mockRestore();
+    }
+  });
+
   it('kekFromPassphrase still unlocks a DEK under WASM failure (end-to-end fallback)', async () => {
     const { kekFromPassphrase } = await import('../factors');
     const { generateDek, seal, unseal } = await import('../vault');

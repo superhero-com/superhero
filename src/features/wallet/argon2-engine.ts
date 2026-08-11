@@ -28,6 +28,46 @@ import { argon2id as nobleArgon2id } from '@noble/hashes/argon2';
 /** Argon2 version, RFC 9106. Pinned identically on both engines. */
 export const ARGON2_VERSION = 0x13;
 
+/** Which engine actually produced the bytes. */
+export type Argon2Engine = 'wasm' | 'noble';
+
+/**
+ * A WASM→pure-JS fallback event. Carries ONLY the selected engine and the failing
+ * error's constructor name — never the passphrase, salt, params, or derived bytes.
+ * The `cause` is a type name (e.g. `CompileError`, `TypeError`), not a message, so
+ * it cannot echo caller input.
+ */
+export interface Argon2FallbackEvent {
+  engine: 'noble';
+  cause: string;
+}
+
+type Argon2FallbackObserver = (event: Argon2FallbackEvent) => void;
+let fallbackObserver: Argon2FallbackObserver | null = null;
+
+/**
+ * Register (or clear, with `null`) a single observer for WASM→pure-JS fallback —
+ * a metric/telemetry hook so a fallback is never silent. The observer is invoked
+ * with no secrets; see {@link Argon2FallbackEvent}. A throwing observer must not
+ * break derivation, so its errors are swallowed.
+ */
+export function setArgon2FallbackObserver(observer: Argon2FallbackObserver | null): void {
+  fallbackObserver = observer;
+}
+
+function reportFallback(err: unknown): void {
+  const cause = err instanceof Error ? err.name : typeof err;
+  // Always-on baseline signal, independent of any registered observer. Only the
+  // error's type name is emitted — no passphrase, salt, or derived bytes.
+  // eslint-disable-next-line no-console
+  console.warn(`[wallet] Argon2id WASM unavailable — using pure-JS fallback (${cause})`);
+  try {
+    fallbackObserver?.({ engine: 'noble', cause });
+  } catch {
+    /* an observer must never break key derivation */
+  }
+}
+
 export interface Argon2idRawParams {
   /** memory in KiB */
   m: number;
@@ -76,20 +116,32 @@ export async function argon2idViaWasm(
 }
 
 /**
- * Derive raw Argon2id bytes, WASM-first with a pure-JS fallback. The fallback is
- * byte-identical (proven by the differential), so a WASM failure degrades to a
- * slow unlock, never a wrong or failed one.
+ * Derive raw Argon2id bytes, WASM-first with a pure-JS fallback, reporting which
+ * engine ran. The fallback is byte-identical (proven by the differential), so a
+ * WASM failure degrades to a slow unlock, never a wrong or failed one — but it is
+ * NOT silent: it emits a baseline console signal and notifies any registered
+ * observer (see {@link setArgon2FallbackObserver}).
  */
+export async function argon2idRawWithEngine(
+  password: Uint8Array,
+  salt: Uint8Array,
+  params: Argon2idRawParams,
+): Promise<{ bytes: Uint8Array; engine: Argon2Engine }> {
+  try {
+    return { bytes: await argon2idViaWasm(password, salt, params), engine: 'wasm' };
+  } catch (err) {
+    reportFallback(err);
+    return { bytes: argon2idViaNoble(password, salt, params), engine: 'noble' };
+  }
+}
+
+/** As {@link argon2idRawWithEngine}, returning only the bytes for callers that derive a KEK. */
 export async function argon2idRaw(
   password: Uint8Array,
   salt: Uint8Array,
   params: Argon2idRawParams,
 ): Promise<Uint8Array> {
-  try {
-    return await argon2idViaWasm(password, salt, params);
-  } catch {
-    return argon2idViaNoble(password, salt, params);
-  }
+  return (await argon2idRawWithEngine(password, salt, params)).bytes;
 }
 
 /**
@@ -104,7 +156,10 @@ export async function prewarmArgon2Engine(): Promise<boolean> {
       m: 256, t: 1, p: 1, dkLen: 32,
     });
     return true;
-  } catch {
+  } catch (err) {
+    // Surface the WASM-unusable state at route entry — the earliest observable
+    // point — so the coming unlock's fallback is expected, not a mystery slowdown.
+    reportFallback(err);
     return false;
   }
 }

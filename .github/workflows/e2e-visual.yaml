@@ -1,0 +1,44 @@
+name: E2E Visual Regression
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build e2e image
+        run: docker build -f Dockerfile.e2e -t superhero-e2e .
+
+      # Only the two visual-regression specs — npm run test:e2e runs all of e2e/,
+      # 7 of which are red on develop today (ZIX-1754), which would pin this job red.
+      # CI=true turns on forbidOnly and turns off reuseExistingServer. The bind
+      # mounts pull the report and diff PNGs out of the --rm container onto the
+      # runner so the upload step below has something to attach on failure.
+      - name: Run visual-regression specs
+        run: |
+          docker run --rm --ipc=host --init -e CI=true \
+            -v "${{ github.workspace }}/playwright-report:/app/playwright-report" \
+            -v "${{ github.workspace }}/test-results:/app/test-results" \
+            superhero-e2e \
+            npx playwright test e2e/wallet-onboarding.spec.ts e2e/trends-invite.spec.ts
+
+      - name: Upload Playwright report and diffs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-visual-report-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30

@@ -5,9 +5,33 @@ FROM mcr.microsoft.com/playwright:v1.60.0-noble
 
 WORKDIR /app
 
+# The Playwright base image ships no C toolchain, but the dependency tree pulls a
+# native addon (bufferutil, via the aeternity git deps) that compiles from source.
+# GitHub's ubuntu-latest runner has make/g++/python3 preinstalled — which is why
+# `npm ci` succeeds in Branch CI but fails in this image without them.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends make g++ python3 \
+ && rm -rf /var/lib/apt/lists/*
+
+# The deps include git sources (git+https). Fail fast instead of blocking the
+# non-interactive build forever on a credential prompt if one can't be fetched.
+ENV GIT_TERMINAL_PROMPT=0
+
+# Pre-warm node-gyp's header cache for this image's node version. The aeternity
+# git deps pull native ws accelerators (bufferutil / utf-8-validate) that compile
+# during npm's nested "git dep preparation"; that compile fetches node headers from
+# nodejs.org, and a transient DNS failure there (EAI_AGAIN) takes the whole `npm ci`
+# down. Fetching the headers once, up front and with retries, means the nested
+# compile reads them from the local cache instead of the network.
+RUN for i in 1 2 3 4 5; do npx --yes node-gyp install && break \
+ || { echo "node-gyp header fetch failed, retry $i"; sleep 10; }; done
+
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
-RUN npm ci
+# Retry npm ci for the same transient-network reason: git clones and registry
+# fetches over a slow link occasionally blip, and a clean re-run is idempotent.
+RUN for i in 1 2 3; do npm ci && break \
+ || { echo "npm ci failed, retry $i"; sleep 15; }; done
 
 COPY . .
 

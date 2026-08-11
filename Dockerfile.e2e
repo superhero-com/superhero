@@ -23,15 +23,18 @@ ENV GIT_TERMINAL_PROMPT=0
 # nodejs.org, and a transient DNS failure there (EAI_AGAIN) takes the whole `npm ci`
 # down. Fetching the headers once, up front and with retries, means the nested
 # compile reads them from the local cache instead of the network.
-RUN for i in 1 2 3 4 5; do npx --yes node-gyp install && break \
- || { echo "node-gyp header fetch failed, retry $i"; sleep 10; }; done
+# `&& exit 0` on success and a trailing `exit 1` are load-bearing: a bare
+# `... || { echo; sleep; }; done` loop exits with the status of its last command
+# (sleep, 0), so total failure would still produce a green layer.
+RUN for i in 1 2 3 4 5; do npx --yes node-gyp install && exit 0; \
+ echo "node-gyp header fetch failed, retry $i"; sleep 10; done; exit 1
 
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
 # Retry npm ci for the same transient-network reason: git clones and registry
 # fetches over a slow link occasionally blip, and a clean re-run is idempotent.
-RUN for i in 1 2 3; do npm ci && break \
- || { echo "npm ci failed, retry $i"; sleep 15; }; done
+RUN for i in 1 2 3; do npm ci && exit 0; \
+ echo "npm ci failed, retry $i"; sleep 15; done; exit 1
 
 COPY . .
 

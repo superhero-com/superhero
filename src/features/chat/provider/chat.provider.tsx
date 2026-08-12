@@ -44,6 +44,7 @@ import {
 } from '../domains/conversations/conversations.storage';
 import { getDMConversationId } from '../utils/converters';
 import { Timing } from '../core/constants';
+import { filterAllowedRelays } from '../core/relay-config';
 import type {
   Profile, NostrFilter, StoredProfiles,
 } from '../core/types';
@@ -75,7 +76,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const session = useRoomSession();
 
   const [status, setStatus] = useAtom(chatStatusAtom);
-  const relays = useAtomValue(relaysAtom);
+  // Transport safety net: only open sockets to allowlisted origins, even if an
+  // off-list relay was persisted by an older build. The seed, the room-config
+  // hook and the settings screen are gated too; this is the last line.
+  const persistedRelays = useAtomValue(relaysAtom);
+  const relays = useMemo(() => filterAllowedRelays(persistedRelays), [persistedRelays]);
   const [connectedRelays, setConnectedRelays] = useAtom(connectedRelaysAtom);
   const [profiles, setProfiles] = useAtom(profilesAtom);
   const setDMMessages = useSetAtom(dmMessagesAtom);

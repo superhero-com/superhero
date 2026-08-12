@@ -26,6 +26,7 @@ import { relaysAtom } from '../domains/ui.state';
 import {
   addRelay, removeRelay, setRelayFlag, validateRelayUrl, testRelayConnection, getRelayDescription,
 } from '../nostr/relays';
+import { isAllowedRelayOrigin } from '../core/relay-config';
 
 type TestState = { url: string; ok: boolean; message: string } | null;
 
@@ -60,6 +61,12 @@ const RelaySettingsView = () => {
     }
     if (!validateRelayUrl(url)) {
       setAddError('Enter a valid secure WebSocket URL (wss://…).');
+      return;
+    }
+    // A relay whose origin is not in the deploy-time allowlist would be blocked by
+    // the site's CSP at connect time — reject it here, with the reason, not silently.
+    if (!isAllowedRelayOrigin(url)) {
+      setAddError('This relay is not permitted by the site configuration.');
       return;
     }
     setAdding(true);

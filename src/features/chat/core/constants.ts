@@ -7,6 +7,7 @@
  * out of scope for the PWA v1, and the constant was already a
  * deprecated non-load-bearing fallback there.
  */
+import { defaultRelays } from './relay-config';
 
 /** Nostr event kinds (NIP-01 and others). */
 export const NostrKind = {
@@ -59,15 +60,13 @@ export const StorageKeys = {
 /**
  * Default relay configuration.
  *
- * The web relay set is `wss://`: a PWA served over `https://` cannot
- * open a plaintext `ws://` socket — the browser blocks it as mixed content — so
- * the app's `ws://` default is upgraded to TLS here before any transport lands.
- * Relay URLs resolved at runtime (e.g. `getRoomConfig().relay_url`) are guarded
- * by `ensureSecureRelayUrl` (see `../nostr/relay-url`).
+ * No relay is hardcoded. The set is derived from the deploy-time `NOSTR_RELAY_URLS`
+ * list (see `./relay-config`), which is `{}` when unset — chat then ships "dark".
+ * Every configured relay is `wss://`: a PWA served over `https://` cannot open a
+ * plaintext `ws://` socket, so the scheme guard (`../nostr/relay-url`) enforces it,
+ * and the server folds the same origins into the CSP `connect-src`.
  */
-export const DEFAULT_RELAYS = {
-  'wss://136.243.173.251:8080': { read: true, write: true },
-} as const;
+export const DEFAULT_RELAYS = defaultRelays();
 
 /** Timing constants. */
 export const Timing = {

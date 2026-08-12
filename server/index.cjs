@@ -30,7 +30,7 @@ indexHtml = indexHtml.replace(
 function envInject(html) {
   // Simple env subst for window.__SUPERCONFIG__ placeholders like $BACKEND_URL
   const keys = [
-    'BACKEND_URL','SUPERHERO_API_URL','SUPERHERO_WS_URL','NODE_URL','WALLET_URL','MIDDLEWARE_URL','DEX_BACKEND_URL','MAINNET_DEX_BACKEND_URL','TESTNET_DEX_BACKEND_URL','CONTRACT_V3_ADDRESS','LANDING_ENABLED','WORDBAZAAR_ENABLED','POPULAR_FEED_ENABLED','JITSI_DOMAIN','GOVERNANCE_API_URL','GOVERNANCE_CONTRACT_ADDRESS','EXPLORER_URL','UNFINISHED_FEATURES','COMMIT_HASH'
+    'BACKEND_URL','SUPERHERO_API_URL','SUPERHERO_WS_URL','NODE_URL','WALLET_URL','MIDDLEWARE_URL','DEX_BACKEND_URL','MAINNET_DEX_BACKEND_URL','TESTNET_DEX_BACKEND_URL','CONTRACT_V3_ADDRESS','LANDING_ENABLED','WORDBAZAAR_ENABLED','POPULAR_FEED_ENABLED','JITSI_DOMAIN','GOVERNANCE_API_URL','GOVERNANCE_CONTRACT_ADDRESS','EXPLORER_URL','UNFINISHED_FEATURES','COMMIT_HASH','NOSTR_RELAY_URLS'
   ];
   let out = html;
   for (const k of keys) {
@@ -271,11 +271,23 @@ const CONNECT_SRC_ALLOWLIST = [
   'https://api.ethplorer.io',
 ];
 
+// Chat relays arrive as a comma-separated list in one env var (NOSTR_RELAY_URLS —
+// the P2P default plus whatever groups_relay origin the API hands out), so unlike
+// the single-URL keys above this one is split before mapping. originOf() returns
+// null on the whole comma string, which is exactly the bug this avoids. The client
+// reads the same env var via window.__SUPERCONFIG__, so the two lists cannot drift.
+function relayConnectOrigins() {
+  return String(process.env.NOSTR_RELAY_URLS || '')
+    .split(',')
+    .map((s) => originOf(s.trim()))
+    .filter(Boolean);
+}
+
 function buildConnectSrc() {
   const dynamic = RUNTIME_CONNECT_ENV_KEYS
     .map((k) => originOf(process.env[k]))
     .filter(Boolean);
-  return Array.from(new Set([...CONNECT_SRC_ALLOWLIST, ...dynamic])).join(' ');
+  return Array.from(new Set([...CONNECT_SRC_ALLOWLIST, ...dynamic, ...relayConnectOrigins()])).join(' ');
 }
 
 // The four sandboxed embed hosts: Twitter/X, YouTube, Spotify, Jitsi. Jitsi's

@@ -22,6 +22,8 @@ import { StartNewChatDialog } from '../components/StartNewChatDialog';
 import { EditProfileDialog } from '../components/EditProfileDialog';
 import { useChatList, type ChatTab } from '../hooks/useChatList';
 import { useRoomSession } from '../hooks/useRoomSession';
+import { isChatRelayConfigured } from '../core/relay-config';
+import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
 
 const TABS: { key: ChatTab; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -44,6 +46,9 @@ const InboxView = () => {
   const tabCount = useMemo(() => ({
     all: counts.all, communities: counts.communities, dms: counts.dms,
   }), [counts]);
+
+  // Dark ship: no relay configured for this deployment ⇒ no transport to start.
+  if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6">

@@ -25,6 +25,7 @@ import ProfileEditModal from './components/modals/ProfileEditModal';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
 import { usePwaInstall } from './hooks/usePwaInstall';
+import { isMobileDevice } from './utils/displayMode';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -213,10 +214,12 @@ const App = () => {
           </Suspense>
           {/* TODO: Disable feedback button on mobile for now */}
           {!isMobile && <FeedbackButton />}
-          {/* PWA install prompt - floating bottom-right, above bottom nav */}
-          <PwaInstallPrompt />
-          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable */}
-          {isMobile && (isIOS || !canPrompt) && (
+          {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
+          {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
+              Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
+              so landscape phones don't lose the install affordance. */}
+          {isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
               canNativePrompt={canPrompt}
               onNativePrompt={promptInstall}

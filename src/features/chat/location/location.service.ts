@@ -27,9 +27,7 @@ import type { LocationLevel } from './s2';
 const KIND_AREA_CARD = 24133;
 
 const RELAYS = [
-  'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-  'wss://nos.lol',
+  'wss://relay.superhero.chat',
 ];
 
 // Module-level pool for location events (separate from the chat pool to

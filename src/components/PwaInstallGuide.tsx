@@ -1,8 +1,5 @@
-import React, {
-  useEffect, useRef, useState,
-} from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
 import { isIOSWebKit, isMobileDevice, isStandalone } from '@/utils/displayMode';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -144,13 +141,53 @@ function getSteps(platform: InstallPlatform, t: ReturnType<typeof useTranslation
   ];
 }
 
+// ── Helper: resolve trigger banner text ───────────────────────────────────────
+
+function getTriggerBanner(
+  trigger: PwaInstallGuideProps['trigger'],
+  t: ReturnType<typeof useTranslation>['t'],
+): string | null {
+  if (trigger === 'location') return t('components.pwaInstallGuide.triggerLocation');
+  if (trigger === 'chat') return t('components.pwaInstallGuide.triggerChat');
+  return null;
+}
+
+// ── Helper: resolve platform subtitle ────────────────────────────────────────
+
+function getPlatformSubtitle(
+  platform: InstallPlatform,
+  t: ReturnType<typeof useTranslation>['t'],
+): string {
+  if (platform === 'ios') return t('components.pwaInstallGuide.subtitleIos');
+  return t('components.pwaInstallGuide.subtitleAndroid');
+}
+
+// ── Helper: resolve already-installed / desktop body text ─────────────────────
+
+function getEarlyExitBody(
+  alreadyInstalled: boolean,
+  t: ReturnType<typeof useTranslation>['t'],
+): string {
+  if (alreadyInstalled) return t('components.pwaInstallGuide.alreadyInstalled');
+  return t('components.pwaInstallGuide.desktopHint');
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: PwaInstallGuideProps) {
+export const PwaInstallGuide = ({
+  open,
+  onOpenChange,
+  trigger = 'general',
+}: PwaInstallGuideProps) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
 
-  const platform: InstallPlatform = isIOSWebKit() ? 'ios' : isMobileDevice() ? 'android' : 'desktop';
+  const platform: InstallPlatform = (() => {
+    if (isIOSWebKit()) return 'ios';
+    if (isMobileDevice()) return 'android';
+    return 'desktop';
+  })();
+
   const alreadyInstalled = isStandalone();
 
   // Reset step when dialog reopens
@@ -169,20 +206,15 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
             <DialogTitle>{t('components.pwaInstallGuide.installedTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-white/60 leading-relaxed">
-            {alreadyInstalled
-              ? t('components.pwaInstallGuide.alreadyInstalled')
-              : t('components.pwaInstallGuide.desktopHint')}
+            {getEarlyExitBody(alreadyInstalled, t)}
           </p>
         </DialogContent>
       </Dialog>
     );
   }
 
-  const triggerBanner = trigger === 'location'
-    ? t('components.pwaInstallGuide.triggerLocation')
-    : trigger === 'chat'
-      ? t('components.pwaInstallGuide.triggerChat')
-      : null;
+  const triggerBanner = getTriggerBanner(trigger, t);
+  const platformSubtitle = getPlatformSubtitle(platform, t);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -197,38 +229,59 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
               {t('components.pwaInstallGuide.title')}
             </DialogTitle>
             <p className="text-xs text-white/50 mt-0.5">
-              {platform === 'ios'
-                ? t('components.pwaInstallGuide.subtitleIos')
-                : t('components.pwaInstallGuide.subtitleAndroid')}
+              {platformSubtitle}
             </p>
           </div>
         </div>
 
         {/* Trigger context banner */}
         {triggerBanner && (
-          <div className="mx-5 mb-2 px-3 py-2 rounded-xl text-xs font-medium"
-            style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b' }}>
+          <div
+            className="mx-5 mb-2 px-3 py-2 rounded-xl text-xs font-medium"
+            style={{
+              background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.2)',
+              color: '#f59e0b',
+            }}
+          >
             {triggerBanner}
           </div>
         )}
 
         {/* Steps */}
         <div className="px-5 pb-2 flex flex-col gap-2">
-          {steps.map((step, i) => {
-            const done = i < activeStep;
-            const active = i === activeStep;
+          {steps.map((step, stepIndex) => {
+            const stepKey = `step-${stepIndex}`;
+            const done = stepIndex < activeStep;
+            const active = stepIndex === activeStep;
+            const bgColor = active
+              ? 'rgba(17,97,254,0.1)'
+              : done
+                ? 'rgba(0,196,125,0.05)'
+                : 'rgba(255,255,255,0.02)';
+            const borderColor = active
+              ? 'rgba(17,97,254,0.3)'
+              : done
+                ? 'rgba(0,196,125,0.2)'
+                : 'rgba(255,255,255,0.06)';
+            const circBg = done
+              ? 'rgba(0,196,125,0.15)'
+              : active
+                ? 'rgba(17,97,254,0.15)'
+                : 'rgba(255,255,255,0.05)';
+            const circBorder = done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.1)';
+            const circColor = done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.3)';
+            const titleColor = active ? 'white' : done ? '#00c47d' : 'rgba(255,255,255,0.5)';
 
             return (
               <button
-                key={i}
+                key={stepKey}
                 type="button"
-                onClick={() => setActiveStep(i)}
+                onClick={() => setActiveStep(stepIndex)}
                 className="flex items-start gap-3 text-left w-full rounded-xl px-3 py-3 transition-all duration-200"
                 style={{
-                  background: active
-                    ? 'rgba(17,97,254,0.1)'
-                    : done ? 'rgba(0,196,125,0.05)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${active ? 'rgba(17,97,254,0.3)' : done ? 'rgba(0,196,125,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                  background: bgColor,
+                  border: `1px solid ${borderColor}`,
                   transform: active ? 'scale(1.01)' : 'scale(1)',
                 }}
               >
@@ -239,11 +292,9 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
                     width: 32,
                     height: 32,
                     borderRadius: '50%',
-                    background: done
-                      ? 'rgba(0,196,125,0.15)'
-                      : active ? 'rgba(17,97,254,0.15)' : 'rgba(255,255,255,0.05)',
-                    border: `2px solid ${done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.1)'}`,
-                    color: done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.3)',
+                    background: circBg,
+                    border: `2px solid ${circBorder}`,
+                    color: circColor,
                   }}
                 >
                   {done ? <CheckIcon /> : step.icon}
@@ -253,7 +304,7 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
                 <div className="flex-1 min-w-0">
                   <div
                     className="text-sm font-semibold"
-                    style={{ color: active ? 'white' : done ? '#00c47d' : 'rgba(255,255,255,0.5)' }}
+                    style={{ color: titleColor }}
                   >
                     {step.title}
                   </div>
@@ -277,20 +328,23 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
 
         {/* Progress dots */}
         <div className="flex justify-center gap-1.5 py-3">
-          {steps.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setActiveStep(i)}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: i === activeStep ? 20 : 6,
-                height: 6,
-                background: i <= activeStep ? '#1161FE' : 'rgba(255,255,255,0.12)',
-              }}
-              aria-label={`Step ${i + 1}`}
-            />
-          ))}
+          {steps.map((_, dotIndex) => {
+            const dotKey = `dot-${dotIndex}`;
+            return (
+              <button
+                key={dotKey}
+                type="button"
+                onClick={() => setActiveStep(dotIndex)}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: dotIndex === activeStep ? 20 : 6,
+                  height: 6,
+                  background: dotIndex <= activeStep ? '#1161FE' : 'rgba(255,255,255,0.12)',
+                }}
+                aria-label={`Step ${dotIndex + 1}`}
+              />
+            );
+          })}
         </div>
 
         {/* Navigation buttons */}
@@ -337,7 +391,7 @@ export function PwaInstallGuide({ open, onOpenChange, trigger = 'general' }: Pwa
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 // ── Install FAB ───────────────────────────────────────────────────────────────
 
@@ -355,7 +409,11 @@ interface PwaInstallFabProps {
   canNativePrompt: boolean;
 }
 
-export function PwaInstallFab({ onNativePrompt, onOpenGuide, canNativePrompt }: PwaInstallFabProps) {
+export const PwaInstallFab = ({
+  onNativePrompt,
+  onOpenGuide,
+  canNativePrompt,
+}: PwaInstallFabProps) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [pulse, setPulse] = useState(false);
@@ -413,7 +471,13 @@ export function PwaInstallFab({ onNativePrompt, onOpenGuide, canNativePrompt }: 
     >
       {/* Download arrow icon */}
       <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path d="M9 2v10M9 12l-4-4M9 12l4-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M9 2v10M9 12l-4-4M9 12l4-4"
+          stroke="#fff"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
         <path d="M2 15h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
       {t('components.pwaInstallGuide.fabLabel')}
@@ -425,4 +489,4 @@ export function PwaInstallFab({ onNativePrompt, onOpenGuide, canNativePrompt }: 
       `}</style>
     </button>
   );
-}
+};

@@ -163,15 +163,15 @@ const broadcastChannel = new BroadcastChannel('sh-chat-offline');
 // Simple in-memory queue (survives as long as SW is alive).
 // For true persistence across SW restarts, IndexedDB would be used;
 // this is sufficient for typical brief connectivity drops.
-let _queue = [];
+let offlineQueue = [];
 
 async function enqueueMessage(msg) {
-  _queue.push(msg);
+  offlineQueue.push(msg);
 }
 
 async function dequeueAll() {
-  const msgs = [..._queue];
-  _queue = [];
+  const msgs = [...offlineQueue];
+  offlineQueue = [];
   return msgs;
 }
 

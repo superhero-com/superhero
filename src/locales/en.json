@@ -3094,5 +3094,25 @@
         }
       }
     }
+  },
+  "bondingCurve": {
+    "title": "How the Bonding Curve Works",
+    "subtitle": "Price rises automatically as more tokens are bought",
+    "chartAriaLabel": "Interactive bonding curve price chart",
+    "axisSupply": "Token Supply",
+    "axisPrice": "Price (AE)",
+    "play": "Play",
+    "pause": "Pause",
+    "replay": "Replay",
+    "step0Label": "Launch — Zero supply",
+    "step0Desc": "At launch, the price starts near zero. Early buyers get the lowest possible price. The curve has not moved yet.",
+    "step1Label": "Early adopters",
+    "step1Desc": "The first buyers drive a small price increase. At low supply, the curve is nearly flat — each purchase barely moves the price.",
+    "step2Label": "Growing momentum",
+    "step2Desc": "As more tokens are bought the curve steepens. The exponential formula means price acceleration increases with every new purchase.",
+    "step3Label": "Strong momentum",
+    "step3Desc": "The price is rising sharply now. Early holders are sitting on significant gains. Each new buyer pays more than the last.",
+    "step4Label": "High supply",
+    "step4Desc": "At high supply the curve is steep. The bonding curve ensures liquidity always exists — you can sell back at any time at the current price."
   }
 }

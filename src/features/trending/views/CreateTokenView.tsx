@@ -22,6 +22,7 @@ import {
   TrendingUp, Sigma, Landmark, Coins,
 } from 'lucide-react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import BondingCurveGraph from '../components/BondingCurveGraph';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
@@ -904,7 +905,13 @@ const CreateTokenView = () => {
             {/* Explainer guide */}
             <div className="min-w-0 flex-1 xl:order-1">
               <div className="xl:text-left">
-                <div className="mt-8 md:mt-12 xl:mt-0 bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
+
+                {/* Interactive bonding curve graph */}
+                <div className="mt-8 md:mt-12 xl:mt-0 mb-6">
+                  <BondingCurveGraph />
+                </div>
+
+                <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
                   <h3 className="text-xl font-bold text-white mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
                     {t('trending.createToken.explainer.title')}
                   </h3>

@@ -24,12 +24,44 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.language-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+/* Clickable variant — stronger interactive feedback */
+.language-item--clickable {
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+}
+
+.language-item--clickable::after {
+  content: '→';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  transition: opacity 0.2s ease, right 0.2s ease;
+  opacity: 0;
+}
+
+.language-item--clickable:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
+  text-decoration: none;
+}
+
+.language-item--clickable:hover::after {
+  opacity: 1;
+  right: 8px;
+}
+
+.language-item--clickable:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .language-flag {
@@ -45,10 +77,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
 }
 
-/* On mobile the graphic sits below the text and spans the full width, so the
-   rows fill the whole width too (no max-width cap). */
+.language-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-right: 18px; /* leave room for → arrow */
+  transition: color 0.2s ease;
+}
+
+.language-item--clickable:hover .language-label {
+  color: rgba(139, 92, 246, 0.8);
+}
+
+/* On mobile the graphic sits below the text and spans the full width */
 @media (max-width: 1237px) {
   .language-showcase {
     gap: 10px;
@@ -64,5 +111,9 @@
 
   .language-sample {
     font-size: 1rem;
+  }
+
+  .language-label {
+    padding-right: 20px;
   }
 }

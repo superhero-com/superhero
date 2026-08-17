@@ -3097,22 +3097,22 @@
   },
   "bondingCurve": {
     "title": "How the Bonding Curve Works",
-    "subtitle": "Price rises automatically as more tokens are bought",
+    "subtitle": "Early buyers get the lowest price — it rises exponentially as more join",
     "chartAriaLabel": "Interactive bonding curve price chart",
     "axisSupply": "Token Supply",
-    "axisPrice": "Price (AE)",
+    "axisPrice": "Price (mAE)",
     "play": "Play",
     "pause": "Pause",
     "replay": "Replay",
     "step0Label": "Launch — Zero supply",
-    "step0Desc": "At launch, the price starts near zero. Early buyers get the lowest possible price. The curve has not moved yet.",
-    "step1Label": "Early adopters",
-    "step1Desc": "The first buyers drive a small price increase. At low supply, the curve is nearly flat — each purchase barely moves the price.",
-    "step2Label": "Growing momentum",
-    "step2Desc": "As more tokens are bought the curve steepens. The exponential formula means price acceleration increases with every new purchase.",
-    "step3Label": "Strong momentum",
-    "step3Desc": "The price is rising sharply now. Early holders are sitting on significant gains. Each new buyer pays more than the last.",
-    "step4Label": "High supply",
-    "step4Desc": "At high supply the curve is steep. The bonding curve ensures liquidity always exists — you can sell back at any time at the current price."
+    "step0Desc": "At launch the price starts near zero. The curve is almost flat here by design — this is the cheapest possible entry point. Early believers get the best price.",
+    "step1Label": "Early adopters — 10M tokens",
+    "step1Desc": "With 10M tokens sold the price has doubled. Still cheap, still early. The curve is beginning to bend — each new buyer moves the price a little more than the last.",
+    "step2Label": "Growing momentum — 50M tokens",
+    "step2Desc": "At 50M tokens the price is ~7.5x the starting price. The exponential shape is now clearly visible. Early holders are already sitting on meaningful gains.",
+    "step3Label": "Strong momentum — 100M tokens",
+    "step3Desc": "At 100M tokens the price is 18x launch. The curve is steep now — each purchase has a significant impact. The DAO treasury is filling up from the 0.5% spread on every trade.",
+    "step4Label": "High supply — 200M tokens",
+    "step4Desc": "At 200M tokens the price is 65x launch. Only 10–20% of the theoretical max supply is ever expected to be reached — so this is already well into the tail. You can always sell back at the current sell price (−0.5% spread)."
   }
 }

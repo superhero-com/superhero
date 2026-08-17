@@ -1,11 +1,18 @@
 /**
  * BondingCurveGraph
  *
- * Interactive, step-by-step animated explanation of the Superhero bonding curve.
- * Uses the real curve formula: price = a·eˢ·supply − c (same constants as bondingCurve.ts).
+ * Interactive, auto-playing bonding curve visualisation for the create-token page.
  *
- * No external animation library — pure CSS transitions + SVG path animation.
- * Steps auto-advance with a "play" button, or the user can step manually.
+ * Formula from BondingCurveExponential.aes (bcl-contracts):
+ *   buy(x)  = 0.001 * (e^(0.00000001 * x) - 1) + 0.0001   [AE per token]
+ *   sell(x) = buy(x) * 0.995
+ *
+ * The curve is intentionally flat at low supply (cheap early-adopter price)
+ * and exponential at higher supply — that IS the feature, not a bug.
+ * We show 0–200M tokens, where the full story plays out in practice.
+ *
+ * Auto-plays on mount, loops continuously.
+ * User can click steps or pause/play.
  */
 
 import React, {
@@ -13,54 +20,88 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// ── Curve constants (mirrors src/utils/bondingCurve.ts) ──────────────────────
-const A = 0.001;
-const K = 0.00000001;
-const C = 0.0009999;
+// ── Real curve formula (matches BondingCurveExponential.aes) ─────────────────
+// supply in actual token count (not aettos)
+function buyPrice(supplyTokens: number): number {
+  // buy(x) = 0.001 * (e^(1e-8 * x) - 1) + 0.0001
+  return 0.001 * (Math.exp(1e-8 * supplyTokens) - 1) + 0.0001;
+}
+function sellPrice(supplyTokens: number): number {
+  return buyPrice(supplyTokens) * 0.995;
+}
 
-/** price(x) in normalised AE units (x = token supply in millions) */
-const price = (x: number): number => Math.max(0, A * Math.exp(K * x * 1e6) - C);
+// ── Axis ranges — 0 to 200M tokens, price in mAE ────────────────────────────
+const X_MAX_M = 200; // millions of tokens
+const X_MAX = X_MAX_M * 1e6;
+const Y_MAX_MAE = 7; // mAE — at 200M tokens buy price ≈ 6.49 mAE
+
+const toMae = (ae: number) => ae * 1000; // convert AE → mAE for display
 
 // ── SVG viewport ─────────────────────────────────────────────────────────────
-const W = 420;
+const W = 440;
 const H = 240;
 const PAD = {
-  top: 20, right: 20, bottom: 40, left: 52,
+  top: 20, right: 24, bottom: 42, left: 56,
 };
 const PLOT_W = W - PAD.left - PAD.right;
 const PLOT_H = H - PAD.top - PAD.bottom;
 
-const X_MAX = 800; // supply in millions of tokens
-const Y_MAX = 0.012; // max price in AE
+function svgX(xTokens: number): number {
+  return PAD.left + (xTokens / X_MAX) * PLOT_W;
+}
+function svgY(maePrice: number): number {
+  return PAD.top + PLOT_H - (Math.min(maePrice, Y_MAX_MAE) / Y_MAX_MAE) * PLOT_H;
+}
 
-const toSvgX = (x: number) => PAD.left + (x / X_MAX) * PLOT_W;
-const toSvgY = (y: number) => PAD.top + PLOT_H - (y / Y_MAX) * PLOT_H;
-
-function buildPath(upToX: number): string {
-  const steps = 120;
+// ── Path builders ─────────────────────────────────────────────────────────────
+function buildBuyPath(upToTokens: number): string {
+  const steps = 160;
+  const end = Math.min(upToTokens, X_MAX);
   const pts: string[] = [];
   for (let i = 0; i <= steps; i += 1) {
-    const x = (i / steps) * Math.min(upToX, X_MAX);
-    const y = price(x);
-    const sx = toSvgX(x);
-    const sy = toSvgY(Math.min(y, Y_MAX));
-    pts.push(`${i === 0 ? 'M' : 'L'}${sx.toFixed(1)},${sy.toFixed(1)}`);
+    const x = (i / steps) * end;
+    const y = toMae(buyPrice(x));
+    pts.push(`${i === 0 ? 'M' : 'L'}${svgX(x).toFixed(1)},${svgY(y).toFixed(1)}`);
   }
   return pts.join(' ');
 }
 
-// ── Gradient fill path (curve + baseline) ────────────────────────────────────
-function buildFill(upToX: number): string {
-  const curve = buildPath(upToX).replace(/^M/, 'M');
-  const lastX = toSvgX(Math.min(upToX, X_MAX)).toFixed(1);
-  const baseY = toSvgY(0).toFixed(1);
-  return `${curve} L${lastX},${baseY} L${toSvgX(0).toFixed(1)},${baseY} Z`;
+function buildSellPath(upToTokens: number): string {
+  const steps = 160;
+  const end = Math.min(upToTokens, X_MAX);
+  const pts: string[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const x = (i / steps) * end;
+    const y = toMae(sellPrice(x));
+    pts.push(`${i === 0 ? 'M' : 'L'}${svgX(x).toFixed(1)},${svgY(y).toFixed(1)}`);
+  }
+  return pts.join(' ');
 }
 
-// ── Steps definition ─────────────────────────────────────────────────────────
+function buildFill(upToTokens: number): string {
+  const buyPath = buildBuyPath(upToTokens);
+  const end = Math.min(upToTokens, X_MAX);
+  const baseY = svgY(0).toFixed(1);
+  return `${buyPath} L${svgX(end).toFixed(1)},${baseY} L${svgX(0).toFixed(1)},${baseY} Z`;
+}
+
+function buildSpreadFill(upToTokens: number): string {
+  const steps = 80;
+  const end = Math.min(upToTokens, X_MAX);
+  const topPts: string[] = [];
+  const botPts: string[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const x = (i / steps) * end;
+    topPts.push(`${svgX(x).toFixed(1)},${svgY(toMae(buyPrice(x))).toFixed(1)}`);
+    botPts.push(`${svgX(x).toFixed(1)},${svgY(toMae(sellPrice(x))).toFixed(1)}`);
+  }
+  return `M${topPts.join(' L')} L${[...botPts].reverse().join(' L')} Z`;
+}
+
+// ── Steps ────────────────────────────────────────────────────────────────────
 interface Step {
   id: string;
-  supplyFraction: number; // 0–1, how far along X the animated marker is
+  supplyM: number; // millions of tokens
   labelKey: string;
   descKey: string;
   color: string;
@@ -69,8 +110,8 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    id: 'origin',
-    supplyFraction: 0,
+    id: 'launch',
+    supplyM: 0,
     labelKey: 'bondingCurve.step0Label',
     descKey: 'bondingCurve.step0Desc',
     color: '#8b5cf6',
@@ -78,7 +119,7 @@ const STEPS: Step[] = [
   },
   {
     id: 'early',
-    supplyFraction: 0.1,
+    supplyM: 10,
     labelKey: 'bondingCurve.step1Label',
     descKey: 'bondingCurve.step1Desc',
     color: '#3b82f6',
@@ -86,7 +127,7 @@ const STEPS: Step[] = [
   },
   {
     id: 'growth',
-    supplyFraction: 0.35,
+    supplyM: 50,
     labelKey: 'bondingCurve.step2Label',
     descKey: 'bondingCurve.step2Desc',
     color: '#06b6d4',
@@ -94,7 +135,7 @@ const STEPS: Step[] = [
   },
   {
     id: 'momentum',
-    supplyFraction: 0.65,
+    supplyM: 100,
     labelKey: 'bondingCurve.step3Label',
     descKey: 'bondingCurve.step3Desc',
     color: '#10b981',
@@ -102,7 +143,7 @@ const STEPS: Step[] = [
   },
   {
     id: 'peak',
-    supplyFraction: 1,
+    supplyM: 200,
     labelKey: 'bondingCurve.step4Label',
     descKey: 'bondingCurve.step4Desc',
     color: '#f59e0b',
@@ -110,180 +151,201 @@ const STEPS: Step[] = [
   },
 ];
 
-// ── Y-axis labels ─────────────────────────────────────────────────────────────
-const Y_TICKS = [0, 0.003, 0.006, 0.009, 0.012];
+// ── Axis ticks ────────────────────────────────────────────────────────────────
+const X_TICKS = [0, 50, 100, 150, 200]; // millions
+const Y_TICKS = [0, 1, 2, 3, 5, 7]; // mAE
 
-// ── X-axis labels ─────────────────────────────────────────────────────────────
-const X_TICKS = [0, 200, 400, 600, 800];
+// ── Easing ───────────────────────────────────────────────────────────────────
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+const ANIM_MS = 1000; // per step
+const HOLD_MS = 2200; // pause before advancing
 
 // ── Component ─────────────────────────────────────────────────────────────────
-
 const BondingCurveGraph: React.FC = () => {
   const { t } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [animatedFraction, setAnimatedFraction] = useState(0);
+  const [playing, setPlaying] = useState(true); // auto-play on mount
+  const [animFraction, setAnimFraction] = useState(0); // 0–1 within current step
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
-  const ANIM_DURATION = 800; // ms per step transition
+  const stepRef = useRef(stepIndex);
+  const playRef = useRef(playing);
+
+  stepRef.current = stepIndex;
+  playRef.current = playing;
 
   const step = STEPS[stepIndex];
-  const targetFraction = step.supplyFraction;
+  const prevSupplyM = stepIndex > 0 ? STEPS[stepIndex - 1].supplyM : 0;
+  const currSupplyM = step.supplyM;
 
-  // Animate fraction toward targetFraction
-  useEffect(() => {
-    const fromFraction = animatedFraction;
-    const toFraction = targetFraction;
-    if (Math.abs(fromFraction - toFraction) < 0.001) return undefined;
+  // Interpolated supply based on animation fraction
+  const displaySupplyM = prevSupplyM + (currSupplyM - prevSupplyM) * easeInOutCubic(animFraction);
+  const displaySupply = displaySupplyM * 1e6;
+  const dotX = svgX(displaySupply);
+  const dotY = svgY(toMae(buyPrice(displaySupply)));
+  const currentBuyMae = toMae(buyPrice(displaySupply));
+  const currentSellMae = toMae(sellPrice(displaySupply));
 
+  // ── Animation loop ──────────────────────────────────────────────────────────
+  const animate = useCallback(() => {
     startRef.current = null;
+    setAnimFraction(0);
 
     const tick = (now: number) => {
       if (startRef.current === null) startRef.current = now;
       const elapsed = now - startRef.current;
-      const t2 = Math.min(elapsed / ANIM_DURATION, 1);
-      // ease out cubic
-      const eased = 1 - (1 - t2) ** 3;
-      setAnimatedFraction(fromFraction + (toFraction - fromFraction) * eased);
-      if (t2 < 1) {
+      const frac = Math.min(elapsed / ANIM_MS, 1);
+      setAnimFraction(frac);
+
+      if (frac < 1) {
         rafRef.current = requestAnimationFrame(tick);
+      } else {
+        // Hold, then advance if still playing
+        setTimeout(() => {
+          if (!playRef.current) return;
+          setStepIndex((prev) => {
+            const next = prev + 1;
+            if (next >= STEPS.length) {
+              // Loop: reset to 0
+              setAnimFraction(0);
+              setTimeout(() => {
+                if (playRef.current) animate();
+              }, 0);
+              return 0;
+            }
+            return next;
+          });
+        }, HOLD_MS);
       }
     };
-    rafRef.current = requestAnimationFrame(tick);
 
+    rafRef.current = requestAnimationFrame(tick);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Start auto-play on mount
+  useEffect(() => {
+    animate();
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-    // intentionally only trigger when targetFraction changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetFraction]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-play
+  // Re-animate when stepIndex changes (from manual click)
+  const prevStepRef = useRef(stepIndex);
   useEffect(() => {
-    if (!playing) return undefined;
-    const timer = setTimeout(() => {
-      if (stepIndex < STEPS.length - 1) {
-        setStepIndex((i) => i + 1);
-      } else {
-        setPlaying(false);
-      }
-    }, ANIM_DURATION + 1800);
-    return () => clearTimeout(timer);
-  }, [playing, stepIndex]);
+    if (stepIndex === prevStepRef.current) return;
+    prevStepRef.current = stepIndex;
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    animate();
+  }, [stepIndex, animate]);
 
-  const handlePlay = useCallback(() => {
-    if (stepIndex === STEPS.length - 1) {
-      setStepIndex(0);
-      setAnimatedFraction(0);
-    }
-    setPlaying(true);
-  }, [stepIndex]);
+  const handlePlayPause = useCallback(() => {
+    setPlaying((v) => {
+      if (!v) animate(); // resume
+      return !v;
+    });
+  }, [animate]);
 
-  const handlePause = useCallback(() => setPlaying(false), []);
-
-  const handleStep = useCallback((idx: number) => {
+  const handleStepClick = useCallback((idx: number) => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     setPlaying(false);
     setStepIndex(idx);
+    setAnimFraction(1);
   }, []);
 
-  // Derived SVG values
-  const supplyX = animatedFraction * X_MAX;
-  const priceY = price(supplyX);
-  const dotX = toSvgX(supplyX);
-  const dotY = toSvgY(Math.min(priceY, Y_MAX));
-  const curvePath = buildPath(supplyX);
-  const fillPath = buildFill(supplyX);
+  // ── Render ────────────────────────────────────────────────────────────────
+  const showCurve = displaySupplyM > 0.5;
 
   return (
     <div className="rounded-2xl border border-purple-500/20 bg-[#0a0a0f] overflow-hidden">
 
       {/* Header */}
-      <div className="px-5 pt-5 pb-3">
+      <div className="px-5 pt-5 pb-2">
         <h3 className="text-base font-bold text-white mb-0.5">
           {t('bondingCurve.title', { defaultValue: 'How the Bonding Curve Works' })}
         </h3>
         <p className="text-xs text-white/50">
-          {t('bondingCurve.subtitle', { defaultValue: 'Price rises automatically as more tokens are bought' })}
+          {t('bondingCurve.subtitle', { defaultValue: 'Early buyers get the lowest price — it rises exponentially as more join' })}
         </p>
       </div>
 
-      {/* SVG Chart */}
-      <div className="px-3 pb-2">
+      {/* Chart */}
+      <div className="px-2 pb-1">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
-          style={{ maxHeight: 220, display: 'block' }}
+          style={{ maxHeight: 230, display: 'block' }}
           aria-label={t('bondingCurve.chartAriaLabel', { defaultValue: 'Bonding curve price chart' })}
         >
           <defs>
-            <linearGradient id="curveGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.15" />
-            </linearGradient>
-            <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="buyGrad" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#8b5cf6" />
               <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
-            <filter id="glow">
+            <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.03" />
+            </linearGradient>
+            <linearGradient id="spreadGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.03" />
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            {/* Full ghost curve behind */}
-            <path id="ghostCurve" d={buildPath(X_MAX)} />
           </defs>
 
-          {/* Y-axis grid lines + labels */}
-          {Y_TICKS.map((val) => {
-            const sy = toSvgY(val);
+          {/* Grid lines — Y */}
+          {Y_TICKS.map((maeVal) => {
+            const sy = svgY(maeVal);
             return (
-              <g key={`ytick-${val}`}>
+              <g key={`y-${maeVal}`}>
                 <line
                   x1={PAD.left}
                   y1={sy}
                   x2={W - PAD.right}
                   y2={sy}
-                  stroke="rgba(255,255,255,0.06)"
+                  stroke="rgba(255,255,255,0.05)"
                   strokeDasharray="3 3"
                 />
                 <text
-                  x={PAD.left - 4}
+                  x={PAD.left - 5}
                   y={sy + 4}
                   textAnchor="end"
-                  fontSize="9"
+                  fontSize="8.5"
                   fill="rgba(255,255,255,0.3)"
                 >
-                  {val === 0 ? '0' : `${(val * 1000).toFixed(0)}m`}
+                  {maeVal === 0 ? '0' : `${maeVal}m`}
                 </text>
               </g>
             );
           })}
 
-          {/* X-axis ticks + labels */}
-          {X_TICKS.map((val) => {
-            const sx = toSvgX(val);
-            const baseY = toSvgY(0);
+          {/* Grid lines — X */}
+          {X_TICKS.map((mVal) => {
+            const sx = svgX(mVal * 1e6);
+            const baseY = svgY(0);
             return (
-              <g key={`xtick-${val}`}>
+              <g key={`x-${mVal}`}>
                 <line
                   x1={sx}
-                  y1={baseY}
+                  y1={PAD.top}
                   x2={sx}
-                  y2={baseY + 4}
-                  stroke="rgba(255,255,255,0.2)"
+                  y2={baseY}
+                  stroke="rgba(255,255,255,0.04)"
+                  strokeDasharray="3 3"
                 />
-                <text
-                  x={sx}
-                  y={baseY + 14}
-                  textAnchor="middle"
-                  fontSize="9"
-                  fill="rgba(255,255,255,0.3)"
-                >
-                  {val === 0 ? '0' : `${val}M`}
+                <line x1={sx} y1={baseY} x2={sx} y2={baseY + 4} stroke="rgba(255,255,255,0.15)" />
+                <text x={sx} y={baseY + 14} textAnchor="middle" fontSize="8.5" fill="rgba(255,255,255,0.3)">
+                  {mVal === 0 ? '0' : `${mVal}M`}
                 </text>
               </g>
             );
@@ -294,215 +356,234 @@ const BondingCurveGraph: React.FC = () => {
             x={PAD.left + PLOT_W / 2}
             y={H - 2}
             textAnchor="middle"
-            fontSize="9"
-            fill="rgba(255,255,255,0.4)"
+            fontSize="8.5"
+            fill="rgba(255,255,255,0.35)"
           >
             {t('bondingCurve.axisSupply', { defaultValue: 'Token Supply' })}
           </text>
           <text
-            x={10}
+            x={9}
             y={PAD.top + PLOT_H / 2}
             textAnchor="middle"
-            fontSize="9"
-            fill="rgba(255,255,255,0.4)"
-            transform={`rotate(-90, 10, ${PAD.top + PLOT_H / 2})`}
+            fontSize="8.5"
+            fill="rgba(255,255,255,0.35)"
+            transform={`rotate(-90, 9, ${PAD.top + PLOT_H / 2})`}
           >
-            {t('bondingCurve.axisPrice', { defaultValue: 'Price (AE)' })}
+            {t('bondingCurve.axisPrice', { defaultValue: 'Price (mAE)' })}
           </text>
 
-          {/* Ghost curve (full, dimmed) */}
+          {/* Ghost full buy curve */}
           <path
-            d={buildPath(X_MAX)}
+            d={buildBuyPath(X_MAX)}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="rgba(255,255,255,0.07)"
             strokeWidth="1.5"
             strokeDasharray="4 4"
           />
 
-          {/* Fill area under animated curve */}
-          {animatedFraction > 0.01 && (
+          {/* Ghost full sell curve */}
+          <path
+            d={buildSellPath(X_MAX)}
+            fill="none"
+            stroke="rgba(16,185,129,0.08)"
+            strokeWidth="1"
+            strokeDasharray="3 5"
+          />
+
+          {/* Fill under buy curve */}
+          {showCurve && (
+            <path d={buildFill(displaySupply)} fill="url(#fillGrad)" />
+          )}
+
+          {/* Spread fill between buy and sell */}
+          {showCurve && displaySupplyM > 5 && (
+            <path d={buildSpreadFill(displaySupply)} fill="url(#spreadGrad)" />
+          )}
+
+          {/* Animated sell curve */}
+          {showCurve && (
             <path
-              d={fillPath}
-              fill="url(#curveGrad)"
+              d={buildSellPath(displaySupply)}
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="1.5"
+              strokeDasharray="3 4"
+              opacity="0.5"
             />
           )}
 
-          {/* Animated curve stroke */}
-          {animatedFraction > 0.01 && (
+          {/* Animated buy curve */}
+          {showCurve && (
             <path
-              d={curvePath}
+              d={buildBuyPath(displaySupply)}
               fill="none"
-              stroke="url(#strokeGrad)"
+              stroke="url(#buyGrad)"
               strokeWidth="2.5"
               strokeLinecap="round"
               filter="url(#glow)"
             />
           )}
 
-          {/* Vertical drop line from dot to x-axis */}
-          {animatedFraction > 0.01 && (
+          {/* Vertical drop line */}
+          {showCurve && (
             <line
               x1={dotX}
               y1={dotY}
               x2={dotX}
-              y2={toSvgY(0)}
+              y2={svgY(0)}
               stroke={step.color}
               strokeWidth="1"
               strokeDasharray="3 3"
-              opacity="0.5"
+              opacity="0.4"
             />
           )}
 
-          {/* Dot on curve */}
-          {animatedFraction > 0 && (
+          {/* Dot on buy curve */}
+          {showCurve && (
             <g filter="url(#glow)">
-              <circle cx={dotX} cy={dotY} r="6" fill={step.color} opacity="0.25" />
-              <circle cx={dotX} cy={dotY} r="3.5" fill={step.color} />
-              <circle cx={dotX} cy={dotY} r="1.5" fill="white" />
+              <circle cx={dotX} cy={dotY} r="7" fill={step.color} opacity="0.2" />
+              <circle cx={dotX} cy={dotY} r="4" fill={step.color} />
+              <circle cx={dotX} cy={dotY} r="1.8" fill="white" />
             </g>
           )}
 
-          {/* Price callout */}
-          {animatedFraction > 0.02 && (
+          {/* Price callout — buy */}
+          {showCurve && currentBuyMae < Y_MAX_MAE * 0.92 && (
             <g>
               <rect
-                x={dotX + 6}
-                y={dotY - 12}
-                width={62}
-                height={16}
-                rx="4"
-                fill="#0f0f1a"
+                x={dotX + 8}
+                y={dotY - 13}
+                width={72}
+                height={15}
+                rx="3"
+                fill="#0a0a0f"
                 stroke={step.color}
-                strokeWidth="0.8"
-                opacity="0.9"
+                strokeWidth="0.7"
+                opacity="0.95"
               />
+              <text x={dotX + 12} y={dotY - 2} fontSize="8.5" fill={step.color} fontWeight="700">
+                {`Buy: ${currentBuyMae.toFixed(3)} mAE`}
+              </text>
+            </g>
+          )}
+
+          {/* Spread label */}
+          {showCurve && displaySupplyM > 20 && displaySupplyM < 180 && (
+            <g>
               <text
-                x={dotX + 10}
-                y={dotY}
-                fontSize="9"
-                fill={step.color}
-                fontWeight="600"
+                x={dotX - 6}
+                y={svgY((currentBuyMae + currentSellMae) / 2) + 3}
+                fontSize="7.5"
+                fill="#10b981"
+                opacity="0.6"
+                textAnchor="end"
               >
-                {`${(priceY * 1000).toFixed(3)} mAE`}
+                −0.5%
               </text>
             </g>
           )}
 
           {/* Axes */}
-          <line
-            x1={PAD.left}
-            y1={PAD.top}
-            x2={PAD.left}
-            y2={toSvgY(0)}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="1"
-          />
-          <line
-            x1={PAD.left}
-            y1={toSvgY(0)}
-            x2={W - PAD.right}
-            y2={toSvgY(0)}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="1"
-          />
+          <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={svgY(0)} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+          <line x1={PAD.left} y1={svgY(0)} x2={W - PAD.right} y2={svgY(0)} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
         </svg>
+      </div>
+
+      {/* Live stats row */}
+      <div className="flex gap-3 px-5 pb-3">
+        <div
+          className="flex-1 rounded-xl px-3 py-2 text-center"
+          style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}
+        >
+          <p className="text-[9px] text-white/40 uppercase tracking-wider">Supply</p>
+          <p className="text-sm font-bold text-white mt-0.5">
+            {displaySupplyM < 1
+              ? `${((displaySupplyM * 1e6) / 1e3).toFixed(1)}K`
+              : `${displaySupplyM.toFixed(1)}M`}
+          </p>
+        </div>
+        <div
+          className="flex-1 rounded-xl px-3 py-2 text-center"
+          style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}
+        >
+          <p className="text-[9px] text-white/40 uppercase tracking-wider">Buy price</p>
+          <p className="text-sm font-bold text-blue-300 mt-0.5">
+            {`${currentBuyMae.toFixed(4)} mAE`}
+          </p>
+        </div>
+        <div
+          className="flex-1 rounded-xl px-3 py-2 text-center"
+          style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)' }}
+        >
+          <p className="text-[9px] text-white/40 uppercase tracking-wider">Sell price</p>
+          <p className="text-sm font-bold text-emerald-400 mt-0.5">
+            {`${currentSellMae.toFixed(4)} mAE`}
+          </p>
+        </div>
       </div>
 
       {/* Step description */}
       <div className="px-5 pb-4">
         <div
-          className="rounded-xl p-4 transition-all duration-500"
-          style={{
-            background: `${step.color}12`,
-            border: `1px solid ${step.color}30`,
-          }}
+          className="rounded-xl p-3.5 transition-all duration-500"
+          style={{ background: `${step.color}10`, border: `1px solid ${step.color}25` }}
         >
-          <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${step.accentClass}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${step.accentClass}`}>
             {t(step.labelKey, { defaultValue: `Step ${stepIndex + 1}` })}
           </p>
-          <p className="text-sm text-white/80 leading-relaxed">
+          <p className="text-xs text-white/75 leading-relaxed">
             {t(step.descKey, { defaultValue: '' })}
           </p>
         </div>
       </div>
 
-      {/* Step dots + controls */}
-      <div className="px-5 pb-5 flex items-center justify-between gap-3">
+      {/* Controls */}
+      <div className="px-5 pb-5 flex items-center justify-between">
         {/* Step dots */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {STEPS.map((s, idx) => (
             <button
               key={s.id}
               type="button"
-              onClick={() => handleStep(idx)}
+              onClick={() => handleStepClick(idx)}
               aria-label={`Step ${idx + 1}`}
-              className="rounded-full transition-all duration-300 border-0 p-0 cursor-pointer"
+              className="rounded-full border-0 p-0 cursor-pointer transition-all duration-300"
               style={{
-                width: idx === stepIndex ? 20 : 7,
-                height: 7,
+                width: idx === stepIndex ? 18 : 6,
+                height: 6,
                 background: idx === stepIndex ? step.color : 'rgba(255,255,255,0.15)',
               }}
             />
           ))}
         </div>
 
-        {/* Prev / Play-Pause / Next */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleStep(Math.max(0, stepIndex - 1))}
-            disabled={stepIndex === 0}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors border-0 cursor-pointer disabled:opacity-30"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
-            aria-label="Previous step"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M6.5 2L3.5 5l3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            onClick={playing ? handlePause : handlePlay}
-            className="flex items-center gap-1.5 px-3 h-7 rounded-full text-white text-xs font-semibold transition-all border-0 cursor-pointer"
-            style={{
-              background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
-              boxShadow: '0 0 12px rgba(139,92,246,0.4)',
-            }}
-          >
-            {playing ? (
-              <>
-                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                  <rect x="1" y="1" width="2.5" height="7" rx="0.5" fill="white" />
-                  <rect x="5.5" y="1" width="2.5" height="7" rx="0.5" fill="white" />
-                </svg>
-                {t('bondingCurve.pause', { defaultValue: 'Pause' })}
-              </>
-            ) : (
-              <>
-                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                  <path d="M1.5 1.5l6 3-6 3V1.5z" fill="white" />
-                </svg>
-                {stepIndex === STEPS.length - 1
-                  ? t('bondingCurve.replay', { defaultValue: 'Replay' })
-                  : t('bondingCurve.play', { defaultValue: 'Play' })}
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleStep(Math.min(STEPS.length - 1, stepIndex + 1))}
-            disabled={stepIndex === STEPS.length - 1}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors border-0 cursor-pointer disabled:opacity-30"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
-            aria-label="Next step"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M3.5 2l3 3-3 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
+        {/* Play / Pause */}
+        <button
+          type="button"
+          onClick={handlePlayPause}
+          className="flex items-center gap-1.5 px-3 h-7 rounded-full text-white text-xs font-semibold border-0 cursor-pointer"
+          style={{
+            background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+            boxShadow: '0 0 12px rgba(139,92,246,0.35)',
+          }}
+        >
+          {playing ? (
+            <>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <rect x="1" y="1" width="2.5" height="7" rx="0.5" fill="white" />
+                <rect x="5.5" y="1" width="2.5" height="7" rx="0.5" fill="white" />
+              </svg>
+              {t('bondingCurve.pause', { defaultValue: 'Pause' })}
+            </>
+          ) : (
+            <>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M1.5 1.5l6 3-6 3V1.5z" fill="white" />
+              </svg>
+              {t('bondingCurve.play', { defaultValue: 'Play' })}
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

@@ -141,6 +141,47 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
             </svg>
           </div>
         </button>
+
+        {/* Option 3: AI Agent */}
+        <a
+          href="https://github.com/epic0x/superhero-agent-skill"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative flex items-center gap-4 w-full rounded-2xl p-4 text-left transition-all duration-200 no-underline bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20"
+        >
+          <div
+            className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
+            style={{ background: 'rgba(16,185,129,0.12)' }}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <rect x="4" y="4" width="20" height="20" rx="5" stroke="#10b981" strokeWidth="2" />
+              <circle cx="14" cy="12" r="3" fill="#10b981" />
+              <path d="M9 20c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="20" cy="8" r="2" fill="#10b981" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-white text-sm">
+                {t('common.modals.onboarding.agentTitle', { defaultValue: 'Onboard your AI Agent' })}
+              </span>
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399' }}
+              >
+                {t('common.modals.onboarding.agentBadge', { defaultValue: 'Skill' })}
+              </span>
+            </div>
+            <p className="text-xs text-white/50 mt-0.5">
+              {t('common.modals.onboarding.agentDesc', { defaultValue: 'Let your AI agent interact with Superhero on your behalf' })}
+            </p>
+          </div>
+          <div className="shrink-0 text-white/30">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M7 5l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </a>
       </div>
 
       {showWalletOptions && (

@@ -24,8 +24,16 @@ export const YouTubeEmbed = ({ videoId, onDismiss }: YouTubeEmbedProps) => {
         className="w-full h-full"
         src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
         title={t('embed.youtubeTitle')}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        // embed sandboxing: cross-origin embed, previously unsandboxed. Minimal
+        // allowlist verified (headless-browser click-through, see PR) to still render/play the
+        // player: allow-scripts + allow-same-origin are required for the YT player app to
+        // initialize at all (without allow-same-origin the frame gets an opaque origin and the
+        // player fails to boot); allow-presentation backs the player's cast button; allow-popups
+        // backs the "Watch on YouTube" / share links. `clipboard-write` above was dropped
+        // (address-swap risk) — nothing in this embed needs it.
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
       />
     </div>
   );

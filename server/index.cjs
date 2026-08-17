@@ -2,6 +2,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { injectHead } = require('./lib/head.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -10,6 +12,20 @@ const API_BASE = process.env.SUPERHERO_API_URL || 'https://api.superhero.com';
 
 // Load template once
 let indexHtml = fs.readFileSync(INDEX_HTML, 'utf8');
+
+// CSP: index.html's three first-party inline <script> tags already carry a
+// `nonce="__CSP_NONCE__"` placeholder (checked into index.html) that gets replaced with a
+// real per-response nonce below. Vite does not preserve a hand-authored `nonce` attribute on
+// the `<script type="module" src="...">` entry tag it emits at build time — verified against
+// this build's dist/index.html; Vite only auto-adds one via the `build.html.cspNonce` config
+// option, which lives in vite.config.ts (out of this task's file scope — see
+// the CSP rollout notes). Patch the
+// same placeholder onto that tag once, here, at server start, so the one per-request
+// `replaceAll('__CSP_NONCE__', nonce)` below covers all four <script> tags in the document.
+indexHtml = indexHtml.replace(
+  /<script type="module"(?![^>]*\bnonce=)([^>]*)>/,
+  '<script type="module" nonce="__CSP_NONCE__"$1>',
+);
 
 function envInject(html) {
   // Simple env subst for window.__SUPERCONFIG__ placeholders like $BACKEND_URL
@@ -25,7 +41,6 @@ function envInject(html) {
 }
 
 function truncate(s, n){ const t=(s||'').trim(); return t.length<=n?t:t.slice(0,Math.max(0,n-1))+'…'; }
-function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));}
 
 function absolutize(url, origin){ if(!url) return undefined; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
 
@@ -208,57 +223,146 @@ async function buildMeta(pathname, origin){
   return { title: 'Superhero', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
 }
 
-function injectHead(html, meta){
-  const parts = [];
-  parts.push(`<title>${escapeHtml(meta.title)}</title>`);
-  if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
-  if (meta.canonical) parts.push(`<link rel="canonical" href="${meta.canonical}">`);
-  parts.push(`<meta property="og:site_name" content="Superhero">`);
-  parts.push(`<meta property="og:type" content="${meta.ogType || 'website'}">`);
-  parts.push(`<meta property="og:title" content="${escapeHtml(meta.title)}">`);
-  if (meta.description) parts.push(`<meta property="og:description" content="${escapeHtml(meta.description)}">`);
-  if (meta.canonical) parts.push(`<meta property="og:url" content="${meta.canonical}">`);
-  parts.push(`<meta property="og:image" content="${meta.ogImage}">`);
-  parts.push(`<meta property="og:image:width" content="1200">`);
-  parts.push(`<meta property="og:image:height" content="630">`);
-  parts.push(`<meta name="twitter:card" content="summary_large_image">`);
-  parts.push(`<meta name="twitter:title" content="${escapeHtml(meta.title)}">`);
-  if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeHtml(meta.description)}">`);
-  parts.push(`<meta name="twitter:image" content="${meta.ogImage}">`);
-  const idx = html.indexOf('</head>');
-  if (idx === -1) return html;
-  return html.slice(0, idx) + '\n' + parts.join('\n') + '\n' + html.slice(idx);
+// --- HARDEN-04: Content-Security-Policy (enforcing) -------------------------------------
+// Enforcing — see @agency/products/superhero/tasks/HARDEN-04-csp-trusted-types.md. The policy
+// blocks non-nonce'd scripts (`script-src 'strict-dynamic' 'nonce-…'`, no unsafe-inline) and,
+// via `require-trusted-types-for 'script'` + `trusted-types superhero-dom default`, forces every
+// innerHTML-class write and script-URL sink through src/utils/trustedTypes.ts. No report
+// sink was ever wired (no report-uri/report-to header, no Reporting-Endpoints, no listener —
+// grep-confirmed), so nothing here collected telemetry; enforcement is instead gated by the
+// zero-violation Playwright soak in e2e/csp.spec.ts (npm run test:e2e:csp), which walks the
+// routes under this exact header and fails on any `securitypolicyviolation`.
+
+function originOf(url) {
+  try { return new URL(url).origin; } catch { return null; }
+}
+
+// Deploy-time overrides this server already envsubst's into window.__SUPERCONFIG__ (see
+// envInject above). Reading them here too means connect-src self-adjusts to whatever origins
+// the running container is actually pointed at, instead of drifting from a hardcoded
+// snapshot of src/config.ts's mainnet/testnet defaults whenever ops repoints an env var.
+const RUNTIME_CONNECT_ENV_KEYS = [
+  'BACKEND_URL', 'SUPERHERO_API_URL', 'SUPERHERO_WS_URL', 'NODE_URL', 'WALLET_URL',
+  'MIDDLEWARE_URL', 'DEX_BACKEND_URL', 'MAINNET_DEX_BACKEND_URL', 'TESTNET_DEX_BACKEND_URL',
+  'GOVERNANCE_API_URL', 'EXPLORER_URL',
+];
+
+// Embed inventory: mainnet +
+// testnet API/middleware/node/DEX/governance/compiler origins hardcoded in src/config.ts,
+// plus the third-party origins the app calls directly — F7 CORS proxies (LinkPreviewCard),
+// F2 Twitter oEmbed existence check (TwitterCard — the `html` field is never rendered), and
+// the GitHub/Openverse/Ethplorer card + search integrations (grep-verified literal URLs).
+const CONNECT_SRC_ALLOWLIST = [
+  "'self'",
+  'https://api.superhero.com', 'wss://api.superhero.com',
+  'https://testnet.api.dev.tokensale.org', 'wss://testnet.api.dev.tokensale.org',
+  'https://mdw.wordcraft.fun',
+  'https://testnet.aeternity.io',
+  'https://v7.compiler.aepps.com',
+  'https://dex-backend-mainnet.prd.service.aepps.com',
+  'https://dex-backend-testnet.prd.service.aepps.com',
+  'https://governance-server-mainnet.prd.service.aepps.com',
+  'https://governance-server-testnet.prd.service.aepps.com',
+  'https://api.codetabs.com',
+  'https://api.allorigins.win',
+  'https://publish.twitter.com',
+  'https://api.github.com',
+  'https://api.openverse.org',
+  'https://api.ethplorer.io',
+];
+
+function buildConnectSrc() {
+  const dynamic = RUNTIME_CONNECT_ENV_KEYS
+    .map((k) => originOf(process.env[k]))
+    .filter(Boolean);
+  return Array.from(new Set([...CONNECT_SRC_ALLOWLIST, ...dynamic])).join(' ');
+}
+
+// The four sandboxed embed hosts: Twitter/X, YouTube, Spotify, Jitsi. Jitsi's
+// host is deploy-configurable (CONFIG.JITSI_DOMAIN / $JITSI_DOMAIN, default meet.jit.si) —
+// read the same env var this server already envsubst's into the page so this stays in sync.
+function buildFrameSrc() {
+  const jitsiOrigin = `https://${process.env.JITSI_DOMAIN || 'meet.jit.si'}`;
+  return [
+    'https://platform.twitter.com',
+    'https://www.youtube-nocookie.com',
+    'https://open.spotify.com',
+    jitsiOrigin,
+  ].join(' ');
+}
+
+function buildCsp(nonce) {
+  return [
+    "default-src 'none'",
+    `script-src 'strict-dynamic' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' https: data: blob:",
+    "media-src 'self' https: data: blob:",
+    "font-src 'self' data:",
+    "manifest-src 'self'",
+    `connect-src ${buildConnectSrc()}`,
+    `frame-src ${buildFrameSrc()}`,
+    "object-src 'none'",
+    "base-uri 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "require-trusted-types-for 'script'",
+    // superhero-dom: the audited first-party writer; default: the deny-markup safety net for
+    // implicit third-party sinks (e.g. Radix Select's static <style>). See src/utils/trustedTypes.ts.
+    'trusted-types superhero-dom default',
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
+// HARDEN-04: the single place the SPA document is rendered. Every path that returns
+// index.html goes through here, so the nonce, the enforcing CSP header and the
+// `__CSP_NONCE__` substitution can never drift apart between routes.
+async function sendSpaDocument(req, res) {
+  // Fresh per-response nonce, matched into the CSP header and into every
+  // nonce="__CSP_NONCE__" placeholder in the served document (see indexHtml patch above).
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.setHeader('Content-Security-Policy', buildCsp(nonce));
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  try {
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const meta = await buildMeta(req.path, origin);
+    res.send(injectHead(envInject(indexHtml), meta).replaceAll('__CSP_NONCE__', nonce));
+  } catch (e) {
+    res.send(indexHtml.replaceAll('__CSP_NONCE__', nonce));
+  }
 }
 
 const app = express();
 app.use('/assets', express.static(path.join(DIST_DIR, 'assets'), { immutable: true, maxAge: '1y' }));
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
-app.use(express.static(DIST_DIR, { maxAge: '1d' }));
 
-app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], async (req, res) => {
-  try {
-    const origin = `${req.protocol}://${req.get('host')}`;
-    const meta = await buildMeta(req.path, origin);
-    const html = injectHead(envInject(indexHtml), meta);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (e) {
-    res.sendFile(INDEX_HTML);
-  }
+// HARDEN-04 bypass fix: `index: false` on the static mount below only disables the *implicit*
+// directory index, so a literal `GET /index.html` still hit express.static and returned the SPA
+// document with no CSP header at all and the raw `__CSP_NONCE__` placeholders — the same
+// application document without the custody-boundary control. Route every literal *.html request
+// to the document handler *before* express.static ever sees it. Matched by suffix rather than by
+// exact path on purpose: it also covers `/./index.html` and, on a case-insensitive filesystem,
+// `/INDEX.HTML`. dist/index.html is the only *.html file the build emits (verified), so nothing
+// legitimate is diverted.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!/\.html?$/i.test(req.path)) return next();
+  return sendSpaDocument(req, res);
 });
+// `index: false` — HARDEN-04 fix: express.static's default `index: 'index.html'` option was
+// auto-serving the raw dist/index.html file for GET `/` (a directory-style request), which
+// silently short-circuited BOTH the SEO injectHead route below (head hardening — title/canonical/
+// JSON-LD never actually reached `/`, the highest-traffic route) AND this CSP header (it was
+// entirely absent on `/`; confirmed via `curl -I` before this fix — see task progress log).
+// Static asset files below (assets/, og-default.png, and any other literal filename under
+// dist/) are unaffected and still served exactly as before; only the implicit index.html
+// fallback for directory-style paths is disabled so those always reach the route handlers.
+app.use(express.static(DIST_DIR, { maxAge: '1d', index: false }));
+
+app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], sendSpaDocument);
 
 // Catch-all: serve SPA with basic SEO
-app.get('*', async (req, res) => {
-  try {
-    const origin = `${req.protocol}://${req.get('host')}`;
-    const meta = await buildMeta(req.path, origin);
-    const html = injectHead(envInject(indexHtml), meta);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (e) {
-    res.sendFile(INDEX_HTML);
-  }
-});
+app.get('*', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);

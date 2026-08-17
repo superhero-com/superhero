@@ -58,12 +58,12 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl',
+        'relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl animate-scaleIn hover-lift',
         isRail ? 'p-4' : 'p-5 md:p-6',
         className,
       )}
     >
-      <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" aria-hidden />
+      <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl animate-float" aria-hidden />
       <div className="relative">
         <div className="mb-3 flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/25 bg-cyan-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300">
@@ -112,9 +112,16 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
 
         <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-700 ease-out"
-            style={{ width: `${progressPct}%` }}
-          />
+            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-700 ease-out relative"
+            style={{
+              width: `${progressPct}%`,
+              animation: progressPct > 0 ? 'progressFill 1s ease-out' : 'none',
+            }}
+          >
+            {progressPct > 0 && (
+              <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+            )}
+          </div>
         </div>
         <p className="mb-3 text-[11px] text-white/40">
           {t('onboarding.progress', { done: doneCount, total })}
@@ -123,10 +130,10 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
         <button
           type="button"
           onClick={handleContinue}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25 hover-lift group"
         >
           {ctaLabel}
-          <span className="text-base">→</span>
+          <span className="text-base group-hover:animate-bounce">→</span>
         </button>
       </div>
     </div>

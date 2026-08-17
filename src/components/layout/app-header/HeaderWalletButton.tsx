@@ -1,25 +1,22 @@
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
-import { AeButton } from '@/components/ui/ae-button';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/ae-dropdown-menu';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAccount, useModal } from '../../../hooks';
+import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
-import Favicon from '../../../svg/favicon.svg?react';
 import { IconThreeDots } from '../../../icons';
 
 const HeaderWalletButton = () => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
   const { disconnectWallet } = useWalletConnect();
-  const { openModal } = useModal();
   const { decimalBalance } = useAccount();
   const navigate = useNavigate();
-  const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = async () => {
     await disconnectWallet();
     window.location.reload();
@@ -30,20 +27,16 @@ const HeaderWalletButton = () => {
     }
   };
 
-  // If not connected or activeAccount is undefined, show connect button
+  // If not connected, show the connect button. ConnectWalletButton owns the
+  // standalone gate: in an installed PWA it opens the inline onboarding flow,
+  // otherwise it opens the external connect modal.
   if (!activeAccount) {
     return (
-      <AeButton
-        onClick={handleConnect}
-        disabled={false}
-        loading={false}
-        variant="default"
-        size="default"
+      <ConnectWalletButton
+        variant="dex"
+        label={t('buttons.connectWalletDex')}
         className="gap-2 rounded-xl sm:rounded-full text-sm"
-      >
-        <Favicon className="w-4 h-4" />
-        {t('buttons.connectWalletDex')}
-      </AeButton>
+      />
     );
   }
 

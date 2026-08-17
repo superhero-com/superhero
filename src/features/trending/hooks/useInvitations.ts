@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useMemo, useRef, useState,
+  useCallback, useEffect, useMemo, useState,
 } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { getAffiliationTreasury } from '../../../libs/affiliation';
 import { normalizeSecretKey } from '../../../utils/secretKey';
 import { fetchJson } from '../../../utils/common';
+import { InvitationsService } from '../../../api/generated/services/InvitationsService';
 import {
   invitationListAtom,
   invitationCodeAtom,
@@ -84,9 +85,6 @@ export function useInvitations() {
 
   // Transaction list state for invitation statuses
   const [transactionList, setTransactionList] = useState<ITransaction[]>([]);
-
-  // Track which invitees we've already checked for claimed status to prevent infinite loops
-  const checkedInviteesRef = useRef<Set<string>>(new Set());
 
   // Helper functions
   const prepareInviteLink = useCallback(
@@ -242,9 +240,6 @@ export function useInvitations() {
   const refreshInvitationData = useCallback(async () => {
     if (!activeAccount) return;
 
-    // Reset checked invitees on manual refresh to re-check everything
-    checkedInviteesRef.current.clear();
-
     setLoading(true);
     try {
       const data = await loadAccountInvitations(activeAccount);
@@ -360,9 +355,6 @@ export function useInvitations() {
   useEffect(() => {
     if (!activeAccount) return;
 
-    // Reset checked invitees when account changes
-    checkedInviteesRef.current.clear();
-
     const loadData = async () => {
       setLoading(true);
       try {
@@ -379,68 +371,59 @@ export function useInvitations() {
     loadData();
   }, [activeAccount, refreshTrigger, loadAccountInvitations, setLoading]);
 
-  // Load claimed invitations when we have invitations to check
-  useEffect(() => {
-    // Get list of invitees that need to be checked (haven't been checked yet)
-    const inviteesToCheck = invitations
-      .filter((inv) => !checkedInviteesRef.current.has(inv.invitee))
-      .map((inv) => inv.invitee);
+  // Load claimed status for all of this inviter's invitations in one paginated
+  // sweep instead of one middleware lookup per invitee. The backend already
+  // tracks claim status on the Invitation row (receiver_address is the
+  // ephemeral invitee keypair; claimer_address is the real wallet that
+  // redeemed it), keyed the same way `invitee` is used throughout this hook.
+  const loadClaimedStatusForInviter = useCallback(async (
+    inviter: string,
+  ): Promise<Record<string, ClaimedInfo | boolean>> => {
+    const claimedByReceiver: Record<string, ClaimedInfo | boolean> = {};
+    let page = 1;
+    let totalPages = 1;
 
-    if (inviteesToCheck.length === 0) return;
+    do {
+      // eslint-disable-next-line no-await-in-loop
+      const response = await InvitationsService.listAll({
+        inviter,
+        limit: 100,
+        page,
+      }) as any;
+      const items: any[] = Array.isArray(response?.items) ? response.items : [];
 
-    const loadClaimed = async () => {
-      const claimedResults: Record<string, ClaimedInfo | boolean>[] = await Promise.all(
-        inviteesToCheck.map(async (invitee) => {
-          // Mark as checked immediately to prevent duplicate requests
-          checkedInviteesRef.current.add(invitee);
-
-          try {
-            const inviteeTransactions = await loadAccountInvitations(invitee);
-            const redeemTx = inviteeTransactions.find(
-              (tx) => tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code,
-            );
-            if (redeemTx) {
-              // The claimer's wallet address is passed
-              // as the second argument to redeemInvitationCode(secretKey, claimerAddress).
-              // The callerId is the invitation keypair address (invitee), NOT the actual claimer.
-              const claimerAddress = redeemTx.tx?.arguments?.[1]?.value as string | undefined;
-
-              // Always mark as claimed when we see a redeem tx.
-              // If we can't extract claimer details,
-              // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
-              return {
-                [invitee]: claimerAddress
-                  ? {
-                    claimedBy: claimerAddress,
-                    claimedAt: redeemTx.microTime,
-                    claimTxHash: redeemTx.hash,
-                  } as ClaimedInfo
-                  : true,
-              };
-            }
-          } catch (error) {
-            console.error(`Failed to load claimed status for ${invitee}:`, error);
-          }
-          return {};
-        }),
-      );
-
-      let newClaimedInvitations: Record<string, ClaimedInfo | boolean> = {};
-      claimedResults.forEach((claimed: Record<string, ClaimedInfo | boolean>) => {
-        newClaimedInvitations = {
-          ...newClaimedInvitations,
-          ...claimed,
-        };
+      items.forEach((item) => {
+        if (!item?.claimed || !item?.receiver_address) return;
+        claimedByReceiver[item.receiver_address] = item.claimer_address
+          ? {
+            claimedBy: item.claimer_address,
+            claimedAt: item.claimed_at ? new Date(item.claimed_at).getTime() : undefined,
+            claimTxHash: item.claim_tx_hash ?? undefined,
+          } as ClaimedInfo
+          : true;
       });
 
-      setClaimedInvitations((prev) => ({
-        ...prev,
-        ...newClaimedInvitations,
-      }));
+      totalPages = response?.meta?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
+
+    return claimedByReceiver;
+  }, []);
+
+  useEffect(() => {
+    if (!activeAccount) return;
+
+    const loadClaimed = async () => {
+      try {
+        const claimedByReceiver = await loadClaimedStatusForInviter(activeAccount);
+        setClaimedInvitations((prev) => ({ ...prev, ...claimedByReceiver }));
+      } catch (error) {
+        console.error('Failed to load claimed invitation status:', error);
+      }
     };
 
     loadClaimed();
-  }, [invitations, loadAccountInvitations, setClaimedInvitations]);
+  }, [activeAccount, refreshTrigger, loadClaimedStatusForInviter, setClaimedInvitations]);
 
   return {
     // Data

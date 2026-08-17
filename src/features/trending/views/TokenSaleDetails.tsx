@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { collectionLabel } from '@/utils/collection';
+import { toTokenLookupParam } from '@/utils/address';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -204,7 +205,9 @@ const TokenSaleDetails = () => {
     queryFn: async () => {
       if (!tokenName) throw new Error('Token name is required');
       try {
-        const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        const result = await TokensService.findByAddress({
+          address: toTokenLookupParam(tokenName),
+        });
         if (!result) {
           throw new Error('Token not found');
         }

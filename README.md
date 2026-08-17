@@ -63,11 +63,21 @@ Configuration is defined in code at `src/config.ts` via the exported `CONFIG` ob
 
 You can override some values at build time using Vite env vars:
 
+`VITE_WEBAUTHN_RP_ID` — the WebAuthn RP ID for wallet passkeys, pinned into the
+artifact at build time and never derived from the serving host. It defaults to
+`superhero.com`, which is correct for production only. Every non-production build
+must set it to a registrable domain suffix of its own origin, or passkey
+registration fails with a `SecurityError`:
+
+- local dev on `localhost` → `VITE_WEBAUTHN_RP_ID=localhost`
+- PR previews on `pr-<N>-superhero.stg.service.aepps.com` → `VITE_WEBAUTHN_RP_ID=stg.service.aepps.com`
+
 ```bash
 # Example overrides at build/dev time
 VITE_SUPERHERO_API_URL=https://api.example.com \
 VITE_SUPERHERO_WS_URL=wss://ws.example.com \
 VITE_X_OAUTH_CLIENT_ID=your_x_oauth_client_id \
+VITE_WEBAUTHN_RP_ID=localhost \
 npm run dev
 
 # Or for a production build
@@ -99,6 +109,8 @@ Defined in `package.json`:
 - `test:e2e:update-snapshots` — update screenshot baselines in Docker (writes to `e2e/` on the host)
 - `test:e2e:host` — run e2e tests on the host (starts dev server if needed)
 - `test:e2e:host:update-snapshots` — update screenshot baselines on the host (visual regression)
+- `generate:pwa-icons` — regenerate `public/icons/*.png` from the shared native-app icon master (on demand only, not part of `build`; see the script's header comment for details)
+- `verify:pwa-assets` — CI/pre-deploy gate: verifies the manifest + icons are served with the correct `Content-Type` from a running origin, e.g. `npm run verify:pwa-assets -- http://localhost:5174`
 
 ## End-to-end tests
 

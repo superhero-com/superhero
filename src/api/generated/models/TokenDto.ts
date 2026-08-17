@@ -2,19 +2,29 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CollectionInfoDto } from './CollectionInfoDto';
 import type { PriceDto } from './PriceDto';
-import type { TokenPriceMovementDto } from './TokenPriceMovementDto';
+import type { TokenPerformanceDto } from './TokenPerformanceDto';
 export type TokenDto = {
     id: number;
     network_id: string;
     factory_address: string;
     sale_address: string;
+    create_tx_hash: string;
     creator_address: string;
+    dao_address: string;
     owner_address: string;
     beneficiary_address: string;
     bonding_curve_address: string;
     collection: string;
+    /**
+     * Resolved metadata for the token's collection, or null when the token has no collection / the collection is unknown to the factory.
+     */
+    collection_info: CollectionInfoDto | null;
     metaInfo: Record<string, any>;
+    unlisted: boolean;
+    last_sync_tx_count: number;
+    tx_count: number;
     address: string;
     name: string;
     symbol: string;
@@ -28,14 +38,11 @@ export type TokenDto = {
     market_cap: string;
     market_cap_data: PriceDto;
     total_supply: string;
+    circulating_supply: string | null;
     dao_balance: string;
+    trending_score: number;
+    trending_score_update_at: string;
+    performance: TokenPerformanceDto | null;
     created_at: string;
-    tx_type: string;
-    volume: string;
-    amount: PriceDto;
-    unit_price: PriceDto;
-    create_tx_hash?: string;
-
-    performance?: TokenPriceMovementDto;
 };
 

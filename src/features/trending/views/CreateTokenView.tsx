@@ -3,7 +3,8 @@ import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter'
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { collectionLabel } from '@/utils/collection';
-import { allowedNameCharsToPattern } from '@/utils/collectionNameChars';
+import { detectMatchingCollections, preferredCollection } from '@/utils/collectionNameChars';
+import BondingCurveGraph from '../components/BondingCurveGraph';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
@@ -18,11 +19,17 @@ import {
 } from '@/features/transaction-notification';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  TrendingUp, Sigma, Landmark, Coins,
+} from 'lucide-react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
+import RocketIcon from '../../../svg/iconRocket.svg?react';
+import SparkleIcon from '../../../svg/iconSparkle.svg?react';
+import PageSpaceHero from '../../../components/hero-banner/PageSpaceHero';
 import { SuperheroApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -31,7 +38,6 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useCommunityFactory } from '../../../hooks/useCommunityFactory';
 import type {
   CollectionId,
-  IAllowedNameChars,
   ICollectionData,
 } from '../../../utils/types';
 
@@ -41,30 +47,6 @@ interface TokenMetaInfo {
   website: string;
   twitter: string;
 }
-
-/**
- * Tests if a string contains only characters allowed by a collection's rules.
- * Returns true if valid, false if contains disallowed characters.
- */
-const isValidForCollection = (str: string, collection: ICollectionData): boolean => {
-  if (!str || !collection?.allowed_name_chars) return false;
-  const pattern = allowedNameCharsToPattern(collection.allowed_name_chars);
-  if (!pattern) return false;
-  // Create regex that matches ALLOWED characters (not invalid ones)
-  const allowedRegex = new RegExp(`^[${pattern}]+$`);
-  return allowedRegex.test(str);
-};
-
-/**
- * Detects which collections match the input string based on allowed characters.
- */
-const detectMatchingCollections = (
-  str: string,
-  collections: ICollectionData[],
-): ICollectionData[] => {
-  if (!str) return [];
-  return collections.filter((collection) => isValidForCollection(str, collection));
-};
 
 const CreateTokenView = () => {
   const { t } = useTranslation();
@@ -77,7 +59,7 @@ const CreateTokenView = () => {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -96,7 +78,6 @@ const CreateTokenView = () => {
   const [aeAmount, setAeAmount] = useState<string>('');
   const [aeAmountDisplay, setAeAmountDisplay] = useState<string>('');
   const [collectionModel, setCollectionModel] = useState<CollectionId>();
-  const [detectedCollections, setDetectedCollections] = useState<ICollectionData[]>([]);
   const [tokenMetaInfo] = useState<TokenMetaInfo>({
     collection: 'word',
     description: '',
@@ -111,7 +92,7 @@ const CreateTokenView = () => {
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState<string>();
   const [loadingPrice, setLoadingPrice] = useState(false);
   const [price, setPrice] = useState(Decimal.ZERO);
-  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'unsupported'>('idle');
+  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'unsupported'>('idle');
   const [foundToken, setFoundToken] = useState<{
     address: string;
     sale_address?: string;
@@ -132,15 +113,11 @@ const CreateTokenView = () => {
     [activeFactoryCollections],
   );
 
-  const selectedCollection = useMemo(
-    (): ICollectionData => (activeFactorySchema?.collections || {})[collectionModel!],
-    [activeFactorySchema, collectionModel],
-  );
-
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target as Node)) {
+      const dropdown = languageDropdownRef.current;
+      if (dropdown && !dropdown.contains(event.target as Node)) {
         setShowLanguageDropdown(false);
       }
     };
@@ -165,38 +142,38 @@ const CreateTokenView = () => {
     initializeFactory();
   }, [loadFactorySchema]);
 
-  // Auto-detect language from input and set collection
-  useEffect(() => {
-    if (!activeFactoryCollectionsArr.length) return;
+  // Which collections accept what the user has typed so far. Derived rather than
+  // stored so the chip never lags a keystroke behind the input.
+  const detectedCollections = useMemo(
+    () => detectMatchingCollections(tokenName.trim(), activeFactoryCollectionsArr),
+    [tokenName, activeFactoryCollectionsArr],
+  );
 
-    const trimmed = tokenName.trim();
-    
-    if (!trimmed) {
-      // No input - set to first available collection (default to English/WORDS)
-      if (!collectionModel) {
-        const firstCollection = activeFactoryCollectionsArr[0] as any;
-        setCollectionModel(firstCollection?.id);
-      }
-      setDetectedCollections([]);
-      return;
+  // The availability check below runs against the debounced name, so it has to
+  // judge "unsupported" against that same value — detecting on the live input
+  // would label the previous name with the current input's verdict.
+  const detectedForDebounced = useMemo(
+    () => detectMatchingCollections(
+      (tokenNameDebounced || '').trim(),
+      activeFactoryCollectionsArr,
+    ),
+    [tokenNameDebounced, activeFactoryCollectionsArr],
+  );
+
+  // The collection a deploy will actually use. Derived from the typed name in
+  // the same pass that detects it, so submitting can never race a state update
+  // and send a name to a collection whose rules reject it. `collectionModel`
+  // holds only what the user picked by hand, honoured while it still accepts
+  // the name — every collection allows "-", so "A-B" can match several.
+  const selectedCollection = useMemo((): ICollectionData | undefined => {
+    if (!detectedCollections.length) {
+      // Nothing matches, or the field is empty: fall back to the default so the
+      // character hint still has a collection to describe.
+      return preferredCollection(activeFactoryCollectionsArr);
     }
-
-    // Detect matching collections based on character patterns
-    const matches = detectMatchingCollections(trimmed, activeFactoryCollectionsArr);
-    setDetectedCollections(matches);
-
-    if (matches.length === 1) {
-      // Exactly one match - auto-select it
-      setCollectionModel(matches[0].id);
-    } else if (matches.length > 1) {
-      // Multiple matches - keep current selection if valid, otherwise pick first
-      const currentStillValid = matches.some(c => c.id === collectionModel);
-      if (!currentStillValid) {
-        setCollectionModel(matches[0].id);
-      }
-    }
-    // If matches.length === 0, keep current collection but mark as unsupported
-  }, [tokenName, activeFactoryCollectionsArr, collectionModel]);
+    return detectedCollections.find((c) => c.id === collectionModel)
+      ?? preferredCollection(detectedCollections);
+  }, [detectedCollections, activeFactoryCollectionsArr, collectionModel]);
 
   // Price calculation effects
   useEffect(() => {
@@ -251,27 +228,24 @@ const CreateTokenView = () => {
     run();
   }, [inputMode, aeAmountDebounced]);
 
-  // Validation
-  const validateStringWithCustomErrors = useCallback((str: string): string | true => {
-    if (!selectedCollection?.allowed_name_chars) return true;
-    
-    if (isValidForCollection(str, selectedCollection)) {
-      return true;
-    }
+  // Collections carry their own casing rules (WORDS is A–Z, RUSSIAN is А–Я), so
+  // uppercasing is what makes a typed name detectable at all.
+  const normalizeTokenName = useCallback(
+    (value: string): string => value.toUpperCase().replace(/ /g, '-'),
+    [],
+  );
 
-    const pattern = allowedNameCharsToPattern(selectedCollection.allowed_name_chars);
-    return t('trending.createToken.errors.allowedCharsRange', { chars: pattern });
-  }, [selectedCollection, t]);
-
-  const normalizeTokenName = useCallback((value: string): string => {
-    // During composition (e.g. Chinese IME), don't normalize
-    return value.toUpperCase().replace(/ /g, '-');
-  }, []);
-
-  const isComposingName = useRef(false);
+  // While an IME composition is active (e.g. typing Chinese via pinyin) the input
+  // holds intermediate Latin text that belongs to no collection. Normalizing it
+  // would abort the composition, and reporting on it would flash "unsupported"
+  // for the whole time the user is typing — so both are suspended until commit.
+  // Tracked twice on purpose: the ref is read inside the change handler before a
+  // re-render can land, the state drives what the chip renders.
+  const isComposingNameRef = useRef(false);
+  const [isComposingName, setIsComposingName] = useState(false);
 
   const onNameUpdate = (value: string) => {
-    if (isComposingName.current) {
+    if (isComposingNameRef.current) {
       setTokenName(value);
       return;
     }
@@ -279,13 +253,14 @@ const CreateTokenView = () => {
   };
 
   const onNameCompositionStart = () => {
-    isComposingName.current = true;
+    isComposingNameRef.current = true;
+    setIsComposingName(true);
   };
 
   const onNameCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
-    isComposingName.current = false;
-    const normalized = normalizeTokenName(e.currentTarget.value);
-    setTokenName(normalized);
+    isComposingNameRef.current = false;
+    setIsComposingName(false);
+    setTokenName(normalizeTokenName(e.currentTarget.value));
   };
 
   // Name availability check
@@ -297,28 +272,23 @@ const CreateTokenView = () => {
       setAlreadyRegisteredAs(undefined);
       setAlreadyRegisteredName(undefined);
       const trimmed = (tokenNameDebounced || '').trim();
-      
+
       if (!trimmed) {
         setNameStatus('idle');
         return;
       }
 
-      // Check if characters are supported
-      if (detectedCollections.length === 0 && trimmed) {
-        setNameStatus('unsupported');
+      // No collection accepts these characters, so there is nothing to look up.
+      // Mid-composition text is intermediate and not worth reporting on.
+      if (!detectedForDebounced.length) {
+        setNameStatus(isComposingName ? 'idle' : 'unsupported');
         return;
       }
 
-      const validation = validateStringWithCustomErrors(trimmed);
-      if (validation !== true) {
-        setNameStatus('invalid');
-        return;
-      }
-      
       setNameStatus('checking');
       nameCheckSeqRef.current += 1;
       const mySeq = nameCheckSeqRef.current;
-      
+
       try {
         const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
@@ -353,7 +323,7 @@ const CreateTokenView = () => {
     return () => {
       cancelled = true;
     };
-  }, [tokenNameDebounced, validateStringWithCustomErrors, detectedCollections]);
+  }, [tokenNameDebounced, detectedForDebounced, isComposingName]);
 
   // Keep focus when taken
   useEffect(() => {
@@ -410,8 +380,26 @@ const CreateTokenView = () => {
     }
   }, []);
 
+  // Only offer the picker when the name genuinely fits more than one collection.
+  const hasCollectionChoice = detectedCollections.length > 1;
+  const showUnsupportedBadge = Boolean(tokenName)
+    && !isComposingName
+    && detectedCollections.length === 0;
+
+  // A name no collection accepts would only fail on chain, so gate on detection
+  // as well as on the availability lookup.
+  const canSubmitName = Boolean(tokenName)
+    && detectedCollections.length > 0
+    && nameStatus !== 'checking'
+    && nameStatus !== 'taken'
+    && nameStatus !== 'unsupported';
+
   // Token creation
   const deploy = async () => {
+    // The submit button is disabled in these cases, but a form can still be
+    // submitted around it, and a rejected deploy costs the user a signature.
+    if (!canSubmitName) return;
+
     setTransactionType('create-token');
     setCreateTokenDetails({
       tokenName,
@@ -505,18 +493,22 @@ const CreateTokenView = () => {
 
   if (loading) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white">
         <div className="p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded w-1/3 mb-4" />
-            <div className="h-4 bg-gray-700 rounded w-2/3 mb-8" />
+          <div className="stagger-children">
+            <div className="h-8 bg-gradient-to-r from-gray-700 to-gray-600 rounded w-1/3 mb-4 animate-shimmer" />
+            <div className="h-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded w-2/3 mb-8 animate-shimmer" />
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className="space-y-4">
-                {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey) => (
-                  <div key={rowKey} className="h-16 bg-gray-700 rounded" />
+                {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey, idx) => (
+                  <div
+                    key={rowKey}
+                    className="h-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded animate-shimmer"
+                    style={{ animationDelay: `${idx * 100}ms` }}
+                  />
                 ))}
               </div>
-              <div className="h-96 bg-gray-700 rounded" />
+              <div className="h-96 bg-gradient-to-r from-gray-700 to-gray-600 rounded animate-shimmer" />
             </div>
           </div>
         </div>
@@ -567,10 +559,15 @@ const CreateTokenView = () => {
         variant="primary"
         size="lg"
         type="submit"
-        disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid' || nameStatus === 'unsupported'}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3"
+        disabled={isCreating || !canSubmitName}
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3 relative overflow-hidden group hover-lift"
       >
-        {t('trending.createToken.submit.createToken')}
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          {!isCreating && <RocketIcon className="w-5 h-5 group-hover:animate-bounce" />}
+          {t('trending.createToken.submit.createToken')}
+          {!isCreating && <SparkleIcon className="w-4 h-4 animate-sparkle" />}
+        </span>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </AeButton>
     );
   };
@@ -579,24 +576,27 @@ const CreateTokenView = () => {
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
         <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
-          <div className="xl:hidden px-2 pt-2 pb-2 text-center">
-            <h3 className="text-2xl md:text-4xl font-bold leading-tight text-white mb-3">
+          <PageSpaceHero
+            className="mb-6 px-6 py-10 md:px-10 md:py-14 text-center xl:text-left"
+            supernovaColor="rgba(255,94,188,.5)"
+          >
+            <h3 className="text-3xl md:text-5xl font-bold leading-tight text-white mb-3 animate-slideDown">
               {t('trending.createToken.hero.line1')}
               <br />
               {t('trending.createToken.hero.line2')}
               <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift inline-block">
                 {t('trending.createToken.hero.line3')}
               </span>
             </h3>
-            <p className="hidden md:block text-white/75 text-base leading-relaxed">
+            <p className="text-white/75 text-base md:text-lg leading-relaxed animate-slideUp animate-delay-200 max-w-2xl mx-auto xl:mx-0">
               {t('trending.createToken.hero.subtitle')}
             </p>
-          </div>
+          </PageSpaceHero>
 
           <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
-            <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2">
-              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+            <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2 animate-scaleIn animate-delay-200">
+              <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative transition-all duration-300 p-5 md:p-8 shadow-2xl hover-lift">
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -636,40 +636,46 @@ const CreateTokenView = () => {
                           required
                           className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
                         />
-                        
+
                         {/* Right side indicators */}
                         <div className="flex items-center gap-2 shrink-0">
                           {nameStatus === 'checking' && <Spinner />}
                           {nameStatus === 'available' && <VerifiedIcon className="w-5 h-5 text-emerald-400" />}
                           {nameStatus === 'taken' && <NotVerifiedIcon className="w-5 h-5 text-red-400" />}
-                          
+
                           {/* Language chip with dropdown */}
                           {tokenName && detectedCollections.length > 0 && (
                             <div className="relative" ref={languageDropdownRef}>
                               <button
                                 type="button"
-                                onClick={() => detectedCollections.length > 1 && setShowLanguageDropdown(!showLanguageDropdown)}
+                                onClick={() => hasCollectionChoice
+                                  && setShowLanguageDropdown(!showLanguageDropdown)}
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                                  detectedCollections.length === 1
-                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 cursor-default'
-                                    : 'bg-purple-500/20 text-purple-300 border border-purple-400/30 hover:bg-purple-500/30 cursor-pointer'
+                                  hasCollectionChoice
+                                    ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30 hover:bg-purple-500/30 cursor-pointer'
+                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 cursor-default'
                                 }`}
-                                disabled={detectedCollections.length === 1}
+                                disabled={!hasCollectionChoice}
+                                aria-haspopup={hasCollectionChoice ? 'listbox' : undefined}
+                                aria-expanded={hasCollectionChoice
+                                  ? showLanguageDropdown
+                                  : undefined}
                               >
                                 {selectedCollection && collectionLabel(selectedCollection.name)}
-                                {detectedCollections.length > 1 && (
-                                  <svg 
+                                {hasCollectionChoice && (
+                                  <svg
                                     className={`w-3 h-3 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`}
-                                    fill="none" 
-                                    viewBox="0 0 24 24" 
+                                    fill="none"
+                                    viewBox="0 0 24 24"
                                     stroke="currentColor"
+                                    aria-hidden="true"
                                   >
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                   </svg>
                                 )}
                               </button>
-                              
-                              {showLanguageDropdown && detectedCollections.length > 1 && (
+
+                              {showLanguageDropdown && hasCollectionChoice && (
                                 <div className="absolute right-0 top-full mt-1 bg-gray-900/95 border border-white/10 rounded-lg shadow-xl z-50 min-w-[120px] overflow-hidden">
                                   {detectedCollections.map((collection) => (
                                     <button
@@ -680,7 +686,7 @@ const CreateTokenView = () => {
                                         setShowLanguageDropdown(false);
                                       }}
                                       className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                                        collection.id === collectionModel
+                                        collection.id === selectedCollection?.id
                                           ? 'bg-purple-500/20 text-white font-medium'
                                           : 'text-white/80 hover:bg-white/5'
                                       }`}
@@ -692,30 +698,28 @@ const CreateTokenView = () => {
                               )}
                             </div>
                           )}
-                          
+
                           {/* Unsupported indicator */}
-                          {tokenName && detectedCollections.length === 0 && (
+                          {showUnsupportedBadge && (
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-400/30">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                               </svg>
-                              Unsupported
+                              {t('trending.createToken.unsupportedBadge')}
                             </div>
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="text-xs text-white/60 mt-1 flex items-center justify-between min-h-[20px]" aria-live="polite">
                         <span>
                           {t('trending.createToken.charactersCount', { count: tokenName.length, max: 20 })}
                         </span>
                         <span className="opacity-80" dir="auto">
-                          {nameStatus === 'unsupported' 
-                            ? 'These characters are not supported yet' 
-                            : nameStatus === 'invalid' 
-                            ? t('trending.createToken.invalidCharacters') 
-                            : (selectedCollection?.description || t('trending.createToken.allowedCharsHint'))
-                          }
+                          {nameStatus === 'unsupported'
+                            ? t('trending.createToken.unsupportedCharacters')
+                            : selectedCollection?.description
+                              || t('trending.createToken.allowedCharsHint')}
                         </span>
                       </div>
                     </div>
@@ -808,7 +812,9 @@ const CreateTokenView = () => {
                               inputMode="decimal"
                               value={aeAmountDisplay}
                               onChange={(e) => {
-                                const { display, sanitized } = formatDisplayPreserveRaw(e.target.value);
+                                const { display, sanitized } = formatDisplayPreserveRaw(
+                                  e.target.value,
+                                );
                                 setAeAmountDisplay(display);
                                 setAeAmount(sanitized);
                               }}
@@ -896,66 +902,112 @@ const CreateTokenView = () => {
               </div>
             </div>
 
-            {/* Explainer */}
-            <div className="min-w-0 flex-1 md:pt-2 xl:order-1">
+            {/* Explainer guide */}
+            <div className="min-w-0 flex-1 xl:order-1">
               <div className="xl:text-left">
-                <div className="hidden xl:block mb-6">
-                  <div className="text-5xl font-bold leading-tight text-white mb-4">
-                    {t('trending.createToken.hero.line1')}
-                    <br />
-                    {t('trending.createToken.hero.line2')}
-                    <br />
-                    <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                      {t('trending.createToken.hero.line3')}
-                    </span>
-                  </div>
-                  <p className="text-white/75 text-lg leading-relaxed">
-                    {t('trending.createToken.hero.subtitle')}
-                  </p>
+
+                {/* Interactive bonding curve graph */}
+                <div className="mt-8 md:mt-12 xl:mt-0 mb-6">
+                  <BondingCurveGraph />
                 </div>
 
-                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
-                  <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
+                  <h3 className="text-xl font-bold text-white mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
                     {t('trending.createToken.explainer.title')}
                   </h3>
-                  <div className="space-y-4 text-white/80 text-sm leading-relaxed">
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.priceDiscoveryBody')}</p>
+
+                  {/* Explainer flow */}
+                  <div className="space-y-4">
+                    {/*  1: Price Discovery */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                        <TrendingUp className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.priceDiscoveryTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.priceDiscoveryBody')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.mathTitle')}</h4>
-                      <p className="mb-2">
-                        {t('trending.createToken.explainer.formulaIntro')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
-                      </p>
-                      <p className="mb-2">
-                        {t('trending.createToken.explainer.whereLabel')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
-                        {' '}
-                        {t('trending.createToken.explainer.constantAnd')}
-                        {' '}
-                        <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
-                        {' '}
-                        {t('trending.createToken.explainer.supplyDescription')}
-                      </p>
-                      <p>{t('trending.createToken.explainer.thisMeans')}</p>
-                      <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                        <li>{t('trending.createToken.explainer.bullet1')}</li>
-                        <li>{t('trending.createToken.explainer.bullet2')}</li>
-                        <li>{t('trending.createToken.explainer.bullet3')}</li>
-                        <li>{t('trending.createToken.explainer.bullet4')}</li>
-                      </ul>
+
+                    {/*  2: Bonding Curve Math */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/5 border border-purple-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                        <Sigma className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.mathTitle')}</h4>
+                        </div>
+                        <div className="space-y-3 text-white/70 text-sm leading-relaxed">
+                          <p>
+                            {t('trending.createToken.explainer.formulaIntro')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
+                          </p>
+                          <p>
+                            {t('trending.createToken.explainer.whereLabel')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code>
+                            {' '}
+                            {t('trending.createToken.explainer.constantAnd')}
+                            {' '}
+                            <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code>
+                            {' '}
+                            {t('trending.createToken.explainer.supplyDescription')}
+                          </p>
+                          <p className="font-medium text-white/80">{t('trending.createToken.explainer.thisMeans')}</p>
+                          <div className="space-y-2 pl-4 border-l-2 border-purple-500/30">
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet1')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet2')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet3')}</span>
+                            </p>
+                            <p className="flex items-start gap-2">
+                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span>{t('trending.createToken.explainer.bullet4')}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.daoTreasuryBody')}</p>
+
+                    {/*  3: DAO Treasury */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
+                        <Landmark className="w-5 h-5 text-orange-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.daoTreasuryTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.daoTreasuryBody')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">{t('trending.createToken.explainer.feesTitle')}</h4>
-                      <p>{t('trending.createToken.explainer.feesBody')}</p>
+
+                    {/*  4: Fees */}
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                        <Coins className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+
+                          <h4 className="font-semibold text-white">{t('trending.createToken.explainer.feesTitle')}</h4>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{t('trending.createToken.explainer.feesBody')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>

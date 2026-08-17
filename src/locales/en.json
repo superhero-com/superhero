@@ -33,7 +33,9 @@
       "trade": "Trade",
       "getChainName": "+ Get .chain name",
       "claimChainName": "Claim",
-      "linkAccount": "Link account"
+      "linkAccount": "Link account",
+      "send": "Send",
+      "receive": "Receive"
     },
     "labels": {
       "superheroHome": "Superhero Home",
@@ -404,7 +406,9 @@
     },
     "heroBanner": {
       "bannerAria": "Superhero banner",
+      "dismiss": "Dismiss",
       "dismissAria": "Dismiss banner",
+      "expandAria": "Show banner",
       "previousSlide": "Previous slide",
       "nextSlide": "Next slide",
       "goToSlide": "Go to slide {{number}}"
@@ -482,6 +486,29 @@
         "tagline": "Trade tokenized hashtags & social trends — the web3 attention market.",
         "getStarted": "Get Started",
         "continueAsGuest": "Continue as guest"
+      },
+      "send": {
+        "title": "Send AE",
+        "subtitle": "Transfer AE from your wallet",
+        "recipient": "Recipient",
+        "recipientPlaceholder": "ak_… or name.chain",
+        "resolvingName": "Looking up name…",
+        "nameNotFound": "That .chain name doesn't point to an account.",
+        "invalidRecipient": "Enter a valid ak_ address or .chain name.",
+        "sendingToSelf": "This is your own address — you'd only pay the fee.",
+        "amountAe": "Amount (AE)",
+        "max": "Max",
+        "confirmInWallet": "Confirm in wallet…",
+        "sentSuccessfully": "{{amount}} AE sent.",
+        "failedToSend": "Failed to send AE."
+      },
+      "receive": {
+        "title": "Receive AE",
+        "subtitle": "Scan or copy your address",
+        "qrAlt": "QR code of your wallet address",
+        "copyAddress": "Copy address",
+        "share": "Share",
+        "networkWarning": "Only æternity (AE) assets can be sent to this address. Anything sent from another chain is lost."
       }
     },
     "trendminer": {
@@ -964,6 +991,13 @@
         "downloadOnMobile": "Download on Mobile",
         "openclawOrClaude": "Openclaw or Claude",
         "continueOnWeb": "Continue on Web",
+        "pwaInstall": {
+          "title": "Install the Superhero app",
+          "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
+          "installButton": "Install",
+          "iosStep1": "Tap the Share button",
+          "iosStep2": "Choose \"Add to Home Screen\""
+        },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",
         "whatIsTitleLine2": "for social trends",
@@ -995,7 +1029,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "Decentralized identity,",
           "titleLine2": "W3C standard",
           "description": "A DID (decentralized identifier) that links your social accounts to your wallet. Your identity is verifiable, portable, and censorship-resistant — following the W3C standard for decentralized identifiers.",
@@ -1003,7 +1037,7 @@
           "point1": "W3C DID standard compliant",
           "point2": "Links wallet, chain names, and X handle",
           "point3": "Self-sovereign — you control your data",
-          "imageAlt": "Superhero ID visual mockup"
+          "imageAlt": "SuperheroID visual mockup"
         },
         "mobile": {
           "eyebrow": "Mobile App",
@@ -1099,7 +1133,7 @@
       "dao": "DAO",
       "earnRewards": "Earn Rewards",
       "getAe": "Get AE",
-      "superheroId": "Superhero ID",
+      "superheroId": "SuperheroID",
       "account": "Account"
     },
     "transactionNotification": {
@@ -2053,6 +2087,8 @@
       "trendTokenName": "Trend token name",
       "charactersCount": "{{count}}/{{max}} characters",
       "invalidCharacters": "Invalid characters",
+      "unsupportedBadge": "Unsupported",
+      "unsupportedCharacters": "These characters aren't supported yet",
       "allowedCharsHint": "Allowed: A–Z, 0–9, and -",
       "tradingLive": "Trading live",
       "token": "Token",
@@ -2275,6 +2311,7 @@
     },
     "tokenListTable": {
       "name": "Name",
+      "collection": "Collection",
       "price": "Price",
       "price30d": "Price (30d)",
       "change24h": "24h %",
@@ -2604,8 +2641,8 @@
   "banners": {
     "keyFeatures": "Key features",
     "bannerA": {
-      "title": "Post on‑chain. Tip instantly.",
-      "description": "Share posts that settle on‑chain. Readers tip inline; creators get receipts automatically.",
+      "title": "Post on-chain. Get tipped instantly.",
+      "description": "Share your thoughts on-chain. Get tipped in seconds when your ideas resonate—no middlemen, pure value.",
       "chips": [
         "Inline tipping",
         "On‑chain receipts"
@@ -2614,24 +2651,43 @@
       "secondaryButton": "How it works"
     },
     "bannerC": {
-      "title": "From signal → treasury: Purpose‑DAOs.",
-      "description": "Buy fees on #trends auto‑seed DAOs so the best ideas get budgets and milestones.",
+      "title": "On-chain attention markets.",
+      "description": "Every trend is a live market for attention. Trade the signal—and holders form a DAO that governs the community behind it.",
       "chips": [
-        "Fees → Treasury",
-        "Creator payouts"
+        "Attention markets",
+        "Community DAO"
       ],
-      "primaryButton": "Start a Purpose‑DAO",
+      "primaryButton": "Start a DAO",
       "secondaryButton": "See DAOs"
     },
     "bannerB": {
-      "title": "Tokenize #trends. Trade the signal.",
-      "description": "#Trends are markets. Go long on culture and let prices surface what matters.",
+      "title": "Turn #trends into tradable tokens.",
+      "description": "Every hashtag becomes a market. Back the ideas you believe in—when they grow, you win.",
       "chips": [
-        "Popularity signals",
+        "Market signals",
         "Bonding curve"
       ],
       "primaryButton": "Launch a #trend",
       "secondaryButton": "Explore #trends"
+    },
+    "bannerD": {
+      "titleMain": "AI agents trade and post for you",
+      "titleAccent": "24/7.",
+      "description": "Deploy AI agents to grow your trends automatically—posting, trading, and scaling while you sleep.",
+      "primaryButton": "Deploy AI agent",
+      "secondaryButton": "How it works"
+    },
+    "bannerLanguages": {
+      "title": "Your language. Your market.",
+      "description": "Create trends in English, 中文, Русский, or العربية. Native on-chain support for global communities—no translation, no barriers.",
+      "primaryButton": "Launch a #trend",
+      "secondaryButton": "See all trends"
+    },
+    "bannerNew": {
+      "title": "Built for humans and AI agents.",
+      "description": "iOS, Android, and full API access for AI agents. Trade trends, post on-chain, and own your wallet—all in one platform.",
+      "primaryButton": "Get started",
+      "secondaryButton": "Learn more"
     }
   },
   "addTokens": {

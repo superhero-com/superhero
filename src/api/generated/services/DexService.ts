@@ -6,6 +6,8 @@ import type { DexTokenDto } from '../models/DexTokenDto';
 import type { DexTokenSummaryDto } from '../models/DexTokenSummaryDto';
 import type { Pagination } from '../models/Pagination';
 import type { PairTransactionDto } from '../models/PairTransactionDto';
+import type { SetListedDto } from '../models/SetListedDto';
+import type { SwapRoutePairDto } from '../models/SwapRoutePairDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -19,12 +21,17 @@ export class DexService {
     public static listAllDexTokens({
         orderBy,
         orderDirection,
+        listed,
         search,
         limit,
         page,
     }: {
         orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume',
         orderDirection?: 'ASC' | 'DESC',
+        /**
+         * Filter to only listed (true) or only unlisted (false) tokens. Omit to return all tokens.
+         */
+        listed?: boolean,
         search?: string,
         limit?: number,
         page?: number,
@@ -35,6 +42,7 @@ export class DexService {
             query: {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
+                'listed': listed,
                 'search': search,
                 'limit': limit,
                 'page': page,
@@ -65,8 +73,8 @@ export class DexService {
     }
     /**
      * Get DEX token price
-     * Retrieve a specific DEX token by its contract address
-     * @returns DexTokenDto
+     * Retrieve a token together with its current price and price metadata.
+     * @returns any The token plus its price and price metadata
      * @throws ApiError
      */
     public static getTokenPrice({
@@ -76,7 +84,7 @@ export class DexService {
          * Token contract address
          */
         address: string,
-    }): CancelablePromise<DexTokenDto> {
+    }): CancelablePromise<Record<string, any>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/dex/tokens/{address}/price',
@@ -144,6 +152,74 @@ export class DexService {
         });
     }
     /**
+     * Get DEX token price history
+     * Get OHLCV price history for a single token. The series is derived from the deepest pool that pairs the token against WAE (so the price is expressed in AE); if no WAE pool exists, the deepest available pool is used. Pass convertTo to express the values in a fiat currency.
+     * @returns any
+     * @throws ApiError
+     */
+    public static getDexTokenHistory({
+        address,
+        interval,
+        convertTo,
+        limit,
+        page,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+        /**
+         * Candle interval in seconds (default 3600, min 60, max 86400)
+         */
+        interval?: number,
+        /**
+         * Currency the OHLC/market-cap/volume values are converted into (default: ae). Fiat conversion uses the AE→currency rate as of each candle’s time (historical coin_prices snapshots) and requires the token to have a WAE-quoted pool; requesting a fiat currency for a token without one returns 400.
+         */
+        convertTo?: 'ae' | 'usd' | 'eur' | 'aud' | 'brl' | 'cad' | 'chf' | 'gbp' | 'xau',
+        limit?: number,
+        page?: number,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/history',
+            path: {
+                'address': address,
+            },
+            query: {
+                'interval': interval,
+                'convertTo': convertTo,
+                'limit': limit,
+                'page': page,
+            },
+        });
+    }
+    /**
+     * Set the listed flag for a DEX token (admin)
+     * Mark a token as listed/unlisted. Requires an API key (x-api-key header or Bearer token).
+     * @returns DexTokenDto
+     * @throws ApiError
+     */
+    public static setDexTokenListed({
+        address,
+        requestBody,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+        requestBody: SetListedDto,
+    }): CancelablePromise<DexTokenDto> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/dex/tokens/{address}/listed',
+            path: {
+                'address': address,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
      * Get all pair transactions
      * Retrieve a paginated list of all DEX pair transactions with optional filtering and sorting
      * @returns any
@@ -156,6 +232,8 @@ export class DexService {
         tokenAddress,
         txType,
         accountAddress,
+        fromDate,
+        toDate,
         limit,
         page,
     }: {
@@ -177,6 +255,14 @@ export class DexService {
          * Filter by account address
          */
         accountAddress?: string,
+        /**
+         * Only include transactions at or after this ISO-8601 date/time (created_at >= from_date)
+         */
+        fromDate?: string,
+        /**
+         * Only include transactions at or before this ISO-8601 date/time (created_at <= to_date)
+         */
+        toDate?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -190,6 +276,8 @@ export class DexService {
                 'token_address': tokenAddress,
                 'tx_type': txType,
                 'account_address': accountAddress,
+                'from_date': fromDate,
+                'to_date': toDate,
                 'limit': limit,
                 'page': page,
             },
@@ -250,6 +338,34 @@ export class DexService {
                 'order_direction': orderDirection,
                 'limit': limit,
                 'page': page,
+            },
+        });
+    }
+    /**
+     * Get swap routes between two tokens
+     * Returns all swap routes (direct and single-hop) from one token to another, used by the swap UI to quote a trade. Each route is an ordered array of pairs. Returns an empty array when no route exists.
+     * @returns SwapRoutePairDto All swap routes between the tokens; each route is an ordered array of pairs
+     * @throws ApiError
+     */
+    public static getSwapRoutes({
+        fromToken,
+        toToken,
+    }: {
+        /**
+         * Source token contract address
+         */
+        fromToken: string,
+        /**
+         * Destination token contract address
+         */
+        toToken: string,
+    }): CancelablePromise<Array<Array<SwapRoutePairDto>>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/swap-routes/{from_token}/{to_token}',
+            path: {
+                'from_token': fromToken,
+                'to_token': toToken,
             },
         });
     }

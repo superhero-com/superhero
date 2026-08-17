@@ -14,12 +14,14 @@ import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import { NotificationsProvider } from './features/notifications';
 import {
   profileEditModalFlowAtom,
   profileEditModalOpenAtom,
   profileEditModalPendingAfterConnectAtom,
 } from './atoms/profileEditModalAtom';
 import ProfileEditModal from './components/modals/ProfileEditModal';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -42,6 +44,12 @@ const TipModal = React.lazy(
 );
 const OnboardingModal = React.lazy(
   () => import('./components/modals/OnboardingModal'),
+);
+const SendModal = React.lazy(
+  () => import('./components/modals/SendModal'),
+);
+const ReceiveModal = React.lazy(
+  () => import('./components/modals/ReceiveModal'),
 );
 
 const App = () => {
@@ -101,13 +109,25 @@ const App = () => {
     // Load data immediately
     loadAccountDataRef.current();
 
-    // Then set up periodic refresh (wallet reconnection is handled in useWalletConnect)
+    // Then set up periodic refresh (wallet reconnection is handled in useWalletConnect).
+    // Skip refreshes while the tab is hidden — a background tab doesn't need
+    // account data updated every 10s.
     const interval = setInterval(() => {
+      if (document.hidden) return;
       loadAccountDataRef.current();
     }, 10000);
 
+    // The interval skips ticks while hidden, so refresh once immediately when
+    // the tab becomes visible again — otherwise account/wallet UI can show data
+    // that hasn't been refreshed since the last visible poll for up to 10s.
+    const handleVisibilityChange = () => {
+      if (!document.hidden) loadAccountDataRef.current();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [activeAccount]);
 
@@ -141,50 +161,56 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
+    <NotificationsProvider>
+      <div className="app-container">
 
-      <GlobalNewAccountEducation />
-      <AppHeader />
-      <div className="app-content">
-        <CollectInvitationLinkCard />
-      </div>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <ModalProvider
-          registry={{
-            'cookies-dialog': CookiesDialog,
-            'token-select': TokenSelectModal,
-            'image-gallery': ImageGallery,
-            alert: AlertModal,
-            'transaction-confirm': TransactionConfirmModal,
-            'connect-wallet': ConnectWalletModal,
-            tip: TipModal,
-            onboarding: OnboardingModal,
+        <GlobalNewAccountEducation />
+        <AppHeader />
+        <div className="app-content">
+          <CollectInvitationLinkCard />
+        </div>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <ModalProvider
+            registry={{
+              'cookies-dialog': CookiesDialog,
+              'token-select': TokenSelectModal,
+              'image-gallery': ImageGallery,
+              alert: AlertModal,
+              'transaction-confirm': TransactionConfirmModal,
+              'connect-wallet': ConnectWalletModal,
+              tip: TipModal,
+              onboarding: OnboardingModal,
+              send: SendModal,
+              receive: ReceiveModal,
+            }}
+          />
+        </Suspense>
+        <ProfileEditModal
+          open={profileEditOpen}
+          onClose={(updatedProfile) => {
+            if (updatedProfile) handleProfileEditSuccess();
+            else handleProfileEditDismiss();
           }}
-        />
-      </Suspense>
-      <ProfileEditModal
-        open={profileEditOpen}
-        onClose={(updatedProfile) => {
-          if (updatedProfile) handleProfileEditSuccess();
-          else handleProfileEditDismiss();
-        }}
         // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
         // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
         // them on success. No onSaveError handler on purpose: a failed save is not a
         // cancel, so the flags survive and the flow can resume when the user retries.
-        onHide={() => setProfileEditOpen(false)}
-        showSkip={profileEditFlow.showSkip}
-        onSkip={handleProfileEditDismiss}
-        onClaimSuccess={
+          onHide={() => setProfileEditOpen(false)}
+          showSkip={profileEditFlow.showSkip}
+          onSkip={handleProfileEditDismiss}
+          onClaimSuccess={
           profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
         }
-      />
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
-      {/* TODO: Disable feedback button on mobile for now */}
-      {!isMobile && <FeedbackButton />}
-    </div>
+        />
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        </Suspense>
+        {/* TODO: Disable feedback button on mobile for now */}
+        {!isMobile && <FeedbackButton />}
+        {/* PWA install prompt - floating bottom-right, above bottom nav */}
+        <PwaInstallPrompt />
+      </div>
+    </NotificationsProvider>
   );
 };
 

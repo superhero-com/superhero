@@ -3,6 +3,7 @@ import { selectAtom } from 'jotai/utils';
 import {
   useCallback, useEffect, useMemo, useState,
 } from 'react';
+import { AccountsService } from '../api/generated/services/AccountsService';
 import {
   chainNameLookupCheckedAtAtom,
   chainNamesAtom,
@@ -12,6 +13,8 @@ import { CURRENT_NETWORK } from '../utils/constants';
 const CHAIN_NAME_REFRESH_INTERVAL = 1000 * 60 * 60; // 1 hour
 const CHAIN_NAME_RETRY_INTERVAL = 1000 * 60 * 5; // 5 minutes
 const BATCH_DEBOUNCE_MS = 80;
+// Matches the backend's per-request cap (GET /api/accounts/chain-names).
+const CHAIN_NAMES_BATCH_SIZE = 25;
 const MIDDLEWARE_NAMES_PATH = '/v3/names';
 
 const AK_ADDRESS_RE = /^ak_[1-9A-HJ-NP-Za-km-z]{48,56}$/;
@@ -33,13 +36,6 @@ function isValidAkAddress(address: string): boolean {
   return AK_ADDRESS_RE.test(address);
 }
 
-function pointsToAccount(name: MiddlewareName, accountAddress: string): boolean {
-  return (name.pointers || []).some((pointer) => (
-    pointer?.key === 'account_pubkey'
-    && String(pointer?.id || '').trim() === accountAddress
-  ));
-}
-
 function getPointedAccount(name: MiddlewareName): string {
   const pointer = (name.pointers || []).find((item) => item?.key === 'account_pubkey');
   const address = String(pointer?.id || '').trim();
@@ -51,9 +47,10 @@ function normalizeAccountAddress(accountAddress?: string | null): string {
 }
 
 // ---------------------------------------------------------------------------
-// Batched fetch queue — collects addresses over BATCH_DEBOUNCE_MS, then fires
-// one middleware request per address (the endpoint doesn't support multi-owned_by).
-// Deduplicates in-flight requests and prevents duplicate scheduling.
+// Batched fetch queue — collects addresses over BATCH_DEBOUNCE_MS, then
+// resolves them all via the backend's batch endpoint (chunked to its
+// <=25-address cap). Deduplicates in-flight requests and prevents duplicate
+// scheduling.
 // ---------------------------------------------------------------------------
 
 type BatchCallback = (results: Map<string, string>) => void;
@@ -63,27 +60,34 @@ let batchTimer: ReturnType<typeof setTimeout> | null = null;
 let batchCallbacks: BatchCallback[] = [];
 const inflightAddresses = new Set<string>();
 
-async function fetchActiveChainName(
-  accountAddress: string,
-  signal?: AbortSignal,
-): Promise<string> {
-  const middlewareUrl = CURRENT_NETWORK.middlewareUrl.replace(/\/$/, '');
-  const params = new URLSearchParams({
-    owned_by: accountAddress,
-    state: 'active',
-  });
-  const res = await fetch(
-    `${middlewareUrl}${MIDDLEWARE_NAMES_PATH}?${params.toString()}`,
-    signal ? { signal } : undefined,
-  );
-  if (!res.ok) throw new Error(`Middleware names request failed with ${res.status}`);
-  const payload = await res.json();
-  const names = Array.isArray(payload?.data) ? payload.data as MiddlewareName[] : [];
-  const pointedName = names.find((item) => (
-    normalizeChainName(item?.name)
-    && pointsToAccount(item, accountAddress)
-  ));
-  return normalizeChainName(pointedName?.name);
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// Resolves chain names for many addresses via the backend's batch endpoint
+// (one request per <=25 addresses) instead of one middleware request per
+// address — this is called for every author in a feed page, so batching it
+// is the difference between 1 request and N requests per page.
+async function fetchChainNamesBatch(addresses: string[]): Promise<Map<string, string>> {
+  const results = new Map<string, string>();
+  await Promise.all(chunk(addresses, CHAIN_NAMES_BATCH_SIZE).map(async (batch) => {
+    try {
+      const resp = await AccountsService.getChainNamesForAddresses({
+        addresses: batch.join(','),
+      }) as Record<string, string | null>;
+      batch.forEach((addr) => {
+        results.set(addr, normalizeChainName(resp?.[addr]));
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.debug('[useChainName] batch lookup failed for', batch, err);
+    }
+  }));
+  return results;
 }
 
 async function fetchAddressByChainName(
@@ -115,28 +119,11 @@ function flushBatch() {
 
   if (!addresses.length) return;
 
-  const controller = new AbortController();
-  const results = new Map<string, string>();
-  let remaining = addresses.length;
+  addresses.forEach((addr) => inflightAddresses.add(addr));
 
-  const settle = () => {
-    remaining -= 1;
-    if (remaining > 0) return;
+  fetchChainNamesBatch(addresses).then((results) => {
     addresses.forEach((a) => inflightAddresses.delete(a));
     callbacks.forEach((cb) => cb(results));
-  };
-
-  addresses.forEach((addr) => {
-    inflightAddresses.add(addr);
-    fetchActiveChainName(addr, controller.signal)
-      .then((name) => { results.set(addr, name); })
-      .catch((err) => {
-        if (err?.name !== 'AbortError') {
-          // eslint-disable-next-line no-console
-          console.debug('[useChainName] lookup failed for', addr, err);
-        }
-      })
-      .finally(settle);
   });
 }
 

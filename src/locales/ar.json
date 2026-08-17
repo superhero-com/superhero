@@ -33,7 +33,9 @@
       "save": "حفظ",
       "getChainName": "+ احصل على اسم ‎.chain",
       "claimChainName": "مطالبة",
-      "linkAccount": "ربط الحساب"
+      "linkAccount": "ربط الحساب",
+      "send": "إرسال",
+      "receive": "استلام"
     },
     "labels": {
       "superheroHome": "الصفحة الرئيسية لـ Superhero",
@@ -739,7 +741,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "هوية لامركزية،",
           "titleLine2": "بمعيار W3C",
           "description": "معرّف لامركزي (DID) يربط حساباتك الاجتماعية بمحفظتك. هويتك قابلة للتحقّق وللنقل ومقاومة للرقابة — وفق معيار W3C للمعرّفات اللامركزية.",
@@ -747,7 +749,7 @@
           "point1": "متوافق مع معيار W3C DID",
           "point2": "يربط المحفظة وأسماء ‎.chain وحساب X",
           "point3": "سيادة ذاتية — أنت تتحكّم في بياناتك",
-          "imageAlt": "نموذج مرئي لـ Superhero ID"
+          "imageAlt": "نموذج مرئي لـ SuperheroID"
         },
         "mobile": {
           "eyebrow": "تطبيق الجوال",
@@ -1002,6 +1004,29 @@
         "tagline": "تداول الوسوم المحوّلة إلى رموز والترندات الاجتماعية — سوق الانتباه في Web3.",
         "getStarted": "ابدأ الآن",
         "continueAsGuest": "المتابعة كضيف"
+      },
+      "send": {
+        "title": "إرسال AE",
+        "subtitle": "حوِّل AE من محفظتك",
+        "recipient": "المستلم",
+        "recipientPlaceholder": "‎ak_… أو name.chain",
+        "resolvingName": "جارٍ البحث عن الاسم…",
+        "nameNotFound": "اسم ‎.chain هذا لا يشير إلى أي حساب.",
+        "invalidRecipient": "أدخل عنوان ‎ak_ صالحًا أو اسم ‎.chain.",
+        "sendingToSelf": "هذا عنوانك أنت — لن تدفع سوى الرسوم.",
+        "amountAe": "المبلغ (AE)",
+        "max": "الحد الأقصى",
+        "confirmInWallet": "أكِّد في المحفظة…",
+        "sentSuccessfully": "تم إرسال {{amount}} AE.",
+        "failedToSend": "تعذّر إرسال AE."
+      },
+      "receive": {
+        "title": "استلام AE",
+        "subtitle": "امسح عنوانك أو انسخه",
+        "qrAlt": "رمز QR لعنوان محفظتك",
+        "copyAddress": "نسخ العنوان",
+        "share": "مشاركة",
+        "networkWarning": "لا يمكن إرسال سوى أصول æternity ‏(AE) إلى هذا العنوان. أي شيء يُرسل من سلسلة أخرى يُفقد."
       }
     },
     "wallet": {
@@ -1074,7 +1099,9 @@
     },
     "heroBanner": {
       "bannerAria": "لافتة Superhero",
+      "dismiss": "إخفاء",
       "dismissAria": "إخفاء اللافتة",
+      "expandAria": "إظهار اللافتة",
       "previousSlide": "الشريحة السابقة",
       "nextSlide": "الشريحة التالية",
       "goToSlide": "الانتقال إلى الشريحة {{number}}"
@@ -2015,6 +2042,8 @@
       "trendTokenName": "اسم رمز الترند",
       "charactersCount": "{{count}}/{{max}} حرف",
       "invalidCharacters": "أحرف غير صالحة",
+      "unsupportedBadge": "غير مدعوم",
+      "unsupportedCharacters": "هذه الأحرف غير مدعومة بعد",
       "allowedCharsHint": "المسموح: A–Z و0–9 و-",
       "tradingLive": "التداول مباشر",
       "token": "الرمز",
@@ -2228,6 +2257,7 @@
     },
     "tokenListTable": {
       "name": "الاسم",
+      "collection": "المجموعة",
       "price": "السعر",
       "price30d": "السعر (30 يومًا)",
       "change24h": "24 ساعة %",
@@ -2632,6 +2662,25 @@
       ],
       "primaryButton": "أطلق ‎#ترندًا",
       "secondaryButton": "استكشف ‎#الترندات"
+    },
+    "bannerD": {
+      "titleMain": "وكلاء الذكاء الاصطناعي يتاجرون وينشرون من أجلك",
+      "titleAccent": "على مدار الساعة.",
+      "description": "انشر وكلاء ذكاء اصطناعي لتنمية ترنداتك تلقائيًا—بالنشر والتداول والتوسّع أثناء نومك.",
+      "primaryButton": "انشر وكيل ذكاء اصطناعي",
+      "secondaryButton": "كيف يعمل"
+    },
+    "bannerLanguages": {
+      "title": "لغتك. سوقك.",
+      "description": "أنشئ ترندات بالإنجليزية أو 中文 أو Русский أو العربية. دعم أصلي على السلسلة للمجتمعات العالمية—بلا ترجمة وبلا حواجز.",
+      "primaryButton": "أطلق ‎#ترندًا",
+      "secondaryButton": "عرض كل الترندات"
+    },
+    "bannerNew": {
+      "title": "مصمم للبشر ووكلاء الذكاء الاصطناعي.",
+      "description": "iOS وAndroid ووصول كامل عبر API لوكلاء الذكاء الاصطناعي. تداول الترندات، انشر على السلسلة، واملك محفظتك—كل ذلك في منصة واحدة.",
+      "primaryButton": "ابدأ الآن",
+      "secondaryButton": "اعرف المزيد"
     }
   },
   "addTokens": {

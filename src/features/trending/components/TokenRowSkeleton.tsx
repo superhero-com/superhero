@@ -1,4 +1,9 @@
-const TokenRowSkeleton = () => (
+interface TokenRowSkeletonProps {
+  /** Must mirror the table's own setting, or headers and skeleton cells drift apart. */
+  showCollectionColumn?: boolean;
+}
+
+const TokenRowSkeleton = ({ showCollectionColumn = true }: TokenRowSkeletonProps) => (
   <>
     {/* Mobile skeleton — matches mobile-only-card layout */}
     <tr className="token-row-skeleton mobile-only-card relative">
@@ -48,6 +53,13 @@ const TokenRowSkeleton = () => (
           </div>
         </div>
       </td>
+
+      {/* Collection */}
+      {showCollectionColumn && (
+        <td className="cell cell-collection px-3">
+          <div className="skeleton-loader skeleton-text w-14 h-4 m-0" role="presentation" aria-hidden="true" />
+        </td>
+      )}
 
       {/* Price */}
       <td className="cell cell-price px-1 text-right">

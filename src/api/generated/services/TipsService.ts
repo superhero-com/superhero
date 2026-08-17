@@ -19,6 +19,7 @@ export class TipsService {
         sender,
         receiver,
         type,
+        postId,
         limit,
         page,
     }: {
@@ -27,6 +28,7 @@ export class TipsService {
         sender?: string,
         receiver?: string,
         type?: string,
+        postId?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -39,6 +41,7 @@ export class TipsService {
                 'sender': sender,
                 'receiver': receiver,
                 'type': type,
+                'post_id': postId,
                 'limit': limit,
                 'page': page,
             },

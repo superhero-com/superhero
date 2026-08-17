@@ -23,3 +23,25 @@ export function collectionLabel(idOrName?: string | null): string {
   if (!name) return '';
   return COLLECTION_LABEL_OVERRIDES[name.toUpperCase()] ?? name;
 }
+
+/** True when a collection id/name refers to the default English ("WORDS") collection. */
+export function isEnglishCollection(idOrName?: string | null): boolean {
+  return collectionName(idOrName).toUpperCase() === 'WORDS';
+}
+
+interface TokenCollectionFields {
+  collection?: string | null;
+  collection_info?: { name?: string | null } | null;
+}
+
+/** Human-facing collection label for a token; prefers the backend-resolved `collection_info`. */
+export function tokenCollectionLabel(token?: TokenCollectionFields | null): string {
+  if (!token) return '';
+  return collectionLabel(token.collection_info?.name ?? token.collection);
+}
+
+/** True when a token's collection is not the default English ("WORDS") collection. */
+export function isNonEnglishToken(token?: TokenCollectionFields | null): boolean {
+  if (!token) return false;
+  return !isEnglishCollection(token.collection_info?.name ?? token.collection);
+}

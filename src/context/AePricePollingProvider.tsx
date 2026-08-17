@@ -58,7 +58,7 @@ export function AePricePollingProvider({ children }: PropsWithChildren) {
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    refetchIntervalInBackground: true,
+    refetchIntervalInBackground: false,
     retry: 1,
   });
 

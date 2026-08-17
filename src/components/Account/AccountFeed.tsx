@@ -37,6 +37,12 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
         { kind: 'token-created' },
       ],
       sender_address: payload?.creator_address || address || '',
+      sender: {
+        address: payload?.creator_address || address || '',
+        public_name: '',
+        bio: '',
+        avatarurl: '',
+      },
       contract_address: saleAddress || '',
       type: 'TOKEN_CREATED',
       content: '',

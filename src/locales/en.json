@@ -3059,16 +3059,16 @@
       "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
       "ios": {
         "step1": {
-          "title": "Tap the Share button",
-          "description": "Find the Share icon at the bottom of Safari — the box with an arrow pointing up."
+          "title": "Tap the ⋯ menu",
+          "description": "Tap the three-dot menu (⋯) in the top-right corner of Safari."
         },
         "step2": {
           "title": "Add to Home Screen",
-          "description": "Scroll down in the share sheet and tap \"Add to Home Screen\"."
+          "description": "Scroll down and tap \"Add to Home Screen\" in the menu."
         },
         "step3": {
           "title": "Tap Add",
-          "description": "Confirm by tapping \"Add\" in the top right — the icon appears on your home screen."
+          "description": "Confirm by tapping \"Add\" in the top right — the app icon appears on your home screen."
         },
         "step4": {
           "title": "Open from home screen",

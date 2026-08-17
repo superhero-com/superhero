@@ -46,10 +46,12 @@ interface PwaInstallGuideProps {
 
 // ── Icons (inline SVG — no extra icon dep) ────────────────────────────────────
 
-const ShareIcon = () => (
+/** Three-dot horizontal menu — matches iOS Safari 18+ toolbar icon for Add to Home Screen */
+const ThreeDotsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-    <path d="M9 2v9M9 2L6 5M9 2l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 11v4a1 1 0 001 1h10a1 1 0 001-1v-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <circle cx="4" cy="9" r="1.4" fill="currentColor" />
+    <circle cx="9" cy="9" r="1.4" fill="currentColor" />
+    <circle cx="14" cy="9" r="1.4" fill="currentColor" />
   </svg>
 );
 
@@ -96,7 +98,7 @@ function getSteps(platform: InstallPlatform, t: ReturnType<typeof useTranslation
       {
         title: t('components.pwaInstallGuide.ios.step1.title'),
         description: t('components.pwaInstallGuide.ios.step1.description'),
-        icon: <ShareIcon />,
+        icon: <ThreeDotsIcon />,
       },
       {
         title: t('components.pwaInstallGuide.ios.step2.title'),

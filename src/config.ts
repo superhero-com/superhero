@@ -15,6 +15,12 @@ type CommonConfig = {
   POPULAR_FEED_ENABLED: boolean;
   /** X (Twitter) OAuth 2.0 client id for "Connect X" (PKCE flow). If unset, Connect X is hidden. */
   X_OAUTH_CLIENT_ID?: string;
+  /**
+   * Comma-separated `wss://` Nostr relay origins for chat, set at deploy time.
+   * No build-time default — unset means chat ships "dark". The server folds the
+   * same origins into the CSP `connect-src` (see `server/index.cjs`).
+   */
+  NOSTR_RELAY_URLS?: string;
 };
 
 /**
@@ -163,6 +169,13 @@ const defaultConfig: AppConfig = {
 const envApiUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_API_URL
   || (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_API_URL)) as string | undefined;
 
+// Local-dev relay override: `npm run dev` (Vite) sends no window.__SUPERCONFIG__,
+// so a build-time VITE_NOSTR_RELAY_URLS is the only way to point chat at a relay
+// there. Production images do not bake this in, so the runtime __SUPERCONFIG__
+// value from the server is the source there (same precedence as SUPERHERO_API_URL).
+const envNostrRelays = ((import.meta as any)?.env?.VITE_NOSTR_RELAY_URLS
+  || (typeof process !== 'undefined' && (process as any).env?.VITE_NOSTR_RELAY_URLS)) as string | undefined;
+
 declare global {
   interface Window {
     __SUPERCONFIG__?: Partial<AppConfig>;
@@ -204,6 +217,7 @@ export const CONFIG: AppConfig = {
   ...runtimeConfig,
   // Vite env overrides for local builds - MUST come after runtimeConfig to override it
   ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
+  ...(envNostrRelays ? { NOSTR_RELAY_URLS: envNostrRelays } : {}),
   // Ensure POPULAR_FEED_ENABLED defaults to true if not explicitly set
   POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED
     ?? defaultConfig.POPULAR_FEED_ENABLED

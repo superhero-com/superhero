@@ -23,6 +23,7 @@ import {
   TrendingUp, Sigma, Landmark, Coins,
 } from 'lucide-react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import BondingCurveGraph from '../components/BondingCurveGraph';
 import { createCommunity } from '../libs/createCommunity';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';

@@ -6,57 +6,39 @@
   height: 100%;
 }
 
-/* Two per row, each a slim horizontal flag + #trend card */
 .language-showcase {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 10px;
   width: 100%;
 }
 
 .language-item {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 14px 12px;
   min-width: 0;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  overflow: hidden;
 }
 
-/* Clickable variant — stronger interactive feedback */
+/* Clickable variant */
 .language-item--clickable {
   cursor: pointer;
-  position: relative;
   text-decoration: none;
-}
-
-.language-item--clickable::after {
-  content: '→';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.3);
-  transition: opacity 0.2s ease, right 0.2s ease;
-  opacity: 0;
 }
 
 .language-item--clickable:hover {
   background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.45);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.22);
   text-decoration: none;
-}
-
-.language-item--clickable:hover::after {
-  opacity: 1;
-  right: 8px;
 }
 
 .language-item--clickable:active {
@@ -65,48 +47,63 @@
 }
 
 .language-flag {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   line-height: 1;
   flex: 0 0 auto;
 }
 
 .language-sample {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
+  /* Allow wrapping — no truncation */
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.25;
+  width: 100%;
 }
 
 .language-label {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.4);
-  white-space: nowrap;
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding-right: 18px; /* leave room for → arrow */
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
   transition: color 0.2s ease;
 }
 
 .language-item--clickable:hover .language-label {
+  color: rgba(139, 92, 246, 0.9);
+}
+
+/* Explore arrow — bottom right of each card */
+.language-item--clickable::after {
+  content: 'Explore →';
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0);
+  transition: color 0.2s ease;
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+.language-item--clickable:hover::after {
   color: rgba(139, 92, 246, 0.8);
 }
 
-/* On mobile the graphic sits below the text and spans the full width */
+/* Mobile: graphic sits below text, can be taller */
 @media (max-width: 1237px) {
   .language-showcase {
     gap: 10px;
   }
 
   .language-item {
-    padding: 11px 16px;
+    padding: 14px 16px 12px;
   }
 
   .language-flag {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
   }
 
   .language-sample {
@@ -114,6 +111,12 @@
   }
 
   .language-label {
-    padding-right: 20px;
+    font-size: 0.65rem;
   }
+}
+
+/* Give the languages slide a slightly wider graphic column than the default (300px) */
+.banner-languages-graphic ~ * .banner-layout__graphic,
+.banner-layout__graphic:has(.banner-languages-graphic) {
+  flex: 0 0 clamp(260px, 42%, 340px);
 }

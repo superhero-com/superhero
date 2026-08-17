@@ -19,6 +19,8 @@ import React, {
   useCallback, useEffect, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { Decimal } from '@/libs/decimal';
 
 // ── Real curve formula (matches BondingCurveExponential.aes) ─────────────────
 // supply in actual token count (not aettos)
@@ -166,6 +168,7 @@ const HOLD_MS = 2200; // pause before advancing
 // ── Component ─────────────────────────────────────────────────────────────────
 const BondingCurveGraph: React.FC = () => {
   const { t } = useTranslation();
+  const { getFiat, currentCurrencyInfo } = useCurrencies();
   const [stepIndex, setStepIndex] = useState(0);
   const [playing, setPlaying] = useState(true); // auto-play on mount
   const [animFraction, setAnimFraction] = useState(0); // 0–1 within current step
@@ -462,7 +465,9 @@ const BondingCurveGraph: React.FC = () => {
                 opacity="0.95"
               />
               <text x={dotX + 12} y={dotY - 2} fontSize="8.5" fill={step.color} fontWeight="700">
-                {`Buy: ${currentBuyMae.toFixed(3)} mAE`}
+                {getFiat(Decimal.from(currentBuyMae / 1000))?.gt(Decimal.ZERO)
+                  ? `${currentCurrencyInfo?.symbol ?? '$'}${Number(getFiat(Decimal.from(currentBuyMae / 1000))?.toString()).toLocaleString(undefined, { maximumFractionDigits: 5 })}`
+                  : `${currentBuyMae.toFixed(3)} mAE`}
               </text>
             </g>
           )}
@@ -508,7 +513,9 @@ const BondingCurveGraph: React.FC = () => {
         >
           <p className="text-[9px] text-white/40 uppercase tracking-wider">Buy price</p>
           <p className="text-sm font-bold text-blue-300 mt-0.5">
-            {`${currentBuyMae.toFixed(4)} mAE`}
+            {getFiat(Decimal.from(currentBuyMae / 1000))?.gt(Decimal.ZERO)
+              ? `${currentCurrencyInfo?.symbol ?? '$'}${Number(getFiat(Decimal.from(currentBuyMae / 1000))?.toString()).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })}`
+              : `${currentBuyMae.toFixed(4)} mAE`}
           </p>
         </div>
         <div
@@ -517,7 +524,9 @@ const BondingCurveGraph: React.FC = () => {
         >
           <p className="text-[9px] text-white/40 uppercase tracking-wider">Sell price</p>
           <p className="text-sm font-bold text-emerald-400 mt-0.5">
-            {`${currentSellMae.toFixed(4)} mAE`}
+            {getFiat(Decimal.from(currentSellMae / 1000))?.gt(Decimal.ZERO)
+              ? `${currentCurrencyInfo?.symbol ?? '$'}${Number(getFiat(Decimal.from(currentSellMae / 1000))?.toString()).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })}`
+              : `${currentSellMae.toFixed(4)} mAE`}
           </p>
         </div>
       </div>

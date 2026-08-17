@@ -34,6 +34,16 @@ const RELAYS = [
 // avoid interference with relay lifecycle managed by NostrClient).
 const locationPool = new SimplePool();
 
+// ── Utils ─────────────────────────────────────────────────────────────────────
+
+function hexToBytes(hex: string): Uint8Array {
+  const arr = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    arr[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return arr;
+}
+
 async function encryptForRecipient(privKeyHex: string, recipientPubHex: string, text: string): Promise<string> {
   const privBytes = hexToBytes(privKeyHex);
   const convKey = nip44.getConversationKey(privBytes, recipientPubHex);
@@ -159,14 +169,4 @@ export function subscribeAreaCards(
   );
 
   return sub;
-}
-
-// ── Utils ─────────────────────────────────────────────────────────────────────
-
-function hexToBytes(hex: string): Uint8Array {
-  const arr = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    arr[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-  }
-  return arr;
 }

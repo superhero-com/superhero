@@ -17,10 +17,10 @@
 
 /** Cell size in degrees at each supported level. */
 const LEVEL_SIZES: Record<number, number> = {
-  5: 2.8125,      // ~300 km — city scale
-  6: 1.40625,     // ~150 km — district scale
-  7: 0.703125,    // ~75 km  — neighbourhood scale
-  8: 0.3515625,   // ~37 km  — meetup scale
+  5: 2.8125, // ~300 km — city scale
+  6: 1.40625, // ~150 km — district scale
+  7: 0.703125, // ~75 km  — neighbourhood scale
+  8: 0.3515625, // ~37 km  — meetup scale
 };
 
 /** Human-readable label for each level. */

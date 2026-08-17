@@ -254,24 +254,29 @@ export const PwaInstallGuide = ({
             const stepKey = `step-${stepIndex}`;
             const done = stepIndex < activeStep;
             const active = stepIndex === activeStep;
-            const bgColor = active
-              ? 'rgba(17,97,254,0.1)'
-              : done
-                ? 'rgba(0,196,125,0.05)'
-                : 'rgba(255,255,255,0.02)';
-            const borderColor = active
-              ? 'rgba(17,97,254,0.3)'
-              : done
-                ? 'rgba(0,196,125,0.2)'
-                : 'rgba(255,255,255,0.06)';
-            const circBg = done
-              ? 'rgba(0,196,125,0.15)'
-              : active
-                ? 'rgba(17,97,254,0.15)'
-                : 'rgba(255,255,255,0.05)';
-            const circBorder = done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.1)';
-            const circColor = done ? '#00c47d' : active ? '#1161FE' : 'rgba(255,255,255,0.3)';
-            const titleColor = active ? 'white' : done ? '#00c47d' : 'rgba(255,255,255,0.5)';
+            let bgColor = 'rgba(255,255,255,0.02)';
+            if (active) bgColor = 'rgba(17,97,254,0.1)';
+            else if (done) bgColor = 'rgba(0,196,125,0.05)';
+
+            let borderColor = 'rgba(255,255,255,0.06)';
+            if (active) borderColor = 'rgba(17,97,254,0.3)';
+            else if (done) borderColor = 'rgba(0,196,125,0.2)';
+
+            let circBg = 'rgba(255,255,255,0.05)';
+            if (done) circBg = 'rgba(0,196,125,0.15)';
+            else if (active) circBg = 'rgba(17,97,254,0.15)';
+
+            let circBorder = 'rgba(255,255,255,0.1)';
+            if (done) circBorder = '#00c47d';
+            else if (active) circBorder = '#1161FE';
+
+            let circColor = 'rgba(255,255,255,0.3)';
+            if (done) circColor = '#00c47d';
+            else if (active) circColor = '#1161FE';
+
+            let titleColor = 'rgba(255,255,255,0.5)';
+            if (active) titleColor = 'white';
+            else if (done) titleColor = '#00c47d';
 
             return (
               <button
@@ -422,7 +427,7 @@ export const PwaInstallFab = ({
   const isMobile = isMobileDevice();
 
   useEffect(() => {
-    if (isInstalled || !isMobile) return;
+    if (isInstalled || !isMobile) return undefined;
 
     // Delay appearance so it doesn't clash with page load
     const showTimer = setTimeout(() => setVisible(true), 2500);
@@ -481,12 +486,14 @@ export const PwaInstallFab = ({
         <path d="M2 15h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
       {t('components.pwaInstallGuide.fabLabel')}
-      <style>{`
+      <style>
+        {`
         @keyframes pwa-fab-in {
           from { opacity: 0; transform: translateY(12px) scale(0.9); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-      `}</style>
+      `}
+      </style>
     </button>
   );
 };

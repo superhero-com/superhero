@@ -32,6 +32,23 @@ export class NostrIdentityLockedError extends Error {
  */
 export type NostrIdentitySource = () => NostrIdentityProvider | null;
 
+export interface RevocableNostrIdentityOptions {
+  /**
+   * Fired after each successful LOCALLY-INITIATED message operation — `signEvent`
+   * (posting / sending) and `nip04Encrypt` (composing an outgoing DM) — the "chat
+   * activity" signal ADR-0004 condition 3 watches. Every DM and room transport
+   * signs and encrypts through this one provider, so a single hook here re-arms
+   * the session idle timer on real chat use across DMs and communities alike.
+   *
+   * `getPublicKey` (a passive read of public material, used by NIP-42 AUTH) and
+   * `nip04Decrypt` deliberately do NOT count: inbound decryption is driven by
+   * relay delivery, not local user action, so counting it would let a remote
+   * sender keep the key resident indefinitely by trickling in DMs — turning the
+   * idle window into a remote-input-controlled one (SR change request, ZIX-1414).
+   */
+  onActivity?: () => void;
+}
+
 /**
  * Wrap a late-resolving {@link NostrIdentitySource} as a `NostrIdentityProvider`.
  * The returned provider is safe to hand to a service that outlives a lock: after
@@ -39,6 +56,7 @@ export type NostrIdentitySource = () => NostrIdentityProvider | null;
  */
 export function createRevocableNostrIdentity(
   source: NostrIdentitySource,
+  { onActivity }: RevocableNostrIdentityOptions = {},
 ): NostrIdentityProvider {
   const resolve = (): NostrIdentityProvider => {
     const identity = source();
@@ -50,12 +68,17 @@ export function createRevocableNostrIdentity(
       return resolve().getPublicKey();
     },
     async signEvent(template: EventTemplate): Promise<NostrEvent> {
-      return resolve().signEvent(template);
+      const event = await resolve().signEvent(template);
+      onActivity?.();
+      return event;
     },
     async nip04Encrypt(recipientPubkey: string, plaintext: string): Promise<string> {
-      return resolve().nip04Encrypt(recipientPubkey, plaintext);
+      const ciphertext = await resolve().nip04Encrypt(recipientPubkey, plaintext);
+      onActivity?.();
+      return ciphertext;
     },
     async nip04Decrypt(senderPubkey: string, ciphertext: string): Promise<string> {
+      // No onActivity: inbound decryption is relay-driven, not local user action.
       return resolve().nip04Decrypt(senderPubkey, ciphertext);
     },
   };

@@ -36,10 +36,17 @@ export function subscribeRoomSession(listener: () => void): () => void {
 export const roomKeySession = new NostrKeySession({ onLock: () => notifyChange() });
 
 /**
- * The single revocable identity every room transport signs through. Holds no key
- * — it re-reads {@link roomKeySession} on each call and rejects once locked.
+ * The single revocable identity every DM and room transport signs through. Holds
+ * no key — it re-reads {@link roomKeySession} on each call and rejects once
+ * locked. Each locally-initiated sign/encrypt re-arms the idle timer via
+ * `touch()`, so an actively-used session does not hard-lock 30 minutes after
+ * unlock (ADR-0004 condition 3 clears on 30 min of *no chat activity*). Inbound
+ * decryption is excluded — it is relay-driven, not local activity.
  */
-export const roomRevocableIdentity = createRevocableNostrIdentity(() => roomKeySession.identity());
+export const roomRevocableIdentity = createRevocableNostrIdentity(
+  () => roomKeySession.identity(),
+  { onActivity: () => roomKeySession.touch() },
+);
 
 let teardownBound = false;
 

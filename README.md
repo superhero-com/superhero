@@ -72,6 +72,18 @@ registration fails with a `SecurityError`:
 - local dev on `localhost` → `VITE_WEBAUTHN_RP_ID=localhost`
 - PR previews on `pr-<N>-superhero.stg.service.aepps.com` → `VITE_WEBAUTHN_RP_ID=stg.service.aepps.com`
 
+A mismatch fails as a `SecurityError` **before the OS shows anything**, so the
+symptom is "tapping the passkey option does nothing" rather than a visible
+error. Verified working on the `stg.service.aepps.com` previews, which
+`.github/workflows/pr_preview.yaml` configures.
+
+The Netlify deploy previews (`deploy-preview-<N>--*.netlify.app`) set no
+`VITE_WEBAUTHN_RP_ID`, so they bake in the production default and **cannot do
+passkeys** — test passkey flows on the stg preview instead. Wiring them up is
+awkward rather than forgotten: `netlify.app` is on the Public Suffix List, so
+each preview's only legal RP ID is its own full hostname, which means a
+per-deploy value and credentials that don't carry between previews.
+
 ```bash
 # Example overrides at build/dev time
 VITE_SUPERHERO_API_URL=https://api.example.com \

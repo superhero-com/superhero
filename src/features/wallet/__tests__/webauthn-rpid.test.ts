@@ -2,8 +2,8 @@
 // hold it build-time-pinned (never runtime-derived from the serving host) and
 // reproduce the finding that a bundle served from an unexpected host must not
 // silently mint host-scoped credentials.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import {
   afterEach, describe, expect, it, vi,
 } from 'vitest';
@@ -38,6 +38,47 @@ describe('WebAuthn rpId is build-time pinned (custody boundary)', () => {
     expect(code).not.toMatch(/window\s*\.\s*location/);
     expect(code).not.toMatch(/location\s*\.\s*hostname/);
     expect(code).not.toMatch(/\.\s*hostname\b/);
+  });
+
+  it('CI guard: webauthn.ts is the ONLY place that reads VITE_WEBAUTHN_RP_ID', () => {
+    // A second inline `import.meta.env.VITE_WEBAUTHN_RP_ID || 'superhero.com'`
+    // is not a harmless duplicate: it keeps defaulting to production on a build
+    // that HAS set the var, so that call site fails with a SecurityError — before
+    // any OS UI is shown, so it reads as "nothing happened" — while every other
+    // ceremony works. usePasskeyConnect shipped exactly that bug. Everything
+    // outside webauthn.ts must import the pinned `RP_ID` instead.
+    const root = resolve(process.cwd(), 'src');
+
+    // webauthn.ts owns the value; vite-env.d.ts only declares its type; this
+    // file names it in fixtures and prose.
+    const allowed = [
+      join('features', 'wallet', 'webauthn.ts'),
+      'vite-env.d.ts',
+      join('features', 'wallet', '__tests__', 'webauthn-rpid.test.ts'),
+    ];
+
+    const sourceFiles = (dir: string): string[] => readdirSync(dir, { withFileTypes: true })
+      .flatMap((entry) => {
+        const path = resolve(dir, entry.name);
+        if (entry.isDirectory()) return sourceFiles(path);
+        return /\.(ts|tsx)$/.test(entry.name) ? [path] : [];
+      });
+
+    const offenders = sourceFiles(root)
+      .map((path) => ({ rel: relative(root, path), path }))
+      .filter(({ rel }) => !allowed.includes(rel))
+      .filter(({ path }) => {
+        const code = readFileSync(path, 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/.*$/gm, '');
+        // Match the actual env READ, not mentions of the name — comments
+        // pointing at the README are fine and shouldn't fail the build.
+        return /import\s*\.\s*meta\s*\.\s*env[\s\S]{0,40}VITE_WEBAUTHN_RP_ID/.test(code)
+          || /VITE_WEBAUTHN_RP_ID[\s\S]{0,20}(\]|\})?\s*\|\|/.test(code);
+      })
+      .map(({ rel }) => rel);
+
+    expect(offenders).toEqual([]);
   });
 });
 

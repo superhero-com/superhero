@@ -4,7 +4,6 @@ import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { collectionLabel } from '@/utils/collection';
 import { detectMatchingCollections, preferredCollection } from '@/utils/collectionNameChars';
-import BondingCurveGraph from '../components/BondingCurveGraph';
 import { toAe } from '@aeternity/aepp-sdk';
 import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';

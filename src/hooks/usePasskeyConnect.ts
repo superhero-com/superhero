@@ -12,7 +12,7 @@
 import {
   useCallback, useEffect, useState,
 } from 'react';
-import { isPlatformAuthenticatorAvailable } from '@/features/wallet/webauthn';
+import { isPlatformAuthenticatorAvailable, RP_ID } from '@/features/wallet/webauthn';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 
 export type PasskeyState =
@@ -73,7 +73,13 @@ export function usePasskeyConnect() {
       await navigator.credentials.get({
         publicKey: {
           challenge: crypto.getRandomValues(new Uint8Array(32)),
-          rpId: import.meta.env.VITE_WEBAUTHN_RP_ID || 'superhero.com',
+          // The pinned build-time RP ID — the custody boundary. Imported rather
+          // than re-reading import.meta.env, so there is exactly ONE place this
+          // value is decided (webauthn.ts). A second inline copy silently drifts:
+          // it would keep defaulting to superhero.com on a build that had set
+          // VITE_WEBAUTHN_RP_ID, and every ceremony here would fail with a
+          // SecurityError while enrollment elsewhere worked.
+          rpId: RP_ID,
           userVerification: 'required',
           allowCredentials: [{
             id: Uint8Array.from(atob(credentialId.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)),
@@ -92,9 +98,24 @@ export function usePasskeyConnect() {
       if (name === 'NotAllowedError' || msg.toLowerCase().includes('cancel')) {
         setState('cancelled');
         setErrorMsg(null); // Don't show an error for user-cancelled
+      } else if (name === 'SecurityError') {
+        // Almost always an RP ID / origin mismatch: the pinned RP_ID is not a
+        // registrable suffix of the serving origin, so the browser refuses the
+        // ceremony BEFORE showing any UI — no Face ID sheet ever appears, which
+        // reads as "nothing happened" rather than as a failure. Name it, because
+        // the generic message sends people hunting for a device problem when it
+        // is a build-config one (see README: VITE_WEBAUTHN_RP_ID).
+        setState('error');
+        setErrorMsg(`Passkeys aren’t available on this domain (expected ${RP_ID}).`);
       } else {
         setState('error');
         setErrorMsg('Passkey failed. Try your wallet instead.');
+      }
+      // Keep the underlying reason reachable for support: the UI copy above is
+      // deliberately short, and a swallowed DOMException name/message is the
+      // difference between a five-minute diagnosis and an afternoon.
+      if (name !== 'NotAllowedError') {
+        console.warn('[passkey] connect failed', { name, msg });
       }
     }
   }, []);

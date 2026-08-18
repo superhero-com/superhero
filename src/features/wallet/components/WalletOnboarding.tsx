@@ -18,7 +18,7 @@ import {
   addPasskeyFactor, addRecoveryCodeFactor, createWalletFromPasskey, importWalletWithDek,
   recordMnemonicBackedUp,
 } from '../wallet-lifecycle';
-import { isPlatformAuthenticatorAvailable } from '../webauthn';
+import { isPlatformAuthenticatorAvailable, RP_ID } from '../webauthn';
 import { clearManifest, manifestForFirstAccount, saveManifest } from '../manifest-store';
 import { deriveAccount } from '../derivation';
 import { createIndexedDbVaultStore } from '../vault-store';
@@ -422,7 +422,14 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       // `protect` step (which offers to add one) has nothing left to ask.
       await goToRecovery(created.record, created.dek);
     } catch (e) {
-      setError((e as Error).message);
+      // An RP ID / origin mismatch fails as a SecurityError BEFORE any OS UI
+      // appears, so "nothing happened when I tapped" is the symptom. Say which
+      // domain the build expects instead of echoing an opaque platform string
+      // (see README: VITE_WEBAUTHN_RP_ID).
+      const name = e instanceof DOMException ? e.name : '';
+      setError(name === 'SecurityError'
+        ? `Passkeys aren’t available on this domain (this build expects ${RP_ID}). Use a recovery phrase instead.`
+        : (e as Error).message);
       setStep('choose');
     }
   }, [store, goToRecovery]);

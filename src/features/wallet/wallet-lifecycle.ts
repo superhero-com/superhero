@@ -24,6 +24,7 @@ import {
 import { fromB64, toB64 } from './vault';
 import { generateRecoveryCode, parseRecoveryCode } from './recovery';
 import { enrollPrfCredential, evaluatePrf } from './webauthn';
+import { mnemonicFromPrf, seedPrfSalt } from './passkey-seed';
 import type { VaultStore } from './vault-store';
 import type { UnlockProvider } from './inline-signer';
 
@@ -147,6 +148,67 @@ export async function addPasskeyFactor(
   const updated = await addFactor(record, dek, enrollment);
   await store.save(updated);
   return updated;
+}
+
+/**
+ * DEVICE-GATED. Create a wallet whose seed IS the passkey — the web (non-PWA)
+ * path, where there is no seed-phrase screen.
+ *
+ * One ceremony does everything: enroll a platform passkey, derive the BIP39
+ * mnemonic from its PRF output at the FIXED seed salt (`passkey-seed.ts`), seal
+ * that mnemonic into a fresh vault, and wrap the DEK under a KEK derived from
+ * the same PRF output — under a DIFFERENT HKDF `info`, so the wrapping key and
+ * the seed material are cryptographically independent.
+ *
+ * Why the mnemonic is not shown: it does not need to be written down, because it
+ * is recoverable from the passkey alone (a fixed salt, no stored per-enrollment
+ * randomness — the threat model R-04's eviction case). It stays exportable from settings, and it
+ * is a normal BIP39 phrase on the standard derivation path, so the account can
+ * be imported into the extension or native wallet like any other.
+ *
+ * `mnemonicBackedUpAt` is deliberately left null: no VERIFIED written backup
+ * happened. Callers that want a durable off-device copy should still enroll a
+ * recovery code (onboarding does).
+ *
+ * Refuses if a vault already exists on this device.
+ */
+export async function createWalletFromPasskey(
+  store: VaultStore,
+  opts: { userName: string; label?: string; now: number },
+): Promise<{ record: VaultRecord; dek: CryptoKey; mnemonic: string }> {
+  if (await store.load()) throw new Error('wallet: a vault already exists on this device');
+
+  const prfSalt = seedPrfSalt();
+  const { credentialId, prfOutput, rpId } = await enrollPrfCredential({
+    userId: crypto.getRandomValues(new Uint8Array(16)),
+    // Shown in the OS passkey picker. Public data only — never anything
+    // identifying beyond what the user already published.
+    userName: opts.userName,
+    prfSalt,
+  });
+
+  // The seed comes from the PRF output...
+  const mnemonic = mnemonicFromPrf(prfOutput);
+
+  // ...and so does the KEK, but through a different HKDF info (see factors.ts's
+  // 'webauthn-prf'), so neither derivation reveals the other.
+  const kdf: HkdfKdf = { alg: 'hkdf-sha256', salt: b64rand(32), info: 'webauthn-prf' };
+  const enrollment: FactorEnrollment = {
+    id: crypto.randomUUID(),
+    type: 'webauthn-prf',
+    label: opts.label ?? 'This device',
+    createdAt: opts.now,
+    kdf,
+    kek: await kekFromHighEntropy(prfOutput, kdf),
+    webauthn: { credentialId: toB64(credentialId), prfSalt: toB64(prfSalt), rpId },
+  };
+
+  const record = await createVault(mnemonic, enrollment, opts.now);
+  await store.save(record);
+  // Same enroll-time lock→unlock round-trip as importWalletWithDek: the DEK we
+  // hand back is proven to be the one the persisted factor actually opens.
+  const { dek } = await unlockVault(record, enrollment.id, enrollment.kek);
+  return { record, dek, mnemonic };
 }
 
 /**

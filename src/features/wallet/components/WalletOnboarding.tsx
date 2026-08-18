@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/button';
 import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { isStandalone } from '@/utils/displayMode';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
 } from '../passphrase';
 import {
-  addPasskeyFactor, addRecoveryCodeFactor, importWalletWithDek, recordMnemonicBackedUp,
+  addPasskeyFactor, addRecoveryCodeFactor, createWalletFromPasskey, importWalletWithDek,
+  recordMnemonicBackedUp,
 } from '../wallet-lifecycle';
 import { isPlatformAuthenticatorAvailable } from '../webauthn';
 import { clearManifest, manifestForFirstAccount, saveManifest } from '../manifest-store';
@@ -149,6 +151,10 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [firstAddr, setFirstAddr] = useState('');
   // Which path reached the passphrase step, so Back returns to the right previous screen.
   const [fromImport, setFromImport] = useState(false);
+  // Did the user actually re-enter the two words? Only then may the vault claim a
+  // VERIFIED written backup (`mnemonicBackedUpAt`). The import path sets it too —
+  // the user supplied the phrase from their own backup, which is the same proof.
+  const [backupVerified, setBackupVerified] = useState(false);
   // Enrollment state. `dek` is the transient unlocked Data-Encryption-Key: adding
   // any factor requires it by construction (vault-record.addFactor), and it is
   // held ONLY for the protect/recovery steps and dropped at `done`. It is never
@@ -158,6 +164,23 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [dek, setDek] = useState<CryptoKey | null>(null);
   const [deviceUnlockAvailable, setDeviceUnlockAvailable] = useState(false);
   const [passkeyEnrolled, setPasskeyEnrolled] = useState(false);
+  // Which surface is this? The seed-phrase flow (write it down, re-enter two
+  // words) is PWA-only: in an installed app the wallet is the point, and the
+  // user is committing to this device. In a browser tab the same six screens are
+  // a wall in front of "just let me in", so web creates the wallet FROM the
+  // passkey instead — same BIP39 seed, derived rather than transcribed
+  // (`passkey-seed.ts`). Resolved after mount, not during render: the server has
+  // no `display-mode` of its own, so deciding at render time would make the
+  // hydrated tree disagree with the SSR'd one (mirrors UserProfile).
+  const [seedFlow, setSeedFlow] = useState(false);
+  useEffect(() => { setSeedFlow(isStandalone()); }, []);
+  // Can this device create a passkey at all? Feature-detect only, never UA-sniff.
+  // Gates the web path's primary CTA; when false the phrase flow is the only way
+  // to create a wallet here, so it must not be hidden behind the passkey button.
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  useEffect(() => {
+    isPlatformAuthenticatorAvailable().then(setPasskeySupported).catch(() => {});
+  }, []);
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
@@ -246,11 +269,15 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       const phrase = normalizeMnemonic(fromImport ? importText : mnemonic);
       const now = Date.now();
       const created = await importWalletWithDek(store, { mnemonic: phrase, passphrase: pass, now });
-      // The written backup is verified before we ever get here — on the create
-      // path by re-entering two random words, on the import path because the
-      // user supplied the phrase from their own existing backup. Either way the
-      // seed demonstrably exists off this device, which is what the flag means.
-      const backed = await recordMnemonicBackedUp(store, created.record, now);
+      // Only claim a VERIFIED written backup when one actually happened: the
+      // create path re-entered two random words, or the import path supplied the
+      // phrase from the user's own existing backup. If the confirm step was
+      // skipped, the flag stays null — IndexedDB is evictable and this is the only
+      // durable evidence the seed exists off-device (the threat model R-04), so recording it
+      // optimistically would be a lie the app later relies on.
+      const backed = backupVerified || fromImport
+        ? await recordMnemonicBackedUp(store, created.record, now)
+        : created.record;
       const { address } = deriveAccount(phrase, 0);
       // Cleartext manifest — public addresses only. This is what lets
       // `AeSdkProvider.makeSigner` recognise the account as an inline one and
@@ -267,19 +294,25 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       setError((e as Error).message);
       setStep('passphrase');
     }
-  }, [store, importText, mnemonic, pass, fromImport]);
+  }, [store, importText, mnemonic, pass, fromImport, backupVerified]);
 
   /**
    * Generate the MANDATORY recovery code and enroll it as a factor. It is the
    * only unlock that survives both total device loss and an Apple PRF rekey, so
    * onboarding cannot reach `done` without it.
+   *
+   * Takes the DEK as an argument (defaulting to state) because the passkey-create
+   * path calls this in the same tick it obtains the DEK, before the `setDek`
+   * re-render has landed — reading state there would see `null` and silently skip
+   * the enrollment, leaving a wallet with no recovery factor.
    */
-  const goToRecovery = useCallback(async (current: VaultRecord) => {
-    if (!dek) return;
+  const goToRecovery = useCallback(async (current: VaultRecord, withDek?: CryptoKey) => {
+    const key = withDek ?? dek;
+    if (!key) return;
     setError('');
     setBusy(true);
     try {
-      const added = await addRecoveryCodeFactor(store, current, dek, Date.now());
+      const added = await addRecoveryCodeFactor(store, current, key, Date.now());
       setRecord(added.record);
       setRecoveryCode(added.code);
       setStep('recovery');
@@ -319,6 +352,38 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       setBusy(false);
     }
   }, [store, record, dek, firstAddr, goToRecovery]);
+
+  /**
+   * DEVICE-GATED. The web (non-PWA) create path: one passkey ceremony produces
+   * the wallet. The BIP39 seed is derived from the passkey's PRF output, so
+   * there is nothing for the user to write down — it is recoverable from the
+   * passkey itself, and still exportable from settings later.
+   *
+   * The mandatory recovery code is enrolled immediately after, exactly as on the
+   * seed path: the passkey is the primary factor, the code is the escape hatch
+   * for a lost device or an Apple PRF rekey (the threat model R-04).
+   */
+  const createWithPasskey = useCallback(async () => {
+    setError('');
+    setStep('creating');
+    try {
+      const now = Date.now();
+      const created = await createWalletFromPasskey(store, { userName: 'Superhero wallet', now });
+      const { address } = deriveAccount(created.mnemonic, 0);
+      saveManifest(manifestForFirstAccount(address));
+      setRecord(created.record);
+      setDek(created.dek);
+      setFirstAddr(address);
+      setPasskeyEnrolled(true);
+      setDeviceUnlockAvailable(true);
+      // Straight to the recovery code: the passkey already IS the unlock, so the
+      // `protect` step (which offers to add one) has nothing left to ask.
+      await goToRecovery(created.record, created.dek);
+    } catch (e) {
+      setError((e as Error).message);
+      setStep('choose');
+    }
+  }, [store, goToRecovery]);
 
   /**
    * Enrollment is complete. Drop every transient secret this component held —
@@ -468,7 +533,38 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   <p className={description}>
                     Your keys stay on this device, encrypted. Superhero never sees them.
                   </p>
-                  <PrimaryButton className="mb-3" onClick={startCreate}>Create a new wallet</PrimaryButton>
+                  {/* In a browser tab the passkey IS the wallet: one tap, no phrase to
+                      transcribe, because the seed is derived from the passkey and stays
+                      recoverable from it. The written-phrase flow is the installed-app
+                      path, and remains available here as the explicit alternative for
+                      anyone who wants a phrase they control. */}
+                  {seedFlow ? (
+                    <PrimaryButton className="mb-3" onClick={startCreate}>Create a new wallet</PrimaryButton>
+                  ) : (
+                    <>
+                      <PrimaryButton
+                        className="mb-3"
+                        disabled={!passkeySupported}
+                        onClick={createWithPasskey}
+                      >
+                        <Fingerprint className="h-4 w-4" />
+                        Continue with passkey
+                      </PrimaryButton>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {passkeySupported
+                          ? 'Face ID, Touch ID or your device PIN. No password, nothing to write down.'
+                          : 'This device or browser can’t create a passkey — use a recovery phrase instead.'}
+                      </p>
+                      <AeButton
+                        variant="ghost"
+                        fullWidth
+                        className="mb-3"
+                        onClick={startCreate}
+                      >
+                        Use a recovery phrase instead
+                      </AeButton>
+                    </>
+                  )}
                   <AeButton variant="ghost" fullWidth onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
                 </AeCard>
                 )}
@@ -515,9 +611,23 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                       />
                     </div>
                   ))}
-                  <PrimaryButton className="mt-2" disabled={!verifyOk} onClick={() => { setFromImport(false); setStep('passphrase'); }}>
+                  <PrimaryButton className="mt-2" disabled={!verifyOk} onClick={() => { setBackupVerified(true); setFromImport(false); setStep('passphrase'); }}>
                     {verifyOk ? 'Continue' : 'Words don’t match yet'}
                   </PrimaryButton>
+                  {/* Skippable on purpose: a hard gate here teaches people to
+                      screenshot the phrase to get past it, and it strands anyone who
+                      wrote it down correctly but mistypes under pressure. Skipping is
+                      allowed but NOT silent — it does not set `mnemonicBackedUpAt`, so
+                      the vault honestly records that no verified backup exists and the
+                      app can keep nagging until one does. */}
+                  <AeButton
+                    variant="ghost"
+                    fullWidth
+                    className="mt-2 text-muted-foreground"
+                    onClick={() => { setBackupVerified(false); setFromImport(false); setStep('passphrase'); }}
+                  >
+                    Skip — I’ll confirm later
+                  </AeButton>
                 </AeCard>
                 )}
 
@@ -542,7 +652,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   <p className={`text-xs mb-4 ${fieldClass(importText.length === 0, importedOk)}`}>
                     {importMsg}
                   </p>
-                  <PrimaryButton disabled={!importedOk} onClick={() => { setFromImport(true); setStep('passphrase'); }}>Continue</PrimaryButton>
+                  <PrimaryButton disabled={!importedOk} onClick={() => { setBackupVerified(true); setFromImport(true); setStep('passphrase'); }}>Continue</PrimaryButton>
                 </AeCard>
                 )}
 

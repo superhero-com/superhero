@@ -36,6 +36,17 @@ vi.mock('../../webauthn', () => ({
   isPlatformAuthenticatorAvailable: () => Promise.resolve(true),
 }));
 
+// These tests are about LAYERING, not about which create path a surface offers.
+// Pin the PWA (standalone) branch so the first screen is the seed flow's
+// "Create a new wallet" — the web branch leads with "Continue with passkey"
+// instead, and this file must not silently start asserting on a different
+// button if that copy changes.
+vi.mock('@/utils/displayMode', () => ({
+  isStandalone: () => true,
+  isIOSWebKit: () => false,
+  isMobileDevice: () => true,
+}));
+
 // Keep the vault/crypto layer out of a layering test — none of it is exercised
 // on the first screen, but the module graph would pull in real WebCrypto.
 vi.mock('../../vault-store', () => ({

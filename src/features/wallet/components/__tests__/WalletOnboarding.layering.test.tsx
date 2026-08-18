@@ -36,13 +36,11 @@ vi.mock('../../webauthn', () => ({
   isPlatformAuthenticatorAvailable: () => Promise.resolve(true),
 }));
 
-// These tests are about LAYERING, not about which create path a surface offers.
-// Pin the PWA (standalone) branch so the first screen is the seed flow's
-// "Create a new wallet" — the web branch leads with "Continue with passkey"
-// instead, and this file must not silently start asserting on a different
-// button if that copy changes.
+// Onboarding reads display-mode helpers on mount; jsdom has no matchMedia by
+// default. The create options are surface-independent, so the value here does
+// not steer which buttons render — it just keeps the probe from throwing.
 vi.mock('@/utils/displayMode', () => ({
-  isStandalone: () => true,
+  isStandalone: () => false,
   isIOSWebKit: () => false,
   isMobileDevice: () => true,
 }));
@@ -92,13 +90,13 @@ const OpenSheet = ({ children }: { children: React.ReactNode }) => (
   </Dialog.Root>
 );
 
-/** Onboarding's first screen offers Create / Import. */
+/** The `choose` screen's passkey option — the first control on the first screen. */
 // NOTE on how these tests see the bug: `getByRole` walks the accessibility
 // tree, which excludes `aria-hidden` subtrees. Against the pre-fix component
 // (a bare `createPortal` sibling) Radix's `hideOthers()` marks the whole
 // takeover `aria-hidden`, so this query cannot find the button at all — the
 // failure is symptom 3 above, not a flaky selector.
-const findCreate = () => screen.findByRole('button', { name: /create a new wallet/i });
+const findCreate = () => screen.findByRole('button', { name: /continue with passkey/i });
 
 describe('WalletOnboarding over an open ConnectWalletModal sheet', () => {
   beforeEach(() => {

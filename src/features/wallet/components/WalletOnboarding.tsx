@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { isStandalone } from '@/utils/displayMode';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
@@ -130,6 +129,59 @@ const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
 const heading = 'text-xl font-bold tracking-tight leading-none mb-1.5';
 const description = 'text-sm text-muted-foreground mb-4';
 
+/**
+ * One create path on the `choose` screen — passkey or recovery phrase.
+ *
+ * Rendered as a bordered panel with its own icon, title, explanation and CTA
+ * rather than a bare button, so the two options read as a genuine choice with
+ * stated trade-offs instead of a primary action plus an afterthought. Disabled
+ * state is used for "this device can't do passkeys": the option stays visible
+ * and explains itself rather than vanishing, which would leave the user
+ * wondering whether they missed something.
+ */
+type OptionCardProps = {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+  cta: string;
+  onClick: () => void;
+  recommended?: boolean;
+  disabled?: boolean;
+};
+
+const OptionCard = ({
+  icon: Icon, title, body, cta, onClick, recommended = false, disabled = false,
+}: OptionCardProps) => (
+  <div
+    className={cn(
+      'mb-3 rounded-2xl border p-4 transition-colors',
+      disabled
+        ? 'border-border bg-muted/20 opacity-60'
+        : 'border-glass-border bg-white/[0.03] hover:bg-white/[0.05]',
+    )}
+  >
+    <div className="mb-1.5 flex items-center gap-2">
+      <Icon className={cn('h-4 w-4 shrink-0', disabled ? 'text-muted-foreground' : 'text-neon-blue')} />
+      <span className="text-sm font-semibold">{title}</span>
+      {recommended && !disabled && (
+        <span className="rounded-full bg-[#1161FE]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#6ea8ff]">
+          Recommended
+        </span>
+      )}
+    </div>
+    <p className="mb-3 text-xs leading-relaxed text-muted-foreground">{body}</p>
+    <AeButton
+      variant={recommended && !disabled ? 'primary' : 'ghost'}
+      fullWidth
+      disabled={disabled}
+      className={recommended && !disabled ? WALLET_CTA : undefined}
+      onClick={onClick}
+    >
+      {cta}
+    </AeButton>
+  </div>
+);
+
 interface Props {
   store?: VaultStore;
   onComplete?: (record: VaultRecord, firstAddress: string) => void;
@@ -164,19 +216,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [dek, setDek] = useState<CryptoKey | null>(null);
   const [deviceUnlockAvailable, setDeviceUnlockAvailable] = useState(false);
   const [passkeyEnrolled, setPasskeyEnrolled] = useState(false);
-  // Which surface is this? The seed-phrase flow (write it down, re-enter two
-  // words) is PWA-only: in an installed app the wallet is the point, and the
-  // user is committing to this device. In a browser tab the same six screens are
-  // a wall in front of "just let me in", so web creates the wallet FROM the
-  // passkey instead — same BIP39 seed, derived rather than transcribed
-  // (`passkey-seed.ts`). Resolved after mount, not during render: the server has
-  // no `display-mode` of its own, so deciding at render time would make the
-  // hydrated tree disagree with the SSR'd one (mirrors UserProfile).
-  const [seedFlow, setSeedFlow] = useState(false);
-  useEffect(() => { setSeedFlow(isStandalone()); }, []);
   // Can this device create a passkey at all? Feature-detect only, never UA-sniff.
-  // Gates the web path's primary CTA; when false the phrase flow is the only way
-  // to create a wallet here, so it must not be hidden behind the passkey button.
+  // Gates the passkey option's CTA; when false the phrase option is the only way
+  // to create a wallet here, so it must never be hidden behind the passkey one.
   const [passkeySupported, setPasskeySupported] = useState(false);
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setPasskeySupported).catch(() => {});
@@ -533,38 +575,32 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   <p className={description}>
                     Your keys stay on this device, encrypted. Superhero never sees them.
                   </p>
-                  {/* In a browser tab the passkey IS the wallet: one tap, no phrase to
-                      transcribe, because the seed is derived from the passkey and stays
-                      recoverable from it. The written-phrase flow is the installed-app
-                      path, and remains available here as the explicit alternative for
-                      anyone who wants a phrase they control. */}
-                  {seedFlow ? (
-                    <PrimaryButton className="mb-3" onClick={startCreate}>Create a new wallet</PrimaryButton>
-                  ) : (
-                    <>
-                      <PrimaryButton
-                        className="mb-3"
-                        disabled={!passkeySupported}
-                        onClick={createWithPasskey}
-                      >
-                        <Fingerprint className="h-4 w-4" />
-                        Continue with passkey
-                      </PrimaryButton>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {passkeySupported
-                          ? 'Face ID, Touch ID or your device PIN. No password, nothing to write down.'
-                          : 'This device or browser can’t create a passkey — use a recovery phrase instead.'}
-                      </p>
-                      <AeButton
-                        variant="ghost"
-                        fullWidth
-                        className="mb-3"
-                        onClick={startCreate}
-                      >
-                        Use a recovery phrase instead
-                      </AeButton>
-                    </>
-                  )}
+
+                  {/* Two ways to create, offered side by side on EVERY surface —
+                      installed app and browser tab alike. They differ only in where
+                      the seed comes from, not in what you end up with: both produce
+                      a standard BIP39 wallet on the same derivation path. Passkey is
+                      listed first because it is the one most people should take, but
+                      the phrase is a peer option, not a fallback buried behind it. */}
+                  <OptionCard
+                    icon={Fingerprint}
+                    title="Use a passkey"
+                    recommended
+                    disabled={!passkeySupported}
+                    body={passkeySupported
+                      ? 'Face ID, Touch ID or your device PIN. Nothing to write down — your recovery phrase is derived from the passkey, and you can reveal it any time in Settings.'
+                      : 'This device or browser can’t create a passkey. Use a recovery phrase instead.'}
+                    cta="Continue with passkey"
+                    onClick={createWithPasskey}
+                  />
+
+                  <OptionCard
+                    icon={KeyRound}
+                    title="Use a recovery phrase"
+                    body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
+                    cta="Create with a phrase"
+                    onClick={startCreate}
+                  />
                   <AeButton variant="ghost" fullWidth onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
                 </AeCard>
                 )}

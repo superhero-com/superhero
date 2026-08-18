@@ -6,18 +6,18 @@ import {
 } from 'vitest';
 
 /**
- * Which create path each surface offers.
+ * The two ways to create a wallet.
  *
- * The seed-phrase flow (show 12 words → re-enter two of them) is PWA-only: in an
- * installed app the wallet is the point. In a browser tab that is a wall in
- * front of "just let me in", so web creates the wallet FROM the passkey — the
- * same BIP39 seed, derived from the passkey's PRF output rather than transcribed
- * by the user (`passkey-seed.ts`), and therefore recoverable from the passkey
- * alone.
+ * Both are offered on EVERY surface — installed PWA and browser tab alike — and
+ * they differ only in where the seed comes from, not in what the user ends up
+ * with: a passkey wallet derives its BIP39 phrase from the passkey's PRF output
+ * (`passkey-seed.ts`), a phrase wallet has the user transcribe one. Either way
+ * it is a standard BIP39 wallet on the same derivation path.
  *
- * These tests pin the split itself, not the copy: a regression that showed the
- * seed screens in a browser tab (or hid them in the PWA) is the bug being
- * guarded against.
+ * These tests pin that both options are always present and independently
+ * reachable. The regression being guarded against is either option becoming
+ * surface-conditional, or the phrase path disappearing when passkeys are
+ * unavailable — which would leave no way to create a wallet at all.
  */
 
 const isStandalone = vi.fn();
@@ -53,83 +53,100 @@ const mount = async () => {
   await act(async () => { render(<WalletOnboarding />); });
 };
 
-describe('WalletOnboarding create paths', () => {
+const passkeyCta = () => screen.findByRole('button', { name: /continue with passkey/i });
+const phraseCta = () => screen.findByRole('button', { name: /create with a phrase/i });
+
+describe('WalletOnboarding create options', () => {
   beforeEach(() => {
     isStandalone.mockReset().mockReturnValue(false);
     isPlatformAuthenticatorAvailable.mockReset().mockResolvedValue(true);
   });
 
-  describe('in a browser tab (not installed)', () => {
-    it('leads with the passkey, not a recovery phrase', async () => {
+  // Both surfaces get both options: the choice is the user's, not the
+  // display-mode's.
+  describe.each([
+    ['a browser tab', false],
+    ['the installed PWA', true],
+  ])('in %s', (_label, standalone) => {
+    beforeEach(() => { isStandalone.mockReturnValue(standalone); });
+
+    it('offers both the passkey and the phrase option', async () => {
       await mount();
 
-      expect(await screen.findByRole('button', { name: /continue with passkey/i })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^create a new wallet$/i })).not.toBeInTheDocument();
+      expect(await passkeyCta()).toBeInTheDocument();
+      expect(await phraseCta()).toBeInTheDocument();
     });
 
-    it('still offers the phrase flow as an explicit alternative', async () => {
-      // Not a dead end: anyone who wants a phrase they control can have one.
+    it('enables both when the device supports passkeys', async () => {
       await mount();
 
-      expect(await screen.findByRole('button', { name: /use a recovery phrase instead/i })).toBeInTheDocument();
+      expect(await passkeyCta()).toBeEnabled();
+      expect(await phraseCta()).toBeEnabled();
     });
 
-    it('disables the passkey CTA when the device cannot make one', async () => {
-      isPlatformAuthenticatorAvailable.mockResolvedValue(false);
+    it('explains each option rather than just labelling it', async () => {
       await mount();
 
-      expect(await screen.findByRole('button', { name: /continue with passkey/i })).toBeDisabled();
-      // ...and the phrase path must remain reachable, or there is no way to
-      // create a wallet at all on this device.
-      expect(screen.getByRole('button', { name: /use a recovery phrase instead/i })).toBeEnabled();
+      expect(await screen.findByText(/derived from the passkey/i)).toBeInTheDocument();
+      expect(screen.getByText(/twelve words you write down/i)).toBeInTheDocument();
     });
   });
 
-  describe('in the installed PWA', () => {
-    it('leads with the seed-phrase flow', async () => {
-      isStandalone.mockReturnValue(true);
+  describe('when the device cannot create a passkey', () => {
+    beforeEach(() => { isPlatformAuthenticatorAvailable.mockResolvedValue(false); });
+
+    it('disables the passkey option but keeps it visible and explained', async () => {
+      // Vanishing would leave the user wondering what they missed; the card
+      // stays and says why.
       await mount();
 
-      expect(await screen.findByRole('button', { name: /^create a new wallet$/i })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /continue with passkey/i })).not.toBeInTheDocument();
+      expect(await passkeyCta()).toBeDisabled();
+      expect(screen.getByText(/can’t create a passkey/i)).toBeInTheDocument();
+    });
+
+    it('leaves the phrase option usable — otherwise there is no way to create', async () => {
+      await mount();
+
+      expect(await phraseCta()).toBeEnabled();
+    });
+  });
+
+  describe('the phrase option', () => {
+    it('starts the seed flow', async () => {
+      await mount();
+      await act(async () => { (await phraseCta()).click(); });
+
+      // First seed screen: the 12 words, with the "written them down" advance.
+      expect(await screen.findByRole('button', { name: /written them down/i })).toBeInTheDocument();
     });
   });
 
   describe('the backup-confirm step', () => {
-    it('can be skipped', async () => {
-      // A hard gate here teaches people to screenshot the phrase to get past it,
-      // and strands anyone who wrote it down but mistypes under pressure.
-      isStandalone.mockReturnValue(true);
+    const reachConfirm = async () => {
       await mount();
-
-      await act(async () => {
-        (await screen.findByRole('button', { name: /^create a new wallet$/i })).click();
-      });
+      await act(async () => { (await phraseCta()).click(); });
       await act(async () => {
         (await screen.findByRole('button', { name: /written them down/i })).click();
       });
+    };
+
+    it('can be skipped', async () => {
+      // A hard gate here teaches people to screenshot the phrase to get past it,
+      // and strands anyone who wrote it down but mistypes under pressure.
+      await reachConfirm();
 
       const skip = await screen.findByRole('button', { name: /skip/i });
       expect(skip).toBeEnabled();
 
       await act(async () => { skip.click(); });
 
-      // Skipping advances the flow rather than blocking it.
       expect(await screen.findByRole('heading', { name: /set a passphrase/i })).toBeInTheDocument();
     });
 
     it('keeps Continue gated on typing the right words', async () => {
       // Skippable is not the same as meaningless: the verified path must still
       // require the actual words, since that is what sets mnemonicBackedUpAt.
-      isStandalone.mockReturnValue(true);
-      await mount();
-
-      await act(async () => {
-        (await screen.findByRole('button', { name: /^create a new wallet$/i })).click();
-      });
-      await act(async () => {
-        (await screen.findByRole('button', { name: /written them down/i })).click();
-      });
+      await reachConfirm();
 
       expect(await screen.findByRole('button', { name: /don’t match yet/i })).toBeDisabled();
     });

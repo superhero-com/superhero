@@ -23,8 +23,9 @@ import {
 } from './factors';
 import { fromB64, toB64 } from './vault';
 import { generateRecoveryCode, parseRecoveryCode } from './recovery';
-import { enrollPrfCredential, evaluatePrf } from './webauthn';
+import { discoverPrf, enrollPrfCredential, evaluatePrf } from './webauthn';
 import { mnemonicFromPrf, seedPrfSalt } from './passkey-seed';
+import { deriveAccount } from './derivation';
 import type { VaultStore } from './vault-store';
 import type { UnlockProvider } from './inline-signer';
 
@@ -209,6 +210,65 @@ export async function createWalletFromPasskey(
   // hand back is proven to be the one the persisted factor actually opens.
   const { dek } = await unlockVault(record, enrollment.id, enrollment.kek);
   return { record, dek, mnemonic };
+}
+
+/** Everything a passkey-recovery ceremony yields, held ONLY until the user confirms. */
+export type RecoveredWalletMaterial = {
+  credentialId: Uint8Array;
+  prfOutput: Uint8Array;
+  rpId: string;
+  mnemonic: string;
+  address: string;
+};
+
+/**
+ * DEVICE-GATED. Run the discoverable recovery ceremony and derive the wallet it
+ * implies — persisting NOTHING. Split from the commit so the UI can show the
+ * derived address for confirmation first: the passkey the user picks may be a
+ * seed-phrase wallet's device factor (random wrap salt, not the fixed seed salt),
+ * and evaluating THAT at the seed salt derives a valid but different, empty
+ * wallet. Committing before the user confirms would persist the wrong one and
+ * then block their correct import with "a vault already exists".
+ */
+export async function deriveRecoveredWallet(store: VaultStore): Promise<RecoveredWalletMaterial> {
+  if (await store.load()) throw new Error('wallet: a vault already exists on this device');
+  const { credentialId, prfOutput, rpId } = await discoverPrf({ prfSalt: seedPrfSalt() });
+  const mnemonic = mnemonicFromPrf(prfOutput);
+  return {
+    credentialId, prfOutput, rpId, mnemonic, address: deriveAccount(mnemonic, 0).address,
+  };
+}
+
+/**
+ * DEVICE-GATED. Persist the wallet derived by `deriveRecoveredWallet` — called
+ * only after the user confirmed the address. Reuses the held PRF output, so
+ * recovery stays a single biometric prompt. Mirrors `createWalletFromPasskey`,
+ * including the enroll-time lock→unlock round-trip.
+ */
+export async function commitRecoveredWallet(
+  store: VaultStore,
+  material: RecoveredWalletMaterial,
+  now: number,
+): Promise<{ record: VaultRecord; dek: CryptoKey }> {
+  if (await store.load()) throw new Error('wallet: a vault already exists on this device');
+  const kdf: HkdfKdf = { alg: 'hkdf-sha256', salt: b64rand(32), info: 'webauthn-prf' };
+  const enrollment: FactorEnrollment = {
+    id: crypto.randomUUID(),
+    type: 'webauthn-prf',
+    label: 'This device',
+    createdAt: now,
+    kdf,
+    kek: await kekFromHighEntropy(material.prfOutput, kdf),
+    webauthn: {
+      credentialId: toB64(material.credentialId),
+      prfSalt: toB64(seedPrfSalt()),
+      rpId: material.rpId,
+    },
+  };
+  const record = await createVault(material.mnemonic, enrollment, now);
+  await store.save(record);
+  const { dek } = await unlockVault(record, enrollment.id, enrollment.kek);
+  return { record, dek };
 }
 
 /**

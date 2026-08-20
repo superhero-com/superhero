@@ -62,6 +62,8 @@ vi.mock('../../wallet-lifecycle', () => ({
   hasFactor: (r: { factors: { type: string }[] }, t: string) => r.factors.some((f) => f.type === t),
   passkeyUnlockProvider: () => mocks.passkeyUnlock,
   passphraseUnlockProvider: (p: string) => () => mocks.passphraseUnlock(p),
+  deriveRecoveredWallet: vi.fn(),
+  commitRecoveredWallet: vi.fn(),
 }));
 
 vi.mock('../../vault-record', () => ({

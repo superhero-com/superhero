@@ -1,4 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
 import {
@@ -15,10 +17,11 @@ import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
 } from '../passphrase';
 import {
-  addPasskeyFactor, addRecoveryCodeFactor, createWalletFromPasskey, hasFactor,
-  importWalletWithDek, passkeyUnlockProvider, passphraseUnlockProvider,
-  recordMnemonicBackedUp,
+  addPasskeyFactor, addRecoveryCodeFactor, commitRecoveredWallet, createWalletFromPasskey,
+  deriveRecoveredWallet, hasFactor, importWalletWithDek, passkeyUnlockProvider,
+  passphraseUnlockProvider, recordMnemonicBackedUp, type RecoveredWalletMaterial,
 } from '../wallet-lifecycle';
+import { checkAccountUsage, type AccountUsage } from '../account-usage';
 import { isPlatformAuthenticatorAvailable, RP_ID } from '../webauthn';
 import {
   clearManifest, loadManifest, manifestForFirstAccount, saveManifest,
@@ -47,6 +50,7 @@ import { unlockVault, type VaultRecord } from '../vault-record';
 type Step =
   | 'exists'
   | 'choose'
+  | 'recover-confirm'
   | 'create-show'
   | 'create-verify'
   | 'import-enter'
@@ -78,6 +82,7 @@ const PrimaryButton = ({ className, children, ...props }: AeButtonProps) => (
 const STEP_PROGRESS: Partial<Record<Step, number>> = {
   'create-show': 0.15,
   'create-verify': 0.3,
+  'recover-confirm': 0.3,
   'import-enter': 0.2,
   passphrase: 0.45,
   creating: 0.6,
@@ -246,6 +251,12 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [copied, setCopied] = useState(false);
   // Erasing is unrecoverable for a passkey wallet, so it takes two taps.
   const [resetArmed, setResetArmed] = useState(false);
+  // Held ONLY between the recovery ceremony and the user's confirm — see
+  // deriveRecoveredWallet for why nothing is persisted until then.
+  const [recovered, setRecovered] = useState<RecoveredWalletMaterial | null>(null);
+  const recoveredRef = useRef<RecoveredWalletMaterial | null>(null);
+  const [usage, setUsage] = useState<AccountUsage | 'checking'>('checking');
+  const usageRun = useRef(0);
   const [unlockPass, setUnlockPass] = useState('');
   const [recoveredAddress, setRecoveredAddress] = useState('');
   const existingAddress = recoveredAddress || (loadManifest()?.activeAddress ?? '');
@@ -270,6 +281,11 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       // we merely couldn't read.
       .catch(() => setError('Couldn’t read this device’s wallet storage. If you’re in a private window, try a normal one.'));
   }, [store]);
+
+  // Closing the modal mid-ceremony is the one exit `dropRecovered` can't cover.
+  // Best-effort: the derived mnemonic is a string and can't be wiped the same way.
+  useEffect(() => { recoveredRef.current = recovered; }, [recovered]);
+  useEffect(() => () => { recoveredRef.current?.prfOutput.fill(0); }, []);
 
   // Warm the strength estimator as soon as onboarding opens — its dictionaries are a
   // separate lazy chunk, so this fetches them off the modal shell while the user is
@@ -307,8 +323,11 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const progress = STEP_PROGRESS[step] ?? 0;
   // Back-nav target per step (null = no back: root, terminal, or in-flight). passphrase
   // returns to whichever path led here. choose/exists/creating/done have no back.
+  // recover-confirm keeps its back only while nothing is saved: once the commit lands
+  // the vault exists, and `choose` would reject every action it offers.
+  const canBackOut = step === 'recover-confirm' && recovered !== null;
   let backTarget: Step | null = null;
-  if (step === 'create-show' || step === 'import-enter') backTarget = 'choose';
+  if (step === 'create-show' || step === 'import-enter' || canBackOut) backTarget = 'choose';
   else if (step === 'create-verify') backTarget = 'create-show';
   else if (step === 'passphrase') backTarget = fromImport ? 'import-enter' : 'create-verify';
 
@@ -508,6 +527,65 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     }
   }, [store, goToRecovery]);
 
+  /** DEVICE-GATED. Recovery ceremony → show the derived address; persists nothing. */
+  const startRecover = useCallback(async () => {
+    setError('');
+    setBusy(true);
+    try {
+      const material = await deriveRecoveredWallet(store);
+      setRecovered(material);
+      setUsage('checking');
+      setStep('recover-confirm');
+      // Fire-and-forget: the check is advisory and must never gate the screen. Tagged
+      // so an abandoned ceremony's slow answer can't land as a verdict on the next
+      // ceremony's address.
+      usageRun.current += 1;
+      const run = usageRun.current;
+      checkAccountUsage(material.address)
+        .then((u) => { if (run === usageRun.current) setUsage(u); });
+    } catch (e) {
+      const name = e instanceof DOMException ? e.name : '';
+      setError(name === 'SecurityError'
+        ? `Passkeys aren’t available on this domain (this build expects ${RP_ID}).`
+        : (e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [store]);
+
+  /** Drop the held recovery material without committing (back-out path). */
+  const dropRecovered = useCallback(() => {
+    recovered?.prfOutput.fill(0);
+    setRecovered(null);
+  }, [recovered]);
+
+  const confirmRecover = useCallback(async () => {
+    setError('');
+    setBusy(true);
+    try {
+      if (!recovered) {
+        // The commit already landed on an attempt that failed at the
+        // recovery-code step — retry just that, or committing again would hit
+        // "a vault already exists" (the same trap the `creating` retry avoids).
+        if (record && dek) await goToRecovery(record, dek);
+        return;
+      }
+      const committed = await commitRecoveredWallet(store, recovered, Date.now());
+      saveManifest(manifestForFirstAccount(recovered.address));
+      setRecord(committed.record);
+      setDek(committed.dek);
+      setFirstAddr(recovered.address);
+      setPasskeyEnrolled(true);
+      setDeviceUnlockAvailable(true);
+      dropRecovered();
+      await goToRecovery(committed.record, committed.dek);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [store, recovered, record, dek, goToRecovery, dropRecovered]);
+
   /**
    * Enrollment is complete. Drop every transient secret this component held —
    * the unlocked DEK, the mnemonic, the passphrase, the recovery code — so the
@@ -606,7 +684,13 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 type="button"
                 variant="ghost"
                 aria-label="Go back"
-                onClick={() => { setError(''); setStep(backTarget as Step); }}
+                onClick={() => {
+                  setError('');
+                  // Backing out of the recovery confirm must drop the derived
+                  // seed material — nothing was persisted, nothing may linger.
+                  if (step === 'recover-confirm') dropRecovered();
+                  setStep(backTarget as Step);
+                }}
                 className="mb-2 -ml-2 h-auto min-h-[44px] gap-1 px-2 text-sm text-muted-foreground hover:text-foreground"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -783,6 +867,60 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     onClick={startCreate}
                   />
                   <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+                  {passkeySupported && (
+                    <AeButton variant="ghost" fullWidth disabled={busy} onClick={startRecover}>
+                      Restore a wallet you created with a passkey
+                    </AeButton>
+                  )}
+                </AeCard>
+                )}
+
+                {step === 'recover-confirm' && (
+                <AeCard variant="glass" hover={false} className="w-full p-6">
+                  <IconChip icon={recovered ? KeyRound : CircleAlert} />
+                  <h2 className={heading}>
+                    {recovered ? 'Is this your wallet?' : 'Almost there — one step left'}
+                  </h2>
+                  <p className={description}>
+                    {recovered
+                      ? 'Your passkey derives this account. Nothing is saved until you confirm.'
+                      : 'Your wallet was restored and saved. Setting up your recovery code didn’t finish, so let’s try that again.'}
+                  </p>
+                  {/* Address and activity only while the material is still held: after
+                      the commit `recovered` is null, and both would be describing a
+                      wallet this screen no longer has in hand. */}
+                  {recovered && (
+                    <>
+                      <p className="mb-3 break-all rounded-lg border border-border bg-muted/40 p-3 font-mono text-xs">
+                        {recovered.address}
+                      </p>
+                      {usage === 'checking' && (
+                        <p className="mb-3 text-xs text-muted-foreground">Checking on-chain activity…</p>
+                      )}
+                      {usage === 'used' && (
+                        <p className="mb-3 text-xs text-emerald-400">
+                          This account has on-chain activity — it looks like a restore.
+                        </p>
+                      )}
+                      {usage === 'unknown' && (
+                        <p className="mb-3 text-xs text-muted-foreground">
+                          Couldn&apos;t check on-chain activity right now.
+                        </p>
+                      )}
+                      {usage === 'pristine' && (
+                        <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                          This account has no on-chain activity — it looks like a new wallet
+                          rather than a restored one. If you created your wallet with a recovery
+                          phrase, go back and use Import instead.
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <ErrorNote error={error} />
+                  <PrimaryButton disabled={busy} onClick={confirmRecover}>
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {recovered ? 'This is my wallet — restore it' : 'Try again'}
+                  </PrimaryButton>
                 </AeCard>
                 )}
 

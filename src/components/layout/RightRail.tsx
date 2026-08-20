@@ -81,17 +81,17 @@ const RightRail = ({
   ].join(' ');
   const walletRailCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'shadow-none transition-all duration-300 ease-in-out',
     'relative overflow-hidden',
   ].join(' ');
   const feedSearchCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] p-3',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'shadow-none transition-all duration-300 ease-in-out',
     'relative overflow-visible',
   ].join(' ');
   const priceCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] p-4',
-    'shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+    'shadow-none transition-all duration-300 ease-in-out',
     'relative overflow-hidden',
   ].join(' ');
 
@@ -234,7 +234,7 @@ const RightRail = ({
       </div>
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-in-out relative overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h4 className="m-0 text-white text-base font-bold">

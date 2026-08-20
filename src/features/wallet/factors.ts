@@ -21,9 +21,9 @@
  * replayed under a different factor. `createdAt`/ids are caller-supplied (this
  * module uses no ambient clock or RNG beyond WebCrypto).
  */
-import { argon2id } from '@noble/hashes/argon2';
-import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha2';
+import { argon2id } from '@noble/hashes/argon2.js';
+import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { fromB64, toB64, type SealedBox } from './vault';
 
 const WRAP_ALG = 'AES-GCM';
@@ -92,7 +92,7 @@ export async function kekFromPassphrase(passphrase: string, params: Argon2idKdf)
 
 /** Derive a KEK from a HIGH-ENTROPY secret (recovery code bytes, or a WebAuthn PRF output) via HKDF. */
 export async function kekFromHighEntropy(secret: Uint8Array, params: HkdfKdf): Promise<CryptoKey> {
-  const raw = hkdf(sha256, secret, fromB64(params.salt), params.info, 32);
+  const raw = hkdf(sha256, secret, fromB64(params.salt), utf8(params.info), 32);
   return importKek(raw);
 }
 

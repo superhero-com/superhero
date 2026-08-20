@@ -3,7 +3,7 @@
   command = "npm run build"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   # Public client-side identifiers used at build/runtime.
   # Tell Netlify's secret scanner to ignore this env var so builds don't fail.
   SECRETS_SCAN_OMIT_KEYS = "VITE_WALLET_CONNECT_PROJECT_ID,VITE_X_OAUTH_CLIENT_ID"

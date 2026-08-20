@@ -18,7 +18,7 @@ import {
 } from 'vitest';
 import { WebSocketServer, type WebSocket as WsSocket } from 'ws';
 import { generateMnemonic, mnemonicToSeedSync } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 import { deriveKeysFromSeed } from '@/features/chat/nostr/crypto';
 import { NostrKeySession } from '@/features/chat/identity/nostr-session';

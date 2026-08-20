@@ -5,7 +5,7 @@ import {
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import {
-  beforeEach, describe, expect, it, vi,
+  beforeEach, describe, expect, it, vi, type Mock,
 } from 'vitest';
 
 import SortControls, { type PopularWeights } from '../SortControls';
@@ -59,8 +59,8 @@ vi.mock('../../../../components/ui/ae-button', () => ({
 }));
 
 describe('SortControls', () => {
-  let onSortChange: ReturnType<typeof vi.fn>;
-  let onPopularWeightsChange: ReturnType<typeof vi.fn>;
+  let onSortChange: Mock<(...args: any[]) => any>;
+  let onPopularWeightsChange: Mock<(...args: any[]) => any>;
 
   beforeEach(() => {
     onSortChange = vi.fn();

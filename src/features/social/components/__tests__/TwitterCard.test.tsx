@@ -4,7 +4,7 @@ import {
 } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
-  afterEach, beforeEach, describe, expect, it, vi,
+  afterEach, beforeEach, describe, expect, it, onTestFinished, vi,
 } from 'vitest';
 
 import { TwitterCard } from '../TwitterCard';
@@ -89,9 +89,22 @@ describe('TwitterCard (sandboxed embed)', () => {
     render(<TwitterCard url={TWEET_URL} />);
     const iframe = await screen.findByTitle('Twitter post') as HTMLIFrameElement;
 
-    Object.defineProperty(iframe, 'contentWindow', {
-      value: window,
+    // Stub on the prototype, not on this node: the component re-renders while the oEmbed
+    // promise settles, and a stub pinned to one element loses its effect if that render
+    // hands `iframeRef` a different node — which made this test flaky. The handler still has
+    // to clear both its real gates (embed origin, and source === the frame's contentWindow).
+    const realContentWindow = Object.getOwnPropertyDescriptor(
+      HTMLIFrameElement.prototype,
+      'contentWindow',
+    );
+    Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
       configurable: true,
+      get: () => window,
+    });
+    onTestFinished(() => {
+      if (realContentWindow) {
+        Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', realContentWindow);
+      }
     });
 
     // Malicious/foreign origin: ignored.

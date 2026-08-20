@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
+const { buildFaqPageJsonLd } = require('./lib/faq-content.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -277,7 +278,13 @@ async function buildMeta(pathname, origin){
     return { title: 'Privacy Policy – Superhero', description: 'How Superhero handles your data.', canonical: `${origin}/privacy`, ogImage: `${origin}/og-default.png` };
   }
   if (pathname === '/faq') {
-    return { title: 'FAQ – Superhero', description: 'Frequently asked questions.', canonical: `${origin}/faq`, ogImage: `${origin}/og-default.png` };
+    return {
+      title: 'FAQ – Superhero',
+      description: 'Frequently asked questions.',
+      canonical: `${origin}/faq`,
+      ogImage: `${origin}/og-default.png`,
+      jsonLd: buildFaqPageJsonLd(),
+    };
   }
   if (pathname.startsWith('/meet')) {
     return { title: 'Meet – Superhero', description: 'Join a Superhero meeting.', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };

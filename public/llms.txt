@@ -60,6 +60,38 @@ SuperheroID is a decentralized identifier (DID) that links social accounts to a 
 - **ProtocolDAO**: The governance token of the Superhero protocol used for voting on proposals and earning rewards.
 - **Superhero Onchain ID**: A W3C-standard DID linking a user's wallet, chain name, and social handles into one verifiable identity.
 
+## Frequently Asked Questions
+
+### What is an attention market?
+
+An attention market is a market where social attention is quantified and made tradable. On Superhero every trend, hashtag, and community has its own token whose price rises and falls with the attention and conviction flowing into it, so attention is priced in real time instead of being captured by a platform. Prices move along an exponential bonding curve — early conviction is rewarded because the price increases as more of a token is bought.
+
+### How do I buy a trend token?
+
+1. Install Superhero Wallet (browser extension, native mobile app, or the web wallet at https://wallet.superhero.com) and fund it with a little AE, the native coin of the æternity blockchain.
+2. Open the trends index at https://superhero.com/trends/tokens and pick a trend, or go straight to a token page at `https://superhero.com/trends/tokens/<SYMBOL>`.
+3. On the token page use the trade card: choose Buy, review the live quote, and confirm the transaction in your wallet. Tokens are minted against AE along the bonding curve — there is no order book, the price is set by the curve.
+
+### What is a SuperheroID?
+
+SuperheroID (Superhero Onchain ID) is a decentralized identifier (DID) that links your æternity wallet address, `.chain` name, and X (Twitter) handle into a single self-sovereign identity. It is W3C DID–standard compliant — verifiable, portable, and censorship-resistant — and is controlled entirely by the user rather than stored on a corporate server.
+
+## Discoverability
+
+- Sitemap: https://superhero.com/sitemap.xml
+- Robots: https://superhero.com/robots.txt
+- This file: https://superhero.com/llms.txt (also served as https://superhero.com/index.md)
+
+Agent crawlers can traverse Superhero content through predictable, server-rendered URL patterns:
+
+- **Token / trend pages** — `https://superhero.com/trends/tokens/<SYMBOL>`, e.g. https://superhero.com/trends/tokens/COMM. The trend index lives at https://superhero.com/trends/tokens.
+- **User profiles** — `https://superhero.com/users/<address>`, where `<address>` is an æternity account address (`ak_…`) or a registered `.chain` name.
+- **Account activity** — `https://superhero.com/trends/accounts/<address>`.
+- **Posts** — `https://superhero.com/post/<id>`.
+- **DAOs** — `https://superhero.com/trends/dao/<sale-address>`.
+
+Each of these routes is server-rendered with SEO metadata and, where applicable, schema.org JSON-LD (WebSite, SocialMediaPosting, Person, CryptoCurrency, and FAQPage on /faq).
+
 ## Docs
 
 - [Whitepaper](https://superhero.com/whitepaper)

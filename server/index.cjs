@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
+const { createSitemapEngine } = require('./lib/sitemap.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -348,6 +349,27 @@ const app = express();
 app.use('/assets', express.static(path.join(DIST_DIR, 'assets'), { immutable: true, maxAge: '1y' }));
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
 
+// Curated sitemap: an in-memory buffer a background timer refreshes (see lib/sitemap.cjs). This
+// handler MUST be registered before express.static below — dist/sitemap.xml is a real file copied
+// from public/, and static would win otherwise (same class as the HARDEN-04 `index: false` bug).
+// Until the first build lands, fall back to that static 9-URL file so a cold start never 404s.
+const sitemap = createSitemapEngine({ apiBase: API_BASE });
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  const buffer = sitemap.getBuffer();
+  if (buffer) {
+    res.setHeader('X-Sitemap-Source', 'buffer');
+    res.setHeader('X-Sitemap-Generated-At', sitemap.getGeneratedAt());
+    return res.send(buffer);
+  }
+  res.setHeader('X-Sitemap-Source', 'static-fallback');
+  try {
+    return res.send(fs.readFileSync(path.join(DIST_DIR, 'sitemap.xml'), 'utf8'));
+  } catch (e) {
+    return res.status(503).send('<!-- sitemap warming up -->');
+  }
+});
+
 // HARDEN-04 bypass fix: `index: false` on the static mount below only disables the *implicit*
 // directory index, so a literal `GET /index.html` still hit express.static and returned the SPA
 // document with no CSP header at all and the raw `__CSP_NONCE__` placeholders — the same
@@ -378,4 +400,5 @@ app.get('*', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);
+  sitemap.start(); // build the sitemap buffer at boot, then every 6h.
 });

@@ -5,7 +5,7 @@
  * whole safety rests on that secret being HIGH-entropy: Argon2id is a work-factor
  * multiplier per guess, not a substitute for a large guess space. With no flag the
  * inline wallet ships live, so a merged low-entropy vault is an offline-crackable
- * target with the whole balance as the prize (ZIX-321). This gate therefore refuses
+ * target with the whole balance as the prize. This gate therefore refuses
  * anything a real attack model can guess, not merely anything that is short.
  *
  * Strength is estimated with zxcvbn (guess-number model): dictionary + breached-
@@ -116,7 +116,7 @@ export function assessPassphrase(pw: string): PassphraseAssessment {
   }
   if (!estimator) {
     // Fails closed: a failed estimator load keeps Create disabled and asks for a
-    // retry — it never falls open to a length rule, which is the thing ZIX-321 fixed.
+    // retry — it never falls open to a length rule, which is the thing the entropy gate fixed.
     if (loadFailed) {
       return {
         ok: false, score: 0, message: "Couldn't check passphrase strength. Check your connection and retry.", pending: false, failed: true,

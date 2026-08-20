@@ -44,7 +44,7 @@ export interface RevocableNostrIdentityOptions {
    * `nip04Decrypt` deliberately do NOT count: inbound decryption is driven by
    * relay delivery, not local user action, so counting it would let a remote
    * sender keep the key resident indefinitely by trickling in DMs — turning the
-   * idle window into a remote-input-controlled one (SR change request, ZIX-1414).
+   * idle window into a remote-input-controlled one (SR change request).
    */
   onActivity?: () => void;
 }

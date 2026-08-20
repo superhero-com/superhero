@@ -92,7 +92,7 @@ describe('revocable nostr identity', () => {
 
     // Inbound decryption is driven by relay delivery, not local user action — it
     // must NOT count as activity, else a remote sender could keep the key resident
-    // by trickling in DMs (SR change request, ZIX-1414).
+    // by trickling in DMs (SR change request).
     await identity.nip04Decrypt(otherPubkey, ciphertext);
     expect(onActivity).toHaveBeenCalledTimes(2);
   });

@@ -56,6 +56,8 @@ vi.mock('../../vault-store', () => ({
 }));
 vi.mock('../../manifest-store', () => ({
   clearManifest: vi.fn(),
+  // No manifest: these suites always land on the create flow.
+  loadManifest: vi.fn(() => null),
   manifestForFirstAccount: vi.fn(),
   saveManifest: vi.fn(),
 }));

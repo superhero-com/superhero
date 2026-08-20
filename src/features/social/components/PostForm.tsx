@@ -22,7 +22,15 @@ import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
+import { MentionSuggestionList } from './MentionSuggestionList';
 import { useLinkDetection } from '../hooks/useLinkDetection';
+import { useMentionSearch, type MentionItem } from '../hooks/useMentionSearch';
+import {
+  detectActiveMention,
+  buildAccountMentionToken,
+  buildTokenMentionToken,
+  applyMention,
+} from '../utils/mentions';
 
 type TippingV3ContractApi = ContractMethodsBase & {
   post_without_tip: (
@@ -164,6 +172,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [showImage, setShowImage] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionDismissed, setMentionDismissed] = useState(false);
 
   const detectedLink = useLinkDetection(text);
   const linkPreviewDismissedForCurrent = Boolean(
@@ -329,6 +339,44 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     && matchesRequiredPrefix
     && remainingSuggestion.length > 0,
   );
+
+  // Inline mentions: detect an in-progress `@account` / `#token` at the caret,
+  // fetch suggestions, and let the user pick one to insert into the content.
+  const activeMention = useMemo(
+    () => detectActiveMention(text, caretPosition),
+    [text, caretPosition],
+  );
+  const mentionKey = activeMention ? `${activeMention.trigger}:${activeMention.start}` : null;
+  // Reset dismissal + highlight whenever the caret moves to a different mention token.
+  useEffect(() => {
+    setMentionDismissed(false);
+    setMentionIndex(0);
+  }, [mentionKey]);
+
+  const { items: mentionItems } = useMentionSearch(mentionDismissed ? null : activeMention);
+  // Defer to the required-hashtag ghost text when it is active to avoid two overlays.
+  const showMentionMenu = Boolean(activeMention)
+    && !mentionDismissed
+    && !showAutoComplete
+    && mentionItems.length > 0;
+  const boundedMentionIndex = Math.min(mentionIndex, Math.max(mentionItems.length - 1, 0));
+
+  const handleSelectMention = (item: MentionItem) => {
+    if (!activeMention) return;
+    const token = item.type === 'account'
+      ? buildAccountMentionToken({ address: item.address })
+      : buildTokenMentionToken({ name: item.name, symbol: item.symbol });
+    const { text: nextText, caret } = applyMention(text, activeMention, token);
+    setText(nextText);
+    setMentionDismissed(true);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(caret, caret);
+      }
+    });
+  };
 
   // Measure the pixel width of the prefix using canvas to fine-tune horizontal placement
   const measuredLeft = useMemo(() => {
@@ -985,6 +1033,29 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     }
                   }}
                   onKeyDown={(e) => {
+                    // Mention picker navigation takes priority while it is open.
+                    if (showMentionMenu) {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setMentionIndex((i) => (i + 1) % mentionItems.length);
+                        return;
+                      }
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setMentionIndex((i) => (i - 1 + mentionItems.length) % mentionItems.length);
+                        return;
+                      }
+                      if (e.key === 'Enter' || e.key === 'Tab') {
+                        e.preventDefault();
+                        handleSelectMention(mentionItems[boundedMentionIndex]);
+                        return;
+                      }
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setMentionDismissed(true);
+                        return;
+                      }
+                    }
                     if (!requiredHashtag || !showAutoComplete) return;
                     if (e.key === 'Tab' || e.key === 'Enter') {
                       e.preventDefault();
@@ -1027,6 +1098,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   >
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>{remainingSuggestion}</span>
                   </div>
+                )}
+
+                {showMentionMenu && (
+                  <MentionSuggestionList
+                    items={mentionItems}
+                    activeIndex={boundedMentionIndex}
+                    onHover={setMentionIndex}
+                    onSelect={handleSelectMention}
+                  />
                 )}
 
                 <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">

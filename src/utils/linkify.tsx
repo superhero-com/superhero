@@ -10,6 +10,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
+import { InlineAccountMention } from '@/components/social/InlineAccountMention';
 import { trustedHtml } from '@/utils/trustedTypes';
 import { formatAddress } from './address';
 
@@ -225,17 +226,24 @@ export function linkify(
     segment.replace(ACCOUNT_TAG_REGEX, (m: string, addr: string, off: number) => {
       if (off > segLast) accountLinked.push(segment.slice(segLast, off));
       const address = addr; // captured address without leading '@'
-      const displayCore = formatAddress(address);
-      const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
-      accountLinked.push(
-        <a
-          href={`/users/${address}`}
-          key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-        >
-          {display}
-        </a>,
-      );
+      if (m.startsWith('@')) {
+        // An explicit '@ak_...' is an intentional account mention — render it as
+        // an inline avatar chip that resolves the account's chain name.
+        accountLinked.push(
+          <InlineAccountMention address={address} key={`acc-${address}-${idx}-${off}`} />,
+        );
+      } else {
+        // A bare address (no '@') stays a plain profile link.
+        accountLinked.push(
+          <a
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          >
+            {formatAddress(address)}
+          </a>,
+        );
+      }
       segLast = off + m.length;
       return m;
     });

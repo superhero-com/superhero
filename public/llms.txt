@@ -89,6 +89,7 @@ Agent crawlers can traverse Superhero content through predictable, server-render
 - **Account activity** — `https://superhero.com/trends/accounts/<address>`.
 - **Posts** — `https://superhero.com/post/<id>`.
 - **DAOs** — `https://superhero.com/trends/dao/<sale-address>`.
+- **Directory hubs** — https://superhero.com/hubs indexes crawlable link lists of user profiles (https://superhero.com/hubs/users) and posts (https://superhero.com/hubs/posts), paginated with `rel="next"`/`rel="prev"`.
 
 Each of these routes is server-rendered with SEO metadata and, where applicable, schema.org JSON-LD (WebSite, SocialMediaPosting, Person, CryptoCurrency, and FAQPage on /faq).
 

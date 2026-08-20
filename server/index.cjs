@@ -52,6 +52,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${origin}/`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: origin,
+      },
     };
   }
 
@@ -62,6 +68,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
       canonical: `${origin}/trends/tokens`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${origin}/trends/tokens`,
+      },
     };
   }
 
@@ -98,6 +110,22 @@ async function buildMeta(pathname, origin){
           canonical: `${origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
           ogType: 'article',
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'SocialMediaPosting',
+            headline: truncate(content,120) || 'Post',
+            datePublished: data?.created_at,
+            dateModified: data?.updated_at || data?.created_at,
+            author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
+            image: media,
+            interactionStatistic: [
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'CommentAction',
+                userInteractionCount: data?.total_comments || 0,
+              },
+            ],
+          },
         };
       }
     } catch {}
@@ -109,9 +137,10 @@ async function buildMeta(pathname, origin){
   if (um) {
     const address = um[1];
     let bio = '';
+    let display = address;
     try {
       const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); }
+      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); if (data?.chain_name) display = String(data.chain_name); }
     } catch {}
     return {
       title: `${address} – Profile – Superhero`,
@@ -119,6 +148,14 @@ async function buildMeta(pathname, origin){
       canonical: `${origin}/users/${address}`,
       ogImage: `${origin}/og-default.png`,
       ogType: 'profile',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: display,
+        identifier: address,
+        description: bio || undefined,
+        image: `${origin}/og-default.png`,
+      },
     };
   }
 
@@ -134,7 +171,20 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return {
+          title: `Buy #${symbol} on Superhero.com`,
+          description: truncate(desc,200),
+          canonical: `${origin}/trends/tokens/${tokenName}`,
+          ogImage: tokenImg || `${origin}/og-default.png`,
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'CryptoCurrency',
+            name: data?.name || data?.symbol,
+            symbol: data?.symbol,
+            identifier: data?.address || data?.sale_address,
+            image: tokenImg,
+          },
+        };
       }
     } catch {}
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
@@ -152,7 +202,20 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return {
+          title: `Buy #${symbol} on Superhero.com`,
+          description: truncate(desc,200),
+          canonical: `${origin}/trends/tokens/${tokenName}`,
+          ogImage: tokenImg || `${origin}/og-default.png`,
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'CryptoCurrency',
+            name: data?.name || data?.symbol,
+            symbol: data?.symbol,
+            identifier: data?.address || data?.sale_address,
+            image: tokenImg,
+          },
+        };
       }
     } catch {}
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };

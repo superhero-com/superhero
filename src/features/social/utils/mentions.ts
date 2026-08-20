@@ -1,39 +1,21 @@
-// Inline mentions for post/comment content.
-//
-// A mention is stored INSIDE the on-chain post `content` string using the same
-// tokens the render pipeline (`utils/linkify`) already understands, so no API or
-// contract change is needed and existing posts stay backwards compatible:
-//   - an account  -> `@ak_...`  (the account address; renders as an avatar chip)
-//   - a token     -> `#name`    (the token name; renders as a price chip)
-// The compose-side picker below only decides which token to insert; the render
-// side is unchanged in shape.
+// Inline @account / #token mentions live inside on-chain post content, using the
+// tokens `utils/linkify` already parses — no API or contract change.
 
 export type MentionTrigger = 'account' | 'token';
 
 export interface ActiveMention {
   trigger: MentionTrigger;
-  /** The text typed after the trigger char, without the `@`/`#`. */
   query: string;
-  /** Index of the trigger char (`@`/`#`) in the source text. */
   start: number;
-  /** Caret index — exclusive end of the in-progress token. */
   end: number;
 }
 
-// Characters allowed in the live token while typing. Account tokens accept the
-// address/chain-name set; token tokens accept the (possibly non-Latin) name set.
 const ACCOUNT_QUERY_RE = /^[A-Za-z0-9_.-]*$/;
 const TOKEN_QUERY_RE = /^[\p{L}\p{N}_-]*$/u;
-
-// A trigger is only a mention when it starts the text or follows whitespace —
-// this keeps `a@b.com` (emails) and `example.com/page#x` (URL fragments) inert,
-// mirroring how `utils/linkify` protects the same shapes at render time.
+// A trigger must start the text or follow whitespace, so `a@b.com` and URL `#frags` stay inert.
 const TRIGGER_RE = /(^|\s)([@#])(\S*)$/u;
 
-/**
- * Detect an in-progress `@account` / `#token` mention immediately before the caret.
- * Returns `null` when the caret is not inside a mention token.
- */
+/** Detect an in-progress `@account` / `#token` at the caret, or null. */
 export function detectActiveMention(text: string, caret: number): ActiveMention | null {
   if (typeof text !== 'string' || caret < 0 || caret > text.length) return null;
   const before = text.slice(0, caret);
@@ -42,7 +24,7 @@ export function detectActiveMention(text: string, caret: number): ActiveMention 
 
   const trigger = match[2];
   const run = match[3];
-  const start = caret - run.length - 1; // index of the trigger char
+  const start = caret - run.length - 1;
 
   if (trigger === '@') {
     if (!ACCOUNT_QUERY_RE.test(run)) return null;
@@ -56,12 +38,12 @@ export function detectActiveMention(text: string, caret: number): ActiveMention 
   };
 }
 
-/** The token stored in post content for a tagged account: the raw address. */
+/** Token stored for a tagged account: the raw address. */
 export function buildAccountMentionToken(account: { address: string }): string {
   return `@${account.address}`;
 }
 
-/** The token stored in post content for a tagged token: `#name` (falls back to symbol). */
+/** Token stored for a tagged token: `#name` (falls back to symbol). */
 export function buildTokenMentionToken(
   token: { name?: string | null; symbol?: string | null },
 ): string {
@@ -69,11 +51,15 @@ export function buildTokenMentionToken(
   return `#${tag}`;
 }
 
-/**
- * Replace the in-progress mention token with the chosen `token`, followed by a
- * single space (unless one already follows). Returns the new text and the caret
- * position to place after the inserted token.
- */
+// A name only round-trips if every char is one `linkify` renders inside a `#tag`
+// (letters/digits/dash + the loaded collections' chars, capped at 50); names with
+// '.' or '_' truncate on render, so such tokens are dropped from the picker.
+export function isRenderableTokenName(name: string, allowedCharsPattern = ''): boolean {
+  if (!name) return false;
+  return new RegExp(`^[A-Za-z0-9\\-${allowedCharsPattern}]{1,50}$`, 'u').test(name);
+}
+
+/** Replace the in-progress token with `token` + a trailing space (unless one follows). */
 export function applyMention(
   text: string,
   active: ActiveMention,

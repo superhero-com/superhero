@@ -153,65 +153,27 @@ const ReplyToFeedItem = memo(({
   const media = Array.isArray(item.media)
     ? item.media.filter((m) => (typeof m === 'string' ? !m.startsWith('comment:') : true))
     : [];
-  const unnamedHeader = isCompact ? (
-    <>
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
-          {formatAddress(authorAddress, 6, true)}
-        </div>
-        <span className="text-white/50 shrink-0">·</span>
-        {item.tx_hash ? (
-          <BlockchainInfoPopover
-            txHash={(item as any).tx_hash}
-            createdAt={item.created_at as unknown as string}
-            sender={(item as any).sender_address}
-            contract={(item as any).contract_address}
-            postId={String(item.id)}
-            triggerContent={(
-              <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                {compactTime(item.created_at as unknown as string)}
-              </span>
-            )}
-          />
-        ) : (
-          <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-        )}
-      </div>
-      <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
-        <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
-        <InlineCopyButton value={authorAddress} className="shrink-0" />
-      </div>
-    </>
+  // One canonical timestamp: relative label, exact time on hover, on-chain popover
+  // when the post has a tx. Shared by every header layout so no branch drifts.
+  const timeLabel = compactTime(item.created_at as unknown as string);
+  const timeTitle = fullTimestamp(item.created_at as unknown as string);
+  const timestampNode = item.tx_hash ? (
+    <BlockchainInfoPopover
+      txHash={(item as any).tx_hash}
+      createdAt={item.created_at as unknown as string}
+      sender={(item as any).sender_address}
+      contract={(item as any).contract_address}
+      postId={String(item.id)}
+      triggerContent={(
+        <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={timeTitle}>
+          {timeLabel}
+        </span>
+      )}
+    />
   ) : (
-    <>
-      <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
-        {authorAddress}
-      </div>
-      <div>
-        {item.tx_hash ? (
-          <BlockchainInfoPopover
-            txHash={(item as any).tx_hash}
-            createdAt={item.created_at as unknown as string}
-            sender={(item as any).sender_address}
-            contract={(item as any).contract_address}
-            postId={String(item.id)}
-            triggerContent={(
-              <span className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
-                {compactTime(item.created_at as unknown as string)}
-                {' '}
-                ago
-              </span>
-            )}
-          />
-        ) : (
-          <div className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
-            {compactTime(item.created_at as unknown as string)}
-            {' '}
-            ago
-          </div>
-        )}
-      </div>
-    </>
+    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={timeTitle}>
+      {timeLabel}
+    </span>
   );
 
   // Compute total descendant comments (all levels) for this item
@@ -310,39 +272,29 @@ const ReplyToFeedItem = memo(({
         </div>
 
         <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
-          {/* Header: keep named-user layout; show address-first layout for unnamed users */}
+          {/* Header: one shape for named and unnamed. Primary line is the resolved
+              name, else a shortened address — never the full ak_ string as a title.
+              The mono address line is dropped for unnamed accounts, where it would
+              only repeat the address already shown above. */}
           <div className="min-w-0">
-            {hasDisplayName ? (
-              <>
-                <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
-                  <div className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}>
-                    {displayName}
-                  </div>
-                  <span className="text-white/50 shrink-0">·</span>
-                  {item.tx_hash ? (
-                    <BlockchainInfoPopover
-                      txHash={(item as any).tx_hash}
-                      createdAt={item.created_at as unknown as string}
-                      sender={(item as any).sender_address}
-                      contract={(item as any).contract_address}
-                      postId={String(item.id)}
-                      triggerContent={(
-                        <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                          {compactTime(item.created_at as unknown as string)}
-                        </span>
-                      )}
-                    />
-                  ) : (
-                    <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
-                  <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
-                  <InlineCopyButton value={authorAddress} className="shrink-0" />
-                </div>
-              </>
-            ) : (
-              unnamedHeader
+            <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
+              <div
+                className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}
+                title={authorAddress}
+              >
+                {hasDisplayName ? displayName : formatAddress(authorAddress, 6, true)}
+              </div>
+              {!hasDisplayName && (
+                <InlineCopyButton value={authorAddress} className="shrink-0" />
+              )}
+              <span className="text-white/50 shrink-0">·</span>
+              {timestampNode}
+            </div>
+            {hasDisplayName && (
+              <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
+                <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+                <InlineCopyButton value={authorAddress} className="shrink-0" />
+              </div>
             )}
           </div>
 

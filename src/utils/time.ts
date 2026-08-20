@@ -1,8 +1,16 @@
-// Mobile-friendly compact time like 2m, 2h, 1d, 4d, 1w
+const SHORT_MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+// Mobile-friendly compact time like 2m, 2h, 1d, 4d — then a short absolute
+// date ("Aug 4", or "Aug 4, 2025" for another year) once it is over a week old,
+// which reads better than "52w".
 export function compactTime(input: string | number | Date | undefined): string {
   if (!input) return '';
   const now = Date.now();
-  const ts = new Date(input).getTime();
+  const d = new Date(input);
+  const ts = d.getTime();
   const seconds = Math.max(0, Math.floor((now - ts) / 1000));
   if (seconds < 60) return `${Math.max(1, seconds)}s`;
   const minutes = Math.floor(seconds / 60);
@@ -11,8 +19,11 @@ export function compactTime(input: string | number | Date | undefined): string {
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d`;
-  const weeks = Math.floor(days / 7);
-  return `${weeks}w`;
+  const month = SHORT_MONTHS[d.getMonth()];
+  const label = `${month} ${d.getDate()}`;
+  return d.getFullYear() === new Date(now).getFullYear()
+    ? label
+    : `${label}, ${d.getFullYear()}`;
 }
 
 export function fullTimestamp(input: string | number | Date | undefined): string {

@@ -1,10 +1,18 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import {
+  describe, it, expect, vi,
+} from 'vitest';
 import { linkify } from '../linkify';
 import { mergedCollectionNameCharsPattern } from '../collectionNameChars';
 import type { ICollectionData } from '../types';
+
+// The account-mention chip resolves a chain name via a batched network hook; pin it
+// so these render tests stay deterministic and offline.
+vi.mock('@/hooks/useChainName', () => ({
+  useChainName: () => ({ chainName: null }),
+}));
 
 function renderLinkify(text: string, options?: Parameters<typeof linkify>[1]) {
   return render(
@@ -115,6 +123,27 @@ describe('linkify hashtag parsing', () => {
 
     const link = screen.getByRole('link', { name: /ak_123abc456/i });
     expect(link).toHaveAttribute('href', '/users/ak_123abc456');
+  });
+
+  const MACRO_ADDR = 'ak_2mMPQ2E9zN8Dd6Fm8jrThQvcYQ7cwR3hh6iC5xGZ2gZ4tHacBdEf';
+
+  it('renders an [account:ak_...] macro as an inline account chip', () => {
+    renderLinkify(`gm [account:${MACRO_ADDR}] there`);
+
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', `/users/${MACRO_ADDR}`);
+    // The macro delimiters are consumed, and the chip label is '@'-prefixed.
+    expect(screen.getByTestId('content').textContent).not.toContain('[account:');
+    expect(link.textContent).toMatch(/^@ak_/);
+  });
+
+  it('leaves a bare ak_ address as a plain link, not a macro chip', () => {
+    renderLinkify(`plain ${MACRO_ADDR} address`);
+
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', `/users/${MACRO_ADDR}`);
+    // No '@' prefix: this is the plain-link path, not the chip.
+    expect(link.textContent).not.toContain('@');
   });
 
   it('treats a lone "#" with no following token characters as plain text', () => {

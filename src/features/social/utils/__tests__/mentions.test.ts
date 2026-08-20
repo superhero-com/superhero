@@ -82,8 +82,8 @@ describe('detectActiveMention', () => {
 });
 
 describe('buildAccountMentionToken', () => {
-  it('stores the raw account address', () => {
-    expect(buildAccountMentionToken({ address: 'ak_123' })).toBe('@ak_123');
+  it('stores the address as an [account:…] macro', () => {
+    expect(buildAccountMentionToken({ address: 'ak_123' })).toBe('[account:ak_123]');
   });
 });
 
@@ -126,18 +126,18 @@ describe('applyMention', () => {
   it('replaces the in-progress token and appends a trailing space', () => {
     const text = 'hey @mar';
     const active = detectActiveMention(text, text.length)!;
-    expect(applyMention(text, active, '@ak_123')).toEqual({
-      text: 'hey @ak_123 ',
-      caret: 'hey @ak_123 '.length,
+    expect(applyMention(text, active, '[account:ak_123]')).toEqual({
+      text: 'hey [account:ak_123] ',
+      caret: 'hey [account:ak_123] '.length,
     });
   });
 
   it('does not add a second space when one already follows', () => {
     const text = 'hey @mar there';
     const active = detectActiveMention(text, 8)!; // caret after "@mar"
-    expect(applyMention(text, active, '@ak_123')).toEqual({
-      text: 'hey @ak_123 there',
-      caret: 'hey @ak_123'.length,
+    expect(applyMention(text, active, '[account:ak_123]')).toEqual({
+      text: 'hey [account:ak_123] there',
+      caret: 'hey [account:ak_123]'.length,
     });
   });
 

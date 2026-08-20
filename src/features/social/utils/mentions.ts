@@ -38,9 +38,14 @@ export function detectActiveMention(text: string, caret: number): ActiveMention 
   };
 }
 
-/** Token stored for a tagged account: the raw address. */
+/**
+ * Token stored for a tagged account: an explicit `[account:{address}]` macro. The
+ * `]` terminator bounds the token by format (not by charset), the macro cannot be
+ * produced by accident, and it is a pure client contract — `superhero-api` does
+ * not index `ak_` mentions. Raw `ak_` addresses in content stay plain links.
+ */
 export function buildAccountMentionToken(account: { address: string }): string {
-  return `@${account.address}`;
+  return `[account:${account.address}]`;
 }
 
 /** Token stored for a tagged token: `#name` (falls back to symbol). */

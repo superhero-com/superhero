@@ -4,16 +4,11 @@ import { useChainName } from '@/hooks/useChainName';
 import { formatAddress } from '@/utils/address';
 
 interface InlineAccountMentionProps {
-  /** The tagged account address (`ak_...`). */
   address: string;
 }
 
-/**
- * Inline rendering of an `@ak_...` account mention inside post content: a small
- * avatar chip that resolves to the account's `.chain` name when known and falls
- * back to the shortened address otherwise (so a mention of an account with no
- * chain name still renders with its identicon).
- */
+// Avatar chip for an `@ak_...` mention: shows the account's `.chain` name when
+// known, else the shortened address (identicon renders either way).
 export const InlineAccountMention = ({ address }: InlineAccountMentionProps) => {
   const { chainName } = useChainName(address);
   const label = chainName ? `@${chainName}` : `@${formatAddress(address, 3, true)}`;

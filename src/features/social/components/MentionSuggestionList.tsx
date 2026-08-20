@@ -10,10 +10,8 @@ interface MentionSuggestionListProps {
   onSelect: (item: MentionItem) => void;
 }
 
-/**
- * The compose-side dropdown of account/token suggestions. Rows use `onMouseDown`
- * (not click) so selecting does not blur the textarea before the handler runs.
- */
+// Rows use `onMouseDown` (not click) so selecting does not blur the textarea
+// before the handler runs.
 export const MentionSuggestionList = ({
   items,
   activeIndex,

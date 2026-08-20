@@ -18,6 +18,7 @@ import { PostsService } from '../../../api/generated';
 import { CONFIG } from '../../../config';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
@@ -353,7 +354,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     setMentionIndex(0);
   }, [mentionKey]);
 
-  const { items: mentionItems } = useMentionSearch(mentionDismissed ? null : activeMention);
+  const hashtagAllowedChars = useHashtagAllowedChars();
+  const { items: mentionItems } = useMentionSearch(
+    mentionDismissed ? null : activeMention,
+    hashtagAllowedChars,
+  );
   // Defer to the required-hashtag ghost text when it is active to avoid two overlays.
   const showMentionMenu = Boolean(activeMention)
     && !mentionDismissed

@@ -4,6 +4,7 @@ import {
   buildAccountMentionToken,
   buildTokenMentionToken,
   applyMention,
+  isRenderableTokenName,
 } from '../mentions';
 
 describe('detectActiveMention', () => {
@@ -92,6 +93,32 @@ describe('buildTokenMentionToken', () => {
   });
   it('falls back to the symbol when there is no name', () => {
     expect(buildTokenMentionToken({ name: '', symbol: 'EMO' })).toBe('#EMO');
+  });
+});
+
+describe('isRenderableTokenName', () => {
+  it('accepts plain Latin names with digits and dashes', () => {
+    expect(isRenderableTokenName('EMOTER')).toBe(true);
+    expect(isRenderableTokenName('ROCK-N-ROLL')).toBe(true);
+    expect(isRenderableTokenName('AE2')).toBe(true);
+  });
+
+  it('rejects names with a dot or underscore (they truncate on render)', () => {
+    expect(isRenderableTokenName('EMOTER.AI')).toBe(false);
+    expect(isRenderableTokenName('FOO_BAR')).toBe(false);
+  });
+
+  it('rejects empty, whitespace, and over-length names', () => {
+    expect(isRenderableTokenName('')).toBe(false);
+    expect(isRenderableTokenName('has space')).toBe(false);
+    expect(isRenderableTokenName('A'.repeat(51))).toBe(false);
+  });
+
+  it('accepts non-Latin names only when the collection charset is provided', () => {
+    // Chinese range as linkify would receive it from mergedCollectionNameCharsPattern.
+    const chinese = '\\u4e00-\\u9fff';
+    expect(isRenderableTokenName('你好')).toBe(false);
+    expect(isRenderableTokenName('你好', chinese)).toBe(true);
   });
 });
 

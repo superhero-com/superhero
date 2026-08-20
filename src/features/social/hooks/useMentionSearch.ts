@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AccountsService } from '@/api/generated';
 import { SuperheroApi } from '@/api/backend';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { ActiveMention } from '../utils/mentions';
+import { type ActiveMention, isRenderableTokenName } from '../utils/mentions';
 
 export interface AccountMentionItem {
   type: 'account';
@@ -23,13 +23,8 @@ export type MentionItem = AccountMentionItem | TokenMentionItem;
 
 const MAX_RESULTS = 6;
 
-/**
- * Typeahead results for the compose-side mention picker. Accounts come from the
- * backend's account typeahead (`/api/accounts/search`); tokens from the token
- * list search. The query is debounced; when no mention is active both queries
- * are disabled so nothing is fetched.
- */
-export function useMentionSearch(active: ActiveMention | null): {
+/** Typeahead results (accounts + tokens) for the compose-side mention picker. */
+export function useMentionSearch(active: ActiveMention | null, tokenAllowedChars = ''): {
   items: MentionItem[];
   isLoading: boolean;
 } {
@@ -58,10 +53,12 @@ export function useMentionSearch(active: ActiveMention | null): {
   const tokens = useQuery({
     queryKey: ['mention-tokens', tokenQuery],
     queryFn: async (): Promise<TokenMentionItem[]> => {
+      // `order_by=trending_score` applies the trending ELIGIBILITY gate, not just a
+      // sort — it silently drops most matches. Rank by trending only for the empty
+      // cold-start query; a named search must reach every matching token.
       const res: any = await SuperheroApi.listTokens({
         search: tokenQuery || undefined,
-        orderBy: 'trending_score',
-        orderDirection: 'DESC',
+        ...(tokenQuery ? {} : { orderBy: 'trending_score' as const, orderDirection: 'DESC' as const }),
         limit: MAX_RESULTS,
       });
       const list = Array.isArray(res?.items) ? res.items : [];
@@ -82,7 +79,10 @@ export function useMentionSearch(active: ActiveMention | null): {
     return { items: accounts.data ?? [], isLoading: accounts.isFetching };
   }
   if (trigger === 'token') {
-    return { items: tokens.data ?? [], isLoading: tokens.isFetching };
+    // Drop tokens whose name would truncate on render (e.g. contains '.' or '_').
+    const items = (tokens.data ?? [])
+      .filter((tk) => isRenderableTokenName(tk.name, tokenAllowedChars));
+    return { items, isLoading: tokens.isFetching };
   }
   return { items: [], isLoading: false };
 }

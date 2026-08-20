@@ -2,6 +2,7 @@ import React, { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { isStandalone } from '@/utils/displayMode';
+import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
@@ -30,10 +31,9 @@ export const ConnectWalletButton = ({
   const { openModal } = useModal();
   const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
 
-  // In an installed PWA, route connect to the in-page onboarding instead of the
-  // external wallet. `isStandalone()` is the sole gate now, mirroring
-  // makeSigner: standalone → inline onboarding, plain browser tab → external flow.
-  const useInlineOnboarding = isStandalone();
+  // Mirrors makeSigner: the flag decides whether the wallet exists, isStandalone
+  // only where it routes.
+  const useInlineOnboarding = INLINE_WALLET_ENABLED && isStandalone();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');

@@ -63,6 +63,15 @@ Configuration is defined in code at `src/config.ts` via the exported `CONFIG` ob
 
 You can override some values at build time using Vite env vars:
 
+`VITE_INLINE_WALLET` — enables the inline (in-page, self-custody) wallet: both
+onboarding and the in-page signer. **Off unless set to the exact string `true`.**
+It fronts real seed custody on mainnet, so enabling it is a deliberate deploy
+decision, not a side effect of merging.
+
+```bash
+VITE_INLINE_WALLET=true npm run dev   # working on the wallet locally
+```
+
 `VITE_WEBAUTHN_RP_ID` — the WebAuthn RP ID for wallet passkeys, pinned into the
 artifact at build time and never derived from the serving host. It defaults to
 `superhero.com`, which is correct for production only. Every non-production build

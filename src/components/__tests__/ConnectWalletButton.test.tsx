@@ -6,13 +6,13 @@ import {
 } from 'vitest';
 
 /**
- * Pins the connect-routing gate after `INLINE_WALLET_ENABLED` was removed:
- * `isStandalone()` is the ONLY gate. In an installed PWA the button opens the
- * in-page inline onboarding flow; in a plain browser tab it opens the external
- * connect modal. This replaces the old flag-off build guards.
+ * Two conditions: the flag decides whether the inline wallet exists at all,
+ * isStandalone() only where an enabled one routes. Previously isStandalone() alone
+ * fronted wallet creation, reachable from any browser tab on mainnet.
  */
 const mocks = vi.hoisted(() => ({
   standalone: false,
+  inlineWalletEnabled: true,
   openModal: vi.fn(),
   addStaticAccount: vi.fn(),
 }));
@@ -20,6 +20,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/utils/displayMode', () => ({
   isStandalone: () => mocks.standalone,
   isIOSWebKit: () => false,
+}));
+
+vi.mock('@/features/wallet/config', () => ({
+  get INLINE_WALLET_ENABLED() { return mocks.inlineWalletEnabled; },
 }));
 
 vi.mock('@/hooks', () => ({
@@ -36,11 +40,24 @@ vi.mock('@/features/wallet/components/WalletOnboarding', () => ({
 // eslint-disable-next-line import/first
 import { ConnectWalletButton } from '../ConnectWalletButton';
 
-describe('ConnectWalletButton — isStandalone() is the only connect gate', () => {
+describe('ConnectWalletButton — flag gates the wallet, isStandalone routes it', () => {
   beforeEach(() => {
     mocks.openModal.mockClear();
     mocks.addStaticAccount.mockClear();
     mocks.standalone = false;
+    mocks.inlineWalletEnabled = true;
+  });
+
+  it('opens the external connect modal in a standalone PWA when the flag is OFF', async () => {
+    // Strongest point for the gate: a PWA is where onboarding would otherwise open.
+    mocks.inlineWalletEnabled = false;
+    mocks.standalone = true;
+    render(<ConnectWalletButton />);
+
+    fireEvent.click(screen.getByRole('button'));
+
+    expect(mocks.openModal).toHaveBeenCalledWith({ name: 'connect-wallet' });
+    expect(screen.queryByTestId('inline-onboarding')).not.toBeInTheDocument();
   });
 
   it('opens the external connect modal in a plain browser tab', () => {

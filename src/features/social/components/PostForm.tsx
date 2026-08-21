@@ -24,6 +24,7 @@ import { GifSelectorDialog } from './GifSelectorDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import { MentionSuggestionList } from './MentionSuggestionList';
+import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { useMentionSearch, type MentionItem } from '../hooks/useMentionSearch';
 import {
@@ -1310,6 +1311,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 )}
 
               </div>
+
+              <TokenTagOptionsBar value={text} onChange={setText} className="mt-2.5" />
 
               {(showEmojiPicker || showGifInput || showImageInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">

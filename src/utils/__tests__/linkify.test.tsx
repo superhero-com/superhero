@@ -14,6 +14,23 @@ vi.mock('@/hooks/useChainName', () => ({
   useChainName: () => ({ chainName: null }),
 }));
 
+// The enhanced widget fetches token data and pulls in currency/i18n providers; the reader's
+// job here is to consume the envelope and choose the right node, so the widget is stubbed to
+// a marker that echoes the symbol and the resolved options.
+vi.mock('@/components/social/PostTokenTag', () => ({
+  default: ({ symbol, options }: { symbol: string; options: Record<string, boolean> }) => (
+    <span
+      data-testid="post-token-tag"
+      data-symbol={symbol}
+      data-chart={String(options.chart)}
+      data-price={String(options.price)}
+      data-change={String(options.change)}
+    >
+      {`#${symbol}`}
+    </span>
+  ),
+}));
+
 function renderLinkify(text: string, options?: Parameters<typeof linkify>[1]) {
   return render(
     <MemoryRouter>
@@ -294,5 +311,105 @@ describe('linkify hashtag parsing — non-Latin BCL collections', () => {
     renderLinkify('gm #こんにちは gm', { hashtagAllowedChars });
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+});
+
+describe('linkify token-tag envelope reader', () => {
+  it('renders a bare #SYMBOL exactly as before (no envelope)', () => {
+    renderLinkify('gm #SUPERHERO fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' }))
+      .toHaveAttribute('href', '/trends/tokens/SUPERHERO');
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #SUPERHERO fam');
+  });
+
+  it('consumes an empty envelope and renders the plain tag', () => {
+    renderLinkify('gm #SUPERHERO{} fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #SUPERHERO fam');
+  });
+
+  it('treats mode=tag as the plain tag', () => {
+    renderLinkify('#SUPERHERO{mode=tag}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('renders a widget for mode=compact (price + change, no chart)', () => {
+    renderLinkify('#SUPERHERO{mode=compact}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-symbol', 'SUPERHERO');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('renders a widget for mode=advanced (chart + price + change)', () => {
+    renderLinkify('#SUPERHERO{mode=advanced}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'true');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('honours an explicit override — advanced minus the chart', () => {
+    renderLinkify('#SUPERHERO{mode=advanced;chart=0}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+  });
+
+  // The forward-compatibility proof: an envelope written by a future client renders as a
+  // clean plain tag in today's client, never as broken text.
+  it('renders an unknown future envelope as a clean plain tag', () => {
+    renderLinkify('#SUPERHERO{mode=hologram;fps=60}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+    expect(screen.getByTestId('content').textContent).not.toContain('{');
+  });
+
+  it('consumes an unparseable envelope and renders the plain tag', () => {
+    renderLinkify('#SUPERHERO{!!garbage!!}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('never prints the braces and preserves the surrounding text', () => {
+    renderLinkify('gm #SUPERHERO{mode=advanced} to the moon');
+
+    expect(screen.getByTestId('post-token-tag')).toHaveAttribute('data-symbol', 'SUPERHERO');
+    const { textContent } = screen.getByTestId('content');
+    expect(textContent).toBe('gm #SUPERHERO to the moon');
+    expect(textContent).not.toContain('{');
+    expect(textContent).not.toContain('}');
+  });
+
+  it('reads an envelope on a hyphenated symbol', () => {
+    renderLinkify('#EMOTER-AI{mode=advanced}');
+
+    expect(screen.getByTestId('post-token-tag')).toHaveAttribute('data-symbol', 'EMOTER-AI');
+    expect(screen.getByTestId('content').textContent).toBe('#EMOTER-AI');
+  });
+
+  it('an unterminated brace is not an envelope and the tag still links', () => {
+    renderLinkify('#SUPERHERO{mode=advanced fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
   });
 });

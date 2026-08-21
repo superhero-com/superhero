@@ -6,14 +6,17 @@ import {
 } from '../tokenTagEnvelope';
 
 describe('parseTokenTagEnvelope — presets', () => {
-  it('empty payload resolves to the tag preset (nothing enhanced)', () => {
+  // `tag` carries change:true — it is today's rendering, badge included. See MODE_PRESETS.
+  it('empty payload resolves to the tag preset (change on, no widget)', () => {
     const options = parseTokenTagEnvelope('');
-    expect(options).toEqual({ chart: false, price: false, change: false });
+    expect(options).toEqual({ chart: false, price: false, change: true });
     expect(isTokenTagEnhanced(options)).toBe(false);
   });
 
-  it('mode=tag is all off', () => {
-    expect(parseTokenTagEnvelope('mode=tag')).toEqual({ chart: false, price: false, change: false });
+  it('mode=tag is the tag preset — change badge on, no widget', () => {
+    const options = parseTokenTagEnvelope('mode=tag');
+    expect(options).toEqual({ chart: false, price: false, change: true });
+    expect(isTokenTagEnhanced(options)).toBe(false);
   });
 
   it('mode=compact is price + change, no chart', () => {
@@ -23,6 +26,33 @@ describe('parseTokenTagEnvelope — presets', () => {
   it('mode=advanced is chart + price + change', () => {
     const options = parseTokenTagEnvelope('mode=advanced');
     expect(options).toEqual({ chart: true, price: true, change: true });
+    expect(isTokenTagEnhanced(options)).toBe(true);
+  });
+});
+
+describe('parseTokenTagEnvelope — the {change=0} "only the tag" form', () => {
+  // Badi's "or only the tag" is the symbol with the badge explicitly off — not mode=tag.
+  it('change=0 turns the badge off and stays a plain tag (not a widget)', () => {
+    const options = parseTokenTagEnvelope('change=0');
+    expect(options).toEqual({ chart: false, price: false, change: false });
+    expect(isTokenTagEnhanced(options)).toBe(false);
+  });
+
+  it('the fully-explicit all-off form is a plain tag with no badge', () => {
+    const options = parseTokenTagEnvelope('chart=0;price=0;change=0');
+    expect(options).toEqual({ chart: false, price: false, change: false });
+    expect(isTokenTagEnhanced(options)).toBe(false);
+  });
+
+  it('change alone never triggers the widget; only chart/price do', () => {
+    expect(isTokenTagEnhanced({ chart: false, price: false, change: true })).toBe(false);
+    expect(isTokenTagEnhanced({ chart: false, price: true, change: false })).toBe(true);
+    expect(isTokenTagEnhanced({ chart: true, price: false, change: false })).toBe(true);
+  });
+
+  it('compact minus the change keeps the widget (price survives)', () => {
+    const options = parseTokenTagEnvelope('mode=compact;change=0');
+    expect(options).toEqual({ chart: false, price: true, change: false });
     expect(isTokenTagEnhanced(options)).toBe(true);
   });
 });
@@ -42,19 +72,19 @@ describe('parseTokenTagEnvelope — overrides and degradation', () => {
   });
 
   it('an unknown mode value falls back to tag, and known keys still apply', () => {
-    expect(parseTokenTagEnvelope('mode=hologram;fps=60')).toEqual({ chart: false, price: false, change: false });
-    expect(parseTokenTagEnvelope('mode=hologram;chart=1')).toEqual({ chart: true, price: false, change: false });
+    expect(parseTokenTagEnvelope('mode=hologram;fps=60')).toEqual({ chart: false, price: false, change: true });
+    expect(parseTokenTagEnvelope('mode=hologram;chart=1')).toEqual({ chart: true, price: false, change: true });
   });
 
   it('a known key with an unrecognised value drops that pair only', () => {
     expect(parseTokenTagEnvelope('mode=compact;price=maybe')).toEqual({ chart: false, price: true, change: true });
-    expect(parseTokenTagEnvelope('chart=yes;price=1')).toEqual({ chart: false, price: true, change: false });
+    expect(parseTokenTagEnvelope('chart=yes;price=1')).toEqual({ chart: false, price: true, change: true });
   });
 
   it('unknown keys and bare flags are dropped, resolving to tag', () => {
-    expect(parseTokenTagEnvelope('advanced')).toEqual({ chart: false, price: false, change: false });
-    expect(parseTokenTagEnvelope('!!garbage!!')).toEqual({ chart: false, price: false, change: false });
-    expect(parseTokenTagEnvelope('fps=60;quality=high')).toEqual({ chart: false, price: false, change: false });
+    expect(parseTokenTagEnvelope('advanced')).toEqual({ chart: false, price: false, change: true });
+    expect(parseTokenTagEnvelope('!!garbage!!')).toEqual({ chart: false, price: false, change: true });
+    expect(parseTokenTagEnvelope('fps=60;quality=high')).toEqual({ chart: false, price: false, change: true });
   });
 });
 

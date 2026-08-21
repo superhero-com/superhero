@@ -34,6 +34,7 @@ import {
   applyMention,
   serializeMentions,
   segmentMentions,
+  clampMentionInput,
   type AppliedMention,
 } from '../utils/mentions';
 
@@ -379,7 +380,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const serializedText = useMemo(() => serializeMentions(text, mentions), [text, mentions]);
   // Segments for the overlay mirror: identical glyph runs, mention runs flagged for pills.
   const mentionSegments = useMemo(() => segmentMentions(text, mentions), [text, mentions]);
-  const showMirror = Boolean(overlayComputed) && text.length > 0;
+  // Only mirror when there is a pill to draw. With no tagged run the mirror is a
+  // pixel-for-pixel no-op, so keeping the textarea's own text avoids taking on any
+  // metric-fidelity (or stale-padding-on-resize) risk for the common untagged post.
+  const hasPilledMention = mentionSegments.some((seg) => seg.mention !== null);
+  const showMirror = Boolean(overlayComputed) && hasPilledMention;
 
   const handleSelectMention = (item: MentionItem) => {
     if (!activeMention) return;
@@ -1095,15 +1100,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   onChange={(e) => {
                     const next = e.target.value;
                     // The 280 cap counts serialised length (the macro, not the chip), so
-                    // it moves off `maxLength` into here; deletions are always allowed.
-                    if (
+                    // it moves off `maxLength` into here. Clamp an over-cap insert to the
+                    // room left — like `maxLength` did — rather than dropping a whole paste.
+                    setText(
                       characterLimit
-                      && next.length > text.length
-                      && serializeMentions(next, mentions).length > characterLimit
-                    ) {
-                      return;
-                    }
-                    setText(next);
+                        ? clampMentionInput(text, next, mentions, characterLimit)
+                        : next,
+                    );
                   }}
                   onFocus={() => {
                     if (requiredHashtag && !text) {

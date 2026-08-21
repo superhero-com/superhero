@@ -2,9 +2,13 @@ import { describe, it, expect } from 'vitest';
 import {
   detectActiveMention,
   buildAccountMentionToken,
+  buildAccountMentionDisplay,
   buildTokenMentionToken,
   applyMention,
   isRenderableTokenName,
+  serializeMentions,
+  segmentMentions,
+  type AppliedMention,
 } from '../mentions';
 
 describe('detectActiveMention', () => {
@@ -148,5 +152,81 @@ describe('applyMention', () => {
       text: 'buying #EMOTER ',
       caret: 'buying #EMOTER '.length,
     });
+  });
+});
+
+describe('buildAccountMentionDisplay', () => {
+  it('uses the chain name when present', () => {
+    expect(buildAccountMentionDisplay({ address: 'ak_123', chainName: 'marek.chain' }))
+      .toBe('@marek.chain');
+  });
+
+  it('falls back to a short address when there is no chain name', () => {
+    // ak_123 is not a valid/long hash, so formatAddress returns it as-is.
+    expect(buildAccountMentionDisplay({ address: 'ak_123' })).toBe('@ak_123');
+  });
+});
+
+const marek: AppliedMention = {
+  trigger: 'account', display: '@marek.chain', serialized: '[account:ak_marek]',
+};
+const emoter: AppliedMention = { trigger: 'token', display: '#EMOTER', serialized: '#EMOTER' };
+
+describe('serializeMentions', () => {
+  it('expands an intact account display run to its macro (display → wire)', () => {
+    expect(serializeMentions('gm @marek.chain', [marek])).toBe('gm [account:ak_marek]');
+  });
+
+  it('leaves token mentions unchanged on the wire', () => {
+    expect(serializeMentions('buying #EMOTER now', [emoter])).toBe('buying #EMOTER now');
+  });
+
+  it('expands two adjacent mentions separated by a single space', () => {
+    expect(serializeMentions('@marek.chain #EMOTER', [marek, emoter]))
+      .toBe('[account:ak_marek] #EMOTER');
+  });
+
+  it('drops the tag once the user edits the run (degrades to plain text)', () => {
+    expect(serializeMentions('gm @marek.chainX', [marek])).toBe('gm @marek.chainX');
+  });
+
+  it('does not expand a run embedded inside a larger word', () => {
+    expect(serializeMentions('x@marek.chain', [marek])).toBe('x@marek.chain');
+  });
+
+  it('round-trips a picked account from insertion to the wire', () => {
+    const typed = 'gm @mar';
+    const active = detectActiveMention(typed, typed.length)!;
+    const display = buildAccountMentionDisplay({ address: 'ak_marek', chainName: 'marek.chain' });
+    const { text: composed } = applyMention(typed, active, display);
+    expect(composed).toBe('gm @marek.chain ');
+    const mention: AppliedMention = {
+      trigger: 'account', display, serialized: buildAccountMentionToken({ address: 'ak_marek' }),
+    };
+    expect(serializeMentions(composed, [mention]).trim()).toBe('gm [account:ak_marek]');
+  });
+});
+
+describe('segmentMentions', () => {
+  it('flags the mention run and leaves the surrounding text plain', () => {
+    expect(segmentMentions('gm @marek.chain !', [marek])).toEqual([
+      { text: 'gm ', mention: null },
+      { text: '@marek.chain', mention: marek },
+      { text: ' !', mention: null },
+    ]);
+  });
+
+  it('returns one plain segment when the edited run no longer matches', () => {
+    expect(segmentMentions('gm @marek.chainX', [marek])).toEqual([
+      { text: 'gm @marek.chainX', mention: null },
+    ]);
+  });
+
+  it('segments two mentions in one line', () => {
+    expect(segmentMentions('@marek.chain and #EMOTER', [marek, emoter])).toEqual([
+      { text: '@marek.chain', mention: marek },
+      { text: ' and ', mention: null },
+      { text: '#EMOTER', mention: emoter },
+    ]);
   });
 });

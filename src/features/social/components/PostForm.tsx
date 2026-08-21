@@ -29,8 +29,12 @@ import { useMentionSearch, type MentionItem } from '../hooks/useMentionSearch';
 import {
   detectActiveMention,
   buildAccountMentionToken,
+  buildAccountMentionDisplay,
   buildTokenMentionToken,
   applyMention,
+  serializeMentions,
+  segmentMentions,
+  type AppliedMention,
 } from '../utils/mentions';
 
 type TippingV3ContractApi = ContractMethodsBase & {
@@ -175,6 +179,10 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionDismissed, setMentionDismissed] = useState(false);
+  // Display→storage split for tagged mentions: the textarea holds the short display
+  // run, and these carry the `[account:{address}]` form each serialises to on submit.
+  const [mentions, setMentions] = useState<AppliedMention[]>([]);
+  const inputWrapRef = useRef<HTMLDivElement>(null);
 
   const detectedLink = useLinkDetection(text);
   const linkPreviewDismissedForCurrent = Boolean(
@@ -366,13 +374,33 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     && mentionItems.length > 0;
   const boundedMentionIndex = Math.min(mentionIndex, Math.max(mentionItems.length - 1, 0));
 
+  // What actually goes on the wire — display runs expanded to their `[account:…]` form.
+  // Drives both the submit content and the character counter (the macro is what counts).
+  const serializedText = useMemo(() => serializeMentions(text, mentions), [text, mentions]);
+  // Segments for the overlay mirror: identical glyph runs, mention runs flagged for pills.
+  const mentionSegments = useMemo(() => segmentMentions(text, mentions), [text, mentions]);
+  const showMirror = Boolean(overlayComputed) && text.length > 0;
+
   const handleSelectMention = (item: MentionItem) => {
     if (!activeMention) return;
-    const token = item.type === 'account'
-      ? buildAccountMentionToken({ address: item.address })
-      : buildTokenMentionToken({ name: item.name, symbol: item.symbol });
-    const { text: nextText, caret } = applyMention(text, activeMention, token);
+    // The textarea gets the short display run; the map remembers what it serialises to.
+    const applied: AppliedMention = item.type === 'account'
+      ? {
+        trigger: 'account',
+        display: buildAccountMentionDisplay({ address: item.address, chainName: item.chainName }),
+        serialized: buildAccountMentionToken({ address: item.address }),
+      }
+      : (() => {
+        const token = buildTokenMentionToken({ name: item.name, symbol: item.symbol });
+        return { trigger: 'token' as const, display: token, serialized: token };
+      })();
+    const { text: nextText, caret } = applyMention(text, activeMention, applied.display);
     setText(nextText);
+    setMentions((prev) => {
+      const dup = prev.some((m) => m.display === applied.display
+        && m.serialized === applied.serialized);
+      return dup ? prev : [...prev, applied];
+    });
     setMentionDismissed(true);
     requestAnimationFrame(() => {
       const el = textareaRef.current;
@@ -425,11 +453,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     const trimmed = text.trim();
     if (!trimmed) return;
     if (!activeAccount) return;
+    // Expand display runs to their `[account:{address}]` storage form for the wire.
+    const serialized = serializeMentions(text, mentions).trim();
 
     setIsSubmitting(true);
 
     const txPayload = isPost
-      ? { type: TxPayloadType.CreatePost, content: trimmed } as const
+      ? { type: TxPayloadType.CreatePost, content: serialized } as const
       : { type: TxPayloadType.CreateComment, postId: postId! } as const;
 
     notifySubmitted(txPayload);
@@ -450,7 +480,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       }
 
       const { decodedResult } = await contract.post_without_tip(
-        trimmed,
+        serialized,
         postMedia,
       );
 
@@ -464,7 +494,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         // This ensures the post appears instantly even if backend isn't ready yet
         const optimisticPost: any = {
           id: newPostId,
-          content: trimmed,
+          content: serialized,
           sender_address: activeAccount,
           media: mediaUrls,
           total_comments: 0,
@@ -655,7 +685,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         // This ensures the reply appears instantly even if backend isn't ready yet
         const optimisticReply: any = {
           id: newReplyId,
-          content: trimmed,
+          content: serialized,
           sender_address: activeAccount,
           media: mediaUrls,
           total_comments: 0,
@@ -941,6 +971,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
       // Reset after success
       setText(initialText || '');
+      setMentions([]);
       setMediaUrls([]);
       setDismissedLinkUrl(null);
       setShowImage(false);
@@ -1021,12 +1052,59 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               </div>
             )}
             <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
-              <div className="relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
+              <div ref={inputWrapRef} className="relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
+                {/* Overlay mirror: same glyph runs as the textarea, mention runs pilled.
+                    Sits behind the transparent-text textarea so caret/selection stay on top;
+                    no horizontal padding on pills, so widths — and the caret — stay exact. */}
+                {showMirror && overlayComputed && (
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 overflow-hidden pointer-events-none select-none text-white whitespace-pre-wrap break-words box-border"
+                    style={{
+                      zIndex: 0,
+                      paddingTop: overlayComputed.paddingTop,
+                      paddingRight: overlayComputed.paddingRight,
+                      paddingBottom: overlayComputed.paddingBottom,
+                      paddingLeft: overlayComputed.paddingLeft,
+                      fontFamily: overlayComputed.fontFamily,
+                      fontSize: overlayComputed.fontSize,
+                      fontWeight: overlayComputed.fontWeight,
+                      lineHeight: overlayComputed.lineHeight,
+                      letterSpacing: overlayComputed.letterSpacing,
+                    }}
+                  >
+                    {mentionSegments.map((seg, i) => (seg.mention ? (
+                      <span
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={`m-${i}`}
+                        className={`rounded bg-white/10 ${seg.mention.trigger === 'account' ? 'text-[var(--neon-teal)]' : 'text-[var(--neon-blue)]'}`}
+                        style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.15)' }}
+                      >
+                        {seg.text}
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <span key={`t-${i}`}>{seg.text}</span>
+                    )))}
+                  </div>
+                )}
                 <textarea
                   ref={textareaRef}
                   placeholder={currentPlaceholder}
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    // The 280 cap counts serialised length (the macro, not the chip), so
+                    // it moves off `maxLength` into here; deletions are always allowed.
+                    if (
+                      characterLimit
+                      && next.length > text.length
+                      && serializeMentions(next, mentions).length > characterLimit
+                    ) {
+                      return;
+                    }
+                    setText(next);
+                  }}
                   onFocus={() => {
                     if (requiredHashtag && !text) {
                       const tag = `${requiredHashtag.toUpperCase()} `;
@@ -1083,9 +1161,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     }
                   }}
                   className="bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
-                  style={{ minHeight: computedMinHeight }}
+                  style={{
+                    minHeight: computedMinHeight,
+                    // Text goes transparent so the mirror below shows the pills; caret
+                    // (caret-color) and selection stay painted by the textarea on top.
+                    ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
+                  }}
                   rows={1}
-                  maxLength={characterLimit}
                 />
 
                 {showAutoComplete && overlayComputed && (
@@ -1111,6 +1193,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     activeIndex={boundedMentionIndex}
                     onHover={setMentionIndex}
                     onSelect={handleSelectMention}
+                    anchorEl={inputWrapRef.current}
                   />
                 )}
 
@@ -1207,8 +1290,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   )}
                 </div>
                 {characterLimit && (
-                  <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
-                    {text.length}
+                  <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
+                    {serializedText.length}
                     /
                     {characterLimit}
                   </div>

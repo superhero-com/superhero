@@ -11,8 +11,11 @@ export interface TokenTagDisplayOptions {
 }
 
 // Named presets are pure sugar over the three toggles, so there is one model, not two.
+// `tag` carries `change: true` because `tag` means *today's rendering*, which already shows
+// the change badge — dropping it would retroactively change every post on chain. The ladder
+// is strictly monotonic: tag ⊂ compact ⊂ advanced. Turning the badge off is `{change=0}`.
 const MODE_PRESETS: Record<string, TokenTagDisplayOptions> = {
-  tag: { chart: false, price: false, change: false },
+  tag: { chart: false, price: false, change: true },
   compact: { chart: false, price: true, change: true },
   advanced: { chart: true, price: true, change: true },
 };
@@ -62,9 +65,14 @@ export function parseTokenTagEnvelope(payload: string): TokenTagDisplayOptions {
   return resolved;
 }
 
-/** Whether the resolved options ask for anything beyond the plain tag. */
+/**
+ * Whether the resolved options need the richer widget. Only `chart`/`price` do — `change`
+ * is the tag's own badge, rendered on the plain node and gated separately, so it must NOT be
+ * part of this switch. Were it included, all-false `{change=0}` would be indistinguishable
+ * from the default and the badge could never be turned off.
+ */
 export function isTokenTagEnhanced(options: TokenTagDisplayOptions): boolean {
-  return options.chart || options.price || options.change;
+  return options.chart || options.price;
 }
 
 // Strip token-tag envelopes from raw content, leaving the bare `#symbol`, so an envelope

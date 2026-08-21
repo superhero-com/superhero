@@ -116,13 +116,20 @@ export function linkify(
 
   // Renders a single '#token' as a link, per the `hashtagVariant` option. `keyPos` is the
   // absolute offset of the '#' in `raw`, used to keep React keys unique across the whole text.
-  const renderHashtagNode = (tokenName: string, keyPos: number): React.ReactNode => (
+  // `showChange` gates the inline change badge — true for a bare tag (today's rendering) and
+  // for the `tag` preset, false for an explicit `{change=0}`.
+  const renderHashtagNode = (
+    tokenName: string,
+    keyPos: number,
+    showChange = true,
+  ): React.ReactNode => (
     options?.hashtagVariant === 'post-inline' ? (
       <PostHashtagLink
         tag={tokenName}
         label={`#${tokenName}`}
         trendMentions={options?.trendMentions}
         variant="inline"
+        showChange={showChange}
         key={`hashtag-${tokenName}-${keyPos}`}
       />
     ) : (
@@ -180,7 +187,9 @@ export function linkify(
                 key={`token-tag-${symbol}-${hashStart + i}`}
               />
             ) : (
-              renderHashtagNode(symbol, hashStart + i)
+              // Not a widget: render today's tag, but honour an explicit `{change=0}` by
+              // gating the badge on the resolved `change` option (default `tag` keeps it on).
+              renderHashtagNode(symbol, hashStart + i, tagOptions.change)
             ),
           );
           i = symEnd + envMatch[0].length;

@@ -313,6 +313,22 @@ describe('linkify token-tag envelope reader', () => {
     expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
   });
 
+  it('treats {change=0} as a plain tag, not a widget (badge gating tested in PostHashtagLink)', () => {
+    renderLinkify('#SUPERHERO{change=0}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('treats the fully-explicit all-off form as a plain tag', () => {
+    renderLinkify('#SUPERHERO{chart=0;price=0;change=0}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
   it('renders a widget for mode=compact (price + change, no chart)', () => {
     renderLinkify('#SUPERHERO{mode=compact}');
 

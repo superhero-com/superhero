@@ -10,8 +10,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
+import PostTokenTag from '@/components/social/PostTokenTag';
+import {
+  parseTokenTagEnvelope,
+  isTokenTagEnhanced,
+  TOKEN_TAG_ENVELOPE_PAYLOAD,
+} from '@/utils/tokenTagEnvelope';
 import { trustedHtml } from '@/utils/trustedTypes';
 import { formatAddress } from './address';
+
+// The `{payload}` display envelope immediately following a token symbol. Anchored so it
+// only matches directly after the symbol; the symbol itself is matched by the existing
+// hashtag classes above. A present-but-invalid envelope is still consumed (never printed).
+const TOKEN_TAG_ENVELOPE_REGEX = new RegExp(`^\\{(${TOKEN_TAG_ENVELOPE_PAYLOAD})\\}`);
 
 // URL matcher (external links)
 const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
@@ -150,8 +161,33 @@ export function linkify(
         ? fullRun.slice(i + 1).match(hashtagTokenRegex)
         : null;
       if (tokenMatch) {
-        nodes.push(renderHashtagNode(tokenMatch[0], hashStart + i));
-        i += 1 + tokenMatch[0].length;
+        const symbol = tokenMatch[0];
+        const symEnd = i + 1 + symbol.length;
+        // A `{payload}` directly after the symbol is a display envelope. It is always
+        // consumed so its text never renders; an enhanced option set becomes a widget,
+        // and an absent/empty/unrecognised envelope falls back to the plain tag.
+        const envMatch = fullRun[symEnd] === '{'
+          ? fullRun.slice(symEnd).match(TOKEN_TAG_ENVELOPE_REGEX)
+          : null;
+        if (envMatch) {
+          const tagOptions = parseTokenTagEnvelope(envMatch[1]);
+          nodes.push(
+            isTokenTagEnhanced(tagOptions) ? (
+              <PostTokenTag
+                symbol={symbol}
+                options={tagOptions}
+                variant={options?.hashtagVariant === 'post-inline' ? 'inline' : 'pill'}
+                key={`token-tag-${symbol}-${hashStart + i}`}
+              />
+            ) : (
+              renderHashtagNode(symbol, hashStart + i)
+            ),
+          );
+          i = symEnd + envMatch[0].length;
+        } else {
+          nodes.push(renderHashtagNode(symbol, hashStart + i));
+          i = symEnd;
+        }
         matchedAny = true;
       } else {
         // Inert stretch: not a valid token start. Consume up to (not including) the next '#'

@@ -10,6 +10,7 @@ const {
   postHubLink,
   renderHubIndex,
   hubListPage,
+  hubStatusCode,
 } = require('../hubs.cjs');
 
 const ORIGIN = 'https://superhero.com';
@@ -116,6 +117,22 @@ describe('hubListPage — rendered directory page', () => {
 
   it('throws on an unknown section', () => {
     expect(() => hubListPage({ section: 'nope', origin: ORIGIN, page: 1, links: [], totalPages: 1 })).toThrow();
+  });
+});
+
+describe('hubStatusCode — zero-link tail / out-of-range pages 404', () => {
+  it('404s a page > 1 that rendered no links (gate-emptied tail or past the end)', () => {
+    expect(hubStatusCode(34, 0)).toBe(404);
+    expect(hubStatusCode(40, 0)).toBe(404);
+  });
+
+  it('keeps page 1 at 200 even with no links, so an API outage degrades rather than 404s', () => {
+    expect(hubStatusCode(1, 0)).toBe(200);
+  });
+
+  it('serves any page that has links at 200', () => {
+    expect(hubStatusCode(33, 70)).toBe(200);
+    expect(hubStatusCode(2, 100)).toBe(200);
   });
 });
 

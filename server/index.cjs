@@ -426,7 +426,8 @@ async function fetchListPage(pathAndQuery) {
   return r.json();
 }
 
-function sendHub(res, html) {
+function sendHub(res, html, status = 200) {
+  res.status(status);
   res.setHeader('Content-Security-Policy', hubCsp());
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
@@ -448,7 +449,8 @@ async function sendUserHub(req, res) {
     links = hubs.filterHubAccounts(items).map((a) => hubs.accountHubLink(a, origin));
     totalPages = Number(data?.meta?.totalPages) || 1;
   } catch {}
-  sendHub(res, hubs.hubListPage({ section: 'users', origin, page, links, totalPages }));
+  const html = hubs.hubListPage({ section: 'users', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
 }
 
 async function sendPostHub(req, res) {
@@ -462,7 +464,8 @@ async function sendPostHub(req, res) {
     links = items.map((p) => hubs.postHubLink(p, origin));
     totalPages = Number(data?.meta?.totalPages) || 1;
   } catch {}
-  sendHub(res, hubs.hubListPage({ section: 'posts', origin, page, links, totalPages }));
+  const html = hubs.hubListPage({ section: 'posts', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
 }
 
 // HARDEN-04: the single place the SPA document is rendered. Every path that returns

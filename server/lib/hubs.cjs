@@ -153,6 +153,16 @@ ${renderNav(prevUrl, nextUrl)}`;
   });
 }
 
+// A gate-emptied tail page or an out-of-range page (page > 1 with no links) must not be an
+// indexable 200: `rel=next` is driven by the API's totalPages but the surfacing gate is applied
+// after each page is fetched, so the gate-failing tail — and any `?page=` past the end — would
+// otherwise publish thin, self-canonicalising, indexable pages the directory links into. A 404
+// de-indexes them and closes both cases in one condition. Page 1 stays 200 so an API outage
+// degrades the hub rather than 404-ing a URL the directory itself links to.
+function hubStatusCode(page, linkCount) {
+  return linkCount === 0 && page > 1 ? 404 : 200;
+}
+
 module.exports = {
   HUB_PAGE_SIZE,
   SECTIONS,
@@ -161,4 +171,5 @@ module.exports = {
   postHubLink,
   renderHubIndex,
   hubListPage,
+  hubStatusCode,
 };

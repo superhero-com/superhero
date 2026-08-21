@@ -34,6 +34,9 @@ interface PostHashtagLinkProps {
   label: string;
   trendMentions?: TrendMention[];
   variant?: 'pill' | 'inline';
+  // Whether to show the 24h change badge. Defaults to true so every existing call site — and
+  // a bare `#SYMBOL` — renders exactly as today; a token tag written `{change=0}` passes false.
+  showChange?: boolean;
 }
 
 function normalizeTag(tag: string) {
@@ -61,6 +64,7 @@ const PostHashtagLink = ({
   label,
   trendMentions,
   variant = 'pill',
+  showChange = true,
 }: PostHashtagLinkProps) => {
   const normalized = normalizeTag(tag);
   const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
@@ -89,7 +93,7 @@ const PostHashtagLink = ({
     queryKey: ['post-hashtag-performance', tokenAddress],
     queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
     staleTime: 60 * 1000,
-    enabled: Boolean(tokenAddress) && !matchedMention?.performance,
+    enabled: showChange && Boolean(tokenAddress) && !matchedMention?.performance,
   });
 
   const performanceData = matchedMention?.performance || (performance as any);
@@ -111,7 +115,7 @@ const PostHashtagLink = ({
       onClick={(e) => e.stopPropagation()}
     >
       <span className="leading-none">{label}</span>
-      {changeText && (
+      {showChange && changeText && (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums leading-none',

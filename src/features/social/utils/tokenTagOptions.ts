@@ -103,12 +103,24 @@ export function serializeTokenTagEnvelope(options: TokenTagDisplayOptions): stri
   return `{${(best as unknown as string[]).join(';')}}`;
 }
 
-// Matches a token tag and its optional display envelope. First char is any Unicode letter or
-// number; the tail additionally allows the dash that appears in symbols such as EMOTER-AI.
-// Mirrors the reader's symbol class and the `[^{}\r\n]{0,64}` payload so a chip surfaces for
-// exactly the tokens the reader will interpret. Fresh instance per call — `g` is stateful.
-export function createTokenTagRegex(): RegExp {
-  return /#([\p{L}\p{N}][\p{L}\p{N}-]{0,49})(\{[^{}\r\n]{0,64}\})?/gu;
+// The token-name character class when no live collection data is available, byte-identical to
+// the reader's DEFAULT_HASHTAG_CHARS_PATTERN in src/utils/linkify.tsx: letters, numbers, dashes.
+const DEFAULT_TOKEN_NAME_CHARS = 'A-Za-z0-9\\-';
+
+// Matches a token tag and its optional display envelope, mirroring the reader's grammar so a chip
+// surfaces for exactly the tokens the reader will interpret — and, critically, for no others:
+//   - the `(^|[^\w./])#` lead guard refuses a '#' preceded by a word char, '.' or '/', so a URL
+//     fragment such as "example.com/page#section" is left alone (matches HASHTAG_WORD_REGEX);
+//   - the symbol class is `A-Za-z0-9-` plus the live collection alphabet (`allowedCharsPattern`
+//     from useHashtagAllowedChars()), not a blanket \p{L}\p{N}, so it honours the same names the
+//     reader does rather than offering chips on characters the loaded collections reject.
+// The lead char is captured (group 1) rather than a lookbehind so the two grammars read the same.
+// Fresh instance per call — `g` is stateful.
+export function createTokenTagRegex(allowedCharsPattern?: string): RegExp {
+  const charClass = allowedCharsPattern
+    ? `${DEFAULT_TOKEN_NAME_CHARS}${allowedCharsPattern}`
+    : DEFAULT_TOKEN_NAME_CHARS;
+  return new RegExp(`(^|[^\\w./])#([${charClass}]{1,50})(\\{[^{}\\r\\n]{0,64}\\})?`, 'gu');
 }
 
 export interface ScannedTokenTag {
@@ -122,19 +134,23 @@ export interface ScannedTokenTag {
 }
 
 // Every token tag in the composer text, in order, with its resolved display options.
-export function scanTokenTags(text: string): ScannedTokenTag[] {
-  const regex = createTokenTagRegex();
+// `allowedCharsPattern` is the live collection alphabet from useHashtagAllowedChars(); pass it so
+// the scan honours the same symbol class the reader does.
+export function scanTokenTags(text: string, allowedCharsPattern?: string): ScannedTokenTag[] {
+  const regex = createTokenTagRegex(allowedCharsPattern);
   const out: ScannedTokenTag[] = [];
   let match: RegExpExecArray | null;
   let index = 0;
   // eslint-disable-next-line no-cond-assign
   while ((match = regex.exec(String(text ?? ''))) !== null) {
-    const braces = match[2] ?? '';
+    const lead = match[1] ?? ''; // guard char before '#', consumed by the match but not the tag
+    const braces = match[3] ?? '';
     const payload = braces ? braces.slice(1, -1) : '';
+    const start = match.index + lead.length;
     out.push({
       index,
-      symbol: match[1],
-      start: match.index,
+      symbol: match[2],
+      start,
       end: match.index + match[0].length,
       payload,
       hasEnvelope: Boolean(braces),
@@ -155,8 +171,9 @@ export function applyTokenTagOptions(
   text: string,
   ordinal: number,
   options: TokenTagDisplayOptions,
+  allowedCharsPattern?: string,
 ): string {
-  const tag = scanTokenTags(text).find((entry) => entry.index === ordinal);
+  const tag = scanTokenTags(text, allowedCharsPattern).find((entry) => entry.index === ordinal);
   if (!tag) return text;
   const envelope = serializeTokenTagEnvelope(options);
   return `${text.slice(0, tag.start)}#${tag.symbol}${envelope}${text.slice(tag.end)}`;

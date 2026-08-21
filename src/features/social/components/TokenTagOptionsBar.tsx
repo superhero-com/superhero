@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import {
   MODE_ORDER,
   MODE_PRESETS,
@@ -34,7 +35,13 @@ const TokenTagOptionsBar = ({ value, onChange, className = '' }: TokenTagOptions
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const tags = useMemo(() => scanTokenTags(value), [value]);
+  // The live collection alphabet, so the composer scans exactly the tokens the reader will honour.
+  const hashtagAllowedChars = useHashtagAllowedChars();
+
+  const tags = useMemo(
+    () => scanTokenTags(value, hashtagAllowedChars),
+    [value, hashtagAllowedChars],
+  );
   const active = openIndex === null ? undefined : tags.find((tag) => tag.index === openIndex);
 
   // Close the popover if its token was edited away while it was open.
@@ -63,7 +70,7 @@ const TokenTagOptionsBar = ({ value, onChange, className = '' }: TokenTagOptions
   if (tags.length === 0) return null;
 
   const setMode = (ordinal: number, mode: TokenTagMode) => {
-    onChange(applyTokenTagOptions(value, ordinal, MODE_PRESETS[mode]));
+    onChange(applyTokenTagOptions(value, ordinal, MODE_PRESETS[mode], hashtagAllowedChars));
   };
 
   const toggleKey = (
@@ -71,7 +78,12 @@ const TokenTagOptionsBar = ({ value, onChange, className = '' }: TokenTagOptions
     current: TokenTagDisplayOptions,
     key: keyof TokenTagDisplayOptions,
   ) => {
-    onChange(applyTokenTagOptions(value, ordinal, { ...current, [key]: !current[key] }));
+    onChange(applyTokenTagOptions(
+      value,
+      ordinal,
+      { ...current, [key]: !current[key] },
+      hashtagAllowedChars,
+    ));
   };
 
   const modeLabel = (options: TokenTagDisplayOptions): string => {

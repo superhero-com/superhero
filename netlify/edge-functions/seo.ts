@@ -17,6 +17,14 @@ function truncate(s: string, n: number): string {
   return `${str.slice(0, Math.max(0, n - 1))}…`;
 }
 
+// Strip a token-tag display envelope (`#SYMBOL{mode=advanced}` -> `#SYMBOL`) so it never
+// lands in a meta description, snippet, or link preview. Kept in sync with the client
+// grammar in src/utils/tokenTagEnvelope.ts (this edge runtime is a standalone copy — same
+// reason truncate/absolutize are duplicated here rather than imported).
+function stripTokenTagEnvelopes(s: string): string {
+  return (s || '').replace(/(#[\p{L}\p{N}-]{1,50})\{[^{}\r\n]{0,64}\}/gu, '$1');
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
@@ -183,7 +191,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         }
       }
       if (data) {
-        const raw: string = (data?.content || '').toString();
+        const raw: string = stripTokenTagEnvelopes((data?.content || '').toString());
         const content: string = raw.replace(/\s+/g, ' ').trim();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
         return {

@@ -127,6 +127,51 @@ export function serializeMentions(text: string, mentions: AppliedMention[]): str
   );
 }
 
+/**
+ * Accept an input change while keeping the serialised length within `limit`, the way
+ * the old `maxLength` did: an over-cap insert is truncated at the caret to the room
+ * left — a 300-char paste keeps what fits rather than being dropped whole — and a
+ * single keystroke with no room is rejected. The inserted region is isolated by the
+ * common prefix/suffix of `prev` and `next`, then binary-searched for the longest
+ * prefix that still fits, counting the serialised macro rather than the display run.
+ */
+export function clampMentionInput(
+  prev: string,
+  next: string,
+  mentions: AppliedMention[],
+  limit: number,
+): string {
+  if (serializeMentions(next, mentions).length <= limit) return next;
+
+  let start = 0;
+  const minLen = Math.min(prev.length, next.length);
+  while (start < minLen && prev[start] === next[start]) start += 1;
+  let endPrev = prev.length;
+  let endNext = next.length;
+  while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
+    endPrev -= 1;
+    endNext -= 1;
+  }
+
+  const before = next.slice(0, start);
+  const after = next.slice(endNext);
+  const inserted = next.slice(start, endNext);
+
+  let lo = 0;
+  let hi = inserted.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    const candidate = `${before}${inserted.slice(0, mid)}${after}`;
+    if (serializeMentions(candidate, mentions).length <= limit) lo = mid;
+    else hi = mid - 1;
+  }
+
+  const clamped = `${before}${inserted.slice(0, lo)}${after}`;
+  // before+after drops the replaced span from an in-limit prev, so lo=0 always fits;
+  // the guard keeps prev only in the degenerate case that assumption ever fails.
+  return serializeMentions(clamped, mentions).length <= limit ? clamped : prev;
+}
+
 export interface MentionSegment {
   text: string;
   mention: AppliedMention | null;

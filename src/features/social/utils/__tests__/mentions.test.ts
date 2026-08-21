@@ -8,6 +8,7 @@ import {
   isRenderableTokenName,
   serializeMentions,
   segmentMentions,
+  clampMentionInput,
   type AppliedMention,
 } from '../mentions';
 
@@ -228,5 +229,34 @@ describe('segmentMentions', () => {
       { text: ' and ', mention: null },
       { text: '#EMOTER', mention: emoter },
     ]);
+  });
+});
+
+describe('clampMentionInput', () => {
+  it('leaves an in-budget change untouched', () => {
+    expect(clampMentionInput('a', 'ab', [], 280)).toBe('ab');
+  });
+
+  it('truncates an over-cap paste to the remaining room, not dropping it whole', () => {
+    expect(clampMentionInput('', 'x'.repeat(300), [], 280)).toBe('x'.repeat(280));
+  });
+
+  it('inserts only what fits when pasting into a partially-full composer', () => {
+    expect(clampMentionInput('ab', 'abXYZ', [], 4)).toBe('abXY');
+  });
+
+  it('rejects a mid-string keystroke when the cap is already reached', () => {
+    const full = 'a'.repeat(280);
+    const typed = `${'a'.repeat(5)}x${'a'.repeat(275)}`; // 281 chars, an 'x' inserted at index 5
+    expect(clampMentionInput(full, typed, [], 280)).toBe(full);
+  });
+
+  it('counts the serialised macro against the cap when clamping', () => {
+    // display run is 13 chars incl. trailing space; serialised is "[account:ak_marek] " (19).
+    const prev = '@marek.chain ';
+    // Appending "xxx" after the intact run -> serialised 22 > 20, clamp to the room left.
+    const clamped = clampMentionInput(prev, '@marek.chain xxx', [marek], 20);
+    expect(serializeMentions(clamped, [marek]).length).toBeLessThanOrEqual(20);
+    expect(clamped).toBe('@marek.chain x');
   });
 });

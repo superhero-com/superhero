@@ -73,6 +73,10 @@ vi.mock('../../../../api/generated', () => ({
   PostsService: {
     getById: (...args: any[]) => mockGetById(...args),
   },
+  // TokenTagOptionsBar reads the live collection alphabet, which loads the factory schema.
+  AppService: {
+    getFactory: vi.fn().mockResolvedValue({ address: 'ct_factory' }),
+  },
 }));
 
 vi.mock('../../../../config', async (importOriginal) => {

@@ -86,6 +86,32 @@ describe('scanTokenTags', () => {
   it('returns nothing for text with no tags', () => {
     expect(scanTokenTags('just some words')).toHaveLength(0);
   });
+
+  // Regression: the composer must not offer a chip on a URL fragment. A '#' preceded by a word
+  // char, '.' or '/' is not a token tag — the reader's HASHTAG_WORD_REGEX refuses it, so a chip
+  // here rewrites the user's link into an envelope the reader will never consume, permanently.
+  it('does not scan a URL fragment as a token tag', () => {
+    expect(scanTokenTags('see https://example.com/page#section for more')).toHaveLength(0);
+    expect(scanTokenTags('foo.com/x#bar')).toHaveLength(0);
+    expect(scanTokenTags('a#b')).toHaveLength(0);
+  });
+
+  it('applying options never rewrites a URL fragment', () => {
+    const text = 'see https://example.com/page#section for more';
+    expect(applyTokenTagOptions(text, 0, MODE_PRESETS.advanced)).toBe(text);
+  });
+
+  it('still scans a real tag that follows whitespace or the start of text', () => {
+    expect(scanTokenTags('#SUPERHERO')).toMatchObject([{ symbol: 'SUPERHERO', start: 0 }]);
+    expect(scanTokenTags('gm #SUPERHERO')).toMatchObject([{ symbol: 'SUPERHERO', start: 3 }]);
+  });
+
+  // The symbol class mirrors the reader: A-Za-z0-9- plus the live collection alphabet, not a
+  // blanket \p{L}\p{N}. Without a collection pattern, non-Latin characters are not token names.
+  it('honours the reader symbol class — non-Latin only when the collection allows it', () => {
+    expect(scanTokenTags('gm #你好')).toHaveLength(0);
+    expect(scanTokenTags('gm #你好', '\\u4e00-\\u9fff')).toMatchObject([{ symbol: '你好' }]);
+  });
 });
 
 describe('applyTokenTagOptions', () => {

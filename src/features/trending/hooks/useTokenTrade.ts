@@ -42,7 +42,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
-  const errorMessage = useRef<string | undefined>();
+  const errorMessage = useRef<string | undefined>(undefined);
   // storeRef lets effects/callbacks always access the latest store without
   // listing `store` (a new object every render) as a reactive dependency.
   const storeRef = useRef(store);

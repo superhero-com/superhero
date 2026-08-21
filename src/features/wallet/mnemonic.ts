@@ -8,7 +8,7 @@
  * handed to the vault/derivation, so what we validate is exactly what we store.
  */
 import { generateMnemonic as scureGenerate, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 /** Trim, collapse internal whitespace, lowercase. BIP39 words are lowercase english. */
 export function normalizeMnemonic(phrase: string): string {

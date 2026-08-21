@@ -6,8 +6,8 @@
  * `superhero-api/src/token-gated-rooms/notifications/room-mute.message.ts` so the
  * server's `verifyMessageSignature` reproduces the same string.
  */
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 
 /**
  * Canonical hash of the room-mute body the user signs. Binds the signature to

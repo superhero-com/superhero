@@ -156,11 +156,6 @@ export default defineConfig(({ mode }) => {
       setupFiles: './vitest.setup.ts',
       testTimeout: 30000,
       pool: 'forks',
-      poolOptions: {
-        forks: {
-          singleFork: true,
-        },
-      },
       clearMocks: true,
       restoreMocks: true,
       unstubGlobals: true,

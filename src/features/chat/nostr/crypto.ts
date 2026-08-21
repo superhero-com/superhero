@@ -15,7 +15,7 @@ import { HDKey } from '@scure/bip32';
 import { getPublicKey } from 'nostr-tools/pure';
 import * as nip04 from 'nostr-tools/nip04';
 import * as nip19 from 'nostr-tools/nip19';
-import { bytesToHex } from '@noble/hashes/utils';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import type { UserKeys } from '../core/types';
 import { getNostrDerivationPath } from '../core/constants';
 

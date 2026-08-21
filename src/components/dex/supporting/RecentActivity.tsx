@@ -151,7 +151,7 @@ const RecentActivityItem = ({
     enabled: Boolean(activeAccount && activity.hash),
   });
   const txStatus = fetchedStatus ?? activity.status;
-  const lastProcessedStatusRef = useRef<RecentActivityType['status']>();
+  const lastProcessedStatusRef = useRef<RecentActivityType['status']>(undefined);
 
   useEffect(() => {
     if (!activeAccount || !activity.hash || !txStatus) return;

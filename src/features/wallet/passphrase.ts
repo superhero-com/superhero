@@ -15,7 +15,7 @@
  * than statically — the onboarding modal paints on its shell and the meter goes
  * live when the estimator lands, with no change to the floor or the reject set.
  */
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 import type { ZxcvbnResult } from '@zxcvbn-ts/core';
 
 /**

@@ -31,10 +31,10 @@
  * Nothing here is persisted server-side — no key, no seed, no PRF output ever
  * leaves the device (the custody decision).
  */
-import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha2';
+import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { entropyToMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 /**
  * The PRF salt used for SEED derivation. Fixed and public by design — see (1)
@@ -55,7 +55,7 @@ export function seedPrfSalt(): Uint8Array {
  * HKDF `info` for the seed. Distinct from `factors.ts`'s `'webauthn-prf'` (the
  * KEK) so the two derivations are cryptographically independent — see (2).
  */
-const SEED_INFO = 'superhero-wallet-seed-v1';
+const SEED_INFO = new TextEncoder().encode('superhero-wallet-seed-v1');
 
 /**
  * HKDF salt for the seed derivation. A constant (not random) for the same

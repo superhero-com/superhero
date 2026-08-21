@@ -165,7 +165,7 @@ const normalizeSignatureResult = (signature: any): string => {
 };
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
-  const aeSdkRef = useRef<AeSdkAepp>();
+  const aeSdkRef = useRef<AeSdkAepp>(undefined);
   const staticAeSdkRef = useRef<AeSdk | null>(null);
   const [sdkInitialized, setSdkInitialized] = useState(false);
   const [activeAccount, setActiveAccount] = useAtom(activeAccountAtom);

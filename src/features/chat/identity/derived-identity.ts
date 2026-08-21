@@ -11,7 +11,7 @@
  */
 import { finalizeEvent, type EventTemplate } from 'nostr-tools/pure';
 import * as nip04 from 'nostr-tools/nip04';
-import { hexToBytes } from '@noble/hashes/utils';
+import { hexToBytes } from '@noble/hashes/utils.js';
 import type { UserKeys, NostrEvent } from '../core/types';
 import type { NostrIdentityProvider } from './nostr-identity';
 

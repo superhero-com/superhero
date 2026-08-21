@@ -124,6 +124,9 @@ export class InlineWalletSigner {
           'inline wallet: derived key does not match the expected account address — refusing to sign',
         );
       }
+      // Not React's `use()` — this is the caller's callback parameter (see the signature
+      // above); eslint-plugin-react-hooks 7 matches the bare identifier.
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       return await use(account);
     } finally {
       account = undefined; // drop the key-bearing account; no cache survives this scope

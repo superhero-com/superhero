@@ -13,7 +13,7 @@
 import { describe, expect, it } from 'vitest';
 import { Buffer } from 'buffer';
 import { generateMnemonic, mnemonicToSeedSync } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 
 import { OpenAPI } from '@/api/generated';
 import { deriveSigner, deriveAccount } from '@/features/wallet/derivation';

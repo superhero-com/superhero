@@ -7,7 +7,7 @@
 // Uint8Array"). A jsdom dual-realm wart only — the derivation itself is pure.
 import { describe, expect, it } from 'vitest';
 import { entropyToMnemonic, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
 import { mnemonicFromPrf, SEED_PRF_SALT_LABEL, seedPrfSalt } from '../passkey-seed';
 import { deriveAccount } from '../derivation';
 

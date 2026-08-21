@@ -1,5 +1,5 @@
 import {
-  afterEach, describe, expect, it, vi,
+  afterEach, describe, expect, it, vi, type Mock,
 } from 'vitest';
 import {
   NotificationFeedClient,
@@ -173,7 +173,7 @@ function makeIo(opts: { transports?: unknown } = {}) {
 function makeClient(over: {
   backend?: ReturnType<typeof makeBackend>;
   io?: ReturnType<typeof makeIo>;
-  signMessage?: ReturnType<typeof vi.fn>;
+  signMessage?: Mock<(...args: any[]) => any>;
   maxItems?: number;
   /** Passed through so a test can wait on a specific internal milestone. */
   log?: (msg: string, err?: unknown) => void;
@@ -287,7 +287,7 @@ describe('session', () => {
     }));
     const { client, io, onItems } = makeClient({
       backend: makeBackend({ items: [feedItem(1)], unread: 1 }),
-      signMessage: signMessage as unknown as ReturnType<typeof vi.fn>,
+      signMessage: signMessage as unknown as Mock<(...args: any[]) => any>,
     });
 
     const first = client.start();

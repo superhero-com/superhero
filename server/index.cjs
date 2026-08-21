@@ -371,10 +371,33 @@ app.use((req, res, next) => {
 // fallback for directory-style paths is disabled so those always reach the route handlers.
 app.use(express.static(DIST_DIR, { maxAge: '1d', index: false }));
 
-app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], sendSpaDocument);
+// Express 5 (path-to-regexp v8) has no bare `*`: a wildcard must be its own named segment.
+// The `/voting*`-style suffix patterns have no direct equivalent, so they become the literal
+// route plus its subtree; anything else they used to catch (`/votingfoo`) still lands on the
+// same handler via the catch-all below, so what is served is unchanged.
+app.get([
+  '/',
+  '/post/:id',
+  '/users/:address',
+  '/users/*splat',
+  '/trends/tokens/:name',
+  '/trends',
+  '/trends/*splat',
+  '/trending',
+  '/trending/*splat',
+  '/defi/*splat',
+  '/voting',
+  '/voting/*splat',
+  '/explore',
+  '/explore/*splat',
+  '/swap',
+  '/swap/*splat',
+  '/pool',
+  '/pool/*splat',
+], sendSpaDocument);
 
 // Catch-all: serve SPA with basic SEO
-app.get('*', sendSpaDocument);
+app.get('/*splat', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
 const { buildFaqPageJsonLd } = require('./lib/faq-content.cjs');
+const hubs = require('./lib/hubs.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -144,7 +145,8 @@ async function buildMeta(pathname, origin){
       if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); if (data?.chain_name) display = String(data.chain_name); }
     } catch {}
     return {
-      title: `${address} – Profile – Superhero`,
+      // chain_name-first title, matching netlify/edge-functions/seo.ts; raw address only when unnamed.
+      title: `${display} – Profile – Superhero`,
       description: bio ? truncate(bio,200) : 'View profile on Superhero, the crypto social network.',
       canonical: `${origin}/users/${address}`,
       ogImage: `${origin}/og-default.png`,
@@ -396,6 +398,73 @@ function buildCsp(nonce) {
   ].join('; ');
 }
 
+// --- crawlable internal-link hubs -----------------------------------------------------
+// Server-rendered directory pages that emit real <a> links to gate-passing profiles and posts,
+// giving user/post pages the crawl path token pages already have via /trends/tokens. These are
+// standalone HTML (no SPA bundle, no scripts), so they carry their own tight, script-free CSP
+// rather than the nonce'd application policy above.
+function hubCsp() {
+  return [
+    "default-src 'none'",
+    "style-src 'unsafe-inline'",
+    "img-src 'self' https: data:",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
+function hubPageParam(req) {
+  const p = parseInt(req.query.page, 10);
+  return Number.isFinite(p) && p > 0 ? p : 1;
+}
+
+async function fetchListPage(pathAndQuery) {
+  const r = await fetch(`${API_BASE.replace(/\/$/, '')}${pathAndQuery}`, { headers: { accept: 'application/json' } });
+  if (!r.ok) return null;
+  return r.json();
+}
+
+function sendHub(res, html) {
+  res.setHeader('Content-Security-Policy', hubCsp());
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+}
+
+async function sendHubIndex(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  sendHub(res, hubs.renderHubIndex(origin));
+}
+
+async function sendUserHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/accounts?order_by=total_tx_count&order_direction=DESC&limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = hubs.filterHubAccounts(items).map((a) => hubs.accountHubLink(a, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  sendHub(res, hubs.hubListPage({ section: 'users', origin, page, links, totalPages }));
+}
+
+async function sendPostHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/posts?limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = items.map((p) => hubs.postHubLink(p, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  sendHub(res, hubs.hubListPage({ section: 'posts', origin, page, links, totalPages }));
+}
+
 // HARDEN-04: the single place the SPA document is rendered. Every path that returns
 // index.html goes through here, so the nonce, the enforcing CSP header and the
 // `__CSP_NONCE__` substitution can never drift apart between routes.
@@ -440,6 +509,12 @@ app.use((req, res, next) => {
 // dist/) are unaffected and still served exactly as before; only the implicit index.html
 // fallback for directory-style paths is disabled so those always reach the route handlers.
 app.use(express.static(DIST_DIR, { maxAge: '1d', index: false }));
+
+// Crawlable hubs — registered before the SPA routes and catch-all so they render
+// their own link lists rather than falling through to the client bundle.
+app.get('/hubs', sendHubIndex);
+app.get('/hubs/users', sendUserHub);
+app.get('/hubs/posts', sendPostHub);
 
 // Express 5 (path-to-regexp v8) has no bare `*`: a wildcard must be its own named segment.
 // The `/voting*`-style suffix patterns have no direct equivalent, so they become the literal

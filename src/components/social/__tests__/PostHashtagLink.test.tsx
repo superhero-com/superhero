@@ -106,7 +106,7 @@ describe('PostHashtagLink — showChange', () => {
   it('legacy inline variant keeps its exact-zero flat notion — a sub-0.05% move still shows 2dp', () => {
     renderVariant('inline', NEAR_FLAT_MENTION);
     const link = screen.getByRole('link');
-    // Legacy renders at 2dp and Marek ruled its behaviour out of scope: 0.03% is non-zero here,
+    // Legacy renders at 2dp and keeps its exact-zero flat notion: 0.03% is non-zero here,
     // so it keeps its arrow rather than adopting the badge's <0.05 flat threshold.
     expect(link.textContent).toContain('0.03%');
     expect(link.textContent).toContain('▲');

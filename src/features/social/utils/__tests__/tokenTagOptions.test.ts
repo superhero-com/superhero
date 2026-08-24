@@ -25,7 +25,7 @@ describe('serializeTokenTagEnvelope', () => {
     expect(serializeTokenTagEnvelope(MODE_PRESETS.advanced)).toBe('{mode=advanced}');
   });
 
-  it("emits {change=0} for Badi's 'only the tag' — symbol with no badge", () => {
+  it('emits {change=0} for the symbol with the change badge explicitly off — not mode=tag', () => {
     expect(serializeTokenTagEnvelope(opts(false, false, false))).toBe('{change=0}');
   });
 

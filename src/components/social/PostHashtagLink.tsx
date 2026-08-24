@@ -106,8 +106,8 @@ const PostHashtagLink = ({
   const changePercent = resolveChangePercent(performanceData);
   const hasChange = changePercent !== null;
   // The redesigned post-pill treats a value that renders as 0.0% as flat, matching the badge.
-  // The legacy pill/inline render keys flat on exact zero — it renders at 2dp and Marek ruled
-  // its behaviour out of scope, so its flat notion moves with its precision, not the badge's.
+  // The legacy pill/inline render keys flat on exact zero — it renders at 2dp, so its flat
+  // notion moves with its precision, not the badge's.
   const isPillFlat = isFlatChange(changePercent ?? 0);
   const isLegacyFlat = changePercent === 0;
   const isPositive = (changePercent ?? 0) > 0;

@@ -1789,7 +1789,25 @@
       "openTrendNamed": "Open trend {{tokenName}}",
       "openTrend": "Open trend"
     },
-    "trade": "Trade"
+    "trade": "Trade",
+    "tokenTag": {
+      "barLabel": "Token display",
+      "configure": "Display options",
+      "optionsFor": "Display options for #{{symbol}}",
+      "modeTag": "Tag",
+      "modeTagHint": "Symbol + 24h change",
+      "modeCompact": "Compact",
+      "modeCompactHint": "+ Price",
+      "modeAdvanced": "Advanced",
+      "modeAdvancedHint": "+ Price + Chart",
+      "custom": "Custom",
+      "toggleChart": "Chart",
+      "togglePrice": "Price",
+      "toggleChange": "Change %",
+      "changeHint": "The 24h change badge, shown by default. Turn it off for just the symbol.",
+      "postsAs": "Posts as",
+      "done": "Done"
+    }
   },
   "governance": {
     "tabs": {

@@ -4,13 +4,13 @@
   react/no-array-index-key,
   no-use-before-define,
   react/no-invalid-html-attribute,
-  no-shadow,
   no-plusplus
 */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
 import PostTokenTag from '@/components/social/PostTokenTag';
+import PostMentionTag from '@/components/social/PostMentionTag';
 import {
   parseTokenTagEnvelope,
   isTokenTagEnhanced,
@@ -128,7 +128,7 @@ export function linkify(
         tag={tokenName}
         label={`#${tokenName}`}
         trendMentions={options?.trendMentions}
-        variant="inline"
+        variant="post-pill"
         showChange={showChange}
         key={`hashtag-${tokenName}-${keyPos}`}
       />
@@ -183,7 +183,6 @@ export function linkify(
               <PostTokenTag
                 symbol={symbol}
                 options={tagOptions}
-                variant={options?.hashtagVariant === 'post-inline' ? 'inline' : 'pill'}
                 key={`token-tag-${symbol}-${hashStart + i}`}
               />
             ) : (
@@ -240,13 +239,21 @@ export function linkify(
       const isKnown = options?.knownChainNames?.has(normalized) ?? false;
       if (isKnown) {
         aensLinked.push(
-          <a
-            href={`/users/${name}`}
-            key={`aens-${name}-${nodeIdx}-${offset}`}
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-          >
-            {match}
-          </a>,
+          options?.hashtagVariant === 'post-inline' ? (
+            <PostMentionTag
+              name={name}
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+            />
+          ) : (
+            <a
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+              className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+            >
+              {match}
+            </a>
+          ),
         );
       } else {
         // Unknown name → keep as plain text
@@ -273,13 +280,22 @@ export function linkify(
       const displayCore = formatAddress(address);
       const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
       accountLinked.push(
-        <a
-          href={`/users/${address}`}
-          key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-        >
-          {display}
-        </a>,
+        options?.hashtagVariant === 'post-inline' ? (
+          <PostMentionTag
+            name={address}
+            label={displayCore}
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+          />
+        ) : (
+          <a
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          >
+            {display}
+          </a>
+        ),
       );
       segLast = off + m.length;
       return m;

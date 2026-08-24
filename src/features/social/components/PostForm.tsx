@@ -1141,7 +1141,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
               </div>
 
-              <TokenTagOptionsBar value={text} onChange={setText} className="mt-2.5" />
+              <TokenTagOptionsBar
+                value={text}
+                onChange={setText}
+                textareaRef={textareaRef}
+                characterLimit={characterLimit}
+                className="mt-2.5"
+              />
 
               {(showEmojiPicker || showGifInput || showImageInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">

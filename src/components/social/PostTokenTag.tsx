@@ -1,31 +1,142 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { toTokenLookupParam } from '@/utils/address';
-import { cn } from '@/lib/utils';
+import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
-import TokenChange from '@/components/Trendminer/TokenChange';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import type { TokenTagDisplayOptions } from '@/utils/tokenTagEnvelope';
+import EntityPill from './EntityPill';
+import { PillChangeBadge } from './pillParts';
+
+// Symbols never wrap and never push the price out of the card, so a long one is
+// clipped with an ellipsis. The pill's own max-width is the backstop; this keeps
+// the symbol itself from eating the whole line first.
+const MAX_SYMBOL_CHARS = 12;
+
+type TokenPillStatus = 'loading' | 'resolved' | 'unknown';
+
+function truncateSymbol(symbol: string): string {
+  return symbol.length > MAX_SYMBOL_CHARS ? `${symbol.slice(0, MAX_SYMBOL_CHARS - 1)}…` : symbol;
+}
+
+type PerfWindow = { current_change_percent?: number | string };
+
+function readChangePercent(token: TokenDto | null | undefined): number | null {
+  const perf = (token?.performance as Record<string, PerfWindow> | undefined);
+  const raw = perf?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent;
+  if (raw === undefined || raw === null || raw === '') return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+export interface TokenPillProps {
+  symbol: string; // without the leading '#'
+  options: TokenTagDisplayOptions;
+  token: TokenDto | null | undefined;
+  status: TokenPillStatus;
+  /** Query is paused with cached data — the value is last-known, not live. */
+  offline?: boolean;
+  /** Hours since the cached value was fetched, for the spoken label only. */
+  staleHours?: number;
+}
+
+/**
+ * Presentational token pill. Pure in its inputs so every state on plate 06 can
+ * be rendered directly from props — loading, resolved, unknown, offline. The
+ * degradation ladder is applied here: a part shows only when its data and every
+ * cheaper data part below it are present, so a missing price drops the chart too
+ * and a missing 24h change drops both. When nothing resolves, the pill falls to
+ * plain dashed text rather than showing an error glyph inside a sentence.
+ */
+export const TokenPill = ({
+  symbol, options, token, status, offline = false, staleHours,
+}: TokenPillProps) => {
+  const normalized = symbol.replace(/^#/, '');
+  const display = truncateSymbol(normalized);
+
+  // Unknown / delisted: plain dashed text, no pill, no link.
+  if (status === 'unknown') {
+    return (
+      <EntityPill plain sigil="#" label={display} markShape="square" ariaLabel={`${normalized} — unknown token`} />
+    );
+  }
+
+  const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
+  const loading = status === 'loading';
+
+  const changePct = readChangePercent(token);
+  const hasChange = changePct !== null;
+  const hasPrice = Boolean(token?.price_data);
+  const hasChart = Boolean(token?.sale_address);
+
+  // Author-requested parts, gated by data with the ladder's ordering: the chart
+  // needs the price present, the price and change stand on their own data.
+  const showChange = options.change && hasChange;
+  const showPrice = options.price && hasPrice;
+  const showChart = options.chart && hasChart && showPrice;
+  const isPositive = (changePct ?? 0) >= 0;
+
+  // Spoken label — one sentence, assembled from what actually renders.
+  const spoken = [normalized];
+  if (loading) spoken.push('loading');
+  if (showPrice) spoken.push('with price');
+  if (showChange) spoken.push(`${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
+  if (showChart) spoken.push('24-hour chart');
+  if (offline && staleHours !== undefined) spoken.push(`last known ${staleHours}h ago`);
+  spoken.push('link');
+  const ariaLabel = `${spoken.join(', ').replace(/, link$/, ' — link')}`;
+
+  const trailing = (
+    <>
+      {offline && <span className="sh-pill__stale-dot" aria-hidden="true" />}
+      {showPrice ? (
+        <span className="sh-pill__price" aria-hidden="true">
+          <PriceDataFormatter priceData={token!.price_data} watchPrice hideFiatPrice />
+        </span>
+      ) : (
+        loading && options.price && <span className="sh-pill__skel sh-pill__skel--price" aria-hidden="true" />
+      )}
+      {showChange && <PillChangeBadge changePercent={changePct ?? 0} />}
+      {showChart ? (
+        <span className="sh-pill__chart" aria-hidden="true">
+          <TokenLineChart saleAddress={token!.sale_address!} height={18} width={60} interval="all-time" />
+        </span>
+      ) : (
+        loading && options.chart && <span className="sh-pill__skel sh-pill__skel--chart" aria-hidden="true" />
+      )}
+    </>
+  );
+
+  return (
+    <EntityPill
+      sigil="#"
+      label={display}
+      markShape="square"
+      to={target}
+      ariaLabel={ariaLabel}
+      rich={options.price || options.chart}
+      trailing={trailing}
+    />
+  );
+};
 
 interface PostTokenTagProps {
   symbol: string;
   options: TokenTagDisplayOptions;
-  variant?: 'pill' | 'inline';
 }
 
 /**
- * Renders a `#SYMBOL{...}` token tag with the display options its envelope resolved to.
- * The symbol link always renders; price, 24h change and chart are added only when asked
- * for and only once the token resolves, so an unknown or still-loading token degrades to
- * the plain tag — the envelope itself is never shown as text.
+ * Resolves a `#SYMBOL{...}` token tag and renders it as the display pill. The
+ * identity is known from the string, so the symbol never skeletons — only the
+ * data slots do; an unknown or delisted token degrades to plain text, and a
+ * paused query with cached data renders a last-known state rather than a stale
+ * number presented as live.
  */
-const PostTokenTag = ({ symbol, options, variant = 'inline' }: PostTokenTagProps) => {
+const PostTokenTag = ({ symbol, options }: PostTokenTagProps) => {
   const normalized = symbol.replace(/^#/, '');
-  const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
 
-  const { data: token } = useQuery<TokenDto | null>({
+  const query = useQuery<TokenDto | null>({
     queryKey: ['post-token-tag', normalized.toUpperCase()],
     queryFn: () => TokensService.findByAddress({ address: toTokenLookupParam(normalized) }),
     staleTime: 60 * 1000,
@@ -33,34 +144,26 @@ const PostTokenTag = ({ symbol, options, variant = 'inline' }: PostTokenTagProps
     retry: false,
   });
 
-  const showChart = options.chart && Boolean(token?.sale_address);
-  const showPrice = options.price && Boolean(token?.price_data);
-  const showChange = options.change && Boolean(token?.performance);
+  const token = query.data;
+  const offline = query.fetchStatus === 'paused' && Boolean(token);
+  let status: TokenPillStatus;
+  if (query.status === 'error' || (query.status === 'success' && !token)) status = 'unknown';
+  else if (query.status === 'pending' && !token) status = 'loading';
+  else status = 'resolved';
+
+  const staleHours = offline && query.dataUpdatedAt
+    ? Math.max(0, Math.round((Date.now() - query.dataUpdatedAt) / (60 * 60 * 1000)))
+    : undefined;
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5 align-baseline">
-      <Link
-        to={target}
-        className={cn(
-          variant === 'pill'
-            ? 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[var(--neon-blue)] text-[12px] font-semibold hover:bg-white/15 hover:border-white/25'
-            : 'inline-flex items-baseline gap-1 text-[var(--neon-blue)] underline-offset-2 hover:underline text-[13px] font-medium',
-          'no-underline outline-none focus:outline-none break-words',
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span className="leading-none">{`#${normalized}`}</span>
-      </Link>
-      {showPrice && token && (
-        <span className="text-[12px] font-semibold tabular-nums leading-none">
-          <PriceDataFormatter priceData={token.price_data} watchPrice hideFiatPrice />
-        </span>
-      )}
-      {showChange && token && <TokenChange token={token} hideNewBadge />}
-      {showChart && token && (
-        <TokenLineChart saleAddress={token.sale_address} height={28} width={96} interval="all-time" />
-      )}
-    </span>
+    <TokenPill
+      symbol={normalized}
+      options={options}
+      token={token}
+      status={status}
+      offline={offline}
+      staleHours={staleHours}
+    />
   );
 };
 

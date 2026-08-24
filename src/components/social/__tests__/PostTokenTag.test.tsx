@@ -118,4 +118,20 @@ describe('TokenPill', () => {
     expect(aria).toContain('unchanged');
     expect(aria).not.toMatch(/\b(up|down)\b/);
   });
+
+  it('treats a sub-0.05% move as flat — a value that renders 0.0% never points anywhere', () => {
+    const token = tokenWith({
+      performance: { [DEFAULT_PAST_TIMEFRAME]: { current_change_percent: 0.04 } } as any,
+    });
+    const { container } = renderPill(
+      <TokenPill symbol="SUPERHERO" options={ADVANCED} token={token} status="resolved" />,
+    );
+    const link = screen.getByRole('link');
+    expect(link.textContent).toContain('0.0%');
+    expect(container.querySelector('.sh-pill__chg--flat')).toBeTruthy();
+    expect(container.querySelector('.sh-pill__chg-arrow')).toBeNull();
+    const aria = link.getAttribute('aria-label') || '';
+    expect(aria).toContain('unchanged');
+    expect(aria).not.toMatch(/\b(up|down)\b/);
+  });
 });

@@ -860,9 +860,12 @@ textarea:disabled {
   .sh-pill:hover { background: rgba(0, 0, 0, 0.08); border-color: rgba(0, 0, 0, 0.2); }
   .sh-pill:active { background: rgba(0, 0, 0, 0.12); }
   .sh-pill__mark { background: rgba(14, 116, 144, 0.14); color: #0e7490; }
-  .sh-pill__chg--up { color: #047857; background: rgba(4, 120, 87, 0.12); }
-  .sh-pill__chg--down { color: #be123c; background: rgba(190, 18, 60, 0.12); }
-  .sh-pill__chg--flat { color: var(--light-font-color); background: rgba(100, 116, 139, 0.12); }
+  /* One Tailwind step darker than the dark-mode inks: on the composited light wash
+     (#fafafa → sh-pill 5% black → badge tint 12%) the brighter values miss 4.5:1.
+     Measured here: up 5.62, down 5.63, flat 5.67. Dark mode already clears the bar. */
+  .sh-pill__chg--up { color: #065f46; background: rgba(4, 120, 87, 0.12); }
+  .sh-pill__chg--down { color: #9f1239; background: rgba(190, 18, 60, 0.12); }
+  .sh-pill__chg--flat { color: #475569; background: rgba(100, 116, 139, 0.12); }
   .sh-pill__skel {
     background: linear-gradient(
       90deg,

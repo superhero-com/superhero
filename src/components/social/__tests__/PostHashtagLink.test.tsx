@@ -23,6 +23,15 @@ const FLAT_MENTION: TrendMention = {
   performance: { past_30d: { current_change_percent: 0 } },
 };
 
+// A sub-0.05% move: renders 0.0% on the 1dp badge, but 0.03% on the legacy 2dp render.
+const NEAR_FLAT_MENTION: TrendMention = {
+  name: 'SUPERHERO',
+  symbol: 'SUPERHERO',
+  address: 'ct_super',
+  sale_address: 'ct_super',
+  performance: { past_30d: { current_change_percent: 0.03 } },
+};
+
 function renderTag(showChange?: boolean) {
   const client = new QueryClient();
   return render(
@@ -81,5 +90,25 @@ describe('PostHashtagLink — showChange', () => {
     expect(link.textContent).not.toContain('%');
     expect(link.textContent).not.toContain('▲');
     expect(link.textContent).not.toContain('▼');
+  });
+
+  it('post-pill: a sub-0.05% move renders flat — a 0.0% badge never points anywhere', () => {
+    const { container } = renderVariant('post-pill', NEAR_FLAT_MENTION);
+    const link = screen.getByRole('link');
+    expect(link.textContent).toContain('0.0%');
+    expect(container.querySelector('.sh-pill__chg--flat')).toBeTruthy();
+    expect(container.querySelector('.sh-pill__chg-arrow')).toBeNull();
+    const aria = link.getAttribute('aria-label') || '';
+    expect(aria).toContain('unchanged');
+    expect(aria).not.toMatch(/\b(up|down)\b/);
+  });
+
+  it('legacy inline variant keeps its exact-zero flat notion — a sub-0.05% move still shows 2dp', () => {
+    renderVariant('inline', NEAR_FLAT_MENTION);
+    const link = screen.getByRole('link');
+    // Legacy renders at 2dp and Marek ruled its behaviour out of scope: 0.03% is non-zero here,
+    // so it keeps its arrow rather than adopting the badge's <0.05 flat threshold.
+    expect(link.textContent).toContain('0.03%');
+    expect(link.textContent).toContain('▲');
   });
 });

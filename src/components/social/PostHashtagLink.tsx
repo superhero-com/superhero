@@ -4,7 +4,7 @@ import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import EntityPill from './EntityPill';
-import { PillChangeBadge } from './pillParts';
+import { PillChangeBadge, isFlatChange } from './pillParts';
 
 const MAX_SYMBOL_CHARS = 12;
 
@@ -105,7 +105,11 @@ const PostHashtagLink = ({
   const performanceData = matchedMention?.performance || (performance as any);
   const changePercent = resolveChangePercent(performanceData);
   const hasChange = changePercent !== null;
-  const isFlat = changePercent === 0;
+  // The redesigned post-pill treats a value that renders as 0.0% as flat, matching the badge.
+  // The legacy pill/inline render keys flat on exact zero — it renders at 2dp and Marek ruled
+  // its behaviour out of scope, so its flat notion moves with its precision, not the badge's.
+  const isPillFlat = isFlatChange(changePercent ?? 0);
+  const isLegacyFlat = changePercent === 0;
   const isPositive = (changePercent ?? 0) > 0;
   const changeText = hasChange ? `${Math.abs(changePercent ?? 0).toFixed(2)}%` : null;
 
@@ -120,7 +124,7 @@ const PostHashtagLink = ({
     const showBadge = showChange && hasChange && changePercent !== null;
     let spokenChange = '';
     if (showBadge) {
-      spokenChange = isFlat
+      spokenChange = isPillFlat
         ? ', unchanged over 24 hours'
         : `, ${isPositive ? 'up' : 'down'} ${Math.abs(changePercent ?? 0).toFixed(1)} percent`;
     }
@@ -149,7 +153,7 @@ const PostHashtagLink = ({
       onClick={(e) => e.stopPropagation()}
     >
       <span className="leading-none">{label}</span>
-      {showChange && changeText && !isFlat && (
+      {showChange && changeText && !isLegacyFlat && (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums leading-none',

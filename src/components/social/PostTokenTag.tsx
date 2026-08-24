@@ -7,7 +7,7 @@ import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter'
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import type { TokenTagDisplayOptions } from '@/utils/tokenTagEnvelope';
 import EntityPill from './EntityPill';
-import { PillChangeBadge } from './pillParts';
+import { PillChangeBadge, isFlatChange } from './pillParts';
 
 // Long symbols clip with an ellipsis rather than pushing the price out of the card.
 const MAX_SYMBOL_CHARS = 12;
@@ -70,7 +70,7 @@ export const TokenPill = ({
   if (loading) spoken.push('loading');
   if (showPrice) spoken.push('with price');
   if (showChange) {
-    spoken.push(changePct === 0
+    spoken.push(isFlatChange(changePct ?? 0)
       ? 'unchanged over 24 hours'
       : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
   }

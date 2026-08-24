@@ -723,18 +723,10 @@ textarea:disabled {
   outline: 2px solid var(--neon-blue);
   outline-offset: 1px;
 }
-/* Invisible vertical padding reaches a 44px touch target without changing the
-   painted height or the line box. */
-.sh-pill::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 44px;
-  min-height: 100%;
-}
+
+/* The pill is its own hit target — no oversized overlay. An overlay taller than
+   the line box hit-tests into the lines above and below and steals their clicks;
+   WCAG 2.5.8's inline exception means a sentence-embedded target needs none. */
 
 /* Leading mark — rounded square (token art) or circle (mention avatar). */
 .sh-pill__mark {

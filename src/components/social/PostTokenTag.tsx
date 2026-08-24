@@ -9,9 +9,7 @@ import type { TokenTagDisplayOptions } from '@/utils/tokenTagEnvelope';
 import EntityPill from './EntityPill';
 import { PillChangeBadge } from './pillParts';
 
-// Symbols never wrap and never push the price out of the card, so a long one is
-// clipped with an ellipsis. The pill's own max-width is the backstop; this keeps
-// the symbol itself from eating the whole line first.
+// Long symbols clip with an ellipsis rather than pushing the price out of the card.
 const MAX_SYMBOL_CHARS = 12;
 
 type TokenPillStatus = 'loading' | 'resolved' | 'unknown';
@@ -35,20 +33,11 @@ export interface TokenPillProps {
   options: TokenTagDisplayOptions;
   token: TokenDto | null | undefined;
   status: TokenPillStatus;
-  /** Query is paused with cached data — the value is last-known, not live. */
-  offline?: boolean;
-  /** Hours since the cached value was fetched, for the spoken label only. */
-  staleHours?: number;
+  offline?: boolean; // query paused on cached data → last-known, not live
+  staleHours?: number; // age of the cached value, spoken label only
 }
 
-/**
- * Presentational token pill. Pure in its inputs so every state on plate 06 can
- * be rendered directly from props — loading, resolved, unknown, offline. The
- * degradation ladder is applied here: a part shows only when its data and every
- * cheaper data part below it are present, so a missing price drops the chart too
- * and a missing 24h change drops both. When nothing resolves, the pill falls to
- * plain dashed text rather than showing an error glyph inside a sentence.
- */
+// Presentational token pill — pure in its inputs, so every state renders directly from props.
 export const TokenPill = ({
   symbol, options, token, status, offline = false, staleHours,
 }: TokenPillProps) => {
@@ -70,8 +59,7 @@ export const TokenPill = ({
   const hasPrice = Boolean(token?.price_data);
   const hasChart = Boolean(token?.sale_address);
 
-  // Author-requested parts, gated by data with the ladder's ordering: the chart
-  // needs the price present, the price and change stand on their own data.
+  // Data-gated in ladder order: the chart needs the price present; a missing part drops it.
   const showChange = options.change && hasChange;
   const showPrice = options.price && hasPrice;
   const showChart = options.chart && hasChart && showPrice;
@@ -126,13 +114,8 @@ interface PostTokenTagProps {
   options: TokenTagDisplayOptions;
 }
 
-/**
- * Resolves a `#SYMBOL{...}` token tag and renders it as the display pill. The
- * identity is known from the string, so the symbol never skeletons — only the
- * data slots do; an unknown or delisted token degrades to plain text, and a
- * paused query with cached data renders a last-known state rather than a stale
- * number presented as live.
- */
+// Resolves a token tag and renders the pill; the symbol is known from the string, so only the
+// data slots skeleton, and an unknown token degrades to plain text.
 const PostTokenTag = ({ symbol, options }: PostTokenTagProps) => {
   const normalized = symbol.replace(/^#/, '');
 

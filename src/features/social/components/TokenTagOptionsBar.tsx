@@ -314,6 +314,7 @@ const TokenTagOptionsBar = ({
   const [open, setOpen] = useState<OpenState>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const openChipRef = useRef<HTMLButtonElement | null>(null);
+  const priorSelectionRef = useRef<{ start: number; end: number; hadFocus: boolean } | null>(null);
 
   const hashtagAllowedChars = useHashtagAllowedChars();
   const tags = useMemo(
@@ -344,18 +345,42 @@ const TokenTagOptionsBar = ({
 
   if (tags.length === 0) return null;
 
-  // Highlight the exact occurrence a chip edits by selecting its span in the textarea. Two
-  // occurrences of one symbol are otherwise indistinguishable in the bar. Selection is set
-  // without stealing keyboard focus, so Tab through the chips is not disrupted; a mouse hover
-  // additionally focuses so the highlight is unmistakable.
-  const highlightOccurrence = (tag: ScannedTokenTag, focus: boolean) => {
+  // Highlight the occurrence a chip edits by selecting its span in the textarea, so two chips for
+  // one symbol are distinguishable. A mouse hover also focuses so the highlight paints; keyboard
+  // focus does not, or Tab into the bar would bounce straight back to the textarea. The prior
+  // selection and focus are captured and restored when the pointer or focus leaves without a
+  // click, so a chip crossed on the way elsewhere never leaves the tag selected in a focused
+  // textarea for the next keystroke to delete.
+  const beginHighlight = (tag: ScannedTokenTag, focusTextarea: boolean) => {
     const el = textareaRef?.current;
     if (!el) return;
     try {
+      if (priorSelectionRef.current === null) {
+        priorSelectionRef.current = {
+          start: el.selectionStart ?? el.value.length,
+          end: el.selectionEnd ?? el.value.length,
+          hadFocus: document.activeElement === el,
+        };
+      }
       el.setSelectionRange(tag.start, tag.end);
-      if (focus) el.focus();
+      if (focusTextarea) el.focus();
     } catch {
       /* setSelectionRange throws on a detached node — ignore */
+    }
+  };
+
+  const endHighlight = (tag: ScannedTokenTag) => {
+    const el = textareaRef?.current;
+    const prior = priorSelectionRef.current;
+    priorSelectionRef.current = null;
+    if (!el || !prior) return;
+    // A clicked chip opened its dialog to edit that tag — leave the span highlighted for it.
+    if (open && open.ordinal === tag.index && open.symbol === tag.symbol) return;
+    try {
+      el.setSelectionRange(prior.start, prior.end);
+      if (!prior.hadFocus) el.blur();
+    } catch {
+      /* ignore */
     }
   };
 
@@ -396,8 +421,10 @@ const TokenTagOptionsBar = ({
                 openChipRef.current = e.currentTarget;
                 setOpen(isOpen ? null : { ordinal: tag.index, symbol: tag.symbol });
               }}
-              onMouseEnter={() => highlightOccurrence(tag, true)}
-              onFocus={() => highlightOccurrence(tag, false)}
+              onMouseEnter={() => beginHighlight(tag, true)}
+              onMouseLeave={() => endHighlight(tag)}
+              onFocus={() => beginHighlight(tag, false)}
+              onBlur={() => endHighlight(tag)}
             >
               <span className="text-primary-400">#</span>
               <span className="max-w-[120px] truncate">{tag.symbol}</span>

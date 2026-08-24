@@ -5,46 +5,24 @@ import { cn } from '@/lib/utils';
 export type EntityMarkShape = 'square' | 'circle';
 
 export interface EntityPillProps {
-  /**
-   * The single spoken label for the whole pill — e.g. "SUPERHERO, 0.004078 AE,
-   * up 2.4 percent, 24-hour chart — link". Every visible part is aria-hidden so
-   * a screen reader hears this once, not four fragments.
-   */
+  // The one spoken label for the whole pill; every visible part is aria-hidden.
   ariaLabel: string;
-  /** '#' for a token, '@' for a mention. */
-  sigil: string;
-  /** The symbol or handle, without its sigil. Pre-truncated by the caller. */
-  label: string;
+  sigil: string; // '#' token, '@' mention
+  label: string; // symbol/handle without sigil, pre-truncated
   markShape: EntityMarkShape;
-  /** Monogram letters, an avatar, or a skeleton — never spoken. */
-  mark?: React.ReactNode;
-  /** Price / change / chart nodes, each already aria-hidden. */
-  trailing?: React.ReactNode;
-  /**
-   * Rich pills (a price and/or chart) are eligible to promote to a block on a
-   * narrow content column. Rung 0/1 pills are not — they never overflow.
-   */
-  rich?: boolean;
-  /** Internal router target (token → trends page). */
-  to?: string;
-  /** Plain anchor target (mention → profile), matching today's mention links. */
-  href?: string;
-  /**
-   * Unresolved: an unknown/delisted token or an unresolvable handle. Plain
-   * dashed text, no pill and no link — a dead affordance is worse than none.
-   */
-  plain?: boolean;
+  mark?: React.ReactNode; // monogram, avatar or skeleton
+  trailing?: React.ReactNode; // price / change / chart, each already aria-hidden
+  rich?: boolean; // has price/chart → eligible for block promotion on a narrow column
+  to?: string; // token → in-app router link
+  href?: string; // mention → plain anchor, matching today's mention links
+  plain?: boolean; // unresolved: plain dashed text, no pill, no link
   onClick?: (e: React.MouseEvent) => void;
   className?: string;
 }
 
-/**
- * The shared inline pill for a token tag and a mention. One link, one hit
- * target, one spoken label; height follows the line box and it never splits
- * across a wrap. Token and mention differ only by the mark's shape and the
- * sigil — everything else (height, radius, wash, border, press, target) is
- * identical, so a post carrying both reads as one system.
- */
+// The shared inline pill for a token tag and a mention: one link, one hit target, one spoken
+// label, height on the line box, never split across a wrap. Token and mention differ only by the
+// mark's shape and the sigil.
 const EntityPill = ({
   ariaLabel,
   sigil,
@@ -60,11 +38,8 @@ const EntityPill = ({
   className = '',
 }: EntityPillProps) => {
   if (plain) {
-    return (
-      <span className="sh-pill-plain" aria-label={ariaLabel}>
-        {`${sigil}${label}`}
-      </span>
-    );
+    // A bare <span> is role=generic, which drops aria-label; the visible text is the name.
+    return <span className="sh-pill-plain">{`${sigil}${label}`}</span>;
   }
 
   const inner = (
@@ -88,8 +63,6 @@ const EntityPill = ({
     onClick?.(e);
   };
 
-  // Token → in-app router link; mention → plain anchor, matching today's
-  // mention behaviour (a full navigation to the profile route).
   if (href) {
     return (
       <a href={href} aria-label={ariaLabel} className={classes} onClick={stop}>

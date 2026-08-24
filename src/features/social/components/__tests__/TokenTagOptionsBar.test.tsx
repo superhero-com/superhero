@@ -116,3 +116,37 @@ describe('TokenTagOptionsBar — rung ladder', () => {
     expect(onChange).toHaveBeenCalledWith('#SUPERHERO beats #SUPERHERO{mode=compact}');
   });
 });
+
+describe('TokenTagOptionsBar — chip hover leaves the textarea as it found it', () => {
+  const BarWithTextarea = ({ value }: { value: string }) => {
+    const ref = React.useRef<HTMLTextAreaElement>(null);
+    return (
+      <>
+        <textarea ref={ref} defaultValue={value} data-testid="ta" />
+        <TokenTagOptionsBar value={value} onChange={() => {}} textareaRef={ref} />
+      </>
+    );
+  };
+
+  it('restores the prior selection and does not leave the textarea focused when a chip is hovered then left without a click', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <BarWithTextarea value="#SUPERHERO beats #SUPERHERO" />
+      </QueryClientProvider>,
+    );
+    const ta = screen.getByTestId('ta') as HTMLTextAreaElement;
+    ta.setSelectionRange(3, 3); // author's caret, textarea not focused
+    expect(document.activeElement).not.toBe(ta);
+
+    const chip = chips()[1];
+    fireEvent.mouseEnter(chip); // highlights the 2nd occurrence and focuses the textarea
+    expect(ta.selectionStart).not.toBe(3);
+    expect(document.activeElement).toBe(ta);
+
+    fireEvent.mouseLeave(chip); // left without clicking — must undo both
+    expect(ta.selectionStart).toBe(3);
+    expect(ta.selectionEnd).toBe(3);
+    expect(document.activeElement).not.toBe(ta);
+  });
+});

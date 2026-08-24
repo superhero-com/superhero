@@ -1,24 +1,15 @@
 import EntityPill from './EntityPill';
 
 export interface MentionPillProps {
-  /** The handle as written, without the leading '@' (e.g. "marco", "marco.chain"). */
-  name: string;
-  /** Profile target — matches today's mention links (`/users/...`). */
-  href: string;
-  /** Display text if it differs from `name` (e.g. a formatted `ak_` address). */
-  label?: string;
-  /** Avatar still resolving — shows a shimmer mark. Live use resolves immediately. */
-  loading?: boolean;
-  /** Unresolvable handle → plain text, no pill, no link. Same rule as an unknown token. */
-  unresolvable?: boolean;
+  name: string; // handle without the leading '@' (e.g. "marco", "marco.chain")
+  href: string; // profile target, matching today's mention links (/users/...)
+  label?: string; // display text when it differs from name (e.g. a formatted ak_ address)
+  loading?: boolean; // avatar still resolving — shimmer mark; live use resolves immediately
+  unresolvable?: boolean; // → plain text, no pill, no link, same as an unknown token
 }
 
-/**
- * A mention rendered as the same pill a token uses — same height, radius, wash,
- * border, press state and hit target — differing only by a circular mark and the
- * '@' sigil, so a post carrying a mention and a token reads as one system rather
- * than two competing chips. An unresolvable handle degrades to plain text.
- */
+// A mention rendered as the same pill a token uses, differing only by a circular mark and the
+// '@' sigil; an unresolvable handle degrades to plain text.
 export const MentionPill = ({
   name, href, label, loading = false, unresolvable = false,
 }: MentionPillProps) => {

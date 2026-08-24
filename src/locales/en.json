@@ -1792,7 +1792,6 @@
     "trade": "Trade",
     "tokenTag": {
       "barLabel": "In this post",
-      "configure": "Display options",
       "optionsFor": "Display options for #{{symbol}}",
       "occurrence": "occurrence {{n}}",
       "howItAppears": "How it appears in your post",

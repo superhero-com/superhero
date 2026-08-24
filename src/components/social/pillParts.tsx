@@ -9,16 +9,20 @@ export interface PillChangeBadgeProps {
 /**
  * The 24h change badge. Direction is carried by an arrow, never by hue alone, so
  * it survives greyscale and red/green colour-blindness. Always aria-hidden — the
- * change is spoken once in the pill's single label.
+ * change is spoken once in the pill's single label. At exactly zero it is neutral
+ * ink with no arrow: a flat token has no direction to point.
  */
 export const PillChangeBadge = ({ changePercent }: PillChangeBadgeProps) => {
-  const positive = changePercent >= 0;
+  const flat = changePercent === 0;
+  const positive = changePercent > 0;
+  let variant = 'flat';
+  if (!flat) variant = positive ? 'up' : 'down';
   return (
     <span
-      className={`sh-pill__chg ${positive ? 'sh-pill__chg--up' : 'sh-pill__chg--down'}`}
+      className={`sh-pill__chg sh-pill__chg--${variant}`}
       aria-hidden="true"
     >
-      <span className="sh-pill__chg-arrow">{positive ? '▲' : '▼'}</span>
+      {!flat && <span className="sh-pill__chg-arrow">{positive ? '▲' : '▼'}</span>}
       {`${Math.abs(changePercent).toFixed(1)}%`}
     </span>
   );

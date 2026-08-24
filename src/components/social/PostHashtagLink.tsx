@@ -104,7 +104,8 @@ const PostHashtagLink = ({
 
   const performanceData = matchedMention?.performance || (performance as any);
   const changePercent = resolveChangePercent(performanceData);
-  const hasChange = changePercent !== null && changePercent !== 0;
+  const hasChange = changePercent !== null;
+  const isFlat = changePercent === 0;
   const isPositive = (changePercent ?? 0) > 0;
   const changeText = hasChange ? `${Math.abs(changePercent ?? 0).toFixed(2)}%` : null;
 
@@ -117,9 +118,12 @@ const PostHashtagLink = ({
       ? `${rawSymbol.slice(0, MAX_SYMBOL_CHARS - 1)}…`
       : rawSymbol;
     const showBadge = showChange && hasChange && changePercent !== null;
-    const spokenChange = showBadge
-      ? `, ${isPositive ? 'up' : 'down'} ${Math.abs(changePercent ?? 0).toFixed(1)} percent`
-      : '';
+    let spokenChange = '';
+    if (showBadge) {
+      spokenChange = isFlat
+        ? ', unchanged over 24 hours'
+        : `, ${isPositive ? 'up' : 'down'} ${Math.abs(changePercent ?? 0).toFixed(1)} percent`;
+    }
     return (
       <EntityPill
         sigil="#"
@@ -145,7 +149,7 @@ const PostHashtagLink = ({
       onClick={(e) => e.stopPropagation()}
     >
       <span className="leading-none">{label}</span>
-      {showChange && changeText && (
+      {showChange && changeText && !isFlat && (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums leading-none',

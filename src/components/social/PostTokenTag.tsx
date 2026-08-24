@@ -69,7 +69,11 @@ export const TokenPill = ({
   const spoken = [normalized];
   if (loading) spoken.push('loading');
   if (showPrice) spoken.push('with price');
-  if (showChange) spoken.push(`${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
+  if (showChange) {
+    spoken.push(changePct === 0
+      ? 'unchanged over 24 hours'
+      : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
+  }
   if (showChart) spoken.push('24-hour chart');
   if (offline && staleHours !== undefined) spoken.push(`last known ${staleHours}h ago`);
   spoken.push('link');

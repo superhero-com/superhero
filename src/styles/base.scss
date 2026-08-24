@@ -771,6 +771,7 @@ textarea:disabled {
 }
 .sh-pill__chg--up { color: #34d399; background: rgba(16, 185, 129, 0.16); }
 .sh-pill__chg--down { color: #fb7185; background: rgba(244, 63, 94, 0.16); }
+.sh-pill__chg--flat { color: var(--light-font-color); background: rgba(148, 163, 184, 0.16); }
 .sh-pill__chg-arrow { font-size: 0.85em; line-height: 1; }
 
 .sh-pill__chart {
@@ -861,6 +862,7 @@ textarea:disabled {
   .sh-pill__mark { background: rgba(14, 116, 144, 0.14); color: #0e7490; }
   .sh-pill__chg--up { color: #047857; background: rgba(4, 120, 87, 0.12); }
   .sh-pill__chg--down { color: #be123c; background: rgba(190, 18, 60, 0.12); }
+  .sh-pill__chg--flat { color: var(--light-font-color); background: rgba(100, 116, 139, 0.12); }
   .sh-pill__skel {
     background: linear-gradient(
       90deg,

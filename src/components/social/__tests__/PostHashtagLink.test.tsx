@@ -15,6 +15,14 @@ const MENTION: TrendMention = {
   performance: { past_30d: { current_change_percent: 12.5 } },
 };
 
+const FLAT_MENTION: TrendMention = {
+  name: 'SUPERHERO',
+  symbol: 'SUPERHERO',
+  address: 'ct_super',
+  sale_address: 'ct_super',
+  performance: { past_30d: { current_change_percent: 0 } },
+};
+
 function renderTag(showChange?: boolean) {
   const client = new QueryClient();
   return render(
@@ -32,6 +40,17 @@ function renderTag(showChange?: boolean) {
   );
 }
 
+function renderVariant(variant: 'inline' | 'post-pill', mention: TrendMention) {
+  const client = new QueryClient();
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <PostHashtagLink tag="SUPERHERO" label="#SUPERHERO" variant={variant} trendMentions={[mention]} />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('PostHashtagLink — showChange', () => {
   it('shows the 24h change badge by default (today\'s rendering, unchanged)', () => {
     renderTag(undefined);
@@ -43,5 +62,24 @@ describe('PostHashtagLink — showChange', () => {
     renderTag(false);
     expect(screen.getByRole('link', { name: /#SUPERHERO/ })).toBeInTheDocument();
     expect(screen.queryByText('12.50%')).not.toBeInTheDocument();
+  });
+
+  it('post-pill: a flat token shows a neutral badge — no arrow, no collapse to rung 0', () => {
+    const { container } = renderVariant('post-pill', FLAT_MENTION);
+    const link = screen.getByRole('link');
+    expect(link.textContent).toContain('0.0%');
+    expect(container.querySelector('.sh-pill__chg--flat')).toBeTruthy();
+    expect(container.querySelector('.sh-pill__chg-arrow')).toBeNull();
+    const aria = link.getAttribute('aria-label') || '';
+    expect(aria).toContain('unchanged');
+    expect(aria).not.toMatch(/\b(up|down)\b/);
+  });
+
+  it('legacy inline variant is unchanged at flat — still no badge', () => {
+    renderVariant('inline', FLAT_MENTION);
+    const link = screen.getByRole('link');
+    expect(link.textContent).not.toContain('%');
+    expect(link.textContent).not.toContain('▲');
+    expect(link.textContent).not.toContain('▼');
   });
 });

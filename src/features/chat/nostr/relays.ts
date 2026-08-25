@@ -110,7 +110,6 @@ export function addRelay(relays: RelayDict, url: string, read = true, write = tr
   return { ...relays, [normalized]: { read, write } };
 }
 
-/** Remove a relay, returning a new dict. */
 export function removeRelay(relays: RelayDict, url: string): RelayDict {
   const normalized = normalizeRelayUrl(url);
   const next = { ...relays };

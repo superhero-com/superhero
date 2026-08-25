@@ -11,7 +11,6 @@ import type {
   NostrEvent, DirectMessage, Profile, MessageStatus,
 } from '../core/types';
 
-/** Convert npub to hex pubkey. */
 export function npubToHex(npub: string): string {
   const decoded = nip19.decode(npub);
   if (decoded.type !== 'npub') {
@@ -29,7 +28,6 @@ export function hexToNpub(pubkey: string): string {
   }
 }
 
-/** Convert nsec to hex private key. */
 export function nsecToHex(nsec: string): string {
   const decoded = nip19.decode(nsec);
   if (decoded.type !== 'nsec') {
@@ -103,7 +101,6 @@ export function eventToProfile(event: NostrEvent): Profile {
   }
 }
 
-/** Extract pubkey mentions from Nostr event tags. */
 export function extractPubkeyMentions(tags: string[][]): string[] {
   return tags
     .filter((tag) => tag[0] === 'p')
@@ -111,17 +108,14 @@ export function extractPubkeyMentions(tags: string[][]): string[] {
     .filter(Boolean);
 }
 
-/** Generate a unique message ID. */
 export function generateMessageId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
-/** Generate the conversation ID for a DM. */
 export function getDMConversationId(pubkey: string): string {
   return `dm_${pubkey}`;
 }
 
-/** Parse a conversation ID to determine its type. */
 export function parseConversationId(conversationId: string): { type: 'dm'; id: string } {
   if (conversationId.startsWith('dm_')) {
     return { type: 'dm', id: conversationId.slice(3) };

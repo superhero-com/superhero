@@ -89,7 +89,6 @@ export class NostrClient {
     this.eventHandlers = new Map();
   }
 
-  /** Register an event handler. */
   on<K extends keyof NostrClientEvents>(event: K, handler: NostrClientEvents[K]): void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
@@ -97,7 +96,6 @@ export class NostrClient {
     this.eventHandlers.get(event)!.add(handler as (...args: unknown[]) => void);
   }
 
-  /** Unregister an event handler. */
   off<K extends keyof NostrClientEvents>(event: K, handler: NostrClientEvents[K]): void {
     this.eventHandlers.get(event)?.delete(handler as (...args: unknown[]) => void);
   }
@@ -115,7 +113,6 @@ export class NostrClient {
     });
   }
 
-  /** Replace the relay set. */
   updateRelays(relays: RelayDict): void {
     this.relays = relays;
   }
@@ -166,7 +163,6 @@ export class NostrClient {
     return subId;
   }
 
-  /** Close a single subscription. */
   unsubscribe(subId: string): void {
     const sub = this.subscriptions.get(subId);
     if (sub) {

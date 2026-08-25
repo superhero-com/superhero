@@ -86,7 +86,6 @@ const HeaderWalletButton = () => {
             address={activeAccount}
             size={40}
             showAddressAndChainName
-            truncateAddress={false}
             contentClassName="px-3 pb-2"
           />
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import EntityPill from './EntityPill';
 
 export interface MentionPillProps {
@@ -6,12 +7,13 @@ export interface MentionPillProps {
   label?: string; // display text when it differs from name (e.g. a formatted ak_ address)
   loading?: boolean; // avatar still resolving — shimmer mark; live use resolves immediately
   unresolvable?: boolean; // → plain text, no pill, no link, same as an unknown token
+  mark?: ReactNode; // custom mark (e.g. an account identicon); defaults to the monogram
 }
 
 // A mention rendered as the same pill a token uses, differing only by a circular mark and the
 // '@' sigil; an unresolvable handle degrades to plain text.
 export const MentionPill = ({
-  name, href, label, loading = false, unresolvable = false,
+  name, href, label, loading = false, unresolvable = false, mark,
 }: MentionPillProps) => {
   const display = label ?? name;
   if (unresolvable) {
@@ -24,7 +26,7 @@ export const MentionPill = ({
       markShape="circle"
       href={href}
       ariaLabel={`${display}, mention — link`}
-      mark={loading ? <span className="sh-pill__skel" style={{ width: '100%', height: '100%' }} /> : name.slice(0, 1)}
+      mark={mark ?? (loading ? <span className="sh-pill__skel" style={{ width: '100%', height: '100%' }} /> : name.slice(0, 1))}
     />
   );
 };

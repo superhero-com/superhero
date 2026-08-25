@@ -9,7 +9,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
-import { InlineAccountMention } from '@/components/social/InlineAccountMention';
+import { AccountMentionPill } from '@/components/social/AccountMentionPill';
 import PostTokenTag from '@/components/social/PostTokenTag';
 import PostMentionTag from '@/components/social/PostMentionTag';
 import {
@@ -227,9 +227,9 @@ export function linkify(
   });
   if (hLast < raw.length) hashtagLinked.push(raw.slice(hLast));
 
-  // Pass 0.5: Explicit `[account:ak_...]` macros → inline account chip. Runs before the
-  // AENS/account/URL passes so the address inside the macro is not re-processed, and is the
-  // only account form that renders a chip; raw `ak_` addresses stay plain links (Pass 2a).
+  // Pass 0.5: Explicit `[account:ak_...]` macros → the shared account mention pill. Runs before
+  // the AENS/account/URL passes so the address inside the macro is not re-processed; the pill
+  // carries the identicon and resolved name, raw `ak_` addresses stay plain links (Pass 2a).
   const macroLinked: React.ReactNode[] = [];
   hashtagLinked.forEach((node, nodeIdx) => {
     if (typeof node !== 'string') {
@@ -241,7 +241,7 @@ export function linkify(
     segment.replace(ACCOUNT_MACRO_REGEX, (m: string, addr: string, offset: number) => {
       if (offset > last) macroLinked.push(segment.slice(last, offset));
       macroLinked.push(
-        <InlineAccountMention address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
+        <AccountMentionPill address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
       );
       last = offset + m.length;
       return m;

@@ -144,14 +144,18 @@ describe('linkify hashtag parsing', () => {
 
   const MACRO_ADDR = 'ak_2mMPQ2E9zN8Dd6Fm8jrThQvcYQ7cwR3hh6iC5xGZ2gZ4tHacBdEf';
 
-  it('renders an [account:ak_...] macro as an inline account chip', () => {
-    renderLinkify(`gm [account:${MACRO_ADDR}] there`);
+  it('renders an [account:ak_...] macro as an inline account chip with its identicon', () => {
+    const { container } = renderLinkify(`gm [account:${MACRO_ADDR}] there`);
 
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', `/users/${MACRO_ADDR}`);
     // The macro delimiters are consumed, and the chip label is '@'-prefixed.
     expect(screen.getByTestId('content').textContent).not.toContain('[account:');
     expect(link.textContent).toMatch(/^@ak_/);
+    // The account badge carries the identicon; with no chain name (mocked null) there is no
+    // separate trailing address — the shortened address is the label itself, not duplicated.
+    expect(container.querySelector('.sh-pill__avatar')).toBeInTheDocument();
+    expect(container.querySelector('.sh-pill__addr')).not.toBeInTheDocument();
   });
 
   it('leaves a bare ak_ address as a plain link, not a macro chip', () => {
@@ -171,6 +175,9 @@ describe('linkify hashtag parsing', () => {
     // Account macro (Pass 0.5), AENS name (Pass 1) and raw address (Pass 2a) each render as the
     // shared EntityPill — no bespoke second treatment beside it.
     expect(container.querySelectorAll('.sh-pill')).toHaveLength(3);
+    // Only the deliberate `[account:…]` badge carries an identicon; the bare AENS name and the
+    // raw address stay text-only pills.
+    expect(container.querySelectorAll('.sh-pill__avatar')).toHaveLength(1);
   });
 
   it('treats a lone "#" with no following token characters as plain text', () => {

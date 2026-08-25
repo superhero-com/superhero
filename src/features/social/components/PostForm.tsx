@@ -400,12 +400,18 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         return { trigger: 'token' as const, display: token, serialized: token };
       })();
     const { text: nextText, caret } = applyMention(text, activeMention, applied.display);
+    const dup = mentions.some((m) => m.display === applied.display
+      && m.serialized === applied.serialized);
+    const nextMentions = dup ? mentions : [...mentions, applied];
+    // The picker set text directly, skipping the clamp the typing/paste paths use — so a
+    // pick could push the serialised macro past the cap. A picked mention is atomic:
+    // route it through the same clamp and reject the pick if the whole run won't fit.
+    const clamped = characterLimit
+      ? clampMentionInput(text, nextText, nextMentions, characterLimit)
+      : nextText;
+    if (clamped !== nextText) return;
     setText(nextText);
-    setMentions((prev) => {
-      const dup = prev.some((m) => m.display === applied.display
-        && m.serialized === applied.serialized);
-      return dup ? prev : [...prev, applied];
-    });
+    setMentions(nextMentions);
     setMentionDismissed(true);
     requestAnimationFrame(() => {
       const el = textareaRef.current;

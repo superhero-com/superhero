@@ -460,35 +460,23 @@ textarea:disabled {
   
   /* Gen Z Ultra Modern Typography */
   h1 {
-    font-size: 2rem;
-    font-weight: 800;
     color: var(--standard-font-color);
     letter-spacing: -1px;
     line-height: 1.1;
   }
   h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
     color: var(--standard-font-color);
     letter-spacing: -0.5px;
   }
   h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
     color: var(--standard-font-color);
   }
   h4 {
-    font-size: 1.25rem;
-    font-weight: 600;
     color: var(--neon-blue);
   }
-  h5 { 
-    font-size: 1.125rem; 
-    font-weight: 500;
+  h5 {  
   }
   h6 {
-    font-size: 1rem;
-    font-weight: 500;
     color: var(--neon-yellow);
   }
 }
@@ -542,15 +530,6 @@ textarea:disabled {
   }
   50% {
     transform: translateY(-10px);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
   }
 }
 

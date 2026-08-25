@@ -9,6 +9,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
+import { InlineAccountMention } from '@/components/social/InlineAccountMention';
 import PostTokenTag from '@/components/social/PostTokenTag';
 import PostMentionTag from '@/components/social/PostMentionTag';
 import {
@@ -30,6 +31,9 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
+// Explicit deliberate account mention: `[account:ak_...]`. The `]` terminator bounds
+// the token; base58 is case-sensitive (no `i` flag); the macro cannot occur by accident.
+const ACCOUNT_MACRO_REGEX = /\[account:(ak_[1-9A-HJ-NP-Za-km-z]{48,56})\]/g;
 // A hashtag "word": '#' at the start of the text, or anywhere NOT immediately preceded by a
 // domain/path-forming character (word char, '.', or '/'), followed by the full run of
 // non-whitespace characters. The exclusion specifically protects URL fragments like
@@ -223,9 +227,31 @@ export function linkify(
   });
   if (hLast < raw.length) hashtagLinked.push(raw.slice(hLast));
 
+  // Pass 0.5: Explicit `[account:ak_...]` macros → inline account chip. Runs before the
+  // AENS/account/URL passes so the address inside the macro is not re-processed, and is the
+  // only account form that renders a chip; raw `ak_` addresses stay plain links (Pass 2a).
+  const macroLinked: React.ReactNode[] = [];
+  hashtagLinked.forEach((node, nodeIdx) => {
+    if (typeof node !== 'string') {
+      macroLinked.push(node);
+      return;
+    }
+    const segment = node as string;
+    let last = 0;
+    segment.replace(ACCOUNT_MACRO_REGEX, (m: string, addr: string, offset: number) => {
+      if (offset > last) macroLinked.push(segment.slice(last, offset));
+      macroLinked.push(
+        <InlineAccountMention address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
+      );
+      last = offset + m.length;
+      return m;
+    });
+    if (last < segment.length) macroLinked.push(segment.slice(last));
+  });
+
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];
-  hashtagLinked.forEach((node, nodeIdx) => {
+  macroLinked.forEach((node, nodeIdx) => {
     if (typeof node !== 'string') {
       aensLinked.push(node);
       return;
@@ -277,6 +303,8 @@ export function linkify(
     segment.replace(ACCOUNT_TAG_REGEX, (m: string, addr: string, off: number) => {
       if (off > segLast) accountLinked.push(segment.slice(segLast, off));
       const address = addr; // captured address without leading '@'
+      // A raw address (with or without '@') is a plain profile link — a deliberate
+      // mention is the `[account:...]` macro handled in Pass 0.5, not a bare address.
       const displayCore = formatAddress(address);
       const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
       accountLinked.push(

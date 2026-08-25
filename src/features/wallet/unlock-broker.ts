@@ -2,8 +2,7 @@
  * P4 integration — the bridge between the (React-free) inline signer and the
  * in-page unlock + WYSIWYS confirmation UI.
  *
- * `InlineWalletSigner` calls an `UnlockProvider` on EVERY signature (the wallet build plan
- * §3.2/§5.4). That provider must (a) show the user exactly what is about to be
+ * `InlineWalletSigner` calls an `UnlockProvider` on EVERY signature. That provider must (a) show the user exactly what is about to be
  * signed and (b) perform user-verification — a WebAuthn PRF ceremony or the
  * passphrase prompt — before it returns a KEK. Both are React concerns, but the
  * signer is installed into the SDK as a plain object with no access to the React

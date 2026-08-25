@@ -1,5 +1,5 @@
 /**
- * P2 slice 4 — the VaultRecord (the wallet build plan §4.2): one per wallet, the encrypted
+ * The VaultRecord: one per wallet, the encrypted
  * envelope at rest. Ties the DEK-sealed mnemonic to an OR-set of WrappedFactors
  * (any one unlocks it). Pure logic over a plain object — persistence is a
  * separate adapter (vault-store) so this is fully unit-testable.
@@ -104,7 +104,7 @@ export function removeFactor(record: VaultRecord, factorId: string): VaultRecord
   return { ...record, factors };
 }
 
-/** Record that the user verified their written mnemonic backup (the wallet build plan §4.6). */
+/** Record that the user verified their written mnemonic backup. */
 export function markMnemonicBackedUp(record: VaultRecord, now: number): VaultRecord {
   return { ...record, mnemonicBackedUpAt: now };
 }

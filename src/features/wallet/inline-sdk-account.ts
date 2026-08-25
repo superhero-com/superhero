@@ -16,8 +16,8 @@
  *    always reflected and no decrypted state is ever held between calls.
  *
  * It changes NOTHING about the custody guarantees: user-verification + unseal
- * happen inside `InlineWalletSigner` on every signature (no cached seed —
- * the custody decision / the threat model R-02). The `unlock` provider passed in is where the
+ * happen inside `InlineWalletSigner` on every signature (no cached seed). The
+ * `unlock` provider passed in is where the
  * per-signature UV + WYSIWYS confirm UI lives; this adapter stays UI-agnostic
  * and unit-testable.
  *
@@ -26,8 +26,8 @@
  * account in the cleartext manifest — so in a plain browser tab this is never
  * reached. The per-signature UV + WYSIWYS confirm it depends on lives in
  * `components/WalletSignPrompt.tsx`, reached through `unlock-broker.ts`.
- * Exposing this to real users remains a separate gated decision at merge time
- * (the wallet build plan §8 P5: device matrix + SR G4 review + CSP enforced).
+ * Exposing this to real users remains a separate gated decision: device matrix,
+ * independent review, CSP enforced.
  */
 import { type Encoded } from '@aeternity/aepp-sdk';
 import type { UnlockProvider } from './inline-signer';

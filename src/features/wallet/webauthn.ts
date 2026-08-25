@@ -1,5 +1,5 @@
 /**
- * P2 slice 3 — the WebAuthn PRF factor ceremony (the wallet build plan §4.3, §6 corrections).
+ * The WebAuthn PRF factor ceremony.
  *
  * A platform passkey's PRF extension yields a stable, high-entropy 32-byte secret
  * for (credential, salt); `kekFromHighEntropy` (factors.ts) turns it into a KEK
@@ -10,7 +10,7 @@
  * Under the same-origin decision (the custody decision) that is the app origin itself.
  *
  * The live `navigator.credentials.create/get` ceremonies cannot run headlessly
- * (no authenticator) and are DEVICE-TEST-GATED (the wallet build plan §7.6 / P5): verify PRF
+ * (no authenticator) and are DEVICE-TEST-GATED: verify PRF
  * availability + stability across a user's synced devices, and after a passcode
  * change, on real hardware. The funds-critical *logic* — the "prf.enabled AND
  * non-empty results is the ONLY proof" gate (§6 correction #10) and capability

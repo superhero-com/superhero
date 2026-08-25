@@ -1,16 +1,16 @@
 /**
- * P2 slice 2 — the factor → KEK layer (the wallet build plan §4.1/§4.3).
+ * The factor → KEK layer.
  *
  * Each enrolled unlock factor derives a Key-Encryption-Key (KEK) that WRAPS the
  * DEK (from `vault.ts`). Multiple factors form an OR-set: any one can unwrap the
- * same DEK, so the wallet's confidentiality equals the WEAKEST enrolled factor
- * (the wallet build plan §4.4). Hence the hard rule enforced by construction here:
+ * same DEK, so the wallet's confidentiality equals the WEAKEST enrolled factor.
+ * Hence the hard rule enforced by construction here:
  *
  *   - `passphrase` → Argon2id (memory-hard) — the only factor that may take a
  *     LOW-entropy user secret, because Argon2id is the work-factor that makes an
  *     offline attack on an exfiltrated wrapped blob expensive. Even so, callers
  *     must require a HIGH-entropy passphrase (never a short PIN — a short PIN
- *     through any KDF is brute-forced offline; see §4.4 / the §6 corrections).
+ *     through any KDF is brute-forced offline).
  *   - `recovery-code` / `webauthn-prf` → HKDF-SHA256 — valid ONLY because their
  *     inputs are already high-entropy (a 128-bit recovery code; a 32-byte
  *     WebAuthn PRF output). Never feed a low-entropy secret to HKDF here.
@@ -66,7 +66,7 @@ export interface WrappedFactor {
 }
 
 /**
- * Argon2id defaults — the wallet build plan §4.3, for the seed-phrase asset class (an
+ * Argon2id defaults for the seed-phrase asset class (an
  * offline, unlimited-time target once a device/backup is exfiltrated). `m` is a
  * FLOOR: never drop below 64 MiB — memory-hardness is what defeats GPU/ASIC
  * attackers; `t` is the tunable dial if unlock latency ever forces a cut.

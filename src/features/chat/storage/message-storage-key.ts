@@ -18,8 +18,7 @@
  * AES-GCM ciphertext with no key anywhere on disk. This is the "justified
  * alternative" to sealing a fresh key inside the VaultRecord that
  * permits: it needs no vault-envelope change or re-enrollment, and binds
- * readability to the same one verification that unlocks the identity. Flagged
- * for the Security Reviewer.
+ * readability to the same one verification that unlocks the identity.
  */
 import { hexToBytes } from '@noble/hashes/utils.js';
 

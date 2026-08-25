@@ -1,5 +1,5 @@
 /**
- * P2 slice 5 — vault persistence (the wallet build plan §3.1, §7).
+ * Vault persistence.
  *
  * The single VaultRecord lives in the wallet origin's OWN IndexedDB (same-origin
  * custody, the custody decision). This module is a thin adapter behind a `VaultStore`

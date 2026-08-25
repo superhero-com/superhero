@@ -9,7 +9,7 @@
  * `deriveMessageStorageKey` — with the session locked there is no key on disk,
  * so a passive read of IndexedDB yields ciphertext only.
  *
- * KNOWN RESIDUAL (for the Security Reviewer): value CONTENT is sealed, but the
+ * KNOWN RESIDUAL: value CONTENT is sealed, but the
  * KEY NAMES are not — `CHAT_MESSAGES_dm_<pubkey>` still reveals which nostr
  * pubkeys you have talked to (conversation-partner metadata), matching the
  * app's key layout. Content confidentiality is delivered; partner-metadata

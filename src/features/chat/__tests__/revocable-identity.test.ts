@@ -10,7 +10,7 @@ import {
 import { generateKeys } from '../nostr/crypto';
 
 /**
- * precondition 1 (the Security Reviewer's named test): a provider — or a
+ * A provider — or a
  * service holding one — obtained BEFORE `NostrKeySession.lock()` must reject
  * AFTER lock, so an explicit lock / idle timeout / teardown actually revokes
  * signing and decryption at the transport layer, not only in the session object.
@@ -92,7 +92,7 @@ describe('revocable nostr identity', () => {
 
     // Inbound decryption is driven by relay delivery, not local user action — it
     // must NOT count as activity, else a remote sender could keep the key resident
-    // by trickling in DMs (SR change request, ZIX-1414).
+    // by trickling in DMs.
     await identity.nip04Decrypt(otherPubkey, ciphertext);
     expect(onActivity).toHaveBeenCalledTimes(2);
   });

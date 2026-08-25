@@ -1,6 +1,6 @@
 /**
- * Entry point from a token page into its token-gated Communities room (the Nostr
- * stack ported in ZIX-562). This sits *beside* the read-only Matrix/quali.chat
+ * Entry point from a token page into its token-gated Communities room (the
+ * ported Nostr stack). This sits *beside* the read-only Matrix/quali.chat
  * feed (`Trendminer/TokenChat.tsx`) — a deliberate CTO decision to add, not
  * replace: the two are independent chat surfaces on the same token.
  *

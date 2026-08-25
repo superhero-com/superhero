@@ -12,7 +12,7 @@
  *  1. **A fixed, public PRF salt.** WebAuthn's PRF is a pseudorandom function of
  *     (credential, salt). A *random* per-enrollment salt — what
  *     `addPasskeyFactor` correctly uses for its KEK — would have to be stored
- *     alongside the vault, and IndexedDB is evictable (the threat model R-04): lose the
+ *     alongside the vault, and IndexedDB is evictable: lose the
  *     record, lose the salt, lose the ability to re-derive the seed even though
  *     the passkey still exists. A constant salt is not a weakness (a PRF salt is
  *     a domain separator, not a secret) and it is what makes the passkey ALONE

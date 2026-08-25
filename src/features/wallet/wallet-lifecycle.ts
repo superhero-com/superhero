@@ -1,5 +1,5 @@
 /**
- * P4/P3 integration slice 1 — the wallet lifecycle (the wallet build plan §3.4/§4/§5).
+ * The wallet lifecycle.
  *
  * The orchestration bridge between the (tested) crypto core and the UI + the
  * AeSdkProvider signer. Screens call these; they never touch WebCrypto directly.
@@ -53,7 +53,7 @@ async function passphraseEnrollment(passphrase: string, label: string, now: numb
  * CALLER CONTRACT: the DEK is transient. Use it for the enrollments that
  * immediately follow and then drop the reference. It must never be persisted,
  * cached across signatures, or held for the session — a session-cached DEK
- * collapses the UV-per-signature custody model (the custody decision / the threat model R-02).
+ * collapses the UV-per-signature custody model.
  */
 export async function importWalletWithDek(
   store: VaultStore,
@@ -163,7 +163,7 @@ export async function addPasskeyFactor(
  *
  * Why the mnemonic is not shown: it does not need to be written down, because it
  * is recoverable from the passkey alone (a fixed salt, no stored per-enrollment
- * randomness — the threat model R-04's eviction case). It stays exportable from settings, and it
+ * randomness). It stays exportable from settings, and it
  * is a normal BIP39 phrase on the standard derivation path, so the account can
  * be imported into the extension or native wallet like any other.
  *
@@ -273,7 +273,7 @@ export async function commitRecoveredWallet(
 
 /**
  * Record that the user completed a VERIFIED written-mnemonic backup and persist
- * it (the wallet build plan §4.6, the threat model R-04). IndexedDB is evictable — this flag is
+ * it. IndexedDB is evictable — this flag is
  * the only durable evidence the seed exists outside the device, so it is written
  * from the flow that actually made the user re-enter words, never optimistically.
  */

@@ -2,7 +2,7 @@
 //
 // Passphrase + recovery paths are node-testable end-to-end. The passkey factor
 // (addPasskeyFactor/passkeyUnlockProvider) runs the WebAuthn ceremony and is
-// device-gated (the wallet build plan §7.6) — not exercised here.
+// device-gated — not exercised here.
 import {
   describe, expect, it,
 } from 'vitest';

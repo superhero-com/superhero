@@ -1,5 +1,5 @@
 /**
- * Revocable `NostrIdentityProvider` (precondition 1).
+ * Revocable `NostrIdentityProvider`.
  *
  * Stage 1's `createDerivedNostrIdentity` captures the key in a closure at
  * construction time, so a provider handed to a long-lived transport keeps
@@ -36,7 +36,7 @@ export interface RevocableNostrIdentityOptions {
   /**
    * Fired after each successful LOCALLY-INITIATED message operation — `signEvent`
    * (posting / sending) and `nip04Encrypt` (composing an outgoing DM) — the "chat
-   * activity" signal ADR-0004 condition 3 watches. Every DM and room transport
+   * activity" signal the idle timeout watches. Every DM and room transport
    * signs and encrypts through this one provider, so a single hook here re-arms
    * the session idle timer on real chat use across DMs and communities alike.
    *
@@ -44,7 +44,7 @@ export interface RevocableNostrIdentityOptions {
    * `nip04Decrypt` deliberately do NOT count: inbound decryption is driven by
    * relay delivery, not local user action, so counting it would let a remote
    * sender keep the key resident indefinitely by trickling in DMs — turning the
-   * idle window into a remote-input-controlled one (SR change request, ZIX-1414).
+   * idle window into a remote-input-controlled one.
    */
   onActivity?: () => void;
 }

@@ -1,5 +1,5 @@
 /**
- * P4 core — the inline signer (the wallet build plan §3.2/§5.4, the threat model R-02).
+ * The inline signer.
  *
  * `InlineWalletSigner` is AccountBase-shaped and signs IN-PAGE by, on EVERY call:
  *   1. running the caller-supplied `UnlockProvider` — this performs USER
@@ -33,7 +33,7 @@ import { unlockVault, type VaultRecord } from './vault-record';
 /**
  * What the signer is about to sign, handed to the UnlockProvider so the confirm
  * UI can show the exact payload (WYSIWYS) and bind the user-verification to THIS
- * signature — not merely to "a signature". (the threat model R-02 / the custody decision.)
+ * signature — not merely to "a signature".
  */
 export interface SigningContext {
   kind: 'transaction' | 'message';

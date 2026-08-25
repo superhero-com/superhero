@@ -13,7 +13,7 @@ import type { NostrClient } from '../nostr/nostr-client';
 import type { NostrEvent } from '../core/types';
 
 /**
- * Finding #1 (the Security Reviewer's named test), enforced at the TRANSPORT
+ * Revocation is enforced at the TRANSPORT
  * layer: a DM service obtained BEFORE `NostrKeySession.lock()` must stop sending
  * and decoding AFTER lock. The service holds a revocable identity, not a raw key,
  * so every path (`sendMessage`, `processIncomingDM`) first awaits the identity

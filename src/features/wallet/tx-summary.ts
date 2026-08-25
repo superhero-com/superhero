@@ -1,6 +1,5 @@
 /**
- * P4 — WYSIWYS decoding for the in-page signing confirmation (the wallet build plan §3.2
- * step 3, §5.4; the threat model NFR-S "what you see is what you sign").
+ * WYSIWYS decoding for the in-page signing confirmation.
  *
  * The signer hands the confirmation UI the exact `tx_…` string it is about to
  * sign. Showing that opaque base64 to a user is not consent, so this module

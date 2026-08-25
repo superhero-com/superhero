@@ -5,7 +5,7 @@
  *
  * The relay URL is run through {@link ensureSecureRelayUrl} here so a non-TLS
  * `relay_url` rejects with a clear error instead of failing opaquely at the
- * socket in an https PWA (precondition 2). It is then checked against the
+ * socket in an https PWA. It is then checked against the
  * deploy-time relay allowlist ({@link isAllowedRelayOrigin}): an API-supplied
  * origin the CSP does not permit is refused here, with a reason, rather than
  * passing validation and being silently killed by `connect-src` at connect time.

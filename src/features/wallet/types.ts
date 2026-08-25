@@ -5,10 +5,9 @@
  * (on-chain public addresses, user-chosen labels, an index, a pointer to the
  * active address). This file must NEVER grow a seed/mnemonic/secret-key/
  * passphrase/recovery-code field — that is the encrypted `VaultRecord`
- * envelope from the wallet build plan §4.2, which is
- * P2+ scope and explicitly not modeled here yet (see the placeholder comment
+ * envelope, which is not modeled here (see the placeholder comment
  * below). If you find yourself adding a field that could hold secret
- * material to this file, stop — that is out of P1 scope.
+ * material to this file, stop.
  */
 
 /** One derived account, keyed by its (public) address. */
@@ -28,7 +27,7 @@ export interface WalletManifest {
   activeAddress: string | null;
 }
 
-// P2: the encrypted seed envelope (`VaultRecord` — see the wallet build plan §4.2:
-// AES-256-GCM-sealed mnemonic, per-factor wrapped DEK) is a SEPARATE,
-// encrypted-at-rest structure. It is gated behind P2 and intentionally not
+// The encrypted seed envelope (`VaultRecord`: AES-256-GCM-sealed mnemonic,
+// per-factor wrapped DEK) is a SEPARATE, encrypted-at-rest structure,
+// intentionally not
 // modeled in this file yet — do not add it ahead of that gate.

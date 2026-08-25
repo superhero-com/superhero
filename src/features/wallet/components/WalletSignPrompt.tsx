@@ -24,10 +24,9 @@ import type { UnlockProvider } from '../inline-signer';
  * (a) seen a decoded description of the exact payload and (b) passed
  * user-verification — the device passkey ceremony, or re-entering the
  * passphrase. That happens on EVERY signature; there is no "unlock once, sign
- * many" path here, and adding one would collapse the custody model
- * (the custody decision / the threat model R-02).
+ * many" path here, and adding one would collapse the custody model.
  *
- * Honest limit, stated where the code lives (the wallet build plan §3.3): under same-origin
+ * Honest limit, stated where the code lives: under same-origin
  * custody this dialog is only as trustworthy as the origin is free of injected
  * script. Script running on `superhero.com` controls the whole DOM and could
  * forge this surface. That is the accepted residual of the same-origin decision,

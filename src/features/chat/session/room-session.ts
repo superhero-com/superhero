@@ -40,7 +40,7 @@ export const roomKeySession = new NostrKeySession({ onLock: () => notifyChange()
  * no key — it re-reads {@link roomKeySession} on each call and rejects once
  * locked. Each locally-initiated sign/encrypt re-arms the idle timer via
  * `touch()`, so an actively-used session does not hard-lock 30 minutes after
- * unlock (ADR-0004 condition 3 clears on 30 min of *no chat activity*). Inbound
+ * unlock. Inbound
  * decryption is excluded — it is relay-driven, not local activity.
  */
 export const roomRevocableIdentity = createRevocableNostrIdentity(

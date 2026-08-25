@@ -95,6 +95,9 @@ const ReplyToFeedItem = memo(({
   const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
   const hasDisplayName = Boolean(displayName);
   const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
+  // Full ak_ address on wide cards; ak_ + first 6 + … + last 6 once the card is
+  // compact. Driven by the card's own width breakpoint, never the user agent.
+  const headerAddress = isCompact ? formatAddress(authorAddress, 6, true) : authorAddress;
 
   // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
   // token name may contain. New collections the backend adds are picked up automatically.
@@ -273,16 +276,16 @@ const ReplyToFeedItem = memo(({
 
         <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
           {/* Header: one shape for named and unnamed. Primary line is the resolved
-              name, else a shortened address — never the full ak_ string as a title.
-              The mono address line is dropped for unnamed accounts, where it would
-              only repeat the address already shown above. */}
+              name, else the address — full on wide cards, middle-truncated on
+              compact ones. The mono address line is dropped for unnamed accounts,
+              where it would only repeat the address already shown above. */}
           <div className="min-w-0">
             <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
               <div
                 className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}
                 title={authorAddress}
               >
-                {hasDisplayName ? displayName : formatAddress(authorAddress, 6, true)}
+                {hasDisplayName ? displayName : headerAddress}
               </div>
               {!hasDisplayName && (
                 <InlineCopyButton value={authorAddress} className="shrink-0" />
@@ -292,7 +295,7 @@ const ReplyToFeedItem = memo(({
             </div>
             {hasDisplayName && (
               <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
-                <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
+                <span className="truncate">{headerAddress}</span>
                 <InlineCopyButton value={authorAddress} className="shrink-0" />
               </div>
             )}

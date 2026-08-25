@@ -7,11 +7,14 @@ interface InlineAccountMentionProps {
   address: string;
 }
 
-// Avatar chip for an `@ak_...` mention: shows the account's `.chain` name when
-// known, else the shortened address (identicon renders either way).
+// Avatar chip for an `@ak_...` mention. With a resolved `.chain` name it mirrors
+// the header user-search row — avatar + chain name + muted address — so the badge
+// reads the same in the composer picker and once rendered in a post. Without a
+// name it falls back to avatar + shortened address, unchanged (identicon renders
+// either way).
 export const InlineAccountMention = ({ address }: InlineAccountMentionProps) => {
   const { chainName } = useChainName(address);
-  const label = chainName ? `@${chainName}` : `@${formatAddress(address, 3, true)}`;
+  const name = chainName?.trim();
 
   return (
     <Link
@@ -21,7 +24,12 @@ export const InlineAccountMention = ({ address }: InlineAccountMentionProps) => 
       title={address}
     >
       <AddressAvatar address={address} size={16} />
-      <span className="leading-none">{label}</span>
+      <span className="leading-none">{name ? `@${name}` : `@${formatAddress(address, 3, true)}`}</span>
+      {name && (
+        <span className="leading-none text-[11px] font-mono text-white/50">
+          {formatAddress(address, 4, true)}
+        </span>
+      )}
     </Link>
   );
 };

@@ -1,6 +1,7 @@
 import React, {
-  useEffect, useMemo, useRef, useState,
+  useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
@@ -20,6 +21,9 @@ import {
 } from '../utils/tokenTagOptions';
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+// Where the portalled dialog paints: anchored under the chip on desktop, or a bottom sheet.
+type Placement = { desktop: boolean; top: number; left: number };
 
 // The four rungs, strictly monotonic. Rung 0 is the badge-less "just the symbol" form —
 // `{change=0}` on the wire — a first-class choice, not an override buried behind a toggle.
@@ -64,6 +68,13 @@ interface RungLadderDialogProps {
   // Expand the composer string to its on-the-wire form so cost and the cap are measured on the
   // macro that posts, not the shorter display run. Identity by default (display === wire).
   serialize: (s: string) => string;
+  // The chip the dialog anchors under. The dialog is portalled to <body> to escape the composer
+  // card's `backdrop-blur` stacking context (a raised z-index inside it cannot beat the feed
+  // painted after it), so it positions against this element's viewport rect instead of the DOM.
+  anchorEl: HTMLElement | null;
+  // Set on the portalled dialog root so the bar's outside-click handler, which now lives in a
+  // different part of the tree, can tell a click inside the dialog from one truly outside.
+  dialogRef: React.RefObject<HTMLDivElement>;
   ts: Translate;
 }
 
@@ -80,12 +91,41 @@ const RungLadderDialog = ({
   characterLimit,
   allowedChars,
   serialize,
+  anchorEl,
+  dialogRef,
   ts,
 }: RungLadderDialogProps) => {
   const { symbol } = active;
   const currentRung = rungOf(active.options);
   const [showCustom, setShowCustom] = useState(currentRung === 'custom');
   const rungRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // Placement, recomputed from the chip's viewport rect. Desktop: anchored just under the chip,
+  // clamped to stay on-screen. Narrow: a viewport-fixed bottom sheet, which the portal now makes
+  // genuinely fixed rather than a containing-block accident of the `md:`-only card blur.
+  const [placement, setPlacement] = useState<Placement | null>(null);
+  const place = useCallback(() => {
+    const desktop = typeof window !== 'undefined'
+      && window.matchMedia('(min-width: 768px)').matches;
+    if (!desktop) { setPlacement({ desktop: false, top: 0, left: 0 }); return; }
+    if (!anchorEl) return;
+    const r = anchorEl.getBoundingClientRect();
+    const DIALOG_W = 380;
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - DIALOG_W - 8));
+    setPlacement({ desktop: true, top: r.bottom + 8, left });
+  }, [anchorEl]);
+
+  useLayoutEffect(place, [place]);
+  useEffect(() => {
+    place();
+    // Capture phase so a scroll in any ancestor, not just the window, repositions the dialog.
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [place]);
 
   // Off-ladder mixes disclose the switches automatically; no rung is lit because none is true.
   useEffect(() => {
@@ -160,11 +200,23 @@ const RungLadderDialog = ({
 
   const overLimit = currentSerialized > characterLimit;
 
-  return (
+  if (!placement) return null;
+
+  const style: React.CSSProperties = placement.desktop
+    ? {
+      position: 'fixed', top: placement.top, left: placement.left, width: 380, maxWidth: 'calc(100vw - 16px)', zIndex: 2000,
+    }
+    : {
+      position: 'fixed', left: 8, right: 8, bottom: 8, zIndex: 2000, maxHeight: 'calc(100dvh - 16px)', overflowY: 'auto',
+    };
+
+  const dialog = (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-label={ts('optionsFor', { symbol })}
-      className="token-tag-dialog fixed inset-x-2 bottom-2 z-50 rounded-2xl border border-white/12 bg-gray-900 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.55)] md:absolute md:inset-auto md:top-[calc(100%+8px)] md:left-0 md:w-[380px]"
+      style={style}
+      className="token-tag-dialog rounded-2xl border border-white/12 bg-gray-900 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.55)]"
     >
       {/* Identity header — the token being edited, named once. */}
       <div className="flex items-start gap-2">
@@ -310,6 +362,8 @@ const RungLadderDialog = ({
       </div>
     </div>
   );
+
+  return createPortal(dialog, document.body);
 };
 
 interface TokenTagOptionsBarProps {
@@ -343,6 +397,7 @@ const TokenTagOptionsBar = ({
   const ts: Translate = (key, options) => t(`social.tokenTag.${key}`, options);
   const [open, setOpen] = useState<OpenState>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const openChipRef = useRef<HTMLButtonElement | null>(null);
   const priorSelectionRef = useRef<{ start: number; end: number; hadFocus: boolean } | null>(null);
 
@@ -367,7 +422,12 @@ const TokenTagOptionsBar = ({
   useEffect(() => {
     if (!open) return undefined;
     function onDocClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(null);
+      const target = e.target as Node;
+      // The dialog is portalled to <body>, outside containerRef — so a click inside it must be
+      // recognised here too, or every click on the dialog would read as "outside" and close it.
+      if (containerRef.current?.contains(target)) return;
+      if (dialogRef.current?.contains(target)) return;
+      setOpen(null);
     }
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
@@ -472,6 +532,8 @@ const TokenTagOptionsBar = ({
                 characterLimit={characterLimit}
                 allowedChars={hashtagAllowedChars}
                 serialize={serialize}
+                anchorEl={openChipRef.current}
+                dialogRef={dialogRef}
                 ts={ts}
               />
             )}

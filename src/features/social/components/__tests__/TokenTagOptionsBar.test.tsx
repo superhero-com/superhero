@@ -117,6 +117,28 @@ describe('TokenTagOptionsBar — rung ladder', () => {
   });
 });
 
+describe('TokenTagOptionsBar — dialog escapes the composer card', () => {
+  it('portals the dialog to <body> and keeps it open on an inside click, closes on an outside one', () => {
+    const { container } = renderBar('#SUPERHERO');
+    fireEvent.click(chips()[0]);
+
+    const dialog = screen.getByRole('dialog');
+    // Portalled out of the bar so it escapes the composer card's backdrop-blur stacking context:
+    // it lives under <body>, not inside the bar's own container.
+    expect(container.contains(dialog)).toBe(false);
+    expect(document.body.contains(dialog)).toBe(true);
+
+    // Outside-click close still works across the portal boundary: a mousedown inside the dialog
+    // must not close it (it is no longer a DOM descendant of the bar).
+    fireEvent.mouseDown(within(dialog).getByRole('radiogroup'));
+    expect(screen.queryByRole('dialog')).toBeInTheDocument();
+
+    // A mousedown truly outside both the bar and the dialog closes it.
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
 describe('TokenTagOptionsBar — serialized cap gate', () => {
   // Expand the string the way `serializeMentions` does, so a rung is measured against the wire
   // length (the +40 stands in for a tagged account's `[account:…]` macro elsewhere in the body).

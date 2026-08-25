@@ -63,9 +63,7 @@ const MASKABLE_SAFE_ZONE_RATIO = 0.8;
 const TOTAL_BUDGET_BYTES = 150 * 1024;
 const PER_ICON_BUDGET_BYTES = 60 * 1024;
 
-// ---------------------------------------------------------------------------
 // CLI args
-// ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
   const args = { source: process.env.PWA_ICON_SOURCE || DEFAULT_SOURCE };
@@ -78,9 +76,7 @@ function parseArgs(argv) {
   return args;
 }
 
-// ---------------------------------------------------------------------------
 // sips wrapper (resampling only -- macOS built-in, no new dependency)
-// ---------------------------------------------------------------------------
 
 function requireSips() {
   if (process.platform !== 'darwin') {
@@ -116,10 +112,8 @@ function sipsDimensions(imgPath) {
   return { width, height };
 }
 
-// ---------------------------------------------------------------------------
 // Minimal pure-Node PNG decode/encode (8-bit, non-interlaced, color type 2
 // RGB or 6 RGBA). Only Node core `zlib` -- no new npm dependency.
-// ---------------------------------------------------------------------------
 
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -316,9 +310,7 @@ function compositeCentered(src, canvasW, canvasH, bg) {
   return { width: canvasW, height: canvasH, pixels: out };
 }
 
-// ---------------------------------------------------------------------------
 // Main
-// ---------------------------------------------------------------------------
 
 function main() {
   const { source } = parseArgs(process.argv.slice(2));

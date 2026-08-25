@@ -402,6 +402,8 @@ const ReplyToFeedItem = memo(({
                       Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
                     ),
                     hashtagVariant: 'post-inline',
+                    // Clamped preview inside a <button>: inline pill only, never the block row.
+                    tokenTagInline: true,
                     trendMentions: (parent as any)?.trend_mentions,
                     hashtagAllowedChars,
                   })}

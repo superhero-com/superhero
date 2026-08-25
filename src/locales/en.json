@@ -1798,7 +1798,7 @@
       "rung0": "Symbol only",
       "rung1": "Symbol + 24h change",
       "rung2": "+ price",
-      "rung3": "+ price + chart",
+      "rung3": "Full row + market cap + chart",
       "marketCap": "Market cap",
       "priceLabel": "Price",
       "default": "default",

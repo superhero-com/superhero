@@ -69,6 +69,13 @@ export function linkify(
   options?: {
     knownChainNames?: Set<string>;
     hashtagVariant?: 'post-inline';
+    /**
+     * Suppress the advanced token-tag row, forcing the inline pill instead. Set in constrained
+     * contexts where a block row cannot render — a line-clamped parent/quoted preview inside a
+     * `<button>`, where a `display:block` `<a>` carrying the chart's `<div>` would be invalid
+     * nesting and visibly broken. Price/change still show; only the row layout is dropped.
+     */
+    tokenTagInline?: boolean;
     trendMentions?: TrendMention[];
     /**
      * Regex character-class body (e.g. from `mergedCollectionNameCharsPattern`) covering the
@@ -181,7 +188,11 @@ export function linkify(
           ? fullRun.slice(symEnd).match(TOKEN_TAG_ENVELOPE_REGEX)
           : null;
         if (envMatch) {
-          const tagOptions = parseTokenTagEnvelope(envMatch[1]);
+          const parsed = parseTokenTagEnvelope(envMatch[1]);
+          // In a clamped preview the full row cannot render, so drop the row switch: the inline
+          // pill still carries price/change, and a chart-only envelope falls through to the plain
+          // tag below rather than a broken block inside a <button>.
+          const tagOptions = options?.tokenTagInline ? { ...parsed, chart: false } : parsed;
           nodes.push(
             isTokenTagEnhanced(tagOptions) ? (
               <PostTokenTag

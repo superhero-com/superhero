@@ -396,6 +396,22 @@ describe('linkify token-tag envelope reader', () => {
     expect(widget).toHaveAttribute('data-change', 'true');
   });
 
+  it('tokenTagInline forces the inline pill — advanced renders with the chart off', () => {
+    renderLinkify('#SUPERHERO{mode=advanced}', { tokenTagInline: true } as any);
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+  });
+
+  it('tokenTagInline drops a chart-only envelope to the plain tag, never a widget', () => {
+    renderLinkify('#SUPERHERO{mode=advanced;price=0}', { tokenTagInline: true } as any);
+
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
   // The forward-compatibility proof: an envelope written by a future client renders as a
   // clean plain tag in today's client, never as broken text.
   it('renders an unknown future envelope as a clean plain tag', () => {

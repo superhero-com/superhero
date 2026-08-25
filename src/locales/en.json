@@ -1799,6 +1799,8 @@
       "rung1": "Symbol + 24h change",
       "rung2": "+ price",
       "rung3": "+ price + chart",
+      "marketCap": "Market cap",
+      "priceLabel": "Price",
       "default": "default",
       "custom": "Custom",
       "customize": "Customize parts",

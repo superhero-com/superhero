@@ -284,7 +284,13 @@ const RungLadderDialog = ({
                 }`}
               />
               <span aria-hidden className="sh-pill-preview pointer-events-none flex-1 min-w-0 overflow-hidden text-[13px] leading-snug">
-                <TokenPill symbol={symbol} options={options} token={token} status={previewStatus} />
+                <TokenPill
+                  symbol={symbol}
+                  options={options}
+                  token={token}
+                  status={previewStatus}
+                  preview
+                />
               </span>
               <span aria-hidden className="flex flex-col items-end text-right flex-shrink-0">
                 <span className={`text-[11px] tabular-nums ${exceeds ? 'text-rose-400 font-semibold' : 'text-white/80'}`}>{`${cost.total} ${ts('chars')}`}</span>

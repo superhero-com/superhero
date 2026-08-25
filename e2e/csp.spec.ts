@@ -175,6 +175,29 @@ test.describe('enforcing CSP + Trusted Types', () => {
     expect(outcome).toBe('registered');
   });
 
+  // React builds every <script> element it renders by parsing a literal into a scratch <div>
+  // and lifting out the first child, so the element factory itself hits the `default` policy.
+  // A drop there leaves the div empty and React's `removeChild(div.firstChild)` throws
+  // `parameter 1 is not of type 'Node'`, unmounting the app on every route with JSON-LD
+  // (src/seo/Head.tsx). The route walk cannot pin this: it needs live data on a detail page.
+  test('lets React build a <script> element under the default policy', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'load' });
+    await page.locator('#root').waitFor({ state: 'visible' });
+
+    // A BARE string, exactly as react-dom writes it — that is what routes through `default`.
+    const outcome = await page.evaluate(() => {
+      const scratch = document.createElement('div');
+      try {
+        scratch.innerHTML = '<script></script>';
+      } catch (err) {
+        return `THREW: ${(err as Error).message}`;
+      }
+      return scratch.firstChild ? 'built' : 'DROPPED';
+    });
+
+    expect(outcome).toBe('built');
+  });
+
   // The other half of the same guard: a cross-origin script URL must still be refused, so the
   // createScriptURL added above is a real boundary and not a pass-through.
   test('refuses a cross-origin script URL', async ({ page }) => {

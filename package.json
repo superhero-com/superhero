@@ -34,7 +34,6 @@
     "@ethersproject/bignumber": "^5.8.0",
     "@multiavatar/multiavatar": "^1.0.7",
     "@noble/hashes": "^2.3.0",
-    "@noble/secp256k1": "^1.7.2",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

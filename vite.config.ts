@@ -56,9 +56,6 @@ export default defineConfig(({ mode }) => {
   env.NODE_ENV = process.env.NODE_ENV as string;
   return {
     plugins: [react(), svgr(), jsonPlugin()],
-    ssr: {
-      noExternal: ['react-helmet-async'],
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

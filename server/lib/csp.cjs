@@ -29,7 +29,8 @@ const RUNTIME_CONNECT_ENV_KEYS = [
 
 // The mainnet/testnet API/middleware/node/DEX/governance/compiler origins from src/config.ts,
 // plus the third-party origins the app calls directly: the CORS proxies (LinkPreviewCard), the
-// Twitter oEmbed existence check (TwitterCard), and the GitHub/Openverse integrations.
+// Twitter oEmbed existence check (TwitterCard — publish.twitter.com 30x's to publish.x.com, so
+// both must be listed), and the GitHub/Openverse integrations.
 const CONNECT_SRC_ALLOWLIST = [
   "'self'",
   'https://api.superhero.com', 'wss://api.superhero.com',
@@ -44,6 +45,7 @@ const CONNECT_SRC_ALLOWLIST = [
   'https://api.codetabs.com',
   'https://api.allorigins.win',
   'https://publish.twitter.com',
+  'https://publish.x.com',
   'https://api.github.com',
   'https://api.openverse.org',
 ];

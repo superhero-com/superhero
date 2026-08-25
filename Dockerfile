@@ -16,6 +16,10 @@ ENV VITE_X_OAUTH_CLIENT_ID=$VITE_X_OAUTH_CLIENT_ID
 # registration fails with a SecurityError on that origin.
 ARG VITE_WEBAUTHN_RP_ID
 ENV VITE_WEBAUTHN_RP_ID=$VITE_WEBAUTHN_RP_ID
+# Inline-wallet release switch. Docker silently drops build-args with no matching
+# ARG, so without this line the flag can never reach the build. Left unset → off.
+ARG VITE_INLINE_WALLET
+ENV VITE_INLINE_WALLET=$VITE_INLINE_WALLET
 
 COPY package.json package-lock.json ./
 COPY scripts ./scripts

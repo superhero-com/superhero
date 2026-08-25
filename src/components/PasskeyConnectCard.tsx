@@ -9,6 +9,8 @@ import React, { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '@/hooks';
 import { usePasskeyConnect } from '@/hooks/usePasskeyConnect';
+import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
+import { isStandalone } from '@/utils/displayMode';
 
 const WalletOnboarding = React.lazy(
   () => import('@/features/wallet/components/WalletOnboarding'),
@@ -66,6 +68,12 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
     resetOnboarding,
     loading,
   } = usePasskeyConnect();
+
+  // Must agree with `makeSigner`: offering creation where the inline signer won't
+  // install produced a real, fundable account whose every signature was routed to
+  // the external wallet, which has never held that key. After the hook so hook
+  // order stays unconditional.
+  if (!INLINE_WALLET_ENABLED || !isStandalone()) return null;
 
   // ── Inline onboarding (no vault yet) ─────────────────────────────────────────
   if (needsOnboarding) {

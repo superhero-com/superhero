@@ -1,4 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
 import {
@@ -15,15 +17,19 @@ import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
 } from '../passphrase';
 import {
-  addPasskeyFactor, addRecoveryCodeFactor, createWalletFromPasskey, importWalletWithDek,
-  recordMnemonicBackedUp,
+  addPasskeyFactor, addRecoveryCodeFactor, commitRecoveredWallet, createWalletFromPasskey,
+  deriveRecoveredWallet, hasFactor, importWalletWithDek, passkeyUnlockProvider,
+  passphraseUnlockProvider, recordMnemonicBackedUp, type RecoveredWalletMaterial,
 } from '../wallet-lifecycle';
+import { checkAccountUsage, type AccountUsage } from '../account-usage';
 import { isPlatformAuthenticatorAvailable, RP_ID } from '../webauthn';
-import { clearManifest, manifestForFirstAccount, saveManifest } from '../manifest-store';
+import {
+  clearManifest, loadManifest, manifestForFirstAccount, saveManifest,
+} from '../manifest-store';
 import { deriveAccount } from '../derivation';
 import { createIndexedDbVaultStore } from '../vault-store';
 import type { VaultStore } from '../vault-store';
-import type { VaultRecord } from '../vault-record';
+import { unlockVault, type VaultRecord } from '../vault-record';
 
 /**
  * P4/P3 — the inline-wallet onboarding flow.
@@ -44,6 +50,7 @@ import type { VaultRecord } from '../vault-record';
 type Step =
   | 'exists'
   | 'choose'
+  | 'recover-confirm'
   | 'create-show'
   | 'create-verify'
   | 'import-enter'
@@ -75,6 +82,7 @@ const PrimaryButton = ({ className, children, ...props }: AeButtonProps) => (
 const STEP_PROGRESS: Partial<Record<Step, number>> = {
   'create-show': 0.15,
   'create-verify': 0.3,
+  'recover-confirm': 0.3,
   'import-enter': 0.2,
   passphrase: 0.45,
   creating: 0.6,
@@ -128,6 +136,20 @@ const IconChip = ({ icon: Icon, spin = false, tone = 'brand' }:
 // step title (DESIGN-02 type scale); descriptions use the muted-foreground token.
 const heading = 'text-xl font-bold tracking-tight leading-none mb-1.5';
 const description = 'text-sm text-muted-foreground mb-4';
+
+/**
+ * Extracted so every failable step can render errors cheaply — `choose` and
+ * `creating` had none, so their failures were invisible.
+ */
+const ErrorNote = ({ error }: { error: string }) => {
+  if (!error) return null;
+  return (
+    <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{error}</span>
+    </div>
+  );
+};
 
 /**
  * One create path on the `choose` screen — passkey or recovery phrase.
@@ -227,6 +249,20 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Erasing is unrecoverable for a passkey wallet, so it takes two taps.
+  const [resetArmed, setResetArmed] = useState(false);
+  // Held ONLY between the recovery ceremony and the user's confirm — see
+  // deriveRecoveredWallet for why nothing is persisted until then.
+  const [recovered, setRecovered] = useState<RecoveredWalletMaterial | null>(null);
+  const recoveredRef = useRef<RecoveredWalletMaterial | null>(null);
+  const [usage, setUsage] = useState<AccountUsage | 'checking'>('checking');
+  const usageRun = useRef(0);
+  const [unlockPass, setUnlockPass] = useState('');
+  const [recoveredAddress, setRecoveredAddress] = useState('');
+  const existingAddress = recoveredAddress || (loadManifest()?.activeAddress ?? '');
+  // The vault is persisted before the mandatory recovery code is enrolled, so a
+  // reload in that window leaves this state — see repairWallet.
+  const needsRecoveryCode = !!record && !hasFactor(record, 'recovery-code');
   // Re-render trigger only: assessPassphrase reads the estimator's own module state,
   // so we just need a state change to re-run it once the load resolves OR fails.
   const [, bumpEstimator] = useState(0);
@@ -238,8 +274,18 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   }, []);
 
   useEffect(() => {
-    store.load().then((r) => { if (r) setStep('exists'); }).catch(() => {});
+    store.load()
+      .then((r) => { if (r) { setRecord(r); setStep('exists'); } })
+      // A failed probe is not "no wallet" — private mode and blocked upgrades
+      // land here too, and treating them as empty offers to overwrite a vault
+      // we merely couldn't read.
+      .catch(() => setError('Couldn’t read this device’s wallet storage. If you’re in a private window, try a normal one.'));
   }, [store]);
+
+  // Closing the modal mid-ceremony is the one exit `dropRecovered` can't cover.
+  // Best-effort: the derived mnemonic is a string and can't be wiped the same way.
+  useEffect(() => { recoveredRef.current = recovered; }, [recovered]);
+  useEffect(() => () => { recoveredRef.current?.prfOutput.fill(0); }, []);
 
   // Warm the strength estimator as soon as onboarding opens — its dictionaries are a
   // separate lazy chunk, so this fetches them off the modal shell while the user is
@@ -247,6 +293,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   useEffect(() => { warmEstimator(); }, [warmEstimator]);
 
   const startCreate = useCallback(() => {
+    // Or a failed passkey attempt's error follows the user here and blames the
+    // phrase path for it.
+    setError('');
     const m = generateMnemonic(12);
     setMnemonic(m);
     const a = Math.floor(Math.random() * 12);
@@ -274,8 +323,11 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const progress = STEP_PROGRESS[step] ?? 0;
   // Back-nav target per step (null = no back: root, terminal, or in-flight). passphrase
   // returns to whichever path led here. choose/exists/creating/done have no back.
+  // recover-confirm keeps its back only while nothing is saved: once the commit lands
+  // the vault exists, and `choose` would reject every action it offers.
+  const canBackOut = step === 'recover-confirm' && recovered !== null;
   let backTarget: Step | null = null;
-  if (step === 'create-show' || step === 'import-enter') backTarget = 'choose';
+  if (step === 'create-show' || step === 'import-enter' || canBackOut) backTarget = 'choose';
   else if (step === 'create-verify') backTarget = 'create-show';
   else if (step === 'passphrase') backTarget = fromImport ? 'import-enter' : 'create-verify';
 
@@ -366,6 +418,47 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   }, [store, dek]);
 
   /**
+   * Repair a valid-but-incomplete vault, by unlocking once.
+   *
+   * Two things go missing independently. `saveManifest` is best-effort and
+   * localStorage can be cleared while IndexedDB survives, so the cleartext
+   * manifest can be gone — leaving the `exists` screen no address to select. And
+   * every path persists the vault BEFORE the mandatory recovery code is enrolled,
+   * so a reload in that window leaves a wallet without one; on a passkey wallet
+   * that code is the only factor surviving a lost passkey or an Apple PRF rekey
+   * (the threat model R-04).
+   *
+   * One unlock covers both: the seed re-derives index 0 for the manifest, the DEK
+   * enrolls the code.
+   */
+  const repairWallet = useCallback(async (usePasskey: boolean) => {
+    if (!record) return;
+    setError('');
+    setBusy(true);
+    try {
+      const provider = usePasskey ? passkeyUnlockProvider() : passphraseUnlockProvider(unlockPass);
+      const { factorId, kek } = await provider(record);
+      const { mnemonic: seed, dek: unlocked } = await unlockVault(record, factorId, kek);
+      const { address } = deriveAccount(seed, 0);
+      saveManifest(manifestForFirstAccount(address));
+      setUnlockPass('');
+      setRecoveredAddress(address);
+      if (!hasFactor(record, 'recovery-code')) {
+        // `done` reads all three. Without them "Open wallet" hands the caller an
+        // empty address and silently does nothing.
+        setFirstAddr(address);
+        setDek(unlocked);
+        setPasskeyEnrolled(hasFactor(record, 'webauthn-prf'));
+        await goToRecovery(record, unlocked);
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [record, unlockPass, goToRecovery]);
+
+  /**
    * DEVICE-GATED. Enroll a platform passkey and use its PRF output as a second
    * KEK for the same DEK. The OS decides which verification it shows — Face ID,
    * Touch ID, fingerprint or the device passcode — and the web platform gives us
@@ -433,6 +526,65 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       setStep('choose');
     }
   }, [store, goToRecovery]);
+
+  /** DEVICE-GATED. Recovery ceremony → show the derived address; persists nothing. */
+  const startRecover = useCallback(async () => {
+    setError('');
+    setBusy(true);
+    try {
+      const material = await deriveRecoveredWallet(store);
+      setRecovered(material);
+      setUsage('checking');
+      setStep('recover-confirm');
+      // Fire-and-forget: the check is advisory and must never gate the screen. Tagged
+      // so an abandoned ceremony's slow answer can't land as a verdict on the next
+      // ceremony's address.
+      usageRun.current += 1;
+      const run = usageRun.current;
+      checkAccountUsage(material.address)
+        .then((u) => { if (run === usageRun.current) setUsage(u); });
+    } catch (e) {
+      const name = e instanceof DOMException ? e.name : '';
+      setError(name === 'SecurityError'
+        ? `Passkeys aren’t available on this domain (this build expects ${RP_ID}).`
+        : (e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [store]);
+
+  /** Drop the held recovery material without committing (back-out path). */
+  const dropRecovered = useCallback(() => {
+    recovered?.prfOutput.fill(0);
+    setRecovered(null);
+  }, [recovered]);
+
+  const confirmRecover = useCallback(async () => {
+    setError('');
+    setBusy(true);
+    try {
+      if (!recovered) {
+        // The commit already landed on an attempt that failed at the
+        // recovery-code step — retry just that, or committing again would hit
+        // "a vault already exists" (the same trap the `creating` retry avoids).
+        if (record && dek) await goToRecovery(record, dek);
+        return;
+      }
+      const committed = await commitRecoveredWallet(store, recovered, Date.now());
+      saveManifest(manifestForFirstAccount(recovered.address));
+      setRecord(committed.record);
+      setDek(committed.dek);
+      setFirstAddr(recovered.address);
+      setPasskeyEnrolled(true);
+      setDeviceUnlockAvailable(true);
+      dropRecovered();
+      await goToRecovery(committed.record, committed.dek);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [store, recovered, record, dek, goToRecovery, dropRecovered]);
 
   /**
    * Enrollment is complete. Drop every transient secret this component held —
@@ -532,7 +684,13 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 type="button"
                 variant="ghost"
                 aria-label="Go back"
-                onClick={() => { setError(''); setStep(backTarget as Step); }}
+                onClick={() => {
+                  setError('');
+                  // Backing out of the recovery confirm must drop the derived
+                  // seed material — nothing was persisted, nothing may linger.
+                  if (step === 'recover-confirm') dropRecovered();
+                  setStep(backTarget as Step);
+                }}
                 className="mb-2 -ml-2 h-auto min-h-[44px] gap-1 px-2 text-sm text-muted-foreground hover:text-foreground"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -556,22 +714,120 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                 {step === 'exists' && (
                 <AeCard variant="glass" hover={false} className="w-full p-6">
                   <IconChip icon={Wallet} />
-                  <h2 className={heading}>Wallet already set up</h2>
+                  <h2 className={heading}>
+                    {needsRecoveryCode ? 'Finish setting up your wallet' : 'Your wallet is ready'}
+                  </h2>
                   <p className={description}>
-                    A wallet already exists on this device. Unlocking is the next screen.
+                    {needsRecoveryCode
+                      ? 'This device already has your wallet, but setup never finished.'
+                      : 'This device already has a wallet. You confirm each transaction when you sign — there is nothing to unlock now.'}
                   </p>
+                  <ErrorNote error={error} />
+                  {/* Repair comes first when something is missing: it is the action we
+                      want taken, and with no manifest Continue is dead anyway. */}
+                  {(!existingAddress || needsRecoveryCode) && (
+                    <div className="mb-3 rounded-lg border border-border bg-muted/40 p-3">
+                      <p className="mb-3 text-xs text-muted-foreground">
+                        {!existingAddress
+                          ? 'This device’s wallet list was cleared. Unlock once and we’ll rebuild it — your wallet and its funds are untouched.'
+                          : 'Your recovery code was never set up. It is the only way back in if you lose this device, so unlock once and we’ll finish that now.'}
+                      </p>
+                      {record && hasFactor(record, 'webauthn-prf') && (
+                        <PrimaryButton
+                          className="mb-2"
+                          disabled={busy}
+                          onClick={() => repairWallet(true)}
+                        >
+                          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                          Unlock with this device
+                        </PrimaryButton>
+                      )}
+                      {record && hasFactor(record, 'passphrase') && (
+                        <>
+                          <Input
+                            className={cn(field, 'mb-2')}
+                            type="password"
+                            value={unlockPass}
+                            placeholder="passphrase"
+                            autoComplete="current-password"
+                            autoCapitalize="none"
+                            onChange={(e) => setUnlockPass(e.target.value)}
+                          />
+                          <AeButton
+                            variant="ghost"
+                            fullWidth
+                            disabled={busy || unlockPass.length === 0}
+                            onClick={() => repairWallet(false)}
+                          >
+                            Unlock with passphrase
+                          </AeButton>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {/* Demoted for a missing code, never blocked on it: the wallet works, and
+                      refusing access to funds over a backup gap is the worse failure. `busy`
+                      is a different matter — leaving mid-enrollment lets the code land in the
+                      vault unseen, and `hasFactor` would then never offer it again. */}
                   <AeButton
-                    variant="ghost"
+                    variant={needsRecoveryCode ? 'ghost' : 'primary'}
                     fullWidth
-                    className="border-rose-500/30 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200"
-                // Clear BOTH halves: leaving the cleartext manifest behind would
-                // leave `makeSigner` installing an inline signer for an address
-                // whose vault no longer exists.
-                    onClick={() => { store.clear().then(() => { clearManifest(); setStep('choose'); }); }}
+                    className={cn(!needsRecoveryCode && WALLET_CTA, 'mb-3')}
+                    disabled={!existingAddress || busy}
+                    onClick={() => {
+                      if (record && existingAddress) onComplete?.(record, existingAddress);
+                    }}
                   >
-                    <Trash2 className="h-4 w-4" />
-                    Reset (dev) — clear this device&apos;s wallet
+                    Continue with this wallet
                   </AeButton>
+                  {resetArmed ? (
+                    <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
+                      <p className="mb-3 text-xs text-rose-300">
+                        This erases the wallet stored on this device. If you have not written
+                        down your recovery phrase or recovery code, the funds in it are gone
+                        for good. Superhero cannot restore it.
+                      </p>
+                      <div className="flex gap-2">
+                        <AeButton variant="ghost" fullWidth onClick={() => setResetArmed(false)}>
+                          Keep my wallet
+                        </AeButton>
+                        <AeButton
+                          variant="ghost"
+                          fullWidth
+                          // Racing an in-flight repair: store.clear() landing before the
+                          // enrollment's store.save() resurrects the vault it just erased.
+                          disabled={busy}
+                          className="border-rose-500/30 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200"
+                          // Clear BOTH halves: leaving the cleartext manifest behind
+                          // would leave `makeSigner` installing an inline signer for an
+                          // address whose vault no longer exists.
+                          onClick={() => {
+                            store.clear()
+                              .then(() => {
+                                clearManifest();
+                                setRecord(null);
+                                setResetArmed(false);
+                                setError('');
+                                setStep('choose');
+                              })
+                              .catch((e) => setError(`Couldn’t clear the wallet: ${(e as Error).message}`));
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Erase it
+                        </AeButton>
+                      </div>
+                    </div>
+                  ) : (
+                    <AeButton
+                      variant="ghost"
+                      fullWidth
+                      disabled={busy}
+                      onClick={() => setResetArmed(true)}
+                    >
+                      Erase this device&apos;s wallet
+                    </AeButton>
+                  )}
                 </AeCard>
                 )}
 
@@ -582,6 +838,8 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   <p className={description}>
                     Your keys stay on this device, encrypted. Superhero never sees them.
                   </p>
+
+                  <ErrorNote error={error} />
 
                   {/* Two ways to create, offered side by side on EVERY surface —
                       installed app and browser tab alike. They differ only in where
@@ -608,7 +866,61 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     cta="Create with a phrase"
                     onClick={startCreate}
                   />
-                  <AeButton variant="ghost" fullWidth onClick={() => { setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+                  <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+                  {passkeySupported && (
+                    <AeButton variant="ghost" fullWidth disabled={busy} onClick={startRecover}>
+                      Restore a wallet you created with a passkey
+                    </AeButton>
+                  )}
+                </AeCard>
+                )}
+
+                {step === 'recover-confirm' && (
+                <AeCard variant="glass" hover={false} className="w-full p-6">
+                  <IconChip icon={recovered ? KeyRound : CircleAlert} />
+                  <h2 className={heading}>
+                    {recovered ? 'Is this your wallet?' : 'Almost there — one step left'}
+                  </h2>
+                  <p className={description}>
+                    {recovered
+                      ? 'Your passkey derives this account. Nothing is saved until you confirm.'
+                      : 'Your wallet was restored and saved. Setting up your recovery code didn’t finish, so let’s try that again.'}
+                  </p>
+                  {/* Address and activity only while the material is still held: after
+                      the commit `recovered` is null, and both would be describing a
+                      wallet this screen no longer has in hand. */}
+                  {recovered && (
+                    <>
+                      <p className="mb-3 break-all rounded-lg border border-border bg-muted/40 p-3 font-mono text-xs">
+                        {recovered.address}
+                      </p>
+                      {usage === 'checking' && (
+                        <p className="mb-3 text-xs text-muted-foreground">Checking on-chain activity…</p>
+                      )}
+                      {usage === 'used' && (
+                        <p className="mb-3 text-xs text-emerald-400">
+                          This account has on-chain activity — it looks like a restore.
+                        </p>
+                      )}
+                      {usage === 'unknown' && (
+                        <p className="mb-3 text-xs text-muted-foreground">
+                          Couldn&apos;t check on-chain activity right now.
+                        </p>
+                      )}
+                      {usage === 'pristine' && (
+                        <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                          This account has no on-chain activity — it looks like a new wallet
+                          rather than a restored one. If you created your wallet with a recovery
+                          phrase, go back and use Import instead.
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <ErrorNote error={error} />
+                  <PrimaryButton disabled={busy} onClick={confirmRecover}>
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {recovered ? 'This is my wallet — restore it' : 'Try again'}
+                  </PrimaryButton>
                 </AeCard>
                 )}
 
@@ -757,21 +1069,32 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   )}
                   <Input className={cn(field, 'mb-2')} type="password" value={pass2} placeholder="confirm passphrase" autoComplete="new-password" autoCapitalize="none" onChange={(e) => setPass2(e.target.value)} />
                   {pass2.length > 0 && !passesMatch && <p className="text-xs text-rose-400 mb-3">Passphrases don&apos;t match.</p>}
-                  {error && (
-                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                  )}
+                  <ErrorNote error={error} />
                   <PrimaryButton className="mt-2" disabled={!(passInfo.ok && passesMatch)} onClick={doCreate}>Create wallet</PrimaryButton>
                 </AeCard>
                 )}
 
                 {step === 'creating' && (
                 <AeCard variant="glass" hover={false} className="w-full p-6">
-                  <IconChip icon={Loader2} spin />
-                  <h2 className={heading}>Encrypting your wallet…</h2>
-                  <p className="text-sm text-muted-foreground">Deriving your key (Argon2id). This takes a moment.</p>
+                  <IconChip icon={error ? CircleAlert : Loader2} spin={!error} />
+                  <h2 className={heading}>
+                    {error ? 'Almost there — one step left' : 'Encrypting your wallet…'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {error
+                      ? 'Your wallet was created and saved. Setting up your recovery code didn’t finish, so let’s try that again.'
+                      : 'Deriving your key (Argon2id). This takes a moment.'}
+                  </p>
+                  {/* Retried in place rather than sending the user back to `choose`:
+                      the vault is already persisted, so a retry there would hit
+                      "a vault already exists on this device" and dead-end again. */}
+                  <ErrorNote error={error} />
+                  {error && record && dek && (
+                    <PrimaryButton disabled={busy} onClick={() => goToRecovery(record, dek)}>
+                      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      Try again
+                    </PrimaryButton>
+                  )}
                 </AeCard>
                 )}
 
@@ -798,12 +1121,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                       </span>
                     </div>
                   )}
-                  {error && (
-                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                  )}
+                  <ErrorNote error={error} />
                   <AeButton variant="ghost" fullWidth disabled={busy} onClick={() => record && goToRecovery(record)}>
                     {deviceUnlockAvailable ? 'Skip — use my passphrase' : 'Continue'}
                   </AeButton>
@@ -844,12 +1162,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     />
                     <span>I&apos;ve saved my recovery code somewhere safe.</span>
                   </label>
-                  {error && (
-                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                  )}
+                  <ErrorNote error={error} />
                   <PrimaryButton disabled={!recoverySaved} onClick={finish}>Finish setup</PrimaryButton>
                 </AeCard>
                 )}

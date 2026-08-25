@@ -1,5 +1,6 @@
 import WebSocketClient from '@/libs/WebSocketClient';
 import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
+import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
 import { indexForAddress } from '@/features/wallet/manifest-store';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
@@ -108,30 +109,23 @@ const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletS
 /**
  * Signer-factory swap point — the wallet build plan §3.4 / §8 phase P4. Installs the
  * in-page inline signer instead of the delegated (`superhero://` deep-link +
- * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when BOTH of these
+ * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when ALL of these
  * hold:
  *
- *  1. `isStandalone()` — the app is running as an installed PWA. This is the
- *     sole feature gate now (the old `INLINE_WALLET_ENABLED` literal is gone).
- *     It is a UX gate ONLY, never a security boundary: it is documented-spoofable,
- *     and under same-origin custody forcing the inline path in a plain browser
- *     tab changes nothing about the security story (the wallet build plan §3.4).
- *  2. The address is a known inline account in the cleartext manifest. This is
+ *  1. `INLINE_WALLET_ENABLED` — the wallet exists in this build at all. It is the
+ *     last backstop in front of real seed custody; `features/wallet/config.ts`
+ *     carries the posture that keeps it off by default.
+ *  2. `isStandalone()` — the app is running as an installed PWA. Routing ONLY,
+ *     never a security boundary: it is documented-spoofable, and under
+ *     same-origin custody forcing the inline path in a plain browser tab changes
+ *     nothing about the security story (the wallet build plan §3.4).
+ *  3. The address is a known inline account in the cleartext manifest. This is
  *     what keeps a user who connected an EXTERNAL wallet (extension,
  *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
  *     the installed PWA — we must never claim to sign for a key we don't hold.
  *
- * Either false → the existing delegated account object, completely unchanged.
+ * Any one false → the existing delegated account object, completely unchanged.
  * Browser (non-standalone) mode is untouched in every case.
- *
- * SECURITY POSTURE (was the docblock on the now-deleted `config.ts`): the inline
- * signer sits in front of real seed custody. Turning it on for real users is a
- * merge-time decision — the security gates it depended on are still open at the
- * time of writing: strict CSP is Report-Only not enforced (CSP hardening), the iOS
- * on-device matrix (PRF availability, IndexedDB survival past the 7-day ITP
- * window) is unrun, and there has been no red-team pass or independent review of
- * the seed-vault code. With the flag removed, the merge
- * to a real-user deploy is the only backstop left in front of that code.
  *
  * The returned account signs in-page: user-verification + WYSIWYS confirm on
  * EVERY signature via `requestUnlock` (`unlock-broker.ts` → `WalletSignPrompt`),
@@ -146,6 +140,9 @@ export const makeSigner = (
   createDelegatedAccount: (addr: string) => unknown,
   networkId?: string,
 ): unknown => {
+  // First because it is a build-time constant: an off build folds the inline path
+  // away here rather than shipping a live call to it.
+  if (!INLINE_WALLET_ENABLED) return createDelegatedAccount(address);
   if (!isStandalone()) return createDelegatedAccount(address);
   const index = indexForAddress(address);
   if (index === null) return createDelegatedAccount(address);

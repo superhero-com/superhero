@@ -102,6 +102,33 @@ export async function evaluatePrf(opts: {
 }
 
 /**
+ * DEVICE-GATED. Evaluate the PRF via a DISCOVERABLE get() — no `allowCredentials`,
+ * the authenticator offers whatever credentials it holds for this RP. This is the
+ * recovery ceremony: there is no vault to read a credential id from, that is what
+ * is being rebuilt. Returns the picked credential's id so the rebuilt record can
+ * store it for normal (pinned) unlocks afterwards.
+ */
+export async function discoverPrf(opts: { prfSalt: Uint8Array }): Promise<{
+  credentialId: Uint8Array; prfOutput: Uint8Array; rpId: string;
+}> {
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      rpId: RP_ID,
+      challenge: bs(randomChallenge()),
+      userVerification: 'required',
+      extensions: {
+        prf: { eval: { first: bs(opts.prfSalt) } },
+      } as AuthenticationExtensionsClientInputs,
+    },
+  }) as PublicKeyCredential;
+  return {
+    credentialId: new Uint8Array(assertion.rawId),
+    prfOutput: extractPrfOutput(assertion.getClientExtensionResults()),
+    rpId: RP_ID,
+  };
+}
+
+/**
  * DEVICE-GATED. Enroll a new platform passkey with the PRF extension and return
  * its credential id + the PRF output for `prfSalt`. Tries eval-at-create first
  * (works on Apple/GPM/Windows Hello, Chrome ≥147); if the platform reported PRF

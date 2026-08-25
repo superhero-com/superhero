@@ -12,6 +12,8 @@ interface ImportMetaEnv {
   readonly VITE_X_OAUTH_CLIENT_ID?: string;
   /** Build-time-pinned WebAuthn RP ID (custody boundary). Defaults to superhero.com. */
   readonly VITE_WEBAUTHN_RP_ID?: string;
+  /** Enables the inline wallet. Off unless the exact string 'true'. */
+  readonly VITE_INLINE_WALLET?: string;
 }
 
 interface ImportMeta {

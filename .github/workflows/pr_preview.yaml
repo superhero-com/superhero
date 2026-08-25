@@ -89,14 +89,25 @@ jobs:
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
           PREFIXES: "VITE_"
+          # Preview-only values: a DEV_VITE_FOO secret reaches THIS build as
+          # VITE_FOO, emitted after the plain VITE_ ones so it wins on duplicate
+          # keys. dockerhub.yaml (the production image) does not strip DEV_, so
+          # preview-only flags can never leak into production — which is exactly
+          # why a plain repo-wide VITE_ secret is the wrong tool for them.
+          # NOTE: the value must also have a matching ARG in the Dockerfile, or
+          # docker drops it silently.
+          ENV_PREFIX: "DEV_"
         run: |
           {
             echo 'build_args<<__BUILD_ARGS_EOF__'
-            echo "$SECRETS_JSON" | jq -r --arg prefixes "$PREFIXES" '
+            echo "$SECRETS_JSON" | jq -r --arg prefixes "$PREFIXES" --arg envp "$ENV_PREFIX" '
               ($prefixes | split(" ") | map(select(length > 0))) as $p
-              | to_entries[]
-              | select(.key as $k | $p | any(. as $pre | $k | startswith($pre)))
-              | "\(.key)=\(.value)"
+              | to_entries
+              | ( map(select(.key as $k | $p | any(. as $pre | $k | startswith($pre))))
+                + ( map(select(.key | startswith($envp)))
+                    | map(.key |= sub("^\($envp)"; ""))
+                    | map(select(.key as $k | $p | any(. as $pre | $k | startswith($pre)))) ) )
+              | .[] | "\(.key)=\(.value)"
             '
             echo '__BUILD_ARGS_EOF__'
           } >> "$GITHUB_OUTPUT"

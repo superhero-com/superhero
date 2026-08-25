@@ -47,7 +47,7 @@ export const TokenPill = ({
   // Unknown / delisted: plain dashed text, no pill, no link.
   if (status === 'unknown') {
     return (
-      <EntityPill plain sigil="#" label={display} markShape="square" ariaLabel={`${normalized} — unknown token`} />
+      <EntityPill plain sigil="#" label={display} ariaLabel={`${normalized} — unknown token`} />
     );
   }
 
@@ -104,7 +104,6 @@ export const TokenPill = ({
     <EntityPill
       sigil="#"
       label={display}
-      markShape="square"
       to={target}
       ariaLabel={ariaLabel}
       rich={options.price || options.chart}

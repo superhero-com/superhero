@@ -699,8 +699,13 @@ textarea:disabled {
   gap: 0.34em;
   max-width: 100%;
   white-space: nowrap;
-  vertical-align: -0.28em; /* sit on the baseline without opening the line rhythm */
-  padding: 0.12em 0.55em 0.12em 0.28em;
+  /* Optically centred on the surrounding text's x-height midline. `middle` is height-independent,
+     so it holds for the short rung-1 pill and the taller rung-3 pill (with chart) alike, at any
+     type size and in either theme. The former hand-tuned negative offset was needed only because
+     the 1.3em leading mark made the pill too tall for `middle` to sit inside the line box; with the
+     mark gone the pill is short enough that `middle` no longer opens the line rhythm. */
+  vertical-align: middle;
+  padding: 0.12em 0.55em;
   border-radius: 999px; /* radius = half height */
   /* Wash lifts the page ~6%; contrast is checked against this, not the page. */
   background: rgba(255, 255, 255, 0.06);
@@ -728,7 +733,9 @@ textarea:disabled {
    the line box hit-tests into the lines above and below and steals their clicks;
    WCAG 2.5.8's inline exception means a sentence-embedded target needs none. */
 
-/* Leading mark — rounded square (token art) or circle (mention avatar). */
+/* Identity chip for the token-tag options dialog header (TokenTagOptionsBar) — the two-letter
+   square that names which token is being edited. The inline post pill no longer carries a leading
+   mark; this is its only remaining use. */
 .sh-pill__mark {
   flex: 0 0 auto;
   width: 1.3em;
@@ -745,7 +752,6 @@ textarea:disabled {
   text-transform: uppercase;
   line-height: 1;
 }
-.sh-pill__mark--circle { border-radius: 50%; }
 
 .sh-pill__symbol {
   overflow: hidden;

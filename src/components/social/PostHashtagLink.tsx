@@ -132,7 +132,6 @@ const PostHashtagLink = ({
       <EntityPill
         sigil="#"
         label={displaySymbol}
-        markShape="square"
         to={target}
         ariaLabel={`${rawSymbol}${spokenChange} — link`}
         trailing={showBadge ? <PillChangeBadge changePercent={changePercent ?? 0} /> : undefined}

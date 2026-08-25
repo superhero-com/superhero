@@ -27,7 +27,22 @@ import { test, expect } from '@playwright/test';
 // `/index.html` is the literal-document entry point: it used to be served by express.static
 // ahead of the CSP route handlers, returning the SPA with no header at all — an attacker who
 // walked a wallet user in through it got the application without the custody-boundary control.
-const ROUTES = ['/', '/index.html', '/trends', '/wallet', '/faq', '/terms'];
+// The DeFi and get-AE routes are here because they mount third-party SDKs whose network origins
+// live inside the dependency rather than in our source, so a source-level allowlist review
+// cannot see them; only a walk under the real header can.
+const ROUTES = [
+  '/', '/index.html',
+  '/trends', '/trends/tokens', '/trends/create',
+  '/wallet', '/invite', '/chat',
+  '/defi/swap', '/defi/pool', '/defi/bridge', '/get-ae',
+  '/voting', '/faq', '/terms',
+];
+
+// Percent-encoded spellings of the same document. `req.path` keeps the escapes while
+// serve-static decodes before resolving, so before the decode fix these reached express.static
+// and returned the SPA with no CSP header and raw `__CSP_NONCE__` placeholders — the bypass
+// `/index.html` above was meant to close, reopened by one encoded character.
+const ENCODED_DOCUMENT_PATHS = ['/index%2Ehtml', '/index%2ehtml', '/index.htm%6C'];
 
 type CspViolation = {
   directive: string;
@@ -116,6 +131,22 @@ test.describe('enforcing CSP + Trusted Types', () => {
       expect(body, `header nonce absent from the document at ${route}`).toContain(
         `nonce="${nonce}"`,
       );
+    });
+  });
+
+  ENCODED_DOCUMENT_PATHS.forEach((route) => {
+    test(`serves an enforcing CSP at the encoded path ${route}`, async ({ playwright, baseURL }) => {
+      // A context with no baseURL of its own: resolving a relative path against one runs it
+      // through the URL parser, which normalises `%2E` back to `.` and would test the wrong
+      // path. Passing the absolute URL keeps the escape intact.
+      const api = await playwright.request.newContext();
+      const response = await api.get(`${baseURL}${route}`);
+      const csp = response.headers()['content-security-policy'];
+      expect(csp, `no Content-Security-Policy at ${route}`).toBeTruthy();
+
+      const body = await response.text();
+      expect(body, `${route} served raw __CSP_NONCE__ placeholders`).not.toContain('__CSP_NONCE__');
+      await api.dispose();
     });
   });
 

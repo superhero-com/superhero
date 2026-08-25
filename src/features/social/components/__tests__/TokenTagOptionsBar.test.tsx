@@ -117,6 +117,40 @@ describe('TokenTagOptionsBar — rung ladder', () => {
   });
 });
 
+describe('TokenTagOptionsBar — serialized cap gate', () => {
+  // Expand the string the way `serializeMentions` does, so a rung is measured against the wire
+  // length (the +40 stands in for a tagged account's `[account:…]` macro elsewhere in the body).
+  const serialize = (s: string) => `${s}${'y'.repeat(40)}`;
+
+  it('refuses a rung that would cross the serialized cap, but allows one that fits', () => {
+    const onChange = vi.fn();
+    // Display 228 chars; serialized 268. Cap 280 → 12 chars of wire room.
+    const value = `${'z'.repeat(217)} #SUPERHERO`;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <TokenTagOptionsBar
+          value={value}
+          onChange={onChange}
+          characterLimit={280}
+          serialize={serialize}
+        />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(chips()[0]);
+
+    // +price+chart adds `{mode=advanced}` (15) → 283 serialized. The display math (243) would
+    // wrongly say it fits; the serialized gate refuses it.
+    fireEvent.click(screen.getByRole('radio', { name: '+ price + chart' }));
+    expect(onChange).not.toHaveBeenCalled();
+
+    // Symbol only adds `{change=0}` (10) → 278 serialized ≤ 280: accepted.
+    fireEvent.click(screen.getByRole('radio', { name: 'Symbol only' }));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(`${'z'.repeat(217)} #SUPERHERO{change=0}`);
+  });
+});
+
 describe('TokenTagOptionsBar — chip hover leaves the textarea as it found it', () => {
   const BarWithTextarea = ({ value }: { value: string }) => {
     const ref = React.useRef<HTMLTextAreaElement>(null);

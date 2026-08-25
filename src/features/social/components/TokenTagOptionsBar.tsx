@@ -61,6 +61,9 @@ interface RungLadderDialogProps {
   onClose: () => void;
   characterLimit: number;
   allowedChars: string;
+  // Expand the composer string to its on-the-wire form so cost and the cap are measured on the
+  // macro that posts, not the shorter display run. Identity by default (display === wire).
+  serialize: (s: string) => string;
   ts: Translate;
 }
 
@@ -76,6 +79,7 @@ const RungLadderDialog = ({
   onClose,
   characterLimit,
   allowedChars,
+  serialize,
   ts,
 }: RungLadderDialogProps) => {
   const { symbol } = active;
@@ -111,10 +115,23 @@ const RungLadderDialog = ({
   if (query.status === 'error' || (query.status === 'success' && !token)) previewStatus = 'unknown';
   else if (query.status === 'pending' && !token) previewStatus = 'loading';
 
-  const setRung = (rung: number) => onChange(
+  // A proposed edit is refused only when it grows the post PAST the cap on the serialised
+  // string — a reduction is always allowed, even from an already-over state, so the author is
+  // never trapped. This is what stops the dialog offering a rung that does not actually fit.
+  const currentSerialized = serialize(value).length;
+  const wouldExceed = (next: string) => {
+    const nextLen = serialize(next).length;
+    return nextLen > characterLimit && nextLen > currentSerialized;
+  };
+
+  const applyIfFits = (next: string) => {
+    if (wouldExceed(next)) return;
+    onChange(next);
+  };
+  const setRung = (rung: number) => applyIfFits(
     applyTokenTagOptions(value, active.index, RUNG_OPTIONS[rung], allowedChars),
   );
-  const togglePart = (key: keyof TokenTagDisplayOptions) => onChange(
+  const togglePart = (key: keyof TokenTagDisplayOptions) => applyIfFits(
     applyTokenTagOptions(
       value,
       active.index,
@@ -141,7 +158,7 @@ const RungLadderDialog = ({
     }
   };
 
-  const overLimit = value.length > characterLimit;
+  const overLimit = currentSerialized > characterLimit;
 
   return (
     <div
@@ -185,17 +202,24 @@ const RungLadderDialog = ({
           const selected = currentRung === rung;
           const cost = rungCost(symbol, options);
           const label = ts(`rung${rung}`);
+          // This rung's own proposed string, so the ladder shows honestly which rungs do not fit
+          // rather than offering one and silently dropping it.
+          const exceeds = !selected
+            && wouldExceed(applyTokenTagOptions(value, active.index, options, allowedChars));
           return (
             <div
               key={`rung-${label}`}
               role="radio"
               aria-checked={selected}
+              aria-disabled={exceeds || undefined}
               aria-label={rung === 1 ? `${label}, ${ts('default')}` : label}
               tabIndex={selected || (currentRung === 'custom' && rung === 1) ? 0 : -1}
               ref={(el) => { rungRefs.current[rung] = el; }}
               onClick={() => setRung(rung)}
               onKeyDown={(e) => onRungKeyDown(e, rung)}
-              className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 cursor-pointer min-h-[44px] transition-colors ${
+              className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 min-h-[44px] transition-colors ${
+                exceeds ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+              } ${
                 selected
                   ? 'bg-primary-100/15 border-primary-400/60'
                   : 'bg-white/[0.03] border-white/10 hover:border-white/20'
@@ -211,7 +235,7 @@ const RungLadderDialog = ({
                 <TokenPill symbol={symbol} options={options} token={token} status={previewStatus} />
               </span>
               <span aria-hidden className="flex flex-col items-end text-right flex-shrink-0">
-                <span className="text-[11px] text-white/80 tabular-nums">{`${cost.total} ${ts('chars')}`}</span>
+                <span className={`text-[11px] tabular-nums ${exceeds ? 'text-rose-400 font-semibold' : 'text-white/80'}`}>{`${cost.total} ${ts('chars')}`}</span>
                 <span className={`text-[10px] tabular-nums ${rung === 1 ? 'text-primary-300' : 'text-white/40'}`}>
                   {rung === 1 ? ts('default') : `+${cost.delta}`}
                 </span>
@@ -274,7 +298,7 @@ const RungLadderDialog = ({
           {`#${symbol}${serializeTokenTagEnvelope(active.options)}`}
         </code>
         <span className={`text-[11px] tabular-nums ${overLimit ? 'text-rose-400 font-semibold' : 'text-white/45'}`}>
-          {`${value.length} / ${characterLimit}`}
+          {`${currentSerialized} / ${characterLimit}`}
         </span>
         <button
           type="button"
@@ -294,6 +318,12 @@ interface TokenTagOptionsBarProps {
   /** The composer textarea, so a chip can highlight the exact occurrence it edits. */
   textareaRef?: React.RefObject<HTMLTextAreaElement>;
   characterLimit?: number;
+  /**
+   * Expand a composer string to its on-the-wire form (account display runs → `[account:…]`),
+   * so the dialog measures the cap against the macro that actually posts. Defaults to identity
+   * for a token-only body where display and wire are the same.
+   */
+  serialize?: (s: string) => string;
   className?: string;
 }
 
@@ -307,7 +337,7 @@ type OpenState = { ordinal: number; symbol: string } | null;
  * when there are no tags.
  */
 const TokenTagOptionsBar = ({
-  value, onChange, textareaRef, characterLimit = 280, className = '',
+  value, onChange, textareaRef, characterLimit = 280, serialize = (s) => s, className = '',
 }: TokenTagOptionsBarProps) => {
   const { t } = useTranslation();
   const ts: Translate = (key, options) => t(`social.tokenTag.${key}`, options);
@@ -441,6 +471,7 @@ const TokenTagOptionsBar = ({
                 onClose={closeAndReturnFocus}
                 characterLimit={characterLimit}
                 allowedChars={hashtagAllowedChars}
+                serialize={serialize}
                 ts={ts}
               />
             )}

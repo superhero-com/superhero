@@ -10,8 +10,8 @@
  *   - is this a mobile device at all, as opposed to a desktop that happens to
  *     have the app installed?
  *
- * All of them guard every access for SSR (`src/entry-server.tsx` renders this
- * app without a `window`/`navigator`).
+ * All of them guard every access to `window`/`navigator`, so they also answer
+ * in a plain Node test environment.
  */
 
 /** True when the app is already running as an installed / standalone PWA. */

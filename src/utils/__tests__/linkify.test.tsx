@@ -163,6 +163,16 @@ describe('linkify hashtag parsing', () => {
     expect(link.textContent).not.toContain('@');
   });
 
+  it('renders all three mention forms through the one pill component (post-inline)', () => {
+    const { container } = renderLinkify(
+      `gm [account:${MACRO_ADDR}] and bob.chain and ${MACRO_ADDR}`,
+      { hashtagVariant: 'post-inline', knownChainNames: new Set(['bob.chain']) },
+    );
+    // Account macro (Pass 0.5), AENS name (Pass 1) and raw address (Pass 2a) each render as the
+    // shared EntityPill — no bespoke second treatment beside it.
+    expect(container.querySelectorAll('.sh-pill')).toHaveLength(3);
+  });
+
   it('treats a lone "#" with no following token characters as plain text', () => {
     renderLinkify('price went up # nice');
 

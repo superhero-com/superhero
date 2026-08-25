@@ -4,14 +4,14 @@
   react/no-array-index-key,
   no-use-before-define,
   react/no-invalid-html-attribute,
-  no-shadow,
   no-plusplus
 */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
-import { InlineAccountMention } from '@/components/social/InlineAccountMention';
+import { AccountMentionPill } from '@/components/social/AccountMentionPill';
 import PostTokenTag from '@/components/social/PostTokenTag';
+import PostMentionTag from '@/components/social/PostMentionTag';
 import {
   parseTokenTagEnvelope,
   isTokenTagEnhanced,
@@ -132,7 +132,7 @@ export function linkify(
         tag={tokenName}
         label={`#${tokenName}`}
         trendMentions={options?.trendMentions}
-        variant="inline"
+        variant="post-pill"
         showChange={showChange}
         key={`hashtag-${tokenName}-${keyPos}`}
       />
@@ -187,7 +187,6 @@ export function linkify(
               <PostTokenTag
                 symbol={symbol}
                 options={tagOptions}
-                variant={options?.hashtagVariant === 'post-inline' ? 'inline' : 'pill'}
                 key={`token-tag-${symbol}-${hashStart + i}`}
               />
             ) : (
@@ -228,9 +227,9 @@ export function linkify(
   });
   if (hLast < raw.length) hashtagLinked.push(raw.slice(hLast));
 
-  // Pass 0.5: Explicit `[account:ak_...]` macros → inline account chip. Runs before the
-  // AENS/account/URL passes so the address inside the macro is not re-processed, and is the
-  // only account form that renders a chip; raw `ak_` addresses stay plain links (Pass 2a).
+  // Pass 0.5: Explicit `[account:ak_...]` macros → the shared account mention pill. Runs before
+  // the AENS/account/URL passes so the address inside the macro is not re-processed; the pill
+  // carries the identicon and resolved name, raw `ak_` addresses stay plain links (Pass 2a).
   const macroLinked: React.ReactNode[] = [];
   hashtagLinked.forEach((node, nodeIdx) => {
     if (typeof node !== 'string') {
@@ -242,7 +241,7 @@ export function linkify(
     segment.replace(ACCOUNT_MACRO_REGEX, (m: string, addr: string, offset: number) => {
       if (offset > last) macroLinked.push(segment.slice(last, offset));
       macroLinked.push(
-        <InlineAccountMention address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
+        <AccountMentionPill address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
       );
       last = offset + m.length;
       return m;
@@ -266,13 +265,21 @@ export function linkify(
       const isKnown = options?.knownChainNames?.has(normalized) ?? false;
       if (isKnown) {
         aensLinked.push(
-          <a
-            href={`/users/${name}`}
-            key={`aens-${name}-${nodeIdx}-${offset}`}
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-          >
-            {match}
-          </a>,
+          options?.hashtagVariant === 'post-inline' ? (
+            <PostMentionTag
+              name={name}
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+            />
+          ) : (
+            <a
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+              className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+            >
+              {match}
+            </a>
+          ),
         );
       } else {
         // Unknown name → keep as plain text
@@ -301,13 +308,22 @@ export function linkify(
       const displayCore = formatAddress(address);
       const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
       accountLinked.push(
-        <a
-          href={`/users/${address}`}
-          key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-        >
-          {display}
-        </a>,
+        options?.hashtagVariant === 'post-inline' ? (
+          <PostMentionTag
+            name={address}
+            label={displayCore}
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+          />
+        ) : (
+          <a
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          >
+            {display}
+          </a>
+        ),
       );
       segLast = off + m.length;
       return m;

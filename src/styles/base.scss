@@ -675,3 +675,212 @@ textarea:disabled {
 }
 
 
+/* ==========================================================================
+   Token & mention display pill
+   One inline object on the text baseline — a token tag or a mention. Height
+   follows the line box, radius is half that height, and the whole pill is a
+   single link/hit-target. It never splits across a wrap (nowrap) and never
+   overflows the card (max-width + internal truncation). A dedicated body
+   wrapper carries the container query that promotes a wide rich pill to its
+   own block on a narrow column — see .sh-pill-container.
+   Sizes are in `em` so the pill scales with Dynamic Type instead of staying a
+   fixed island.
+   ========================================================================== */
+
+/* The body-text wrapper opts in to container queries so a rich pill can promote
+   below a narrow content column. container-type must live here, never on the
+   post-card root: it makes the element a containing block for absolutely- and
+   fixed-positioned descendants, and the card carries popovers and menus. */
+.sh-pill-container { container-type: inline-size; }
+
+.sh-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34em;
+  max-width: 100%;
+  white-space: nowrap;
+  /* Optically centred on the surrounding text's x-height midline. `middle` is height-independent,
+     so it holds for the short rung-1 pill and the taller rung-3 pill (with chart) alike, at any
+     type size and in either theme. The former hand-tuned negative offset was needed only because
+     the 1.3em leading mark made the pill too tall for `middle` to sit inside the line box; with the
+     mark gone the pill is short enough that `middle` no longer opens the line rhythm. */
+  vertical-align: middle;
+  padding: 0.12em 0.55em;
+  border-radius: 999px; /* radius = half height */
+  /* Wash lifts the page ~6%; contrast is checked against this, not the page. */
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--neon-blue);
+  font-size: 0.92em;
+  font-weight: 600;
+  line-height: 1.1;
+  text-decoration: none;
+  position: relative;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+.sh-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+/* Pressed: the whole pill responds, never just the symbol. */
+.sh-pill:active { background: rgba(255, 255, 255, 0.16); }
+.sh-pill:focus-visible {
+  outline: 2px solid var(--neon-blue);
+  outline-offset: 1px;
+}
+
+/* The pill is its own hit target — no oversized overlay. An overlay taller than
+   the line box hit-tests into the lines above and below and steals their clicks;
+   WCAG 2.5.8's inline exception means a sentence-embedded target needs none. */
+
+/* Identity chip for the token-tag options dialog header (TokenTagOptionsBar) — the two-letter
+   square that names which token is being edited. The inline post pill no longer carries a leading
+   mark; this is its only remaining use. */
+.sh-pill__mark {
+  flex: 0 0 auto;
+  width: 1.3em;
+  height: 1.3em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.32em;
+  background: rgba(69, 183, 209, 0.22);
+  color: var(--neon-blue);
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.sh-pill__symbol {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sh-pill__price {
+  color: var(--standard-font-color);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* 24h change badge. Direction never rides on hue alone — an arrow carries it. */
+.sh-pill__chg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  padding: 0.05em 0.4em;
+  border-radius: 999px;
+  font-size: 0.86em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sh-pill__chg--up { color: #34d399; background: rgba(16, 185, 129, 0.16); }
+.sh-pill__chg--down { color: #fb7185; background: rgba(244, 63, 94, 0.16); }
+.sh-pill__chg--flat { color: var(--light-font-color); background: rgba(148, 163, 184, 0.16); }
+.sh-pill__chg-arrow { font-size: 0.85em; line-height: 1; }
+
+.sh-pill__chart {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+/* Data-slot skeleton. The symbol is known from the string, so it never
+   skeletons — only the data slots do. */
+.sh-pill__skel {
+  display: inline-block;
+  height: 0.85em;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.06)
+  );
+  background-size: 200% 100%;
+  animation: sh-pill-shimmer 1.2s ease-in-out infinite;
+}
+.sh-pill__skel--price { width: 3.4em; }
+.sh-pill__skel--chart { width: 5em; }
+@keyframes sh-pill-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Offline — last known. A dimmed dot marks a value that is not live; the
+   staleness is spoken in the aria-label, never shown as a live number. */
+.sh-pill__stale-dot {
+  width: 0.42em;
+  height: 0.42em;
+  border-radius: 50%;
+  background: var(--light-font-color);
+  opacity: 0.6;
+  flex: 0 0 auto;
+}
+
+/* Unknown / delisted token, or an unresolvable mention: plain dashed text, no
+   pill and no link. A dead affordance is worse than no affordance. */
+.sh-pill-plain {
+  color: var(--light-font-color);
+  text-decoration: underline dashed;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+/* Promotion: past a narrow content column a rich pill (price and/or chart)
+   drops to its own block so a ~250px pill never overflows the card. The inline
+   form is already correct without this rule (max-width + truncation); the
+   promotion is an enhancement, so no container-query support is required. */
+@container (max-width: 360px) {
+  .sh-pill--rich {
+    display: flex;
+    width: 100%;
+    white-space: normal;
+    margin-block: 0.15em;
+  }
+  .sh-pill--rich .sh-pill__chart { margin-left: auto; }
+}
+
+/* Composer rung preview: the pill renders at natural width and the row clips it, rather than
+   squeezing the symbol into an ellipsis and overlapping the price. */
+.sh-pill-preview .sh-pill { max-width: none; }
+
+/* Reduced motion: the skeleton holds a flat tint and does not shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .sh-pill__skel {
+    animation: none;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Light mode: same component, re-tokenised. Cyan and mint both fail 4.5:1 on a
+   light wash at their dark-mode values, so they step down here. */
+:root[data-theme='light'] {
+  .sh-pill {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #0e7490;
+  }
+  .sh-pill:hover { background: rgba(0, 0, 0, 0.08); border-color: rgba(0, 0, 0, 0.2); }
+  .sh-pill:active { background: rgba(0, 0, 0, 0.12); }
+  .sh-pill__mark { background: rgba(14, 116, 144, 0.14); color: #0e7490; }
+  /* One Tailwind step darker than the dark-mode inks: on the composited light wash
+     (#fafafa → sh-pill 5% black → badge tint 12%) the brighter values miss 4.5:1.
+     Measured here: up 5.62, down 5.63, flat 5.67. Dark mode already clears the bar. */
+  .sh-pill__chg--up { color: #065f46; background: rgba(4, 120, 87, 0.12); }
+  .sh-pill__chg--down { color: #9f1239; background: rgba(190, 18, 60, 0.12); }
+  .sh-pill__chg--flat { color: #475569; background: rgba(100, 116, 139, 0.12); }
+  .sh-pill__skel {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.05),
+      rgba(0, 0, 0, 0.12),
+      rgba(0, 0, 0, 0.05)
+    );
+    background-size: 200% 100%;
+  }
+}
+
+

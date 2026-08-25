@@ -23,6 +23,7 @@ import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
+import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { MentionSuggestionList } from './MentionSuggestionList';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { useMentionSearch, type MentionItem } from '../hooks/useMentionSearch';
@@ -378,6 +379,13 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   // What actually goes on the wire — display runs expanded to their `[account:…]` form.
   // Drives both the submit content and the character counter (the macro is what counts).
   const serializedText = useMemo(() => serializeMentions(text, mentions), [text, mentions]);
+  // The one accept-path into the composer buffer: every proposed string — the textarea's own
+  // edits and the token-tag chip bar's rung changes — goes through here, so the serialised cap
+  // is enforced in exactly one place. clampMentionInput trims an over-cap insert to the room
+  // left, counting the serialised macro rather than the shorter display run.
+  const acceptComposerText = (next: string) => setText(
+    characterLimit ? clampMentionInput(text, next, mentions, characterLimit) : next,
+  );
   // Segments for the overlay mirror: identical glyph runs, mention runs flagged for pills.
   const mentionSegments = useMemo(() => segmentMentions(text, mentions), [text, mentions]);
   // Only mirror when there is a pill to draw. With no tagged run the mirror is a
@@ -1097,17 +1105,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   ref={textareaRef}
                   placeholder={currentPlaceholder}
                   value={text}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    // The 280 cap counts serialised length (the macro, not the chip), so
-                    // it moves off `maxLength` into here. Clamp an over-cap insert to the
-                    // room left — like `maxLength` did — rather than dropping a whole paste.
-                    setText(
-                      characterLimit
-                        ? clampMentionInput(text, next, mentions, characterLimit)
-                        : next,
-                    );
-                  }}
+                  onChange={(e) => acceptComposerText(e.target.value)}
                   onFocus={() => {
                     if (requiredHashtag && !text) {
                       const tag = `${requiredHashtag.toUpperCase()} `;
@@ -1310,6 +1308,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 )}
 
               </div>
+
+              <TokenTagOptionsBar
+                value={text}
+                onChange={acceptComposerText}
+                serialize={(s) => serializeMentions(s, mentions)}
+                textareaRef={textareaRef}
+                characterLimit={characterLimit}
+                className="mt-2.5"
+              />
 
               {(showEmojiPicker || showGifInput || showImageInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">

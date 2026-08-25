@@ -31,7 +31,7 @@ describe('parseTokenTagEnvelope — presets', () => {
 });
 
 describe('parseTokenTagEnvelope — the {change=0} "only the tag" form', () => {
-  // Badi's "or only the tag" is the symbol with the badge explicitly off — not mode=tag.
+  // The symbol with the badge explicitly off — not mode=tag.
   it('change=0 turns the badge off and stays a plain tag (not a widget)', () => {
     const options = parseTokenTagEnvelope('change=0');
     expect(options).toEqual({ chart: false, price: false, change: false });

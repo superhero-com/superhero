@@ -3,6 +3,10 @@ import { cn } from '@/lib/utils';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import EntityPill from './EntityPill';
+import { PillChangeBadge, isFlatChange } from './pillParts';
+
+const MAX_SYMBOL_CHARS = 12;
 
 type TokenLike = {
   name?: string;
@@ -33,7 +37,9 @@ interface PostHashtagLinkProps {
   tag: string;
   label: string;
   trendMentions?: TrendMention[];
-  variant?: 'pill' | 'inline';
+  // 'pill' / 'inline' are today's baseline renderings (trade activity, etc.). 'post-pill' is
+  // the redesigned display pill inside post cards — same resolution, pill chrome, leading mark.
+  variant?: 'pill' | 'inline' | 'post-pill';
   // Whether to show the 24h change badge. Defaults to true so every existing call site — and
   // a bare `#SYMBOL` — renders exactly as today; a token tag written `{change=0}` passes false.
   showChange?: boolean;
@@ -98,9 +104,40 @@ const PostHashtagLink = ({
 
   const performanceData = matchedMention?.performance || (performance as any);
   const changePercent = resolveChangePercent(performanceData);
-  const hasChange = changePercent !== null && changePercent !== 0;
+  const hasChange = changePercent !== null;
+  // The redesigned post-pill treats a value that renders as 0.0% as flat, matching the badge.
+  // The legacy pill/inline render keys flat on exact zero — it renders at 2dp, so its flat
+  // notion moves with its precision, not the badge's.
+  const isPillFlat = isFlatChange(changePercent ?? 0);
+  const isLegacyFlat = changePercent === 0;
   const isPositive = (changePercent ?? 0) > 0;
   const changeText = hasChange ? `${Math.abs(changePercent ?? 0).toFixed(2)}%` : null;
+
+  // The redesigned post-card pill: a leading mark, the symbol, and the 24h change badge when
+  // asked for and available. The token link is always kept — a bare hashtag stays navigable —
+  // so this is a rung-0 (`{change=0}`) or rung-1 (default) rendering, never the rich widget.
+  if (variant === 'post-pill') {
+    const rawSymbol = String(label).replace(/^#/, '');
+    const displaySymbol = rawSymbol.length > MAX_SYMBOL_CHARS
+      ? `${rawSymbol.slice(0, MAX_SYMBOL_CHARS - 1)}…`
+      : rawSymbol;
+    const showBadge = showChange && hasChange && changePercent !== null;
+    let spokenChange = '';
+    if (showBadge) {
+      spokenChange = isPillFlat
+        ? ', unchanged over 24 hours'
+        : `, ${isPositive ? 'up' : 'down'} ${Math.abs(changePercent ?? 0).toFixed(1)} percent`;
+    }
+    return (
+      <EntityPill
+        sigil="#"
+        label={displaySymbol}
+        to={target}
+        ariaLabel={`${rawSymbol}${spokenChange} — link`}
+        trailing={showBadge ? <PillChangeBadge changePercent={changePercent ?? 0} /> : undefined}
+      />
+    );
+  }
 
   return (
     <Link
@@ -115,7 +152,7 @@ const PostHashtagLink = ({
       onClick={(e) => e.stopPropagation()}
     >
       <span className="leading-none">{label}</span>
-      {showChange && changeText && (
+      {showChange && changeText && !isLegacyFlat && (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums leading-none',

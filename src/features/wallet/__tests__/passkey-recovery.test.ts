@@ -20,8 +20,8 @@ const authenticator = vi.hoisted(() => ({
 }));
 
 vi.mock('../webauthn', async () => {
-  const { hmac } = await import('@noble/hashes/hmac');
-  const { sha256 } = await import('@noble/hashes/sha2');
+  const { hmac } = await import('@noble/hashes/hmac.js');
+  const { sha256 } = await import('@noble/hashes/sha2.js');
   const prf = (id: string, salt: Uint8Array) => (
     hmac(sha256, authenticator.credentials.get(id)!, salt)
   );

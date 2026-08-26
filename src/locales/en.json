@@ -1795,7 +1795,6 @@
       "optionsFor": "Display options for #{{symbol}}",
       "occurrence": "occurrence {{n}}",
       "howItAppears": "How it appears in your post",
-      "rung0": "Symbol only",
       "rung1": "Symbol + 24h change",
       "rung2": "+ price",
       "rung3": "Full row + market cap + chart",

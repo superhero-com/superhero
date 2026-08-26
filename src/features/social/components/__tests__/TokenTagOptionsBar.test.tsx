@@ -10,7 +10,6 @@ import TokenTagOptionsBar from '../TokenTagOptionsBar';
 
 const LABELS: Record<string, string> = {
   'social.tokenTag.barLabel': 'In this post',
-  'social.tokenTag.rung0': 'Symbol only',
   'social.tokenTag.rung1': 'Symbol + 24h change',
   'social.tokenTag.rung2': '+ price',
   'social.tokenTag.rung3': '+ price + chart',
@@ -87,19 +86,21 @@ describe('TokenTagOptionsBar — chip bar', () => {
 });
 
 describe('TokenTagOptionsBar — rung ladder', () => {
-  it('opens a ladder of four content-labelled rungs with per-rung character cost', () => {
+  it('opens a ladder of three content-labelled rungs, percentage-only the default', () => {
     renderBar('#SUPERHERO');
     fireEvent.click(chips()[0]);
 
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('radio', { name: 'Symbol only' })).toBeInTheDocument();
+    // The badge-less "Symbol only" rung is gone; the ladder opens on the percentage-only default.
+    expect(within(dialog).queryByRole('radio', { name: 'Symbol only' })).not.toBeInTheDocument();
+    expect(within(dialog).getAllByRole('radio')).toHaveLength(3);
     expect(within(dialog).getByRole('radio', { name: 'Symbol + 24h change, default' })).toBeInTheDocument();
     expect(within(dialog).getByRole('radio', { name: '+ price' })).toBeInTheDocument();
     expect(within(dialog).getByRole('radio', { name: '+ price + chart' })).toBeInTheDocument();
 
-    // Rung 0 (`{change=0}`) costs more than the default: #SUPERHERO{change=0} = 20 chars, +10.
-    expect(within(dialog).getByText('20 ch')).toBeInTheDocument();
-    expect(within(dialog).getByText('+10')).toBeInTheDocument();
+    // The +price rung's cost is shown: #SUPERHERO{mode=compact} = 24 chars, +14 over the bare tag.
+    expect(within(dialog).getByText('24 ch')).toBeInTheDocument();
+    expect(within(dialog).getByText('+14')).toBeInTheDocument();
   });
 
   it('emits {mode=advanced} when the +price+chart rung is chosen', () => {
@@ -146,8 +147,8 @@ describe('TokenTagOptionsBar — serialized cap gate', () => {
 
   it('refuses a rung that would cross the serialized cap, but allows one that fits', () => {
     const onChange = vi.fn();
-    // Display 228 chars; serialized 268. Cap 280 → 12 chars of wire room.
-    const value = `${'z'.repeat(217)} #SUPERHERO`;
+    // Display 226 chars; serialized 266. Cap 280 → 14 chars of wire room.
+    const value = `${'z'.repeat(215)} #SUPERHERO`;
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={client}>
@@ -161,15 +162,15 @@ describe('TokenTagOptionsBar — serialized cap gate', () => {
     );
     fireEvent.click(chips()[0]);
 
-    // +price+chart adds `{mode=advanced}` (15) → 283 serialized. The display math (243) would
+    // +price+chart adds `{mode=advanced}` (15) → 281 serialized. The display math (241) would
     // wrongly say it fits; the serialized gate refuses it.
     fireEvent.click(screen.getByRole('radio', { name: '+ price + chart' }));
     expect(onChange).not.toHaveBeenCalled();
 
-    // Symbol only adds `{change=0}` (10) → 278 serialized ≤ 280: accepted.
-    fireEvent.click(screen.getByRole('radio', { name: 'Symbol only' }));
+    // +price adds `{mode=compact}` (14) → 280 serialized ≤ 280: accepted.
+    fireEvent.click(screen.getByRole('radio', { name: '+ price' }));
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(`${'z'.repeat(217)} #SUPERHERO{change=0}`);
+    expect(onChange).toHaveBeenCalledWith(`${'z'.repeat(215)} #SUPERHERO{mode=compact}`);
   });
 });
 

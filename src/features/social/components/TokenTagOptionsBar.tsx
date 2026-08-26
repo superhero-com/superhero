@@ -25,12 +25,12 @@ type Translate = (key: string, options?: Record<string, unknown>) => string;
 // Where the portalled dialog paints: anchored under the chip on desktop, or a bottom sheet.
 type Placement = { desktop: boolean; top: number; left: number };
 
-// The four rungs, strictly monotonic. Rung 0 is the badge-less "just the symbol" form —
-// `{change=0}` on the wire — a first-class choice, not an override buried behind a toggle.
-// No preset name (`tag`/`compact`/`advanced`) ever reaches the UI: each rung is labelled by
+// The three rungs, strictly monotonic, numbered 1–3 so the percentage-only default stays rung 1.
+// The badge-less `{change=0}` form is still a readable wire value, but it is no longer offered as
+// a rung — an author who wants it reaches it through Customize, where it reads as an off-ladder
+// mix. No preset name (`tag`/`compact`/`advanced`) ever reaches the UI: each rung is labelled by
 // what it shows, and the live preview is the real label.
 const RUNG_OPTIONS: TokenTagDisplayOptions[] = [
-  { chart: false, price: false, change: false }, // 0 · Symbol only
   MODE_PRESETS.tag, // 1 · Symbol + 24h change (default)
   MODE_PRESETS.compact, // 2 · + price
   MODE_PRESETS.advanced, // 3 · + price + chart
@@ -38,9 +38,9 @@ const RUNG_OPTIONS: TokenTagDisplayOptions[] = [
 
 const PART_KEYS: (keyof TokenTagDisplayOptions)[] = ['change', 'price', 'chart'];
 
-// Which rung a set of options is, or 'custom' for an off-ladder mix.
+// Which rung a set of options is, or 'custom' for an off-ladder mix — the badge-less `{change=0}`
+// form now among them, since it is no longer a rung of its own.
 function rungOf(options: TokenTagDisplayOptions): number | 'custom' {
-  if (!options.change && !options.price && !options.chart) return 0;
   const preset = matchPreset(options);
   if (preset === 'tag') return 1;
   if (preset === 'compact') return 2;
@@ -50,8 +50,7 @@ function rungOf(options: TokenTagDisplayOptions): number | 'custom' {
 
 // Character cost of a rung: the whole `#SYMBOL{...}` length, and the delta over the bare
 // `#SYMBOL`. The macro counts against the post limit, so this is the one consequence the author
-// cannot otherwise see — including that rung 0 costs more than the default, because turning the
-// badge off means writing `{change=0}`.
+// cannot otherwise see.
 function rungCost(symbol: string, options: TokenTagDisplayOptions) {
   const envelope = serializeTokenTagEnvelope(options);
   const bare = symbol.length + 1; // '#' + symbol
@@ -79,7 +78,7 @@ interface RungLadderDialogProps {
 }
 
 /**
- * The select-mode dialog: four rungs as a radiogroup, each a live preview of the pill at real
+ * The select-mode dialog: three rungs as a radiogroup, each a live preview of the pill at real
  * size, plus a "Customize parts" disclosure that auto-opens on an off-ladder mix. Anchored below
  * the composer on desktop, a bottom sheet on narrow — never over the text being edited.
  */
@@ -168,8 +167,9 @@ const RungLadderDialog = ({
     if (wouldExceed(next)) return;
     onChange(next);
   };
+  // Rungs are numbered 1–3; RUNG_OPTIONS is 0-indexed, so a rung maps to `rung - 1`.
   const setRung = (rung: number) => applyIfFits(
-    applyTokenTagOptions(value, active.index, RUNG_OPTIONS[rung], allowedChars),
+    applyTokenTagOptions(value, active.index, RUNG_OPTIONS[rung - 1], allowedChars),
   );
   const togglePart = (key: keyof TokenTagDisplayOptions) => applyIfFits(
     applyTokenTagOptions(
@@ -180,7 +180,7 @@ const RungLadderDialog = ({
     ),
   );
 
-  const focusRung = (rung: number) => rungRefs.current[Math.max(0, Math.min(3, rung))]?.focus();
+  const focusRung = (rung: number) => rungRefs.current[Math.max(1, Math.min(3, rung))]?.focus();
 
   // ↑↓ / ←→ move and select; Space/Enter select. Handled per-radio so the radiogroup container
   // carries no keyboard listener of its own.
@@ -193,7 +193,7 @@ const RungLadderDialog = ({
       setRung(next); focusRung(next);
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      const next = Math.max(0, rung - 1);
+      const next = Math.max(1, rung - 1);
       setRung(next); focusRung(next);
     }
   };
@@ -250,7 +250,8 @@ const RungLadderDialog = ({
         aria-label={ts('optionsFor', { symbol })}
         className="mt-2 flex flex-col gap-1"
       >
-        {RUNG_OPTIONS.map((options, rung) => {
+        {RUNG_OPTIONS.map((options, i) => {
+          const rung = i + 1; // rungs are 1-based; the badge-less rung 0 was removed
           const selected = currentRung === rung;
           const cost = rungCost(symbol, options);
           const label = ts(`rung${rung}`);
@@ -391,7 +392,7 @@ type OpenState = { ordinal: number; symbol: string } | null;
 
 /**
  * A chip bar over the composer: one chip per token occurrence in the post, each showing the
- * shape it is currently set to. Tapping a chip opens a ladder of four rungs — each a live
+ * shape it is currently set to. Tapping a chip opens a ladder of three rungs — each a live
  * preview of the widget at real size. The bar edits the `{...}` envelope directly in the single
  * composer string, so nothing is held in side-state a paste or edit could desync. Renders nothing
  * when there are no tags.

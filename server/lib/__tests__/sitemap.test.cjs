@@ -124,6 +124,22 @@ describe('buildEntries', () => {
     const { fetchImpl } = makeFetch({ '/api/tokens': [{ name: 'T', holders_count: 3 }] }, { failPath: '/api/accounts' });
     await expect(buildEntries(fetchImpl, 'https://api.test', ORIGIN)).rejects.toThrow();
   });
+
+  it('emits the post canonical: /post/<slug> when present, else the _v3-stripped id', async () => {
+    const { fetchImpl } = makeFetch({
+      '/api/tokens': [],
+      '/api/accounts': [],
+      '/api/posts': [
+        { id: '12352_v3', slug: 'ever-notice-crypto-communities-12352', created_at: '2026-01-01T00:00:00Z' },
+        { id: '999_v3', created_at: '2026-01-01T00:00:00Z' }, // no slug → id fallback
+      ],
+    });
+    const { entries } = await buildEntries(fetchImpl, 'https://api.test', ORIGIN);
+    const locs = entries.map((e) => e.loc);
+    expect(locs).toContain('https://superhero.com/post/ever-notice-crypto-communities-12352');
+    expect(locs).toContain('https://superhero.com/post/999'); // fallback still strips _v3
+    expect(locs).not.toContain('https://superhero.com/post/12352'); // never the bare id when a slug exists
+  });
 });
 
 describe('engine buffer semantics', () => {

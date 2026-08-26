@@ -14,6 +14,8 @@
  * below the threshold, so the filter costs ~21 pages, not the full table. `banned` is not part of
  * the ordering, so banned accounts are dropped in memory rather than by an early stop. */
 
+const hubs = require('./hubs.cjs');
+
 const MAX_PAGE_LIMIT = 100; // superhero-api hard cap (src/utils/pagination.ts) — a larger value is a 400.
 const DEFAULT_ORIGIN = 'https://superhero.com';
 const DEFAULT_REFRESH_MS = 6 * 60 * 60 * 1000; // 6h
@@ -52,9 +54,11 @@ function tokenLoc(origin, name) {
 function accountLoc(origin, address) {
   return `${origin}/users/${encodeURIComponent(address)}`;
 }
-function postLoc(origin, id) {
-  // postDetailPath in the app strips the _v3 suffix — the sitemap must emit the same canonical form.
-  return `${origin}/post/${encodeURIComponent(String(id).replace(/_v3$/, ''))}`;
+function postLoc(origin, idOrSlug) {
+  // The app's /post canonical prefers the slug (server/index.cjs, netlify/edge-functions/seo.ts),
+  // so callers pass `slug || id`. The _v3 suffix only appears on the id fallback, so stripping it
+  // here is a no-op on slugs and keeps the sitemap in the canonical form Search Console indexes.
+  return `${origin}/post/${encodeURIComponent(String(idOrSlug).replace(/_v3$/, ''))}`;
 }
 
 function buildSitemapXml(entries) {
@@ -101,7 +105,7 @@ async function collectAccounts(fetchImpl, apiBase) {
   const buildUrl = (page) =>
     `${apiBase}/api/accounts?order_by=total_tx_count&order_direction=DESC&limit=${MAX_PAGE_LIMIT}&page=${page}`;
   const rows = await collectPaged(fetchImpl, buildUrl, { stopWhen: (a) => Number(a.total_tx_count) < 1 });
-  return rows.filter((a) => a.banned !== true); // banned is off the ordering axis — drop in memory.
+  return hubs.filterHubAccounts(rows); // share the hub gate (total_tx_count >= 1 AND banned === false).
 }
 
 async function collectPosts(fetchImpl, apiBase) {
@@ -122,7 +126,7 @@ async function buildEntries(fetchImpl, apiBase, origin) {
   for (const p of STATIC_PATHS) entries.push({ loc: `${origin}${p === '/' ? '/' : p}` });
   for (const t of tokens) entries.push({ loc: tokenLoc(origin, t.name), lastmod: toLastmod(t.created_at) });
   for (const a of accounts) entries.push({ loc: accountLoc(origin, a.address), lastmod: toLastmod(a.created_at) });
-  for (const p of posts) entries.push({ loc: postLoc(origin, p.id), lastmod: toLastmod(p.created_at) });
+  for (const p of posts) entries.push({ loc: postLoc(origin, p.slug || p.id), lastmod: toLastmod(p.created_at) });
   return { entries, counts: { static: STATIC_PATHS.length, tokens: tokens.length, accounts: accounts.length, posts: posts.length } };
 }
 

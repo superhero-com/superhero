@@ -758,6 +758,29 @@ textarea:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Leading identicon — account mention only. The account's visual identity, not a monogram, so
+   it survives the monogram removal. Sized in em against the pill's own line box (1.1 line-height)
+   so it seats inside the line without re-raising pill height, and scales with Dynamic Type. The
+   viewBox'd jdenticon SVG fills the em box. */
+.sh-pill__avatar {
+  flex: 0 0 auto;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  line-height: 0;
+}
+.sh-pill__avatar svg { width: 100%; height: 100%; display: block; }
+
+/* Muted address trailing an account mention's chain name. aria-hidden — the name and address
+   are spoken once in the pill's single aria-label, never as a second string. */
+.sh-pill__addr {
+  color: var(--light-font-color);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
 .sh-pill__price {
   color: var(--standard-font-color);
   font-variant-numeric: tabular-nums;

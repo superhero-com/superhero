@@ -7,6 +7,10 @@ export interface EntityPillProps {
   ariaLabel: string;
   sigil: string; // '#' token, '@' mention
   label: string; // symbol/handle without sigil, pre-truncated
+  // Optional leading node — only an account mention passes it (its identicon). Token pills
+  // pass nothing, so the monogram removal stands: this is not the old `mark`, it is the
+  // account's visual identity, sized in em so it seats inside the line box.
+  leading?: React.ReactNode;
   trailing?: React.ReactNode; // price / change / chart, each already aria-hidden
   rich?: boolean; // has price/chart → eligible for block promotion on a narrow column
   to?: string; // token → in-app router link
@@ -17,12 +21,13 @@ export interface EntityPillProps {
 }
 
 // The shared inline pill for a token tag and a mention: one link, one hit target, one spoken
-// label, height on the line box, never split across a wrap. No leading mark — the '#' / '@'
-// sigil carries the token-vs-mention distinction, matching the mobile client.
+// label, height on the line box, never split across a wrap. The '#' / '@' sigil carries the
+// token-vs-mention distinction; only an account mention adds a leading identicon.
 const EntityPill = ({
   ariaLabel,
   sigil,
   label,
+  leading,
   trailing,
   rich = false,
   to,
@@ -38,6 +43,7 @@ const EntityPill = ({
 
   const inner = (
     <>
+      {leading}
       <span className="sh-pill__symbol" aria-hidden="true">
         {`${sigil}${label}`}
       </span>

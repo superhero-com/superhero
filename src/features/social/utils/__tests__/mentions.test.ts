@@ -270,4 +270,23 @@ describe('clampMentionInput', () => {
     // pick is atomic: the clamp returns something other than nextText and the caller drops it.
     expect(clampMentionInput(typed, nextText, [marek], 20)).not.toBe(nextText);
   });
+
+  // Regression: an arbitrary truncation could cut inside a `#SYMBOL{...}` envelope, leaving a
+  // dangling `{` that the reader renders as literal text. The clamp backs the cut off to the
+  // envelope's start, so the tag survives as a bare `#SYMBOL`. Uses the shared envelope grammar.
+  it('backs an over-cap cut off the start of a token envelope, never leaving a dangling {', () => {
+    const body = 'x'.repeat(270);
+    const clamped = clampMentionInput(body, `${body} #SUPERHERO{mode=advanced}`, [], 285);
+    expect(clamped).toBe(`${body} #SUPERHERO`);
+    expect(clamped.endsWith('{')).toBe(false);
+    expect(clamped.length).toBeLessThanOrEqual(285);
+  });
+
+  it('leaves an envelope untouched when the cut falls entirely outside it', () => {
+    // Room reaches exactly past the whole envelope; only the trailing " gm" is trimmed.
+    const body = 'y'.repeat(250);
+    const clamped = clampMentionInput(body, `${body} #A{mode=advanced} gm`, [], 268);
+    expect(clamped).toBe(`${body} #A{mode=advanced}`);
+    expect(clamped.length).toBeLessThanOrEqual(268);
+  });
 });

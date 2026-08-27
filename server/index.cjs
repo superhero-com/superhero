@@ -37,6 +37,18 @@ function envInject(html) {
     const val = process.env[k] || '';
     out = out.replaceAll(`$${k}`, String(val));
   }
+  // Keys whose built-in default in src/config.ts must survive an UNSET env var,
+  // while still being overridable — including being turned off. The substitution
+  // above cannot express that on its own: it collapses "unset" and "set to empty"
+  // to the same '', and the client reads '' for NOSTR_RELAY_URLS as an explicit
+  // "chat off" (EMPTY_MEANS_OFF in src/config.ts).
+  //
+  // So when the var is genuinely absent, drop the key from the payload entirely
+  // and let the bundled default win. `NOSTR_RELAY_URLS=` (present but empty) still
+  // reaches the client as '' and still disables chat.
+  if (process.env.NOSTR_RELAY_URLS === undefined) {
+    out = out.replace(/^\s*NOSTR_RELAY_URLS: '',?\r?\n/m, '');
+  }
   return out;
 }
 
@@ -289,11 +301,27 @@ function relayConnectOrigins() {
     .filter(Boolean);
 }
 
+// Superhero's own chat relay, allowed unconditionally because it is also the
+// built-in default in src/config.ts (COMMON_CONFIG.NOSTR_RELAY_URLS). Without it
+// here, a container started with no NOSTR_RELAY_URLS would serve a client that
+// knows the relay while the CSP forbids it — chat would render and every socket
+// would be blocked at connect time, which reads as "chat is broken" rather than
+// "chat is misconfigured".
+//
+// KEEP IN SYNC with COMMON_CONFIG.NOSTR_RELAY_URLS. e2e/chat-availability.spec.ts
+// asserts every relay the client advertises appears in connect-src.
+const CHAT_RELAY_ALLOWLIST = ['wss://relay.superhero.chat'];
+
 function buildConnectSrc() {
   const dynamic = RUNTIME_CONNECT_ENV_KEYS
     .map((k) => originOf(process.env[k]))
     .filter(Boolean);
-  return Array.from(new Set([...CONNECT_SRC_ALLOWLIST, ...dynamic, ...relayConnectOrigins()])).join(' ');
+  return Array.from(new Set([
+    ...CONNECT_SRC_ALLOWLIST,
+    ...dynamic,
+    ...CHAT_RELAY_ALLOWLIST,
+    ...relayConnectOrigins(),
+  ])).join(' ');
 }
 
 // The four sandboxed embed hosts: Twitter/X, YouTube, Spotify, Jitsi. Jitsi's

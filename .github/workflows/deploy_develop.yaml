@@ -21,9 +21,6 @@ jobs:
     with:
       VERSION: ${{ inputs.VERSION }}
       CONTAINER_NAME: "develop-superhero-mainnet"
-      # Enables Nostr chat on develop. Runtime (not build-time) so the CSP
-      # connect-src is derived from the same value — see ssh_deploy.yaml.
-      NOSTR_RELAY_URLS: "wss://relay.superhero.chat"
     secrets:
       DEPLOY_HOST: ${{ secrets.DEV_DEPLOY_HOST }}
       DEPLOY_KEY: ${{ secrets.DEV_DEPLOY_KEY }}

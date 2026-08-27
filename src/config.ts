@@ -16,9 +16,13 @@ type CommonConfig = {
   /** X (Twitter) OAuth 2.0 client id for "Connect X" (PKCE flow). If unset, Connect X is hidden. */
   X_OAUTH_CLIENT_ID?: string;
   /**
-   * Comma-separated `wss://` Nostr relay origins for chat, set at deploy time.
-   * No build-time default — unset means chat ships "dark". The server folds the
-   * same origins into the CSP `connect-src` (see `server/index.cjs`).
+   * Comma-separated `wss://` Nostr relay origins for chat.
+   *
+   * Defaults to Superhero's own relay in {@link COMMON_CONFIG}, so chat works
+   * out of the box on every surface. A runtime `NOSTR_RELAY_URLS` overrides it —
+   * set it to a different relay to repoint chat, or to an empty string to ship
+   * chat "dark" (entry points hidden). The server folds the same origins into the
+   * CSP `connect-src` (see `server/index.cjs`).
    */
   NOSTR_RELAY_URLS?: string;
 };
@@ -76,6 +80,18 @@ export const COMMON_CONFIG = {
   TESTNET_DEX_BACKEND_URL: 'https://dex-backend-testnet.prd.service.aepps.com',
   POPULAR_FEED_ENABLED: true,
   X_OAUTH_CLIENT_ID: (process.env as any).VITE_X_OAUTH_CLIENT_ID ?? '',
+  // Superhero's own NIP-29 groups relay. A default rather than deploy-only config
+  // so chat works on every surface — including the ArgoCD stg previews, whose
+  // container env lives in a separate gitops repo.
+  //
+  // MUST stay in sync with CHAT_RELAY_ALLOWLIST in server/index.cjs: the client
+  // reads this value, the CSP `connect-src` is built there, and a relay the client
+  // knows but the header forbids means chat renders and every socket dies at
+  // connect time. `e2e/chat-availability.spec.ts` fails if the two drift.
+  //
+  // A runtime NOSTR_RELAY_URLS still overrides this (see CONFIG below), so ops can
+  // repoint or disable chat without a rebuild.
+  NOSTR_RELAY_URLS: 'wss://relay.superhero.chat',
 } satisfies CommonConfig;
 
 export const NETWORKS: Record<Network, NetworkDefinition> = {
@@ -193,6 +209,25 @@ function isPlaceholder(v: unknown): boolean {
   return typeof v === 'string' && (/^\$[A-Z0-9_]+$/.test(v) || v.trim() === '');
 }
 
+/**
+ * Keys where an explicitly empty runtime value is MEANINGFUL and must survive the
+ * `isPlaceholder` filter.
+ *
+ * `NOSTR_RELAY_URLS` now has a built-in default, so discarding `''` would make it
+ * impossible to turn chat off: the default would win and chat would stay live on a
+ * deployment that deliberately blanked it. An unsubstituted `$NOSTR_RELAY_URLS`
+ * placeholder is still discarded — that is a broken deploy, not an intent to
+ * disable.
+ */
+const EMPTY_MEANS_OFF: ReadonlySet<string> = new Set(['NOSTR_RELAY_URLS']);
+
+/** True when a runtime value should replace the built-in default. */
+function isMeaningfulRuntimeValue(key: string, v: unknown): boolean {
+  if (v === undefined || v === null) return false;
+  if (EMPTY_MEANS_OFF.has(key) && typeof v === 'string' && v.trim() === '') return true;
+  return !isPlaceholder(v);
+}
+
 function coerceValue(key: keyof AppConfig, v: any): any {
   if (key === 'POPULAR_FEED_ENABLED') return toBool(v);
   return v;
@@ -207,7 +242,7 @@ const runtimeRaw = (
 const runtimeConfig: Partial<AppConfig> = runtimeRaw
   ? Object.fromEntries(
     Object.entries(runtimeRaw)
-      .filter(([, v]) => v !== undefined && v !== null && !isPlaceholder(v))
+      .filter(([k, v]) => isMeaningfulRuntimeValue(k, v))
       .map(([k, v]) => [k, coerceValue(k as keyof AppConfig, v)]),
   ) as Partial<AppConfig>
   : {};

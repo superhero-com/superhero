@@ -40,50 +40,64 @@ async function gotoChat(page: Page) {
   await page.waitForLoadState('networkidle').catch(() => {});
 }
 
-/** What the app itself resolved — the injected runtime config, not our guess. */
-async function configuredRelays(page: Page): Promise<string> {
+/**
+ * The raw runtime injection.
+ *
+ * NOTE this is NOT the same as "the relays chat will use". The relay has a
+ * built-in default (`COMMON_CONFIG.NOSTR_RELAY_URLS`), so a deployment that sets
+ * no env var serves `''` here and still has chat enabled from the bundle. Use
+ * this only to assert the substitution contract (no `$PLACEHOLDER` leaking
+ * through); use the rendered UI to decide whether chat is actually on.
+ */
+async function injectedRelayValue(page: Page): Promise<string | undefined> {
   return page.evaluate(
     // eslint-disable-next-line no-underscore-dangle
     () => (window as unknown as { __SUPERCONFIG__?: Record<string, string> })
-      .__SUPERCONFIG__?.NOSTR_RELAY_URLS ?? '',
+      .__SUPERCONFIG__?.NOSTR_RELAY_URLS,
   );
 }
 
-test.describe('chat deploy configuration', () => {
-  test('the server substitutes a real relay into __SUPERCONFIG__', async ({ page }) => {
-    // Guards the whole suite: an unsubstituted '$NOSTR_RELAY_URLS' placeholder is
-    // precisely the production bug, and `isPlaceholder()` in config.ts discards
-    // it — so the app would fall back to "no relay" and dark-ship.
-    await gotoChat(page);
-    const relays = await configuredRelays(page);
+/** The CSP `connect-src` list served with the chat route. */
+async function connectSrc(page: Page): Promise<string> {
+  const response = await page.goto(`${BASE}/chat`, { waitUntil: 'domcontentloaded' });
+  const csp = response?.headers()['content-security-policy'] ?? '';
+  return /connect-src ([^;]*)/.exec(csp)?.[1] ?? '';
+}
 
-    expect(relays, 'NOSTR_RELAY_URLS missing or left as a $PLACEHOLDER').toBe(EXPECTED_RELAY);
-    expect(relays.startsWith('$')).toBe(false);
+test.describe('chat deploy configuration', () => {
+  test('never serves an unsubstituted $PLACEHOLDER', async ({ page }) => {
+    // The production bug this file exists for: envsubst not running leaves a
+    // literal '$NOSTR_RELAY_URLS' in the HTML. `isPlaceholder()` in config.ts
+    // discards it, so chat silently falls back to the built-in default — fine
+    // today, but it means a deployment that MEANT to repoint the relay would be
+    // ignored without any signal. Fail loudly instead.
+    await gotoChat(page);
+    const injected = await injectedRelayValue(page);
+
+    expect(injected ?? '', 'envsubst did not run — $NOSTR_RELAY_URLS leaked to the client')
+      .not.toMatch(/^\$/);
   });
 
-  test('the relay origin is allowed by the CSP connect-src', async ({ page }) => {
+  test('permits the chat relay in the CSP connect-src', async ({ page }) => {
     // The UI can look perfect and still fail at connect time if the header does
-    // not permit the socket. server/index.cjs derives connect-src from the same
-    // env var, so this asserts the two never drift apart.
-    const response = await page.goto(`${BASE}/chat`, { waitUntil: 'domcontentloaded' });
-    const csp = response?.headers()['content-security-policy'] ?? '';
+    // not permit the socket. server/index.cjs allows CHAT_RELAY_ALLOWLIST
+    // unconditionally plus anything from NOSTR_RELAY_URLS, so the default relay
+    // must always be present.
+    const allowed = await connectSrc(page);
 
-    expect(csp, 'no CSP header served').not.toBe('');
-    const connectSrc = /connect-src ([^;]*)/.exec(csp)?.[1] ?? '';
-    expect(connectSrc).toContain(new URL(EXPECTED_RELAY).origin);
+    expect(allowed, 'no CSP connect-src served').not.toBe('');
+    expect(allowed).toContain(new URL(EXPECTED_RELAY).origin);
   });
 });
 
-test.describe('chat entry points (relay configured)', () => {
+test.describe('chat entry points', () => {
   test.beforeEach(async ({ page }) => {
     await gotoChat(page);
-    test.skip(
-      (await configuredRelays(page)) === '',
-      'no relay configured for this deployment — see the dark-ship test below',
-    );
   });
 
   test('does NOT show the unavailable notice', async ({ page }) => {
+    // Chat is on by default now, so the notice appearing means the relay default
+    // was lost — the exact regression this guards.
     await expect(page.getByText(/chat is unavailable|not available/i)).toHaveCount(0);
   });
 
@@ -109,62 +123,51 @@ test.describe('chat entry points (relay configured)', () => {
   });
 });
 
-test.describe('chat dark-ship (no relay)', () => {
-  // The guard against this suite passing vacuously. Point it at a SECOND server
-  // started with NO relay env var AND built without VITE_NOSTR_RELAY_URLS:
+test.describe('chat dark-ship (relay explicitly blanked)', () => {
+  // The guard against this suite passing vacuously. Chat is on by default, so
+  // "off" is now an explicit act: run a server with NOSTR_RELAY_URLS set to the
+  // empty string, which config.ts honours via EMPTY_MEANS_OFF.
   //
-  //   npm run build                                        # no VITE_ relay
-  //   NODE_ENV=production PORT=4179 node server/index.cjs   # no runtime relay
+  //   NOSTR_RELAY_URLS= NODE_ENV=production PORT=4179 node server/index.cjs
   //   CHAT_DARK_BASE_URL=http://localhost:4179 npx playwright test …
-  //
-  // Both halves matter. A build-time VITE_NOSTR_RELAY_URLS is folded into CONFIG
-  // *after* the runtime value (src/config.ts), so a relay baked into the bundle
-  // keeps chat enabled even when the container's env is empty — which is exactly
-  // how a "disabled" deployment can quietly still be live. Skipped rather than
-  // failed when unset, because a same-build server cannot express this state.
   const DARK_BASE = process.env.CHAT_DARK_BASE_URL;
 
-  test.skip(!DARK_BASE, 'set CHAT_DARK_BASE_URL to a relay-less build+deployment');
+  test.skip(!DARK_BASE, 'set CHAT_DARK_BASE_URL to a deployment with NOSTR_RELAY_URLS=""');
 
-  test('hides the entry points when no relay is configured', async ({ page }) => {
+  test('hides the entry points', async ({ page }) => {
     await page.goto(`${DARK_BASE}/chat`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
-
-    // Confirm we really are testing an unconfigured deployment, so a
-    // misconfigured second server cannot make this pass for the wrong reason.
-    expect(await configuredRelays(page)).toBe('');
 
     await expect(page.getByRole('button', { name: /new chat/i })).toHaveCount(0);
   });
 });
 
 test.describe('relay config has a single source', () => {
-  test('every relay the client knows is permitted by the CSP', async ({ page }) => {
-    // The drift guard, and the reason this file exists in CI.
+  test('every relay the client is told about is permitted by the CSP', async ({ page }) => {
+    // The drift guard, and the reason this file runs in CI.
     //
-    // `__SUPERCONFIG__` and `connect-src` are produced by different code paths in
-    // server/index.cjs from the same env var. If a deployment ever sets the build
-    // arg instead of the runtime var, the client gains a relay the header does not
-    // allow: chat renders, then every socket is blocked. That failure is invisible
-    // in a screenshot, so assert the relation directly.
-    const response = await page.goto(`${BASE}/chat`, { waitUntil: 'domcontentloaded' });
-    const csp = response?.headers()['content-security-policy'] ?? '';
-    const connectSrc = /connect-src ([^;]*)/.exec(csp)?.[1] ?? '';
+    // The client's relay list and the CSP connect-src are produced by different
+    // code paths (src/config.ts vs server/index.cjs). If a deployment sets
+    // NOSTR_RELAY_URLS to a relay the server does not fold into connect-src, the
+    // client gains a relay the header forbids: chat renders, then every socket is
+    // blocked. That failure is invisible in a screenshot, so assert it directly.
+    const allowed = await connectSrc(page);
 
-    const relays = (await configuredRelays(page)).split(',')
+    // Whatever the deployment injected, plus the built-in default that ships in
+    // the bundle — every one of them must be allowed.
+    const injected = (await injectedRelayValue(page)) ?? '';
+    const relays = [...new Set([...injected.split(','), EXPECTED_RELAY])]
       .map((s) => s.trim())
-      .filter(Boolean);
+      .filter((s) => s.startsWith('wss://') || s.startsWith('ws://'));
 
-    // A deployment with no relays is a valid (dark-shipped) state; nothing to check.
-    test.skip(relays.length === 0, 'no relay configured for this deployment');
-
-    const missing = relays.filter((r) => !connectSrc.includes(new URL(r).origin));
+    const missing = relays.filter((r) => !allowed.includes(new URL(r).origin));
 
     expect(
       missing,
-      `relays present in __SUPERCONFIG__ but missing from CSP connect-src: ${missing.join(', ')}`
-      + ' — sockets will be blocked at runtime. Set NOSTR_RELAY_URLS on the'
-      + ' container, not just the VITE_ build arg.',
+      `relays the client may dial but the CSP forbids: ${missing.join(', ')}`
+      + ' — sockets will be blocked at runtime. Add the origin to'
+      + ' CHAT_RELAY_ALLOWLIST in server/index.cjs, or set NOSTR_RELAY_URLS on the'
+      + ' container so relayConnectOrigins() picks it up.',
     ).toEqual([]);
   });
 });

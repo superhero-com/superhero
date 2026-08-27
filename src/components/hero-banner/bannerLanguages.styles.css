@@ -92,26 +92,37 @@
   color: rgba(139, 92, 246, 0.8);
 }
 
-/* Mobile: graphic sits below text, can be taller */
+/* Mobile: graphic sits below text, so these cards drive the slide height —
+   two rows of two, so every vertical pixel here counts twice. Trimmed to keep
+   an expanded banner from eating half the screen before any feed content. */
 @media (max-width: 1237px) {
   .language-showcase {
-    gap: 10px;
+    gap: 6px;
   }
 
   .language-item {
-    padding: 14px 16px 12px;
+    /* Was 14px 16px 12px. Horizontal padding stays roomy enough for the longer
+       scripts (the Arabic/Chinese samples wrap); vertical is cut hard. */
+    padding: 8px 12px 8px;
+    gap: 3px;
   }
 
   .language-flag {
-    font-size: 1.7rem;
+    font-size: 1.35rem;
   }
 
   .language-sample {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .language-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+  }
+
+  /* The hover-only "Explore →" affordance can never fire on touch, so its
+     reserved row was pure dead height on exactly the surface being fixed. */
+  .language-item--clickable::after {
+    display: none;
   }
 }
 

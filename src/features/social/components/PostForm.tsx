@@ -384,7 +384,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   // is enforced in exactly one place. clampMentionInput trims an over-cap insert to the room
   // left, counting the serialised macro rather than the shorter display run.
   const acceptComposerText = (next: string) => setText(
-    characterLimit ? clampMentionInput(text, next, mentions, characterLimit) : next,
+    characterLimit
+      ? clampMentionInput(text, next, mentions, characterLimit, hashtagAllowedChars)
+      : next,
   );
   // Segments for the overlay mirror: identical glyph runs, mention runs flagged for pills.
   const mentionSegments = useMemo(() => segmentMentions(text, mentions), [text, mentions]);

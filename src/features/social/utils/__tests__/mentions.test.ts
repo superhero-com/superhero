@@ -271,6 +271,21 @@ describe('clampMentionInput', () => {
     expect(clamped.length).toBeLessThanOrEqual(285);
   });
 
+  // The clamp must scan with the same widened symbol class as the composer scanner: a
+  // collection symbol (e.g. Cyrillic/Latin-extended "ÜBER") is only detected as a tag when the
+  // live alphabet is threaded in, otherwise its envelope is cut to a dangling `{`. Mainnet has
+  // Chinese, Arabic and Cyrillic collections, so this is reachable.
+  it('backs off a non-Latin collection envelope when the alphabet is threaded in', () => {
+    const body = 'x'.repeat(270);
+    const next = `${body} #ÜBER{mode=advanced}`;
+    const latinExt = '\\u00c0-\\u024f';
+    expect(clampMentionInput(body, next, [], 285, latinExt)).toBe(`${body} #ÜBER`);
+    expect(clampMentionInput(body, next, [], 285, latinExt)).not.toContain('{');
+    // Without the alphabet the fallback class misses "Ü", the envelope is not detected, and the
+    // brace is left dangling mid-string — the residual this fix closes.
+    expect(clampMentionInput(body, next, [], 285)).toContain('{');
+  });
+
   it('leaves an envelope untouched when the cut falls entirely outside it', () => {
     // Room reaches exactly past the whole envelope; only the trailing " gm" is trimmed.
     const body = 'y'.repeat(250);

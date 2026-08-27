@@ -275,10 +275,12 @@ const ReplyToFeedItem = memo(({
         </div>
 
         <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
-          {/* Header: one shape for named and unnamed. Primary line is the resolved
-              name, else the address — full on wide cards, middle-truncated on
-              compact ones. The mono address line is dropped for unnamed accounts,
-              where it would only repeat the address already shown above. */}
+          {/* Header: avatar + two lines for every card. Primary line is the
+              resolved name (else the address — full on wide cards,
+              middle-truncated on compact ones). Second line carries the mono
+              address for named accounts, or the timestamp for unnamed ones —
+              where the timestamp on the top line would leave a single line and
+              the mono address would only repeat what is already shown above. */}
           <div className="min-w-0">
             <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
               <div
@@ -290,14 +292,20 @@ const ReplyToFeedItem = memo(({
               {!hasDisplayName && (
                 <InlineCopyButton value={authorAddress} className="shrink-0" />
               )}
-              <span className="text-white/50 shrink-0">·</span>
-              {timestampNode}
+              {hasDisplayName && (
+                <>
+                  <span className="text-white/50 shrink-0">·</span>
+                  {timestampNode}
+                </>
+              )}
             </div>
-            {hasDisplayName && (
+            {hasDisplayName ? (
               <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
                 <span className="truncate">{headerAddress}</span>
                 <InlineCopyButton value={authorAddress} className="shrink-0" />
               </div>
+            ) : (
+              <div className="min-w-0">{timestampNode}</div>
             )}
           </div>
 

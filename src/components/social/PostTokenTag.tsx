@@ -1,12 +1,14 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { toTokenLookupParam } from '@/utils/address';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
-import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import type { TokenTagDisplayOptions } from '@/utils/tokenTagEnvelope';
 import EntityPill from './EntityPill';
+import TokenTagCandleChart from './TokenTagCandleChart';
 import { PillChangeBadge, isFlatChange } from './pillParts';
 
 // Long symbols clip with an ellipsis rather than pushing the price out of the card.
@@ -35,34 +37,138 @@ export interface TokenPillProps {
   status: TokenPillStatus;
   offline?: boolean; // query paused on cached data → last-known, not live
   staleHours?: number; // age of the cached value, spoken label only
+  preview?: boolean; // rendered in the composer ladder, not the post → tighter row sizing
 }
+
+function tokenTarget(normalized: string): string {
+  return `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
+}
+
+interface TokenRowProps {
+  symbol: string; // normalized, without the leading '#'
+  options: TokenTagDisplayOptions;
+  token: TokenDto | null | undefined;
+  status: TokenPillStatus;
+  preview?: boolean; // composer ladder → shorter candlestick, tighter spacing
+}
+
+// The advanced full-row: name, price, market cap and a small candlestick, one link to the token.
+// Reached only when `options.chart` resolves true (TokenPill dispatches here). Every slot is
+// data-gated on its own — a missing part is dropped, the row is never blanked — and the
+// candlestick no longer depends on price, so `{mode=advanced;price=0}` is a row without a price.
+const TokenRow = ({
+  symbol, options, token, status, preview = false,
+}: TokenRowProps) => {
+  const { t } = useTranslation();
+  const normalized = symbol.replace(/^#/, '');
+  const loading = status === 'loading';
+
+  const changePct = readChangePercent(token);
+  const hasChange = changePct !== null;
+  const showChange = options.change && hasChange;
+  const isPositive = (changePct ?? 0) >= 0;
+
+  const showPrice = options.price && Boolean(token?.price_data);
+  const showMcap = Boolean(token?.market_cap_data);
+  const showChart = Boolean(token?.sale_address); // price precondition dropped in the row
+
+  // One spoken label for the whole row, assembled from what actually renders.
+  const spoken = [normalized];
+  if (loading) spoken.push('loading');
+  if (showPrice) spoken.push('with price');
+  if (showMcap) spoken.push('market cap');
+  if (showChange) {
+    spoken.push(isFlatChange(changePct ?? 0)
+      ? 'unchanged over 24 hours'
+      : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
+  }
+  if (showChart) spoken.push('candlestick chart');
+  spoken.push('link');
+  const ariaLabel = spoken.join(', ').replace(/, link$/, ' — link');
+
+  const chartHeight = preview ? 44 : 72;
+
+  return (
+    <Link
+      to={tokenTarget(normalized)}
+      aria-label={ariaLabel}
+      className={`sh-token-row${preview ? ' sh-token-row--preview' : ''}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span className="sh-token-row__head" aria-hidden="true">
+        <span className="sh-token-row__symbol">{`#${normalized}`}</span>
+        {showChange && <PillChangeBadge changePercent={changePct ?? 0} />}
+      </span>
+
+      <span className="sh-token-row__stats" aria-hidden="true">
+        {showPrice ? (
+          <span className="sh-token-row__stat">
+            <span className="sh-token-row__stat-label">{t('social.tokenTag.priceLabel')}</span>
+            <span className="sh-token-row__price">
+              <PriceDataFormatter priceData={token!.price_data} watchPrice hideFiatPrice />
+            </span>
+          </span>
+        ) : (
+          loading && <span className="sh-pill__skel sh-pill__skel--price" />
+        )}
+        {showMcap && (
+          <span className="sh-token-row__stat">
+            <span className="sh-token-row__stat-label">{t('social.tokenTag.marketCap')}</span>
+            <span className="sh-token-row__mcap">
+              <PriceDataFormatter priceData={token!.market_cap_data} bignumber hideFiatPrice />
+            </span>
+          </span>
+        )}
+      </span>
+
+      {showChart ? (
+        <TokenTagCandleChart token={token!} height={chartHeight} className="sh-token-row__chart" />
+      ) : (
+        loading && <span className="sh-pill__skel sh-token-row__chart-skel" style={{ height: chartHeight }} />
+      )}
+    </Link>
+  );
+};
 
 // Presentational token pill — pure in its inputs, so every state renders directly from props.
 export const TokenPill = ({
-  symbol, options, token, status, offline = false, staleHours,
+  symbol, options, token, status, offline = false, staleHours, preview = false,
 }: TokenPillProps) => {
   const normalized = symbol.replace(/^#/, '');
   const display = truncateSymbol(normalized);
 
-  // Unknown / delisted: plain dashed text, no pill, no link.
+  // Unknown / delisted: plain dashed text, no pill, no link — the same in either layout.
   if (status === 'unknown') {
     return (
       <EntityPill plain sigil="#" label={display} ariaLabel={`${normalized} — unknown token`} />
     );
   }
 
-  const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
+  // The row switch: `chart` resolved true promotes the tag to a full row (name · price · market
+  // cap · candlestick). It is derived from the parsed options alone, never a wire mode name, so
+  // any payload resolving to `chart: true` renders identically. `chart` false is the inline pill.
+  if (options.chart) {
+    return (
+      <TokenRow
+        symbol={normalized}
+        options={options}
+        token={token}
+        status={status}
+        preview={preview}
+      />
+    );
+  }
+
+  const target = tokenTarget(normalized);
   const loading = status === 'loading';
 
   const changePct = readChangePercent(token);
   const hasChange = changePct !== null;
   const hasPrice = Boolean(token?.price_data);
-  const hasChart = Boolean(token?.sale_address);
 
-  // Data-gated in ladder order: the chart needs the price present; a missing part drops it.
+  // Inline pill covers rungs 0-2 only; `chart: true` routes to TokenRow above, so no chart slot.
   const showChange = options.change && hasChange;
   const showPrice = options.price && hasPrice;
-  const showChart = options.chart && hasChart && showPrice;
   const isPositive = (changePct ?? 0) >= 0;
 
   // Spoken label — one sentence, assembled from what actually renders.
@@ -74,7 +180,6 @@ export const TokenPill = ({
       ? 'unchanged over 24 hours'
       : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
   }
-  if (showChart) spoken.push('24-hour chart');
   if (offline && staleHours !== undefined) spoken.push(`last known ${staleHours}h ago`);
   spoken.push('link');
   const ariaLabel = `${spoken.join(', ').replace(/, link$/, ' — link')}`;
@@ -90,13 +195,6 @@ export const TokenPill = ({
         loading && options.price && <span className="sh-pill__skel sh-pill__skel--price" aria-hidden="true" />
       )}
       {showChange && <PillChangeBadge changePercent={changePct ?? 0} />}
-      {showChart ? (
-        <span className="sh-pill__chart" aria-hidden="true">
-          <TokenLineChart saleAddress={token!.sale_address!} height={18} width={60} interval="all-time" />
-        </span>
-      ) : (
-        loading && options.chart && <span className="sh-pill__skel sh-pill__skel--chart" aria-hidden="true" />
-      )}
     </>
   );
 
@@ -106,7 +204,7 @@ export const TokenPill = ({
       label={display}
       to={target}
       ariaLabel={ariaLabel}
-      rich={options.price || options.chart}
+      rich={options.price}
       trailing={trailing}
     />
   );

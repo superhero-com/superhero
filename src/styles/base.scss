@@ -870,6 +870,106 @@ textarea:disabled {
    squeezing the symbol into an ellipsis and overlapping the price. */
 .sh-pill-preview .sh-pill { max-width: none; }
 
+/* ==========================================================================
+   Advanced token-tag row (.sh-token-row)
+   Name · price · market cap · small candlestick. Promoted from the inline pill
+   when `chart` resolves true. A whole row cannot sit on the text baseline, so
+   it is a deliberate block that breaks the inline run it is spliced into — the
+   body wrapper it lands in is a <div> (flow content), so a block child is valid.
+   Every slot is data-gated by the renderer; CSS only lays out what is passed.
+   ========================================================================== */
+.sh-token-row {
+  display: block; /* breaks the inline run — the row owns its own lines */
+  width: 100%;
+  max-width: 420px;
+  margin: 0.45em 0;
+  padding: 0.6em 0.75em;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--standard-font-color);
+  text-decoration: none;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+.sh-token-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.sh-token-row:focus-visible {
+  outline: 2px solid var(--neon-blue);
+  outline-offset: 1px;
+}
+.sh-token-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+.sh-token-row__symbol {
+  min-width: 0;
+  color: var(--neon-blue);
+  font-weight: 700;
+  font-size: 1.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sh-token-row__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3em 1.15em;
+  margin-top: 0.3em;
+}
+.sh-token-row__stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+}
+.sh-token-row__stat-label {
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--light-font-color);
+}
+.sh-token-row__price,
+.sh-token-row__mcap {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--standard-font-color);
+}
+.sh-token-row__chart {
+  display: block;
+  width: 100%;
+  margin-top: 0.5em;
+}
+.sh-token-row__chart-skel {
+  display: block;
+  width: 100%;
+  margin-top: 0.5em;
+  border-radius: 8px;
+}
+/* Composer ladder preview: no outer margin, fills its slot, a touch tighter. */
+.sh-token-row--preview {
+  margin: 0;
+  max-width: none;
+  padding: 0.45em 0.55em;
+}
+
+:root[data-theme='light'] {
+  .sh-token-row {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #0f172a;
+  }
+  .sh-token-row:hover {
+    background: rgba(0, 0, 0, 0.07);
+    border-color: rgba(0, 0, 0, 0.18);
+  }
+  .sh-token-row__symbol { color: #0e7490; }
+}
+
 /* Reduced motion: the skeleton holds a flat tint and does not shimmer. */
 @media (prefers-reduced-motion: reduce) {
   .sh-pill__skel {

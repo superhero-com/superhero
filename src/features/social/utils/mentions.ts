@@ -135,12 +135,15 @@ export function serializeMentions(text: string, mentions: AppliedMention[]): str
  * single keystroke with no room is rejected. The inserted region is isolated by the
  * common prefix/suffix of `prev` and `next`, then binary-searched for the longest
  * prefix that still fits, counting the serialised macro rather than the display run.
+ * `allowedCharsPattern` is the live collection alphabet; pass it so the envelope-backoff
+ * scan below reads the same widened symbol class the composer scanner does.
  */
 export function clampMentionInput(
   prev: string,
   next: string,
   mentions: AppliedMention[],
   limit: number,
+  allowedCharsPattern?: string,
 ): string {
   if (serializeMentions(next, mentions).length <= limit) return next;
 
@@ -172,7 +175,7 @@ export function clampMentionInput(
   // closing `}` falls in the dropped span, back the cut off to the `{` so the tag survives as
   // a bare `#SYMBOL`. Uses the shared envelope grammar so it stays in step with the reader.
   const cut = start + lo;
-  const straddled = scanTokenTags(next).find((tag) => {
+  const straddled = scanTokenTags(next, allowedCharsPattern).find((tag) => {
     if (!tag.hasEnvelope) return false;
     const braceOpen = tag.start + 1 + tag.symbol.length;
     return braceOpen >= start && braceOpen < cut && cut < tag.end && tag.end <= endNext;

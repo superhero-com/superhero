@@ -13,6 +13,11 @@ on:
         default: "superhero"
         required: false
         type: string
+      NOSTR_RELAY_URLS:
+        description: "Comma-separated wss:// chat relays. Read at RUNTIME by server/index.cjs for both window.__SUPERCONFIG__ and the CSP connect-src, so the client and the header can never disagree. Empty => chat dark-ships (no entry points). Deliberately not a VITE_ build arg: that would reach the bundle but not the CSP, so chat would render and every socket would be blocked."
+        required: false
+        type: string
+        default: ""
     secrets:
       DEPLOY_HOST:
         description: "Host to deploy to"
@@ -66,4 +71,5 @@ jobs:
               --log-opt max-file=30 \
               -p ${{secrets.HOST_PORT}}:80 \
               -e NODE_ENV=production \
+              -e NOSTR_RELAY_URLS="${{ inputs.NOSTR_RELAY_URLS }}" \
               ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}

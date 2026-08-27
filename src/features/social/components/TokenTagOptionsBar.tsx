@@ -9,15 +9,17 @@ import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { toTokenLookupParam } from '@/utils/address';
 import { TokenPill } from '@/components/social/PostTokenTag';
-import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import {
   MODE_PRESETS,
-  applyTokenTagOptions,
   matchPreset,
-  scanTokenTags,
   serializeTokenTagEnvelope,
-  type ScannedTokenTag,
   type TokenTagDisplayOptions,
+} from '@/utils/tokenTagEnvelope';
+import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
+import {
+  applyTokenTagOptions,
+  scanTokenTags,
+  type ScannedTokenTag,
 } from '../utils/tokenTagOptions';
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;

@@ -15,15 +15,12 @@ import PostMentionTag from '@/components/social/PostMentionTag';
 import {
   parseTokenTagEnvelope,
   isTokenTagEnhanced,
-  TOKEN_TAG_ENVELOPE_PAYLOAD,
+  buildTokenNameRegex,
+  walkHashtagRun,
+  HASHTAG_WORD_REGEX_SOURCE,
 } from '@/utils/tokenTagEnvelope';
 import { trustedHtml } from '@/utils/trustedTypes';
 import { formatAddress } from './address';
-
-// The `{payload}` display envelope immediately following a token symbol. Anchored so it
-// only matches directly after the symbol; the symbol itself is matched by the existing
-// hashtag classes above. A present-but-invalid envelope is still consumed (never printed).
-const TOKEN_TAG_ENVELOPE_REGEX = new RegExp(`^\\{(${TOKEN_TAG_ENVELOPE_PAYLOAD})\\}`);
 
 // URL matcher (external links)
 const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
@@ -34,32 +31,17 @@ const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
 // Explicit deliberate account mention: `[account:ak_...]`. The `]` terminator bounds
 // the token; base58 is case-sensitive (no `i` flag); the macro cannot occur by accident.
 const ACCOUNT_MACRO_REGEX = /\[account:(ak_[1-9A-HJ-NP-Za-km-z]{48,56})\]/g;
-// A hashtag "word": '#' at the start of the text, or anywhere NOT immediately preceded by a
-// domain/path-forming character (word char, '.', or '/'), followed by the full run of
-// non-whitespace characters. The exclusion specifically protects URL fragments like
-// "example.com/page#section" (preceded by 'e', a word char) without requiring whitespace before
-// every hashtag — CJK text, punctuation, and other non-Latin scripts commonly butt right up
-// against a following "#tag" with no space (e.g. "支持#你好", "see,#TOKEN").
-const HASHTAG_WORD_REGEX = /(^|[^\w./])#(\S+)/g;
-// Fallback token-name character class when no live collection data is available (e.g. before
-// the BCL factory schema has loaded): letters, numbers, and dashes only.
-const DEFAULT_HASHTAG_CHARS_PATTERN = 'A-Za-z0-9\\-';
-// Regexes are rebuilt per distinct `hashtagAllowedChars` pattern (collections load once and
-// rarely change), so a tiny cache avoids recompiling the same regex on every render.
+// The hashtag "word" grammar and the per-symbol token-name matcher come from the reader/writer
+// module (src/utils/tokenTagEnvelope.ts) so the composer scan and this reader share one source.
+// The token-name regex is rebuilt per distinct `hashtagAllowedChars` pattern (collections load
+// once and rarely change), so a tiny cache avoids recompiling the same regex on every render.
 const hashtagTokenRegexCache = new Map<string, RegExp>();
 function getHashtagTokenRegex(extraCharsPattern?: string): RegExp {
-  const pattern = extraCharsPattern
-    ? `${DEFAULT_HASHTAG_CHARS_PATTERN}${extraCharsPattern}`
-    : DEFAULT_HASHTAG_CHARS_PATTERN;
-  let regex = hashtagTokenRegexCache.get(pattern);
+  const key = extraCharsPattern ?? '';
+  let regex = hashtagTokenRegexCache.get(key);
   if (!regex) {
-    // The token-name-valid prefix of a hashtag word. Notably excludes '.', so "#emoter.ai"
-    // only captures "emoter" as the token name — anything after the valid prefix (e.g. ".ai")
-    // is not a valid token and is left as plain, inert text. The 'u' flag makes the {1,50}
-    // length cap and the character class count by Unicode code point, not UTF-16 code unit,
-    // so multi-byte collection alphabets (Chinese, Arabic, Russian, ...) are handled correctly.
-    regex = new RegExp(`^[${pattern}]{1,50}`, 'u');
-    hashtagTokenRegexCache.set(pattern, regex);
+    regex = buildTokenNameRegex(extraCharsPattern);
+    hashtagTokenRegexCache.set(key, regex);
   }
   return regex;
 }
@@ -162,74 +144,49 @@ export function linkify(
   //
   // A single non-whitespace run can contain more than one hashtag with no separator between
   // them (e.g. "#one#two", or a stray "##foo"), so the whole run (including the leading '#'
-  // that HASHTAG_WORD_REGEX matched separately) is walked char-by-char: each '#' followed by
-  // valid token characters becomes its own link, and any characters that aren't part of a
-  // valid token (e.g. ".ai/", or a '#' not followed by a valid token) are left as inert plain
-  // text until the next '#' is found, so parsing can resume from there.
+  // the word grammar matched separately) is walked char-by-char by `walkHashtagRun`: each '#'
+  // followed by valid token characters becomes its own link, and any characters that aren't
+  // part of a valid token (e.g. ".ai/", or a '#' not followed by a valid token) are left as
+  // inert plain text until the next '#', so parsing resumes there.
   const hashtagLinked: React.ReactNode[] = [];
   let hLast = 0;
-  raw.replace(HASHTAG_WORD_REGEX, (m: string, lead: string, word: string, offset: number) => {
+  const hashtagWordRegex = new RegExp(HASHTAG_WORD_REGEX_SOURCE, 'g'); // fresh: `g` is stateful
+  raw.replace(hashtagWordRegex, (m: string, lead: string, word: string, offset: number) => {
     const hashStart = offset + lead.length;
-    const fullRun = `#${word}`;
-    let i = 0;
-    let matchedAny = false;
-    const nodes: React.ReactNode[] = [];
-    while (i < fullRun.length) {
-      const tokenMatch = fullRun[i] === '#'
-        ? fullRun.slice(i + 1).match(hashtagTokenRegex)
-        : null;
-      if (tokenMatch) {
-        const symbol = tokenMatch[0];
-        const symEnd = i + 1 + symbol.length;
-        // A `{payload}` directly after the symbol is a display envelope. It is always
-        // consumed so its text never renders; an enhanced option set becomes a widget,
-        // and an absent/empty/unrecognised envelope falls back to the plain tag.
-        const envMatch = fullRun[symEnd] === '{'
-          ? fullRun.slice(symEnd).match(TOKEN_TAG_ENVELOPE_REGEX)
-          : null;
-        if (envMatch) {
-          const parsed = parseTokenTagEnvelope(envMatch[1]);
-          // In a clamped preview the full row cannot render, so drop the row switch: the inline
-          // pill still carries price/change, and a chart-only envelope falls through to the plain
-          // tag below rather than a broken block inside a <button>.
-          const tagOptions = options?.tokenTagInline ? { ...parsed, chart: false } : parsed;
-          nodes.push(
-            isTokenTagEnhanced(tagOptions) ? (
-              <PostTokenTag
-                symbol={symbol}
-                options={tagOptions}
-                key={`token-tag-${symbol}-${hashStart + i}`}
-              />
-            ) : (
-              // Not a widget: render today's tag, but honour an explicit `{change=0}` by
-              // gating the badge on the resolved `change` option (default `tag` keeps it on).
-              renderHashtagNode(symbol, hashStart + i, tagOptions.change)
-            ),
-          );
-          i = symEnd + envMatch[0].length;
-        } else {
-          nodes.push(renderHashtagNode(symbol, hashStart + i));
-          i = symEnd;
-        }
-        matchedAny = true;
-      } else {
-        // Inert stretch: not a valid token start. Consume up to (not including) the next '#'
-        // so the loop can retry hashtag parsing from there.
-        let j = i + 1;
-        while (j < fullRun.length && fullRun[j] !== '#') j++;
-        const inertChunk = fullRun.slice(i, j);
-        // Wrapped so later passes (which skip non-string nodes) don't try to re-linkify it
-        // as a URL/AENS/account.
-        nodes.push(<React.Fragment key={`hashtag-rest-${hashStart + i}`}>{inertChunk}</React.Fragment>);
-        i = j;
-      }
-    }
-
-    if (!matchedAny) {
+    const segments = walkHashtagRun(`#${word}`, hashtagTokenRegex);
+    if (!segments) {
       // No '#' in this run ever led to a valid token — not a hashtag, leave untouched for
       // later passes to evaluate normally.
       return m;
     }
+    const nodes = segments.map((seg) => {
+      if (seg.type === 'inert') {
+        // Wrapped so later passes (which skip non-string nodes) don't try to re-linkify it
+        // as a URL/AENS/account.
+        return (
+          <React.Fragment key={`hashtag-rest-${hashStart + seg.start}`}>{seg.text}</React.Fragment>
+        );
+      }
+      if (seg.hasEnvelope) {
+        const parsed = parseTokenTagEnvelope(seg.payload);
+        // In a clamped preview the full row cannot render, so drop the row switch: the inline
+        // pill still carries price/change, and a chart-only envelope falls through to the plain
+        // tag below rather than a broken block inside a <button>.
+        const tagOptions = options?.tokenTagInline ? { ...parsed, chart: false } : parsed;
+        return isTokenTagEnhanced(tagOptions) ? (
+          <PostTokenTag
+            symbol={seg.symbol}
+            options={tagOptions}
+            key={`token-tag-${seg.symbol}-${hashStart + seg.start}`}
+          />
+        ) : (
+          // Not a widget: render today's tag, but honour an explicit `{change=0}` by
+          // gating the badge on the resolved `change` option (default `tag` keeps it on).
+          renderHashtagNode(seg.symbol, hashStart + seg.start, tagOptions.change)
+        );
+      }
+      return renderHashtagNode(seg.symbol, hashStart + seg.start);
+    });
 
     if (hashStart > hLast) hashtagLinked.push(raw.slice(hLast, hashStart));
     hashtagLinked.push(...nodes);

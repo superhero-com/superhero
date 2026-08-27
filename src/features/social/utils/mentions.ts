@@ -2,6 +2,7 @@
 // tokens `utils/linkify` already parses — no API or contract change.
 
 import { formatAddress } from '@/utils/address';
+import { scanTokenTags } from './tokenTagOptions';
 
 export type MentionTrigger = 'account' | 'token';
 
@@ -165,6 +166,18 @@ export function clampMentionInput(
     if (serializeMentions(candidate, mentions).length <= limit) lo = mid;
     else hi = mid - 1;
   }
+
+  // Never truncate inside a token-tag `{...}` envelope: an arbitrary cut can leave a dangling
+  // `#SYMBOL{` that renders the brace as literal text. If the cut splits an envelope whose
+  // closing `}` falls in the dropped span, back the cut off to the `{` so the tag survives as
+  // a bare `#SYMBOL`. Uses the shared envelope grammar so it stays in step with the reader.
+  const cut = start + lo;
+  const straddled = scanTokenTags(next).find((tag) => {
+    if (!tag.hasEnvelope) return false;
+    const braceOpen = tag.start + 1 + tag.symbol.length;
+    return braceOpen >= start && braceOpen < cut && cut < tag.end && tag.end <= endNext;
+  });
+  if (straddled) lo = straddled.start + 1 + straddled.symbol.length - start;
 
   const clamped = `${before}${inserted.slice(0, lo)}${after}`;
   // before+after drops the replaced span from an in-limit prev, so lo=0 always fits;

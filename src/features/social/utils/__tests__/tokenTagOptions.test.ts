@@ -1,76 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import {
   MODE_PRESETS,
-  parseTokenTagEnvelope,
-  serializeTokenTagEnvelope,
+  type TokenTagDisplayOptions,
+} from '@/utils/tokenTagEnvelope';
+import {
   scanTokenTags,
   applyTokenTagOptions,
-  matchPreset,
-  type TokenTagDisplayOptions,
 } from '../tokenTagOptions';
 
 const opts = (chart: boolean, price: boolean, change: boolean): TokenTagDisplayOptions => ({
   chart,
   price,
   change,
-});
-
-describe('serializeTokenTagEnvelope', () => {
-  it('emits no envelope for the tag default — a bare tag is byte-identical to today', () => {
-    expect(serializeTokenTagEnvelope(MODE_PRESETS.tag)).toBe('');
-  });
-
-  it('emits the named mode for compact and advanced presets', () => {
-    expect(serializeTokenTagEnvelope(MODE_PRESETS.compact)).toBe('{mode=compact}');
-    expect(serializeTokenTagEnvelope(MODE_PRESETS.advanced)).toBe('{mode=advanced}');
-  });
-
-  it('emits {change=0} for the symbol with the change badge explicitly off — not mode=tag', () => {
-    expect(serializeTokenTagEnvelope(opts(false, false, false))).toBe('{change=0}');
-  });
-
-  it('emits the minimal custom mix from the nearest base', () => {
-    expect(serializeTokenTagEnvelope(opts(true, false, true))).toBe('{chart=1}');
-    expect(serializeTokenTagEnvelope(opts(true, false, false))).toBe('{chart=1;change=0}');
-    expect(serializeTokenTagEnvelope(opts(false, true, false))).toBe('{price=1;change=0}');
-    expect(serializeTokenTagEnvelope(opts(true, true, false))).toBe('{mode=advanced;change=0}');
-  });
-
-  it('round-trips every possible options triple through the reader parser', () => {
-    [false, true].forEach((chart) => {
-      [false, true].forEach((price) => {
-        [false, true].forEach((change) => {
-          const triple = opts(chart, price, change);
-          const payload = serializeTokenTagEnvelope(triple).replace(/^\{|\}$/g, '');
-          expect(parseTokenTagEnvelope(payload)).toEqual(triple);
-        });
-      });
-    });
-  });
-});
-
-describe('parseTokenTagEnvelope', () => {
-  it('resolves empty / unknown payloads to the tag preset', () => {
-    expect(parseTokenTagEnvelope('')).toEqual(MODE_PRESETS.tag);
-    expect(parseTokenTagEnvelope('mode=hologram;fps=60')).toEqual(MODE_PRESETS.tag);
-    expect(parseTokenTagEnvelope('!!garbage!!')).toEqual(MODE_PRESETS.tag);
-  });
-
-  it('applies explicit toggles over the mode preset regardless of order', () => {
-    expect(parseTokenTagEnvelope('mode=advanced;chart=0')).toEqual(opts(false, true, true));
-    expect(parseTokenTagEnvelope('chart=0;mode=advanced')).toEqual(opts(false, true, true));
-  });
-
-  it('drops an unrecognised value but keeps the rest', () => {
-    expect(parseTokenTagEnvelope('price=1;change=maybe')).toEqual(opts(false, true, true));
-  });
-});
-
-describe('matchPreset', () => {
-  it('names an exact preset and returns null for a custom mix', () => {
-    expect(matchPreset(MODE_PRESETS.compact)).toBe('compact');
-    expect(matchPreset(opts(true, false, false))).toBeNull();
-  });
 });
 
 describe('scanTokenTags', () => {
@@ -87,9 +28,24 @@ describe('scanTokenTags', () => {
     expect(scanTokenTags('just some words')).toHaveLength(0);
   });
 
+  // The composer now walks the run the way the reader does, so an unseparated pair links both
+  // tags. Before this row the composer's single global regex consumed the lead char and could
+  // not re-enter at the second '#', surfacing a chip for '#one' only — the one measured
+  // divergence from the reader. See src/utils/linkify.tsx's run-walk.
+  it('links both tags of an unseparated pair ("#one#two"), matching the reader', () => {
+    const tags = scanTokenTags('#one#two');
+    expect(tags.map((t) => t.symbol)).toEqual(['one', 'two']);
+    expect(tags[0]).toMatchObject({ start: 0, end: 4 });
+    expect(tags[1]).toMatchObject({ start: 4, end: 8 });
+  });
+
+  it('resumes scanning after an inert dotted remainder ("#emoter.ai/#foo")', () => {
+    expect(scanTokenTags('#emoter.ai/#foo').map((t) => t.symbol)).toEqual(['emoter', 'foo']);
+  });
+
   // Regression: the composer must not offer a chip on a URL fragment. A '#' preceded by a word
-  // char, '.' or '/' is not a token tag — the reader's HASHTAG_WORD_REGEX refuses it, so a chip
-  // here rewrites the user's link into an envelope the reader will never consume, permanently.
+  // char, '.' or '/' is not a token tag — the reader's grammar refuses it, so a chip here
+  // rewrites the user's link into an envelope the reader will never consume, permanently.
   it('does not scan a URL fragment as a token tag', () => {
     expect(scanTokenTags('see https://example.com/page#section for more')).toHaveLength(0);
     expect(scanTokenTags('foo.com/x#bar')).toHaveLength(0);
@@ -129,6 +85,10 @@ describe('applyTokenTagOptions', () => {
     expect(applyTokenTagOptions('hi #SUPERHERO{mode=advanced}!', 0, MODE_PRESETS.tag)).toBe(
       'hi #SUPERHERO!',
     );
+  });
+
+  it('addresses the right tag of an unseparated pair by ordinal', () => {
+    expect(applyTokenTagOptions('#one#two', 1, MODE_PRESETS.advanced)).toBe('#one#two{mode=advanced}');
   });
 
   it('is a no-op when no tag sits at the given ordinal', () => {

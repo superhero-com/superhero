@@ -259,4 +259,15 @@ describe('clampMentionInput', () => {
     expect(serializeMentions(clamped, [marek]).length).toBeLessThanOrEqual(20);
     expect(clamped).toBe('@marek.chain x');
   });
+
+  it('rejects a picked mention whose serialised macro would cross the cap', () => {
+    // Mirrors the picker path: typed query replaced by the display run, counted by macro.
+    // Short display (@marek.chain) but a long [account:…] macro is what pushes over 20.
+    const typed = 'hey @mar';
+    const active = detectActiveMention(typed, typed.length)!;
+    const { text: nextText } = applyMention(typed, active, marek.display);
+    // Serialised "hey [account:ak_marek] " (23) > 20 -> the whole run cannot fit, so the
+    // pick is atomic: the clamp returns something other than nextText and the caller drops it.
+    expect(clampMentionInput(typed, nextText, [marek], 20)).not.toBe(nextText);
+  });
 });

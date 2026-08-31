@@ -27,7 +27,22 @@ import { test, expect } from '@playwright/test';
 // `/index.html` is the literal-document entry point: it used to be served by express.static
 // ahead of the CSP route handlers, returning the SPA with no header at all — an attacker who
 // walked a wallet user in through it got the application without the custody-boundary control.
-const ROUTES = ['/', '/index.html', '/trends', '/wallet', '/faq', '/terms'];
+// The DeFi and get-AE routes are here because they mount third-party SDKs whose network origins
+// live inside the dependency rather than in our source, so a source-level allowlist review
+// cannot see them; only a walk under the real header can.
+const ROUTES = [
+  '/', '/index.html',
+  '/trends', '/trends/tokens', '/trends/create',
+  '/wallet', '/invite', '/chat',
+  '/defi/swap', '/defi/pool', '/defi/bridge', '/get-ae',
+  '/voting', '/faq', '/terms',
+];
+
+// Percent-encoded spellings of the same document. `req.path` keeps the escapes while
+// serve-static decodes before resolving, so before the decode fix these reached express.static
+// and returned the SPA with no CSP header and raw `__CSP_NONCE__` placeholders — the bypass
+// `/index.html` above was meant to close, reopened by one encoded character.
+const ENCODED_DOCUMENT_PATHS = ['/index%2Ehtml', '/index%2ehtml', '/index.htm%6C'];
 
 type CspViolation = {
   directive: string;
@@ -119,6 +134,22 @@ test.describe('enforcing CSP + Trusted Types', () => {
     });
   });
 
+  ENCODED_DOCUMENT_PATHS.forEach((route) => {
+    test(`serves an enforcing CSP at the encoded path ${route}`, async ({ playwright, baseURL }) => {
+      // A context with no baseURL of its own: resolving a relative path against one runs it
+      // through the URL parser, which normalises `%2E` back to `.` and would test the wrong
+      // path. Passing the absolute URL keeps the escape intact.
+      const api = await playwright.request.newContext();
+      const response = await api.get(`${baseURL}${route}`);
+      const csp = response.headers()['content-security-policy'];
+      expect(csp, `no Content-Security-Policy at ${route}`).toBeTruthy();
+
+      const body = await response.text();
+      expect(body, `${route} served raw __CSP_NONCE__ placeholders`).not.toContain('__CSP_NONCE__');
+      await api.dispose();
+    });
+  });
+
   // Regression guard. `ServiceWorkerContainer.register()` takes a TrustedScriptURL, so under
   // `require-trusted-types-for 'script'` a policy that implements only `createHTML` makes it
   // throw outright — killing web push for every user who granted permission. The route walk
@@ -142,6 +173,29 @@ test.describe('enforcing CSP + Trusted Types', () => {
     });
 
     expect(outcome).toBe('registered');
+  });
+
+  // React builds every <script> element it renders by parsing a literal into a scratch <div>
+  // and lifting out the first child, so the element factory itself hits the `default` policy.
+  // A drop there leaves the div empty and React's `removeChild(div.firstChild)` throws
+  // `parameter 1 is not of type 'Node'`, unmounting the app on every route with JSON-LD
+  // (src/seo/Head.tsx). The route walk cannot pin this: it needs live data on a detail page.
+  test('lets React build a <script> element under the default policy', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'load' });
+    await page.locator('#root').waitFor({ state: 'visible' });
+
+    // A BARE string, exactly as react-dom writes it — that is what routes through `default`.
+    const outcome = await page.evaluate(() => {
+      const scratch = document.createElement('div');
+      try {
+        scratch.innerHTML = '<script></script>';
+      } catch (err) {
+        return `THREW: ${(err as Error).message}`;
+      }
+      return scratch.firstChild ? 'built' : 'DROPPED';
+    });
+
+    expect(outcome).toBe('built');
   });
 
   // The other half of the same guard: a cross-origin script URL must still be refused, so the

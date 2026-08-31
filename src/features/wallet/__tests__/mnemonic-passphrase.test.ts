@@ -53,7 +53,7 @@ describe('passphrase gate (weakest-factor rule)', () => {
 
   // The old length-only gate accepted every one of these — a 12-char non-numeric
   // string or any 4-word input passed. They are exactly the offline-crackable
-  // vaults ZIX-321 is about, so the entropy gate MUST now reject them.
+  // vaults this gate is about, so the entropy gate MUST now reject them.
   it('rejects low-entropy strings the old length gate let through', () => {
     [
       'passwordpassword', // 16 chars, all one dictionary word repeated

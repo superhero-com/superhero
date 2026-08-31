@@ -10,7 +10,7 @@ import {
  * if the prompt is absent. This guards THAT binding at `AeSdkProvider`'s render —
  * it fails if the `<WalletSignPrompt/>` mount is removed. The direct
  * `WalletSignPrompt` unit tests render the component themselves and so cannot
- * catch a provider that stops mounting it (folded ZIX-341 AC).
+ * catch a provider that stops mounting it.
  */
 vi.mock('@/libs/WebSocketClient', () => ({
   default: { connect: vi.fn(), disconnect: vi.fn() },

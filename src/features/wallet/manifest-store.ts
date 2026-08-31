@@ -1,5 +1,5 @@
 /**
- * P4 — persistence for the CLEARTEXT `WalletManifest` (the wallet build plan §5.2).
+ * Persistence for the CLEARTEXT `WalletManifest`.
  *
  * The manifest holds only public data — on-chain `ak_…` addresses, the account
  * index each was derived at, user labels, and a pointer to the active address.

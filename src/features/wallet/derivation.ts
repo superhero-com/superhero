@@ -24,8 +24,7 @@ export function deriveSigner(mnemonic: string, index: number): AccountBase {
  * (`m/44'/457'/{index}'/0'/0'`, SLIP-0010 ed25519), so calling it here
  * guarantees the inline signer derives byte-identical addresses to a user's
  * existing wallet for the same mnemonic + index. See
- * `__tests__/derivation.goldenvector.test.ts` and
- * the wallet build plan §5.1/§6.6 — a divergent
+ * `__tests__/derivation.goldenvector.test.ts` — a divergent
  * derivation path means a user sees the wrong address for their seed, which
  * reads as lost funds.
  *

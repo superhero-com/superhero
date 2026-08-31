@@ -120,7 +120,7 @@ describe('factor → KEK layer (wrap/unwrap the DEK)', () => {
     expect(await unseal(sealed, dek2)).toBe(MNEMONIC);
   });
 
-  it('DEFAULT_ARGON2ID meets the the wallet build plan §4.3 target (m>=64 MiB, t>=3, p=1)', () => {
+  it('DEFAULT_ARGON2ID meets the target (m>=64 MiB, t>=3, p=1)', () => {
     expect(DEFAULT_ARGON2ID.m).toBeGreaterThanOrEqual(65536); // 64 MiB memory floor — never lower
     expect(DEFAULT_ARGON2ID.t).toBeGreaterThanOrEqual(3);
     expect(DEFAULT_ARGON2ID.p).toBe(1);

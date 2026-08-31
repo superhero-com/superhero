@@ -6,9 +6,7 @@
  * IndexedDB adapter (see `../storage`), not AsyncStorage.
  */
 
-// ============================================
 // Message Types
-// ============================================
 
 export type MessageStatus =
   | { type: 'sending' }
@@ -38,9 +36,7 @@ export interface DirectMessage extends Message {
 /** Union of all conversation message shapes (DM-only in v1). */
 export type ConversationMessage = DirectMessage;
 
-// ============================================
 // Contact Types
-// ============================================
 
 /** User profile metadata (NIP-01 kind 0). */
 export interface Profile {
@@ -67,9 +63,7 @@ export interface Contact {
   lastSeen?: number;
 }
 
-// ============================================
 // Conversation Types
-// ============================================
 
 /** Direct message conversation. */
 export interface DirectConversation {
@@ -84,9 +78,7 @@ export interface DirectConversation {
 /** Union of all conversation shapes (DM-only in v1). */
 export type Conversation = DirectConversation;
 
-// ============================================
 // Relay Types
-// ============================================
 
 /** Relay configuration. */
 export interface Relay {
@@ -105,9 +97,7 @@ export interface RelayDict {
   };
 }
 
-// ============================================
 // User/Keys Types
-// ============================================
 
 /**
  * The user's Nostr keys. Derived from the æternity wallet seed
@@ -134,9 +124,7 @@ export interface ChatStatus {
   lastActivity?: number;
 }
 
-// ============================================
 // Storage Types
-// ============================================
 
 export interface StoredMessages {
   [conversationId: string]: ConversationMessage[];
@@ -163,9 +151,7 @@ export interface ChatManifest {
   };
 }
 
-// ============================================
 // Nostr Protocol Types (at boundaries)
-// ============================================
 
 /** Raw Nostr event structure. */
 export interface NostrEvent {

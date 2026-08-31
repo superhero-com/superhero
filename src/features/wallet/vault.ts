@@ -1,5 +1,5 @@
 /**
- * P2 slice 1 — the inner envelope (the wallet build plan §4.1/§4.2).
+ * The inner envelope.
  *
  * A random 256-bit Data-Encryption-Key (DEK) AES-256-GCM-seals the BIP39
  * mnemonic. The DEK is itself wrapped, separately, under each enrolled factor's
@@ -7,7 +7,7 @@
  * HKDF) — but that wrapping is a LATER slice; this file is only the innermost
  * seal/unseal and DEK lifecycle. WebCrypto only; no third-party crypto deps.
  *
- * Custody rules this module observes (the threat model / the custody decision):
+ * Custody rules this module observes:
  *  - Never persists plaintext. Only `SealedBox` (self-describing: alg + iv +
  *    ciphertext + aad) is storable.
  *  - The mnemonic transits as a JS `string` (R-05: an immutable string cannot be
@@ -26,7 +26,7 @@ const DEFAULT_AAD = 'superhero-vault-v1';
 /**
  * Ciphertext at rest. No key material. Safe to store in the vault record.
  *
- * Self-describing (the wallet build plan §4.1): the box records the `alg` and `aad` it was
+ * Self-describing: the box records the `alg` and `aad` it was
  * sealed under, so open reads them back from the box instead of from the current
  * code constants — the same property the factor layer's KDF recipe already has
  * (`factors.ts`), which is what makes an algorithm/AAD change forward-compatible

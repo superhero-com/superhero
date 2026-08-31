@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { ensureSecureRelayUrl } from '../nostr/relay-url';
 
-/** precondition 2: a PWA over https cannot open a ws:// socket. */
+/** A PWA over https cannot open a ws:// socket. */
 describe('ensureSecureRelayUrl', () => {
   it('accepts wss:// unchanged', () => {
     expect(ensureSecureRelayUrl('wss://relay.example:8080')).toBe(

@@ -1,9 +1,17 @@
 name: Branch CI
 
 on:
+  # `pull_request` already fires on every push to a branch under review, and covers forks, whose
+  # pushes raise no event here at all. Running `push` for every non-main branch on top of that
+  # started all three jobs twice per push — lint/types/tests, a full build plus the Playwright CSP
+  # soak, and screenshots — so `push` is left to cover only what no PR does: landing on develop.
   push:
-    branches-ignore:
+    branches:
+      - develop
+  pull_request:
+    branches:
       - main
+      - develop
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,8 +37,42 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Check types
+        run: npm run check:types
+
       - name: Run tests
         run: npm run test
+
+  # The CSP is the backstop in front of seed custody, so it needs a gate that fails the build
+  # rather than a manual soak. The origin check catches an allowlist that has fallen behind the
+  # bundle; the e2e soak catches a policy the running app actually violates.
+  csp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check connect-src covers every origin in the bundle
+        run: npm run check:csp-origins
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run CSP + Trusted Types soak
+        run: npm run test:e2e:csp
 
   screenshots:
     runs-on: ubuntu-latest

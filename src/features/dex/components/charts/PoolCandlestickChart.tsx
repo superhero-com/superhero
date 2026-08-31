@@ -15,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import AeButton from '../../../../components/AeButton';
 import { TokenChip } from '../../../../components/TokenChip';
+import { TradingViewAttribution } from '../../../../components/charts/TradingViewAttribution';
 import { useChart } from '../../../../hooks/useChart';
 import { Decimal } from '../../../../libs/decimal';
 import WebSocketClient from '../../../../libs/WebSocketClient';
@@ -814,6 +815,7 @@ export const PoolCandlestickChart = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <TradingViewAttribution />
           <div className="text-white/60 text-xs font-mono font-medium">
             {moment().format('HH:mm:ss')}
           </div>

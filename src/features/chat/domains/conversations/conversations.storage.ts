@@ -13,12 +13,10 @@ import { getChatStore, hasChatStore } from '../../storage/chat-store';
 
 // ---- Unread counts ----------------------------------------------------------
 
-/** Persist all unread counts. */
 export async function saveUnreadCounts(counts: StoredUnreadCounts): Promise<void> {
   await getChatStore().setItem(StorageKeys.UNREAD_COUNTS, JSON.stringify(counts));
 }
 
-/** Load all unread counts. */
 export async function loadUnreadCounts(): Promise<StoredUnreadCounts> {
   try {
     const data = await getChatStore().getItem(StorageKeys.UNREAD_COUNTS);
@@ -28,14 +26,12 @@ export async function loadUnreadCounts(): Promise<StoredUnreadCounts> {
   }
 }
 
-/** Increment one conversation's unread count. */
 export async function incrementUnreadCount(conversationId: string): Promise<void> {
   const counts = await loadUnreadCounts();
   counts[conversationId] = (counts[conversationId] || 0) + 1;
   await saveUnreadCounts(counts);
 }
 
-/** Reset one conversation's unread count to zero. */
 export async function clearUnreadCount(conversationId: string): Promise<void> {
   const counts = await loadUnreadCounts();
   counts[conversationId] = 0;
@@ -54,7 +50,6 @@ export async function getChatManifest(): Promise<ChatManifest> {
   }
 }
 
-/** Persist the chat manifest. */
 export async function saveChatManifest(manifest: ChatManifest): Promise<void> {
   await getChatStore().setItem(StorageKeys.CHAT_MANIFEST, JSON.stringify(manifest));
 }

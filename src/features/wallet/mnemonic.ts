@@ -1,5 +1,5 @@
 /**
- * P4/P3 — BIP39 mnemonic helpers (generate / validate / normalize).
+ * BIP39 mnemonic helpers (generate / validate / normalize).
  *
  * Validation is funds-critical: importing a typo'd or checksum-invalid phrase
  * must be rejected BEFORE a vault is created, or the user would seal a wrong seed

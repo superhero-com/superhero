@@ -1,5 +1,5 @@
 /**
- * Relay-URL scheme guard (precondition 2).
+ * Relay-URL scheme guard.
  *
  * A PWA served over `https://` cannot open a plaintext `ws://` socket — the
  * browser blocks it as mixed content, so a relay that comes back over `ws://`

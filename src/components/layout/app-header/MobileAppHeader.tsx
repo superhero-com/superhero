@@ -46,7 +46,11 @@ const MobileAppHeader = () => {
     queryKey: ['TokensService.findByAddress', tokenNameParam],
     queryFn: async () => {
       if (!tokenNameParam) return null;
-      return TokensService.findByAddress({ address: toTokenLookupParam(tokenNameParam) });
+      // A trend nobody has tokenized yet resolves to nothing, and react-query rejects an
+      // `undefined` result outright — so say "no token" in the one way it accepts.
+      return (await TokensService.findByAddress({
+        address: toTokenLookupParam(tokenNameParam),
+      })) ?? null;
     },
     enabled: Boolean(tokenNameParam),
     staleTime: 60 * 1000,

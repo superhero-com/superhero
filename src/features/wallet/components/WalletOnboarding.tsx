@@ -32,15 +32,14 @@ import type { VaultStore } from '../vault-store';
 import { unlockVault, type VaultRecord } from '../vault-record';
 
 /**
- * P4/P3 — the inline-wallet onboarding flow.
+ * The inline-wallet onboarding flow.
  *
- * Order is load-bearing, not cosmetic (the wallet build plan §4.6): the written mnemonic is
+ * Order is load-bearing, not cosmetic: the written mnemonic is
  * shown and VERIFIED before any vault exists, then the passphrase factor creates
  * it, then the optional device passkey and the MANDATORY recovery code are
  * enrolled onto the already-unlocked DEK. Backup precedes custody because
  * IndexedDB eviction, a lost passphrase and Apple's PRF-rekey bug are each
- * individually unrecoverable if the only copy of the seed is the wrapped one
- * (the threat model R-04).
+ * individually unrecoverable if the only copy of the seed is the wrapped one.
  *
  * Nothing here persists a mnemonic, passphrase, recovery code, or DEK in the
  * clear — `importWalletWithDek` builds the encrypted envelope, and the transient
@@ -233,7 +232,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   // any factor requires it by construction (vault-record.addFactor), and it is
   // held ONLY for the protect/recovery steps and dropped at `done`. It is never
   // persisted and must never be reused as a session unlock — the signer re-runs
-  // user-verification on every signature (the custody decision / the threat model R-02).
+  // user-verification on every signature.
   const [record, setRecord] = useState<VaultRecord | null>(null);
   const [dek, setDek] = useState<CryptoKey | null>(null);
   const [deviceUnlockAvailable, setDeviceUnlockAvailable] = useState(false);
@@ -367,7 +366,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       // create path re-entered two random words, or the import path supplied the
       // phrase from the user's own existing backup. If the confirm step was
       // skipped, the flag stays null — IndexedDB is evictable and this is the only
-      // durable evidence the seed exists off-device (the threat model R-04), so recording it
+      // durable evidence the seed exists off-device, so recording it
       // optimistically would be a lie the app later relies on.
       const backed = backupVerified || fromImport
         ? await recordMnemonicBackedUp(store, created.record, now)
@@ -425,8 +424,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
    * manifest can be gone — leaving the `exists` screen no address to select. And
    * every path persists the vault BEFORE the mandatory recovery code is enrolled,
    * so a reload in that window leaves a wallet without one; on a passkey wallet
-   * that code is the only factor surviving a lost passkey or an Apple PRF rekey
-   * (the threat model R-04).
+   * that code is the only factor surviving a lost passkey or an Apple PRF rekey.
    *
    * One unlock covers both: the seed re-derives index 0 for the manifest, the DEK
    * enrolls the code.
@@ -496,7 +494,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
    *
    * The mandatory recovery code is enrolled immediately after, exactly as on the
    * seed path: the passkey is the primary factor, the code is the escape hatch
-   * for a lost device or an Apple PRF rekey (the threat model R-04).
+   * for a lost device or an Apple PRF rekey.
    */
   const createWithPasskey = useCallback(async () => {
     setError('');

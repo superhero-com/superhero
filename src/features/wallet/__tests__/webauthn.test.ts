@@ -2,7 +2,7 @@
 //
 // Covers the funds-critical PRF-result gate + capability logic with injected
 // extension results. The live navigator.credentials ceremony is device-gated
-// (the wallet build plan §7.6) and not exercised here.
+// and not exercised here.
 import {
   describe, expect, it,
 } from 'vitest';

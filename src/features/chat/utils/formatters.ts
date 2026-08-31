@@ -5,13 +5,11 @@
  */
 import type { Contact, Profile, Message } from '../core/types';
 
-/** Shorten an npub for display. */
 export function shortenNpub(npub: string): string {
   if (npub.length < 16) return npub;
   return `${npub.slice(0, 12)}...${npub.slice(-8)}`;
 }
 
-/** Shorten a hex pubkey for display. */
 export function shortenPubkey(pubkey: string): string {
   if (pubkey.length < 16) return pubkey;
   return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
@@ -52,13 +50,11 @@ export function formatFullDateTime(timestamp: number): string {
   return new Date(timestamp).toLocaleString();
 }
 
-/** Truncate long text for preview. */
 export function truncateText(text: string, maxLength = 100): string {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 3)}...`;
 }
 
-/** Format message content for a conversation preview. */
 export function formatMessagePreview(content: string, maxLength = 50): string {
   return truncateText(content.replace(/\s+/g, ' ').trim(), maxLength);
 }
@@ -72,13 +68,11 @@ export function formatRelayUrl(url: string): string {
   }
 }
 
-/** Format a profile bio/about for display. */
 export function formatProfileBio(bio: string | undefined, maxLength = 150): string {
   if (!bio) return '';
   return truncateText(bio, maxLength);
 }
 
-/** Generate initials from a name. */
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/);
   if (words.length === 0 || words[0] === '') return '?';

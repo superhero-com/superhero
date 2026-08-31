@@ -10,6 +10,7 @@ import { formatFractionalPrice } from '@/utils/common';
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
 import { AeCard } from '../../../../components/ui/ae-card';
+import { TradingViewAttribution } from '../../../../components/charts/TradingViewAttribution';
 import { Decimal } from '../../../../libs/decimal';
 
 interface ChartType {
@@ -93,6 +94,9 @@ const TokenPricePerformance = ({
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#ffffff',
+        // Dropped by the Trusted Types `default` policy under the enforcing CSP; the licence's
+        // link is carried by src/components/charts/TradingViewAttribution.tsx instead.
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
@@ -526,6 +530,8 @@ const TokenPricePerformance = ({
           </div>
         )}
       </AeCard>
+
+      <TradingViewAttribution className="text-right" />
 
       {/* Time Frame Selector */}
       <div className="flex gap-2 mt-3 justify-center">

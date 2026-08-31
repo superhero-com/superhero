@@ -1,5 +1,5 @@
 /**
- * P2 slice 5 — recovery code (the wallet build plan §4.6, R-04).
+ * Recovery code.
  *
  * A 128-bit, high-entropy code shown ONCE at enrollment. It is a `recovery-code`
  * factor (HKDF → KEK, factors.ts) — a device-independent unlock path so a single

@@ -32,6 +32,16 @@ const POLICY_NAME = 'superhero-dom';
 
 const passthrough = (input: string): string => input;
 
+// React builds every <script> element it renders by parsing this exact literal into a scratch
+// <div> (`createInstance` in react-dom 19), so the element factory itself reaches the default
+// policy like any other implicit sink. Dropping it leaves the div empty and React's very next
+// statement — `div.removeChild(div.firstChild)` — throws `parameter 1 is not of type 'Node'`,
+// which unmounts the whole app on every route that renders a <script> (the JSON-LD in
+// src/seo/Head.tsx: token detail, post detail, profile). The literal is a constant with no
+// attributes and no body, so parsing it yields an inert element; the src and text that would
+// give it behaviour still go through createScriptURL and this policy respectively.
+const REACT_SCRIPT_ELEMENT_FACTORY = '<script></script>';
+
 // Implicit sinks only ever carry first-party CSS/text here (see `default` above). A string with
 // no `<` cannot introduce an element or script, so it is safe to pass; drop anything else.
 //
@@ -40,6 +50,7 @@ const passthrough = (input: string): string => input;
 // signal that markup vanished — e2e/csp.spec.ts fails the soak on it.
 function denyMarkup(input: string): string {
   if (input.indexOf('<') === -1) return input;
+  if (input === REACT_SCRIPT_ELEMENT_FACTORY) return input;
   // eslint-disable-next-line no-console
   console.warn('[trusted-types] dropped markup from an un-audited DOM sink');
   return '';

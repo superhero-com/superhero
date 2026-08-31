@@ -74,7 +74,7 @@ const forgeCall = (
 const ADDR = { name: 'a', type: 'address' };
 const INT = { name: 'n', type: 'int' };
 
-const contractCallTx = (callData: `cb_${string}`, amount: bigint | number = 0): string => buildTx({
+const contractCallTx = (callData: `cb_${string}`, amount: string | number = 0): string => buildTx({
   tag: Tag.ContractCallTx,
   callerId: SENDER,
   contractId: CONTRACT,
@@ -104,7 +104,7 @@ describe('summarizeTransaction', () => {
       tag: Tag.SpendTx,
       senderId: SENDER,
       recipientId: RECIPIENT,
-      amount: 2n * 10n ** 18n,
+      amount: (2n * 10n ** 18n).toString(),
       nonce: 7,
       payload: 'ba_Xfbg4g==',
     });
@@ -123,7 +123,7 @@ describe('summarizeTransaction', () => {
 
   it('emphasises the value-moving rows so they lead the confirmation', () => {
     const tx = buildTx({
-      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: 1n, nonce: 1,
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '1', nonce: 1,
     });
     const emphasised = summarizeTransaction(tx)!.rows.filter((r) => r.emphasis).map((r) => r.label);
     expect(emphasised).toEqual(['To', 'Amount']);
@@ -164,7 +164,7 @@ describe('summarizeTransaction — contract calls (WYSIWYS decode of function + 
 
   it('surfaces AE attached to a contract call as an emphasised row', () => {
     const summary = summarizeTransaction(
-      contractCallTx(encodeCall('transfer', [RECIPIENT, 1n]), 2n * 10n ** 18n),
+      contractCallTx(encodeCall('transfer', [RECIPIENT, 1n]), (2n * 10n ** 18n).toString()),
     );
     const attached = summary!.rows.find((r) => r.label === 'AE sent with call');
     expect(attached).toMatchObject({ value: '2 AE', emphasis: true });
@@ -181,7 +181,7 @@ describe('summarizeTransaction — contract calls (WYSIWYS decode of function + 
   });
 
   it('fails closed when contract calldata cannot be decoded', () => {
-    const garbage = encode(new Uint8Array([0, 1, 2, 3, 4, 5]), Encoding.Bytearray);
+    const garbage = encode(new Uint8Array([0, 1, 2, 3, 4, 5]), Encoding.Bytearray) as `cb_${string}`;
     expect(summarizeTransaction(contractCallTx(garbage))).toBeNull();
   });
 });
@@ -330,7 +330,7 @@ describe('summarizeTransaction — PayingForTx surfaces the inner transaction', 
 
   it('decodes the wrapper AND the inner tx the user actually consents to', () => {
     const inner = buildTx({
-      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: 7n, nonce: 1,
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '7', nonce: 1,
     });
     const summary = summarizeTransaction(wrap(inner));
     expect(summary!.title).toBe('Pay fees for another transaction');
@@ -342,7 +342,7 @@ describe('summarizeTransaction — PayingForTx surfaces the inner transaction', 
   });
 
   it('fails closed when the inner transaction cannot be explained', () => {
-    const garbage = encode(new Uint8Array([9, 9, 9, 9]), Encoding.Bytearray);
+    const garbage = encode(new Uint8Array([9, 9, 9, 9]), Encoding.Bytearray) as `cb_${string}`;
     expect(summarizeTransaction(wrap(contractCallTx(garbage)))).toBeNull();
   });
 

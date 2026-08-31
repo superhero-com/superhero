@@ -107,7 +107,7 @@ const inlineVaultStore = createIndexedDbVaultStore();
 const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
 
 /**
- * Signer-factory swap point — the wallet build plan §3.4 / §8 phase P4. Installs the
+ * Signer-factory swap point. Installs the
  * in-page inline signer instead of the delegated (`superhero://` deep-link +
  * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when ALL of these
  * hold:
@@ -118,7 +118,7 @@ const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletS
  *  2. `isStandalone()` — the app is running as an installed PWA. Routing ONLY,
  *     never a security boundary: it is documented-spoofable, and under
  *     same-origin custody forcing the inline path in a plain browser tab changes
- *     nothing about the security story (the wallet build plan §3.4).
+ *     nothing about the security story.
  *  3. The address is a known inline account in the cleartext manifest. This is
  *     what keeps a user who connected an EXTERNAL wallet (extension,
  *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside

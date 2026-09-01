@@ -14,6 +14,7 @@ import Spinner from '@/components/Spinner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAccount } from '@/hooks';
+import { NostrLinkGate } from '@/features/nostr-link';
 
 import { formatThresholdDigits } from '../utils/formatters';
 import { RoomStatusChip } from '../components/RoomStatusChip';
@@ -192,6 +193,8 @@ const InboxView = () => {
 
       <StartNewChatDialog open={startOpen} onOpenChange={setStartOpen} />
       <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
+
+      <NostrLinkGate />
     </div>
   );
 };

@@ -5,8 +5,11 @@
  * via `useSyncExternalStore`.
  */
 import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useAtomCallback } from 'jotai/utils';
 
 import { useAccount } from '@/hooks';
+import { fetchNostrLink } from '@/features/nostr-link/link-flow';
+import { nostrLinkStatusAtom } from '@/features/nostr-link/state';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
 import {
   lockRoomSession,
@@ -43,6 +46,18 @@ export function useRoomSession(): UseRoomSessionResult {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Unlocking caches the key locally but does NOT register the account's npub,
+  // leaving a session peers cannot reach — they resolve `ak_…` → npub through the
+  // link. An unlock click is an explicit "I want to use chat", so re-raise the
+  // prompt even for an account that dismissed it earlier (`done`).
+  const promptLinkIfUnlinked = useAtomCallback(
+    useCallback(async (get, set, address: string) => {
+      const status = get(nostrLinkStatusAtom);
+      if (status === 'linked' || status === 'linking' || status === 'prompt') return;
+      set(nostrLinkStatusAtom, (await fetchNostrLink(address)) ? 'linked' : 'prompt');
+    }, []),
+  );
+
   const unlock = useCallback(async () => {
     if (!activeAccount) {
       setError(new Error('Connect an account to unlock chat.'));
@@ -54,10 +69,14 @@ export function useRoomSession(): UseRoomSessionResult {
       await unlockRoomSession(activeAccount);
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to unlock chat.'));
+      return;
     } finally {
       setIsUnlocking(false);
     }
-  }, [activeAccount]);
+    // Outside the unlock's own try: a failed link lookup must not report the
+    // session — which is unlocked — as having failed to unlock.
+    await promptLinkIfUnlinked(activeAccount).catch(() => {});
+  }, [activeAccount, promptLinkIfUnlinked]);
 
   const lock = useCallback(() => lockRoomSession(), []);
 

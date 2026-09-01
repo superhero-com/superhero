@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Spinner from '@/components/Spinner';
 import Identicon from '@/components/Identicon';
+import { NostrLinkGate } from '@/features/nostr-link';
 
 import { contactsAtom } from '../domains/contacts/contacts.state';
 import { profilesAtom } from '../domains/profiles/profiles.state';
@@ -159,6 +160,8 @@ const DmThreadView = () => {
         {renderComposer()}
         {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
       </div>
+
+      <NostrLinkGate />
     </div>
   );
 };

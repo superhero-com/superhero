@@ -4,6 +4,7 @@ import {
   Download, MonitorSmartphone, Share, X, ChevronDown,
 } from 'lucide-react';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
+import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -19,12 +20,18 @@ export const PwaInstallPrompt = () => {
     canPrompt, promptInstall, isIOS, isInstalled,
   } = usePwaInstall();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  // Persisted: component state alone brought the card back on every reload, with
+  // no way for the user to ever say "not this".
+  const { isSnoozed, snooze } = usePwaInstallSnooze();
+  // Hides the card the instant an install is accepted, without waiting on
+  // `appinstalled`. Deliberately NOT the snooze: they installed, so there is no
+  // dismissal to remember.
+  const [justInstalled, setJustInstalled] = useState(false);
   const [iosDialogOpen, setIosDialogOpen] = useState(false);
   const iosTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Don't render if already installed, not installable, or dismissed
-  if (isInstalled || (!canPrompt && !isIOS) || isDismissed) return null;
+  if (isInstalled || justInstalled || (!canPrompt && !isIOS) || isSnoozed) return null;
 
   return (
     <>
@@ -76,7 +83,7 @@ export const PwaInstallPrompt = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsDismissed(true)}
+                    onClick={snooze}
                     className="p-1 rounded-full hover:bg-white/5 transition-colors"
                     aria-label="Dismiss"
                   >
@@ -118,7 +125,7 @@ export const PwaInstallPrompt = () => {
                   onClick={async () => {
                     const accepted = await promptInstall();
                     if (accepted) {
-                      setIsDismissed(true);
+                      setJustInstalled(true);
                     }
                   }}
                   className="w-full group inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"

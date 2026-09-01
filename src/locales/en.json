@@ -3079,6 +3079,7 @@
       "next": "Next →",
       "done": "Done!",
       "fabLabel": "Install App",
+      "fabDismissLabel": "Dismiss",
       "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
       "ios": {
         "step1": {

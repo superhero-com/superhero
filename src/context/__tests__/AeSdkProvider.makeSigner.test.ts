@@ -3,11 +3,12 @@ import {
 } from 'vitest';
 
 /**
- * `makeSigner` installs the inline signer only when all three hold:
- * `INLINE_WALLET_ENABLED`, `isStandalone()`, and the address being in the
- * cleartext manifest. Anything else falls through to the delegated relay,
- * unchanged. The flag is checked first, so an off build never reaches the inline
- * path whatever the other two say; the manifest check is what leaves an
+ * `makeSigner` (account install) and `signMessageInline` (the signing path) both
+ * resolve the account through `inlineSignerIndex`, which yields an index only
+ * when all three hold: `INLINE_WALLET_ENABLED`, `isStandalone()`, and the address
+ * being in the cleartext manifest. Anything else falls through to the delegated
+ * relay, unchanged. The flag is checked first, so an off build never reaches the
+ * inline path whatever the other two say; the manifest check is what leaves an
  * externally connected wallet — whose key we don't hold — on the relay.
  *
  * `vi.doMock` + `resetModules()` + dynamic import per test, so each case controls
@@ -39,9 +40,19 @@ const mockFlag = (value: boolean) => vi.doMock('@/features/wallet/config', () =>
   INLINE_WALLET_ENABLED: value,
 }));
 
+/** Records what the inline account was built with, and signs a fixed value. */
+let inlineAccountOpts: { address: string; index: number } | null = null;
+const mockInlineAccount = () => vi.doMock('@/features/wallet/inline-sdk-account', () => ({
+  createInlineSdkAccount: (opts: { address: string; index: number }) => {
+    inlineAccountOpts = opts;
+    return { signMessage: async () => new Uint8Array([0x0b, 0xad, 0xc0, 0xde]) };
+  },
+}));
+
 describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
   beforeEach(() => {
     vi.resetModules();
+    inlineAccountOpts = null;
   });
 
   afterEach(() => {
@@ -49,6 +60,7 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     vi.doUnmock('@/features/wallet/manifest-store');
     vi.doUnmock('@/features/wallet/vault-store');
     vi.doUnmock('@/features/wallet/config');
+    vi.doUnmock('@/features/wallet/inline-sdk-account');
   });
 
   it('returns the delegated account when the feature flag is OFF, even standalone with a manifest hit', async () => {
@@ -125,6 +137,43 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     expect(result.address).toBe(INLINE_ADDRESS);
     expect(typeof result.signTransaction).toBe('function');
     expect(typeof result.signMessage).toBe('function');
+  });
+
+  it('signs a message in-page for an inline account, under its manifest index', async () => {
+    // The delegated relay's account carries the provider's own `signMessage`, so
+    // the signing path must build the inline account from the manifest rather
+    // than resolve one off the static sdk — which would deep-link out on a
+    // device holding the seed, or recurse.
+    mockFlag(true);
+    mockStandalone(true);
+    mockManifest();
+    mockInlineAccount();
+
+    const { signMessageInline } = await import('@/context/AeSdkProvider');
+
+    await expect(signMessageInline(INLINE_ADDRESS, 'hello')).resolves.toBe('0badc0de');
+    expect(inlineAccountOpts).toMatchObject({ address: INLINE_ADDRESS, index: 3 });
+  });
+
+  it('declines to sign in-page for an external, absent or browser-tab address', async () => {
+    mockFlag(true);
+    mockStandalone(true);
+    mockManifest();
+    mockInlineAccount();
+
+    const standalone = await import('@/context/AeSdkProvider');
+    expect(standalone.signMessageInline(EXTERNAL_ADDRESS, 'hello')).toBeNull();
+    expect(standalone.signMessageInline(undefined, 'hello')).toBeNull();
+
+    vi.resetModules();
+    vi.doUnmock('@/utils/displayMode');
+    mockStandalone(false);
+    mockManifest();
+    mockInlineAccount();
+
+    const browserTab = await import('@/context/AeSdkProvider');
+    expect(browserTab.signMessageInline(INLINE_ADDRESS, 'hello')).toBeNull();
+    expect(inlineAccountOpts).toBeNull();
   });
 
   it('the installed inline signer refuses to sign when no vault exists on the device', async () => {

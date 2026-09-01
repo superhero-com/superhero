@@ -107,10 +107,10 @@ const inlineVaultStore = createIndexedDbVaultStore();
 const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
 
 /**
- * Signer-factory swap point. Installs the
- * in-page inline signer instead of the delegated (`superhero://` deep-link +
- * `localStorage` poll + `BroadcastChannel`) relay, but ONLY when ALL of these
- * hold:
+ * The vault index `address` derives under when it signs in-page through the
+ * inline wallet, or `null` when it belongs on the delegated (`superhero://`
+ * deep-link + `localStorage` poll + `BroadcastChannel`) relay. ALL of these must
+ * hold for an index:
  *
  *  1. `INLINE_WALLET_ENABLED` — the wallet exists in this build at all. It is the
  *     last backstop in front of real seed custody; `features/wallet/config.ts`
@@ -124,13 +124,32 @@ const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletS
  *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
  *     the installed PWA — we must never claim to sign for a key we don't hold.
  *
- * Any one false → the existing delegated account object, completely unchanged.
- * Browser (non-standalone) mode is untouched in every case.
- *
- * The returned account signs in-page: user-verification + WYSIWYS confirm on
- * EVERY signature via `requestUnlock` (`unlock-broker.ts` → `WalletSignPrompt`),
- * then unseal → derive → sign → drop. No unlocked seed is cached between
- * signatures — see `inline-signer.ts`.
+ * Any one false → the delegated path, completely unchanged. Browser
+ * (non-standalone) mode is untouched in every case. Every route to a signature
+ * resolves the account through this one lookup so they cannot drift.
+ */
+export const inlineSignerIndex = (address: string): number | null => {
+  // First because it is a build-time constant: an off build folds the inline path
+  // away here rather than shipping a live call to it.
+  if (!INLINE_WALLET_ENABLED) return null;
+  if (!isStandalone()) return null;
+  return indexForAddress(address);
+};
+
+/**
+ * The inline account for `address`: it signs in-page with user verification +
+ * WYSIWYS confirm on EVERY signature via `requestUnlock` (`unlock-broker.ts` →
+ * `WalletSignPrompt`), then unseal → derive → sign → drop. No unlocked seed is
+ * cached between signatures — see `inline-signer.ts`.
+ */
+const inlineAccount = (address: string, index: number, networkId?: string) => (
+  createInlineSdkAccount({
+    address, index, store: inlineVaultStore, unlock: requestUnlock, networkId,
+  })
+);
+
+/**
+ * Signer-factory swap point.
  *
  * Exported as a plain function (not a hook) so it can be unit-tested in
  * isolation from React lifecycle / SDK initialization.
@@ -140,15 +159,9 @@ export const makeSigner = (
   createDelegatedAccount: (addr: string) => unknown,
   networkId?: string,
 ): unknown => {
-  // First because it is a build-time constant: an off build folds the inline path
-  // away here rather than shipping a live call to it.
-  if (!INLINE_WALLET_ENABLED) return createDelegatedAccount(address);
-  if (!isStandalone()) return createDelegatedAccount(address);
-  const index = indexForAddress(address);
+  const index = inlineSignerIndex(address);
   if (index === null) return createDelegatedAccount(address);
-  return createInlineSdkAccount({
-    address, index, store: inlineVaultStore, unlock: requestUnlock, networkId,
-  });
+  return inlineAccount(address, index, networkId);
 };
 
 const normalizeSignatureResult = (signature: any): string => {
@@ -159,6 +172,22 @@ const normalizeSignatureResult = (signature: any): string => {
     return bytesToHex(signature.signature);
   }
   throw new Error('Wallet did not return a valid signature');
+};
+
+/**
+ * In-page signature for an inline account, or `null` when `address` is not one
+ * and the caller must fall through to the delegated relay. Builds the account
+ * here rather than resolving it off the static sdk: that registry can still hold
+ * the DELEGATED account for this address, whose `signMessage` is the provider's
+ * own — signing through it would recurse.
+ */
+export const signMessageInline = (
+  address: string | undefined,
+  message: string,
+): Promise<string> | null => {
+  const index = address ? inlineSignerIndex(address) : null;
+  if (!address || index === null) return null;
+  return inlineAccount(address, index).signMessage(message).then(normalizeSignatureResult);
 };
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
@@ -208,6 +237,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     message: string,
     options?: SignMessageOptions,
   ): Promise<string> => {
+    // Inline accounts live on the static sdk, not the AeSdkAepp, so the aepp
+    // attempt below would fail "not connected" and deep-link out to the installed
+    // wallet — from the very device that holds the seed.
+    const inline = signMessageInline(activeAccountRef.current, message);
+    if (inline) return inline;
+
     const signer = aeSdkRef.current as any;
     if (typeof signer?.signMessage === 'function') {
       try {

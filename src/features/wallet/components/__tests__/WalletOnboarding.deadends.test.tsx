@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   passphraseUnlock: vi.fn(),
   unlockVault: vi.fn(),
   saveManifest: vi.fn(),
+  addPasskeyFactor: vi.fn(),
 }));
 
 vi.mock('@/utils/displayMode', () => ({
@@ -56,7 +57,7 @@ vi.mock('../../manifest-store', () => ({
 vi.mock('../../wallet-lifecycle', () => ({
   createWalletFromPasskey: (...a: unknown[]) => mocks.createWalletFromPasskey(...a),
   addRecoveryCodeFactor: (...a: unknown[]) => mocks.addRecoveryCodeFactor(...a),
-  addPasskeyFactor: vi.fn(),
+  addPasskeyFactor: (...a: unknown[]) => mocks.addPasskeyFactor(...a),
   importWalletWithDek: vi.fn(),
   recordMnemonicBackedUp: vi.fn(),
   hasFactor: (r: { factors: { type: string }[] }, t: string) => r.factors.some((f) => f.type === t),
@@ -98,7 +99,89 @@ describe('WalletOnboarding — no step is a dead end', () => {
     mocks.manifest = null;
     mocks.createWalletFromPasskey.mockReset();
     mocks.addRecoveryCodeFactor.mockReset();
+    mocks.addPasskeyFactor.mockReset();
     mocks.clear.mockClear();
+  });
+
+  describe('a wallet with no passkey can still gain one', () => {
+    /**
+     * `protect` offers "Skip — use my passphrase", and onboarding used to be the
+     * only place `addPasskeyFactor` was reachable from — so that skip was
+     * permanent, and the connect modal's passkey card then had nothing to run.
+     */
+    const PASSPHRASE_ONLY = { factors: [{ type: 'passphrase' }, { type: 'recovery-code' }] };
+
+    beforeEach(() => {
+      mocks.record = PASSPHRASE_ONLY;
+      mocks.manifest = { accounts: [{ index: 0, address: 'ak_existing' }], activeAddress: 'ak_existing' };
+      mocks.passphraseUnlock.mockResolvedValue({ factorId: 'f0', kek: {} });
+      mocks.unlockVault.mockResolvedValue({ mnemonic: VALID_MNEMONIC, dek: {} });
+    });
+
+    it('offers to add device unlock, behind the one unlock enrolling it needs', async () => {
+      await mount();
+      await screen.findByText(/add your device.s own unlock/i);
+
+      // Not offered before the unlock: enrolling a factor requires the DEK.
+      expect(screen.queryByRole('button', { name: /set up device unlock/i })).not.toBeInTheDocument();
+
+      const input = screen.getByPlaceholderText('passphrase');
+      fireEvent.change(input, { target: { value: 'correct horse battery staple' } });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /unlock with passphrase/i }));
+      });
+
+      expect(await screen.findByRole('button', { name: /set up device unlock/i })).toBeEnabled();
+    });
+
+    it('enrolls without walking into a recovery-code step the wallet already passed', async () => {
+      // goToRecovery would mint a SECOND code and demand it be saved — the first
+      // one is still valid, so that screen would be a lie plus a lost code.
+      mocks.addPasskeyFactor.mockResolvedValue({
+        factors: [...PASSPHRASE_ONLY.factors, { type: 'webauthn-prf' }],
+      });
+      await mount();
+
+      fireEvent.change(await screen.findByPlaceholderText('passphrase'), { target: { value: 'pass' } });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /unlock with passphrase/i }));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /set up device unlock/i }));
+      });
+
+      expect(mocks.addPasskeyFactor).toHaveBeenCalledTimes(1);
+      expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
+      expect(screen.queryByText(/save your recovery code/i)).not.toBeInTheDocument();
+      // The screen doesn't change, so it has to say the ceremony landed.
+      expect(await screen.findByText(/device unlock is set up/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /continue with this wallet/i })).toBeEnabled();
+    });
+
+    it('keeps the recovery-code retry when that enrollment is what failed', async () => {
+      // The unlock leaves a DEK behind, but repair outranks the passkey offer:
+      // replacing these controls would strand the retry for the MANDATORY code
+      // behind a passkey ceremony the user may not be able to complete.
+      mocks.record = { factors: [{ type: 'passphrase' }] };
+      mocks.addRecoveryCodeFactor.mockRejectedValue(new Error('quota'));
+      await mount();
+
+      fireEvent.change(await screen.findByPlaceholderText('passphrase'), { target: { value: 'pass' } });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /unlock with passphrase/i }));
+      });
+
+      expect(screen.getByRole('button', { name: /unlock with passphrase/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /set up device unlock/i })).not.toBeInTheDocument();
+    });
+
+    it('does not offer the passkey it already has', async () => {
+      mocks.record = FAKE_RECORD;
+      await mount();
+      await screen.findByRole('button', { name: /continue with this wallet/i });
+
+      expect(screen.queryByText(/add your device.s own unlock/i)).not.toBeInTheDocument();
+    });
   });
 
   describe('the `exists` screen', () => {

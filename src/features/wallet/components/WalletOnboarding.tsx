@@ -237,6 +237,13 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   const [dek, setDek] = useState<CryptoKey | null>(null);
   const [deviceUnlockAvailable, setDeviceUnlockAvailable] = useState(false);
   const [passkeyEnrolled, setPasskeyEnrolled] = useState(false);
+  /**
+   * A passkey was enrolled onto an ALREADY complete wallet, from `exists`. That
+   * path has no next screen to walk to, so this is the only confirmation the
+   * ceremony actually landed. Distinct from `passkeyEnrolled`, which is also set
+   * by a repair unlock that merely observed an existing one.
+   */
+  const [passkeyJustAdded, setPasskeyJustAdded] = useState(false);
   // Can this device create a passkey at all? Feature-detect only, never UA-sniff.
   // Gates the passkey option's CTA; when false the phrase option is the only way
   // to create a wallet here, so it must never be hidden behind the passkey one.
@@ -262,6 +269,27 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   // The vault is persisted before the mandatory recovery code is enrolled, so a
   // reload in that window leaves this state — see repairWallet.
   const needsRecoveryCode = !!record && !hasFactor(record, 'recovery-code');
+  /** Something is missing that only an unlock can rebuild (manifest, recovery code). */
+  const showUnlockBox = !!record && (!existingAddress || needsRecoveryCode);
+  /**
+   * This wallet could hold a device passkey and doesn't. Not a defect — `protect`
+   * offers "Skip — use my passphrase" — but it used to be irreversible, because
+   * onboarding was the only place `addPasskeyFactor` was ever reachable from.
+   */
+  const canAddPasskey = !!record && passkeySupported && !hasFactor(record, 'webauthn-prf');
+  /**
+   * Offer the enrollment only once nothing else needs this box. Repair outranks
+   * it: a failed `goToRecovery` leaves the wallet on `exists` still missing its
+   * mandatory recovery code, and replacing the unlock controls there would strand
+   * the retry behind a passkey ceremony the user may not be able to complete.
+   */
+  const offerAddPasskey = canAddPasskey && !!dek && !showUnlockBox;
+  let unlockBoxReason = 'You unlock this wallet with your passphrase. Add your device’s own unlock too, so you don’t type it for every signature — the device decides which (Face ID, Touch ID, fingerprint, or your passcode).';
+  if (!record || !existingAddress) {
+    unlockBoxReason = 'This device’s wallet list was cleared. Unlock once and we’ll rebuild it — your wallet and its funds are untouched.';
+  } else if (needsRecoveryCode) {
+    unlockBoxReason = 'Your recovery code was never set up. It’s your backup way into this device’s wallet if your passkey stops working, so unlock once and we’ll finish that now.';
+  }
   // Re-render trigger only: assessPassphrase reads the estimator's own module state,
   // so we just need a state change to re-run it once the load resolves OR fails.
   const [, bumpEstimator] = useState(0);
@@ -431,7 +459,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
    * that code is the only factor surviving a lost passkey or an Apple PRF rekey.
    *
    * One unlock covers both: the seed re-derives index 0 for the manifest, the DEK
-   * enrolls the code.
+   * enrolls the code. It also enrolls a LATER device passkey — onboarding's
+   * `protect` step is skippable, and until this it was the only place a passkey
+   * could ever be added, so "Skip — use my passphrase" was a permanent choice.
    */
   const repairWallet = useCallback(async (usePasskey: boolean) => {
     if (!record) return;
@@ -445,26 +475,34 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       saveManifest(manifestForFirstAccount(address));
       setUnlockPass('');
       setRecoveredAddress(address);
-      if (!hasFactor(record, 'recovery-code')) {
-        // `done` reads all three. Without them "Open wallet" hands the caller an
-        // empty address and silently does nothing.
-        setFirstAddr(address);
+      // `done` reads both. Without them "Open wallet" hands the caller an empty
+      // address and silently does nothing.
+      setFirstAddr(address);
+      setPasskeyEnrolled(hasFactor(record, 'webauthn-prf'));
+      // Hold the DEK only where a later step spends it — the mandatory recovery
+      // code, or a device passkey this wallet never got. Everywhere else it dies
+      // with the unlock, which is the shortest lifetime this screen can give it.
+      const missingCode = !hasFactor(record, 'recovery-code');
+      if (missingCode || (passkeySupported && !hasFactor(record, 'webauthn-prf'))) {
         setDek(unlocked);
-        setPasskeyEnrolled(hasFactor(record, 'webauthn-prf'));
-        await goToRecovery(record, unlocked);
       }
+      if (missingCode) await goToRecovery(record, unlocked);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [record, unlockPass, goToRecovery]);
+  }, [record, unlockPass, passkeySupported, goToRecovery]);
 
   /**
    * DEVICE-GATED. Enroll a platform passkey and use its PRF output as a second
    * KEK for the same DEK. The OS decides which verification it shows — Face ID,
    * Touch ID, fingerprint or the device passcode — and the web platform gives us
    * no way to know or choose which, so the copy must never promise a named one.
+   *
+   * Reached from `protect` during onboarding AND from `exists` afterwards, so it
+   * must not assume the recovery code is still ahead of it: on an already
+   * complete wallet there is no next step to walk to.
    */
   const enrollDeviceUnlock = useCallback(async () => {
     if (!record || !dek) return;
@@ -481,6 +519,15 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       });
       setRecord(updated);
       setPasskeyEnrolled(true);
+      if (hasFactor(updated, 'recovery-code')) {
+        // Enrolled onto a complete wallet (the `exists` screen). Nothing follows,
+        // so drop the DEK here rather than carrying it to a step this path never
+        // reaches — and say it landed, since the screen does not change.
+        setPasskeyJustAdded(true);
+        setDek(null);
+        setBusy(false);
+        return;
+      }
       await goToRecovery(updated);
     } catch (e) {
       // Not fatal: the passphrase factor still protects the wallet, and this
@@ -728,46 +775,64 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   </p>
                   <ErrorNote error={error} />
                   {/* Repair comes first when something is missing: it is the action we
-                      want taken, and with no manifest Continue is dead anyway. */}
-                  {(!existingAddress || needsRecoveryCode) && (
+                      want taken, and with no manifest Continue is dead anyway. The
+                      same box offers a LATE device passkey, because it already owns
+                      the one unlock enrolling one needs — and `protect` is skippable,
+                      so without this a passphrase-only wallet could never gain one. */}
+                  {(showUnlockBox || canAddPasskey) && (
                     <div className="mb-3 rounded-lg border border-border bg-muted/40 p-3">
                       <p className="mb-3 text-xs text-muted-foreground">
-                        {!existingAddress
-                          ? 'This device’s wallet list was cleared. Unlock once and we’ll rebuild it — your wallet and its funds are untouched.'
-                          : 'Your recovery code was never set up. It’s your backup way into this device’s wallet if your passkey stops working, so unlock once and we’ll finish that now.'}
+                        {unlockBoxReason}
                       </p>
-                      {record && hasFactor(record, 'webauthn-prf') && (
-                        <PrimaryButton
-                          className="mb-2"
-                          disabled={busy}
-                          onClick={() => repairWallet(true)}
-                        >
+                      {/* Already unlocked and only the passkey is missing: spend the
+                          unlock we have rather than asking for a second one. */}
+                      {offerAddPasskey ? (
+                        <PrimaryButton disabled={busy} onClick={enrollDeviceUnlock}>
                           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                          Unlock with this device
+                          Set up device unlock
                         </PrimaryButton>
-                      )}
-                      {record && hasFactor(record, 'passphrase') && (
+                      ) : (
                         <>
-                          <Input
-                            className={cn(field, 'mb-2')}
-                            type="password"
-                            value={unlockPass}
-                            placeholder="passphrase"
-                            autoComplete="current-password"
-                            autoCapitalize="none"
-                            onChange={(e) => setUnlockPass(e.target.value)}
-                          />
-                          <AeButton
-                            variant="ghost"
-                            fullWidth
-                            disabled={busy || unlockPass.length === 0}
-                            onClick={() => repairWallet(false)}
-                          >
-                            Unlock with passphrase
-                          </AeButton>
+                          {record && hasFactor(record, 'webauthn-prf') && (
+                            <PrimaryButton
+                              className="mb-2"
+                              disabled={busy}
+                              onClick={() => repairWallet(true)}
+                            >
+                              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                              Unlock with this device
+                            </PrimaryButton>
+                          )}
+                          {record && hasFactor(record, 'passphrase') && (
+                            <>
+                              <Input
+                                className={cn(field, 'mb-2')}
+                                type="password"
+                                value={unlockPass}
+                                placeholder="passphrase"
+                                autoComplete="current-password"
+                                autoCapitalize="none"
+                                onChange={(e) => setUnlockPass(e.target.value)}
+                              />
+                              <AeButton
+                                variant="ghost"
+                                fullWidth
+                                disabled={busy || unlockPass.length === 0}
+                                onClick={() => repairWallet(false)}
+                              >
+                                Unlock with passphrase
+                              </AeButton>
+                            </>
+                          )}
                         </>
                       )}
                     </div>
+                  )}
+                  {passkeyJustAdded && (
+                    <p className="mb-3 flex items-center gap-2 text-xs text-emerald-400">
+                      <CircleCheck className="h-4 w-4 shrink-0" />
+                      Device unlock is set up. Your passphrase still works.
+                    </p>
                   )}
                   {/* Demoted for a missing code, never blocked on it: the wallet works, and
                       refusing access to funds over a backup gap is the worse failure. `busy`

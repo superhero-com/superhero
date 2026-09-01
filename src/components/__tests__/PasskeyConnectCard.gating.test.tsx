@@ -1,5 +1,7 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import {
+  render, screen, act, fireEvent,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
   beforeEach, describe, expect, it, vi,
@@ -17,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   standalone: true,
   inlineWalletEnabled: true,
   trigger: vi.fn(),
+  openDeviceWallet: vi.fn(),
+  deviceWallet: 'none' as string,
+  state: 'idle' as string,
+  errorMsg: null as string | null,
   connectedAddress: null as string | null,
   addStaticAccount: vi.fn(),
 }));
@@ -35,13 +41,16 @@ vi.mock('@/hooks', () => ({
 }));
 
 vi.mock('@/hooks/usePasskeyConnect', () => ({
+  hasDeviceVault: (d: string) => d === 'passkey' || d === 'other-factors',
   usePasskeyConnect: () => ({
     available: true,
-    state: 'idle',
-    errorMsg: null,
+    state: mocks.state,
+    errorMsg: mocks.errorMsg,
     needsOnboarding: false,
+    deviceWallet: mocks.deviceWallet,
     connectedAddress: mocks.connectedAddress,
     trigger: mocks.trigger,
+    openDeviceWallet: mocks.openDeviceWallet,
     resetOnboarding: vi.fn(),
     loading: false,
   }),
@@ -58,6 +67,10 @@ describe('PasskeyConnectCard — offered only where the wallet can actually sign
     mocks.standalone = true;
     mocks.inlineWalletEnabled = true;
     mocks.trigger.mockClear();
+    mocks.openDeviceWallet.mockClear();
+    mocks.deviceWallet = 'none';
+    mocks.state = 'idle';
+    mocks.errorMsg = null;
     mocks.addStaticAccount.mockClear();
     mocks.connectedAddress = null;
   });
@@ -77,6 +90,43 @@ describe('PasskeyConnectCard — offered only where the wallet can actually sign
     mocks.inlineWalletEnabled = false;
     const { container } = render(<PasskeyConnectCard onConnected={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('names this device’s passphrase-only wallet instead of a passkey it does not have', async () => {
+    // Advertising "Passkey" over a vault with no webauthn factor is what made
+    // the old dead end read as a broken button.
+    mocks.deviceWallet = 'other-factors';
+    await mount();
+
+    const card = screen.getByRole('button', { name: /this device.s wallet/i });
+    expect(card).toBeEnabled();
+    fireEvent.click(card);
+    expect(mocks.trigger).toHaveBeenCalled();
+  });
+
+  it('routes a failed ceremony to the fallback it just promised', async () => {
+    // Re-running `trigger` would only re-fail; the error must not be the last word.
+    mocks.deviceWallet = 'passkey';
+    mocks.state = 'error';
+    mocks.errorMsg = 'Passkey failed.';
+    await mount();
+
+    const card = screen.getByRole('button', { name: /tap to unlock another way/i });
+    fireEvent.click(card);
+
+    expect(mocks.openDeviceWallet).toHaveBeenCalled();
+    expect(mocks.trigger).not.toHaveBeenCalled();
+  });
+
+  it('leaves the error alone when there is no wallet to fall back to', async () => {
+    mocks.deviceWallet = 'none';
+    mocks.state = 'error';
+    mocks.errorMsg = 'Passkey failed.';
+    await mount();
+
+    expect(screen.queryByText(/tap to unlock another way/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /passkey/i }));
+    expect(mocks.openDeviceWallet).not.toHaveBeenCalled();
   });
 });
 

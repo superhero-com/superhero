@@ -5,8 +5,17 @@
  * ConnectWalletModal. Handles three cases:
  *
  * 1. No vault → show WalletOnboarding (creates wallet + enrolls passkey)
- * 2. Vault with passkey factor → trigger WebAuthn unlock
+ * 2. Vault with passkey factor → run the WebAuthn unlock and connect the account
  * 3. Vault without passkey factor → guide user to enroll one in settings
+ *
+ * Case 2 must actually PROVE the passkey opens this vault. An earlier revision
+ * ran `navigator.credentials.get` and discarded the result, which verified
+ * nothing (any credential the browser offered "succeeded") and connected nobody
+ * — `onConnected` was never reached, so the card was a dead end. The ceremony
+ * now goes through the same `passkeyUnlockProvider` the signer uses and the KEK
+ * is proven against the vault by unwrapping the DEK, which fails closed at GCM.
+ * The mnemonic is deliberately NOT decrypted: connecting needs the public
+ * address from the manifest, not the seed.
  */
 
 import {
@@ -14,6 +23,9 @@ import {
 } from 'react';
 import { isPlatformAuthenticatorAvailable, RP_ID } from '@/features/wallet/webauthn';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
+import { passkeyUnlockProvider } from '@/features/wallet/wallet-lifecycle';
+import { unwrapDek } from '@/features/wallet/factors';
+import { loadManifest } from '@/features/wallet/manifest-store';
 
 export type PasskeyState =
   | 'idle'
@@ -28,6 +40,8 @@ export function usePasskeyConnect() {
   const [state, setState] = useState<PasskeyState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  /** Set once a passkey has been proven against the vault; the card connects it. */
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setAvailable);
@@ -37,6 +51,7 @@ export function usePasskeyConnect() {
     setState('checking');
     setErrorMsg(null);
     setNeedsOnboarding(false);
+    setConnectedAddress(null);
 
     try {
       // Check what's in the vault
@@ -62,34 +77,34 @@ export function usePasskeyConnect() {
       // Passkey factor exists → run the WebAuthn ceremony
       setState('unlocking');
       const passkeyFactor = record.factors.find((f) => f.type === 'webauthn-prf');
-      const credentialId = passkeyFactor?.webauthn?.credentialId;
-
-      if (!credentialId) {
+      if (!passkeyFactor?.webauthn) {
         setState('error');
         setErrorMsg('Passkey data is incomplete. Try reconnecting your wallet.');
         return;
       }
 
-      await navigator.credentials.get({
-        publicKey: {
-          challenge: crypto.getRandomValues(new Uint8Array(32)),
-          // The pinned build-time RP ID — the custody boundary. Imported rather
-          // than re-reading import.meta.env, so there is exactly ONE place this
-          // value is decided (webauthn.ts). A second inline copy silently drifts:
-          // it would keep defaulting to superhero.com on a build that had set
-          // VITE_WEBAUTHN_RP_ID, and every ceremony here would fail with a
-          // SecurityError while enrollment elsewhere worked.
-          rpId: RP_ID,
-          userVerification: 'required',
-          allowCredentials: [{
-            id: Uint8Array.from(atob(credentialId.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)),
-            type: 'public-key' as const,
-          }],
-          extensions: { prf: {} } as unknown as AuthenticationExtensionsClientInputs,
-        },
-      });
+      // The same provider the signer unlocks with: it evaluates the PRF at this
+      // factor's stored salt and derives the KEK, rather than running a ceremony
+      // whose result nothing reads.
+      const { kek } = await passkeyUnlockProvider()(record);
+      // The KEK only proves anything once it opens THIS vault. A wrong or foreign
+      // credential produces a KEK that fails right here, at GCM. The mnemonic is
+      // deliberately not unsealed: connecting needs the public address, not the seed.
+      await unwrapDek(passkeyFactor, kek);
 
-      // Success — the wallet lifecycle will pick up the account
+      const manifest = loadManifest();
+      const address = manifest?.activeAddress
+        ?? manifest?.accounts[0]?.address;
+      if (!address) {
+        // Vault intact but the cleartext manifest is gone — clearing site data
+        // drops localStorage while IndexedDB survives. Onboarding's repair path
+        // unlocks once and rebuilds the address list.
+        setNeedsOnboarding(true);
+        setState('no-vault');
+        return;
+      }
+
+      setConnectedAddress(address);
       setState('idle');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -122,6 +137,7 @@ export function usePasskeyConnect() {
 
   const resetOnboarding = useCallback(() => {
     setNeedsOnboarding(false);
+    setConnectedAddress(null);
     setState('idle');
   }, []);
 
@@ -130,6 +146,7 @@ export function usePasskeyConnect() {
     state,
     errorMsg,
     needsOnboarding,
+    connectedAddress,
     trigger,
     resetOnboarding,
     loading: state === 'checking' || state === 'unlocking',

@@ -5,7 +5,7 @@
  * Handles the full passkey flow: vault check → WebAuthn unlock → inline onboarding if needed.
  */
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '@/hooks';
 import { usePasskeyConnect } from '@/hooks/usePasskeyConnect';
@@ -64,10 +64,28 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
     state,
     errorMsg,
     needsOnboarding,
+    connectedAddress,
     trigger,
     resetOnboarding,
     loading,
   } = usePasskeyConnect();
+
+  // A proven passkey has to reach the caller, or the card is a dead end: the
+  // ceremony ran, the vault opened, and nothing connected.
+  // Latched against an unmemoised `onConnected`, which re-fires this effect and
+  // would connect twice. Keyed on the address rather than a flag because
+  // `resetOnboarding` nulls it, and re-proving the same wallet must still connect.
+  const connectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!connectedAddress) {
+      connectedRef.current = null;
+      return;
+    }
+    if (connectedRef.current === connectedAddress) return;
+    connectedRef.current = connectedAddress;
+    addStaticAccount(connectedAddress);
+    onConnected(connectedAddress);
+  }, [connectedAddress, addStaticAccount, onConnected]);
 
   // Must agree with `makeSigner`: offering creation where the inline signer won't
   // install produced a real, fundable account whose every signature was routed to

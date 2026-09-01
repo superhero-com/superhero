@@ -124,6 +124,13 @@ function resolveTargetPath(data) {
   try {
     const parsed = new URL(data.url || resolveNotificationPath(data), self.location.origin);
     if (parsed.origin !== self.location.origin) return '/';
+    // The origin check alone is not enough, because only the PATH survives it.
+    // `https://<us>//evil.example/x` is same-origin, but its pathname is
+    // `//evil.example/x` — a scheme-relative reference that re-resolves to
+    // https://evil.example/x when openTarget rebuilds it, and openWindow (unlike
+    // client.navigate) will follow it off-origin. The URL parser has already
+    // folded any backslashes to `/`, so this covers `/\evil.example` too.
+    if (parsed.pathname.startsWith('//')) return '/';
     return parsed.pathname + parsed.search + parsed.hash;
   } catch {
     return '/';

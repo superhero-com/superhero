@@ -207,6 +207,20 @@ describe('notifications service worker — notificationclick', () => {
     expect(sw.swSelf.clients.openWindow).toHaveBeenCalledWith('/');
   });
 
+  it('refuses a scheme-relative data.url that is technically same-origin', async () => {
+    // `https://app.test//evil.example/x` passes the origin check, but its pathname
+    // is `//evil.example/x`, which re-resolves scheme-relative to
+    // https://evil.example/x — and openWindow is not origin-scoped.
+    await click(sw, { url: `${ORIGIN}//evil.example/phish` });
+    expect(sw.swSelf.clients.openWindow).toHaveBeenCalledWith('/');
+  });
+
+  it('refuses a backslash-prefixed data.url', async () => {
+    // The URL parser folds `\` to `/`, so this is the same attack spelled differently.
+    await click(sw, { url: String.raw`${ORIGIN}/\evil.example/phish` });
+    expect(sw.swSelf.clients.openWindow).toHaveBeenCalledWith('/');
+  });
+
   it('honours an explicit same-origin data.url over the derived path', async () => {
     sw.swSelf.clients.matchAll.mockResolvedValue([]);
     await click(sw, { url: `${ORIGIN}/users/ak_x?tab=posts`, type: 'post-comment', commentId: '9_v3' });

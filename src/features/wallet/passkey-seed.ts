@@ -1,11 +1,12 @@
 /**
- * Passkey-derived seed — the web (non-PWA) wallet creation path.
+ * Passkey-derived seed — the "Use a passkey" wallet creation path.
  *
- * The browser-tab flow has no seed-phrase screen: the user taps "Continue with
+ * That flow has no seed-phrase screen: the user taps "Continue with
  * passkey" and a wallet exists. That is only safe because the mnemonic is not
  * *discarded*, it is DERIVED — deterministically, from the passkey's own PRF
- * output — so it can be re-obtained later (export in settings) or re-derived
- * from scratch on a new device with nothing but the passkey.
+ * output — so it can be re-derived from scratch on any device the passkey is
+ * available on. Note there is no export/reveal screen today, so a passkey that
+ * does not sync off its device leaves no other copy of the seed.
  *
  * Two properties make that work, and both are load-bearing:
  *

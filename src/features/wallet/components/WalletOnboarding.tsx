@@ -297,8 +297,11 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     setError('');
     const m = generateMnemonic(12);
     setMnemonic(m);
-    const a = Math.floor(Math.random() * 12);
-    let b = Math.floor(Math.random() * 12);
+    // No key material rides on these indices, but this file must not carry a
+    // Math.random anyone could copy into somewhere that does.
+    const [ra, rb] = crypto.getRandomValues(new Uint32Array(2));
+    const a = ra % 12;
+    let b = rb % 12;
     if (b === a) b = (b + 1) % 12;
     setVerifyIdx([Math.min(a, b), Math.max(a, b)]);
     setVerifyIn(['', '']);
@@ -391,8 +394,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
 
   /**
    * Generate the MANDATORY recovery code and enroll it as a factor. It is the
-   * only unlock that survives both total device loss and an Apple PRF rekey, so
-   * onboarding cannot reach `done` without it.
+   * only unlock that survives a forgotten passphrase AND an Apple PRF rekey, so
+   * onboarding cannot reach `done` without it. It does NOT survive losing the
+   * device — the record it unlocks lives only here (recovery.ts).
    *
    * Takes the DEK as an argument (defaulting to state) because the passkey-create
    * path calls this in the same tick it obtains the DEK, before the `setDek`
@@ -487,14 +491,16 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   }, [store, record, dek, firstAddr, goToRecovery]);
 
   /**
-   * DEVICE-GATED. The web (non-PWA) create path: one passkey ceremony produces
-   * the wallet. The BIP39 seed is derived from the passkey's PRF output, so
-   * there is nothing for the user to write down — it is recoverable from the
-   * passkey itself, and still exportable from settings later.
+   * DEVICE-GATED. The "Use a passkey" create path, offered on every surface: one
+   * passkey ceremony produces the wallet. The BIP39 seed is derived from the
+   * passkey's PRF output, so there is nothing for the user to write down — it is
+   * re-derivable wherever that passkey is, which for a device-bound credential
+   * (Windows Hello) means this device only. There is no reveal screen, so do not
+   * describe the seed as exportable (passkey-seed.ts).
    *
    * The mandatory recovery code is enrolled immediately after, exactly as on the
    * seed path: the passkey is the primary factor, the code is the escape hatch
-   * for a lost device or an Apple PRF rekey.
+   * for a forgotten passphrase or an Apple PRF rekey.
    */
   const createWithPasskey = useCallback(async () => {
     setError('');
@@ -728,7 +734,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                       <p className="mb-3 text-xs text-muted-foreground">
                         {!existingAddress
                           ? 'This device’s wallet list was cleared. Unlock once and we’ll rebuild it — your wallet and its funds are untouched.'
-                          : 'Your recovery code was never set up. It is the only way back in if you lose this device, so unlock once and we’ll finish that now.'}
+                          : 'Your recovery code was never set up. It’s your backup way into this device’s wallet if your passkey stops working, so unlock once and we’ll finish that now.'}
                       </p>
                       {record && hasFactor(record, 'webauthn-prf') && (
                         <PrimaryButton
@@ -781,8 +787,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   {resetArmed ? (
                     <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
                       <p className="mb-3 text-xs text-rose-300">
-                        This erases the wallet stored on this device. If you have not written
-                        down your recovery phrase or recovery code, the funds in it are gone
+                        This erases the wallet stored on this device. Your recovery code
+                        cannot bring it back — it only unlocks what is stored here. Unless you
+                        wrote down your recovery phrase, the funds in it are gone
                         for good. Superhero cannot restore it.
                       </p>
                       <div className="flex gap-2">
@@ -851,7 +858,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     recommended
                     disabled={!passkeySupported}
                     body={passkeySupported
-                      ? 'Face ID, Touch ID or your device PIN. Nothing to write down — your recovery phrase is derived from the passkey, and you can reveal it any time in Settings.'
+                      ? 'Face ID, Touch ID or your device PIN. Your recovery phrase is derived from the passkey, so it comes back on any device that passkey syncs to — iCloud Keychain or Google Password Manager. A passkey that never leaves one device, like Windows Hello, is the only copy.'
                       : 'This device or browser can’t create a passkey. Use a recovery phrase instead.'}
                     cta="Continue with passkey"
                     onClick={createWithPasskey}
@@ -1131,8 +1138,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   <IconChip icon={LifeBuoy} />
                   <h2 className={heading}>Save your recovery code</h2>
                   <p className="text-sm text-amber-300/90 mb-4">
-                    Shown once, now. It unlocks your wallet if you forget your passphrase or lose this
-                    device. Store it somewhere other than this device.
+                    Shown once, now. It unlocks the wallet on this device if you forget your
+                    passphrase or your passkey stops working. It cannot bring a wallet back from a
+                    lost or wiped device. Store it somewhere other than this device.
                   </p>
                   <p className="rounded-xl border border-border bg-muted/60 px-3 py-3 font-mono text-sm break-all text-center text-foreground mb-2">
                     {recoveryCode}

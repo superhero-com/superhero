@@ -2,9 +2,15 @@
  * Recovery code.
  *
  * A 128-bit, high-entropy code shown ONCE at enrollment. It is a `recovery-code`
- * factor (HKDF → KEK, factors.ts) — a device-independent unlock path so a single
- * passkey rekey (Apple FB22434584) or eviction can't orphan the wallet. It is NOT
- * a substitute for the mandatory WRITTEN mnemonic backup; both are required.
+ * factor (HKDF → KEK, factors.ts) — a PASSKEY-independent unlock path, so a single
+ * passkey rekey (Apple FB22434584) can't orphan the wallet.
+ *
+ * It is NOT device-independent, and must never be described as one. The code only
+ * derives a KEK; unwrapping the DEK still needs `record.factors[].wrap` and
+ * `record.seal`, which live solely in this device's evictable IndexedDB
+ * (vault-store.ts). Lose the record — a wiped device, Safari ITP eviction — and the
+ * code unlocks nothing. Only the WRITTEN mnemonic backup survives that, which is
+ * why it is mandatory and why the two are not interchangeable.
  *
  * Rendered as grouped uppercase hex (bijective, no base32 bit-packing to get
  * wrong — for a recovery path, correctness beats brevity). Parsing is lenient

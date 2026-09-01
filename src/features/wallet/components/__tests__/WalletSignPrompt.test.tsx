@@ -344,3 +344,84 @@ describe('WalletSignPrompt — per-signature unlock + WYSIWYS confirm', () => {
     second.catch(() => {});
   });
 });
+
+describe('WalletSignPrompt — the prompt describes the grant it is asking for', () => {
+  beforeEach(() => {
+    resetUnlockBroker();
+    passphraseProvider.mockReset().mockResolvedValue({ factorId: 'f0', kek: KEK });
+  });
+
+  afterEach(() => resetUnlockBroker());
+
+  it('does not claim a one-shot unlock when unlocking the chat session', async () => {
+    // The regression this pins: the description was unconditional, so approving a
+    // key cached for a rolling 30-minute window read as "nothing is kept unlocked
+    // afterwards" — the opposite of what the user was granting.
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), { kind: 'chat-session', idleMinutes: 30 });
+
+    expect(screen.getByText(/unlock chat/i)).toBeInTheDocument();
+    expect(screen.getByText(/locks itself after 30 minutes idle/i)).toBeInTheDocument();
+    expect(screen.queryByText(/one signature only/i)).toBeNull();
+
+    pending.catch(() => {});
+  });
+
+  it('still claims a one-shot unlock for a real signature', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), SPEND_CONTEXT);
+
+    expect(screen.getByText(/one signature only/i)).toBeInTheDocument();
+
+    pending.catch(() => {});
+  });
+
+  it('shows no WYSIWYS payload box for a non-signing unlock', async () => {
+    // There are no bytes to show, and rendering the box empty would imply there are.
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), { kind: 'nostr-link' });
+
+    expect(screen.getByText(/link your chat identity/i)).toBeInTheDocument();
+    expect(screen.queryByText(/show raw transaction/i)).toBeNull();
+
+    pending.catch(() => {});
+  });
+
+  /**
+   * The submit button is the last thing read before the grant is given, so it
+   * has to agree with the heading and description above it. Keying it off the
+   * PRESENCE of a context made every chat grant claim a signature — the one
+   * claim those kinds exist to contradict.
+   */
+  it.each([
+    ['chat-session', { kind: 'chat-session', idleMinutes: 30 }, /approve & unlock/i],
+    ['nostr-link', { kind: 'nostr-link' }, /approve & link/i],
+  ] as const)('does not offer to sign for a %s grant', async (_name, context, label) => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), context);
+
+    expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sign/i })).toBeNull();
+
+    pending.catch(() => {});
+  });
+
+  it('still offers to sign a real signature', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), SPEND_CONTEXT);
+
+    expect(screen.getByRole('button', { name: /approve & sign/i })).toBeInTheDocument();
+
+    pending.catch(() => {});
+  });
+
+  it('asks only to unlock when nothing is being granted', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'));
+
+    const submit = screen.getByRole('button', { name: /^unlock$/i });
+    expect(submit).toBeInTheDocument();
+
+    pending.catch(() => {});
+  });
+});

@@ -16,7 +16,9 @@ import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 import { deriveNostrIdentity } from '@/features/wallet/nostr-key';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
 import { indexForAddress } from '@/features/wallet/manifest-store';
-import { NostrKeySession, bindNostrSessionTeardown } from '../identity/nostr-session';
+import {
+  NostrKeySession, bindNostrSessionTeardown, DEFAULT_NOSTR_IDLE_TIMEOUT_MS,
+} from '../identity/nostr-session';
 import { createRevocableNostrIdentity } from '../identity/revocable-identity';
 
 /** Subscribers notified whenever the session locks or unlocks. */
@@ -68,7 +70,16 @@ export async function unlockRoomSession(address: string): Promise<string> {
     throw new Error('Chat needs the in-app wallet on this device.');
   }
   const accountIndex = indexForAddress(address) ?? 0;
-  const keys = await deriveNostrIdentity(record, requestUnlock, accountIndex);
+  // Name the grant: this approval yields a key cached for a rolling idle window,
+  // not the single signature the prompt otherwise describes.
+  const keys = await deriveNostrIdentity(
+    record,
+    (r) => requestUnlock(r, {
+      kind: 'chat-session',
+      idleMinutes: Math.round(DEFAULT_NOSTR_IDLE_TIMEOUT_MS / 60_000),
+    }),
+    accountIndex,
+  );
   roomKeySession.unlock(keys);
   ensureRoomSessionTeardown();
   notifyChange();

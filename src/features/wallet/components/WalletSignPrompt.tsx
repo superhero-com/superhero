@@ -13,7 +13,19 @@ import {
   hasFactor, passkeyUnlockProvider, passphraseUnlockProvider, recoveryUnlockProvider,
 } from '../wallet-lifecycle';
 import { summarizeTransaction, type TxSummary } from '../tx-summary';
-import type { UnlockProvider } from '../inline-signer';
+import type { SigningContext, UnlockProvider } from '../inline-signer';
+
+/**
+ * Is this grant an actual signature? Only the payload kinds are; `chat-session`
+ * and `nostr-link` were given a context precisely because they are NOT, so every
+ * control that says "sign" must ask this rather than test for a context at all.
+ * A type predicate, so the WYSIWYS block narrows to the kinds that have a payload.
+ */
+const isSignatureContext = (
+  c?: SigningContext,
+): c is Extract<SigningContext, { payload: string }> => (
+  c?.kind === 'transaction' || c?.kind === 'message'
+);
 
 /**
  * P4 integration — the in-page unlock + WYSIWYS confirmation surface.
@@ -174,6 +186,28 @@ const WalletSignPrompt = () => {
   let heading = 'Confirm it’s you';
   if (context?.kind === 'transaction') heading = 'Confirm this transaction';
   else if (context?.kind === 'message') heading = 'Sign this message';
+  else if (context?.kind === 'chat-session') heading = 'Unlock chat';
+  else if (context?.kind === 'nostr-link') heading = 'Link your chat identity';
+
+  // What the approval actually grants. The default is a one-shot signature; the
+  // chat kinds are NOT, and saying so is the whole point of naming them.
+  let grantDescription = 'Your wallet unlocks for this one signature only — '
+    + 'nothing is kept unlocked afterwards.';
+  if (context?.kind === 'chat-session') {
+    grantDescription = 'This unlocks your chat identity, which stays available while you are '
+      + `using chat and locks itself after ${context.idleMinutes} minutes idle. `
+      + 'Your wallet is not unlocked for anything else.';
+  } else if (context?.kind === 'nostr-link') {
+    grantDescription = 'This derives the chat identity that signs your one-time link proof. '
+      + 'It is held for the rest of this flow, then dropped.';
+  }
+
+  // Must track `grantDescription`: a button promising a signature over a grant
+  // that is a rolling chat session is the one place the user reads before acting.
+  let submitLabel = 'Unlock';
+  if (isSignatureContext(context)) submitLabel = 'Approve & sign';
+  else if (context?.kind === 'chat-session') submitLabel = 'Approve & unlock';
+  else if (context?.kind === 'nostr-link') submitLabel = 'Approve & link';
 
   const submitSecret = () => runUnlock(
     mode === 'recovery' ? recoveryUnlockProvider(secret) : passphraseUnlockProvider(secret),
@@ -231,12 +265,11 @@ const WalletSignPrompt = () => {
                   {heading}
                 </Dialog.Title>
                 <Dialog.Description className="text-sm text-muted-foreground mb-4">
-                  Your wallet unlocks for this one signature only — nothing is kept unlocked
-                  afterwards.
+                  {grantDescription}
                 </Dialog.Description>
 
                 {/* ---------- WYSIWYS: exactly what is about to be signed ---------- */}
-                {context && (
+                {isSignatureContext(context) && (
                   <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
                     {summary && <SummaryBlock summary={summary} />}
                     {context.kind === 'transaction' && !summary && (
@@ -306,7 +339,7 @@ const WalletSignPrompt = () => {
                     />
                     <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || secret.length === 0} onClick={submitSecret}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                      {context ? 'Approve & sign' : 'Unlock'}
+                      {submitLabel}
                     </button>
                   </>
                 )}

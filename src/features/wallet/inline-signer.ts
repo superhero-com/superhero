@@ -35,22 +35,32 @@ import { unlockVault, type VaultRecord } from './vault-record';
  * UI can show the exact payload (WYSIWYS) and bind the user-verification to THIS
  * signature — not merely to "a signature".
  */
-export interface SigningContext {
-  kind: 'transaction' | 'message';
+export type SigningContext =
   /** the exact bytes being signed: the `tx_…` string, or the message text. */
-  payload: string;
-  networkId?: string;
-}
+  | { kind: 'transaction'; payload: string; networkId?: string }
+  | { kind: 'message'; payload: string; networkId?: string }
+  /**
+   * Not a signature: unlocking the chat identity. The derived nostr key is then
+   * cached for a rolling idle window (`nostr-session.ts`), so the prompt must
+   * say so — the one-signature wording every other unlock carries is the
+   * opposite of what this grant does.
+   */
+  | { kind: 'chat-session'; idleMinutes: number }
+  /** Not a signature either: deriving the identity that signs the link proof. */
+  | { kind: 'nostr-link' };
 
 /**
  * Performs user-verification and returns the KEK for one of the vault's factors.
  * Implementations: passphrase prompt (kekFromPassphrase) or WebAuthn PRF
  * (evaluatePrf → kekFromHighEntropy). MUST re-verify on every call.
  *
- * `context` is present ONLY for a signature (the signing path —
- * `InlineWalletSigner` — always provides it); it is absent for non-signing
- * unlocks (factor enrollment / recovery). When `context` is present the provider
- * MUST show it to the user (WYSIWYS) before releasing a KEK. NOTE (P4/SR):
+ * `context` describes what the unlock is FOR. The signing path
+ * (`InlineWalletSigner`) always provides a `transaction`/`message` context, and
+ * when one is present the provider MUST show the payload to the user (WYSIWYS)
+ * before releasing a KEK. The non-signing kinds carry no payload but still name
+ * the grant, because a prompt that cannot say what it is authorising defaults to
+ * describing a one-shot signature — which for `chat-session` is untrue. Context
+ * is absent only for factor enrollment / recovery. NOTE (P4/SR):
  * showing the payload and binding the KEK release to it is enforced only by the
  * provider — the core cannot attest UV happened or that this payload was shown.
  * The passkey provider SHOULD make this binding cryptographic (WebAuthn PRF

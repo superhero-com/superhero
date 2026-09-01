@@ -21,7 +21,12 @@
 
 const ALG = 'AES-GCM';
 const IV_BYTES = 12; // 96-bit IV, the GCM standard/nonce size
-const DEFAULT_AAD = 'superhero-vault-v1';
+/**
+ * The AAD every vault seal is bound to. Exported so `unlockVault` can assert it
+ * rather than trusting the value carried inside the (untrusted) box — without
+ * that assertion the binding this module advertises does not actually hold.
+ */
+export const VAULT_AAD = 'superhero-vault-v1';
 
 /**
  * Ciphertext at rest. No key material. Safe to store in the vault record.
@@ -79,7 +84,7 @@ export function generateDek(): Promise<CryptoKey> {
 const bs = (u: Uint8Array): BufferSource => u as unknown as BufferSource;
 
 /** AES-256-GCM-seal a UTF-8 string (the mnemonic) under the DEK. */
-export async function seal(plaintext: string, dek: CryptoKey, aad: string = DEFAULT_AAD): Promise<SealedBox> {
+export async function seal(plaintext: string, dek: CryptoKey, aad: string = VAULT_AAD): Promise<SealedBox> {
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
   const ct = new Uint8Array(await crypto.subtle.encrypt(
     { name: ALG, iv, additionalData: bs(enc.encode(aad)) },
@@ -100,7 +105,7 @@ export async function seal(plaintext: string, dek: CryptoKey, aad: string = DEFA
  */
 export async function unseal(box: SealedBox, dek: CryptoKey, expectedAad?: string): Promise<string> {
   const alg = box.alg ?? ALG;
-  const aad = box.aad ?? DEFAULT_AAD;
+  const aad = box.aad ?? VAULT_AAD;
   if (expectedAad !== undefined && expectedAad !== aad) {
     throw new Error('vault: sealed box AAD does not match the expected context');
   }

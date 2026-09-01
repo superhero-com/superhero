@@ -12,7 +12,7 @@
  *    unrecoverable (the write-only-backup is the fallback, not an unlock path).
  */
 import {
-  generateDek, seal, unseal, type SealedBox,
+  generateDek, seal, unseal, VAULT_AAD, type SealedBox,
 } from './vault';
 import {
   unwrapDek, wrapDek, type KdfParams, type FactorType, type WrappedFactor,
@@ -84,7 +84,10 @@ export async function unlockVault(
   const factor = record.factors.find((f) => f.id === factorId);
   if (!factor) throw new Error(`vault: no factor ${factorId}`);
   const dek = await unwrapDek(factor, kek);
-  const mnemonic = await unseal(record.seal, dek);
+  // Assert the context rather than accepting whatever the box records: `unseal`
+  // reads `aad` out of the box itself, so without an expected value a seal moved
+  // in from another context would decrypt happily under the same DEK.
+  const mnemonic = await unseal(record.seal, dek, VAULT_AAD);
   return { mnemonic, dek };
 }
 

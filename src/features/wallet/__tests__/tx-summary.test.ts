@@ -359,3 +359,46 @@ describe('summarizeTransaction — PayingForTx surfaces the inner transaction', 
     expect(rowMap(summary!.inner!)['Argument 3']).toBe(SENDER);
   });
 });
+
+// Whether a selector decodes as text or as bytes is a per-name coin flip (see
+// `toHex`). Reading only the bytes form left every call in the text half — posting
+// included — undecodable, so the prompt could only offer Cancel.
+describe('summarizeTransaction — selectors that decode as text, not bytes', () => {
+  const STR = { name: 's', type: 'string' };
+  const STR_LIST = { name: 'm', type: { list: ['string'] } };
+
+  it('names a post — the selector 0x1c397862 decodes as a UTF-8 string', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('post_without_tip', [STR, STR_LIST], ['hello #test', []]),
+    ));
+    expect(summary).not.toBeNull();
+    expect(summary!.title).toBe('Publish a post');
+    expect(summary!.caution).toBeUndefined();
+    expect(rowMap(summary!).Text).toBe('hello #test');
+  });
+
+  it('names an AE-out swap, whose selector also decodes as a string', () => {
+    const summary = summarizeTransaction(contractCallTx(forgeCall(
+      'swap_exact_tokens_for_ae',
+      [
+        { name: 'amountIn', type: 'int' },
+        { name: 'amountOutMin', type: 'int' },
+        { name: 'path', type: { list: ['address'] } },
+        { name: 'to', type: 'address' },
+        { name: 'deadline', type: 'int' },
+        { name: 'callback', type: { option: ['int'] } },
+      ],
+      [1n, 2n, [RECIPIENT, SENDER], RECIPIENT, 999n, undefined],
+    )));
+    expect(summary!.title).toBe('Swap tokens');
+  });
+
+  it('still shape-checks a string-selector function rather than trusting its name', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('post_without_tip', [STR, STR_LIST, ADDR], ['hi', [], SENDER]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+    expect(rowMap(summary!).Function).toMatch(/post_without_tip — unexpected argument shape/);
+  });
+});

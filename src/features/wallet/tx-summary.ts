@@ -122,6 +122,7 @@ const isIntArg: ArgType = (v) => (
   || (typeof v === 'number' && Number.isInteger(v))
   || (typeof v === 'string' && /^-?\d+$/.test(v))
 );
+const isStringArg: ArgType = (v) => typeof v === 'string';
 /** FATE `list(_)` decodes to a JS array — e.g. a DEX swap's token path. */
 const isListArg: ArgType = (v) => Array.isArray(v);
 /** FATE `option(_)` decodes to a variant object: `None` → {0:[]}, `Some` → {1:[v]}. */
@@ -158,6 +159,14 @@ const addressRow = (label: string, value: unknown, emphasis = true): TxSummaryRo
 );
 
 const KNOWN_FUNCTIONS: Record<string, KnownFn> = {
+  // The one entry here that moves no value: without it every post and comment —
+  // the app's primary action — lands on the unrecognised-contract caution path.
+  post_without_tip: {
+    title: 'Publish a post',
+    effect: 'Records this text on the Superhero content contract, publicly and permanently.',
+    argTypes: [isStringArg, isListArg],
+    argRows: (a) => [textRow('Text', a[0], true), textRow('Media', stringify(a[1]))],
+  },
   transfer: {
     title: 'Send tokens',
     effect: 'Transfers tokens from your account to another account.',
@@ -231,6 +240,11 @@ const SELECTOR_TO_NAME: Map<string, string> = (() => {
 
 const toHex = (bytes: unknown): string | null => {
   if (bytes instanceof Uint8Array) return bytesToHex(bytes);
+  // `bytes` and `string` share a FATE wire encoding, so the untyped decoder hands
+  // back the selector as text whenever its four bytes are valid UTF-8 — true of
+  // `post_without_tip`. It only takes that branch when the text re-encodes to the
+  // identical bytes, so encoding it back recovers the selector exactly.
+  if (typeof bytes === 'string') return bytesToHex(new TextEncoder().encode(bytes));
   // ContractByteArrayEncoder yields the selector as a byte array; be defensive.
   if (Array.isArray(bytes) && bytes.every((b) => typeof b === 'number')) {
     return bytesToHex(bytes as number[]);

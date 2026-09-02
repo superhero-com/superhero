@@ -6,7 +6,7 @@ import {
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 
 /**
@@ -156,9 +156,9 @@ export const PwaInstallPrompt = () => {
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              <p className="text-sm text-white/70 leading-relaxed">
+              <DialogDescription className="text-sm text-white/70 leading-relaxed">
                 {t('common.views.landing.pwaInstall.iosIntro')}
-              </p>
+              </DialogDescription>
 
               <div className="space-y-3">
                 <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">

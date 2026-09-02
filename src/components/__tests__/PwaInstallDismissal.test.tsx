@@ -194,6 +194,9 @@ describe('PwaInstallPrompt', () => {
     // The Share glyph sits mid-sentence, so the hint has to render as one
     // translated string wrapped around the icon.
     expect(screen.getByText(/icon in Safari's toolbar/)).toBeTruthy();
+    // Radix only sets aria-describedby when a DialogDescription is present, so
+    // without one a screen reader announces the title and nothing else.
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-describedby');
   });
 
   it('survives a localStorage that throws', () => {

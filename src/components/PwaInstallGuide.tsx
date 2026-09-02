@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { isIOSWebKit, isMobileDevice, isStandalone } from '@/utils/displayMode';
 import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 
 /**
@@ -203,9 +203,9 @@ export const PwaInstallGuide = ({
           <DialogHeader>
             <DialogTitle>{t('components.pwaInstallGuide.installedTitle')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-white/60 leading-relaxed">
+          <DialogDescription className="text-sm text-white/60 leading-relaxed">
             {getEarlyExitBody(alreadyInstalled, t)}
-          </p>
+          </DialogDescription>
         </DialogContent>
       </Dialog>
     );
@@ -226,9 +226,9 @@ export const PwaInstallGuide = ({
             <DialogTitle className="text-base font-bold">
               {t('components.pwaInstallGuide.title')}
             </DialogTitle>
-            <p className="text-xs text-white/50 mt-0.5">
+            <DialogDescription className="text-xs text-white/50 mt-0.5">
               {platformSubtitle}
-            </p>
+            </DialogDescription>
           </div>
         </div>
 

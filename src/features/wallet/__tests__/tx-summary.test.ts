@@ -492,3 +492,64 @@ describe('summarizeTransaction — fields the envelope must not hide', () => {
     expect(rowMap(summarizeTransaction(tx)).Payload).toBeUndefined();
   });
 });
+
+// A name update and a contract deploy both used to summarise as little more than
+// "From / Network fee / Nonce" — a signature over fields the prompt never showed.
+describe('summarizeTransaction — name updates, deploys and gas', () => {
+  it('shows where a name update repoints the name', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.NameUpdateTx,
+      accountId: SENDER,
+      nonce: 10,
+      nameId: 'superhero.chain',
+      nameTtl: 180000,
+      clientTtl: 3600,
+      pointers: [{ key: 'account_pubkey', id: RECIPIENT }],
+    }));
+
+    expect(summary!.title).toBe('Update a name');
+    const rows = rowMap(summary);
+    // The name arrives hashed on an update; the pointer is the part that matters.
+    expect(rows.Name).toMatch(/^nm_/);
+    expect(rows['Points to (account_pubkey)']).toBe(RECIPIENT);
+    const pointer = summary!.rows.find((r) => r.label.startsWith('Points to'));
+    expect(pointer?.emphasis).toBe(true);
+  });
+
+  it('shows a deploy’s deposit and gas ceiling', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.ContractCreateTx,
+      ownerId: SENDER,
+      nonce: 11,
+      code: encode(new Uint8Array([1, 2, 3, 4]), Encoding.ContractBytearray),
+      callData: encodeCall('unknown_fn', [1n]),
+      amount: 0,
+      deposit: 0,
+      gasLimit: 76000,
+      gasPrice: '1000000000',
+    }));
+
+    expect(summary!.title).toBe('Deploy a contract');
+    const rows = rowMap(summary);
+    expect(rows['Contract deposit']).toBe('0 AE');
+    expect(rows['Gas, at most']).toBe('0.000076 AE');
+  });
+
+  it('shows the gas ceiling on a contract call, which dwarfs the fee', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.ContractCallTx,
+      callerId: SENDER,
+      contractId: CONTRACT,
+      amount: 0,
+      gasLimit: 5000000,
+      gasPrice: '1000000000',
+      nonce: 3,
+      callData: encodeCall('transfer', [RECIPIENT, 1n]),
+    }));
+
+    const rows = rowMap(summary);
+    expect(rows['Gas, at most']).toBe('0.005 AE');
+    // The row that used to stand alone is an order of magnitude smaller.
+    expect(rows['Network fee']).toMatch(/^0\.0001/);
+  });
+});

@@ -82,6 +82,32 @@ const textRow = (label: string, value: unknown, emphasis = false): TxSummaryRow 
 );
 
 /**
+ * Gas is charged on TOP of `fee`, up to the limit in the transaction. At a
+ * routine 5M limit that ceiling is around thirty times the fee, so a prompt
+ * showing only "Network fee" understates what the call can cost.
+ */
+const maxGasRow = (gasLimit: unknown, gasPrice: unknown): TxSummaryRow | null => {
+  const limit = asBigInt(gasLimit);
+  const price = asBigInt(gasPrice);
+  if (limit === null || price === null) return null;
+  return { label: 'Gas, at most', value: formatAe(limit * price) };
+};
+
+/**
+ * Where a name will resolve after this update — the whole substance of a
+ * `NameUpdateTx`, and the field an attacker would repoint at their own account.
+ */
+const pointerRows = (pointers: unknown): TxSummaryRow[] => (
+  Array.isArray(pointers)
+    ? pointers.flatMap((p) => {
+      const { key, id } = (p ?? {}) as { key?: unknown; id?: unknown };
+      const row = textRow(`Points to (${String(key)})`, id, true);
+      return row ? [row] : [];
+    })
+    : []
+);
+
+/**
  * A `SpendTx` payload — the memo a tip rides on, and bytes the signature covers
  * like any other field. Rendered as text when it decodes to text, and as the raw
  * `ba_…` otherwise, so nothing signed goes undisplayed.
@@ -581,6 +607,7 @@ function summarizeContractCall(u: Unpacked): TxSummary | null {
     ...semanticRows,
     ...envelopeRows,
     amountRow('Network fee', u.fee),
+    maxGasRow(u.gasLimit, u.gasPrice),
     textRow('Nonce', asBigInt(u.nonce)?.toString()),
   ].filter((row): row is TxSummaryRow => row !== null);
 
@@ -627,14 +654,20 @@ function summarizeUnpacked(u: Unpacked, depth: number): TxSummary | null {
     textRow('To', u.recipientId, true),
     amountRow('Amount', u.amount, true),
     textRow('Contract', u.contractId),
-    textRow('Name', u.name),
+    // `name` is the plain name a claim registers; `nameId` is the hash every
+    // later name transaction carries instead. Neither is recoverable from the
+    // other, so whichever is present is the only handle the user gets.
+    textRow('Name', u.name ?? u.nameId),
+    ...pointerRows(u.pointers),
     // The price of a name, and the largest amount in the transaction by far. Left
     // out, a claim showed only the network fee — cents, next to the hundreds of AE
     // actually being spent.
     amountRow('Name price', u.nameFee, true),
+    amountRow('Contract deposit', u.deposit),
     payloadRow(u.payload),
     textRow('From', u.senderId ?? u.accountId ?? u.callerId ?? u.ownerId),
     amountRow('Network fee', u.fee),
+    maxGasRow(u.gasLimit, u.gasPrice),
     textRow('Nonce', asBigInt(u.nonce)?.toString()),
   ].filter((row): row is TxSummaryRow => row !== null);
 

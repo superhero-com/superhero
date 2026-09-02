@@ -5,13 +5,16 @@
 // the app uses. Without it a dependency can bump a signature and put a whole
 // screen back on the caution path with nothing failing.
 import { describe, expect, it } from 'vitest';
-import { Tag, buildTx, buildContractId } from '@aeternity/aepp-sdk';
+import {
+  Tag, buildTx, buildContractId, encode, Encoding,
+} from '@aeternity/aepp-sdk';
 import { Encoder } from '@aeternity/aepp-calldata';
 import TIPPING from 'tipping-contract/generated/Tipping_v3.aci.json';
 import SALE from 'bctsl-contracts/generated/AffiliationBondingCurveTokenSale.aci.json';
 import FACTORY from 'bctsl-contracts/generated/CommunityFactory.aci.json';
 import TREASURY from 'bctsl-contracts/generated/AffiliationTreasury.aci.json';
 import DAO_VOTE from 'bctsl-contracts/generated/DAOVote.aci.json';
+import DAO from 'bctsl-contracts/generated/DAO.aci.json';
 import ROUTER from 'dex-contracts-v2/deployment/aci/AedexV2Router.aci.json';
 import WAE from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
 import AEX9 from 'dex-contracts-v2/deployment/aci/FungibleTokenFull.aci.json';
@@ -24,13 +27,15 @@ const THEM = 'ak_11111111111111111111111111111111273Yts';
 const TOKEN = 'ct_11111111111111111111111111111111273Yts';
 const CALLEE = buildContractId(ME, 1);
 const ONE = 10n ** 18n;
+/** What the DAO charges to open a vote, in aettos — bctsl-sdk sends this verbatim. */
+const DAO_VOTE_FEE = (555n * ONE).toString();
 
 const call = (
   aci: unknown,
   contract: string,
   fn: string,
   args: unknown[],
-  amount = 0,
+  amount: string | number = 0,
 ): string => buildTx({
   tag: Tag.ContractCallTx,
   callerId: ME,
@@ -81,6 +86,9 @@ const APP_CALLS: [string, string, string][] = [
   ['vote on a poll', call(POLL, 'Poll', 'vote', [1n]), 'Vote'],
   ['revoke a poll vote', call(POLL, 'Poll', 'revoke_vote', []), 'Revoke your vote'],
 
+  ['open a DAO vote', call(DAO, 'DAO', 'add_vote', [{
+    subject: { VotePayout: [THEM] }, description: 'pay the thing', link: 'https://x',
+  }], DAO_VOTE_FEE), 'Open a DAO vote'],
   ['vote in a DAO', call(DAO_VOTE, 'DAOVote', 'vote', [true, ONE]), 'Vote'],
   ['revoke a DAO vote', call(DAO_VOTE, 'DAOVote', 'revoke_vote', []), 'Revoke your vote'],
   ['withdraw from a DAO vote', call(DAO_VOTE, 'DAOVote', 'withdraw', []), 'Withdraw your balance'],
@@ -125,5 +133,53 @@ describe('summarizeTransaction — every app call is named, none cautioned', () 
     ]));
     const rows = Object.fromEntries(summary!.rows.map((r) => [r.label, r.value]));
     expect(rows['Least pool shares accepted']).toBe('none');
+  });
+
+  it('names what a DAO vote proposes, not just that a vote is being opened', () => {
+    const summary = summarizeTransaction(call(DAO, 'DAO', 'add_vote', [{
+      subject: { VotePayout: [THEM] }, description: 'pay the thing', link: 'https://x',
+    }], DAO_VOTE_FEE));
+
+    const rows = Object.fromEntries(summary!.rows.map((r) => [r.label, r.value]));
+    expect(rows.Proposal).toBe(`pay out to an account — ${THEM}`);
+    expect(rows.Description).toBe('pay the thing');
+    // The 555 AE the DAO charges is the reason this one must not read as routine.
+    expect(rows['AE sent with call']).toBe('555 AE');
+  });
+
+  it('distinguishes a moderator proposal from a payout one', () => {
+    const summary = summarizeTransaction(call(DAO, 'DAO', 'add_vote', [{
+      subject: { AddModerator: [THEM] }, description: 'promote', link: '',
+    }], DAO_VOTE_FEE));
+    const rows = Object.fromEntries(summary!.rows.map((r) => [r.label, r.value]));
+    expect(rows.Proposal).toBe(`add a moderator — ${THEM}`);
+  });
+
+  it('shows what a deployed poll is being seeded with', () => {
+    const initCallData = new Encoder(POLL as never).encode('Poll', 'init', [
+      {
+        title: 'Fund the thing', description: 'why', link: 'https://x', spec_ref: undefined,
+      },
+      new Map([[0, 'yes'], [1, 'no']]),
+      500000,
+    ] as never);
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.ContractCreateTx,
+      ownerId: ME,
+      nonce: 11,
+      code: encode(new Uint8Array([1, 2, 3, 4]), Encoding.ContractBytearray),
+      callData: initCallData,
+      amount: 0,
+      deposit: 0,
+      gasLimit: 76000,
+      gasPrice: '1000000000',
+    }));
+
+    expect(summary!.title).toBe('Deploy a contract');
+    const rows = Object.fromEntries(summary!.rows.map((r) => [r.label, r.value]));
+    expect(rows['Init argument 1']).toContain('Fund the thing');
+    expect(rows['Init argument 2']).toContain('yes');
+    // `close_height` is an option, so it arrives Some-wrapped.
+    expect(rows['Init argument 3']).toContain('500000');
   });
 });

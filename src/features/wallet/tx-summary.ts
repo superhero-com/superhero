@@ -189,6 +189,18 @@ const isOptionArg: ArgType = (v) => (
   typeof v === 'object' && v !== null && !Array.isArray(v)
   && ('0' in (v as Record<string, unknown>) || '1' in (v as Record<string, unknown>))
 );
+/** Any FATE variant: one numeric constructor tag mapped to its payload list. */
+const variantTag = (v: unknown): number | null => {
+  if (typeof v !== 'object' || v === null || Array.isArray(v) || v instanceof Map) return null;
+  const keys = Object.keys(v);
+  if (keys.length !== 1 || !/^\d+$/.test(keys[0])) return null;
+  return Array.isArray((v as Record<string, unknown>)[keys[0]]) ? Number(keys[0]) : null;
+};
+/** A DAO vote's `metadata` record, which decodes to (subject variant, description, link). */
+const isVoteMetadataArg: ArgType = (v) => (
+  Array.isArray(v) && v.length === 3 && variantTag(v[0]) !== null
+  && typeof v[1] === 'string' && typeof v[2] === 'string'
+);
 
 /** Exact positional-shape match: right arity, every arg the expected type. */
 const argsMatchTypes = (types: readonly ArgType[], args: unknown[]): boolean => (
@@ -225,6 +237,28 @@ const optionRow = (label: string, value: unknown): TxSummaryRow => {
   const some = (value as Record<string, unknown[]> | null)?.['1'];
   return { label, value: Array.isArray(some) ? stringify(some[0]) : 'none' };
 };
+/**
+ * `VoteSubjects.subject` constructors in ACI order — the decoded tag IS the
+ * index. What a DAO vote proposes is the reason to approve or refuse it, and it
+ * arrives as a bare `{"0":[…]}` that reads as nothing at all.
+ */
+const VOTE_SUBJECTS = [
+  'pay out to an account',
+  'pay out an amount to an account',
+  'change the DAO contract',
+  'change the community info',
+  'change the minimum token threshold',
+  'add a moderator',
+  'remove a moderator',
+];
+const subjectRow = (variant: unknown): TxSummaryRow => {
+  const tag = variantTag(variant);
+  const payload = tag === null ? [] : (variant as Record<string, unknown[]>)[String(tag)];
+  const name = (tag !== null && VOTE_SUBJECTS[tag]) || `subject ${String(tag)}`;
+  const detail = payload.map(stringify).join(', ');
+  return { label: 'Proposal', value: detail ? `${name} — ${detail}` : name, emphasis: true };
+};
+
 const boolRow = (
   label: string,
   value: unknown,
@@ -431,6 +465,16 @@ const KNOWN_FUNCTIONS: Record<string, readonly KnownFn[]> = {
       ],
     },
   ],
+  add_vote: [{
+    title: 'Open a DAO vote',
+    effect: 'Opens a new vote in this DAO. The AE attached to this call is what the DAO '
+      + 'charges to open one.',
+    argTypes: [isVoteMetadataArg],
+    argRows: (a) => {
+      const [subject, description, link] = a[0] as unknown[];
+      return [subjectRow(subject), textRow('Description', description), textRow('Link', link)];
+    },
+  }],
   revoke_vote: [{
     title: 'Revoke your vote',
     effect: 'Takes back the vote you cast, releasing any tokens it locked.',
@@ -527,6 +571,24 @@ const toHex = (bytes: unknown): string | null => {
     return bytesToHex(bytes as number[]);
   }
   return null;
+};
+
+/**
+ * A `ContractCreateTx`'s `init` arguments. The code being deployed is opaque
+ * bytecode either way, but these are the values it is being seeded with — a
+ * governance poll's question and its options — and they were rendered nowhere.
+ * Best-effort by design: unlike a call, a deploy is not refused for want of them.
+ */
+const initArgRows = (callData: unknown): TxSummaryRow[] => {
+  if (typeof callData !== 'string') return [];
+  try {
+    const decoded = new ContractByteArrayEncoder().decode(callData as `cb_${string}`);
+    if (!Array.isArray(decoded) || decoded.length < 2) return [];
+    const args = Array.isArray(decoded[1]) ? (decoded[1] as unknown[]) : [decoded[1]];
+    return args.map((arg, i) => ({ label: `Init argument ${i + 1}`, value: stringify(arg) }));
+  } catch {
+    return [];
+  }
 };
 
 /**
@@ -659,6 +721,7 @@ function summarizeUnpacked(u: Unpacked, depth: number): TxSummary | null {
     // other, so whichever is present is the only handle the user gets.
     textRow('Name', u.name ?? u.nameId),
     ...pointerRows(u.pointers),
+    ...initArgRows(u.callData),
     // The price of a name, and the largest amount in the transaction by far. Left
     // out, a claim showed only the network fee — cents, next to the hundreds of AE
     // actually being spent.

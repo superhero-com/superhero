@@ -24,7 +24,9 @@
  *    on-chain fact this pure decoder cannot know, and inventing a scale would
  *    misstate the amount the user is approving.
  */
-import { Tag, unpackTx, hash } from '@aeternity/aepp-sdk';
+import {
+  Tag, unpackTx, hash, decode,
+} from '@aeternity/aepp-sdk';
 import { ContractByteArrayEncoder } from '@aeternity/aepp-calldata';
 
 export interface TxSummaryRow {
@@ -78,6 +80,33 @@ const amountRow = (label: string, value: unknown, emphasis = false): TxSummaryRo
 const textRow = (label: string, value: unknown, emphasis = false): TxSummaryRow | null => (
   typeof value === 'string' && value.length > 0 ? { label, value, emphasis } : null
 );
+
+/**
+ * A `SpendTx` payload — the memo a tip rides on, and bytes the signature covers
+ * like any other field. Rendered as text when it decodes to text, and as the raw
+ * `ba_…` otherwise, so nothing signed goes undisplayed.
+ */
+const payloadRow = (value: unknown): TxSummaryRow | null => {
+  if (typeof value !== 'string' || !value.startsWith('ba_')) return null;
+  let bytes: Uint8Array;
+  try {
+    bytes = decode(value as `ba_${string}`);
+  } catch {
+    return { label: 'Payload', value };
+  }
+  // The empty payload every plain send carries; a row saying "" is noise.
+  if (bytes.length === 0) return null;
+  try {
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    // Control characters mean these bytes are not the memo they decode to.
+    const control = [...text].some((c) => {
+      const n = c.charCodeAt(0);
+      return n < 9 || (n > 13 && n < 32);
+    });
+    if (!control) return { label: 'Payload', value: text };
+  } catch { /* not UTF-8 — fall through to the raw encoding */ }
+  return { label: 'Payload', value };
+};
 
 /** Readable names for the tags the app actually issues; unknown tags fall back to the tag name. */
 const TITLES: Partial<Record<Tag, string>> = {
@@ -599,6 +628,11 @@ function summarizeUnpacked(u: Unpacked, depth: number): TxSummary | null {
     amountRow('Amount', u.amount, true),
     textRow('Contract', u.contractId),
     textRow('Name', u.name),
+    // The price of a name, and the largest amount in the transaction by far. Left
+    // out, a claim showed only the network fee — cents, next to the hundreds of AE
+    // actually being spent.
+    amountRow('Name price', u.nameFee, true),
+    payloadRow(u.payload),
     textRow('From', u.senderId ?? u.accountId ?? u.callerId ?? u.ownerId),
     amountRow('Network fee', u.fee),
     textRow('Nonce', asBigInt(u.nonce)?.toString()),

@@ -442,3 +442,53 @@ describe('summarizeTransaction — bonding-curve token sale', () => {
     expect(summary!.caution).toMatch(/not the shape that function should have/i);
   });
 });
+
+// Two fields the envelope summary used to drop on the floor. Both are covered by
+// the signature, and one of them is the largest amount in the transaction.
+describe('summarizeTransaction — fields the envelope must not hide', () => {
+  const ba = (text: string) => encode(new TextEncoder().encode(text), Encoding.Bytearray);
+
+  it('shows the name price, not just the network fee, on a name claim', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.NameClaimTx,
+      accountId: SENDER,
+      nonce: 9,
+      name: 'superhero.chain',
+      nameSalt: 12345,
+      nameFee: (500n * 10n ** 18n).toString(),
+    }));
+
+    const rows = rowMap(summary);
+    expect(rows.Name).toBe('superhero.chain');
+    expect(rows['Name price']).toBe('500 AE');
+    expect(rows['Network fee']).toMatch(/^0\.0000/);
+    expect(summary!.rows.find((r) => r.label === 'Name price')?.emphasis).toBe(true);
+  });
+
+  it('shows a spend payload as the text it is', () => {
+    const tx = buildTx({
+      tag: Tag.SpendTx,
+      senderId: SENDER,
+      recipientId: RECIPIENT,
+      amount: '1',
+      nonce: 7,
+      payload: ba('TIP_POST:1234_v3'),
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBe('TIP_POST:1234_v3');
+  });
+
+  it('falls back to the raw encoding for a payload that is not text', () => {
+    const raw = encode(new Uint8Array([0xff, 0xfe, 0x00, 0x01]), Encoding.Bytearray);
+    const tx = buildTx({
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '1', nonce: 7, payload: raw,
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBe(raw);
+  });
+
+  it('adds no payload row to a plain send', () => {
+    const tx = buildTx({
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '1', nonce: 7,
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBeUndefined();
+  });
+});

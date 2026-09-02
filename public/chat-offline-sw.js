@@ -2,11 +2,13 @@
 /*
  * Superhero Chat — offline cache service worker.
  *
- * This is a SEPARATE worker from notifications-sw.js, registered with a
- * restricted scope of '/chat' so it ONLY intercepts requests under the
- * /chat route tree. It deliberately does NOT touch the root '/' scope,
- * which is reserved for the notifications push worker that handles VAPID
- * and must never intercept fetch (security constraint — see notifications-sw.js).
+ * This is a SEPARATE worker from notifications-sw.js, registered with a scope of
+ * '/chat'. Scope picks which DOCUMENTS it controls, not which URLs it sees: a
+ * controlled /chat page routes every request here, `/assets/*` and cross-origin
+ * included — which is why both are handled below instead of being dead branches.
+ * It deliberately does NOT touch the root '/' scope, which is reserved for the
+ * notifications push worker that handles VAPID and must never intercept fetch
+ * (security constraint — see notifications-sw.js).
  *
  * What this worker does:
  * 1. Same-origin static assets under /chat — cache-first for content-hashed
@@ -31,17 +33,24 @@
  *   silently dropped while the app looked like it supported one. Removed rather
  *   than left as a promise the code does not keep.
  *
- * SECURITY — this worker only caches chat UI assets. It never sees wallet
- * routes, seed data, or signing requests. The scope restriction enforces this.
+ * SECURITY — this worker stores only chat UI assets, never wallet routes, seed
+ * data or signing requests. Enforced by the fetch handler, NOT by the scope: an
+ * SPA document keeps its controller across client-side navigation, so a page
+ * opened at /chat and routed to a wallet screen still sends its requests here.
  *
  * REGISTRATION — registered from src/features/chat/hooks/useChatServiceWorker.ts
  * with { scope: '/chat' }, from the chat route tree only.
  */
 
-// Bumped whenever the caching RULES change: `activate` deletes every other
-// `sh-chat-*` cache, which is what evicts entries an older revision stored under
-// rules we no longer trust.
-const CACHE_NAME = 'sh-chat-v2';
+// Rewritten at build time by scripts/vite-chat-precache.mjs, which alone knows the
+// hashed filenames. Dev serves unhashed modules, so the repo copy precaches nothing.
+const BUILD_ID = 'dev';
+const PRECACHE_ASSETS = [];
+
+// `v2` tracks the caching RULES; BUILD_ID scopes the cache to the assets it was
+// filled for. `activate` sweeps every other `sh-chat-*`, so both a rule change and
+// a new build evict what would otherwise accumulate forever.
+const CACHE_NAME = `sh-chat-v2-${BUILD_ID}`;
 
 // The navigation fallback. Precached on install so an offline deep link to
 // /chat/dm/<pubkey> has a shell to land on — client-side routing never issues a
@@ -146,9 +155,12 @@ async function networkFirstWithShellFallback(request) {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      // Best-effort: a failed precache must not fail the install and leave the
-      // previous worker in control.
-      .then((cache) => cache.add(SHELL_URL).catch(() => {}))
+      // Per URL, not `addAll`: that is all-or-nothing, so one asset pruned by a
+      // concurrent deploy would discard the precache AND fail the install, which
+      // leaves the previous worker in control.
+      .then((cache) => Promise.all(
+        [SHELL_URL, ...PRECACHE_ASSETS].map((url) => cache.add(url).catch(() => {})),
+      ))
       .then(() => self.skipWaiting()),
   );
 });

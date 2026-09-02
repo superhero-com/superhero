@@ -13,8 +13,11 @@ import path from 'node:path';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import { injectPrecache } from '../../../../scripts/vite-chat-precache.mjs';
 
 const ORIGIN = 'https://app.test';
+/** The repo copy's unbuilt BUILD_ID; the build rewrites it per asset list. */
+const CACHE = 'sh-chat-v2-dev';
 const SW_PATH = path.resolve(__dirname, '../../../../public/chat-offline-sw.js');
 
 type Handlers = Record<string, (event: any) => void>;
@@ -28,12 +31,12 @@ function fakeCache() {
     put: vi.fn(async (req: any, res: Response) => {
       entries.set(typeof req === 'string' ? req : req.url, res);
     }),
-    add: vi.fn(async () => undefined),
+    add: vi.fn<(url: string) => Promise<void>>(async () => undefined),
   };
 }
 
-function loadSw() {
-  const source = readFileSync(SW_PATH, 'utf8');
+function loadSw(transform: (source: string) => string = (src) => src) {
+  const source = transform(readFileSync(SW_PATH, 'utf8'));
   const handlers: Handlers = {};
   const caches = new Map<string, ReturnType<typeof fakeCache>>();
   const swSelf = {
@@ -88,7 +91,7 @@ describe('chat offline worker — what it refuses to cache', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/assets/DmThread-OLD.js`));
 
-    const cache = caches.get('sh-chat-v2');
+    const cache = caches.get(CACHE);
     expect(cache?.entries.size).toBe(0);
   });
 
@@ -98,7 +101,7 @@ describe('chat offline worker — what it refuses to cache', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/assets/DmThread-abc123.js`));
 
-    expect(caches.get('sh-chat-v2')?.entries.size).toBe(1);
+    expect(caches.get(CACHE)?.entries.size).toBe(1);
   });
 
   it('stores a hashed asset unstamped, so the body is never buffered first', async () => {
@@ -110,7 +113,7 @@ describe('chat offline worker — what it refuses to cache', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/assets/DmThread-abc123.js`));
 
-    const stored = caches.get('sh-chat-v2')?.entries.get(`${ORIGIN}/assets/DmThread-abc123.js`);
+    const stored = caches.get(CACHE)?.entries.get(`${ORIGIN}/assets/DmThread-abc123.js`);
     expect(stored?.headers.get('sw-cached-at')).toBeNull();
   });
 
@@ -120,7 +123,7 @@ describe('chat offline worker — what it refuses to cache', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/icons/logo.svg`));
 
-    const stored = caches.get('sh-chat-v2')?.entries.get(`${ORIGIN}/icons/logo.svg`);
+    const stored = caches.get(CACHE)?.entries.get(`${ORIGIN}/icons/logo.svg`);
     expect(stored?.headers.get('sw-cached-at')).not.toBeNull();
   });
 
@@ -143,7 +146,7 @@ describe('chat offline worker — what it refuses to cache', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/assets/x.js`));
 
-    expect(caches.get('sh-chat-v2')?.entries.size).toBe(0);
+    expect(caches.get(CACHE)?.entries.size).toBe(0);
   });
 
   it('still serves the fetched response when the stamped write rejects (e.g. quota)', async () => {
@@ -155,7 +158,7 @@ describe('chat offline worker — what it refuses to cache', () => {
     const { handlers, caches } = loadSw();
     const cache = fakeCache();
     cache.put.mockRejectedValue(new Error('QuotaExceededError'));
-    caches.set('sh-chat-v2', cache as any);
+    caches.set(CACHE, cache as any);
     vi.stubGlobal('fetch', vi.fn(async () => res('<svg/>', 'image/svg+xml')));
 
     const responded = await fetchEvent(handlers, req(`${ORIGIN}/icons/logo.svg`));
@@ -171,7 +174,7 @@ describe('chat offline worker — offline navigation', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/chat/dm/ak_abc`, { mode: 'navigate' }));
 
-    expect(caches.get('sh-chat-v2')?.entries.size).toBe(0);
+    expect(caches.get(CACHE)?.entries.size).toBe(0);
   });
 
   it('refreshes the one shell entry on a /chat navigation, query string and all', async () => {
@@ -180,7 +183,7 @@ describe('chat offline worker — offline navigation', () => {
 
     await fetchEvent(handlers, req(`${ORIGIN}/chat?ref=push`, { mode: 'navigate' }));
 
-    const entries = caches.get('sh-chat-v2')?.entries;
+    const entries = caches.get(CACHE)?.entries;
     expect([...(entries?.keys() ?? [])]).toEqual(['/chat']);
     expect(await entries?.get('/chat')?.text()).toContain('fresh shell');
   });
@@ -191,7 +194,7 @@ describe('chat offline worker — offline navigation', () => {
     const { handlers, caches } = loadSw();
     const cache = fakeCache();
     cache.entries.set('/chat', res('<html>shell</html>', 'text/html'));
-    caches.set('sh-chat-v2', cache as any);
+    caches.set(CACHE, cache as any);
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline'); }));
 
     const responded = await fetchEvent(
@@ -210,7 +213,10 @@ describe('chat offline worker — cache versioning', () => {
     const { handlers, swSelf, caches } = loadSw();
     caches.set('sh-chat-v1', fakeCache());
     caches.set('sh-chat-geocode-v1', fakeCache());
-    caches.set('sh-chat-v2', fakeCache());
+    // A previous build's cache: hashed assets it precached are dead weight once
+    // their URLs are gone from the app, and nothing else would ever evict them.
+    caches.set('sh-chat-v2-0badcafe', fakeCache());
+    caches.set(CACHE, fakeCache());
 
     let done: Promise<unknown> = Promise.resolve();
     handlers.activate({ waitUntil: (p: Promise<unknown>) => { done = p; } });
@@ -218,7 +224,41 @@ describe('chat offline worker — cache versioning', () => {
 
     expect(swSelf.caches.delete).toHaveBeenCalledWith('sh-chat-v1');
     expect(swSelf.caches.delete).toHaveBeenCalledWith('sh-chat-geocode-v1');
-    expect(swSelf.caches.delete).not.toHaveBeenCalledWith('sh-chat-v2');
+    expect(swSelf.caches.delete).toHaveBeenCalledWith('sh-chat-v2-0badcafe');
+    expect(swSelf.caches.delete).not.toHaveBeenCalledWith(CACHE);
+  });
+});
+
+describe('chat offline worker — install precache', () => {
+  const install = async (handlers: Handlers) => {
+    let done: Promise<unknown> = Promise.resolve();
+    handlers.install({ waitUntil: (p: Promise<unknown>) => { done = p; } });
+    await done;
+  };
+
+  it('precaches the build assets, not just the shell', async () => {
+    // Why the list exists: scripts/vite-chat-precache.mjs.
+    const assets = ['/assets/index-abc123.js', '/assets/index-abc123.css'];
+    const { handlers, caches } = loadSw((src) => injectPrecache(src, assets));
+
+    await install(handlers);
+
+    const [cache] = [...caches.values()];
+    expect(cache.add.mock.calls.map(([url]) => url)).toEqual(['/chat', ...assets]);
+  });
+
+  it('installs anyway when one asset is already gone', async () => {
+    // A partial cache beats the rejected install that leaves the OLD worker up.
+    const { handlers } = loadSw((src) => injectPrecache(src, ['/assets/gone.js']));
+    const cache = fakeCache();
+    cache.add = vi.fn(async (url: string) => {
+      if (url === '/assets/gone.js') throw new Error('404');
+    });
+    (globalThis as any).caches.open = async () => cache;
+
+    await expect(install(handlers)).resolves.toBeUndefined();
+
+    expect(cache.add.mock.calls.map(([url]) => url)).toEqual(['/chat', '/assets/gone.js']);
   });
 });
 

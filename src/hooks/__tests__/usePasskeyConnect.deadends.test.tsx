@@ -23,7 +23,6 @@ const mocks = vi.hoisted(() => ({
   loadFails: false,
   manifest: { accounts: [{ index: 0, address: 'ak_existing' }], activeAddress: 'ak_existing' } as unknown,
   passkeyUnlock: vi.fn(),
-  unwrapDek: vi.fn(),
 }));
 
 vi.mock('@/features/wallet/webauthn', () => ({
@@ -47,10 +46,6 @@ vi.mock('@/features/wallet/manifest-store', () => ({
 
 vi.mock('@/features/wallet/wallet-lifecycle', () => ({
   passkeyUnlockProvider: () => mocks.passkeyUnlock,
-}));
-
-vi.mock('@/features/wallet/factors', () => ({
-  unwrapDek: (...a: unknown[]) => mocks.unwrapDek(...a),
 }));
 
 const { usePasskeyConnect } = await import('../usePasskeyConnect');
@@ -92,7 +87,6 @@ describe('usePasskeyConnect — every device state has a way in', () => {
     mocks.loadFails = false;
     mocks.manifest = { accounts: [{ index: 0, address: 'ak_existing' }], activeAddress: 'ak_existing' };
     mocks.passkeyUnlock.mockReset().mockResolvedValue({ factorId: 'f1', kek: 'kek' });
-    mocks.unwrapDek.mockReset().mockResolvedValue('dek');
   });
 
   it('opens the device wallet when the vault has no passkey factor', async () => {
@@ -118,13 +112,25 @@ describe('usePasskeyConnect — every device state has a way in', () => {
     expect(screen.getByTestId('error')).toHaveTextContent('');
   });
 
-  it('still connects a passkey wallet by proving the KEK opens the vault', async () => {
+  it('still connects a passkey wallet once the provider proves it opens the vault', async () => {
     mocks.record = { factors: [{ id: 'f0', type: 'passphrase' }, PASSKEY_FACTOR] };
     await mount();
     await tap();
 
-    expect(mocks.unwrapDek).toHaveBeenCalledWith(PASSKEY_FACTOR, 'kek');
     expect(screen.getByTestId('connected')).toHaveTextContent('ak_existing');
+    expect(screen.getByTestId('onboarding')).toHaveTextContent('false');
+  });
+
+  it('connects nobody when the passkey does not open this vault', async () => {
+    // What must never happen: falling through to a connected address on the
+    // strength of a ceremony that merely completed.
+    mocks.record = { factors: [PASSKEY_FACTOR] };
+    mocks.passkeyUnlock.mockRejectedValue(new Error('This device could not unlock your wallet.'));
+    await mount();
+    await tap();
+
+    expect(screen.getByTestId('state')).toHaveTextContent('error');
+    expect(screen.getByTestId('connected')).toHaveTextContent('');
     expect(screen.getByTestId('onboarding')).toHaveTextContent('false');
   });
 

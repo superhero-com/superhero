@@ -112,6 +112,16 @@ describe('passkey recovery', () => {
     expect(await empty.load()).toEqual(created.record);
   });
 
+  it('refuses to unlock when the credential is rekeyed under the same id', async () => {
+    // The Apple FB22434584 case in miniature: the same credential id now yields a
+    // different PRF output, and the provider is where that has to surface.
+    const store = createInMemoryVaultStore();
+    const { record } = await createWalletFromPasskey(store, { userName: 'w', now: 1 });
+    authenticator.credentials.set(authenticator.pick, crypto.getRandomValues(new Uint8Array(32)));
+
+    await expect(passkeyUnlockProvider()(record)).rejects.toThrow(/could not unlock/i);
+  });
+
   it('a short PRF output fails the derive instead of yielding a weak wallet', async () => {
     authenticator.credentials.set('weak', crypto.getRandomValues(new Uint8Array(32)));
     authenticator.pick = 'weak';

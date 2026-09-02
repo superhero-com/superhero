@@ -97,4 +97,38 @@ describe('wallet lifecycle', () => {
   it('recoveryUnlockProvider rejects a malformed code up front (before signing)', () => {
     expect(() => recoveryUnlockProvider('too-short')).toThrow(/128 bits/);
   });
+
+  it('rejects a wrong passphrase in the provider, not later in the signer', async () => {
+    const store = createInMemoryVaultStore();
+    const record = await importWallet(store, { mnemonic: MNEMONIC, passphrase: 'pw', now: 1 });
+
+    await expect(passphraseUnlockProvider('not-pw')(record)).rejects.toThrow(/passphrase is not right/i);
+  });
+
+  // A wrong secret and a tampered record both fail at `unwrapDek`, and only one of
+  // them is the user's fault. Collapsing the two would have the victim of an
+  // altered vault retyping a passphrase that was right all along.
+  it('reports a tampered wrap as tampering, not as a mistyped passphrase', async () => {
+    const store = createInMemoryVaultStore();
+    const record = await importWallet(store, { mnemonic: MNEMONIC, passphrase: 'pw', now: 1 });
+    const tampered = {
+      ...record,
+      factors: record.factors.map((f) => ({ ...f, wrap: { ...f.wrap, aad: 'wrap:elsewhere:passphrase' } })),
+    };
+
+    await expect(passphraseUnlockProvider('pw')(tampered)).rejects.toThrow(/AAD does not bind/);
+  });
+
+  it('rejects a well-formed but wrong recovery code in the provider', async () => {
+    const store = createInMemoryVaultStore();
+    const record = await importWallet(store, { mnemonic: MNEMONIC, passphrase: 'pw', now: 1 });
+    const pp = await passphraseUnlockProvider('pw')(record);
+    const { dek } = await unlockVault(record, pp.factorId, pp.kek);
+    const { record: withCode } = await addRecoveryCodeFactor(store, record, dek, 2);
+
+    // Right shape, wrong code — the length check passes, so only the unwrap catches it.
+    const wrong = 'DEAD-BEEF-DEAD-BEEF-DEAD-BEEF-DEAD-BEEF';
+    await expect(recoveryUnlockProvider(wrong)(withCode))
+      .rejects.toThrow(/recovery code is not right/i);
+  });
 });

@@ -18,8 +18,8 @@ import {
   type FactorEnrollment, type VaultRecord,
 } from './vault-record';
 import {
-  DEFAULT_ARGON2ID, kekFromHighEntropy, kekFromPassphrase,
-  type Argon2idKdf, type HkdfKdf,
+  DEFAULT_ARGON2ID, kekFromHighEntropy, kekFromPassphrase, unwrapDek,
+  type Argon2idKdf, type HkdfKdf, type WrappedFactor,
 } from './factors';
 import { fromB64, toB64 } from './vault';
 import { generateRecoveryCode, parseRecoveryCode } from './recovery';
@@ -30,6 +30,30 @@ import type { VaultStore } from './vault-store';
 import type { UnlockProvider } from './inline-signer';
 
 const b64rand = (n: number) => toB64(crypto.getRandomValues(new Uint8Array(n)));
+
+const WRONG_SECRET: Record<WrappedFactor['type'], string> = {
+  passphrase: 'That passphrase is not right — try again.',
+  'recovery-code': 'That recovery code is not right — check every character and try again.',
+  'webauthn-prf': 'This device could not unlock your wallet.',
+};
+
+/**
+ * A wrong secret still derives a well-formed KEK; only unwrapping the DEK proves
+ * it opens anything. Every provider ends here (and drops the DEK again) so the
+ * prompt — still open — reports it, rather than the signer long afterwards, with
+ * nothing left to retype into.
+ */
+async function verifiedUnlock(factor: WrappedFactor, kek: CryptoKey) {
+  try {
+    await unwrapDek(factor, kek);
+  } catch (e) {
+    // Only the GCM auth failure means "wrong secret". `unwrapDek`'s AAD check is
+    // a tamper signal, and telling that user to retype would bury it forever.
+    if ((e as Error)?.message?.startsWith('vault:')) throw e;
+    throw new Error(WRONG_SECRET[factor.type]);
+  }
+  return { factorId: factor.id, kek };
+}
 
 async function passphraseEnrollment(passphrase: string, label: string, now: number): Promise<FactorEnrollment> {
   const kdf: Argon2idKdf = { alg: 'argon2id', salt: b64rand(16), ...DEFAULT_ARGON2ID };
@@ -87,7 +111,7 @@ export function passphraseUnlockProvider(passphrase: string): UnlockProvider {
   return async (record: VaultRecord) => {
     const factor = record.factors.find((f) => f.type === 'passphrase');
     if (!factor) throw new Error('wallet: no passphrase factor enrolled');
-    return { factorId: factor.id, kek: await kekFromPassphrase(passphrase, factor.kdf as Argon2idKdf) };
+    return verifiedUnlock(factor, await kekFromPassphrase(passphrase, factor.kdf as Argon2idKdf));
   };
 }
 
@@ -117,7 +141,7 @@ export function recoveryUnlockProvider(code: string): UnlockProvider {
   return async (record: VaultRecord) => {
     const factor = record.factors.find((f) => f.type === 'recovery-code');
     if (!factor) throw new Error('wallet: no recovery-code factor enrolled');
-    return { factorId: factor.id, kek: await kekFromHighEntropy(bytes, factor.kdf as HkdfKdf) };
+    return verifiedUnlock(factor, await kekFromHighEntropy(bytes, factor.kdf as HkdfKdf));
   };
 }
 
@@ -307,6 +331,6 @@ export function passkeyUnlockProvider(): UnlockProvider {
       credentialId: fromB64(factor.webauthn.credentialId),
       prfSalt: fromB64(factor.webauthn.prfSalt),
     });
-    return { factorId: factor.id, kek: await kekFromHighEntropy(prfOutput, factor.kdf as HkdfKdf) };
+    return verifiedUnlock(factor, await kekFromHighEntropy(prfOutput, factor.kdf as HkdfKdf));
   };
 }

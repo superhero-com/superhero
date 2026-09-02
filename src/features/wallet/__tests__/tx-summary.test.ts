@@ -402,3 +402,43 @@ describe('summarizeTransaction — selectors that decode as text, not bytes', ()
     expect(rowMap(summary!).Function).toMatch(/post_without_tip — unexpected argument shape/);
   });
 });
+
+// Buying and selling a bonding-curve token is a first-class app action, and the
+// caution path it used to land on ("not a recognised standard one") reads as a
+// warning about the app's own button.
+describe('summarizeTransaction — bonding-curve token sale', () => {
+  it('names a buy and shows the AE it spends, taken from the envelope', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('buy', [INT], [10n ** 18n]),
+      (42n * 10n ** 17n).toString(),
+    ));
+    expect(summary!.title).toBe('Buy tokens');
+    expect(summary!.caution).toBeUndefined();
+
+    const rows = rowMap(summary);
+    expect(rows['Tokens to buy']).toBe('1000000000000000000 (raw token units)');
+    expect(rows['AE sent with call']).toBe('4.2 AE');
+  });
+
+  it('names a sell and shows the AE floor the call enforces', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('sell', [INT, INT], [10n ** 18n, 39n * 10n ** 17n]),
+    ));
+    expect(summary!.title).toBe('Sell tokens');
+    expect(summary!.caution).toBeUndefined();
+
+    const rows = rowMap(summary);
+    expect(rows['Tokens to sell']).toBe('1000000000000000000 (raw token units)');
+    expect(rows['Minimum AE returned']).toBe('3.9 AE');
+  });
+
+  it.each([
+    ['buy', [INT, ADDR], [1n, SENDER]],
+    ['sell', [INT], [1n]],
+  ] as const)('downgrades a %s whose arguments are the wrong shape', (fn, defs, args) => {
+    const summary = summarizeTransaction(contractCallTx(forgeCall(fn, [...defs], [...args])));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+  });
+});

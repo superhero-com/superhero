@@ -123,6 +123,10 @@ const isIntArg: ArgType = (v) => (
   || (typeof v === 'string' && /^-?\d+$/.test(v))
 );
 const isStringArg: ArgType = (v) => typeof v === 'string';
+const isBoolArg: ArgType = (v) => typeof v === 'boolean';
+/** A contract-typed argument (`IAEX9Minimal`, `Poll`, …) decodes to a `ct_…` string. */
+const isContractArg: ArgType = (v) => typeof v === 'string' && /^ct_[1-9A-HJ-NP-Za-km-z]+$/.test(v);
+const isMapArg: ArgType = (v) => v instanceof Map;
 /** FATE `list(_)` decodes to a JS array — e.g. a DEX swap's token path. */
 const isListArg: ArgType = (v) => Array.isArray(v);
 /** FATE `option(_)` decodes to a variant object: `None` → {0:[]}, `Some` → {1:[v]}. */
@@ -142,6 +146,10 @@ const stringify = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (Array.isArray(value)) return `[${value.map(stringify).join(', ')}]`;
+  // A Map JSON-stringifies to `{}`, which reads as "empty" for a map that is not.
+  if (value instanceof Map) {
+    return [...value].map(([k, v]) => `${stringify(k)}: ${stringify(v)}`).join(', ');
+  }
   if (value === null || value === undefined) return '';
   try {
     return JSON.stringify(value, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
@@ -157,46 +165,260 @@ const tokenAmountRow = (label: string, value: unknown, emphasis = true): TxSumma
 const addressRow = (label: string, value: unknown, emphasis = true): TxSummaryRow | null => (
   textRow(label, value, emphasis)
 );
+/** An `option` argument, rendered so `None` reads as an absent value, not as `{}`. */
+const optionRow = (label: string, value: unknown): TxSummaryRow => {
+  const some = (value as Record<string, unknown[]> | null)?.['1'];
+  return { label, value: Array.isArray(some) ? stringify(some[0]) : 'none' };
+};
+const boolRow = (
+  label: string,
+  value: unknown,
+  yes: string,
+  no: string,
+  emphasis = false,
+): TxSummaryRow => ({ label, value: value === true ? yes : no, emphasis });
 
-const KNOWN_FUNCTIONS: Record<string, KnownFn> = {
-  // The one entry here that moves no value: without it every post and comment —
-  // the app's primary action — lands on the unrecognised-contract caution path.
-  post_without_tip: {
+/**
+ * A name can carry MORE than one shape — `vote` is a poll's `vote(int)` and a
+ * DAO's `vote(bool, int)` — so each candidate is tried, and a name we know over a
+ * shape we do not still downgrades to the caution path.
+ *
+ * Names like `buy`, `vote` and `withdraw` are ordinary words over trivial int
+ * shapes, so a match here is weaker evidence than an AEX-9 `transfer` is. Titles
+ * therefore describe the shape rather than vouch for a particular contract; the
+ * `Contract` row is what identifies who is really being called.
+ */
+const KNOWN_FUNCTIONS: Record<string, readonly KnownFn[]> = {
+  // The one entry here that moves no value: without it every post and comment -
+  // the app's primary action - lands on the unrecognised-contract caution path.
+  post_without_tip: [{
     title: 'Publish a post',
     effect: 'Records this text on the Superhero content contract, publicly and permanently.',
     argTypes: [isStringArg, isListArg],
     argRows: (a) => [textRow('Text', a[0], true), textRow('Media', stringify(a[1]))],
-  },
-  transfer: {
+  }],
+
+  // The number that matters most on a buy is exact whatever the contract turns
+  // out to be: the AE spent is the envelope amount, not one of the arguments.
+  buy: [{
+    title: 'Buy tokens',
+    effect: 'Spends the AE attached to this call to buy tokens from this sale contract.',
+    argTypes: [isIntArg],
+    argRows: (a) => [tokenAmountRow('Tokens to buy', a[0])],
+  }],
+  sell: [{
+    title: 'Sell tokens',
+    effect: 'Sells your tokens back to this sale contract for AE.',
+    argTypes: [isIntArg, isIntArg],
+    argRows: (a) => [
+      tokenAmountRow('Tokens to sell', a[0]),
+      amountRow('Minimum AE returned', a[1], true),
+    ],
+  }],
+  create_community: [{
+    title: 'Create a token',
+    effect: 'Creates a new community token and spends the AE attached to this call on the '
+      + 'first tokens.',
+    argTypes: [isStringArg, isStringArg, isIntArg, isBoolArg, isMapArg],
+    argRows: (a) => [
+      textRow('Token name', a[1], true),
+      tokenAmountRow('First purchase', a[2]),
+      textRow('Collection', a[0]),
+      boolRow('Visibility', a[3], 'private', 'public'),
+      textRow('Details', stringify(a[4])),
+    ],
+  }],
+
+  transfer: [{
     title: 'Send tokens',
     effect: 'Transfers tokens from your account to another account.',
     argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('To', a[0]), tokenAmountRow('Amount', a[1])],
-  },
-  transfer_allowance: {
+  }],
+  transfer_allowance: [{
     title: 'Move tokens using an allowance',
     effect: 'Moves tokens between accounts using a spending allowance.',
     argTypes: [isAddressArg, isAddressArg, isIntArg],
     argRows: (a) => [addressRow('From', a[0]), addressRow('To', a[1]), tokenAmountRow('Amount', a[2])],
-  },
-  create_allowance: {
+  }],
+  create_allowance: [{
     title: 'Approve token spending',
     effect: 'Lets another account spend your tokens up to this amount.',
     argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('Spender', a[0]), tokenAmountRow('Approved amount', a[1])],
-  },
-  change_allowance: {
+  }],
+  change_allowance: [{
     title: 'Change token spending approval',
     effect: 'Increases or decreases how many of your tokens another account may spend.',
     argTypes: [isAddressArg, isIntArg],
     argRows: (a) => [addressRow('Spender', a[0]), tokenAmountRow('Amount change', a[1])],
-  },
-  reset_allowance: {
+  }],
+  reset_allowance: [{
     title: 'Revoke token spending approval',
     effect: 'Removes another account’s permission to spend your tokens.',
     argTypes: [isAddressArg],
     argRows: (a) => [addressRow('Spender', a[0])],
-  },
+  }],
+
+  // The token slots are `ct_` contracts and the recipient slot is an `ak_`
+  // account; keeping those predicates apart is what stops a call that swaps the
+  // two from being named.
+  add_liquidity: [{
+    title: 'Add liquidity',
+    effect: 'Deposits both tokens into a liquidity pool and gives you pool shares for them.',
+    argTypes: [
+      isContractArg, isContractArg, isIntArg, isIntArg, isIntArg, isIntArg,
+      isAddressArg, isOptionArg, isIntArg,
+    ],
+    argRows: (a) => [
+      textRow('Token A', a[0], true),
+      tokenAmountRow('Amount A', a[2]),
+      textRow('Token B', a[1], true),
+      tokenAmountRow('Amount B', a[3]),
+      tokenAmountRow('Least A accepted', a[4], false),
+      tokenAmountRow('Least B accepted', a[5], false),
+      addressRow('Pool shares to', a[6], false),
+      optionRow('Least pool shares accepted', a[7]),
+      textRow('Deadline', stringify(a[8])),
+    ],
+  }],
+  add_liquidity_ae: [{
+    title: 'Add liquidity',
+    effect: 'Deposits this token plus the AE attached to this call into a liquidity pool, '
+      + 'and gives you pool shares for them.',
+    argTypes: [isContractArg, isIntArg, isIntArg, isIntArg, isAddressArg, isOptionArg, isIntArg],
+    argRows: (a) => [
+      textRow('Token', a[0], true),
+      tokenAmountRow('Token amount', a[1]),
+      tokenAmountRow('Least tokens accepted', a[2], false),
+      amountRow('Least AE accepted', a[3], false),
+      addressRow('Pool shares to', a[4], false),
+      optionRow('Least pool shares accepted', a[5]),
+      textRow('Deadline', stringify(a[6])),
+    ],
+  }],
+  remove_liquidity: [{
+    title: 'Remove liquidity',
+    effect: 'Burns your pool shares and returns both tokens to you.',
+    argTypes: [
+      isContractArg, isContractArg, isIntArg, isIntArg, isIntArg, isAddressArg, isIntArg,
+    ],
+    argRows: (a) => [
+      tokenAmountRow('Pool shares to burn', a[2]),
+      textRow('Token A', a[0], true),
+      textRow('Token B', a[1], true),
+      tokenAmountRow('Least A accepted', a[3], false),
+      tokenAmountRow('Least B accepted', a[4], false),
+      addressRow('Tokens to', a[5], false),
+      textRow('Deadline', stringify(a[6])),
+    ],
+  }],
+  remove_liquidity_ae: [{
+    title: 'Remove liquidity',
+    effect: 'Burns your pool shares and returns the token and AE to you.',
+    argTypes: [isContractArg, isIntArg, isIntArg, isIntArg, isAddressArg, isIntArg],
+    argRows: (a) => [
+      tokenAmountRow('Pool shares to burn', a[1]),
+      textRow('Token', a[0], true),
+      tokenAmountRow('Least tokens accepted', a[2], false),
+      amountRow('Least AE accepted', a[3], false),
+      addressRow('Tokens to', a[4], false),
+      textRow('Deadline', stringify(a[5])),
+    ],
+  }],
+
+  deposit: [{
+    title: 'Wrap AE',
+    effect: 'Hands the AE attached to this call to the contract in exchange for the same '
+      + 'amount of its wrapped token.',
+    argTypes: [],
+    argRows: () => [],
+  }],
+
+  withdraw: [
+    {
+      title: 'Unwrap AE',
+      effect: 'Hands back this much of the wrapped token for the same amount of AE.',
+      argTypes: [isIntArg],
+      argRows: (a) => [tokenAmountRow('Amount', a[0])],
+    },
+    {
+      title: 'Withdraw your balance',
+      effect: 'Withdraws whatever balance this contract is holding for you.',
+      argTypes: [],
+      argRows: () => [],
+    },
+  ],
+
+  add_poll: [{
+    title: 'Register a poll',
+    effect: 'Adds an already-deployed poll to the governance registry.',
+    argTypes: [isContractArg, isBoolArg],
+    argRows: (a) => [
+      textRow('Poll contract', a[0], true),
+      boolRow('Listing', a[1], 'listed publicly', 'unlisted'),
+    ],
+  }],
+  vote: [
+    {
+      title: 'Vote',
+      effect: 'Casts your vote on this poll. Nothing of yours is moved or locked.',
+      argTypes: [isIntArg],
+      argRows: (a) => [textRow('Option', stringify(a[0]), true)],
+    },
+    {
+      title: 'Vote',
+      effect: 'Casts your vote and locks the tokens you are voting with until the vote closes.',
+      argTypes: [isBoolArg, isIntArg],
+      argRows: (a) => [
+        boolRow('Vote', a[0], 'in favour', 'against', true),
+        tokenAmountRow('Tokens locked', a[1]),
+      ],
+    },
+  ],
+  revoke_vote: [{
+    title: 'Revoke your vote',
+    effect: 'Takes back the vote you cast, releasing any tokens it locked.',
+    argTypes: [],
+    argRows: () => [],
+  }],
+  delegate: [{
+    title: 'Delegate your vote',
+    effect: 'Lets this account vote with your balance until you revoke it.',
+    argTypes: [isAddressArg],
+    argRows: (a) => [addressRow('Delegate to', a[0])],
+  }],
+  revoke_delegation: [{
+    title: 'Revoke your delegation',
+    effect: 'Takes back the voting power you delegated.',
+    argTypes: [],
+    argRows: () => [],
+  }],
+
+  register_invitation_code: [{
+    title: 'Create invitation links',
+    effect: 'Funds one-time invitation links out of the AE attached to this call. Anyone '
+      + 'holding a link can claim its AE.',
+    argTypes: [isListArg, isIntArg, isIntArg],
+    argRows: (a) => [
+      textRow('Invitations', String((a[0] as unknown[]).length), true),
+      amountRow('AE per invitation', a[2], true),
+      amountRow('Fee cover per invitation', a[1]),
+      textRow('Invitation accounts', stringify(a[0])),
+    ],
+  }],
+  revoke_invitation_code: [{
+    title: 'Revoke an invitation',
+    effect: 'Cancels an unclaimed invitation and returns its AE to you.',
+    argTypes: [isAddressArg],
+    argRows: (a) => [addressRow('Invitation account', a[0])],
+  }],
+  redeem_invitation_code: [{
+    title: 'Redeem an invitation',
+    effect: 'Claims this invitation’s AE to the given account.',
+    argTypes: [isAddressArg],
+    argRows: (a) => [addressRow('Invitee', a[0])],
+  }],
 };
 
 // DEX router swaps, each with the exact positional shape the aeternity DEX router
@@ -274,18 +496,18 @@ function summarizeContractCall(u: Unpacked): TxSummary | null {
   if (selector === null) return null;
 
   const name = SELECTOR_TO_NAME.get(selector);
-  const knownDef = name ? KNOWN_FUNCTIONS[name] : undefined;
+  const knownDefs = name ? KNOWN_FUNCTIONS[name] : undefined;
   // Only name a value-moving effect when the decoded calldata is the exact shape
   // that function must have. A selector-name match with the wrong arity or types
   // is NOT that function — treat it as an unrecognised call and show every arg.
-  const known = knownDef && argsMatchShape(knownDef, args) ? knownDef : undefined;
+  const known = knownDefs?.find((fn) => argsMatchShape(fn, args));
   // A DEX swap effect is only claimed when the calldata is the router's exact
   // shape — a selector-name match alone does not defend "this is a token swap".
   const swapTypes = name ? SWAP_FUNCTIONS[name] : undefined;
   const isSwap = swapTypes !== undefined && argsMatchTypes(swapTypes, args);
   // A recognised value-moving or swap name whose decoded calldata is the wrong
   // shape is NOT that function; claim nothing and fall to the caution path.
-  const shapeMismatch = (knownDef !== undefined && known === undefined)
+  const shapeMismatch = (knownDefs !== undefined && known === undefined)
     || (swapTypes !== undefined && !isSwap);
 
   const envelopeRows: (TxSummaryRow | null)[] = [

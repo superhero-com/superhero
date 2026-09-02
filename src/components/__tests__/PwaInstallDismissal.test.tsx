@@ -11,6 +11,7 @@ import {
 } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import React from 'react';
+import en from '@/locales/en.json';
 
 const mocks = vi.hoisted(() => ({
   canPrompt: true,
@@ -24,15 +25,32 @@ const mocks = vi.hoisted(() => ({
 // Resolves the real en.json strings, so a query for the dismiss control matches its LABEL and not
 // an untranslated key that happens to contain the same word.
 vi.mock('react-i18next', async () => {
-  const en = (await import('@/locales/en.json')).default;
-  const translate = (key: string): string => {
+  const ReactMod = await import('react');
+  const strings = (await import('@/locales/en.json')).default;
+  const translate = (key: string, options?: Record<string, unknown>): string => {
     const value = key.split('.').reduce<unknown>(
       (node, part) => (node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined),
-      en,
+      strings,
     );
-    return typeof value === 'string' ? value : key;
+    if (typeof value !== 'string') return key;
+    return value.replace(/{{(\w+)}}/g, (token, name) => String(options?.[name] ?? token));
   };
-  return { useTranslation: () => ({ t: translate }) };
+  // The iOS hint interpolates the Share glyph into the MIDDLE of a sentence, so
+  // the mock has to substitute components the way the real Trans does — without
+  // it that string could only be translated as three unorderable fragments.
+  const Trans = ({ i18nKey, components }: {
+    i18nKey: string;
+    components?: Record<string, React.ReactElement>;
+  }) => ReactMod.createElement(
+    ReactMod.Fragment,
+    null,
+    ...translate(i18nKey).split(/(<[a-zA-Z]\w*\s*\/>)/g).map((part, index) => {
+      const tag = /^<([a-zA-Z]\w*)\s*\/>$/.exec(part);
+      const node = tag && components?.[tag[1]];
+      return node ? ReactMod.cloneElement(node, { key: `slot-${index}` }) : part;
+    }),
+  );
+  return { useTranslation: () => ({ t: translate }), Trans };
 });
 
 vi.mock('@/hooks/usePwaInstall', () => ({
@@ -159,6 +177,23 @@ describe('PwaInstallPrompt', () => {
     mocks.isInstalled = true;
     const { container } = render(<PwaInstallPrompt />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders the iOS instructions from locale strings', async () => {
+    // Every string in this dialog used to be hardcoded English, so a translated
+    // build showed a localised title above an English body.
+    mocks.isIOS = true;
+    mocks.canPrompt = false;
+    render(<PwaInstallPrompt />);
+    await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
+    await act(async () => { screen.getByRole('button', { name: 'Show Instructions' }).click(); });
+
+    const strings = en.common.views.landing.pwaInstall;
+    expect(screen.getByText(strings.iosIntro)).toBeTruthy();
+    expect(screen.getByText(strings.iosStep2Hint)).toBeTruthy();
+    // The Share glyph sits mid-sentence, so the hint has to render as one
+    // translated string wrapped around the icon.
+    expect(screen.getByText(/icon in Safari's toolbar/)).toBeTruthy();
   });
 
   it('survives a localStorage that throws', () => {

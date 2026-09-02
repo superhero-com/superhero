@@ -765,6 +765,23 @@
         "bottomCta": {
           "title": "Prêt à découvrir la prochaine tendance ?",
           "subtitle": "Rejoignez le marché de l'attention. Échangez votre conviction. Possédez votre identité."
+        },
+        "pwaInstall": {
+          "title": "Installer l'application Superhero",
+          "description": "Ajoutez Superhero à votre écran d'accueil pour une expérience plus rapide et en plein écran — sans passer par un app store.",
+          "installButton": "Installer",
+          "iosStep1": "Appuyez sur le bouton Partager",
+          "iosStep2": "Choisissez « Sur l'écran d'accueil »",
+          "installApp": "Installer l'app",
+          "minimize": "Réduire",
+          "dismiss": "Fermer",
+          "benefitHomescreen": "S'ajoute à l'écran d'accueil",
+          "benefitWallet": "Portefeuille intégré",
+          "benefitNotifications": "Notifications push",
+          "showInstructions": "Voir les instructions",
+          "iosIntro": "Ajoutez Superhero à votre écran d'accueil pour un accès rapide et une expérience en plein écran.",
+          "iosStep1Hint": "Appuyez sur l'icône <shareIcon/> dans la barre d'outils de Safari",
+          "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »"
         }
       },
       "branding": {
@@ -1782,7 +1799,30 @@
       "tryAdjustingSearch": "Essayez d'ajuster vos termes de recherche ou vos filtres.",
       "loadingPosts": "Chargement des publications..."
     },
-    "trade": "Trader"
+    "trade": "Trader",
+    "tokenTag": {
+      "barLabel": "Dans ce post",
+      "optionsFor": "Options d'affichage pour #{{symbol}}",
+      "occurrence": "occurrence {{n}}",
+      "howItAppears": "Aperçu dans votre post",
+      "rung1": "Symbole + variation 24 h",
+      "rung2": "+ prix",
+      "rung3": "Ligne complète + capitalisation + graphique",
+      "marketCap": "Capitalisation",
+      "priceLabel": "Prix",
+      "default": "par défaut",
+      "custom": "Personnalisé",
+      "customize": "Personnaliser les éléments",
+      "customizeHint": "graphique · prix · variation",
+      "switchChange": "Badge de variation 24 h",
+      "switchPrice": "Prix",
+      "switchChart": "Graphique 24 h",
+      "on": "Activé",
+      "off": "Désactivé",
+      "chars": "car.",
+      "close": "Fermer",
+      "done": "Terminé"
+    }
   },
   "governance": {
     "tabs": {
@@ -3034,5 +3074,80 @@
     "earnSectionDescription": "Commencez avec les moyens natifs de Superhero pour gagner des AE en faisant grandir la communauté et en rejoignant les programmes de récompenses.",
     "buySectionTitle": "Acheter auprès de tiers externes",
     "buySectionDescription": "Utilisez des plateformes d'échange et des fournisseurs de swap tiers si vous préférez acheter des AE directement en dehors de Superhero."
+  },
+  "components": {
+    "pwaInstallGuide": {
+      "title": "Installer Superhero",
+      "subtitleIos": "Suivez ces étapes dans Safari",
+      "subtitleAndroid": "Suivez ces étapes dans Chrome",
+      "installedTitle": "Déjà installée",
+      "alreadyInstalled": "Superhero fonctionne déjà comme une application installée.",
+      "desktopHint": "Sur ordinateur, utilisez le bouton d'installation dans la barre d'adresse de votre navigateur.",
+      "triggerLocation": "Installez l'application pour activer le partage de position — Safari sur iOS exige le mode autonome.",
+      "triggerChat": "Installez l'application pour profiter pleinement du chat, y compris hors ligne.",
+      "back": "Retour",
+      "next": "Suivant →",
+      "done": "Terminé !",
+      "fabLabel": "Installer l'app",
+      "fabDismissLabel": "Fermer",
+      "iosSafariNote": "Safari est obligatoire — Chrome et Firefox sur iOS ne peuvent pas installer de PWA.",
+      "stepDotLabel": "Étape {{number}}",
+      "ios": {
+        "step1": {
+          "title": "Appuyez sur le menu ⋯",
+          "description": "Appuyez sur le menu à trois points (⋯) en haut à droite de Safari."
+        },
+        "step2": {
+          "title": "Sur l'écran d'accueil",
+          "description": "Faites défiler vers le bas et appuyez sur « Sur l'écran d'accueil » dans le menu."
+        },
+        "step3": {
+          "title": "Appuyez sur Ajouter",
+          "description": "Confirmez en appuyant sur « Ajouter » en haut à droite — l'icône de l'app apparaît sur votre écran d'accueil."
+        },
+        "step4": {
+          "title": "Ouvrir depuis l'écran d'accueil",
+          "description": "Lancez l'app depuis l'icône de votre écran d'accueil — le partage de position et le mode hors ligne fonctionnent désormais."
+        }
+      },
+      "android": {
+        "step1": {
+          "title": "Ouvrir le menu du navigateur",
+          "description": "Appuyez sur le menu à trois points (⋮) en haut à droite de Chrome."
+        },
+        "step2": {
+          "title": "Ajouter à l'écran d'accueil",
+          "description": "Appuyez sur « Ajouter à l'écran d'accueil » ou « Installer l'application » dans le menu."
+        },
+        "step3": {
+          "title": "Confirmer l'installation",
+          "description": "Appuyez sur « Installer » dans la fenêtre qui s'affiche."
+        },
+        "step4": {
+          "title": "Ouvrir depuis l'écran d'accueil",
+          "description": "Lancez l'app depuis votre écran d'accueil — la position et le mode hors ligne fonctionnent parfaitement."
+        }
+      }
+    }
+  },
+  "bondingCurve": {
+    "title": "Comment fonctionne la courbe de bonding",
+    "subtitle": "Les premiers acheteurs obtiennent le prix le plus bas — il augmente de façon exponentielle à mesure que d'autres arrivent",
+    "chartAriaLabel": "Graphique interactif du prix de la courbe de bonding",
+    "axisSupply": "Offre de jetons",
+    "axisPrice": "Prix (mAE)",
+    "play": "Lecture",
+    "pause": "Pause",
+    "replay": "Rejouer",
+    "step0Label": "Lancement — offre nulle",
+    "step0Desc": "Au lancement, le prix démarre proche de zéro. La courbe est presque plate ici, à dessein — c'est le point d'entrée le moins cher possible. Ceux qui y croient tôt obtiennent le meilleur prix.",
+    "step1Label": "Premiers acheteurs — 10 M de jetons",
+    "step1Desc": "Avec 10 M de jetons vendus, le prix a doublé. Toujours bon marché, toujours tôt. La courbe commence à s'infléchir — chaque nouvel acheteur fait bouger le prix un peu plus que le précédent.",
+    "step2Label": "Dynamique croissante — 50 M de jetons",
+    "step2Desc": "À 50 M de jetons, le prix vaut environ 7,5 fois le prix de départ. La forme exponentielle est désormais bien visible. Les premiers détenteurs affichent déjà des gains notables.",
+    "step3Label": "Forte dynamique — 100 M de jetons",
+    "step3Desc": "À 100 M de jetons, le prix vaut 18 fois celui du lancement. La courbe est maintenant raide — chaque achat a un impact significatif. La trésorerie de la DAO se remplit grâce au spread de 0,5 % prélevé sur chaque transaction.",
+    "step4Label": "Offre élevée — 200 M de jetons",
+    "step4Desc": "À 200 M de jetons, le prix vaut 65 fois celui du lancement. On s'attend à ce que seuls 10 à 20 % de l'offre maximale théorique soient un jour atteints — nous sommes donc déjà bien dans la queue de distribution. Vous pouvez toujours revendre au prix de vente actuel (spread de −0,5 %)."
   }
 }

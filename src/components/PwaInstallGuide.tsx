@@ -15,14 +15,9 @@ import {
  * - PwaInstallGuide handles the manual flow for iOS Safari and cases where
  *   the native prompt isn't available but the user should still be guided.
  *
- * Use the `usePwaInstallGuide` hook to trigger it from anywhere in the app,
- * or render <PwaInstallGuide open={...} onOpenChange={...} /> directly.
- *
- * Trigger locations in this PR:
- * - Chat → Location tab: when an iOS user tries to enable location sharing
- *   without the PWA installed (geolocation is blocked in mobile Safari's
- *   in-browser context but works in standalone mode).
- * - Standalone "Install App" FAB shown on mobile when not yet installed.
+ * Rendered once from `App.tsx` and opened by the `PwaInstallFab` below. The
+ * `trigger` prop can caption the sheet for the flow that sent the user here,
+ * but no caller passes it yet, so it always opens with the general copy.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -349,7 +344,7 @@ export const PwaInstallGuide = ({
                   height: 6,
                   background: dotIndex <= activeStep ? '#1161FE' : 'rgba(255,255,255,0.12)',
                 }}
-                aria-label={`Step ${dotIndex + 1}`}
+                aria-label={t('components.pwaInstallGuide.stepDotLabel', { number: dotIndex + 1 })}
               />
             );
           })}

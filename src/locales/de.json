@@ -765,6 +765,23 @@
         "bottomCta": {
           "title": "Bereit, den nächsten Trend zu entdecken?",
           "subtitle": "Treten Sie dem Aufmerksamkeitsmarkt bei. Handeln Sie Überzeugung. Besitzen Sie Ihre Identität."
+        },
+        "pwaInstall": {
+          "title": "Superhero-App installieren",
+          "description": "Fügen Sie Superhero zu Ihrem Startbildschirm hinzu – schneller und im Vollbild, ganz ohne App Store.",
+          "installButton": "Installieren",
+          "iosStep1": "Tippen Sie auf „Teilen“",
+          "iosStep2": "Wählen Sie „Zum Home-Bildschirm“",
+          "installApp": "App installieren",
+          "minimize": "Minimieren",
+          "dismiss": "Schließen",
+          "benefitHomescreen": "Speichert auf dem Startbildschirm",
+          "benefitWallet": "Integrierte Wallet",
+          "benefitNotifications": "Push-Benachrichtigungen",
+          "showInstructions": "Anleitung anzeigen",
+          "iosIntro": "Fügen Sie Superhero zu Ihrem Startbildschirm hinzu – für schnellen Zugriff und ein Vollbild-Erlebnis.",
+          "iosStep1Hint": "Tippen Sie in der Safari-Symbolleiste auf das <shareIcon/>-Symbol",
+          "iosStep2Hint": "Scrollen Sie und wählen Sie „Zum Home-Bildschirm“"
         }
       },
       "branding": {
@@ -1782,7 +1799,30 @@
       "tryAdjustingSearch": "Versuchen Sie, Ihre Suchbegriffe oder Filter anzupassen.",
       "loadingPosts": "Beiträge werden geladen..."
     },
-    "trade": "Handeln"
+    "trade": "Handeln",
+    "tokenTag": {
+      "barLabel": "In diesem Beitrag",
+      "optionsFor": "Anzeigeoptionen für #{{symbol}}",
+      "occurrence": "Vorkommen {{n}}",
+      "howItAppears": "So erscheint es in Ihrem Beitrag",
+      "rung1": "Symbol + 24-h-Änderung",
+      "rung2": "+ Preis",
+      "rung3": "Ganze Zeile + Marktkapitalisierung + Chart",
+      "marketCap": "Marktkapitalisierung",
+      "priceLabel": "Preis",
+      "default": "Standard",
+      "custom": "Benutzerdefiniert",
+      "customize": "Teile anpassen",
+      "customizeHint": "Chart · Preis · Änderung",
+      "switchChange": "24-h-Änderungs-Badge",
+      "switchPrice": "Preis",
+      "switchChart": "24-h-Chart",
+      "on": "An",
+      "off": "Aus",
+      "chars": "Z.",
+      "close": "Schließen",
+      "done": "Fertig"
+    }
   },
   "governance": {
     "tabs": {
@@ -3034,5 +3074,80 @@
     "earnSectionDescription": "Beginnen Sie mit Superhero-eigenen Möglichkeiten, AE zu verdienen, indem Sie die Community vergrößern und an Belohnungsprogrammen teilnehmen.",
     "buySectionTitle": "Von externen Drittanbietern kaufen",
     "buySectionDescription": "Nutzen Sie Drittanbieter-Börsen und Swap-Anbieter, wenn Sie AE lieber direkt außerhalb von Superhero kaufen möchten."
+  },
+  "components": {
+    "pwaInstallGuide": {
+      "title": "Superhero installieren",
+      "subtitleIos": "Folgen Sie diesen Schritten in Safari",
+      "subtitleAndroid": "Folgen Sie diesen Schritten in Chrome",
+      "installedTitle": "Bereits installiert",
+      "alreadyInstalled": "Superhero läuft bereits als installierte App.",
+      "desktopHint": "Nutzen Sie am Desktop die Installationsschaltfläche in der Adressleiste Ihres Browsers.",
+      "triggerLocation": "Installieren Sie die App, um die Standortfreigabe zu aktivieren – iOS-Safari erfordert dafür den Standalone-Modus.",
+      "triggerChat": "Installieren Sie die App für das volle Chat-Erlebnis, inklusive Offline-Unterstützung.",
+      "back": "Zurück",
+      "next": "Weiter →",
+      "done": "Fertig!",
+      "fabLabel": "App installieren",
+      "fabDismissLabel": "Schließen",
+      "iosSafariNote": "Nur mit Safari möglich – Chrome und Firefox unter iOS können keine PWAs installieren.",
+      "stepDotLabel": "Schritt {{number}}",
+      "ios": {
+        "step1": {
+          "title": "Auf das ⋯-Menü tippen",
+          "description": "Tippen Sie oben rechts in Safari auf das Drei-Punkte-Menü (⋯)."
+        },
+        "step2": {
+          "title": "Zum Home-Bildschirm",
+          "description": "Scrollen Sie nach unten und tippen Sie im Menü auf „Zum Home-Bildschirm“."
+        },
+        "step3": {
+          "title": "Auf „Hinzufügen“ tippen",
+          "description": "Bestätigen Sie mit „Hinzufügen“ oben rechts – das App-Symbol erscheint auf Ihrem Home-Bildschirm."
+        },
+        "step4": {
+          "title": "Vom Home-Bildschirm öffnen",
+          "description": "Starten Sie über das Symbol auf dem Home-Bildschirm – Standortfreigabe und Offline-Modus funktionieren jetzt."
+        }
+      },
+      "android": {
+        "step1": {
+          "title": "Browsermenü öffnen",
+          "description": "Tippen Sie oben rechts in Chrome auf das Drei-Punkte-Menü (⋮)."
+        },
+        "step2": {
+          "title": "Zum Startbildschirm hinzufügen",
+          "description": "Tippen Sie im Menü auf „Zum Startbildschirm hinzufügen“ oder „App installieren“."
+        },
+        "step3": {
+          "title": "Installation bestätigen",
+          "description": "Tippen Sie in der erscheinenden Abfrage auf „Installieren“."
+        },
+        "step4": {
+          "title": "Vom Startbildschirm öffnen",
+          "description": "Starten Sie über Ihren Startbildschirm – Standort und Offline-Modus funktionieren einwandfrei."
+        }
+      }
+    }
+  },
+  "bondingCurve": {
+    "title": "So funktioniert die Bonding Curve",
+    "subtitle": "Frühe Käufer erhalten den niedrigsten Preis – er steigt exponentiell, je mehr dazukommen",
+    "chartAriaLabel": "Interaktives Preisdiagramm der Bonding Curve",
+    "axisSupply": "Token-Angebot",
+    "axisPrice": "Preis (mAE)",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "replay": "Wiederholen",
+    "step0Label": "Start – kein Angebot",
+    "step0Desc": "Beim Start liegt der Preis nahe null. Die Kurve ist hier bewusst fast flach – das ist der günstigstmögliche Einstiegspunkt. Wer früh daran glaubt, bekommt den besten Preis.",
+    "step1Label": "Frühe Käufer – 10 Mio. Token",
+    "step1Desc": "Bei 10 Mio. verkauften Token hat sich der Preis verdoppelt. Immer noch günstig, immer noch früh. Die Kurve beginnt sich zu krümmen – jeder neue Käufer bewegt den Preis etwas stärker als der vorherige.",
+    "step2Label": "Wachsende Dynamik – 50 Mio. Token",
+    "step2Desc": "Bei 50 Mio. Token liegt der Preis beim ca. 7,5-Fachen des Startpreises. Die exponentielle Form ist jetzt klar zu erkennen. Frühe Halter sitzen bereits auf spürbaren Gewinnen.",
+    "step3Label": "Starke Dynamik – 100 Mio. Token",
+    "step3Desc": "Bei 100 Mio. Token liegt der Preis beim 18-Fachen des Starts. Die Kurve ist nun steil – jeder Kauf hat deutliche Auswirkungen. Die DAO-Treasury füllt sich durch den Spread von 0,5 % bei jedem Trade.",
+    "step4Label": "Hohes Angebot – 200 Mio. Token",
+    "step4Desc": "Bei 200 Mio. Token liegt der Preis beim 65-Fachen des Starts. Erwartet wird, dass jemals nur 10–20 % des theoretischen Maximalangebots erreicht werden – das ist also bereits weit im Ausläufer. Sie können jederzeit zum aktuellen Verkaufspreis zurückverkaufen (−0,5 % Spread)."
   }
 }

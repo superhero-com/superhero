@@ -54,6 +54,7 @@ import { createEncryptedKeyValueStore } from '../storage/encrypted-kv-store';
 import { setChatStore, clearChatStore } from '../storage/chat-store';
 import { roomKeySession, lockRoomSession } from '../session/room-session';
 import { useRoomSession } from '../hooks/useRoomSession';
+import { useChatServiceWorker } from '../hooks/useChatServiceWorker';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
 
 export interface ChatContextValue {
@@ -375,16 +376,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   // Teardown on unmount.
   useEffect(() => () => { clientRef.current?.destroy(); }, []);
 
-  // Register the chat offline service worker (scoped to /chat only —
-  // never interferes with the notifications SW or the inline wallet).
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker
-      .register('/chat-offline-sw.js', { scope: '/chat' })
-      .catch(() => {
-        // Non-fatal: offline caching won't work, but the app still functions.
-      });
-  }, []);
+  // Scoped to /chat, and registered only once the user is on a chat route — see
+  // the hook for why a visitor who never opens chat must not carry the worker.
+  useChatServiceWorker(Object.keys(relays).length);
 
   const value = useMemo<ChatContextValue>(() => ({
     isConnected: status.isConnected,

@@ -1,12 +1,27 @@
 /**
  * usePasskeyConnect
  *
- * Shared hook for the passkey connect flow used in OnboardingModal and
- * ConnectWalletModal. Handles three cases:
+ * Shared hook behind the inline-wallet card in OnboardingModal and
+ * ConnectWalletModal — the only inline entry point either modal offers, so every
+ * branch must end on a control, never on a message:
  *
- * 1. No vault → show WalletOnboarding (creates wallet + enrolls passkey)
- * 2. Vault with passkey factor → trigger WebAuthn unlock
- * 3. Vault without passkey factor → guide user to enroll one in settings
+ * 1. Vault with a usable passkey factor → the WebAuthn unlock, then connect.
+ * 2. Anything else, vault or none → hand off to `WalletOnboarding`, which
+ *    re-reads the record and picks `exists` (continue / repair / passphrase
+ *    unlock / erase) or `choose`.
+ *
+ * Case 2 used to be an error telling the user to enroll a passkey in "Settings →
+ * Security" — a screen that does not exist, `addPasskeyFactor` being reachable
+ * only from onboarding. Anyone who took `protect`'s "Skip — use my passphrase"
+ * was locked out of a live vault, as was a failed ceremony.
+ *
+ * Case 1 must actually PROVE the passkey opens this vault. An earlier revision
+ * ran `navigator.credentials.get` and discarded the result, which verified
+ * nothing (any credential the browser offered "succeeded") and connected nobody.
+ * The ceremony goes through the same `passkeyUnlockProvider` the signer uses and
+ * the KEK is proven against the vault by unwrapping the DEK, which fails closed
+ * at GCM. The mnemonic is deliberately NOT decrypted: connecting needs the
+ * public address from the manifest, not the seed.
  */
 
 import {
@@ -14,82 +29,123 @@ import {
 } from 'react';
 import { isPlatformAuthenticatorAvailable, RP_ID } from '@/features/wallet/webauthn';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
+import { passkeyUnlockProvider } from '@/features/wallet/wallet-lifecycle';
+import { unwrapDek } from '@/features/wallet/factors';
+import { loadManifest } from '@/features/wallet/manifest-store';
 
 export type PasskeyState =
   | 'idle'
   | 'checking'
-  | 'no-vault' // no wallet on device → show inline onboarding
   | 'unlocking' // running the WebAuthn ceremony
   | 'error'
   | 'cancelled';
 
-export function usePasskeyConnect() {
+/**
+ * What this device's vault holds, so the card can name what a tap will do before
+ * the tap. `unknown` is unreadable storage (private mode, a blocked upgrade) —
+ * not "no wallet", so the card keeps its generic copy.
+ */
+export type DeviceWallet = 'unknown' | 'none' | 'passkey' | 'other-factors';
+
+/** True where a device wallet exists, so there is a way in with or without a passkey. */
+export const hasDeviceVault = (d: DeviceWallet): boolean => d === 'passkey' || d === 'other-factors';
+
+/**
+ * @param enabled whether the caller can actually render the inline wallet. The
+ * probe below opens — and on a fresh device CREATES — the vault database, so it
+ * must not run on a surface that renders nothing, least of all in a build with
+ * the wallet switched off.
+ */
+export function usePasskeyConnect(enabled = true) {
   const [available, setAvailable] = useState(false);
   const [state, setState] = useState<PasskeyState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [deviceWallet, setDeviceWallet] = useState<DeviceWallet>('unknown');
+  /** Set once a passkey has been proven against the vault; the card connects it. */
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setAvailable);
+  }, []);
+
+  const probeVault = useCallback(() => {
+    if (!enabled) return;
+    createIndexedDbVaultStore().load()
+      .then((record) => {
+        if (!record) {
+          setDeviceWallet('none');
+          return;
+        }
+        const passkey = record.factors.find((f) => f.type === 'webauthn-prf');
+        setDeviceWallet(passkey?.webauthn ? 'passkey' : 'other-factors');
+      })
+      .catch(() => {}); // unreadable storage stays `unknown`; `trigger` reports the real read
+  }, [enabled]);
+
+  useEffect(() => { probeVault(); }, [probeVault]);
+
+  /**
+   * Hand the device's wallet to `WalletOnboarding`, which re-reads the vault and
+   * picks its own screen — one branch for absent, passkey-less and half-repaired.
+   */
+  const openDeviceWallet = useCallback(() => {
+    setErrorMsg(null);
+    setState('idle');
+    setNeedsOnboarding(true);
   }, []);
 
   const trigger = useCallback(async () => {
     setState('checking');
     setErrorMsg(null);
     setNeedsOnboarding(false);
+    setConnectedAddress(null);
 
     try {
-      // Check what's in the vault
       const store = createIndexedDbVaultStore();
       const record = await store.load();
 
       if (!record) {
-        // No wallet at all → guide through inline onboarding (creates wallet + passkey)
-        setState('no-vault');
-        setNeedsOnboarding(true);
+        setDeviceWallet('none');
+        openDeviceWallet();
         return;
       }
 
-      const hasPasskeyFactor = record.factors.some((f) => f.type === 'webauthn-prf');
-
-      if (!hasPasskeyFactor) {
-        // Wallet exists but no passkey enrolled
-        setState('error');
-        setErrorMsg('No passkey set up yet. Go to Settings → Security to add one.');
-        return;
-      }
-
-      // Passkey factor exists → run the WebAuthn ceremony
-      setState('unlocking');
+      // The SAME factor `passkeyUnlockProvider` will pick, so the two cannot
+      // disagree about which credential this unlock is for. Incomplete WebAuthn
+      // data means no ceremony is runnable — that is a wallet to open by its
+      // other factors, not an error to strand the user on.
       const passkeyFactor = record.factors.find((f) => f.type === 'webauthn-prf');
-      const credentialId = passkeyFactor?.webauthn?.credentialId;
-
-      if (!credentialId) {
-        setState('error');
-        setErrorMsg('Passkey data is incomplete. Try reconnecting your wallet.');
+      if (!passkeyFactor?.webauthn) {
+        setDeviceWallet('other-factors');
+        openDeviceWallet();
         return;
       }
 
-      await navigator.credentials.get({
-        publicKey: {
-          challenge: crypto.getRandomValues(new Uint8Array(32)),
-          // The pinned build-time RP ID — the custody boundary. Imported rather
-          // than re-reading import.meta.env, so there is exactly ONE place this
-          // value is decided (webauthn.ts). A second inline copy silently drifts:
-          // it would keep defaulting to superhero.com on a build that had set
-          // VITE_WEBAUTHN_RP_ID, and every ceremony here would fail with a
-          // SecurityError while enrollment elsewhere worked.
-          rpId: RP_ID,
-          userVerification: 'required',
-          allowCredentials: [{
-            id: Uint8Array.from(atob(credentialId.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)),
-            type: 'public-key' as const,
-          }],
-          extensions: { prf: {} } as unknown as AuthenticationExtensionsClientInputs,
-        },
-      });
+      setDeviceWallet('passkey');
+      setState('unlocking');
 
-      // Success — the wallet lifecycle will pick up the account
+      // The same provider the signer unlocks with: it evaluates the PRF at this
+      // factor's stored salt and derives the KEK, rather than running a ceremony
+      // whose result nothing reads.
+      const { kek } = await passkeyUnlockProvider()(record);
+      // The KEK only proves anything once it opens THIS vault. A wrong or foreign
+      // credential produces a KEK that fails right here, at GCM. The mnemonic is
+      // deliberately not unsealed: connecting needs the public address, not the seed.
+      await unwrapDek(passkeyFactor, kek);
+
+      const manifest = loadManifest();
+      const address = manifest?.activeAddress
+        ?? manifest?.accounts[0]?.address;
+      if (!address) {
+        // Vault intact but the cleartext manifest is gone — clearing site data
+        // drops localStorage while IndexedDB survives. Onboarding's repair path
+        // unlocks once and rebuilds the address list.
+        openDeviceWallet();
+        return;
+      }
+
+      setConnectedAddress(address);
       setState('idle');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -109,7 +165,7 @@ export function usePasskeyConnect() {
         setErrorMsg(`Passkeys aren’t available on this domain (expected ${RP_ID}).`);
       } else {
         setState('error');
-        setErrorMsg('Passkey failed. Try your wallet instead.');
+        setErrorMsg('Passkey failed.');
       }
       // Keep the underlying reason reachable for support: the UI copy above is
       // deliberately short, and a swallowed DOMException name/message is the
@@ -118,19 +174,26 @@ export function usePasskeyConnect() {
         console.warn('[passkey] connect failed', { name, msg });
       }
     }
-  }, []);
+  }, [openDeviceWallet]);
 
   const resetOnboarding = useCallback(() => {
     setNeedsOnboarding(false);
+    setConnectedAddress(null);
     setState('idle');
-  }, []);
+    // Onboarding may have erased or created a wallet behind us; a stale label
+    // would offer a passkey that is gone.
+    probeVault();
+  }, [probeVault]);
 
   return {
     available,
     state,
     errorMsg,
     needsOnboarding,
+    deviceWallet,
+    connectedAddress,
     trigger,
+    openDeviceWallet,
     resetOnboarding,
     loading: state === 'checking' || state === 'unlocking',
   };

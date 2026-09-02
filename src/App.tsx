@@ -60,7 +60,9 @@ const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
-  const { canPrompt, promptInstall, isIOS } = usePwaInstall();
+  const {
+    canPrompt, promptInstall, isIOS, isInstalled,
+  } = usePwaInstall();
   const [installGuideOpen, setInstallGuideOpen] = React.useState(false);
   const { loadAccountData } = useAccount();
   const {
@@ -224,6 +226,7 @@ const App = () => {
               canNativePrompt={canPrompt}
               onNativePrompt={promptInstall}
               onOpenGuide={() => setInstallGuideOpen(true)}
+              isInstalled={isInstalled}
             />
           )}
           <PwaInstallGuide

@@ -2,94 +2,150 @@
 /*
  * Superhero Chat — offline cache service worker.
  *
- * This is a SEPARATE worker from notifications-sw.js, registered with a
- * restricted scope of '/chat' so it ONLY intercepts requests under the
- * /chat route tree. It deliberately does NOT touch the root '/' scope,
- * which is reserved for the notifications push worker that handles VAPID
- * and must never intercept fetch (security constraint — see notifications-sw.js).
+ * This is a SEPARATE worker from notifications-sw.js, registered with a scope of
+ * '/chat'. Scope picks which DOCUMENTS it controls, not which URLs it sees: a
+ * controlled /chat page routes every request here, `/assets/*` and cross-origin
+ * included — which is why both are handled below instead of being dead branches.
+ * It deliberately does NOT touch the root '/' scope, which is reserved for the
+ * notifications push worker that handles VAPID and must never intercept fetch
+ * (security constraint — see notifications-sw.js).
  *
  * What this worker does:
- * 1. Cache-first for static assets (JS/CSS/fonts/icons) under /chat.
- * 2. Network-first with cache fallback for the chat SPA shell (/chat, /chat/*).
- * 3. Queues outgoing Nostr relay WebSocket messages when offline and replays
- *    them via a BroadcastChannel when the client reconnects.
- *    (WebSockets themselves are not interceptable by SW fetch — we use a
- *    BroadcastChannel handshake with the chat client instead.)
- * 4. Caches Nominatim reverse-geocode responses for 24h so location labels
- *    display offline after first lookup.
+ * 1. Same-origin static assets under /chat — cache-first for content-hashed
+ *    /assets/* (the URL changes when the bytes do), stale-while-revalidate with
+ *    a 1-day ceiling for everything else (logos, icons: stable URLs, mutable
+ *    bytes — an unbounded entry would strand a bad asset with no way to refresh).
+ * 2. Network-first with a cached /chat shell fallback for chat navigations, so
+ *    an offline deep link still lands in the app rather than on a dead page.
  *
- * SECURITY — this worker only caches chat UI assets. It never sees wallet
- * routes, seed data, or signing requests. The scope restriction enforces this.
+ * What it deliberately does NOT do:
+ * - Touch cross-origin requests. The worker inherits the page's enforcing CSP,
+ *   where a worker `fetch()` is a `connect-src` sink rather than `img-src`, so
+ *   re-fetching a third-party asset here would fail under a policy the page
+ *   itself satisfies. Cross-origin requests are left entirely alone.
+ * - Cache anything that is not a 200 with a non-HTML content-type. The SPA
+ *   answers unknown paths with `text/html`, so an unguarded `response.ok` will
+ *   happily store the app shell under a `.js` URL; `nosniff` then refuses to
+ *   execute it and the cache never re-checks. The server 404s subresources for
+ *   the same reason (server/index.cjs) — this is the second half of that fix.
+ * - Queue outgoing messages. A previous revision documented a BroadcastChannel
+ *   replay protocol that no client ever implemented, so an offline send was
+ *   silently dropped while the app looked like it supported one. Removed rather
+ *   than left as a promise the code does not keep.
  *
- * REGISTRATION — registered from src/features/chat/provider/chat.provider.tsx
- * with { scope: '/chat' } when the chat feature mounts.
+ * SECURITY — this worker stores only chat UI assets, never wallet routes, seed
+ * data or signing requests. Enforced by the fetch handler, NOT by the scope: an
+ * SPA document keeps its controller across client-side navigation, so a page
+ * opened at /chat and routed to a wallet screen still sends its requests here.
+ *
+ * REGISTRATION — registered from src/features/chat/hooks/useChatServiceWorker.ts
+ * with { scope: '/chat' }, from the chat route tree only.
  */
 
-const CACHE_NAME = 'sh-chat-v1';
-const GEOCODE_CACHE = 'sh-chat-geocode-v1';
+// Rewritten at build time by scripts/vite-chat-precache.mjs, which alone knows the
+// hashed filenames. Dev serves unhashed modules, so the repo copy precaches nothing.
+const BUILD_ID = 'dev';
+const PRECACHE_ASSETS = [];
 
-// Assets that should be precached on install (populated by build tooling
-// or kept minimal here — the chat bundle is already in the main app cache).
-const PRECACHE_ASSETS = [
-  // intentionally empty — we rely on runtime caching below
-];
+// `v2` tracks the caching RULES; BUILD_ID scopes the cache to the assets it was
+// filled for. `activate` sweeps every other `sh-chat-*`, so both a rule change and
+// a new build evict what would otherwise accumulate forever.
+const CACHE_NAME = `sh-chat-v2-${BUILD_ID}`;
 
-// ── Cache strategies ─────────────────────────────────────────────────────────
+// The navigation fallback. Precached on install so an offline deep link to
+// /chat/dm/<pubkey> has a shell to land on — client-side routing never issues a
+// document request for those URLs, so they are never cached by visiting them.
+const SHELL_URL = '/chat';
 
-async function fetchAndCache(request, cache) {
+// Unhashed assets change bytes without changing URL, so they get a ceiling.
+const DEFAULT_MAX_AGE_SECONDS = 24 * 60 * 60;
+
+// ── Cache policy ─────────────────────────────────────────────────────────────
+
+/**
+ * Whether a response may be stored. The content-type test is the load-bearing
+ * one: `response.ok` alone accepts the SPA's HTML fallback for a missing asset.
+ */
+function isCacheable(response, request) {
+  if (!response || response.status !== 200 || response.type === 'opaque') return false;
+  const contentType = response.headers.get('content-type') || '';
+  // A navigation is the one request that SHOULD store HTML.
+  if (request.mode === 'navigate') return true;
+  return !/^text\/html\b/i.test(contentType);
+}
+
+async function fetchAndCache(request, cache, maxAgeSeconds) {
   const response = await fetch(request);
-  if (response.ok) {
-    const headers = new Headers(response.headers);
-    headers.set('sw-cached-at', String(Date.now()));
-    const cloned = new Response(await response.clone().arrayBuffer(), {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
-    cache.put(request, cloned);
+  if (!isCacheable(response, request)) return response;
+
+  // No age check will ever read a timestamp on an `Infinity` entry, so store the
+  // response as it streams. Stamping one costs a full buffer of every chunk in
+  // the bundle before the page is handed a single byte.
+  if (maxAgeSeconds === Infinity) {
+    cache.put(request, response.clone()).catch(() => {});
+    return response;
   }
+
+  const headers = new Headers(response.headers);
+  headers.set('sw-cached-at', String(Date.now()));
+  const cloned = new Response(await response.clone().arrayBuffer(), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+  // Not awaited past a failure: a quota error here must not turn an already-
+  // fetched response into a network error for the page. The write is still
+  // ordered before `return` so a caller relying on cache-then-serve (none do
+  // today) would see it land, but a rejection can no longer propagate out.
+  await cache.put(request, cloned).catch(() => {});
   return response;
 }
 
-async function cacheFirst(request, cacheName, maxAgeSeconds = Infinity) {
-  const cache = await caches.open(cacheName);
+/**
+ * Serve from cache, revalidating in the background once the entry passes
+ * `maxAgeSeconds`. `Infinity` is reserved for content-hashed URLs, where a
+ * changed byte means a changed URL and a stale entry is impossible.
+ */
+async function cacheFirst(request, maxAgeSeconds) {
+  const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
 
   if (cached) {
-    const cachedDate = cached.headers.get('sw-cached-at');
-    if (cachedDate && maxAgeSeconds !== Infinity) {
-      const age = (Date.now() - parseInt(cachedDate, 10)) / 1000;
-      if (age > maxAgeSeconds) {
-        // Stale — fetch fresh in background, return stale now
-        fetchAndCache(request, cache).catch(() => {});
-      }
+    const cachedAt = cached.headers.get('sw-cached-at');
+    if (cachedAt && maxAgeSeconds !== Infinity) {
+      const age = (Date.now() - parseInt(cachedAt, 10)) / 1000;
+      if (age > maxAgeSeconds) fetchAndCache(request, cache, maxAgeSeconds).catch(() => {});
     }
     return cached;
   }
 
-  return fetchAndCache(request, cache);
+  return fetchAndCache(request, cache, maxAgeSeconds);
 }
 
+/**
+ * Only the shell is stored. A per-URL copy of /chat/dm/<address> serves nothing the
+ * fallback below does not, and keys an entry by the conversation partner — cleartext,
+ * and outliving a logout, beside a message history kept encrypted at rest.
+ */
 async function networkFirstWithShellFallback(request) {
   const cache = await caches.open(CACHE_NAME);
+  // Keyed by SHELL_URL, not the request, so `/chat?ref=x` refreshes the one entry.
+  const isShell = new URL(request.url).pathname === SHELL_URL;
   try {
     const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
+    if (isShell && isCacheable(response, request)) {
+      cache.put(SHELL_URL, response.clone()).catch(() => {});
     }
     return response;
   } catch {
-    // Offline — return cached version or the app shell
-    const cached = await cache.match(request);
-    if (cached) return cached;
-
-    // Last resort: return whatever /chat shell we have
-    const shell = await cache.match('/chat');
+    // Client-side routing means /chat/dm/<id> was probably never fetched as a
+    // document; the precached shell boots the app, which then renders the route.
+    const shell = await cache.match(SHELL_URL);
     if (shell) return shell;
 
     return new Response(
       '<h1>Offline</h1><p>Chat is unavailable offline. Open the app when connected.</p>',
-      { headers: { 'Content-Type': 'text/html' } },
+      { status: 503, headers: { 'Content-Type': 'text/html' } },
     );
   }
 }
@@ -98,14 +154,15 @@ async function networkFirstWithShellFallback(request) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      if (PRECACHE_ASSETS.length > 0) {
-        return cache.addAll(PRECACHE_ASSETS);
-      }
-      return Promise.resolve();
-    }),
+    caches.open(CACHE_NAME)
+      // Per URL, not `addAll`: that is all-or-nothing, so one asset pruned by a
+      // concurrent deploy would discard the precache AND fail the install, which
+      // leaves the previous worker in control.
+      .then((cache) => Promise.all(
+        [SHELL_URL, ...PRECACHE_ASSETS].map((url) => cache.add(url).catch(() => {})),
+      ))
+      .then(() => self.skipWaiting()),
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -113,7 +170,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((keys) => Promise.all(
         keys
-          .filter((k) => k.startsWith('sh-chat-') && k !== CACHE_NAME && k !== GEOCODE_CACHE)
+          .filter((k) => k.startsWith('sh-chat-') && k !== CACHE_NAME)
           .map((k) => caches.delete(k)),
       ))
       .then(() => self.clients.claim()),
@@ -124,71 +181,26 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
-  // Only handle GET requests
   if (request.method !== 'GET') return;
 
-  // Nominatim geocode — cache for 24 hours
-  if (url.hostname === 'nominatim.openstreetmap.org') {
-    event.respondWith(cacheFirst(request, GEOCODE_CACHE, 24 * 60 * 60));
+  const url = new URL(request.url);
+  // Cross-origin is left to the page, which reaches it under a CSP directive
+  // this worker's `fetch()` would not satisfy.
+  if (url.origin !== self.location.origin) return;
+
+  // Content-hashed build output: the URL is the version, so it never goes stale.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(cacheFirst(request, Infinity));
     return;
   }
 
-  // Static assets (JS, CSS, fonts, images) — cache-first
-  if (url.pathname.match(/\.(js|css|woff2?|png|svg|ico|webp|jpg)$/)) {
-    event.respondWith(cacheFirst(request, CACHE_NAME));
+  if (/\.(?:js|css|woff2?|png|svg|ico|webp|jpg)$/.test(url.pathname)) {
+    event.respondWith(cacheFirst(request, DEFAULT_MAX_AGE_SECONDS));
     return;
   }
 
-  // Chat SPA navigation — network-first, fall back to cached shell
   if (url.pathname.startsWith('/chat')) {
     event.respondWith(networkFirstWithShellFallback(request));
-  }
-});
-
-// ── Offline message queue ────────────────────────────────────────────────────
-
-/**
- * The chat client posts messages here when the Nostr relay WebSocket is down.
- * On reconnect, the client reads the queue and replays them.
- *
- * Protocol:
- *   client → SW: { type: 'QUEUE_MSG', payload: <nostr event JSON> }
- *   SW → client: { type: 'REPLAY_QUEUE', messages: [...] }  (on ONLINE event)
- */
-
-const broadcastChannel = new BroadcastChannel('sh-chat-offline');
-
-// Simple in-memory queue (survives as long as SW is alive).
-// For true persistence across SW restarts, IndexedDB would be used;
-// this is sufficient for typical brief connectivity drops.
-let offlineQueue = [];
-
-async function enqueueMessage(msg) {
-  offlineQueue.push(msg);
-}
-
-async function dequeueAll() {
-  const msgs = [...offlineQueue];
-  offlineQueue = [];
-  return msgs;
-}
-
-broadcastChannel.onmessage = async (event) => {
-  const { type, payload } = event.data || {};
-
-  if (type === 'QUEUE_MSG') {
-    await enqueueMessage(payload);
-  } else if (type === 'FLUSH_QUEUE') {
-    const messages = await dequeueAll();
-    broadcastChannel.postMessage({ type: 'REPLAY_QUEUE', messages });
-  }
-};
-
-self.addEventListener('online', async () => {
-  const messages = await dequeueAll();
-  if (messages.length > 0) {
-    broadcastChannel.postMessage({ type: 'REPLAY_QUEUE', messages });
   }
 });

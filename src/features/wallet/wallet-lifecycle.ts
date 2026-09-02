@@ -163,9 +163,15 @@ export async function addPasskeyFactor(
  *
  * Why the mnemonic is not shown: it does not need to be written down, because it
  * is recoverable from the passkey alone (a fixed salt, no stored per-enrollment
- * randomness). It stays exportable from settings, and it
- * is a normal BIP39 phrase on the standard derivation path, so the account can
- * be imported into the extension or native wallet like any other.
+ * randomness). It is a normal BIP39 phrase on the standard derivation path, so
+ * the account can be imported into the extension or native wallet like any other.
+ *
+ * The caveat the onboarding copy now states: this holds only for a passkey that
+ * SYNCS (iCloud Keychain, Google Password Manager). A device-bound platform
+ * credential — Windows Hello — dies with its device, and there is no reveal or
+ * export screen anywhere in the app, so for those users this really is the only
+ * copy. A UV-gated phrase reveal is the fix; until it exists, do not describe the
+ * mnemonic as exportable.
  *
  * `mnemonicBackedUpAt` is deliberately left null: no VERIFIED written backup
  * happened. Callers that want a durable off-device copy should still enroll a

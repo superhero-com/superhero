@@ -37,6 +37,10 @@ export const deriveInlineLinkIdentity: DeriveLinkIdentity = async (address) => {
     throw new Error('Chat linking needs the in-app wallet on this device.');
   }
   const accountIndex = indexForAddress(address) ?? 0;
-  const keys = await deriveNostrIdentity(record, requestUnlock, accountIndex);
+  const keys = await deriveNostrIdentity(
+    record,
+    (r) => requestUnlock(r, { kind: 'nostr-link' }),
+    accountIndex,
+  );
   return { npub: keys.npub, identity: createDerivedNostrIdentity(keys) };
 };

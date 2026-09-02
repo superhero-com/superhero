@@ -5,6 +5,7 @@ import svgr from 'vite-plugin-svgr';
 
 import { existsSync } from 'fs';
 import { createRequire } from 'module';
+import { chatPrecache } from './scripts/vite-chat-precache.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -55,7 +56,7 @@ export default defineConfig(({ mode }) => {
   // this preserves prior behavior without re-exposing the rest of the host environment.
   env.NODE_ENV = process.env.NODE_ENV as string;
   return {
-    plugins: [react(), svgr(), jsonPlugin()],
+    plugins: [react(), svgr(), jsonPlugin(), chatPrecache()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isIOSWebKit, isMobileDevice, isStandalone } from '@/utils/displayMode';
+import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 
 /**
@@ -14,14 +15,9 @@ import {
  * - PwaInstallGuide handles the manual flow for iOS Safari and cases where
  *   the native prompt isn't available but the user should still be guided.
  *
- * Use the `usePwaInstallGuide` hook to trigger it from anywhere in the app,
- * or render <PwaInstallGuide open={...} onOpenChange={...} /> directly.
- *
- * Trigger locations in this PR:
- * - Chat → Location tab: when an iOS user tries to enable location sharing
- *   without the PWA installed (geolocation is blocked in mobile Safari's
- *   in-browser context but works in standalone mode).
- * - Standalone "Install App" FAB shown on mobile when not yet installed.
+ * Rendered once from `App.tsx` and opened by the `PwaInstallFab` below. The
+ * `trigger` prop can caption the sheet for the flow that sent the user here,
+ * but no caller passes it yet, so it always opens with the general copy.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -207,9 +203,9 @@ export const PwaInstallGuide = ({
           <DialogHeader>
             <DialogTitle>{t('components.pwaInstallGuide.installedTitle')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-white/60 leading-relaxed">
+          <DialogDescription className="text-sm text-white/60 leading-relaxed">
             {getEarlyExitBody(alreadyInstalled, t)}
-          </p>
+          </DialogDescription>
         </DialogContent>
       </Dialog>
     );
@@ -230,9 +226,9 @@ export const PwaInstallGuide = ({
             <DialogTitle className="text-base font-bold">
               {t('components.pwaInstallGuide.title')}
             </DialogTitle>
-            <p className="text-xs text-white/50 mt-0.5">
+            <DialogDescription className="text-xs text-white/50 mt-0.5">
               {platformSubtitle}
-            </p>
+            </DialogDescription>
           </div>
         </div>
 
@@ -348,7 +344,7 @@ export const PwaInstallGuide = ({
                   height: 6,
                   background: dotIndex <= activeStep ? '#1161FE' : 'rgba(255,255,255,0.12)',
                 }}
-                aria-label={`Step ${dotIndex + 1}`}
+                aria-label={t('components.pwaInstallGuide.stepDotLabel', { number: dotIndex + 1 })}
               />
             );
           })}
@@ -414,39 +410,55 @@ interface PwaInstallFabProps {
   onOpenGuide: () => void;
   /** Whether the native Chromium prompt is available */
   canNativePrompt: boolean;
+  /**
+   * From `usePwaInstall`. `isStandalone()` alone cannot hide this: after a
+   * successful install the ORIGINAL tab is still not standalone, so the FAB
+   * stayed on screen offering to install an app the user had just installed.
+   */
+  isInstalled?: boolean;
 }
+
+// The attention pulse stops after this many cycles. It used to run for the life
+// of the page, re-rendering twice every nine seconds forever; a user who has not
+// tapped it by the third pulse is not going to.
+const MAX_PULSES = 3;
 
 export const PwaInstallFab = ({
   onNativePrompt,
   onOpenGuide,
   canNativePrompt,
+  isInstalled: installedProp = false,
 }: PwaInstallFabProps) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [pulse, setPulse] = useState(false);
+  const { isSnoozed, snooze } = usePwaInstallSnooze();
 
-  const isInstalled = isStandalone();
+  const isInstalled = installedProp || isStandalone();
   const isMobile = isMobileDevice();
+  const hidden = isInstalled || isSnoozed || !isMobile;
 
   useEffect(() => {
-    if (isInstalled || !isMobile) return undefined;
+    if (hidden) return undefined;
 
     // Delay appearance so it doesn't clash with page load
     const showTimer = setTimeout(() => setVisible(true), 2500);
 
-    // Periodic pulse to catch attention
+    let pulses = 0;
     const pulseInterval = setInterval(() => {
       setPulse(true);
       setTimeout(() => setPulse(false), 700);
+      pulses += 1;
+      if (pulses >= MAX_PULSES) clearInterval(pulseInterval);
     }, 9000);
 
     return () => {
       clearTimeout(showTimer);
       clearInterval(pulseInterval);
     };
-  }, [isInstalled, isMobile]);
+  }, [hidden]);
 
-  if (!visible || isInstalled) return null;
+  if (!visible || hidden) return null;
 
   const handleClick = async () => {
     if (canNativePrompt && onNativePrompt) {
@@ -457,45 +469,69 @@ export const PwaInstallFab = ({
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      aria-label={t('components.pwaInstallGuide.fabLabel')}
-      className="fixed z-50 flex items-center gap-2 rounded-full text-white font-bold text-sm transition-all"
-      style={{
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)',
-        right: 16,
-        height: 44,
-        padding: '0 18px 0 14px',
-        background: 'linear-gradient(135deg, #1161FE, #8b5cf6)',
-        boxShadow: pulse
-          ? '0 0 0 6px rgba(17,97,254,0.25), 0 4px 20px rgba(17,97,254,0.5)'
-          : '0 4px 20px rgba(17,97,254,0.4)',
-        transform: pulse ? 'scale(1.05)' : 'scale(1)',
-        transition: 'box-shadow 0.3s ease, transform 0.3s ease',
-        animation: 'pwa-fab-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
-      }}
+    <div
+      className="fixed z-50 flex items-center gap-1.5"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)', right: 16 }}
     >
-      {/* Download arrow icon */}
-      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path
-          d="M9 2v10M9 12l-4-4M9 12l4-4"
-          stroke="#fff"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path d="M2 15h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-      {t('components.pwaInstallGuide.fabLabel')}
-      <style>
-        {`
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-label={t('components.pwaInstallGuide.fabLabel')}
+        className="flex items-center gap-2 rounded-full text-white font-bold text-sm transition-all border-0"
+        style={{
+          height: 44,
+          padding: '0 18px 0 14px',
+          background: 'linear-gradient(135deg, #1161FE, #8b5cf6)',
+          boxShadow: pulse
+            ? '0 0 0 6px rgba(17,97,254,0.25), 0 4px 20px rgba(17,97,254,0.5)'
+            : '0 4px 20px rgba(17,97,254,0.4)',
+          transform: pulse ? 'scale(1.05)' : 'scale(1)',
+          transition: 'box-shadow 0.3s ease, transform 0.3s ease',
+          animation: 'pwa-fab-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
+        }}
+      >
+        {/* Download arrow icon */}
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path
+            d="M9 2v10M9 12l-4-4M9 12l4-4"
+            stroke="#fff"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M2 15h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        {t('components.pwaInstallGuide.fabLabel')}
+        <style>
+          {`
         @keyframes pwa-fab-in {
           from { opacity: 0; transform: translateY(12px) scale(0.9); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}
-      </style>
-    </button>
+        </style>
+      </button>
+      <button
+        type="button"
+        onClick={snooze}
+        aria-label={t('components.pwaInstallGuide.fabDismissLabel')}
+        className="flex items-center justify-center rounded-full border-0 text-white/70 hover:text-white"
+        style={{
+          width: 28,
+          height: 28,
+          background: 'rgba(15,17,26,0.85)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path
+            d="M2.5 2.5l7 7M9.5 2.5l-7 7"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </div>
   );
 };

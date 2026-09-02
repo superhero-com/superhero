@@ -996,7 +996,17 @@
           "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
           "installButton": "Install",
           "iosStep1": "Tap the Share button",
-          "iosStep2": "Choose \"Add to Home Screen\""
+          "iosStep2": "Choose \"Add to Home Screen\"",
+          "installApp": "Install App",
+          "minimize": "Minimize",
+          "dismiss": "Dismiss",
+          "benefitHomescreen": "Saves to homescreen",
+          "benefitWallet": "Integrated wallet",
+          "benefitNotifications": "Push notifications",
+          "showInstructions": "Show Instructions",
+          "iosIntro": "Add Superhero to your home screen for quick access and a full-screen experience.",
+          "iosStep1Hint": "Tap the <shareIcon/> icon in Safari's toolbar",
+          "iosStep2Hint": "Scroll and select \"Add to Home Screen\""
         },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",
@@ -3079,6 +3089,7 @@
       "next": "Next →",
       "done": "Done!",
       "fabLabel": "Install App",
+      "fabDismissLabel": "Dismiss",
       "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
       "ios": {
         "step1": {
@@ -3115,7 +3126,8 @@
           "title": "Open from home screen",
           "description": "Launch from your home screen — location and offline mode work perfectly."
         }
-      }
+      },
+      "stepDotLabel": "Step {{number}}"
     }
   },
   "bondingCurve": {

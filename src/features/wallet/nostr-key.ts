@@ -40,8 +40,9 @@ export async function deriveNostrIdentity(
   unlock: UnlockProvider,
   accountIndex: number,
 ): Promise<UserKeys> {
-  // USER VERIFICATION at chat entry. No SigningContext: this is a non-signing
-  // unlock, so no WYSIWYS payload is shown — the provider performs UV only.
+  // USER VERIFICATION at chat entry. Passed no context of its own: the caller
+  // binds the one that names the grant ('chat-session' / 'nostr-link'). Nothing
+  // is signed here, so there is no WYSIWYS payload to show.
   const { factorId, kek } = await unlock(record);
   let mnemonic: string | undefined;
   let seed: Uint8Array | undefined;

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
 const { createCspPolicy, CSP_REPORT_PATH } = require('./lib/csp.cjs');
+const { decodedPath, isSubresourceRequest } = require('./lib/subresource.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -311,21 +312,34 @@ app.post(
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
 
 // Route literal *.html requests to the document handler before express.static can answer them
-// off disk. The path is decoded first: req.path keeps percent-escapes while serve-static decodes
-// before resolving, so `/index%2Ehtml` matches no route here yet resolves to index.html there.
-// Suffix-matched so it also covers `/./index.html` and, on a case-insensitive filesystem,
-// `/INDEX.HTML`.
+// off disk. Suffix-matched on the decoded path, so it also covers `/./index.html` and, on a
+// case-insensitive filesystem, `/INDEX.HTML`.
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-  let pathname = req.path;
-  try { pathname = decodeURIComponent(req.path); } catch { /* malformed escape: match the raw path */ }
-  if (!/\.html?$/i.test(pathname)) return next();
+  if (!/\.html?$/i.test(decodedPath(req.path))) return next();
   return sendSpaDocument(req, res);
 });
 
 // `index: false` so a directory-style request for `/` reaches the SEO route handlers below
 // instead of being answered with the raw dist/index.html.
-app.use(express.static(DIST_DIR, { maxAge: '1d', index: false }));
+app.use(express.static(DIST_DIR, {
+  maxAge: '1d',
+  index: false,
+  setHeaders: (res, filePath) => {
+    // A service worker script must never be answered from a stale cache: the browser's update
+    // check is the ONLY way a worker is replaced, so a cached copy makes a shipped fix invisible
+    // for as long as that entry lives.
+    if (/-sw\.js$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
+
+// Subresource requests must 404 rather than fall through to the SPA document below — see
+// lib/subresource.cjs for what that prevents and how a request is classified.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (!isSubresourceRequest(decodedPath(req.path), req.get('sec-fetch-dest'))) return next();
+  return res.status(404).type('text/plain').send('Not found');
+});
 
 // Express 5 (path-to-regexp v8) has no bare `*`: a wildcard must be its own named segment.
 // The `/voting*`-style suffix patterns have no direct equivalent, so they become the literal

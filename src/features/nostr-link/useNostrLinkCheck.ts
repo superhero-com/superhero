@@ -72,7 +72,11 @@ export function useNostrLinkCheck(
         address: activeAccount, npub, identity, signMessage,
       });
       clearDismissal(activeAccount);
-      setStatus('done');
+      // `linked`, not `done`: `done` means "unlinked, but resolved for now", and
+      // every re-prompt path (`useRequestNostrLinkPrompt`, the unlock check in
+      // `useRoomSession`) reopens the dialog on it — so a just-linked account
+      // would be asked to enable chat again while the link tx is still settling.
+      setStatus('linked');
     } catch (err) {
       notifyError(err instanceof Error ? err.message : 'Failed to link Nostr identity.');
       setStatus('error');

@@ -3,7 +3,13 @@
  * an `ak_…` wallet address (resolved to its linked nostr key via
  * `fetchNostrLink`), an `npub1…`, or a 64-char hex pubkey, then navigates to the
  * DM thread. Below the input, "Suggested" lists accounts that have linked a
- * nostr key (`useNostrLinkedAccounts`).
+ * nostr key, filtered by whatever else is typed (`useNostrLinkedAccounts`, which
+ * searches names server-side).
+ *
+ * A name typed out in full and pressing Start therefore has to mean the same as
+ * clicking that row: the button is the obvious thing to press after typing, and
+ * making it refuse a name the list is already showing reads as the search being
+ * broken.
  */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +25,7 @@ import { formatAddress } from '@/utils/address';
 
 import { normalizeNostrId } from '../utils/converters';
 import { ContactRow } from './ContactRow';
-import { useNostrLinkedAccounts } from '../hooks/useNostrLinkedAccounts';
+import { useNostrLinkedAccounts, type NostrLinkedAccount } from '../hooks/useNostrLinkedAccounts';
 import { useRecentChats } from '../hooks/useRecentChats';
 
 export interface StartNewChatDialogProps {
@@ -36,15 +42,29 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
 
   const search = value.trim();
   const looksLikeTarget = /^(ak_|npub1)/.test(search) || /^[0-9a-f]{64}$/i.test(search);
-  const { accounts } = useNostrLinkedAccounts(
+  const { accounts, query } = useNostrLinkedAccounts(
     looksLikeTarget ? '' : search,
     { enabled: open, limit: 12 },
   );
+  // No results for this term YET. Submitting now would report "no account" for a
+  // name whose row is about to appear. Deliberately not `isFetching`: that also
+  // covers the background refetch on window focus, which would disable Start
+  // while the matching row is on screen.
+  const isSearching = !looksLikeTarget && query.isLoading;
 
   const suggestions = useMemo(
     () => accounts.filter((a) => a.nostrAddress),
     [accounts],
   );
+
+  // Whole name only. A prefix that happens to match one row today matches a
+  // different person once someone else registers a longer name.
+  const namedExactly = useMemo(() => {
+    const needle = search.toLowerCase();
+    return needle
+      ? suggestions.filter((a) => a.chainName?.toLowerCase() === needle)
+      : [];
+  }, [suggestions, search]);
 
   const openDm = (pubkey: string, seed: string, label: string) => {
     record({
@@ -55,9 +75,31 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
     navigate(`/chat/dm/${pubkey}`);
   };
 
+  /** The one path a chosen account opens through, whether picked or typed. */
+  const openAccount = (account: NostrLinkedAccount) => {
+    try {
+      const { pubkey } = normalizeNostrId(account.nostrAddress!);
+      openDm(pubkey, account.address, account.chainName || formatAddress(account.address));
+    } catch {
+      setError('Could not resolve that account’s Nostr key.');
+    }
+  };
+
   const resolveAndOpen = async () => {
     if (!search) return;
     setError(null);
+
+    if (!looksLikeTarget) {
+      if (namedExactly.length === 1) {
+        openAccount(namedExactly[0]);
+        return;
+      }
+      if (namedExactly.length > 1) {
+        setError('More than one account uses that name — pick the one you meant below.');
+        return;
+      }
+    }
+
     setIsResolving(true);
     try {
       let pubkey: string;
@@ -73,7 +115,8 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
       }
       openDm(pubkey, search, formatAddress(search));
     } catch {
-      setError('Enter a valid wallet address (ak_…), npub, or hex pubkey.');
+      setError('No account found. Enter a full name from the list, a wallet address '
+        + '(ak_…), an npub, or a hex pubkey.');
     } finally {
       setIsResolving(false);
     }
@@ -88,7 +131,7 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
             New chat
           </DialogTitle>
           <DialogDescription>
-            Enter a wallet address, npub, or hex pubkey to start a conversation.
+            Search by name, or enter a wallet address, npub, or hex pubkey.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,13 +142,19 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
           <Input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="ak_… or npub1…"
+            placeholder="Name, ak_… or npub1…"
             autoCapitalize="none"
             autoCorrect="off"
             aria-label="Chat target"
           />
-          <Button type="submit" size="sm" disabled={!search || isResolving}>
-            {isResolving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Start'}
+          <Button
+            type="submit"
+            size="sm"
+            // Keeps a name while the label is a spinner.
+            aria-label="Start"
+            disabled={!search || isResolving || isSearching}
+          >
+            {isResolving || isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Start'}
           </Button>
         </form>
         {error && <p className="text-xs text-error">{error}</p>}
@@ -120,15 +169,7 @@ export const StartNewChatDialog = ({ open, onOpenChange }: StartNewChatDialogPro
                   seed={account.nostrAddress || account.address}
                   title={account.chainName || formatAddress(account.address)}
                   subtitle={formatAddress(account.address)}
-                  onClick={() => {
-                    try {
-                      const { pubkey } = normalizeNostrId(account.nostrAddress!);
-                      const label = account.chainName || formatAddress(account.address);
-                      openDm(pubkey, account.address, label);
-                    } catch {
-                      setError('Could not resolve that account’s Nostr key.');
-                    }
-                  }}
+                  onClick={() => openAccount(account)}
                 />
               ))}
             </div>

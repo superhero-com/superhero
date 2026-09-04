@@ -35,24 +35,26 @@ export const TOKEN_TAG_ENVELOPE_PAYLOAD = '[^{}\\r\\n]{0,64}';
  */
 export function parseTokenTagEnvelope(payload: string): TokenTagDisplayOptions {
   const resolved: TokenTagDisplayOptions = { ...TAG_PRESET };
+  // Whitespace around the key, the `=`, and the value is insignificant, so a hand-typed
+  // `{change = 0}` reads the same as `{change=0}` — the payload class admits the space and
+  // both SSR strippers already drop it, so the reader must interpret it, not print it.
   const pairs = String(payload ?? '')
     .toLowerCase()
     .split(';')
-    .map((pair) => pair.trim())
-    .filter(Boolean);
+    .map((pair) => {
+      const eq = pair.indexOf('=');
+      if (eq < 0) return null; // bare flag / garbage: no `key=value`
+      return { key: pair.slice(0, eq).trim(), value: pair.slice(eq + 1).trim() };
+    })
+    .filter((pair): pair is { key: string; value: string } => pair !== null && pair.key !== '');
 
   // `mode` first, so explicit toggles override its preset regardless of their order.
-  const modePair = pairs.find((pair) => pair.startsWith('mode='));
+  const modePair = pairs.find((pair) => pair.key === 'mode');
   if (modePair) {
-    const mode = modePair.slice('mode='.length);
-    Object.assign(resolved, MODE_PRESETS[mode] ?? TAG_PRESET);
+    Object.assign(resolved, MODE_PRESETS[modePair.value] ?? TAG_PRESET);
   }
 
-  pairs.forEach((pair) => {
-    const eq = pair.indexOf('=');
-    if (eq < 0) return; // bare flag / garbage: no `key=value`, drop it
-    const key = pair.slice(0, eq);
-    const value = pair.slice(eq + 1);
+  pairs.forEach(({ key, value }) => {
     if (key === 'mode') return; // handled above
     if ((BOOLEAN_KEYS as readonly string[]).includes(key)) {
       if (value === '1') resolved[key as (typeof BOOLEAN_KEYS)[number]] = true;

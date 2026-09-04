@@ -40,7 +40,16 @@ const ACCOUNT_MACRO_REGEX = /\[account:(ak_[1-9A-HJ-NP-Za-km-z]{48,56})\]/g;
 // "example.com/page#section" (preceded by 'e', a word char) without requiring whitespace before
 // every hashtag — CJK text, punctuation, and other non-Latin scripts commonly butt right up
 // against a following "#tag" with no space (e.g. "支持#你好", "see,#TOKEN").
-const HASHTAG_WORD_REGEX = /(^|[^\w./])#(\S+)/g;
+//
+// The run also swallows a `{payload}` display envelope even though the payload class admits
+// spaces (`{change = 0}`): a bare `\S+` would end at the first space and hand the reader a
+// half-open `{change` that never matches the envelope grammar, so the braces leaked out as
+// text. A full `{...}` is consumed as one atom; an unterminated `{` still falls through to
+// `\S`, so anything without a closing brace keeps its old, brace-as-text behaviour.
+const HASHTAG_WORD_REGEX = new RegExp(
+  `(^|[^\\w./])#((?:\\{${TOKEN_TAG_ENVELOPE_PAYLOAD}\\}|\\S)+)`,
+  'g',
+);
 // Fallback token-name character class when no live collection data is available (e.g. before
 // the BCL factory schema has loaded): letters, numbers, and dashes only.
 const DEFAULT_HASHTAG_CHARS_PATTERN = 'A-Za-z0-9\\-';

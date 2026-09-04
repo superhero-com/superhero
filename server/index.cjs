@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
 const { createCspPolicy, CSP_REPORT_PATH } = require('./lib/csp.cjs');
 const { decodedPath, isSubresourceRequest } = require('./lib/subresource.cjs');
+const { stripTokenTagEnvelopes } = require('./lib/token-tag.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -51,12 +52,6 @@ function envInject(html) {
 }
 
 function truncate(s, n){ const t=(s||'').trim(); return t.length<=n?t:t.slice(0,Math.max(0,n-1))+'…'; }
-
-// Strip a token-tag display envelope (`#SYMBOL{mode=advanced}` -> `#SYMBOL`) so it never
-// lands in a meta description or link preview. Kept in sync with the client grammar in
-// src/utils/tokenTagEnvelope.ts (this file is a standalone CommonJS SSR copy — same reason
-// truncate/absolutize are duplicated here rather than imported).
-function stripTokenTagEnvelopes(s){ return String(s||'').replace(/(#[\p{L}\p{N}-]{1,50})\{[^{}\r\n]{0,64}\}/gu, '$1'); }
 
 function absolutize(url, origin){ if(!url) return undefined; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
 

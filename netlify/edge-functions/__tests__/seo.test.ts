@@ -11,7 +11,7 @@
  * which the HTML tokenizer never recognizes as tag syntax), so the payload renders as inert
  * text and the JSON-LD block remains valid, parseable JSON. */
 
-import { injectHead, jsonLdSafe } from '../seo';
+import { injectHead, jsonLdSafe, stripTokenTagEnvelopes } from '../seo';
 
 const BASE_HTML = '<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>';
 const BREAKOUT_PAYLOAD = '</script><script>alert(1)</script>';
@@ -147,5 +147,24 @@ describe('injectHead — JSON-LD script-breakout XSS regression', () => {
     const doc = parseHtml(html);
     expect(doc.querySelectorAll('script').length).toBe(0);
     expect(doc.querySelector('title')?.textContent).toBe('<script>alert(1)</script>');
+  });
+});
+
+/* The token-tag display envelope must never reach a crawler's meta description. The payload class
+ * admits internal whitespace, so a spaced `{change = 0}` has to be stripped by this edge copy too
+ * — otherwise the client reader consumes the envelope while the SSR head leaks the raw braces. */
+describe('stripTokenTagEnvelopes (netlify SSR copy)', () => {
+  it('drops the envelope and keeps the symbol', () => {
+    expect(stripTokenTagEnvelopes('gm #SUPERHERO{mode=advanced} fam')).toBe('gm #SUPERHERO fam');
+  });
+
+  it('strips a spaced envelope — the payload class admits internal whitespace', () => {
+    expect(stripTokenTagEnvelopes('gm #SUPERHERO{change = 0} fam')).toBe('gm #SUPERHERO fam');
+    expect(stripTokenTagEnvelopes('#SUPERHERO{ mode = advanced }')).toBe('#SUPERHERO');
+  });
+
+  it('leaves a bare symbol and a plain object literal untouched', () => {
+    expect(stripTokenTagEnvelopes('#SUPERHERO')).toBe('#SUPERHERO');
+    expect(stripTokenTagEnvelopes('an object literal { a: 1 } stays')).toBe('an object literal { a: 1 } stays');
   });
 });

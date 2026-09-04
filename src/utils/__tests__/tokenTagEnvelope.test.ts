@@ -57,6 +57,25 @@ describe('parseTokenTagEnvelope — the {change=0} "only the tag" form', () => {
   });
 });
 
+describe('parseTokenTagEnvelope — whitespace around the key, =, and value is insignificant', () => {
+  // The payload class `[^{}\r\n]{0,64}` admits spaces, so a hand-typed `{change = 0}` must
+  // resolve exactly like `{change=0}` rather than dropping the pair.
+  it.each([
+    'change = 0',
+    ' change=0 ',
+    'change= 0',
+    'change =0',
+    '\tchange=0',
+  ])('%j turns the badge off, same as change=0', (payload) => {
+    expect(parseTokenTagEnvelope(payload)).toEqual({ chart: false, price: false, change: false });
+  });
+
+  it('trims a spaced mode value', () => {
+    expect(parseTokenTagEnvelope('mode = advanced')).toEqual({ chart: true, price: true, change: true });
+    expect(parseTokenTagEnvelope('mode= compact ;change =0')).toEqual({ chart: false, price: true, change: false });
+  });
+});
+
 describe('parseTokenTagEnvelope — overrides and degradation', () => {
   it('an explicit key overrides its preset regardless of order', () => {
     expect(parseTokenTagEnvelope('mode=advanced;chart=0')).toEqual({ chart: false, price: true, change: true });
@@ -112,5 +131,10 @@ describe('stripTokenTagEnvelopes', () => {
 
   it('strips multiple envelopes in one string', () => {
     expect(stripTokenTagEnvelopes('#A{mode=tag} and #B{mode=advanced}')).toBe('#A and #B');
+  });
+
+  it('strips a spaced envelope — the payload class admits internal whitespace', () => {
+    expect(stripTokenTagEnvelopes('gm #SUPERHERO{change = 0} fam')).toBe('gm #SUPERHERO fam');
+    expect(stripTokenTagEnvelopes('#SUPERHERO{ mode = advanced }')).toBe('#SUPERHERO');
   });
 });

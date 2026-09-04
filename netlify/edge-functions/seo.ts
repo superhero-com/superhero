@@ -20,8 +20,9 @@ function truncate(s: string, n: number): string {
 // Strip a token-tag display envelope (`#SYMBOL{mode=advanced}` -> `#SYMBOL`) so it never
 // lands in a meta description, snippet, or link preview. Kept in sync with the client
 // grammar in src/utils/tokenTagEnvelope.ts (this edge runtime is a standalone copy — same
-// reason truncate/absolutize are duplicated here rather than imported).
-function stripTokenTagEnvelopes(s: string): string {
+// reason truncate/absolutize are duplicated here rather than imported). The payload class
+// admits internal whitespace (`{change = 0}`), so a spaced envelope is stripped too.
+export function stripTokenTagEnvelopes(s: string): string {
   return (s || '').replace(/(#[\p{L}\p{N}-]{1,50})\{[^{}\r\n]{0,64}\}/gu, '$1');
 }
 

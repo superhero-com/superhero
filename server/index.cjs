@@ -60,6 +60,39 @@ function stripTokenTagEnvelopes(s){ return String(s||'').replace(/(#[\p{L}\p{N}-
 
 function absolutize(url, origin){ if(!url) return undefined; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
 
+const BASE_API = API_BASE.replace(/\/$/, '');
+
+async function fetchJson(url){
+  try {
+    const r = await fetch(url, { headers: { accept: 'application/json' } });
+    if (r.ok) return await r.json();
+  } catch {}
+  return null;
+}
+
+// The three entity fetches the SEO <head> injector already relies on, factored out so the
+// per-entity markdown routes below hit the same production API path with the same fallbacks.
+async function fetchPost(segment){
+  let data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(segment)}`);
+  if (!data && /^\d+$/.test(segment)) {
+    data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(`${segment}_v3`)}`);
+  }
+  if (!data) {
+    const sdata = await fetchJson(`${BASE_API}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`);
+    const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+    if (first?.id) data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(String(first.id))}`);
+  }
+  return data;
+}
+
+async function fetchAccount(address){
+  return fetchJson(`${BASE_API}/api/accounts/${encodeURIComponent(address)}`);
+}
+
+async function fetchToken(name){
+  return fetchJson(`${BASE_API}/api/tokens/${encodeURIComponent(String(name).toUpperCase())}`);
+}
+
 async function buildMeta(pathname, origin){
   // Root
   if (pathname === '/' || pathname === '') {
@@ -85,38 +118,19 @@ async function buildMeta(pathname, origin){
   const pm = pathname.match(/^\/post\/([^/]+)/);
   if (pm) {
     const segment = pm[1];
-    const baseApi = API_BASE.replace(/\/$/, '');
-    async function fetchPostBySegment(seg){
-      const r = await fetch(`${baseApi}/api/posts/${encodeURIComponent(seg)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) return r.json();
-      return null;
+    const data = await fetchPost(segment);
+    if (data) {
+      const raw = stripTokenTagEnvelopes(String(data?.content || ''));
+      const content = raw.replace(/\s+/g,' ').trim();
+      const media = Array.isArray(data?.media) ? data.media : [];
+      return {
+        title: `${truncate(content,80) || 'Post'} – Superhero`,
+        description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
+        canonical: `${origin}/post/${data?.slug || segment}`,
+        ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
+        ogType: 'article',
+      };
     }
-    try {
-      let data = await fetchPostBySegment(segment);
-      if (!data && /^\d+$/.test(segment)) {
-        data = await fetchPostBySegment(`${segment}_v3`);
-      }
-      if (!data) {
-        const sr = await fetch(`${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`, { headers: { accept: 'application/json' } });
-        if (sr.ok) {
-          const sdata = await sr.json();
-          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
-          if (first?.id) data = await fetchPostBySegment(String(first.id));
-        }
-      }
-      if (data) {
-        const raw = stripTokenTagEnvelopes(String(data?.content || ''));
-        const content = raw.replace(/\s+/g,' ').trim();
-        const media = Array.isArray(data?.media) ? data.media : [];
-        return {
-          title: `${truncate(content,80) || 'Post'} – Superhero`,
-          description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${origin}/post/${data?.slug || segment}`,
-          ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
-          ogType: 'article',
-        };
-      }
-    } catch {}
     return { title: 'Post – Superhero', canonical: `${origin}/post/${segment}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
   }
 
@@ -124,11 +138,8 @@ async function buildMeta(pathname, origin){
   const um = pathname.match(/^\/users\/([^/]+)/);
   if (um) {
     const address = um[1];
-    let bio = '';
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); }
-    } catch {}
+    const data = await fetchAccount(address);
+    const bio = String(data?.bio || '').trim();
     return {
       title: `${address} – Profile – Superhero`,
       description: bio ? truncate(bio,200) : 'View profile on Superhero, the crypto social network.',
@@ -143,16 +154,13 @@ async function buildMeta(pathname, origin){
   if (tm) {
     const tokenName = tm[1];
     const address = tokenName.toUpperCase();
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
-        const symbol = data?.symbol || data?.name || address;
-        const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
-        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
-      }
-    } catch {}
+    const data = await fetchToken(tokenName);
+    if (data) {
+      const symbol = data?.symbol || data?.name || address;
+      const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
+      const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
+      return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+    }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
@@ -161,16 +169,13 @@ async function buildMeta(pathname, origin){
   if (tml) {
     const tokenName = tml[1];
     const address = tokenName.toUpperCase();
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
-        const symbol = data?.symbol || data?.name || address;
-        const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
-        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
-      }
-    } catch {}
+    const data = await fetchToken(tokenName);
+    if (data) {
+      const symbol = data?.symbol || data?.name || address;
+      const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
+      const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
+      return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+    }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
@@ -239,6 +244,84 @@ async function buildMeta(pathname, origin){
   return { title: 'Superhero', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
 }
 
+// Per-entity markdown variants for agent crawlers. The SPA body is client-rendered
+// (`<div id="root">`) and most agent crawlers do not execute JS, so they see nothing. These
+// `.md` routes answer the same three entities the <head> injector fetches, as plain markdown.
+function fmtNum(v){
+  const n = Number(v);
+  if (!isFinite(n)) return undefined;
+  if (n === 0) return '0';
+  if (Math.abs(n) >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  return Number(n.toPrecision(4)).toString();
+}
+
+function mdStatLines(rows){
+  return rows.filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `- ${k}: ${v}`).join('\n');
+}
+
+function postMarkdown(data, segment, origin){
+  const content = stripTokenTagEnvelopes(String(data?.content || '')).trim();
+  const sender = data?.sender || {};
+  const address = sender.address || data?.sender_address || '';
+  const author = sender.public_name || address || 'Unknown';
+  const media = Array.isArray(data?.media) ? data.media.filter(Boolean) : [];
+  const stats = mdStatLines([
+    ['Author', address && author !== address ? `${author} (${address})` : (author || address)],
+    ['Comments', data?.total_comments],
+    ['Posted', data?.created_at],
+    ['URL', `${origin}/post/${data?.slug || segment}`],
+  ]);
+  const parts = [`# Post by ${author}`, content || '_No text content._'];
+  if (media.length) parts.push(media.map((m, i) => `![media ${i + 1}](${absolutize(m, origin)})`).join('\n'));
+  parts.push(stats);
+  return parts.join('\n\n') + '\n';
+}
+
+function userMarkdown(data, address, origin){
+  const name = data?.public_name || data?.chain_name || address;
+  const bio = String(data?.bio || data?.profile?.bio || '').trim();
+  const stats = mdStatLines([
+    ['Address', address],
+    ['Chain name', data?.chain_name || undefined],
+    ['Tokens created', data?.total_created_tokens],
+    ['Holdings', data?.holdings_count],
+    ['Total volume (AE)', fmtNum(data?.total_volume)],
+    ['Transactions', data?.total_tx_count],
+    ['URL', `${origin}/users/${address}`],
+  ]);
+  return [`# ${name}`, bio || '_No bio._', stats].join('\n\n') + '\n';
+}
+
+function tokenMarkdown(data, tokenName, origin){
+  const symbol = data?.symbol || data?.name || tokenName.toUpperCase();
+  const desc = String(data?.metaInfo?.description || '').trim();
+  const priceAe = fmtNum(data?.price_data?.ae ?? data?.price);
+  const priceUsd = fmtNum(data?.price_data?.usd);
+  const stats = mdStatLines([
+    ['Name', data?.name],
+    ['Symbol', data?.symbol],
+    ['Contract', data?.address],
+    ['Sale contract', data?.sale_address],
+    ['Price', priceAe !== undefined ? `${priceAe} AE${priceUsd !== undefined ? ` (~$${priceUsd})` : ''}` : undefined],
+    ['Holders', data?.holders_count],
+    ['Transactions', data?.tx_count],
+    ['Trending score', data?.trending_score],
+    ['Creator', data?.creator_address],
+    ['Created', data?.created_at],
+    ['URL', `${origin}/trends/tokens/${tokenName}`],
+  ]);
+  return [`# #${symbol}`, desc || `Explore #${symbol} token, trades, holders and posts on Superhero.`, stats].join('\n\n') + '\n';
+}
+
+function sendMarkdown(res, body){
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.send(body);
+}
+
+function sendMarkdownNotFound(res){
+  res.status(404).type('text/markdown; charset=utf-8').send('# Not found\n\nNo such entity.\n');
+}
+
 // The policy itself lives in ./lib/csp.cjs so scripts/check-csp-origins.cjs can diff its
 // allowlist against the built bundle and the directives can be asserted in tests.
 const { buildCsp } = createCspPolicy();
@@ -270,6 +353,30 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   next();
+});
+
+// Per-entity markdown for agent crawlers, matched on the decoded path so it runs ahead of the
+// static and SPA-document handlers that would otherwise answer `.md` with HTML. Kept before the
+// CSP/nonce middleware since a markdown body carries no scripts to protect.
+const MD_ROUTES = [
+  { re: /^\/post\/(.+)\.md$/, fetch: fetchPost, render: postMarkdown },
+  { re: /^\/users\/(.+)\.md$/, fetch: fetchAccount, render: userMarkdown },
+  { re: /^\/trends\/tokens\/(.+)\.md$/, fetch: fetchToken, render: tokenMarkdown },
+];
+app.use(async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const pathname = decodedPath(req.path);
+  const route = MD_ROUTES.find((r) => r.re.test(pathname));
+  if (!route) return next();
+  const key = pathname.match(route.re)[1];
+  try {
+    const data = await route.fetch(key);
+    if (!data) return sendMarkdownNotFound(res);
+    const origin = `${req.protocol}://${req.get('host')}`;
+    return sendMarkdown(res, route.render(data, key, origin));
+  } catch {
+    return sendMarkdownNotFound(res);
+  }
 });
 
 // Content-hashed, immutable subresources. Mounted ahead of the CSP so the ~1.5 kB policy is not

@@ -1,10 +1,35 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import {
+  describe, it, expect, vi,
+} from 'vitest';
 import { linkify } from '../linkify';
 import { mergedCollectionNameCharsPattern } from '../collectionNameChars';
 import type { ICollectionData } from '../types';
+
+// The account-mention chip resolves a chain name via a batched network hook; pin it
+// so these render tests stay deterministic and offline.
+vi.mock('@/hooks/useChainName', () => ({
+  useChainName: () => ({ chainName: null }),
+}));
+
+// The enhanced widget fetches token data and pulls in currency/i18n providers; the reader's
+// job here is to consume the envelope and choose the right node, so the widget is stubbed to
+// a marker that echoes the symbol and the resolved options.
+vi.mock('@/components/social/PostTokenTag', () => ({
+  default: ({ symbol, options }: { symbol: string; options: Record<string, boolean> }) => (
+    <span
+      data-testid="post-token-tag"
+      data-symbol={symbol}
+      data-chart={String(options.chart)}
+      data-price={String(options.price)}
+      data-change={String(options.change)}
+    >
+      {`#${symbol}`}
+    </span>
+  ),
+}));
 
 function renderLinkify(text: string, options?: Parameters<typeof linkify>[1]) {
   return render(
@@ -115,6 +140,44 @@ describe('linkify hashtag parsing', () => {
 
     const link = screen.getByRole('link', { name: /ak_123abc456/i });
     expect(link).toHaveAttribute('href', '/users/ak_123abc456');
+  });
+
+  const MACRO_ADDR = 'ak_2mMPQ2E9zN8Dd6Fm8jrThQvcYQ7cwR3hh6iC5xGZ2gZ4tHacBdEf';
+
+  it('renders an [account:ak_...] macro as an inline account chip with its identicon', () => {
+    const { container } = renderLinkify(`gm [account:${MACRO_ADDR}] there`);
+
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', `/users/${MACRO_ADDR}`);
+    // The macro delimiters are consumed, and the chip label is '@'-prefixed.
+    expect(screen.getByTestId('content').textContent).not.toContain('[account:');
+    expect(link.textContent).toMatch(/^@ak_/);
+    // The account badge carries the identicon; with no chain name (mocked null) there is no
+    // separate trailing address — the shortened address is the label itself, not duplicated.
+    expect(container.querySelector('.sh-pill__avatar')).toBeInTheDocument();
+    expect(container.querySelector('.sh-pill__addr')).not.toBeInTheDocument();
+  });
+
+  it('leaves a bare ak_ address as a plain link, not a macro chip', () => {
+    renderLinkify(`plain ${MACRO_ADDR} address`);
+
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', `/users/${MACRO_ADDR}`);
+    // No '@' prefix: this is the plain-link path, not the chip.
+    expect(link.textContent).not.toContain('@');
+  });
+
+  it('renders all three mention forms through the one pill component (post-inline)', () => {
+    const { container } = renderLinkify(
+      `gm [account:${MACRO_ADDR}] and bob.chain and ${MACRO_ADDR}`,
+      { hashtagVariant: 'post-inline', knownChainNames: new Set(['bob.chain']) },
+    );
+    // Account macro (Pass 0.5), AENS name (Pass 1) and raw address (Pass 2a) each render as the
+    // shared EntityPill — no bespoke second treatment beside it.
+    expect(container.querySelectorAll('.sh-pill')).toHaveLength(3);
+    // Only the deliberate `[account:…]` badge carries an identicon; the bare AENS name and the
+    // raw address stay text-only pills.
+    expect(container.querySelectorAll('.sh-pill__avatar')).toHaveLength(1);
   });
 
   it('treats a lone "#" with no following token characters as plain text', () => {
@@ -265,5 +328,137 @@ describe('linkify hashtag parsing — non-Latin BCL collections', () => {
     renderLinkify('gm #こんにちは gm', { hashtagAllowedChars });
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+});
+
+describe('linkify token-tag envelope reader', () => {
+  it('renders a bare #SYMBOL exactly as before (no envelope)', () => {
+    renderLinkify('gm #SUPERHERO fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' }))
+      .toHaveAttribute('href', '/trends/tokens/SUPERHERO');
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #SUPERHERO fam');
+  });
+
+  it('consumes an empty envelope and renders the plain tag', () => {
+    renderLinkify('gm #SUPERHERO{} fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('gm #SUPERHERO fam');
+  });
+
+  it('treats mode=tag as the plain tag', () => {
+    renderLinkify('#SUPERHERO{mode=tag}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('treats {change=0} as a plain tag, not a widget (badge gating tested in PostHashtagLink)', () => {
+    renderLinkify('#SUPERHERO{change=0}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('treats the fully-explicit all-off form as a plain tag', () => {
+    renderLinkify('#SUPERHERO{chart=0;price=0;change=0}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('renders a widget for mode=compact (price + change, no chart)', () => {
+    renderLinkify('#SUPERHERO{mode=compact}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-symbol', 'SUPERHERO');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('renders a widget for mode=advanced (chart + price + change)', () => {
+    renderLinkify('#SUPERHERO{mode=advanced}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'true');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('honours an explicit override — advanced minus the chart', () => {
+    renderLinkify('#SUPERHERO{mode=advanced;chart=0}');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+  });
+
+  it('tokenTagInline forces the inline pill — advanced renders with the chart off', () => {
+    renderLinkify('#SUPERHERO{mode=advanced}', { tokenTagInline: true } as any);
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-chart', 'false');
+    expect(widget).toHaveAttribute('data-price', 'true');
+    expect(widget).toHaveAttribute('data-change', 'true');
+  });
+
+  it('tokenTagInline drops a chart-only envelope to the plain tag, never a widget', () => {
+    renderLinkify('#SUPERHERO{mode=advanced;price=0}', { tokenTagInline: true } as any);
+
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  // The forward-compatibility proof: an envelope written by a future client renders as a
+  // clean plain tag in today's client, never as broken text.
+  it('renders an unknown future envelope as a clean plain tag', () => {
+    renderLinkify('#SUPERHERO{mode=hologram;fps=60}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+    expect(screen.getByTestId('content').textContent).not.toContain('{');
+  });
+
+  it('consumes an unparseable envelope and renders the plain tag', () => {
+    renderLinkify('#SUPERHERO{!!garbage!!}');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    expect(screen.getByTestId('content').textContent).toBe('#SUPERHERO');
+  });
+
+  it('never prints the braces and preserves the surrounding text', () => {
+    renderLinkify('gm #SUPERHERO{mode=advanced} to the moon');
+
+    expect(screen.getByTestId('post-token-tag')).toHaveAttribute('data-symbol', 'SUPERHERO');
+    const { textContent } = screen.getByTestId('content');
+    expect(textContent).toBe('gm #SUPERHERO to the moon');
+    expect(textContent).not.toContain('{');
+    expect(textContent).not.toContain('}');
+  });
+
+  it('reads an envelope on a hyphenated symbol', () => {
+    renderLinkify('#EMOTER-AI{mode=advanced}');
+
+    expect(screen.getByTestId('post-token-tag')).toHaveAttribute('data-symbol', 'EMOTER-AI');
+    expect(screen.getByTestId('content').textContent).toBe('#EMOTER-AI');
+  });
+
+  it('an unterminated brace is not an envelope and the tag still links', () => {
+    renderLinkify('#SUPERHERO{mode=advanced fam');
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
   });
 });

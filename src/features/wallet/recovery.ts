@@ -1,0 +1,49 @@
+/**
+ * Recovery code.
+ *
+ * A 128-bit, high-entropy code shown ONCE at enrollment. It is a `recovery-code`
+ * factor (HKDF → KEK, factors.ts) — a PASSKEY-independent unlock path, so a single
+ * passkey rekey (Apple FB22434584) can't orphan the wallet.
+ *
+ * It is NOT device-independent, and must never be described as one. The code only
+ * derives a KEK; unwrapping the DEK still needs `record.factors[].wrap` and
+ * `record.seal`, which live solely in this device's evictable IndexedDB
+ * (vault-store.ts). Lose the record — a wiped device, Safari ITP eviction — and the
+ * code unlocks nothing. Only the WRITTEN mnemonic backup survives that, which is
+ * why it is mandatory and why the two are not interchangeable.
+ *
+ * Rendered as grouped uppercase hex (bijective, no base32 bit-packing to get
+ * wrong — for a recovery path, correctness beats brevity). Parsing is lenient
+ * about case, spaces and dashes so a user can retype it comfortably.
+ */
+
+/** Format 16 raw bytes as `XXXX-XXXX-…` uppercase hex (8 groups of 4). */
+export function formatRecoveryCode(bytes: Uint8Array): string {
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  return (hex.match(/.{1,4}/g) ?? []).join('-');
+}
+
+/** 128 bits as hex. Exported so the unlock form can gate on a complete code. */
+export const RECOVERY_CODE_DIGITS = 32;
+
+/** Dashes and spacing are how a user reads the code back, not part of it. */
+const hexOnly = (code: string) => code.replace(/[^0-9a-fA-F]/g, '');
+
+export function recoveryCodeDigits(code: string): number {
+  return hexOnly(code).length;
+}
+
+/** Parse a recovery code back to 16 bytes. Tolerates case/spaces/dashes; rejects wrong length. */
+export function parseRecoveryCode(code: string): Uint8Array {
+  const hex = hexOnly(code);
+  if (hex.length !== RECOVERY_CODE_DIGITS) throw new Error('recovery code: expected 128 bits (32 hex characters)');
+  const out = new Uint8Array(16);
+  for (let i = 0; i < 16; i += 1) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+
+/** Generate a fresh 128-bit recovery code: the display string + its raw bytes (for the KEK). */
+export function generateRecoveryCode(): { code: string; bytes: Uint8Array } {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return { code: formatRecoveryCode(bytes), bytes };
+}

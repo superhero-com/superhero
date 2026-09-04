@@ -242,7 +242,9 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 
 @media (max-width: 1237px) {
   .banner-layout {
-    padding: 4px 4px 22px;
+    /* Tight bottom pad: the dots sit outside this box, so 22px here was dead
+       space between the graphic and the carousel controls. */
+    padding: 4px 4px 10px;
     align-items: stretch;
     height: 100%;
   }
@@ -252,7 +254,9 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
     min-height: 0;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    /* Text block → graphic. 16px read as a visible seam once the columns
+       stack; 10px still separates them without inflating the slide. */
+    gap: 10px;
   }
 
   /* Graphic fills the whole remaining space below the text/buttons */
@@ -272,6 +276,9 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
 
   .banner-layout__actions {
     justify-content: flex-start;
+    /* Buttons belong to the text block above them; 6px + the column's own gap
+       double-spaced them. */
+    margin-top: 2px;
   }
 }
 
@@ -1126,9 +1133,20 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
     padding-right: 92px;
   }
 
-  /* Reduce banner height on mobile */
+  /* Reduce banner height on mobile.
+     The slide is only ~120px of real text (headline + lede + CTAs); the rest was
+     padding and gaps, so an expanded banner ate well over half a phone screen
+     before any feed content appeared. min-height is a floor, not a target —
+     short slides shrink to fit now instead of being padded out to it. */
   .hero-banner {
-    min-height: 220px;
+    min-height: 180px;
+    padding: 10px;
+  }
+
+  /* Headline → lede → CTAs. 9px was tuned for the desktop two-column layout
+     where the column is short; stacked on mobile it compounds three times. */
+  .banner-layout__text {
+    gap: 6px;
   }
 
   .hero-banner::before {

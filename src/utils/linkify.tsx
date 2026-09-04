@@ -4,13 +4,26 @@
   react/no-array-index-key,
   no-use-before-define,
   react/no-invalid-html-attribute,
-  no-shadow,
   no-plusplus
 */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
+import { AccountMentionPill } from '@/components/social/AccountMentionPill';
+import PostTokenTag from '@/components/social/PostTokenTag';
+import PostMentionTag from '@/components/social/PostMentionTag';
+import {
+  parseTokenTagEnvelope,
+  isTokenTagEnhanced,
+  TOKEN_TAG_ENVELOPE_PAYLOAD,
+} from '@/utils/tokenTagEnvelope';
+import { trustedHtml } from '@/utils/trustedTypes';
 import { formatAddress } from './address';
+
+// The `{payload}` display envelope immediately following a token symbol. Anchored so it
+// only matches directly after the symbol; the symbol itself is matched by the existing
+// hashtag classes above. A present-but-invalid envelope is still consumed (never printed).
+const TOKEN_TAG_ENVELOPE_REGEX = new RegExp(`^\\{(${TOKEN_TAG_ENVELOPE_PAYLOAD})\\}`);
 
 // URL matcher (external links)
 const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
@@ -18,6 +31,9 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
+// Explicit deliberate account mention: `[account:ak_...]`. The `]` terminator bounds
+// the token; base58 is case-sensitive (no `i` flag); the macro cannot occur by accident.
+const ACCOUNT_MACRO_REGEX = /\[account:(ak_[1-9A-HJ-NP-Za-km-z]{48,56})\]/g;
 // A hashtag "word": '#' at the start of the text, or anywhere NOT immediately preceded by a
 // domain/path-forming character (word char, '.', or '/'), followed by the full run of
 // non-whitespace characters. The exclusion specifically protects URL fragments like
@@ -53,6 +69,13 @@ export function linkify(
   options?: {
     knownChainNames?: Set<string>;
     hashtagVariant?: 'post-inline';
+    /**
+     * Suppress the advanced token-tag row, forcing the inline pill instead. Set in constrained
+     * contexts where a block row cannot render — a line-clamped parent/quoted preview inside a
+     * `<button>`, where a `display:block` `<a>` carrying the chart's `<div>` would be invalid
+     * nesting and visibly broken. Price/change still show; only the row layout is dropped.
+     */
+    tokenTagInline?: boolean;
     trendMentions?: TrendMention[];
     /**
      * Regex character-class body (e.g. from `mergedCollectionNameCharsPattern`) covering the
@@ -73,7 +96,7 @@ export function linkify(
   const decodeHtmlEntities = (str: string): string => {
     if (typeof document !== 'undefined') {
       const textarea = document.createElement('textarea');
-      textarea.innerHTML = str;
+      textarea.innerHTML = trustedHtml(str);
       return textarea.value;
     }
     // Fallback for SSR: decode common entities manually
@@ -104,13 +127,20 @@ export function linkify(
 
   // Renders a single '#token' as a link, per the `hashtagVariant` option. `keyPos` is the
   // absolute offset of the '#' in `raw`, used to keep React keys unique across the whole text.
-  const renderHashtagNode = (tokenName: string, keyPos: number): React.ReactNode => (
+  // `showChange` gates the inline change badge — true for a bare tag (today's rendering) and
+  // for the `tag` preset, false for an explicit `{change=0}`.
+  const renderHashtagNode = (
+    tokenName: string,
+    keyPos: number,
+    showChange = true,
+  ): React.ReactNode => (
     options?.hashtagVariant === 'post-inline' ? (
       <PostHashtagLink
         tag={tokenName}
         label={`#${tokenName}`}
         trendMentions={options?.trendMentions}
-        variant="inline"
+        variant="post-pill"
+        showChange={showChange}
         key={`hashtag-${tokenName}-${keyPos}`}
       />
     ) : (
@@ -149,8 +179,38 @@ export function linkify(
         ? fullRun.slice(i + 1).match(hashtagTokenRegex)
         : null;
       if (tokenMatch) {
-        nodes.push(renderHashtagNode(tokenMatch[0], hashStart + i));
-        i += 1 + tokenMatch[0].length;
+        const symbol = tokenMatch[0];
+        const symEnd = i + 1 + symbol.length;
+        // A `{payload}` directly after the symbol is a display envelope. It is always
+        // consumed so its text never renders; an enhanced option set becomes a widget,
+        // and an absent/empty/unrecognised envelope falls back to the plain tag.
+        const envMatch = fullRun[symEnd] === '{'
+          ? fullRun.slice(symEnd).match(TOKEN_TAG_ENVELOPE_REGEX)
+          : null;
+        if (envMatch) {
+          const parsed = parseTokenTagEnvelope(envMatch[1]);
+          // In a clamped preview the full row cannot render, so drop the row switch: the inline
+          // pill still carries price/change, and a chart-only envelope falls through to the plain
+          // tag below rather than a broken block inside a <button>.
+          const tagOptions = options?.tokenTagInline ? { ...parsed, chart: false } : parsed;
+          nodes.push(
+            isTokenTagEnhanced(tagOptions) ? (
+              <PostTokenTag
+                symbol={symbol}
+                options={tagOptions}
+                key={`token-tag-${symbol}-${hashStart + i}`}
+              />
+            ) : (
+              // Not a widget: render today's tag, but honour an explicit `{change=0}` by
+              // gating the badge on the resolved `change` option (default `tag` keeps it on).
+              renderHashtagNode(symbol, hashStart + i, tagOptions.change)
+            ),
+          );
+          i = symEnd + envMatch[0].length;
+        } else {
+          nodes.push(renderHashtagNode(symbol, hashStart + i));
+          i = symEnd;
+        }
         matchedAny = true;
       } else {
         // Inert stretch: not a valid token start. Consume up to (not including) the next '#'
@@ -178,9 +238,31 @@ export function linkify(
   });
   if (hLast < raw.length) hashtagLinked.push(raw.slice(hLast));
 
+  // Pass 0.5: Explicit `[account:ak_...]` macros → the shared account mention pill. Runs before
+  // the AENS/account/URL passes so the address inside the macro is not re-processed; the pill
+  // carries the identicon and resolved name, raw `ak_` addresses stay plain links (Pass 2a).
+  const macroLinked: React.ReactNode[] = [];
+  hashtagLinked.forEach((node, nodeIdx) => {
+    if (typeof node !== 'string') {
+      macroLinked.push(node);
+      return;
+    }
+    const segment = node as string;
+    let last = 0;
+    segment.replace(ACCOUNT_MACRO_REGEX, (m: string, addr: string, offset: number) => {
+      if (offset > last) macroLinked.push(segment.slice(last, offset));
+      macroLinked.push(
+        <AccountMentionPill address={addr} key={`acc-macro-${addr}-${nodeIdx}-${offset}`} />,
+      );
+      last = offset + m.length;
+      return m;
+    });
+    if (last < segment.length) macroLinked.push(segment.slice(last));
+  });
+
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];
-  hashtagLinked.forEach((node, nodeIdx) => {
+  macroLinked.forEach((node, nodeIdx) => {
     if (typeof node !== 'string') {
       aensLinked.push(node);
       return;
@@ -194,13 +276,21 @@ export function linkify(
       const isKnown = options?.knownChainNames?.has(normalized) ?? false;
       if (isKnown) {
         aensLinked.push(
-          <a
-            href={`/users/${name}`}
-            key={`aens-${name}-${nodeIdx}-${offset}`}
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-          >
-            {match}
-          </a>,
+          options?.hashtagVariant === 'post-inline' ? (
+            <PostMentionTag
+              name={name}
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+            />
+          ) : (
+            <a
+              href={`/users/${name}`}
+              key={`aens-${name}-${nodeIdx}-${offset}`}
+              className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+            >
+              {match}
+            </a>
+          ),
         );
       } else {
         // Unknown name → keep as plain text
@@ -224,16 +314,27 @@ export function linkify(
     segment.replace(ACCOUNT_TAG_REGEX, (m: string, addr: string, off: number) => {
       if (off > segLast) accountLinked.push(segment.slice(segLast, off));
       const address = addr; // captured address without leading '@'
+      // A raw address (with or without '@') is a plain profile link — a deliberate
+      // mention is the `[account:...]` macro handled in Pass 0.5, not a bare address.
       const displayCore = formatAddress(address);
       const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
       accountLinked.push(
-        <a
-          href={`/users/${address}`}
-          key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-        >
-          {display}
-        </a>,
+        options?.hashtagVariant === 'post-inline' ? (
+          <PostMentionTag
+            name={address}
+            label={displayCore}
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+          />
+        ) : (
+          <a
+            href={`/users/${address}`}
+            key={`acc-${address}-${idx}-${off}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          >
+            {display}
+          </a>
+        ),
       );
       segLast = off + m.length;
       return m;

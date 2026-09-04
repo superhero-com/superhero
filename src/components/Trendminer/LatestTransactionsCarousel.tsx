@@ -18,7 +18,7 @@ const LatestTransactionsCarousel = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(undefined);
   const skeletonKeys = useMemo(
     () => Array.from({ length: itemsToShow }, () => crypto?.randomUUID?.()),
     [itemsToShow],

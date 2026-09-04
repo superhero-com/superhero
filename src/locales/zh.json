@@ -33,7 +33,9 @@
       "save": "保存",
       "getChainName": "+ 获取 .chain 名称",
       "claimChainName": "申领",
-      "linkAccount": "关联账户"
+      "linkAccount": "关联账户",
+      "send": "发送",
+      "receive": "接收"
     },
     "labels": {
       "superheroHome": "Superhero 首页",
@@ -763,6 +765,23 @@
         "bottomCta": {
           "title": "准备好发现下一个趋势了吗？",
           "subtitle": "加入注意力市场。交易信念。拥有你的身份。"
+        },
+        "pwaInstall": {
+          "title": "安装 Superhero 应用",
+          "description": "将 Superhero 添加到主屏幕，获得更快的全屏体验——无需应用商店。",
+          "installButton": "安装",
+          "iosStep1": "点按“分享”按钮",
+          "iosStep2": "选择“添加到主屏幕”",
+          "installApp": "安装应用",
+          "minimize": "最小化",
+          "dismiss": "关闭",
+          "benefitHomescreen": "保存到主屏幕",
+          "benefitWallet": "集成钱包",
+          "benefitNotifications": "推送通知",
+          "showInstructions": "查看安装步骤",
+          "iosIntro": "将 Superhero 添加到主屏幕，快速访问并享受全屏体验。",
+          "iosStep1Hint": "点按 Safari 工具栏中的 <shareIcon/> 图标",
+          "iosStep2Hint": "向下滚动并选择“添加到主屏幕”"
         }
       },
       "branding": {
@@ -836,7 +855,7 @@
         "section1Para3": "使用本界面即表示你确认所有交易均直接在区块链上进行，不受本公司控制，并且你仍需独自负责保护你的数字资产、私钥以及遵守适用法律。访问或使用本网站即表示你声明并保证你至少年满 18 岁（如你所在司法管辖区的成年年龄更高，则为该年龄），并具有签订本条款的法律行为能力。",
         "section2Title": "II. 经营范围",
         "section2Para1": "Superhero.com 开发了一个网站，以信息流形式呈现用户对互联网上任何他们喜爱的新闻的捐赠和评论，并让其他用户能够积极地对信息流中的新闻进行捐赠和评论。该信息中心使用户能够激励有关世界各地任何事物的信息丰富、准确的更新——无论是由新闻机构还是普通人创建的。因此，由于用户的积极作用，本网站是一个分享有关最佳内容的全球实时更新的平台。",
-        "section2Para2": "Superhero.com 允许用户使用去中心化协议进行兑换、封装和跨链。Swap 使用户能够直接相互兑换原生 AE 代币和 AEX-9 代币。交易直接在链上执行，不可逆转，用户对其资产和密钥负全部责任。Wrap 将 AE 转换为封装 AE（wAE）以供 DeFi 使用，并在需要时转换回来。ETH Bridge 让用户将原生 ETH 从 Ethereum 区块链转移到 æternity 成为 æETH，随后自动兑换为 AE 代币。Pool——用户向为去中心化交易所（DEX）兑换提供动力的资金池提供流动性，并分享交易手续费。所有这些功能均直接从用户钱包运行至链上智能合约，无需中介。它们是去信任的，意味着用户始终掌控自己的资产。",
+        "section2Para2": "Superhero.com 还提供访问 æternity 区块链上开源智能合约的入口，用户可自行选择使用这些合约，将一种基于 æternity 的代币兑换为另一种代币，将 AE 转换为封装 AE（wAE）并可再转换回来，以及向链上流动性合约贡献代币。每一项此类指令均由用户在自己的钱包中签名并在链上结算；本公司不运营交易所，不作为交易对手方或托管方，也不控制任何相关资产或金额，并且不提供或承诺任何形式的回报。",
         "section3Title": "III. 法律免责声明",
         "section3Para1": "Superhero.com 作为一个去中心化的开源协议运行，用户无需中介即可直接在区块链上交互。使用本网站时，你仍需独自负责你的私钥和钱包的安全，因为本网站以去中心化方式运行，资产和密钥的完全控制权留在你手中。本网站的所有使用均通过去中心化协议直接在区块链上进行，用户对保护其资产和交易决策负全部责任。本网站上的任何内容均不构成指导或专业建议。用户对通过协议使用其资产和开展的活动负全部责任。评估与使用本网站相关的风险（包括但不限于市场波动、监管变化和潜在的技术漏洞）是用户的唯一责任。本网站按\"现状\"和\"现有\"提供，不提供任何明示或暗示的保证。在法律允许的最大范围内，本网站及其贡献者不对因使用本网站而产生或与之相关的直接、间接、附带或后果性损害（包括但不限于资金、数据或利润的损失）承担任何责任。你有责任确保你对本网站的使用符合适用于它的法律法规。由于本网站是开源的，部署可能由社区成员独立运营。Superhero.com 不对第三方或社区运营实例的运行、修改或合规性负责。",
         "section4Title": "IV. 关于第三方链接的版权声明",
@@ -1002,6 +1021,29 @@
         "tagline": "交易代币化的话题标签与社交趋势——web3 注意力市场。",
         "getStarted": "开始使用",
         "continueAsGuest": "以访客身份继续"
+      },
+      "send": {
+        "title": "发送 AE",
+        "subtitle": "从你的钱包转出 AE",
+        "recipient": "接收方",
+        "recipientPlaceholder": "ak_… 或 name.chain",
+        "resolvingName": "正在解析名称…",
+        "nameNotFound": "该 .chain 名称未指向任何账户。",
+        "invalidRecipient": "请输入有效的 ak_ 地址或 .chain 名称。",
+        "sendingToSelf": "这是你自己的地址 —— 你只会支付手续费。",
+        "amountAe": "金额（AE）",
+        "max": "最大",
+        "confirmInWallet": "请在钱包中确认…",
+        "sentSuccessfully": "已发送 {{amount}} AE。",
+        "failedToSend": "AE 发送失败。"
+      },
+      "receive": {
+        "title": "接收 AE",
+        "subtitle": "扫描或复制你的地址",
+        "qrAlt": "你的钱包地址二维码",
+        "copyAddress": "复制地址",
+        "share": "分享",
+        "networkWarning": "此地址仅能接收 æternity（AE）资产。从其他链发送的资产将会丢失。"
       }
     },
     "wallet": {
@@ -1102,6 +1144,7 @@
       "earnRewards": "赚取奖励",
       "getAe": "获取 AE",
       "superheroId": "Superhero ID",
+      "chat": "聊天",
       "account": "账户"
     },
     "transactionNotification": {
@@ -1756,7 +1799,30 @@
       "tryAdjustingSearch": "请尝试调整你的搜索词或筛选条件。",
       "loadingPosts": "正在加载帖子…"
     },
-    "trade": "交易"
+    "trade": "交易",
+    "tokenTag": {
+      "barLabel": "本帖中",
+      "optionsFor": "#{{symbol}} 的显示选项",
+      "occurrence": "第 {{n}} 处",
+      "howItAppears": "在帖子中的显示效果",
+      "rung1": "代号 + 24 小时涨跌",
+      "rung2": "+ 价格",
+      "rung3": "完整行 + 市值 + 图表",
+      "marketCap": "市值",
+      "priceLabel": "价格",
+      "default": "默认",
+      "custom": "自定义",
+      "customize": "自定义显示项",
+      "customizeHint": "图表 · 价格 · 涨跌",
+      "switchChange": "24 小时涨跌标签",
+      "switchPrice": "价格",
+      "switchChart": "24 小时图表",
+      "on": "开",
+      "off": "关",
+      "chars": "字符",
+      "close": "关闭",
+      "done": "完成"
+    }
   },
   "governance": {
     "tabs": {
@@ -3008,5 +3074,80 @@
     "earnSectionDescription": "从 Superhero 原生方式开始，通过壮大社区和参与奖励计划来赚取 AE。",
     "buySectionTitle": "从外部第三方购买",
     "buySectionDescription": "当你更愿意在 Superhero 之外直接购买 AE 时，可使用第三方交易所和兑换服务商。"
+  },
+  "components": {
+    "pwaInstallGuide": {
+      "title": "安装 Superhero",
+      "subtitleIos": "在 Safari 中按以下步骤操作",
+      "subtitleAndroid": "在 Chrome 中按以下步骤操作",
+      "installedTitle": "已安装",
+      "alreadyInstalled": "Superhero 已作为已安装的应用运行。",
+      "desktopHint": "在桌面端，请使用浏览器地址栏中的安装按钮。",
+      "triggerLocation": "安装应用以启用位置共享——iOS Safari 需要独立运行模式。",
+      "triggerChat": "安装应用以获得完整的聊天体验，包括离线支持。",
+      "back": "上一步",
+      "next": "下一步 →",
+      "done": "完成！",
+      "fabLabel": "安装应用",
+      "fabDismissLabel": "关闭",
+      "iosSafariNote": "必须使用 Safari——iOS 上的 Chrome 和 Firefox 无法安装 PWA。",
+      "stepDotLabel": "第 {{number}} 步",
+      "ios": {
+        "step1": {
+          "title": "点按 ⋯ 菜单",
+          "description": "点按 Safari 右上角的三点菜单（⋯）。"
+        },
+        "step2": {
+          "title": "添加到主屏幕",
+          "description": "向下滚动并在菜单中点按“添加到主屏幕”。"
+        },
+        "step3": {
+          "title": "点按“添加”",
+          "description": "点按右上角的“添加”确认——应用图标会出现在主屏幕上。"
+        },
+        "step4": {
+          "title": "从主屏幕打开",
+          "description": "通过主屏幕图标启动——位置共享和离线模式现已可用。"
+        }
+      },
+      "android": {
+        "step1": {
+          "title": "打开浏览器菜单",
+          "description": "点按 Chrome 右上角的三点菜单（⋮）。"
+        },
+        "step2": {
+          "title": "添加到主屏幕",
+          "description": "在菜单中点按“添加到主屏幕”或“安装应用”。"
+        },
+        "step3": {
+          "title": "确认安装",
+          "description": "在弹出的提示中点按“安装”。"
+        },
+        "step4": {
+          "title": "从主屏幕打开",
+          "description": "从主屏幕启动——位置和离线模式均可正常使用。"
+        }
+      }
+    }
+  },
+  "bondingCurve": {
+    "title": "联合曲线的运作方式",
+    "subtitle": "越早买入价格越低——随着更多人加入，价格呈指数上涨",
+    "chartAriaLabel": "交互式联合曲线价格图表",
+    "axisSupply": "代币供应量",
+    "axisPrice": "价格（mAE）",
+    "play": "播放",
+    "pause": "暂停",
+    "replay": "重播",
+    "step0Label": "启动——供应量为零",
+    "step0Desc": "启动时价格接近于零。此处曲线几乎是平的，这是有意为之——这是可能的最低入场点。早期的信仰者拿到最好的价格。",
+    "step1Label": "早期买家——1000 万代币",
+    "step1Desc": "售出 1000 万代币后，价格已经翻倍。依然便宜，依然很早。曲线开始弯曲——每位新买家对价格的推动都比上一位更大一些。",
+    "step2Label": "势头渐起——5000 万代币",
+    "step2Desc": "在 5000 万代币时，价格约为起始价的 7.5 倍。指数形态此时已清晰可见。早期持有者已经获得可观收益。",
+    "step3Label": "势头强劲——1 亿代币",
+    "step3Desc": "在 1 亿代币时，价格是启动价的 18 倍。曲线此刻已经很陡——每一笔买入都会产生显著影响。DAO 金库正通过每笔交易 0.5% 的价差不断充实。",
+    "step4Label": "高供应量——2 亿代币",
+    "step4Desc": "在 2 亿代币时，价格是启动价的 65 倍。预计理论最大供应量中最终只会达到 10–20%，因此这里已经处于很靠后的尾部。你随时可以按当前卖出价回售（价差 −0.5%）。"
   }
 }

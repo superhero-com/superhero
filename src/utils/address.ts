@@ -102,6 +102,21 @@ export function prepareExplorerUrl(
 }
 
 /**
+ * Normalizes a `/trends/tokens/:param` route param for `TokensService.findByAddress`,
+ * which accepts either a token NAME/symbol or a `ct_` sale address.
+ *
+ * Names resolve uppercased, but a `ct_` address is case-sensitive base58 —
+ * uppercasing one corrupts it, so the lookup 404s. Room notifications deep-link
+ * with a sale address, which is how that path became reachable.
+ *
+ * The prefix test is case-INSENSITIVE on purpose: a `CT_…` param is already an
+ * address, and uppercasing the rest of it only corrupts it further.
+ */
+export function toTokenLookupParam(param: string): string {
+  return /^ct_/i.test(param) ? param : param.toUpperCase();
+}
+
+/**
  * Checks if an address is an account address
  */
 export function isAccountAddress(address: string): boolean {

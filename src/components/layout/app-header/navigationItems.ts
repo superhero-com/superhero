@@ -1,6 +1,6 @@
 import { TRENDING_ENABLED } from '@/config';
 import {
-  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark,
+  Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -46,6 +46,13 @@ const REFER_EARN_ITEM: NavigationItem = {
   icon: Gift,
 };
 
+const CHAT_ITEM: NavigationItem = {
+  id: 'chat',
+  labelKey: 'nav.chat',
+  path: '/chat',
+  icon: MessageCircle,
+};
+
 const GET_AE_ITEM: NavigationItem = {
   id: 'get-ae',
   labelKey: 'nav.getAe',
@@ -74,13 +81,17 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
 /**
  * Items rendered directly in the mobile footer bar. DeFi and DAO are moved
  * into the "More" dropdown to keep the bar compact on small screens.
+ *
+ * In PWA standalone mode, the Chat item is always shown.
+ * In browser mode, Chat may be omitted to prioritize other actions.
  */
 export const getMobileFooterNavigationItems = (
   activeAccount?: string | null,
+  pwaMode?: boolean,
 ): NavigationItem[] => [
   HOME_ITEM,
   ...(TRENDING_ENABLED ? [EXPLORE_ITEM] : []),
-  ...(TRENDING_ENABLED ? [REFER_EARN_ITEM] : []),
+  ...(pwaMode ? [CHAT_ITEM] : []),
   {
     id: 'account',
     labelKey: 'nav.superheroId',

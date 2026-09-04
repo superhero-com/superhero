@@ -33,7 +33,9 @@
       "trade": "Trade",
       "getChainName": "+ Get .chain name",
       "claimChainName": "Claim",
-      "linkAccount": "Link account"
+      "linkAccount": "Link account",
+      "send": "Send",
+      "receive": "Receive"
     },
     "labels": {
       "superheroHome": "Superhero Home",
@@ -484,6 +486,29 @@
         "tagline": "Trade tokenized hashtags & social trends — the web3 attention market.",
         "getStarted": "Get Started",
         "continueAsGuest": "Continue as guest"
+      },
+      "send": {
+        "title": "Send AE",
+        "subtitle": "Transfer AE from your wallet",
+        "recipient": "Recipient",
+        "recipientPlaceholder": "ak_… or name.chain",
+        "resolvingName": "Looking up name…",
+        "nameNotFound": "That .chain name doesn't point to an account.",
+        "invalidRecipient": "Enter a valid ak_ address or .chain name.",
+        "sendingToSelf": "This is your own address — you'd only pay the fee.",
+        "amountAe": "Amount (AE)",
+        "max": "Max",
+        "confirmInWallet": "Confirm in wallet…",
+        "sentSuccessfully": "{{amount}} AE sent.",
+        "failedToSend": "Failed to send AE."
+      },
+      "receive": {
+        "title": "Receive AE",
+        "subtitle": "Scan or copy your address",
+        "qrAlt": "QR code of your wallet address",
+        "copyAddress": "Copy address",
+        "share": "Share",
+        "networkWarning": "Only æternity (AE) assets can be sent to this address. Anything sent from another chain is lost."
       }
     },
     "trendminer": {
@@ -896,7 +921,7 @@
         "section1Para3": "By using the Interface, you acknowledge that all transactions occur directly on the blockchain, outside the control of the Company, and that you remain solely responsible for securing your digital assets, private keys, and compliance with applicable laws. By accessing or using the Website, you represent and warrant that you are at least 18 years old (or the age of majority in your jurisdiction, if higher) and have the legal capacity to enter into these Terms.",
         "section2Title": "II. Subject of activity",
         "section2Para1": "Superhero.com developed a website which reflects as a newsfeed users’ donations and comments to news about anything they like on the internet and gives the possibility for other users to actively donate and comment on the news available on the newsfeed. This information hub enables users to incentivize informative and accurate updates about anything all over the world — whether created by news organizations or regular people. Therefore, due to the active role of users, the website is a platform on which real-time global updates about the best content are shared.",
-        "section2Para2": "Superhero.com allows Users to swap, wrap, and bridge using a decentralised protocol. Swap enables users to directly exchange native AE tokens and AEX-9 tokens with each other. Transactions are executed directly on-chain, are irreversible, and users retain full responsibility for their assets and keys. Wrap converts AE into wrapped AE (wAE) for DeFi use, and back again when needed. ETH Bridge lets users move native ETH from the Ethereum blockchain into æternity as æETH, which is then automatically swapped into AE tokens. Pool — users provide liquidity into pools that power the decentralized exchange (DEX) swaps, and they share in the transaction fees. All these features operate directly from the user’s wallet to on-chain smart contracts, without intermediaries. They are trustless, meaning users stay in control of their assets at all times.",
+        "section2Para2": "Superhero.com also provides access to open-source smart contracts on the æternity blockchain, which a User may choose to use to exchange one æternity-based token for another, to convert AE into wrapped AE (wAE) and back, and to contribute tokens to on-chain liquidity contracts. Every such instruction is signed by the User in their own wallet and settled on-chain; the Company does not operate an exchange, act as counterparty or custodian, or control any asset or amount involved, and no return of any kind is offered or promised.",
         "section3Title": "III. Legal Disclaimer",
         "section3Para1": "Superhero.com functions as a decentralised, open-source protocol through which users interact directly on the blockchain without intermediaries. When using the Website, you remain solely responsible for the security of your private keys and wallets, as the Website operates in a decentralised manner, leaving full control of assets and keys with you. All use of the Website occurs directly on the blockchain via a decentralised protocol, with users retaining full responsibility for safeguarding their assets and transaction decisions. Nothing on the Website constitutes guidance or professional advice. Users are solely responsible for the use of their assets and activities conducted through the protocol. It is the sole responsibility of users to assess the risks associated with the use of the Website, including but not limited to market volatility, changes in regulation, and potential technological vulnerabilities. The Website is provided \"as is\" and \"as available,\" without warranties of any kind, whether express or implied. To the fullest extent permitted by law, the Website and its contributors disclaim all liability for direct, indirect, incidental, or consequential damages arising out of or in connection with the use of the Website, including but not limited to loss of funds, data, or profits. You are responsible for ensuring that your use of the Website complies with the laws and regulations applicable to it. As the Website is open-source, deployments may be operated independently by community members. Superhero.com is not responsible for the operation, modification, or compliance of third-party or community-run instances.",
         "section4Title": "IV. Copyright notice regarding third-party links",
@@ -966,6 +991,23 @@
         "downloadOnMobile": "Download on Mobile",
         "openclawOrClaude": "Openclaw or Claude",
         "continueOnWeb": "Continue on Web",
+        "pwaInstall": {
+          "title": "Install the Superhero app",
+          "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
+          "installButton": "Install",
+          "iosStep1": "Tap the Share button",
+          "iosStep2": "Choose \"Add to Home Screen\"",
+          "installApp": "Install App",
+          "minimize": "Minimize",
+          "dismiss": "Dismiss",
+          "benefitHomescreen": "Saves to homescreen",
+          "benefitWallet": "Integrated wallet",
+          "benefitNotifications": "Push notifications",
+          "showInstructions": "Show Instructions",
+          "iosIntro": "Add Superhero to your home screen for quick access and a full-screen experience.",
+          "iosStep1Hint": "Tap the <shareIcon/> icon in Safari's toolbar",
+          "iosStep2Hint": "Scroll and select \"Add to Home Screen\""
+        },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",
         "whatIsTitleLine2": "for social trends",
@@ -997,7 +1039,7 @@
           }
         },
         "id": {
-          "eyebrow": "Superhero ID",
+          "eyebrow": "SuperheroID",
           "titleLine1": "Decentralized identity,",
           "titleLine2": "W3C standard",
           "description": "A DID (decentralized identifier) that links your social accounts to your wallet. Your identity is verifiable, portable, and censorship-resistant — following the W3C standard for decentralized identifiers.",
@@ -1005,7 +1047,7 @@
           "point1": "W3C DID standard compliant",
           "point2": "Links wallet, chain names, and X handle",
           "point3": "Self-sovereign — you control your data",
-          "imageAlt": "Superhero ID visual mockup"
+          "imageAlt": "SuperheroID visual mockup"
         },
         "mobile": {
           "eyebrow": "Mobile App",
@@ -1101,7 +1143,8 @@
       "dao": "DAO",
       "earnRewards": "Earn Rewards",
       "getAe": "Get AE",
-      "superheroId": "Superhero ID",
+      "superheroId": "SuperheroID",
+      "chat": "Chat",
       "account": "Account"
     },
     "transactionNotification": {
@@ -1756,7 +1799,30 @@
       "openTrendNamed": "Open trend {{tokenName}}",
       "openTrend": "Open trend"
     },
-    "trade": "Trade"
+    "trade": "Trade",
+    "tokenTag": {
+      "barLabel": "In this post",
+      "optionsFor": "Display options for #{{symbol}}",
+      "occurrence": "occurrence {{n}}",
+      "howItAppears": "How it appears in your post",
+      "rung1": "Symbol + 24h change",
+      "rung2": "+ price",
+      "rung3": "Full row + market cap + chart",
+      "marketCap": "Market cap",
+      "priceLabel": "Price",
+      "default": "default",
+      "custom": "Custom",
+      "customize": "Customize parts",
+      "customizeHint": "chart · price · change",
+      "switchChange": "24h change badge",
+      "switchPrice": "Price",
+      "switchChart": "24h chart",
+      "on": "On",
+      "off": "Off",
+      "chars": "ch",
+      "close": "Close",
+      "done": "Done"
+    }
   },
   "governance": {
     "tabs": {
@@ -3008,5 +3074,80 @@
       "disconnect": "Disconnect",
       "connectEthereumWallet": "Connect Ethereum Wallet"
     }
+  },
+  "components": {
+    "pwaInstallGuide": {
+      "title": "Install Superhero",
+      "subtitleIos": "Follow these steps in Safari",
+      "subtitleAndroid": "Follow these steps in Chrome",
+      "installedTitle": "Already installed",
+      "alreadyInstalled": "Superhero is already running as an installed app.",
+      "desktopHint": "On desktop, use the install button in your browser's address bar.",
+      "triggerLocation": "Install the app to enable location sharing — iOS Safari requires standalone mode.",
+      "triggerChat": "Install the app for the full chat experience, including offline support.",
+      "back": "Back",
+      "next": "Next →",
+      "done": "Done!",
+      "fabLabel": "Install App",
+      "fabDismissLabel": "Dismiss",
+      "iosSafariNote": "Must use Safari — Chrome and Firefox on iOS cannot install PWAs.",
+      "ios": {
+        "step1": {
+          "title": "Tap the ⋯ menu",
+          "description": "Tap the three-dot menu (⋯) in the top-right corner of Safari."
+        },
+        "step2": {
+          "title": "Add to Home Screen",
+          "description": "Scroll down and tap \"Add to Home Screen\" in the menu."
+        },
+        "step3": {
+          "title": "Tap Add",
+          "description": "Confirm by tapping \"Add\" in the top right — the app icon appears on your home screen."
+        },
+        "step4": {
+          "title": "Open from home screen",
+          "description": "Launch from your home screen icon — location sharing and offline mode now work."
+        }
+      },
+      "android": {
+        "step1": {
+          "title": "Open browser menu",
+          "description": "Tap the three-dot menu (⋮) in the top right of Chrome."
+        },
+        "step2": {
+          "title": "Add to Home screen",
+          "description": "Tap \"Add to Home screen\" or \"Install app\" from the menu."
+        },
+        "step3": {
+          "title": "Confirm install",
+          "description": "Tap \"Install\" on the prompt that appears."
+        },
+        "step4": {
+          "title": "Open from home screen",
+          "description": "Launch from your home screen — location and offline mode work perfectly."
+        }
+      },
+      "stepDotLabel": "Step {{number}}"
+    }
+  },
+  "bondingCurve": {
+    "title": "How the Bonding Curve Works",
+    "subtitle": "Early buyers get the lowest price — it rises exponentially as more join",
+    "chartAriaLabel": "Interactive bonding curve price chart",
+    "axisSupply": "Token Supply",
+    "axisPrice": "Price (mAE)",
+    "play": "Play",
+    "pause": "Pause",
+    "replay": "Replay",
+    "step0Label": "Launch — Zero supply",
+    "step0Desc": "At launch the price starts near zero. The curve is almost flat here by design — this is the cheapest possible entry point. Early believers get the best price.",
+    "step1Label": "Early adopters — 10M tokens",
+    "step1Desc": "With 10M tokens sold the price has doubled. Still cheap, still early. The curve is beginning to bend — each new buyer moves the price a little more than the last.",
+    "step2Label": "Growing momentum — 50M tokens",
+    "step2Desc": "At 50M tokens the price is ~7.5x the starting price. The exponential shape is now clearly visible. Early holders are already sitting on meaningful gains.",
+    "step3Label": "Strong momentum — 100M tokens",
+    "step3Desc": "At 100M tokens the price is 18x launch. The curve is steep now — each purchase has a significant impact. The DAO treasury is filling up from the 0.5% spread on every trade.",
+    "step4Label": "High supply — 200M tokens",
+    "step4Desc": "At 200M tokens the price is 65x launch. Only 10–20% of the theoretical max supply is ever expected to be reached — so this is already well into the tail. You can always sell back at the current sell price (−0.5% spread)."
   }
 }

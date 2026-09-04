@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "Superhero",
+  "short_name": "Superhero",
+  "description": "Superhero is an on-chain attention market built on the æternity blockchain where users can discover, trade, and govern social trends.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "prefer_related_applications": false,
+  "theme_color": "#0a0a0f",
+  "background_color": "#0a0a0f",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

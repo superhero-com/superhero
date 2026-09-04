@@ -66,7 +66,10 @@ vi.mock('@/config', () => ({
 
 describe('useClaimChainName', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // `resetAllMocks`, not `clearAllMocks`: since Vitest 4 clearing no longer drains queued
+    // `mockResolvedValueOnce` values, so a test that queues more than it consumes would spill
+    // the rest into the next one. Every implementation this suite needs is re-set below.
+    vi.resetAllMocks();
     vi.stubGlobal('fetch', mockFetch);
     mockActiveAccount = 'ak_test_active';
     mockAeSdkState = {

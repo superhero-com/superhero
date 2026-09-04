@@ -216,8 +216,10 @@ describe('TokenList search experience', () => {
       expect(searchApiMocks.fetchTrendSearchPreview).toHaveBeenCalledWith('hello');
     }, { timeout: 2000 });
 
+    // Await the rendered result, not just the fetch call: the preview paints a tick after the
+    // request resolves, and React 19 no longer happens to flush that before `waitFor` returns.
+    expect(await screen.findByText('ALPHA')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Users' })).not.toBeInTheDocument();
-    expect(screen.getByText('ALPHA')).toBeInTheDocument();
     expect(screen.getByText('user.chain')).toBeInTheDocument();
     expect(screen.getByText('Searchable post')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View all' })).toBeInTheDocument();

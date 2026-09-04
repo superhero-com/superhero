@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { collectionLabel } from '@/utils/collection';
+import { toTokenLookupParam } from '@/utils/address';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ import { Head } from '../../../seo/Head';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import TokenChange from '../../../components/Trendminer/TokenChange';
 import TokenChat from '../../../components/Trendminer/TokenChat';
+import TokenCommunityChatButton from '../../chat/components/TokenCommunityChatButton';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import {
@@ -204,7 +206,9 @@ const TokenSaleDetails = () => {
     queryFn: async () => {
       if (!tokenName) throw new Error('Token name is required');
       try {
-        const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        const result = await TokensService.findByAddress({
+          address: toTokenLookupParam(tokenName),
+        });
         if (!result) {
           throw new Error('Token not found');
         }
@@ -810,6 +814,11 @@ const TokenSaleDetails = () => {
                     token={token}
                   />
                   <TokenRanking token={token} />
+                  {/* Communities (Nostr) — beside the Matrix feed, not replacing it. */}
+                  <TokenCommunityChatButton
+                    saleAddress={token.sale_address}
+                    symbol={token.symbol}
+                  />
                   {/* Quali.chat CTA - old design cards */}
                   <TokenChat
                     token={{

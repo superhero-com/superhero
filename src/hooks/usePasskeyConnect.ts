@@ -18,10 +18,11 @@
  * Case 1 must actually PROVE the passkey opens this vault. An earlier revision
  * ran `navigator.credentials.get` and discarded the result, which verified
  * nothing (any credential the browser offered "succeeded") and connected nobody.
- * The ceremony goes through the same `passkeyUnlockProvider` the signer uses and
- * the KEK is proven against the vault by unwrapping the DEK, which fails closed
- * at GCM. The mnemonic is deliberately NOT decrypted: connecting needs the
- * public address from the manifest, not the seed.
+ * The ceremony goes through the same `passkeyUnlockProvider` the signer uses,
+ * which unwraps the DEK before it returns a KEK — so a foreign or rekeyed
+ * credential fails closed at GCM, inside the provider. The mnemonic is
+ * deliberately never decrypted: connecting needs the public address from the
+ * manifest, not the seed.
  */
 
 import {
@@ -30,7 +31,6 @@ import {
 import { isPlatformAuthenticatorAvailable, RP_ID } from '@/features/wallet/webauthn';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
 import { passkeyUnlockProvider } from '@/features/wallet/wallet-lifecycle';
-import { unwrapDek } from '@/features/wallet/factors';
 import { loadManifest } from '@/features/wallet/manifest-store';
 
 export type PasskeyState =
@@ -125,14 +125,9 @@ export function usePasskeyConnect(enabled = true) {
       setDeviceWallet('passkey');
       setState('unlocking');
 
-      // The same provider the signer unlocks with: it evaluates the PRF at this
-      // factor's stored salt and derives the KEK, rather than running a ceremony
-      // whose result nothing reads.
-      const { kek } = await passkeyUnlockProvider()(record);
-      // The KEK only proves anything once it opens THIS vault. A wrong or foreign
-      // credential produces a KEK that fails right here, at GCM. The mnemonic is
-      // deliberately not unsealed: connecting needs the public address, not the seed.
-      await unwrapDek(passkeyFactor, kek);
+      // Reaching the next line is the proof this passkey opens THIS vault
+      // (see the header).
+      await passkeyUnlockProvider()(record);
 
       const manifest = loadManifest();
       const address = manifest?.activeAddress

@@ -23,10 +23,20 @@ export function formatRecoveryCode(bytes: Uint8Array): string {
   return (hex.match(/.{1,4}/g) ?? []).join('-');
 }
 
+/** 128 bits as hex. Exported so the unlock form can gate on a complete code. */
+export const RECOVERY_CODE_DIGITS = 32;
+
+/** Dashes and spacing are how a user reads the code back, not part of it. */
+const hexOnly = (code: string) => code.replace(/[^0-9a-fA-F]/g, '');
+
+export function recoveryCodeDigits(code: string): number {
+  return hexOnly(code).length;
+}
+
 /** Parse a recovery code back to 16 bytes. Tolerates case/spaces/dashes; rejects wrong length. */
 export function parseRecoveryCode(code: string): Uint8Array {
-  const hex = code.replace(/[^0-9a-fA-F]/g, '');
-  if (hex.length !== 32) throw new Error('recovery code: expected 128 bits (32 hex characters)');
+  const hex = hexOnly(code);
+  if (hex.length !== RECOVERY_CODE_DIGITS) throw new Error('recovery code: expected 128 bits (32 hex characters)');
   const out = new Uint8Array(16);
   for (let i = 0; i < 16; i += 1) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
   return out;

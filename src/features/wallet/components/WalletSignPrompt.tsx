@@ -12,6 +12,7 @@ import {
 import {
   hasFactor, passkeyUnlockProvider, passphraseUnlockProvider, recoveryUnlockProvider,
 } from '../wallet-lifecycle';
+import { RECOVERY_CODE_DIGITS, recoveryCodeDigits } from '../recovery';
 import { summarizeTransaction, type TxSummary } from '../tx-summary';
 import type { SigningContext, UnlockProvider } from '../inline-signer';
 
@@ -57,7 +58,8 @@ const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sk
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-blue-500/25 '
   + 'inline-flex items-center justify-center gap-2';
 const ghostBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm '
-  + 'hover:bg-white/[0.08] transition-colors inline-flex items-center justify-center gap-2';
+  + 'hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed transition-colors '
+  + 'inline-flex items-center justify-center gap-2';
 const input = 'w-full min-h-[44px] rounded-lg border border-input bg-white/[0.04] px-3 py-3 text-sm text-white '
   + 'shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none '
   + 'focus-visible:ring-1 focus-visible:ring-ring';
@@ -147,12 +149,15 @@ const WalletSignPrompt = () => {
     setQueue((prev) => prev.slice(1));
   }, []);
 
-  const runUnlock = useCallback(async (provider: UnlockProvider) => {
+  // Takes a factory, not a provider: `recoveryUnlockProvider` parses the code as
+  // it is constructed, and a throw there would escape this try and leave the user
+  // with a dead button and no message.
+  const runUnlock = useCallback(async (makeProvider: () => UnlockProvider) => {
     if (!active) return;
     setError('');
     setBusy(true);
     try {
-      const result = await provider(active.record, active.context);
+      const result = await makeProvider()(active.record, active.context);
       active.resolve(result);
       dequeue();
     } catch (e) {
@@ -202,6 +207,15 @@ const WalletSignPrompt = () => {
       + 'It is held for the rest of this flow, then dropped.';
   }
 
+  // A partial recovery code can only fail, so it never becomes submittable.
+  const typedDigits = recoveryCodeDigits(secret);
+  const secretReady = mode === 'recovery'
+    ? typedDigits === RECOVERY_CODE_DIGITS
+    : secret.length > 0;
+  const codeHint = typedDigits > RECOVERY_CODE_DIGITS
+    ? `${typedDigits} characters — a recovery code is ${RECOVERY_CODE_DIGITS}`
+    : `${typedDigits} of ${RECOVERY_CODE_DIGITS} characters`;
+
   // Must track `grantDescription`: a button promising a signature over a grant
   // that is a rolling chat session is the one place the user reads before acting.
   let submitLabel = 'Unlock';
@@ -210,7 +224,7 @@ const WalletSignPrompt = () => {
   else if (context?.kind === 'nostr-link') submitLabel = 'Approve & link';
 
   const submitSecret = () => runUnlock(
-    mode === 'recovery' ? recoveryUnlockProvider(secret) : passphraseUnlockProvider(secret),
+    () => (mode === 'recovery' ? recoveryUnlockProvider(secret) : passphraseUnlockProvider(secret)),
   );
 
   return (
@@ -312,7 +326,7 @@ const WalletSignPrompt = () => {
                 {/* Suppressed entirely when approval is blocked (undecodable tx): the
                     only action then is Cancel. */}
                 {!blockApproval && canPasskey && (
-                  <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(passkeyUnlockProvider())}>
+                  <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(() => passkeyUnlockProvider())}>
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
                     Unlock with this device
                   </button>
@@ -334,10 +348,21 @@ const WalletSignPrompt = () => {
                       autoCorrect="off"
                       spellCheck={false}
                       placeholder={mode === 'recovery' ? 'XXXX-XXXX-…' : 'passphrase'}
+                      aria-describedby={mode === 'recovery' ? 'wallet-unlock-code-progress' : undefined}
                       onChange={(e) => setSecret(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' && secret.length > 0 && !busy) submitSecret(); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && secretReady && !busy) submitSecret(); }}
                     />
-                    <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || secret.length === 0} onClick={submitSecret}>
+                    {/* Says what the button below is waiting for — a half-typed code
+                        otherwise leaves it greyed out with no reason given. */}
+                    {mode === 'recovery' && (
+                      <p
+                        id="wallet-unlock-code-progress"
+                        className={cn('mb-2 text-[11px]', secretReady ? 'text-emerald-300' : 'text-muted-foreground')}
+                      >
+                        {secretReady ? 'Code complete.' : codeHint}
+                      </p>
+                    )}
+                    <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || !secretReady} onClick={submitSecret}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                       {submitLabel}
                     </button>

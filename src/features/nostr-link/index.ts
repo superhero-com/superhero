@@ -9,5 +9,5 @@ export { deriveInlineLinkIdentity } from './identity-source';
 export type { DeriveLinkIdentity, LinkNostrIdentity } from './identity-source';
 // Shared status atom — drives the root-mounted EnableChatDialog (NostrLinkGate).
 // Consumers (e.g. the Stage 3 "enable posting" flow) flip it to `'prompt'` to
-// open the canonical link dialog and observe `'done'`/`'linked'` for success.
+// open the canonical link dialog and observe `'linked'` for success.
 export { nostrLinkStatusAtom } from './state';

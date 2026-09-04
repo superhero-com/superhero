@@ -23,6 +23,9 @@ import {
  * summaries the component must render and fail-close on.
  */
 const passphraseProvider = vi.fn();
+// The FACTORY, not the closure it returns — a provider can fail as it is built
+// (see `runUnlock`).
+const passphraseFactory = vi.fn((secret: string) => () => passphraseProvider(secret));
 const passkeyProvider = vi.fn();
 const recoveryProvider = vi.fn();
 
@@ -38,7 +41,7 @@ const fx = vi.hoisted(() => ({
 vi.mock('../../wallet-lifecycle', () => ({
   hasFactor: (record: { factors: { type: string }[] }, type: string) => record.factors
     .some((f) => f.type === type),
-  passphraseUnlockProvider: (secret: string) => () => passphraseProvider(secret),
+  passphraseUnlockProvider: (secret: string) => passphraseFactory(secret),
   passkeyUnlockProvider: () => () => passkeyProvider(),
   recoveryUnlockProvider: (code: string) => () => recoveryProvider(code),
 }));
@@ -125,6 +128,7 @@ describe('WalletSignPrompt — per-signature unlock + WYSIWYS confirm', () => {
   beforeEach(() => {
     resetUnlockBroker();
     passphraseProvider.mockReset().mockResolvedValue({ factorId: 'f0', kek: KEK });
+    passphraseFactory.mockReset(); // restores the vi.fn implementation above
     passkeyProvider.mockReset().mockResolvedValue({ factorId: 'f1', kek: KEK });
     recoveryProvider.mockReset().mockResolvedValue({ factorId: 'f2', kek: KEK });
   });
@@ -349,6 +353,7 @@ describe('WalletSignPrompt — the prompt describes the grant it is asking for',
   beforeEach(() => {
     resetUnlockBroker();
     passphraseProvider.mockReset().mockResolvedValue({ factorId: 'f0', kek: KEK });
+    passphraseFactory.mockReset();
   });
 
   afterEach(() => resetUnlockBroker());
@@ -422,6 +427,93 @@ describe('WalletSignPrompt — the prompt describes the grant it is asking for',
     const submit = screen.getByRole('button', { name: /^unlock$/i });
     expect(submit).toBeInTheDocument();
 
+    pending.catch(() => {});
+  });
+
+  it('reports a provider that throws as it is built, rather than swallowing it', async () => {
+    passphraseFactory.mockImplementationOnce(() => { throw new Error('secret is malformed'); });
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase'), SPEND_CONTEXT);
+    let settled = false;
+    pending.then(() => { settled = true; }, () => { settled = true; });
+
+    fireEvent.change(await screen.findByLabelText(/passphrase/i), { target: { value: 'x' } });
+    fireEvent.click(screen.getByRole('button', { name: /approve & sign/i }));
+
+    await screen.findByText(/secret is malformed/i);
+    expect(settled).toBe(false);
+    pending.catch(() => {});
+  });
+});
+
+// A recovery code is 32 hex digits and worth nothing partial, so the form says how
+// far along it is rather than leaving a greyed-out button unexplained.
+describe('WalletSignPrompt — recovery code entry', () => {
+  beforeEach(() => {
+    resetUnlockBroker();
+    recoveryProvider.mockReset().mockResolvedValue({ factorId: 'f2', kek: KEK });
+  });
+
+  afterEach(() => resetUnlockBroker());
+
+  const toRecoveryMode = async () => {
+    fireEvent.click(await screen.findByRole('button', { name: /use my recovery code instead/i }));
+    return screen.findByLabelText(/recovery code/i);
+  };
+
+  it('counts the digits and keeps approval disabled until the code is complete', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase', 'recovery-code'), SPEND_CONTEXT);
+
+    fireEvent.change(await toRecoveryMode(), { target: { value: 'DEAD-BE' } });
+
+    expect(screen.getByText(/6 of 32 characters/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /approve & sign/i })).toBeDisabled();
+    expect(recoveryProvider).not.toHaveBeenCalled();
+
+    pending.catch(() => {});
+  });
+
+  it('names an over-long code instead of counting past the target', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase', 'recovery-code'), SPEND_CONTEXT);
+
+    fireEvent.change(await toRecoveryMode(), { target: { value: '0'.repeat(33) } });
+
+    expect(screen.getByText(/33 characters .* recovery code is 32/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /approve & sign/i })).toBeDisabled();
+
+    pending.catch(() => {});
+  });
+
+  it('says the code is complete and releases the KEK once it is', async () => {
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase', 'recovery-code'), SPEND_CONTEXT);
+
+    const code = 'DEAD-BEEF-DEAD-BEEF-DEAD-BEEF-DEAD-BEEF';
+    fireEvent.change(await toRecoveryMode(), { target: { value: code } });
+
+    expect(screen.getByText(/code complete/i)).toBeInTheDocument();
+    const approve = screen.getByRole('button', { name: /approve & sign/i });
+    expect(approve).toBeEnabled();
+
+    fireEvent.click(approve);
+    await expect(pending).resolves.toEqual({ factorId: 'f2', kek: KEK });
+    expect(recoveryProvider).toHaveBeenCalledWith(code);
+  });
+
+  it('stays open with the error when the code is wrong', async () => {
+    recoveryProvider.mockRejectedValueOnce(new Error('That recovery code is not right.'));
+    render(<WalletSignPrompt />);
+    const pending = request(recordWith('passphrase', 'recovery-code'), SPEND_CONTEXT);
+    let settled = false;
+    pending.then(() => { settled = true; }, () => { settled = true; });
+
+    fireEvent.change(await toRecoveryMode(), { target: { value: '0000-0000-0000-0000-0000-0000-0000-0000' } });
+    fireEvent.click(screen.getByRole('button', { name: /approve & sign/i }));
+
+    await screen.findByText(/recovery code is not right/i);
+    expect(settled).toBe(false);
     pending.catch(() => {});
   });
 });

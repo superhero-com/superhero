@@ -359,3 +359,197 @@ describe('summarizeTransaction — PayingForTx surfaces the inner transaction', 
     expect(rowMap(summary!.inner!)['Argument 3']).toBe(SENDER);
   });
 });
+
+// Whether a selector decodes as text or as bytes is a per-name coin flip (see
+// `toHex`). Reading only the bytes form left every call in the text half — posting
+// included — undecodable, so the prompt could only offer Cancel.
+describe('summarizeTransaction — selectors that decode as text, not bytes', () => {
+  const STR = { name: 's', type: 'string' };
+  const STR_LIST = { name: 'm', type: { list: ['string'] } };
+
+  it('names a post — the selector 0x1c397862 decodes as a UTF-8 string', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('post_without_tip', [STR, STR_LIST], ['hello #test', []]),
+    ));
+    expect(summary).not.toBeNull();
+    expect(summary!.title).toBe('Publish a post');
+    expect(summary!.caution).toBeUndefined();
+    expect(rowMap(summary!).Text).toBe('hello #test');
+  });
+
+  it('names an AE-out swap, whose selector also decodes as a string', () => {
+    const summary = summarizeTransaction(contractCallTx(forgeCall(
+      'swap_exact_tokens_for_ae',
+      [
+        { name: 'amountIn', type: 'int' },
+        { name: 'amountOutMin', type: 'int' },
+        { name: 'path', type: { list: ['address'] } },
+        { name: 'to', type: 'address' },
+        { name: 'deadline', type: 'int' },
+        { name: 'callback', type: { option: ['int'] } },
+      ],
+      [1n, 2n, [RECIPIENT, SENDER], RECIPIENT, 999n, undefined],
+    )));
+    expect(summary!.title).toBe('Swap tokens');
+  });
+
+  it('still shape-checks a string-selector function rather than trusting its name', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('post_without_tip', [STR, STR_LIST, ADDR], ['hi', [], SENDER]),
+    ));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+    expect(rowMap(summary!).Function).toMatch(/post_without_tip — unexpected argument shape/);
+  });
+});
+
+// Buying and selling a bonding-curve token is a first-class app action, and the
+// caution path it used to land on ("not a recognised standard one") reads as a
+// warning about the app's own button.
+describe('summarizeTransaction — bonding-curve token sale', () => {
+  it('names a buy and shows the AE it spends, taken from the envelope', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('buy', [INT], [10n ** 18n]),
+      (42n * 10n ** 17n).toString(),
+    ));
+    expect(summary!.title).toBe('Buy tokens');
+    expect(summary!.caution).toBeUndefined();
+
+    const rows = rowMap(summary);
+    expect(rows['Tokens to buy']).toBe('1000000000000000000 (raw token units)');
+    expect(rows['AE sent with call']).toBe('4.2 AE');
+  });
+
+  it('names a sell and shows the AE floor the call enforces', () => {
+    const summary = summarizeTransaction(contractCallTx(
+      forgeCall('sell', [INT, INT], [10n ** 18n, 39n * 10n ** 17n]),
+    ));
+    expect(summary!.title).toBe('Sell tokens');
+    expect(summary!.caution).toBeUndefined();
+
+    const rows = rowMap(summary);
+    expect(rows['Tokens to sell']).toBe('1000000000000000000 (raw token units)');
+    expect(rows['Minimum AE returned']).toBe('3.9 AE');
+  });
+
+  it.each([
+    ['buy', [INT, ADDR], [1n, SENDER]],
+    ['sell', [INT], [1n]],
+  ] as const)('downgrades a %s whose arguments are the wrong shape', (fn, defs, args) => {
+    const summary = summarizeTransaction(contractCallTx(forgeCall(fn, [...defs], [...args])));
+    expect(summary!.title).toBe('Call a contract');
+    expect(summary!.effect).toBeUndefined();
+    expect(summary!.caution).toMatch(/not the shape that function should have/i);
+  });
+});
+
+// Two fields the envelope summary used to drop on the floor. Both are covered by
+// the signature, and one of them is the largest amount in the transaction.
+describe('summarizeTransaction — fields the envelope must not hide', () => {
+  const ba = (text: string) => encode(new TextEncoder().encode(text), Encoding.Bytearray);
+
+  it('shows the name price, not just the network fee, on a name claim', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.NameClaimTx,
+      accountId: SENDER,
+      nonce: 9,
+      name: 'superhero.chain',
+      nameSalt: 12345,
+      nameFee: (500n * 10n ** 18n).toString(),
+    }));
+
+    const rows = rowMap(summary);
+    expect(rows.Name).toBe('superhero.chain');
+    expect(rows['Name price']).toBe('500 AE');
+    expect(rows['Network fee']).toMatch(/^0\.0000/);
+    expect(summary!.rows.find((r) => r.label === 'Name price')?.emphasis).toBe(true);
+  });
+
+  it('shows a spend payload as the text it is', () => {
+    const tx = buildTx({
+      tag: Tag.SpendTx,
+      senderId: SENDER,
+      recipientId: RECIPIENT,
+      amount: '1',
+      nonce: 7,
+      payload: ba('TIP_POST:1234_v3'),
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBe('TIP_POST:1234_v3');
+  });
+
+  it('falls back to the raw encoding for a payload that is not text', () => {
+    const raw = encode(new Uint8Array([0xff, 0xfe, 0x00, 0x01]), Encoding.Bytearray);
+    const tx = buildTx({
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '1', nonce: 7, payload: raw,
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBe(raw);
+  });
+
+  it('adds no payload row to a plain send', () => {
+    const tx = buildTx({
+      tag: Tag.SpendTx, senderId: SENDER, recipientId: RECIPIENT, amount: '1', nonce: 7,
+    });
+    expect(rowMap(summarizeTransaction(tx)).Payload).toBeUndefined();
+  });
+});
+
+// A name update and a contract deploy both used to summarise as little more than
+// "From / Network fee / Nonce" — a signature over fields the prompt never showed.
+describe('summarizeTransaction — name updates, deploys and gas', () => {
+  it('shows where a name update repoints the name', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.NameUpdateTx,
+      accountId: SENDER,
+      nonce: 10,
+      nameId: 'superhero.chain',
+      nameTtl: 180000,
+      clientTtl: 3600,
+      pointers: [{ key: 'account_pubkey', id: RECIPIENT }],
+    }));
+
+    expect(summary!.title).toBe('Update a name');
+    const rows = rowMap(summary);
+    // The name arrives hashed on an update; the pointer is the part that matters.
+    expect(rows.Name).toMatch(/^nm_/);
+    expect(rows['Points to (account_pubkey)']).toBe(RECIPIENT);
+    const pointer = summary!.rows.find((r) => r.label.startsWith('Points to'));
+    expect(pointer?.emphasis).toBe(true);
+  });
+
+  it('shows a deploy’s deposit and gas ceiling', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.ContractCreateTx,
+      ownerId: SENDER,
+      nonce: 11,
+      code: encode(new Uint8Array([1, 2, 3, 4]), Encoding.ContractBytearray),
+      callData: encodeCall('unknown_fn', [1n]),
+      amount: 0,
+      deposit: 0,
+      gasLimit: 76000,
+      gasPrice: '1000000000',
+    }));
+
+    expect(summary!.title).toBe('Deploy a contract');
+    const rows = rowMap(summary);
+    expect(rows['Contract deposit']).toBe('0 AE');
+    expect(rows['Gas, at most']).toBe('0.000076 AE');
+  });
+
+  it('shows the gas ceiling on a contract call, which dwarfs the fee', () => {
+    const summary = summarizeTransaction(buildTx({
+      tag: Tag.ContractCallTx,
+      callerId: SENDER,
+      contractId: CONTRACT,
+      amount: 0,
+      gasLimit: 5000000,
+      gasPrice: '1000000000',
+      nonce: 3,
+      callData: encodeCall('transfer', [RECIPIENT, 1n]),
+    }));
+
+    const rows = rowMap(summary);
+    expect(rows['Gas, at most']).toBe('0.005 AE');
+    // The row that used to stand alone is an order of magnitude smaller.
+    expect(rows['Network fee']).toMatch(/^0\.0001/);
+  });
+});

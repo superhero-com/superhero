@@ -28,7 +28,7 @@ export const PillChangeBadge = ({ changePercent }: PillChangeBadgeProps) => {
       aria-hidden="true"
     >
       {!flat && <span className="sh-pill__chg-arrow">{positive ? '▲' : '▼'}</span>}
-      {`${Math.abs(changePercent).toFixed(1)}%`}
+      <span>{`${Math.abs(changePercent).toFixed(1)}%`}</span>
     </span>
   );
 };

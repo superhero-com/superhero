@@ -600,7 +600,7 @@ const TokenSaleDetails = () => {
               >
                 <span className="flex items-center justify-center gap-1.5">
                   {tokenDoesNotExist && <Lock className="h-3 w-3" />}
-                  {t('trending.tokenSale.tabTransactions')}
+                  <span>{t('trending.tokenSale.tabTransactions')}</span>
                 </span>
               </button>
               <button
@@ -612,8 +612,10 @@ const TokenSaleDetails = () => {
               >
                 <span className="flex items-center justify-center gap-1.5">
                   {tokenDoesNotExist && <Lock className="h-3 w-3" />}
-                  {t('trending.tokenSale.tabHolders')}
-                  {!tokenDoesNotExist && ` (${token?.holders_count || 0})`}
+                  <span>
+                    {t('trending.tokenSale.tabHolders')}
+                    {!tokenDoesNotExist && ` (${token?.holders_count || 0})`}
+                  </span>
                 </span>
               </button>
             </div>

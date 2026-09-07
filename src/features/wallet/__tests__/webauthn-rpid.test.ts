@@ -13,13 +13,22 @@ import {
 
 describe('WebAuthn rpId is build-time pinned (custody boundary)', () => {
   it('the production build value is superhero.com (default when unconfigured)', () => {
-    // Branch CI runs with VITE_WEBAUTHN_RP_ID unset, so this asserts the
-    // production artifact's rpId — the exact string the requirement pins.
+    // The rpId a build with VITE_WEBAUTHN_RP_ID unset takes — the production
+    // artifact's, and the exact string the requirement pins. Asserted through
+    // the resolver, NOT through `RP_ID`: this repo's own .env pins `localhost`
+    // so the ceremony is runnable in dev, and a test that reads the ambient
+    // build value fails on every such checkout while proving nothing.
     expect(DEFAULT_RP_ID).toBe('superhero.com');
-    expect(RP_ID).toBe('superhero.com');
     expect(pinnedRpId(undefined)).toBe('superhero.com');
     expect(pinnedRpId({})).toBe('superhero.com');
     expect(pinnedRpId({ VITE_WEBAUTHN_RP_ID: '   ' })).toBe('superhero.com');
+  });
+
+  it('ships the resolver’s value, not a second independently-computed one', () => {
+    // The bug this forbids is a hardcoded `RP_ID = 'superhero.com'`: it keeps
+    // defaulting to production on a build that HAS set the var, which is the
+    // silent-SecurityError failure the fourth test describes, one level up.
+    expect(RP_ID).toBe(pinnedRpId(import.meta.env));
   });
 
   it('a non-production build pins its own value (preview/staging/dev)', () => {
@@ -105,10 +114,12 @@ describe('the finding: a bundle served from an unexpected host', () => {
       prfSalt: new Uint8Array(32).fill(1),
     });
 
-    expect(rpId).toBe('superhero.com');
+    // The pinned value for THIS build, whatever it is — the finding is that the
+    // serving host does not get a say, not that the value is any one string.
+    expect(rpId).toBe(RP_ID);
     expect(create).toHaveBeenCalledTimes(1);
     const passed = create.mock.calls[0][0].publicKey.rp.id;
-    expect(passed).toBe('superhero.com');
+    expect(passed).toBe(RP_ID);
     expect(passed).not.toBe('attacker.example.com');
   });
 });

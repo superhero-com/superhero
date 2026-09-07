@@ -60,7 +60,7 @@ const PostTipButton = ({ toAddress, postId }: { toAddress: string; postId: strin
       )}
       {isSuccess && <Check className="w-[14px] h-[14px]" />}
       {!isPending && !isSuccess && <IconDiamond className="w-[14px] h-[14px]" />}
-      {buttonLabel}
+      <span>{buttonLabel}</span>
     </button>
   );
 };

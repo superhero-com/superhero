@@ -564,7 +564,7 @@ const CreateTokenView = () => {
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
           {!isCreating && <RocketIcon className="w-5 h-5 group-hover:animate-bounce" />}
-          {t('trending.createToken.submit.createToken')}
+          <span>{t('trending.createToken.submit.createToken')}</span>
           {!isCreating && <SparkleIcon className="w-4 h-4 animate-sparkle" />}
         </span>
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

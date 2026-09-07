@@ -325,10 +325,12 @@ const WalletSignPrompt = () => {
                 {/* ---------- User verification ---------- */}
                 {/* Suppressed entirely when approval is blocked (undecodable tx): the
                     only action then is Cancel. */}
+                {/* Labels are wrapped for the reason translationSafeChildren
+                    gives; these buttons are raw, so they do not get it free. */}
                 {!blockApproval && canPasskey && (
                   <button type="button" className={`${primaryBtn} mb-3`} disabled={busy} onClick={() => runUnlock(() => passkeyUnlockProvider())}>
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                    Unlock with this device
+                    <span>Unlock with this device</span>
                   </button>
                 )}
 
@@ -364,7 +366,7 @@ const WalletSignPrompt = () => {
                     )}
                     <button type="button" className={`${canPasskey ? ghostBtn : primaryBtn} mb-2`} disabled={busy || !secretReady} onClick={submitSecret}>
                       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                      {submitLabel}
+                      <span>{submitLabel}</span>
                     </button>
                   </>
                 )}
@@ -376,7 +378,7 @@ const WalletSignPrompt = () => {
                     onClick={() => { setMode(mode === 'recovery' ? 'passphrase' : 'recovery'); setSecret(''); setError(''); }}
                   >
                     <LifeBuoy className="h-3.5 w-3.5" />
-                    {mode === 'recovery' ? 'Use my passphrase instead' : 'Use my recovery code instead'}
+                    <span>{mode === 'recovery' ? 'Use my passphrase instead' : 'Use my recovery code instead'}</span>
                   </button>
                 )}
 

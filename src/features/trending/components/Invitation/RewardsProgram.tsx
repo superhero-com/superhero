@@ -178,7 +178,7 @@ const RewardsProgram = () => {
                 {verifyStatus === 'completed'
                   ? <CheckCircle2 className="w-4 h-4" />
                   : <Gift className="w-4 h-4" />}
-                {t('rewardsProgram.milestone1.earnBadge')}
+                <span>{t('rewardsProgram.milestone1.earnBadge')}</span>
               </span>
             </div>
             <div className="mb-4">
@@ -333,7 +333,7 @@ const RewardsProgram = () => {
                 {postStatus === 'completed'
                   ? <CheckCircle2 className="w-4 h-4" />
                   : <Gift className="w-4 h-4" />}
-                {t('rewardsProgram.milestone2.earnBadge')}
+                <span>{t('rewardsProgram.milestone2.earnBadge')}</span>
               </span>
             </div>
             <div className="mb-4">
@@ -393,7 +393,7 @@ const RewardsProgram = () => {
                   {postStatus === 'completed'
                     ? <CheckCircle2 className="w-4 h-4" />
                     : <Gift className="w-4 h-4" />}
-                  {t('rewardsProgram.milestone2.streakBadge')}
+                  <span>{t('rewardsProgram.milestone2.streakBadge')}</span>
                 </span>
               </div>
 

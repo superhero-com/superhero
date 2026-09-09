@@ -15,10 +15,10 @@ export type AccountProfileDto = {
     /**
      * Followers, chain-truth served from the index.
      */
-    followers_count: number;
+    followers_count?: number;
     /**
      * Following, chain-truth served from the index.
      */
-    following_count: number;
+    following_count?: number;
 };
 

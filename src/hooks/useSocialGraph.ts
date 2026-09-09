@@ -154,8 +154,13 @@ export function useSocialGraph(targetAddress?: string) {
         ? { a_follows_b: relationship.a_follows_b, b_follows_a: relationship.b_follows_a }
         : undefined;
       try {
-        // Sign with the connected wallet, never a locally held key.
-        if (!walletConnected) await connectWallet();
+        // Sign with the connected wallet, never a locally held key. connectWallet
+        // returns null on cancel/failure — and clears the active account doing so —
+        // so abort rather than continue into a signed write with no session.
+        if (!walletConnected) {
+          const connected = await connectWallet();
+          if (!connected) return;
+        }
 
         // Advisory precheck: do not ask the user to sign a doomed transaction.
         try {

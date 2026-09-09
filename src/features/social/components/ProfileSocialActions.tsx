@@ -20,14 +20,17 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
   const { t } = useTranslation('common');
   const {
     isSelf, viewer, isReady, isFollowing, hasBlocked,
-    configLoading, pendingAction, error, clearError,
+    configLoading, relationshipLoading, pendingAction, error, clearError,
     follow, unfollow, block, unblock,
   } = useSocialGraph(targetAddress);
   const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
 
+  // On-chain writes must never fire against an unresolved AENS name; the target
+  // is only signable once it resolves to a raw ak_ address.
+  if (!targetAddress?.startsWith('ak_')) return null;
   if (isSelf || !viewer) return null;
-  // Reserve space while the config (caps + contract address) loads.
-  if (configLoading) return <div className="h-8" aria-hidden />;
+  // Reserve space while the config (caps + contract address) and relationship load.
+  if (configLoading || relationshipLoading) return <div className="h-8" aria-hidden />;
   // No contract configured — degrade to nothing rather than a broken control.
   if (!isReady && !hasBlocked) return null;
 

@@ -124,10 +124,24 @@
   .language-item--clickable::after {
     display: none;
   }
+
+  /* Stacked layout: the graphic column takes whatever height is left under the
+     CTAs. Centering the cards in it parked them in the middle of that box —
+     the dead gap above the flags. Sit them straight under the buttons. */
+  .banner-languages-graphic {
+    align-items: flex-start;
+  }
 }
 
-/* Give the languages slide a slightly wider graphic column than the default (300px) */
-.banner-languages-graphic ~ * .banner-layout__graphic,
-.banner-layout__graphic:has(.banner-languages-graphic) {
-  flex: 0 0 clamp(260px, 42%, 340px);
+/* Give the languages slide a slightly wider graphic column than the default
+   (300px). Desktop only: below the breakpoint .banner-layout__top flips to a
+   column, where this `flex` shorthand stops being a *width* and becomes a
+   fixed, unshrinkable 260-340px of HEIGHT. It outranks the stacked layout's
+   own `flex: 1 1 auto` on specificity (:has() counts its argument), which is
+   what pushed the language cards ~60px down and clipped the second row off
+   the bottom of the slide. */
+@media (min-width: 1238px) {
+  .banner-layout__graphic:has(.banner-languages-graphic) {
+    flex: 0 0 clamp(260px, 42%, 340px);
+  }
 }

@@ -3,11 +3,16 @@ import { test, expect, Page } from '@playwright/test';
 /**
  * Chat availability — the deploy-config contract, end to end.
  *
- * Chat "dark ships": `InboxView` returns `<ChatUnavailableNotice />` before
- * rendering anything when `isChatRelayConfigured()` is false, i.e. when
- * `NOSTR_RELAY_URLS` is empty. That gate sits ABOVE the "New chat" button, so a
- * missing relay presents to the user as "the button is gone", not as an error —
- * exactly how the production outage looked.
+ * `InboxView` returns `<ChatUnavailableNotice />` before rendering anything when
+ * `isChatRelayConfigured()` is false. That gate sits ABOVE the "New chat"
+ * button, so a missing relay presents to the user as "the button is gone", not
+ * as an error — exactly how the production outage looked.
+ *
+ * Nothing a deployment does with `NOSTR_RELAY_URLS` should reach that state any
+ * more. The relay is a built-in default and a blank runtime value is discarded
+ * like any other placeholder, because a blank one was never intentional: an
+ * unset `ssh_deploy.yaml` input reached every container as
+ * `-e NOSTR_RELAY_URLS=""` and took chat down everywhere.
  *
  * Two properties are asserted, and the second is the one that bites:
  *
@@ -123,22 +128,24 @@ test.describe('chat entry points', () => {
   });
 });
 
-test.describe('chat dark-ship (relay explicitly blanked)', () => {
-  // The guard against this suite passing vacuously. Chat is on by default, so
-  // "off" is now an explicit act: run a server with NOSTR_RELAY_URLS set to the
-  // empty string, which config.ts honours via EMPTY_MEANS_OFF.
+test.describe('a blank relay env var does not take chat down', () => {
+  // The production repro. Every deployment ran in exactly this state: the
+  // workflow passed an unset input through as `-e NOSTR_RELAY_URLS=""`, the
+  // server injected `NOSTR_RELAY_URLS: ''`, and the client read that as a
+  // deliberate "chat off" — so /chat served ChatUnavailableNotice while the
+  // bundle and the CSP both carried wss://relay.superhero.chat.
   //
   //   NOSTR_RELAY_URLS= NODE_ENV=production PORT=4179 node server/index.cjs
-  //   CHAT_DARK_BASE_URL=http://localhost:4179 npx playwright test …
-  const DARK_BASE = process.env.CHAT_DARK_BASE_URL;
+  //   CHAT_BLANK_RELAY_BASE_URL=http://localhost:4179 npx playwright test …
+  const BLANK_BASE = process.env.CHAT_BLANK_RELAY_BASE_URL;
 
-  test.skip(!DARK_BASE, 'set CHAT_DARK_BASE_URL to a deployment with NOSTR_RELAY_URLS=""');
+  test.skip(!BLANK_BASE, 'set CHAT_BLANK_RELAY_BASE_URL to a deployment with NOSTR_RELAY_URLS=""');
 
-  test('hides the entry points', async ({ page }) => {
-    await page.goto(`${DARK_BASE}/chat`, { waitUntil: 'domcontentloaded' });
+  test('keeps the entry points, falling back to the built-in relay', async ({ page }) => {
+    await page.goto(`${BLANK_BASE}/chat`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
 
-    await expect(page.getByRole('button', { name: /new chat/i })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /new chat/i })).toHaveCount(1);
   });
 });
 

@@ -1,6 +1,7 @@
 import {
-  test, expect, devices, Page,
+  test, expect, devices,
 } from '@playwright/test';
+import { forceStandalone } from './helpers/display-mode';
 
 /**
  * The sign prompt must be usable while the Send sheet is open behind it.
@@ -30,28 +31,6 @@ const PASSPHRASE = 'correct horse battery staple extra';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { defaultBrowserType, ...IPHONE } = devices['iPhone 13'];
-
-// `isStandalone()` is the sole inline-wallet gate and Playwright cannot emulate
-// display-mode, so stub the media query before the bundle loads.
-async function forceStandalone(page: Page) {
-  await page.addInitScript(() => {
-    const orig = window.matchMedia.bind(window);
-    window.matchMedia = (query: string) => (
-      query.includes('display-mode: standalone')
-        ? ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addListener() {},
-          removeListener() {},
-          addEventListener() {},
-          removeEventListener() {},
-          dispatchEvent() { return false; },
-        } as unknown as MediaQueryList)
-        : orig(query)
-    );
-  });
-}
 
 /**
  * The freshly onboarded account is empty and unknown to the chain, so the node's
@@ -86,8 +65,14 @@ async function onboardInlineWallet(page: Page): Promise<string> {
   await page.getByRole('button', { name: /connect wallet/i })
     .filter({ visible: true }).first().click();
 
-  await page.getByText('Set up your wallet').waitFor({ state: 'visible' });
-  await page.getByRole('button', { name: 'Create a new wallet' }).click();
+  // The `choose` screen, anchored on its own copy rather than its "Set up your
+  // wallet" heading: Radix renders a second, screen-reader-only copy of the
+  // dialog title, so a text/role query for the heading is a strict-mode
+  // violation and this onboarding step never got past its first wait.
+  await page.getByText(/your keys stay on this device, encrypted/i).waitFor({ state: 'visible' });
+  // Renamed from 'Create a new wallet' when the choose screen was split into two
+  // explicit create options (passkey / recovery phrase); this is the phrase one.
+  await page.getByRole('button', { name: 'Create with a phrase' }).click();
   await page.getByText('Write down your recovery phrase').waitFor({ state: 'visible' });
 
   const tiles = await page.locator('div.grid.grid-cols-3 > div').allInnerTexts();

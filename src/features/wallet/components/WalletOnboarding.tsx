@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { AeCard } from '@/components/ui/ae-card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { isStandalone } from '@/utils/displayMode';
 import { generateMnemonic, isValidMnemonic, normalizeMnemonic } from '../mnemonic';
 import {
   assessPassphrase, generatePassphrase, isEstimatorReady, loadPassphraseEstimator,
@@ -251,6 +252,23 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setPasskeySupported).catch(() => {});
   }, []);
+  /**
+   * Importing an existing wallet — pasting a seed phrase or private key — is
+   * offered in the installed app only.
+   *
+   * In a browser tab the answer to "I already have a wallet" is Connect, which
+   * hands signing to the extension or the wallet app and never asks for the
+   * secret. That handoff is a redirect, and a redirect out of an installed PWA
+   * does not come back cleanly — which is exactly why the app needs a way to
+   * take the key directly, and the web does not. Creating a wallet (passkey or a
+   * fresh phrase) is unaffected: it is offered on both surfaces, because nothing
+   * is being typed in.
+   *
+   * Read once at mount rather than per render: display mode does not change
+   * within the life of this dialog, and a value that flipped mid-flow would move
+   * a control out from under the user.
+   */
+  const [importAllowed] = useState(isStandalone);
   const [busy, setBusy] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
@@ -936,7 +954,9 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     cta="Create with a phrase"
                     onClick={startCreate}
                   />
-                  <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+                  {importAllowed && (
+                    <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
+                  )}
                   {passkeySupported && (
                     <AeButton variant="ghost" fullWidth disabled={busy} onClick={startRecover}>
                       Restore a wallet you created with a passkey
@@ -981,7 +1001,11 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                         <div className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                           This account has no on-chain activity — it looks like a new wallet
                           rather than a restored one. If you created your wallet with a recovery
-                          phrase, go back and use Import instead.
+                          phrase,
+                          {' '}
+                          {importAllowed
+                            ? 'go back and use Import instead.'
+                            : 'open it in the installed app or connect your wallet instead.'}
                         </div>
                       )}
                     </>

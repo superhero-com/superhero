@@ -35,18 +35,12 @@ function envInject(html) {
     const val = process.env[k] || '';
     out = out.replaceAll(`$${k}`, String(val));
   }
-  // Keys whose built-in default in src/config.ts must survive an UNSET env var,
-  // while still being overridable — including being turned off. The substitution
-  // above cannot express that on its own: it collapses "unset" and "set to empty"
-  // to the same '', and the client reads '' for NOSTR_RELAY_URLS as an explicit
-  // "chat off" (EMPTY_MEANS_OFF in src/config.ts).
-  //
-  // So when the var is genuinely absent, drop the key from the payload entirely
-  // and let the bundled default win. `NOSTR_RELAY_URLS=` (present but empty) still
-  // reaches the client as '' and still disables chat.
-  if (process.env.NOSTR_RELAY_URLS === undefined) {
-    out = out.replace(/^\s*NOSTR_RELAY_URLS: '',?\r?\n/m, '');
-  }
+  // No special case for NOSTR_RELAY_URLS any more. The substitution above collapses
+  // "unset" and "set to empty" to the same '', and the client now treats '' for every
+  // key as "not configured" and falls back to the built-in default — the relay in
+  // COMMON_CONFIG. This used to need a carve-out here because '' meant "chat off",
+  // which is exactly how every deployment ended up dark: ssh_deploy.yaml passed an
+  // unset input through as `-e NOSTR_RELAY_URLS=""`.
   return out;
 }
 

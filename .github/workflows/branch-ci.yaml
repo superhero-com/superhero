@@ -74,6 +74,15 @@ jobs:
       - name: Run CSP + Trusted Types soak
         run: npm run test:e2e:csp
 
+      # Which way in each surface offers — passkey on both, seed import in the app
+      # only, external-wallet connect on the web only, chat in the app only. Every
+      # one of these regresses invisibly (an option that should not be there works
+      # right up until the user needs the key back), and they are the only e2e that
+      # drives a real WebAuthn ceremony, so they run here rather than in the Docker
+      # suite nothing gates on.
+      - name: Pin the per-surface wallet and chat rules
+        run: npm run test:e2e:wallet-surfaces
+
   screenshots:
     runs-on: ubuntu-latest
 

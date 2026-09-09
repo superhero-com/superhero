@@ -1,6 +1,7 @@
 import {
   test, expect, Page, Locator,
 } from '@playwright/test';
+import { forceStandalone } from './helpers/display-mode';
 
 /**
  * Inline-wallet onboarding — visual-regression baselines (design track DESIGN-05).
@@ -35,29 +36,11 @@ const VIEWPORTS = [
   { name: 'desktop', width: 1280, height: 800 },
 ] as const;
 
-// Make `isStandalone()` (src/utils/displayMode.ts) report an installed PWA by
-// stubbing the `(display-mode: standalone)` media query — Playwright can't emulate
-// display-mode natively. Runs before the app bundle so ConnectWalletButton reads it
-// as standalone on first render and routes Connect Wallet to inline onboarding.
-async function forceStandalone(page: Page) {
-  await page.addInitScript(() => {
-    const orig = window.matchMedia.bind(window);
-    window.matchMedia = (query: string) => (
-      query.includes('display-mode: standalone')
-        ? ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addListener() {},
-          removeListener() {},
-          addEventListener() {},
-          removeEventListener() {},
-          dispatchEvent() { return false; },
-        } as unknown as MediaQueryList)
-        : orig(query)
-    );
-  });
-}
+// The `choose` screen, anchored on its own copy rather than its "Set up your
+// wallet" heading: Radix renders a second, screen-reader-only copy of the dialog
+// title, so a text/role query for the heading is a strict-mode violation — which
+// is what both paths below were failing on before reaching their first assertion.
+const chooseScreen = (page: Page) => page.getByText(/your keys stay on this device, encrypted/i);
 
 // Open the inline onboarding overlay through the app's real entry point.
 async function openOnboarding(page: Page) {
@@ -98,11 +81,13 @@ VIEWPORTS.forEach((vp) => {
       await openOnboarding(page);
 
       // choose
-      await page.getByText('Set up your wallet').waitFor({ state: 'visible' });
+      await chooseScreen(page).waitFor({ state: 'visible' });
       await snap(page, vp.name, 'choose');
 
       // create-show — mask the generated 12-word grid
-      await page.getByRole('button', { name: 'Create a new wallet' }).click();
+      // Renamed from 'Create a new wallet' when the choose screen was split into two
+      // explicit create options (passkey / recovery phrase); this is the phrase one.
+      await page.getByRole('button', { name: 'Create with a phrase' }).click();
       await page.getByText('Write down your recovery phrase').waitFor({ state: 'visible' });
       const tiles = await page.locator('div.grid.grid-cols-3 > div').allInnerTexts();
       const words = tiles.map((t) => t.replace(/^\s*\d+\s*/, '').trim());
@@ -161,7 +146,7 @@ VIEWPORTS.forEach((vp) => {
 
     test('import path — choose -> import-enter', async ({ page }) => {
       await openOnboarding(page);
-      await page.getByText('Set up your wallet').waitFor({ state: 'visible' });
+      await chooseScreen(page).waitFor({ state: 'visible' });
 
       await page.getByRole('button', { name: 'Import an existing wallet' }).click();
       await page.getByText('Import your wallet').waitFor({ state: 'visible' });

@@ -6,16 +6,15 @@ import {
 } from 'vitest';
 
 /**
- * Routing only: in an installed PWA this button IS the wallet, so it opens
- * onboarding directly; in a browser tab it opens the connect modal, where the
- * passkey card sits alongside the external-wallet and agent options. The tab
- * case must keep opening the modal — routing straight to onboarding there would
- * take the external-wallet and agent choices away.
+ * One entry point on every surface: the connect modal. The button used to route
+ * an installed PWA straight into the inline onboarding overlay, which put a
+ * second, different choice screen in front of the same three options the modal
+ * already offers. Now the modal's wallet card is what differs by surface, and
+ * this button never decides anything.
  */
 const mocks = vi.hoisted(() => ({
   standalone: false,
   openModal: vi.fn(),
-  addStaticAccount: vi.fn(),
 }));
 
 vi.mock('@/utils/displayMode', () => ({
@@ -24,43 +23,29 @@ vi.mock('@/utils/displayMode', () => ({
 }));
 
 vi.mock('@/hooks', () => ({
-  useAeSdk: () => ({ activeAccount: undefined, addStaticAccount: mocks.addStaticAccount }),
+  useAeSdk: () => ({ activeAccount: undefined }),
   useWalletConnect: () => ({ connectingWallet: false }),
   useModal: () => ({ openModal: mocks.openModal }),
-}));
-
-// Stub the lazy onboarding surface so the test never pulls in the crypto stack.
-vi.mock('@/features/wallet/components/WalletOnboarding', () => ({
-  default: () => <div data-testid="inline-onboarding">Set up your wallet</div>,
 }));
 
 // eslint-disable-next-line import/first
 import { ConnectWalletButton } from '../ConnectWalletButton';
 
-describe('ConnectWalletButton — isStandalone routes it', () => {
+describe('ConnectWalletButton — always the connect modal', () => {
   beforeEach(() => {
     mocks.openModal.mockClear();
-    mocks.addStaticAccount.mockClear();
     mocks.standalone = false;
   });
 
-  it('opens the external connect modal in a plain browser tab', () => {
-    mocks.standalone = false;
+  it.each([
+    ['a plain browser tab', false],
+    ['an installed PWA', true],
+  ])('opens the connect modal in %s', (_label, standalone) => {
+    mocks.standalone = standalone;
     render(<ConnectWalletButton />);
 
     fireEvent.click(screen.getByRole('button'));
 
     expect(mocks.openModal).toHaveBeenCalledWith({ name: 'connect-wallet' });
-    expect(screen.queryByTestId('inline-onboarding')).not.toBeInTheDocument();
-  });
-
-  it('opens the inline onboarding flow in a standalone PWA', async () => {
-    mocks.standalone = true;
-    render(<ConnectWalletButton />);
-
-    fireEvent.click(screen.getByRole('button'));
-
-    expect(mocks.openModal).not.toHaveBeenCalled();
-    expect(await screen.findByTestId('inline-onboarding')).toBeInTheDocument();
   });
 });

@@ -1,16 +1,9 @@
-import React, { Suspense, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { isStandalone } from '@/utils/displayMode';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
-
-// Inline PWA onboarding, lazy-loaded so its crypto stack (bip39/argon2/…) never
-// enters this button's chunk. It is only reached when `isStandalone()` — i.e.
-// the app is running as an installed PWA — so a plain browser tab never fetches
-// the onboarding chunk and keeps the existing external connect flow.
-const WalletOnboarding = React.lazy(() => import('@/features/wallet/components/WalletOnboarding'));
 
 type Props = {
   label?: string;
@@ -25,16 +18,9 @@ export const ConnectWalletButton = ({
   label, block, style, className, variant = 'default', muted = false,
 }: Props) => {
   const { t } = useTranslation('common');
-  const { activeAccount, addStaticAccount } = useAeSdk();
+  const { activeAccount } = useAeSdk();
   const { connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
-  const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
-
-  // Routing only, and deliberately still standalone-only. In an installed PWA
-  // this button IS the wallet, so it goes straight to onboarding; in a browser
-  // tab it opens the connect modal, where the passkey card sits alongside the
-  // external-wallet and agent options rather than replacing them.
-  const useInlineOnboarding = isStandalone();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
@@ -71,44 +57,30 @@ export const ConnectWalletButton = ({
   const buttonClasses = cn(resolvedBaseClasses, className);
 
   return (
-    <>
-      <AeButton
-        type="button"
-        onClick={() => (useInlineOnboarding
-          ? setShowInlineOnboarding(true)
-          : openModal({ name: 'connect-wallet' }))}
-        disabled={connectingWallet}
-        loading={connectingWallet}
-        variant="ghost"
-        size={variant === 'dex' ? 'default' : 'default'}
-        fullWidth={block}
-        className={buttonClasses}
-        style={style}
-      >
-        <span className="hidden sm:inline-flex items-center gap-2">
-          <Favicon className="w-4 h-4" />
-          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-        </span>
-        <span className="sm:hidden">
-          {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
-        </span>
-      </AeButton>
-      {showInlineOnboarding && (
-        <Suspense fallback={null}>
-          {/* Adopt the freshly-onboarded account: `addStaticAccount` sets it as
-              the active account AND installs the signer through `makeSigner`,
-              which — because onboarding has just written the address into the
-              cleartext manifest — resolves to the inline in-page signer. From
-              here on, signing happens in the PWA behind the per-signature
-              unlock + confirm prompt. */}
-          <WalletOnboarding onComplete={(_record, address) => {
-            setShowInlineOnboarding(false);
-            if (address) addStaticAccount(address);
-          }}
-          />
-        </Suspense>
-      )}
-    </>
+    // One entry point on every surface: the connect modal, where the passkey,
+    // wallet and agent options live. The modal's wallet card is what differs by
+    // surface (connect on the web, import in the installed app), not the route
+    // to it — routing the PWA straight into onboarding put a second, different
+    // choice screen in front of the same three options.
+    <AeButton
+      type="button"
+      onClick={() => openModal({ name: 'connect-wallet' })}
+      disabled={connectingWallet}
+      loading={connectingWallet}
+      variant="ghost"
+      size={variant === 'dex' ? 'default' : 'default'}
+      fullWidth={block}
+      className={buttonClasses}
+      style={style}
+    >
+      <span className="hidden sm:inline-flex items-center gap-2">
+        <Favicon className="w-4 h-4" />
+        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+      </span>
+      <span className="sm:hidden">
+        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
+      </span>
+    </AeButton>
   );
 };
 

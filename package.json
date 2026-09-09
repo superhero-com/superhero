@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@aeternity/aepp-calldata": "^1.9.1",
-    "@aeternity/aepp-sdk": "^14.1.0",
+    "@aeternity/aepp-sdk": "^15.0.0",
     "@ethersproject/bignumber": "^5.8.0",
     "@multiavatar/multiavatar": "^1.0.7",
     "@noble/hashes": "^2.3.0",

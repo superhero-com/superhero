@@ -10,8 +10,6 @@ import React, { Suspense, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '@/hooks';
 import { hasDeviceVault, usePasskeyConnect, type DeviceWallet } from '@/hooks/usePasskeyConnect';
-import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
-import { isStandalone } from '@/utils/displayMode';
 
 const WalletOnboarding = React.lazy(
   () => import('@/features/wallet/components/WalletOnboarding'),
@@ -77,10 +75,10 @@ interface PasskeyConnectCardProps {
 const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
   const { t } = useTranslation();
   const { addStaticAccount } = useAeSdk();
-  // Must agree with `makeSigner`: offering creation where the inline signer won't
-  // install produced a real, fundable account whose every signature was routed to
-  // the external wallet, which has never held that key.
-  const inlineWalletAvailable = INLINE_WALLET_ENABLED && isStandalone();
+  // Offered on every surface — a browser tab as much as the installed PWA. The
+  // pairing that has to hold is with `inlineSignerIndex`: a wallet created here
+  // is written into the cleartext manifest, so that lookup resolves it to the
+  // in-page signer and its signatures are made by the key this device holds.
   const {
     available,
     state,
@@ -92,7 +90,7 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
     openDeviceWallet,
     resetOnboarding,
     loading,
-  } = usePasskeyConnect(inlineWalletAvailable);
+  } = usePasskeyConnect();
 
   // A proven passkey has to reach the caller, or the card is a dead end: the
   // ceremony ran, the vault opened, and nothing connected.
@@ -110,9 +108,6 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
     addStaticAccount(connectedAddress);
     onConnected(connectedAddress);
   }, [connectedAddress, addStaticAccount, onConnected]);
-
-  // After the hooks, so hook order stays unconditional.
-  if (!inlineWalletAvailable) return null;
 
   const hasDeviceWallet = hasDeviceVault(deviceWallet);
 

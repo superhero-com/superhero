@@ -1,10 +1,8 @@
 import WebSocketClient from '@/libs/WebSocketClient';
 import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
-import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
 import { indexForAddress } from '@/features/wallet/manifest-store';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
 import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
-import { isStandalone } from '@/utils/displayMode';
 import {
   AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
 } from '@aeternity/aepp-sdk';
@@ -101,40 +99,39 @@ const inlineVaultStore = createIndexedDbVaultStore();
 /**
  * The in-page unlock + WYSIWYS confirmation surface the inline signer blocks on.
  * Lazy-loaded so its crypto stack stays in its own chunk and is fetched on demand
- * — only ever reached when the inline signer actually installs (standalone PWA +
- * a known inline account), so a plain browser tab never fetches it.
+ * — only ever reached when the inline signer actually installs (a known inline
+ * account), so a session that only ever connects an external wallet never
+ * fetches it.
  */
 const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
 
 /**
  * The vault index `address` derives under when it signs in-page through the
  * inline wallet, or `null` when it belongs on the delegated (`superhero://`
- * deep-link + `localStorage` poll + `BroadcastChannel`) relay. ALL of these must
- * hold for an index:
+ * deep-link + `localStorage` poll + `BroadcastChannel`) relay.
  *
- *  1. `INLINE_WALLET_ENABLED` — the wallet exists in this build at all. It is the
- *     last backstop in front of real seed custody; `features/wallet/config.ts`
- *     carries the posture that keeps it off by default.
- *  2. `isStandalone()` — the app is running as an installed PWA. Routing ONLY,
- *     never a security boundary: it is documented-spoofable, and under
- *     same-origin custody forcing the inline path in a plain browser tab changes
- *     nothing about the security story.
- *  3. The address is a known inline account in the cleartext manifest. This is
- *     what keeps a user who connected an EXTERNAL wallet (extension,
- *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
- *     the installed PWA — we must never claim to sign for a key we don't hold.
+ * ONE condition decides it: the address is a known inline account in the
+ * cleartext manifest — a wallet this device created or imported in-page, whose
+ * key material is right here. That is the whole safety property, and it is the
+ * only one that ever was. It keeps a user who connected an EXTERNAL wallet
+ * (extension, `wallet.superhero.com`, WalletConnect) on the delegated relay,
+ * because we must never claim to sign for a key we don't hold.
  *
- * Any one false → the delegated path, completely unchanged. Browser
- * (non-standalone) mode is untouched in every case. Every route to a signature
- * resolves the account through this one lookup so they cannot drift.
+ * `isStandalone()` and the `INLINE_WALLET_ENABLED` build flag used to sit in
+ * front of it, restricting the inline signer to an installed PWA. They are gone
+ * on purpose. Neither was a security boundary — isStandalone is documented-
+ * spoofable, and under same-origin custody the inline path in a browser tab
+ * changes nothing about the security story — but together they broke the web
+ * passkey flow they were supposed to protect: `PasskeyConnectCard` created a
+ * real, fundable account from the passkey, then this lookup refused it and every
+ * signature was routed to an external wallet that has never held that key. The
+ * manifest check below is what makes that impossible, in a tab and in the PWA
+ * alike.
+ *
+ * Every route to a signature resolves the account through this one lookup so
+ * they cannot drift.
  */
-export const inlineSignerIndex = (address: string): number | null => {
-  // First because it is a build-time constant: an off build folds the inline path
-  // away here rather than shipping a live call to it.
-  if (!INLINE_WALLET_ENABLED) return null;
-  if (!isStandalone()) return null;
-  return indexForAddress(address);
-};
+export const inlineSignerIndex = (address: string): number | null => indexForAddress(address);
 
 /**
  * The inline account for `address`: it signs in-page with user verification +

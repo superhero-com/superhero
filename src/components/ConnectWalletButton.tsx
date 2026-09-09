@@ -2,7 +2,6 @@ import React, { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { isStandalone } from '@/utils/displayMode';
-import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
@@ -31,9 +30,11 @@ export const ConnectWalletButton = ({
   const { openModal } = useModal();
   const [showInlineOnboarding, setShowInlineOnboarding] = useState(false);
 
-  // Mirrors makeSigner: the flag decides whether the wallet exists, isStandalone
-  // only where it routes.
-  const useInlineOnboarding = INLINE_WALLET_ENABLED && isStandalone();
+  // Routing only, and deliberately still standalone-only. In an installed PWA
+  // this button IS the wallet, so it goes straight to onboarding; in a browser
+  // tab it opens the connect modal, where the passkey card sits alongside the
+  // external-wallet and agent options rather than replacing them.
+  const useInlineOnboarding = isStandalone();
 
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');

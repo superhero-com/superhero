@@ -4,15 +4,22 @@ import {
 
 /**
  * `makeSigner` (account install) and `signMessageInline` (the signing path) both
- * resolve the account through `inlineSignerIndex`, which yields an index only
- * when all three hold: `INLINE_WALLET_ENABLED`, `isStandalone()`, and the address
- * being in the cleartext manifest. Anything else falls through to the delegated
- * relay, unchanged. The flag is checked first, so an off build never reaches the
- * inline path whatever the other two say; the manifest check is what leaves an
- * externally connected wallet — whose key we don't hold — on the relay.
+ * resolve the account through `inlineSignerIndex`, which yields an index on ONE
+ * condition: the address is in the cleartext manifest, i.e. this device created
+ * or imported that wallet in-page and holds its key. Anything else falls through
+ * to the delegated relay, unchanged.
+ *
+ * The manifest check is the whole boundary, and it is display-mode independent.
+ * `INLINE_WALLET_ENABLED` and `isStandalone()` used to sit in front of it; they
+ * are gone, because restricting the signer to an installed PWA did not protect
+ * anything (isStandalone is spoofable, custody is same-origin either way) while
+ * it did break the web passkey flow: the card minted a real account and this
+ * lookup then refused it, routing its signatures to an external wallet that
+ * never held the key. So a browser tab is now a first-class inline surface, and
+ * these tests pin that an externally connected wallet is still never claimed.
  *
  * `vi.doMock` + `resetModules()` + dynamic import per test, so each case controls
- * the three inputs without leaking state.
+ * its inputs without leaking state.
  */
 vi.mock('@/libs/WebSocketClient', () => ({
   default: {
@@ -29,15 +36,13 @@ const mockManifest = () => vi.doMock('@/features/wallet/manifest-store', () => (
   indexForAddress: (address: string) => (address === INLINE_ADDRESS ? 3 : null),
 }));
 
-/** Control the display-mode routing signal. */
+/**
+ * Display mode, which must no longer change any outcome — mocked only so the
+ * standalone/browser-tab pairs below are genuinely testing both surfaces.
+ */
 const mockStandalone = (value: boolean) => vi.doMock('@/utils/displayMode', () => ({
   isStandalone: () => value,
   isIOSWebKit: () => false,
-}));
-
-/** Control the build-time feature gate (real default is OFF). */
-const mockFlag = (value: boolean) => vi.doMock('@/features/wallet/config', () => ({
-  INLINE_WALLET_ENABLED: value,
 }));
 
 /** Records what the inline account was built with, and signs a fixed value. */
@@ -59,58 +64,16 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     vi.doUnmock('@/utils/displayMode');
     vi.doUnmock('@/features/wallet/manifest-store');
     vi.doUnmock('@/features/wallet/vault-store');
-    vi.doUnmock('@/features/wallet/config');
     vi.doUnmock('@/features/wallet/inline-sdk-account');
   });
 
-  it('returns the delegated account when the feature flag is OFF, even standalone with a manifest hit', async () => {
-    // Every other condition favours the inline signer and it still must not install.
-    mockFlag(false);
-    mockStandalone(true);
-    mockManifest();
-
-    const { makeSigner } = await import('@/context/AeSdkProvider');
-    const delegatedAccount = { marker: 'delegated-account' };
-    const createDelegatedAccount = vi.fn().mockReturnValue(delegatedAccount);
-
-    expect(makeSigner(INLINE_ADDRESS, createDelegatedAccount)).toBe(delegatedAccount);
-    expect(createDelegatedAccount).toHaveBeenCalledWith(INLINE_ADDRESS);
-  });
-
-  it('defaults to OFF when VITE_INLINE_WALLET is unset — no mock, the real config module', async () => {
-    // Loads the real config, so a change to the default itself fails here.
-    mockStandalone(true);
-    mockManifest();
-
-    const { INLINE_WALLET_ENABLED } = await import('@/features/wallet/config');
-    expect(INLINE_WALLET_ENABLED).toBe(false);
-
-    const { makeSigner } = await import('@/context/AeSdkProvider');
-    const delegatedAccount = { marker: 'delegated-account' };
-    const createDelegatedAccount = vi.fn().mockReturnValue(delegatedAccount);
-
-    expect(makeSigner(INLINE_ADDRESS, createDelegatedAccount)).toBe(delegatedAccount);
-  });
-
-  it('returns the delegated account in a plain browser tab (not standalone), even with a manifest hit', async () => {
-    // The "real browser-tab user is unaffected" proof: not standalone → external.
-    mockFlag(true);
-    mockStandalone(false);
-    mockManifest();
-
-    const { makeSigner } = await import('@/context/AeSdkProvider');
-    const delegatedAccount = { marker: 'delegated-account' };
-    const createDelegatedAccount = vi.fn().mockReturnValue(delegatedAccount);
-
-    const result = makeSigner(INLINE_ADDRESS, createDelegatedAccount);
-
-    expect(result).toBe(delegatedAccount);
-    expect(createDelegatedAccount).toHaveBeenCalledWith(INLINE_ADDRESS);
-  });
-
-  it('keeps an EXTERNALLY connected account on the delegated relay even when standalone', async () => {
-    mockFlag(true);
-    mockStandalone(true);
+  it.each([
+    ['an installed PWA', true],
+    ['a plain browser tab', false],
+  ])('keeps an EXTERNALLY connected account on the delegated relay in %s', async (_label, standalone) => {
+    // The safety property, and the only one: we never claim to sign for a key we
+    // do not hold, whatever surface the app is running on.
+    mockStandalone(standalone);
     mockManifest();
 
     const { makeSigner } = await import('@/context/AeSdkProvider');
@@ -121,9 +84,13 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     expect(createDelegatedAccount).toHaveBeenCalledWith(EXTERNAL_ADDRESS);
   });
 
-  it('installs the inline signer only when standalone AND the address is a known inline account', async () => {
-    mockFlag(true);
-    mockStandalone(true);
+  it.each([
+    ['an installed PWA', true],
+    ['a plain browser tab', false],
+  ])('installs the inline signer for a known inline account in %s', async (_label, standalone) => {
+    // The browser-tab case is the regression guard for the web passkey flow: a
+    // wallet created from a passkey in a tab must sign with its own key here.
+    mockStandalone(standalone);
     mockManifest();
 
     const { makeSigner } = await import('@/context/AeSdkProvider');
@@ -144,8 +111,7 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     // the signing path must build the inline account from the manifest rather
     // than resolve one off the static sdk — which would deep-link out on a
     // device holding the seed, or recurse.
-    mockFlag(true);
-    mockStandalone(true);
+    mockStandalone(false);
     mockManifest();
     mockInlineAccount();
 
@@ -155,29 +121,18 @@ describe('AeSdkProvider makeSigner — inline wallet swap point', () => {
     expect(inlineAccountOpts).toMatchObject({ address: INLINE_ADDRESS, index: 3 });
   });
 
-  it('declines to sign in-page for an external, absent or browser-tab address', async () => {
-    mockFlag(true);
+  it('declines to sign in-page for an external or absent address', async () => {
     mockStandalone(true);
     mockManifest();
     mockInlineAccount();
 
-    const standalone = await import('@/context/AeSdkProvider');
-    expect(standalone.signMessageInline(EXTERNAL_ADDRESS, 'hello')).toBeNull();
-    expect(standalone.signMessageInline(undefined, 'hello')).toBeNull();
-
-    vi.resetModules();
-    vi.doUnmock('@/utils/displayMode');
-    mockStandalone(false);
-    mockManifest();
-    mockInlineAccount();
-
-    const browserTab = await import('@/context/AeSdkProvider');
-    expect(browserTab.signMessageInline(INLINE_ADDRESS, 'hello')).toBeNull();
+    const sdk = await import('@/context/AeSdkProvider');
+    expect(sdk.signMessageInline(EXTERNAL_ADDRESS, 'hello')).toBeNull();
+    expect(sdk.signMessageInline(undefined, 'hello')).toBeNull();
     expect(inlineAccountOpts).toBeNull();
   });
 
   it('the installed inline signer refuses to sign when no vault exists on the device', async () => {
-    mockFlag(true);
     mockStandalone(true);
     mockManifest();
     // The device has no vault (also the jsdom reality — no IndexedDB). The

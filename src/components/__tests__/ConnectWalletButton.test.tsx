@@ -6,13 +6,14 @@ import {
 } from 'vitest';
 
 /**
- * Two conditions: the flag decides whether the inline wallet exists at all,
- * isStandalone() only where an enabled one routes. Previously isStandalone() alone
- * fronted wallet creation, reachable from any browser tab on mainnet.
+ * Routing only: in an installed PWA this button IS the wallet, so it opens
+ * onboarding directly; in a browser tab it opens the connect modal, where the
+ * passkey card sits alongside the external-wallet and agent options. The tab
+ * case must keep opening the modal — routing straight to onboarding there would
+ * take the external-wallet and agent choices away.
  */
 const mocks = vi.hoisted(() => ({
   standalone: false,
-  inlineWalletEnabled: true,
   openModal: vi.fn(),
   addStaticAccount: vi.fn(),
 }));
@@ -20,10 +21,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/utils/displayMode', () => ({
   isStandalone: () => mocks.standalone,
   isIOSWebKit: () => false,
-}));
-
-vi.mock('@/features/wallet/config', () => ({
-  get INLINE_WALLET_ENABLED() { return mocks.inlineWalletEnabled; },
 }));
 
 vi.mock('@/hooks', () => ({
@@ -40,24 +37,11 @@ vi.mock('@/features/wallet/components/WalletOnboarding', () => ({
 // eslint-disable-next-line import/first
 import { ConnectWalletButton } from '../ConnectWalletButton';
 
-describe('ConnectWalletButton — flag gates the wallet, isStandalone routes it', () => {
+describe('ConnectWalletButton — isStandalone routes it', () => {
   beforeEach(() => {
     mocks.openModal.mockClear();
     mocks.addStaticAccount.mockClear();
     mocks.standalone = false;
-    mocks.inlineWalletEnabled = true;
-  });
-
-  it('opens the external connect modal in a standalone PWA when the flag is OFF', async () => {
-    // Strongest point for the gate: a PWA is where onboarding would otherwise open.
-    mocks.inlineWalletEnabled = false;
-    mocks.standalone = true;
-    render(<ConnectWalletButton />);
-
-    fireEvent.click(screen.getByRole('button'));
-
-    expect(mocks.openModal).toHaveBeenCalledWith({ name: 'connect-wallet' });
-    expect(screen.queryByTestId('inline-onboarding')).not.toBeInTheDocument();
   });
 
   it('opens the external connect modal in a plain browser tab', () => {

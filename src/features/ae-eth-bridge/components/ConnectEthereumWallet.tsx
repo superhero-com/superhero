@@ -77,7 +77,7 @@ const ConnectEthereumWallet = ({
     <Button
       onClick={handleConnect}
       disabled={disabled}
-      className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+      className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider transition-all duration-300 ease-in-out ${
         disabled
           ? 'bg-white/10 cursor-not-allowed opacity-60'
           : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'

@@ -26,9 +26,9 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const [activeAccount] = useAtom(activeAccountAtom);
 
   // Refs for contract instances
-  const tokenSaleFactoryRef = useRef<TokenSale>();
-  const tokenInstanceRef = useRef<Contract<ContractMethodsBase>>();
-  const daoRef = useRef<DAO>();
+  const tokenSaleFactoryRef = useRef<TokenSale>(undefined);
+  const tokenInstanceRef = useRef<Contract<ContractMethodsBase>>(undefined);
+  const daoRef = useRef<DAO>(undefined);
 
   // State
   const [state, setState] = useState<DAOState>();

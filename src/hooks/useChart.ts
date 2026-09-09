@@ -10,6 +10,17 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 
+/**
+ * lightweight-charts writes its attribution logo with innerHTML, so the Trusted Types `default`
+ * policy blanks it under the enforcing CSP. The licence's link is carried by
+ * src/components/charts/TradingViewAttribution.tsx instead, so the logo stays off whatever a
+ * caller passes — at creation and on every later `applyOptions`, which would otherwise carry an
+ * `attributionLogo: true` straight back in.
+ */
+function withoutAttributionLogo(options: DeepPartial<ChartOptions>): DeepPartial<ChartOptions> {
+  return { ...options, layout: { ...options.layout, attributionLogo: false } };
+}
+
 interface UseChartProps {
   onChartReady?: (chart: IChartApi) => void;
   height?: number;
@@ -45,11 +56,8 @@ export function useChart({
     if (!chartContainer.current || chart.current) return;
     isChartDisposedRef.current = false;
 
-    const defaultChartOptions: DeepPartial<ChartOptions> = {
-      layout: {
-        textColor: isDarkMode ? 'white' : 'black',
-        background: { color: 'transparent', type: ColorType.Solid },
-      },
+    const callerOptions = latestChartOptionsRef.current;
+    const defaultChartOptions: DeepPartial<ChartOptions> = withoutAttributionLogo({
       grid: {
         vertLines: {
           color: 'rgba(255,255,255, 0.08)',
@@ -75,8 +83,15 @@ export function useChart({
       },
       height,
       width: chartContainer.current.offsetWidth,
-      ...latestChartOptionsRef.current,
-    };
+      ...callerOptions,
+      // Merged after the caller's options, not before: every caller passes its own `layout`,
+      // which would otherwise replace the object wholesale and drop these defaults with it.
+      layout: {
+        textColor: isDarkMode ? 'white' : 'black',
+        background: { color: 'transparent', type: ColorType.Solid },
+        ...callerOptions.layout,
+      },
+    });
 
     const chartInstance = createChart(chartContainer.current, defaultChartOptions);
     chart.current = chartInstance;
@@ -124,7 +139,7 @@ export function useChart({
 
   useEffect(() => {
     if (!chart.current) return;
-    chart.current.applyOptions(chartOptions);
+    chart.current.applyOptions(withoutAttributionLogo(chartOptions));
   }, [chartOptions]);
 
   // Update chart colors when dark mode changes

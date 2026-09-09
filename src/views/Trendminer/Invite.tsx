@@ -12,6 +12,7 @@ import {
   RewardsProgram,
 } from '../../features/trending/components/Invitation';
 import Shell from '../../components/layout/Shell';
+import PageSpaceHero from '../../components/hero-banner/PageSpaceHero';
 import { useAeSdk } from '../../hooks';
 
 export default function Invite() {
@@ -29,7 +30,10 @@ export default function Invite() {
     <Shell>
       <div className="mx-auto px-4 py-2">
         {/* Hero */}
-        <div className="mb-8 py-2">
+        <PageSpaceHero
+          className="mb-8 px-6 py-10 md:px-10 md:py-14"
+          supernovaColor="rgba(0,229,255,.5)"
+        >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold m-0 leading-tight">
             <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               {t('inviteView.heroBrand')}
@@ -37,8 +41,7 @@ export default function Invite() {
             </span>
             <span className="text-white">{t('inviteView.heroRewards')}</span>
           </h1>
-
-        </div>
+        </PageSpaceHero>
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
 

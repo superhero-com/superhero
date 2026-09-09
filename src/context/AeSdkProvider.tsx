@@ -1,10 +1,18 @@
 import WebSocketClient from '@/libs/WebSocketClient';
+import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
+import { INLINE_WALLET_ENABLED } from '@/features/wallet/config';
+import { indexForAddress } from '@/features/wallet/manifest-store';
+import { requestUnlock } from '@/features/wallet/unlock-broker';
+import { createIndexedDbVaultStore } from '@/features/wallet/vault-store';
+import { isStandalone } from '@/utils/displayMode';
 import {
   AeSdk, AeSdkAepp, CompilerHttp, Contract, Encoded, Node,
 } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -87,6 +95,75 @@ const bytesToHex = (bytes: Uint8Array | number[]) => Array.from(bytes)
   .map((byte) => byte.toString(16).padStart(2, '0'))
   .join('');
 
+/** Device vault for the inline wallet. Lazy per call — no IndexedDB is opened until a signature. */
+const inlineVaultStore = createIndexedDbVaultStore();
+
+/**
+ * The in-page unlock + WYSIWYS confirmation surface the inline signer blocks on.
+ * Lazy-loaded so its crypto stack stays in its own chunk and is fetched on demand
+ * — only ever reached when the inline signer actually installs (standalone PWA +
+ * a known inline account), so a plain browser tab never fetches it.
+ */
+const WalletSignPrompt = lazy(() => import('@/features/wallet/components/WalletSignPrompt'));
+
+/**
+ * The vault index `address` derives under when it signs in-page through the
+ * inline wallet, or `null` when it belongs on the delegated (`superhero://`
+ * deep-link + `localStorage` poll + `BroadcastChannel`) relay. ALL of these must
+ * hold for an index:
+ *
+ *  1. `INLINE_WALLET_ENABLED` — the wallet exists in this build at all. It is the
+ *     last backstop in front of real seed custody; `features/wallet/config.ts`
+ *     carries the posture that keeps it off by default.
+ *  2. `isStandalone()` — the app is running as an installed PWA. Routing ONLY,
+ *     never a security boundary: it is documented-spoofable, and under
+ *     same-origin custody forcing the inline path in a plain browser tab changes
+ *     nothing about the security story.
+ *  3. The address is a known inline account in the cleartext manifest. This is
+ *     what keeps a user who connected an EXTERNAL wallet (extension,
+ *     `wallet.superhero.com`, WalletConnect) on the delegated relay even inside
+ *     the installed PWA — we must never claim to sign for a key we don't hold.
+ *
+ * Any one false → the delegated path, completely unchanged. Browser
+ * (non-standalone) mode is untouched in every case. Every route to a signature
+ * resolves the account through this one lookup so they cannot drift.
+ */
+export const inlineSignerIndex = (address: string): number | null => {
+  // First because it is a build-time constant: an off build folds the inline path
+  // away here rather than shipping a live call to it.
+  if (!INLINE_WALLET_ENABLED) return null;
+  if (!isStandalone()) return null;
+  return indexForAddress(address);
+};
+
+/**
+ * The inline account for `address`: it signs in-page with user verification +
+ * WYSIWYS confirm on EVERY signature via `requestUnlock` (`unlock-broker.ts` →
+ * `WalletSignPrompt`), then unseal → derive → sign → drop. No unlocked seed is
+ * cached between signatures — see `inline-signer.ts`.
+ */
+const inlineAccount = (address: string, index: number, networkId?: string) => (
+  createInlineSdkAccount({
+    address, index, store: inlineVaultStore, unlock: requestUnlock, networkId,
+  })
+);
+
+/**
+ * Signer-factory swap point.
+ *
+ * Exported as a plain function (not a hook) so it can be unit-tested in
+ * isolation from React lifecycle / SDK initialization.
+ */
+export const makeSigner = (
+  address: string,
+  createDelegatedAccount: (addr: string) => unknown,
+  networkId?: string,
+): unknown => {
+  const index = inlineSignerIndex(address);
+  if (index === null) return createDelegatedAccount(address);
+  return inlineAccount(address, index, networkId);
+};
+
 const normalizeSignatureResult = (signature: any): string => {
   if (typeof signature === 'string') return signature;
   if (signature instanceof Uint8Array || Array.isArray(signature)) return bytesToHex(signature);
@@ -97,8 +174,24 @@ const normalizeSignatureResult = (signature: any): string => {
   throw new Error('Wallet did not return a valid signature');
 };
 
+/**
+ * In-page signature for an inline account, or `null` when `address` is not one
+ * and the caller must fall through to the delegated relay. Builds the account
+ * here rather than resolving it off the static sdk: that registry can still hold
+ * the DELEGATED account for this address, whose `signMessage` is the provider's
+ * own — signing through it would recurse.
+ */
+export const signMessageInline = (
+  address: string | undefined,
+  message: string,
+): Promise<string> | null => {
+  const index = address ? inlineSignerIndex(address) : null;
+  if (!address || index === null) return null;
+  return inlineAccount(address, index).signMessage(message).then(normalizeSignatureResult);
+};
+
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
-  const aeSdkRef = useRef<AeSdkAepp>();
+  const aeSdkRef = useRef<AeSdkAepp>(undefined);
   const staticAeSdkRef = useRef<AeSdk | null>(null);
   const [sdkInitialized, setSdkInitialized] = useState(false);
   const [activeAccount, setActiveAccount] = useAtom(activeAccountAtom);
@@ -144,6 +237,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     message: string,
     options?: SignMessageOptions,
   ): Promise<string> => {
+    // Inline accounts live on the static sdk, not the AeSdkAepp, so the aepp
+    // attempt below would fail "not connected" and deep-link out to the installed
+    // wallet — from the very device that holds the seed.
+    const inline = signMessageInline(activeAccountRef.current, message);
+    if (inline) return inline;
+
     const signer = aeSdkRef.current as any;
     if (typeof signer?.signMessage === 'function') {
       try {
@@ -280,6 +379,206 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [setTransactionsQueue]);
 
+  /**
+   * Builds the existing delegated (deep-link + relay) signing account object —
+   * UNCHANGED behavior, only extracted into its own callback so `makeSigner`
+   * (see above) can choose between this and the inline in-page signer without
+   * altering this logic.
+   */
+  const createDelegatedSignerAccount = useCallback((address: string) => ({
+    address,
+    signTransaction(
+      tx: Encoded.Transaction,
+      options?: { innerTx?: boolean },
+    ): Promise<Encoded.Transaction> {
+      const uniqueId = Math.random().toString(36).substring(7);
+      const currentUrl = new URL(window.location.href);
+      // reset url
+      currentUrl.searchParams.delete('transaction');
+      currentUrl.searchParams.delete('status');
+
+      const currentDomain = currentUrl.origin;
+
+      // append transaction parameter for success case
+      // const successUrl = new URL(currentUrl.href);
+      const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+      successUrl.searchParams.set('transaction', '{transaction}');
+      successUrl.searchParams.set('status', 'completed');
+
+      // append transaction parameter for failed case
+      const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
+      cancelUrl.searchParams.set('status', 'cancelled');
+
+      const signUrl: any = createDeepLinkUrl({
+        type: 'sign-transaction',
+        transaction: tx,
+        networkId: activeNetwork.networkId,
+        innerTx: options?.innerTx === true ? 'true' : undefined,
+        'replace-caller': 'true',
+        // decode these urls because they will be encoded again
+        'x-success': decodeURI(successUrl.href),
+        'x-cancel': decodeURI(cancelUrl.href),
+      });
+
+      setTransactionsQueue((prev) => ({
+        ...prev,
+        [uniqueId]: {
+          status: 'pending',
+          tx,
+          signUrl,
+        },
+      }));
+
+      return new Promise((resolve, reject) => {
+        let newWindow: Window | null = null;
+        const ackChannel = typeof BroadcastChannel !== 'undefined'
+          ? new BroadcastChannel(TX_QUEUE_ACK_CHANNEL)
+          : null;
+        const windowFeatures = [
+          'name=Superhero Wallet',
+          'width=362',
+          'height=594',
+          'toolbar=false',
+          'location=false',
+          'menubar=false',
+          'popup',
+        ].join(',');
+
+        let interval: NodeJS.Timeout | null = null;
+        let timeout: NodeJS.Timeout | null = null;
+        let isCleanedUp = false;
+        let unloadHandler: (() => void) | null = null;
+        const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
+
+        // Cleanup function to prevent memory leaks
+        const cleanup = () => {
+          if (isCleanedUp) return;
+          isCleanedUp = true;
+
+          if (interval) {
+            clearInterval(interval);
+            interval = null;
+          }
+          if (timeout) {
+            clearTimeout(timeout);
+            timeout = null;
+          }
+          if (unloadHandler && typeof window !== 'undefined') {
+            window.removeEventListener('beforeunload', unloadHandler);
+            unloadHandler = null;
+          }
+          if (newWindow) {
+            newWindow.close();
+            newWindow = null;
+          }
+          ackChannel?.close();
+        };
+
+        openModal({
+          name: 'transaction-confirm',
+          props: {
+            transaction: tx,
+            onConfirm: () => {
+              /**
+               * By setting a name and width/height,
+               * the extension is forced to open in a new window
+               */
+              newWindow = openDeepLink({
+                type: 'sign-transaction',
+                transaction: tx,
+                networkId: activeNetwork.networkId,
+                innerTx: options?.innerTx === true ? 'true' : undefined,
+                'replace-caller': 'true',
+                'x-success': decodeURI(successUrl.href),
+                'x-cancel': decodeURI(cancelUrl.href),
+                target: '_blank',
+                windowFeatures,
+              });
+            },
+            onCancel: () => {
+              cleanup();
+              // Remove transaction from queue
+              const currentQueue = transactionsQueueRef.current;
+              if (Object.keys(currentQueue).includes(uniqueId)) {
+                const newQueue = { ...currentQueue };
+                delete newQueue[uniqueId];
+                setTransactionsQueue(newQueue);
+              }
+              reject(new Error('Transaction cancelled'));
+            },
+          },
+        });
+
+        // Set a timeout to prevent infinite polling (5 minutes max)
+        const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
+        timeout = setTimeout(() => {
+          safeLocalStringStorage.removeItem(storedResultKey);
+          cleanup();
+          reject(new Error('Transaction polling timeout'));
+        }, MAX_POLL_TIME);
+
+        // Handle page unload to cleanup interval
+        if (typeof window !== 'undefined' && !IS_MOBILE) {
+          unloadHandler = () => {
+            cleanup();
+          };
+          window.addEventListener('beforeunload', unloadHandler);
+        }
+
+        interval = setInterval(() => {
+          const currentQueue = transactionsQueueRef.current;
+          const storedResult = safeLocalStringStorage.getItem(storedResultKey);
+          let parsedStoredResult: any = null;
+          try {
+            parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
+          } catch {
+            safeLocalStringStorage.removeItem(storedResultKey);
+          }
+          const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+
+          if (queueEntry) {
+            if (queueEntry.status === 'cancelled') {
+              ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
+              safeLocalStringStorage.removeItem(storedResultKey);
+              cleanup();
+              reject(new Error('Transaction cancelled'));
+              // delete transaction from queue
+              const newQueue = { ...currentQueue };
+              delete newQueue[uniqueId];
+              setTransactionsQueue(newQueue);
+              return;
+            }
+
+            if (
+              queueEntry.status === 'completed'
+            ) {
+              const signedTx = queueEntry.transaction;
+              if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
+                safeLocalStringStorage.removeItem(storedResultKey);
+                cleanup();
+                // delete transaction from queue
+                const newQueue = { ...currentQueue };
+                delete newQueue[uniqueId];
+                setTransactionsQueue(newQueue);
+                reject(new Error('Wallet did not return a signed transaction'));
+                return;
+              }
+              ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
+              safeLocalStringStorage.removeItem(storedResultKey);
+              cleanup();
+              resolve(signedTx as Encoded.Transaction);
+              // delete transaction from queue
+              const newQueue = { ...currentQueue };
+              delete newQueue[uniqueId];
+              setTransactionsQueue(newQueue);
+            }
+          }
+        }, 500);
+      });
+    },
+    signMessage,
+  } as any), [activeNetwork.networkId, setTransactionsQueue, openModal, signMessage]);
+
   const addStaticAccount = useCallback(async (address: string) => {
     // should wait till staticAeSdk is initialized
     await new Promise((resolve) => {
@@ -293,202 +592,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     setActiveAccount(address);
     staticAeSdkRef.current.addAccount(
-      {
-        address,
-        signTransaction(
-          tx: Encoded.Transaction,
-          options?: { innerTx?: boolean },
-        ): Promise<Encoded.Transaction> {
-          const uniqueId = Math.random().toString(36).substring(7);
-          const currentUrl = new URL(window.location.href);
-          // reset url
-          currentUrl.searchParams.delete('transaction');
-          currentUrl.searchParams.delete('status');
-
-          const currentDomain = currentUrl.origin;
-
-          // append transaction parameter for success case
-          // const successUrl = new URL(currentUrl.href);
-          const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
-          successUrl.searchParams.set('transaction', '{transaction}');
-          successUrl.searchParams.set('status', 'completed');
-
-          // append transaction parameter for failed case
-          const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
-          cancelUrl.searchParams.set('status', 'cancelled');
-
-          const signUrl: any = createDeepLinkUrl({
-            type: 'sign-transaction',
-            transaction: tx,
-            networkId: activeNetwork.networkId,
-            innerTx: options?.innerTx === true ? 'true' : undefined,
-            'replace-caller': 'true',
-            // decode these urls because they will be encoded again
-            'x-success': decodeURI(successUrl.href),
-            'x-cancel': decodeURI(cancelUrl.href),
-          });
-
-          setTransactionsQueue((prev) => ({
-            ...prev,
-            [uniqueId]: {
-              status: 'pending',
-              tx,
-              signUrl,
-            },
-          }));
-
-          return new Promise((resolve, reject) => {
-            let newWindow: Window | null = null;
-            const ackChannel = typeof BroadcastChannel !== 'undefined'
-              ? new BroadcastChannel(TX_QUEUE_ACK_CHANNEL)
-              : null;
-            const windowFeatures = [
-              'name=Superhero Wallet',
-              'width=362',
-              'height=594',
-              'toolbar=false',
-              'location=false',
-              'menubar=false',
-              'popup',
-            ].join(',');
-
-            let interval: NodeJS.Timeout | null = null;
-            let timeout: NodeJS.Timeout | null = null;
-            let isCleanedUp = false;
-            let unloadHandler: (() => void) | null = null;
-            const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
-
-            // Cleanup function to prevent memory leaks
-            const cleanup = () => {
-              if (isCleanedUp) return;
-              isCleanedUp = true;
-
-              if (interval) {
-                clearInterval(interval);
-                interval = null;
-              }
-              if (timeout) {
-                clearTimeout(timeout);
-                timeout = null;
-              }
-              if (unloadHandler && typeof window !== 'undefined') {
-                window.removeEventListener('beforeunload', unloadHandler);
-                unloadHandler = null;
-              }
-              if (newWindow) {
-                newWindow.close();
-                newWindow = null;
-              }
-              ackChannel?.close();
-            };
-
-            openModal({
-              name: 'transaction-confirm',
-              props: {
-                transaction: tx,
-                onConfirm: () => {
-                  /**
-                   * By setting a name and width/height,
-                   * the extension is forced to open in a new window
-                   */
-                  newWindow = openDeepLink({
-                    type: 'sign-transaction',
-                    transaction: tx,
-                    networkId: activeNetwork.networkId,
-                    innerTx: options?.innerTx === true ? 'true' : undefined,
-                    'replace-caller': 'true',
-                    'x-success': decodeURI(successUrl.href),
-                    'x-cancel': decodeURI(cancelUrl.href),
-                    target: '_blank',
-                    windowFeatures,
-                  });
-                },
-                onCancel: () => {
-                  cleanup();
-                  // Remove transaction from queue
-                  const currentQueue = transactionsQueueRef.current;
-                  if (Object.keys(currentQueue).includes(uniqueId)) {
-                    const newQueue = { ...currentQueue };
-                    delete newQueue[uniqueId];
-                    setTransactionsQueue(newQueue);
-                  }
-                  reject(new Error('Transaction cancelled'));
-                },
-              },
-            });
-
-            // Set a timeout to prevent infinite polling (5 minutes max)
-            const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
-            timeout = setTimeout(() => {
-              safeLocalStringStorage.removeItem(storedResultKey);
-              cleanup();
-              reject(new Error('Transaction polling timeout'));
-            }, MAX_POLL_TIME);
-
-            // Handle page unload to cleanup interval
-            if (typeof window !== 'undefined' && !IS_MOBILE) {
-              unloadHandler = () => {
-                cleanup();
-              };
-              window.addEventListener('beforeunload', unloadHandler);
-            }
-
-            interval = setInterval(() => {
-              const currentQueue = transactionsQueueRef.current;
-              const storedResult = safeLocalStringStorage.getItem(storedResultKey);
-              let parsedStoredResult: any = null;
-              try {
-                parsedStoredResult = storedResult ? JSON.parse(storedResult) : null;
-              } catch {
-                safeLocalStringStorage.removeItem(storedResultKey);
-              }
-              const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
-
-              if (queueEntry) {
-                if (queueEntry.status === 'cancelled') {
-                  ackChannel?.postMessage({ id: uniqueId, status: 'cancelled' });
-                  safeLocalStringStorage.removeItem(storedResultKey);
-                  cleanup();
-                  reject(new Error('Transaction cancelled'));
-                  // delete transaction from queue
-                  const newQueue = { ...currentQueue };
-                  delete newQueue[uniqueId];
-                  setTransactionsQueue(newQueue);
-                  return;
-                }
-
-                if (
-                  queueEntry.status === 'completed'
-                ) {
-                  const signedTx = queueEntry.transaction;
-                  if (!signedTx || typeof signedTx !== 'string' || !signedTx.startsWith('tx_')) {
-                    safeLocalStringStorage.removeItem(storedResultKey);
-                    cleanup();
-                    // delete transaction from queue
-                    const newQueue = { ...currentQueue };
-                    delete newQueue[uniqueId];
-                    setTransactionsQueue(newQueue);
-                    reject(new Error('Wallet did not return a signed transaction'));
-                    return;
-                  }
-                  ackChannel?.postMessage({ id: uniqueId, status: 'completed' });
-                  safeLocalStringStorage.removeItem(storedResultKey);
-                  cleanup();
-                  resolve(signedTx as Encoded.Transaction);
-                  // delete transaction from queue
-                  const newQueue = { ...currentQueue };
-                  delete newQueue[uniqueId];
-                  setTransactionsQueue(newQueue);
-                }
-              }
-            }, 500);
-          });
-        },
-        signMessage,
-      } as any,
+      makeSigner(address, createDelegatedSignerAccount, activeNetwork.networkId) as any,
       { select: true },
     );
-  }, [setActiveAccount, activeNetwork.networkId, setTransactionsQueue, openModal, signMessage]);
+  }, [setActiveAccount, createDelegatedSignerAccount, activeNetwork.networkId]);
 
   const initSdk = useCallback(async () => {
     // Prevent re-initialization if already initialized
@@ -616,6 +723,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AeSdkContext.Provider value={contextValue}>
       {children}
+      {/* Mounted app-wide (not inside a wallet screen) because a signature can be
+          requested from anywhere; the signer fails closed if it is absent. It
+          only ever renders anything once the inline signer requests an unlock,
+          which only happens in standalone mode — inert in a plain browser tab. */}
+      <Suspense fallback={null}>
+        <WalletSignPrompt />
+      </Suspense>
     </AeSdkContext.Provider>
   );
 };

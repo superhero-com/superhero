@@ -12,6 +12,14 @@ type HeadProps = {
 
 const CANONICAL_ORIGIN = 'https://superhero.com';
 
+// Schema values carry user text (a post headline, a profile bio, a token description). Escaping
+// `<` keeps the payload out of every markup sink it passes on the way into the tag — including
+// the Trusted Types `default` policy, which blanks any string containing a tag and would drop
+// the whole graph. `\u003c` is valid JSON, so consumers still parse the original characters.
+function serializeJsonLd(schema: Record<string, any>): string {
+  return JSON.stringify(schema).replace(/</g, '\\u003c');
+}
+
 export const Head = (props: HeadProps) => {
   const {
     title,
@@ -79,7 +87,7 @@ export const Head = (props: HeadProps) => {
       {/* JSON-LD */}
       {jsonLdArray.map((schema) => (
         <script key={JSON.stringify(schema)} type="application/ld+json">
-          {JSON.stringify(schema)}
+          {serializeJsonLd(schema)}
         </script>
       ))}
     </Helmet>

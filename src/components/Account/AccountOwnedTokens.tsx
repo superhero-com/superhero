@@ -82,7 +82,7 @@ const AccountOwnedTokens = ({
               return (
                 <div
                   key={`${token?.address || token?.name || index}`}
-                  className="owned-token-row px-4 py-3 md:px-4 md:py-2.5 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  className="owned-token-row px-4 py-3 md:px-4 md:py-2.5 rounded-xl relative overflow-hidden transition-all duration-300 ease-in-out"
                 >
                   {/* Compact mobile layout */}
                   <div className="md:hidden">

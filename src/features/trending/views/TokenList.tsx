@@ -108,9 +108,10 @@ const TokenList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
+  const collectionFromUrl = searchParams.get('collection')?.toUpperCase() ?? 'all';
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
-  const [collection, setCollection] = useState<string>('all');
+  const [collection, setCollection] = useState<string>(collectionFromUrl);
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   const [searchInput, setSearchInput] = useState(qFromUrl);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconClose } from '@/icons';
+import { safeHref } from '@/utils/safeHref';
 
 interface OgData {
   title?: string;
@@ -145,9 +146,14 @@ export const LinkPreviewCard = ({ url, onDismiss }: LinkPreviewCardProps) => {
   }
 
   // Full OG card
+  // `data.url` is the `og:url` meta tag scraped from a REMOTE, attacker-controlled page (via the
+  // proxy above) — never trust its scheme. Fall back to the (already http(s)-only, per
+  // `useLinkDetection`) `url` prop, then to an inert `#` if even that somehow isn't safe.
+  const href = safeHref(data.url) ?? safeHref(url) ?? '#';
+
   return (
     <a
-      href={data.url ?? url}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="relative rounded-xl border border-white/10 bg-white/5 overflow-hidden flex gap-0 hover:bg-white/8 hover:border-white/20 transition-all duration-200 group no-underline"

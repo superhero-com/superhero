@@ -402,6 +402,8 @@ const ReplyToFeedItem = memo(({
                       Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
                     ),
                     hashtagVariant: 'post-inline',
+                    // Clamped preview inside a <button>: inline pill only, never the block row.
+                    tokenTagInline: true,
                     trendMentions: (parent as any)?.trend_mentions,
                     hashtagAllowedChars,
                   })}
@@ -410,8 +412,10 @@ const ReplyToFeedItem = memo(({
             </button>
           )}
 
-          {/* Body */}
-          <div className="mt-2 text-[15px] text-foreground leading-snug">
+          {/* Body — sh-pill-container scopes the container query that promotes a wide
+              token pill to its own block on a narrow column. container-type lives here, on
+              the body wrapper, never on the card root (which carries popovers and menus). */}
+          <div className="mt-2 text-[15px] text-foreground leading-snug sh-pill-container">
             {linkify(item.content, {
               knownChainNames: new Set(
                 Object.values(chainNames || {}).map((n) => n?.toLowerCase()),

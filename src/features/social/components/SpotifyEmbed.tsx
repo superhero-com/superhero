@@ -38,9 +38,16 @@ export const SpotifyEmbed = ({ spotifyType, spotifyId, onDismiss }: SpotifyEmbed
         width="100%"
         height={height}
         style={{ border: 'none' }}
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
         title={t('embed.spotifyTitle')}
+        // embed sandboxing: cross-origin embed, previously unsandboxed. Minimal
+        // allowlist verified (headless-browser click-through, see PR) to still render/play the
+        // widget: allow-scripts + allow-same-origin are required for the Spotify player app to
+        // initialize (same-origin storage/cookies on open.spotify.com); allow-popups backs the
+        // "Save on Spotify" / "Open in Spotify" external links. `clipboard-write` above was
+        // dropped (address-swap risk) — nothing in this embed needs it.
+        sandbox="allow-scripts allow-same-origin allow-popups"
       />
     </div>
   );

@@ -203,8 +203,8 @@ const TokenChat = ({ token, mode = 'full' }: Props) => {
   const fromRef = useRef<string | undefined>(undefined);
   const maxRetries = 3;
   const tokenRef = useRef<{ name: string; address: string }>(token);
-  const loadMessagesRef = useRef<(isInitial?: boolean) => void>();
-  const scheduleRetryRef = useRef<(isInitial: boolean) => void>();
+  const loadMessagesRef = useRef<(isInitial?: boolean) => void>(undefined);
+  const scheduleRetryRef = useRef<(isInitial: boolean) => void>(undefined);
 
   // Keep token ref in sync to avoid recreating callbacks
   useEffect(() => {

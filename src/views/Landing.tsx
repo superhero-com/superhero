@@ -53,9 +53,6 @@ function FeatureCard({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main Product Page                                                 */
-/* ------------------------------------------------------------------ */
 export default function Landing() {
   const { t } = useTranslation();
   return (
@@ -135,7 +132,7 @@ export default function Landing() {
             </a>
           </div>
           <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
           >
             <Link
               to="/"

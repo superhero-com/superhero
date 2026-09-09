@@ -21,6 +21,7 @@ import { useCurrencies } from '@/hooks/useCurrencies';
 import { Decimal } from '@/libs/decimal';
 import WebSocketClient from '@/libs/WebSocketClient';
 import { cn } from '@/lib/utils';
+import { TradingViewAttribution } from './TradingViewAttribution';
 import AeButton from '../AeButton';
 
 interface IInterval {
@@ -659,6 +660,7 @@ export default function TokenCandlestickChart({
         </div>
 
         <div className="flex items-center gap-3">
+          <TradingViewAttribution />
           <div className="text-white/60 text-xs font-mono font-medium">
             {moment().format('HH:mm:ss')}
           </div>

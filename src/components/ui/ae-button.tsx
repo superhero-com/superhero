@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { translationSafeChildren } from '@/utils/translationSafeChildren';
 import Spinner from '@/components/Spinner';
 
 const aeButtonVariants = cva(
@@ -85,7 +86,7 @@ const AeButton = React.forwardRef<HTMLButtonElement, AeButtonProps>(
         {loading && (
           <Spinner className="h-4 w-4" />
         )}
-        {children}
+        {asChild ? children : translationSafeChildren(children)}
       </Comp>
     );
   },

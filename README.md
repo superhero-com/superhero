@@ -63,11 +63,42 @@ Configuration is defined in code at `src/config.ts` via the exported `CONFIG` ob
 
 You can override some values at build time using Vite env vars:
 
+`VITE_INLINE_WALLET` — enables the inline (in-page, self-custody) wallet: both
+onboarding and the in-page signer. **Off unless set to the exact string `true`.**
+It fronts real seed custody on mainnet, so enabling it is a deliberate deploy
+decision, not a side effect of merging.
+
+```bash
+VITE_INLINE_WALLET=true npm run dev   # working on the wallet locally
+```
+
+`VITE_WEBAUTHN_RP_ID` — the WebAuthn RP ID for wallet passkeys, pinned into the
+artifact at build time and never derived from the serving host. It defaults to
+`superhero.com`, which is correct for production only. Every non-production build
+must set it to a registrable domain suffix of its own origin, or passkey
+registration fails with a `SecurityError`:
+
+- local dev on `localhost` → `VITE_WEBAUTHN_RP_ID=localhost`
+- PR previews on `pr-<N>-superhero.stg.service.aepps.com` → `VITE_WEBAUTHN_RP_ID=stg.service.aepps.com`
+
+A mismatch fails as a `SecurityError` **before the OS shows anything**, so the
+symptom is "tapping the passkey option does nothing" rather than a visible
+error. Verified working on the `stg.service.aepps.com` previews, which
+`.github/workflows/pr_preview.yaml` configures.
+
+The Netlify deploy previews (`deploy-preview-<N>--*.netlify.app`) set no
+`VITE_WEBAUTHN_RP_ID`, so they bake in the production default and **cannot do
+passkeys** — test passkey flows on the stg preview instead. Wiring them up is
+awkward rather than forgotten: `netlify.app` is on the Public Suffix List, so
+each preview's only legal RP ID is its own full hostname, which means a
+per-deploy value and credentials that don't carry between previews.
+
 ```bash
 # Example overrides at build/dev time
 VITE_SUPERHERO_API_URL=https://api.example.com \
 VITE_SUPERHERO_WS_URL=wss://ws.example.com \
 VITE_X_OAUTH_CLIENT_ID=your_x_oauth_client_id \
+VITE_WEBAUTHN_RP_ID=localhost \
 npm run dev
 
 # Or for a production build
@@ -99,6 +130,8 @@ Defined in `package.json`:
 - `test:e2e:update-snapshots` — update screenshot baselines in Docker (writes to `e2e/` on the host)
 - `test:e2e:host` — run e2e tests on the host (starts dev server if needed)
 - `test:e2e:host:update-snapshots` — update screenshot baselines on the host (visual regression)
+- `generate:pwa-icons` — regenerate `public/icons/*.png` from the shared native-app icon master (on demand only, not part of `build`; see the script's header comment for details)
+- `verify:pwa-assets` — CI/pre-deploy gate: verifies the manifest + icons are served with the correct `Content-Type` from a running origin, e.g. `npm run verify:pwa-assets -- http://localhost:5174`
 
 ## End-to-end tests
 

@@ -36,7 +36,7 @@ const TokenRowSkeleton = ({ showCollectionColumn = true }: TokenRowSkeletonProps
     </tr>
 
     {/* Desktop skeleton row */}
-    <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
+    <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-in-out">
       <td className="cell-fake" />
 
       {/* Rank */}

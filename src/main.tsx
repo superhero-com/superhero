@@ -13,6 +13,8 @@ import ToastProvider from './components/ToastProvider';
 import { TransactionNotificationProvider, TransactionNotificationBanner } from './features/transaction-notification';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
+// Mint the single Trusted Types policy before any component mounts a DOM sink.
+import './utils/trustedTypes';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';

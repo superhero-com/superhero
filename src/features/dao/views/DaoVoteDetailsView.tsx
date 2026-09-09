@@ -2,6 +2,7 @@ import { TokensService } from '@/api/generated';
 import { useDaoVote } from '@/features/dao/hooks/useDaoVote';
 import { useAeSdk } from '@/hooks';
 import { ensureAddress, ensureString } from '@/utils/common';
+import { safeHref } from '@/utils/safeHref';
 import { Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -97,6 +98,11 @@ const DaoVoteDetailsContent = ({
   const isOpen = voteState
     ? currentBlockHeight < voteState.close_height
     : false;
+
+  // `voteState.metadata.link` is free-text supplied by whoever created the poll — no scheme
+  // validation happens on-chain, so a `javascript:`/`data:` payload must be rejected here before
+  // it can ever reach an `href`.
+  const proposalLink = safeHref(voteState?.metadata?.link);
 
   const getVoteStatusColor = () => {
     if (!isOpen) return 'bg-red-500/20 text-red-400 border-red-500/30';
@@ -251,11 +257,11 @@ const DaoVoteDetailsContent = ({
                       </div>
 
                       <div className="space-y-3">
-                        {voteState?.metadata?.link && (
+                        {proposalLink && (
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
                             <span className="text-white/60 font-medium min-w-[120px]">{t('linkLabel')}</span>
                             <a
-                              href={voteState.metadata.link}
+                              href={proposalLink}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-400 hover:text-blue-300 underline"

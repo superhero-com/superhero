@@ -14,12 +14,18 @@ import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
 import { AppHeader } from './components/layout/app-header';
 import FeedbackButton from './components/FeedbackButton';
+import { NotificationsProvider } from './features/notifications';
+import { ChatProvider } from './features/chat/provider/chat.provider';
 import {
   profileEditModalFlowAtom,
   profileEditModalOpenAtom,
   profileEditModalPendingAfterConnectAtom,
 } from './atoms/profileEditModalAtom';
 import ProfileEditModal from './components/modals/ProfileEditModal';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
+import { usePwaInstall } from './hooks/usePwaInstall';
+import { isMobileDevice } from './utils/displayMode';
 
 const CookiesDialog = React.lazy(
   () => import('./components/modals/CookiesDialog'),
@@ -43,11 +49,21 @@ const TipModal = React.lazy(
 const OnboardingModal = React.lazy(
   () => import('./components/modals/OnboardingModal'),
 );
+const SendModal = React.lazy(
+  () => import('./components/modals/SendModal'),
+);
+const ReceiveModal = React.lazy(
+  () => import('./components/modals/ReceiveModal'),
+);
 
 const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
+  const {
+    canPrompt, promptInstall, isIOS, isInstalled,
+  } = usePwaInstall();
+  const [installGuideOpen, setInstallGuideOpen] = React.useState(false);
   const { loadAccountData } = useAccount();
   const {
     attemptReconnection,
@@ -153,50 +169,73 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
-
-      <GlobalNewAccountEducation />
-      <AppHeader />
-      <div className="app-content">
-        <CollectInvitationLinkCard />
-      </div>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <ModalProvider
-          registry={{
-            'cookies-dialog': CookiesDialog,
-            'token-select': TokenSelectModal,
-            'image-gallery': ImageGallery,
-            alert: AlertModal,
-            'transaction-confirm': TransactionConfirmModal,
-            'connect-wallet': ConnectWalletModal,
-            tip: TipModal,
-            onboarding: OnboardingModal,
-          }}
-        />
-      </Suspense>
-      <ProfileEditModal
-        open={profileEditOpen}
-        onClose={(updatedProfile) => {
-          if (updatedProfile) handleProfileEditSuccess();
-          else handleProfileEditDismiss();
-        }}
-        // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
-        // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
-        // them on success. No onSaveError handler on purpose: a failed save is not a
-        // cancel, so the flags survive and the flow can resume when the user retries.
-        onHide={() => setProfileEditOpen(false)}
-        showSkip={profileEditFlow.showSkip}
-        onSkip={handleProfileEditDismiss}
-        onClaimSuccess={
-          profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
-        }
-      />
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
-      {/* TODO: Disable feedback button on mobile for now */}
-      {!isMobile && <FeedbackButton />}
-    </div>
+    <NotificationsProvider>
+      {/* Mounted above the router so the relay pool survives route changes. */}
+      <ChatProvider>
+        <div className="app-container">
+          <GlobalNewAccountEducation />
+          <AppHeader />
+          <div className="app-content">
+            <CollectInvitationLinkCard />
+          </div>
+          <Suspense fallback={<div className="loading-fallback" />}>
+            <ModalProvider
+              registry={{
+                'cookies-dialog': CookiesDialog,
+                'token-select': TokenSelectModal,
+                'image-gallery': ImageGallery,
+                alert: AlertModal,
+                'transaction-confirm': TransactionConfirmModal,
+                'connect-wallet': ConnectWalletModal,
+                tip: TipModal,
+                onboarding: OnboardingModal,
+                send: SendModal,
+                receive: ReceiveModal,
+              }}
+            />
+          </Suspense>
+          <ProfileEditModal
+            open={profileEditOpen}
+            onClose={(updatedProfile) => {
+              if (updatedProfile) handleProfileEditSuccess();
+              else handleProfileEditDismiss();
+            }}
+          // Hide the dialog while a save runs (or when it's dismissed mid-save), keeping the
+          // flow flags (e.g. the post-onboarding redirect) intact — onClose(updated) settles
+          // them on success. No onSaveError handler on purpose: a failed save is not a
+          // cancel, so the flags survive and the flow can resume when the user retries.
+            onHide={() => setProfileEditOpen(false)}
+            showSkip={profileEditFlow.showSkip}
+            onSkip={handleProfileEditDismiss}
+            onClaimSuccess={
+            profileEditFlow.redirectToProfileOnClose ? handleProfileEditSuccess : undefined
+          }
+          />
+          <Suspense fallback={<div className="loading-fallback" />}>
+            <div className="app-routes-container">{useRoutes(routes as any)}</div>
+          </Suspense>
+          {/* TODO: Disable feedback button on mobile for now */}
+          {!isMobile && <FeedbackButton />}
+          {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
+          {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
+              Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
+              so landscape phones don't lose the install affordance. */}
+          {isMobileDevice() && (isIOS || !canPrompt) && (
+            <PwaInstallFab
+              canNativePrompt={canPrompt}
+              onNativePrompt={promptInstall}
+              onOpenGuide={() => setInstallGuideOpen(true)}
+              isInstalled={isInstalled}
+            />
+          )}
+          <PwaInstallGuide
+            open={installGuideOpen}
+            onOpenChange={setInstallGuideOpen}
+          />
+        </div>
+      </ChatProvider>
+    </NotificationsProvider>
   );
 };
 

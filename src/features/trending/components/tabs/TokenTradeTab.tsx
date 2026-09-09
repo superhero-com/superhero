@@ -30,8 +30,10 @@ const ChangePill = ({ token }: { token?: TokenDto | null }) => {
     >
       {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : null}
       {isNegative ? <ArrowDown className="h-3.5 w-3.5" /> : null}
-      {Math.abs(pct).toFixed(2)}
-      %
+      <span>
+        {Math.abs(pct).toFixed(2)}
+        %
+      </span>
     </span>
   );
 };

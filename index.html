@@ -8,7 +8,7 @@
       /* Prevent slow color/fill/stroke fades on first paint (iOS Safari) */
       html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
     </style>
-    <script>
+    <script nonce="__CSP_NONCE__">
       (function () {
         try {
           var ua = navigator.userAgent || '';
@@ -88,10 +88,16 @@
     </script>
     <title>Superhero.com – The All‑in‑One Social + Crypto App</title>
     <link rel="icon" type="image/svg+xml" href="/src/svg/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Superhero" />
   </head>
   <body>
     <div id="root"></div>
-    <script>
+    <script nonce="__CSP_NONCE__">
       // Synchronous runtime configuration injected at container start via envsubst
       window.__SUPERCONFIG__ = {
         BACKEND_URL: '$BACKEND_URL',
@@ -108,10 +114,11 @@
         GOVERNANCE_API_URL: '$GOVERNANCE_API_URL',
         GOVERNANCE_CONTRACT_ADDRESS: '$GOVERNANCE_CONTRACT_ADDRESS',
         EXPLORER_URL: '$EXPLORER_URL',
+        NOSTR_RELAY_URLS: '$NOSTR_RELAY_URLS',
       };
     </script>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
+    <script type="module" src="/src/main.tsx" nonce="__CSP_NONCE__"></script>
+    <script nonce="__CSP_NONCE__">
       // Re-enable transitions after first paint
       window.addEventListener('load', function () {
         requestAnimationFrame(function () {

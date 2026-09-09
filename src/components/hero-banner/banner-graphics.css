@@ -269,3 +269,27 @@
   font-weight: 700;
   color: #fff;
 }
+
+/* ---------- Mobile density ----------
+   The mini-card is the graphic on every slide except Languages, so its padding
+   and row spacing set the height of the whole expanded banner on a phone. There
+   were no mobile rules here at all: the desktop values were inherited straight
+   into the stacked layout, where the card is full-width and much taller. */
+@media (max-width: 1237px) {
+  .bmini {
+    padding: 8px;
+    gap: 5px;
+  }
+
+  .bmini__head {
+    gap: 8px;
+  }
+
+  .bmini__list {
+    gap: 4px;
+  }
+
+  .bmini__list-row {
+    padding: 4px 7px;
+  }
+}

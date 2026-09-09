@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSetAtom } from 'jotai';
 import { HeaderLogo } from '../../../icons';
+import { NotificationBell } from '../../../features/notifications';
 import HeaderWalletButton from './HeaderWalletButton';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
@@ -77,7 +78,7 @@ const WebAppHeader = () => {
       }}
       aria-label={t('aria.primary')}
     >
-      <div className="flex items-center h-16 px-6">
+      <div className="flex items-center justify-between h-16 px-6">
         <Link
           to="/"
           className="flex items-center no-underline hover:no-underline"
@@ -86,6 +87,7 @@ const WebAppHeader = () => {
         >
           <HeaderLogo className="h-8 w-auto" />
         </Link>
+        <NotificationBell />
       </div>
 
       <nav className="flex flex-col gap-1 px-3" aria-label={t('aria.main')}>

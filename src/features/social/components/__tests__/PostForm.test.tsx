@@ -59,6 +59,12 @@ vi.mock('../../../../hooks/useAccount', () => ({
   }),
 }));
 
+// The composer reads the collection charset for the mention picker; isolate the
+// unit test from the factory-schema loader (it fetches via AppService).
+vi.mock('../../../../hooks/useCommunityFactory', () => ({
+  useHashtagAllowedChars: () => '',
+}));
+
 vi.mock('../../../../libs/initializeContractTyped', () => ({
   initializeContractTyped: (...args: any[]) => mockInitializeContractTyped(...args),
 }));
@@ -66,6 +72,10 @@ vi.mock('../../../../libs/initializeContractTyped', () => ({
 vi.mock('../../../../api/generated', () => ({
   PostsService: {
     getById: (...args: any[]) => mockGetById(...args),
+  },
+  // TokenTagOptionsBar reads the live collection alphabet, which loads the factory schema.
+  AppService: {
+    getFactory: vi.fn().mockResolvedValue({ address: 'ct_factory' }),
   },
 }));
 

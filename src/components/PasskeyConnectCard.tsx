@@ -11,9 +11,9 @@ import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '@/hooks';
 import { hasDeviceVault, usePasskeyConnect, type DeviceWallet } from '@/hooks/usePasskeyConnect';
 
-const WalletOnboarding = React.lazy(
-  () => import('@/features/wallet/components/WalletOnboarding'),
-);
+// One import promise for both the lazy element and the warm-up below.
+const loadWalletOnboarding = () => import('@/features/wallet/components/WalletOnboarding');
+const WalletOnboarding = React.lazy(loadWalletOnboarding);
 
 const PasskeyIcon = () => (
   <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
@@ -92,6 +92,11 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
     loading,
   } = usePasskeyConnect();
 
+  // Warm the onboarding chunk while the card is merely on screen. A new user's
+  // tap has to reach a WebAuthn ceremony inside the browser's user-activation
+  // window; fetching bip39/argon2 on that tap is what would blow it.
+  useEffect(() => { loadWalletOnboarding().catch(() => {}); }, []);
+
   // A proven passkey has to reach the caller, or the card is a dead end: the
   // ceremony ran, the vault opened, and nothing connected.
   // Latched against an unmemoised `onConnected`, which re-fires this effect and
@@ -146,7 +151,12 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
               </div>
             )}
           >
+            {/* `entry="passkey"`: the tap on this card WAS the choice, so the
+                flow runs the ceremony instead of asking again on a second
+                screen. Back on its first screen returns to this modal. */}
             <WalletOnboarding
+              entry="passkey"
+              onCancel={resetOnboarding}
               onComplete={(_record, address) => {
                 resetOnboarding();
                 if (address) {
@@ -156,13 +166,6 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
               }}
             />
           </Suspense>
-          <button
-            type="button"
-            onClick={resetOnboarding}
-            className="mt-3 text-xs text-white/40 hover:text-white/60 border-0 bg-transparent cursor-pointer p-0"
-          >
-            {t('common.modals.onboarding.backToOptions', { defaultValue: '← Back to options' })}
-          </button>
         </div>
       </div>
     );

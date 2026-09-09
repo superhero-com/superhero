@@ -3,21 +3,21 @@ import { addVirtualAuthenticator } from './helpers/webauthn';
 import { forceBrowserTab, forceStandalone } from './helpers/display-mode';
 
 /**
- * Which way in you get, per surface.
+ * One sign-in modal, three cards, on both surfaces — and what the middle card means.
  *
  * The passkey wallet is a third kind of account next to "connect the extension"
  * and "connect the wallet app": self-custody, created in-page, with its BIP39
  * seed DERIVED from a platform passkey's PRF output rather than transcribed by
- * the user. It exists on both the website and the installed PWA, but the other
- * ways in do not, and the split is not cosmetic:
+ * the user. The modal that offers it is the same on the website and in the
+ * installed PWA: Passkey, Superhero Wallet, AI agent. The only thing that
+ * differs is what the wallet card does, and the difference is not cosmetic:
  *
- *  1. Passkey — BOTH surfaces. Nothing is typed, nothing redirects.
- *  2. Import an existing wallet (seed phrase / private key) — PWA ONLY. In a
- *     browser tab the answer to "I already have a wallet" is Connect, which
- *     hands signing to the extension or wallet app and never sees the secret.
- *  3. Connect an external wallet — WEB ONLY. That handoff is a redirect, and a
- *     redirect out of an installed PWA does not come back cleanly, which is
- *     exactly why the app takes the key directly instead.
+ *  1. Passkey — BOTH surfaces, and the tap on the card runs the ceremony.
+ *  2. Wallet card in the installed app — IMPORT (seed phrase / private key),
+ *     straight onto the field. The connect handoff is a redirect, and a
+ *     redirect out of an installed PWA does not come back cleanly.
+ *  3. Wallet card in a browser tab — CONNECT the extension or wallet app,
+ *     which signs; this page never sees a secret. No import on the web.
  *  4. Chat — PWA ONLY. It derives a Nostr identity from the wallet seed and
  *     keeps key material in client storage; a browser tab has no durable store
  *     for it (Safari's 7-day ITP eviction, "clear browsing data"), and losing
@@ -51,87 +51,89 @@ async function clickConnect(page: Page) {
 const chooseScreen = (page: Page) => page.getByText(/your keys stay on this device, encrypted/i);
 const importOption = (page: Page) => page.getByRole('button', { name: /import an existing wallet/i });
 
-test.describe('the passkey wallet is offered on both surfaces', () => {
-  test('a browser tab lists Passkey in the connect modal, ready to use', async ({ page }) => {
-    await forceBrowserTab(page);
-    const auth = await addVirtualAuthenticator(page);
-    await clickConnect(page);
+/** The three cards, in the one modal both surfaces share. */
+const modal = (page: Page) => page.getByRole('dialog');
+const passkeyCard = (page: Page) => modal(page).getByRole('button', { name: /^passkey/i });
+const walletCard = (page: Page) => modal(page).getByTestId('wallet-option');
+const agentCard = (page: Page) => modal(page).getByRole('button', { name: /onboard your ai agent/i });
 
-    const modal = page.getByRole('dialog');
-    const passkey = modal.getByRole('button', { name: /^passkey/i });
+/** The import flow's first screen — the phrase field, no choice screen before it. */
+const importScreen = (page: Page) => page.getByRole('heading', { name: /import your wallet/i })
+  .filter({ visible: true });
 
-    await expect(passkey).toBeVisible();
-    // Enabled, not merely present: the card renders disabled with "Not available
-    // on this device/browser" wherever no platform authenticator exists, and a
-    // regression that hid the wallet again would look exactly like that.
-    await expect(passkey).toBeEnabled();
-    await expect(passkey).not.toContainText(/not available/i);
+test.describe('one sign-in modal, three cards, on both surfaces', () => {
+  ([
+    { name: 'a browser tab', force: forceBrowserTab },
+    { name: 'the installed app', force: forceStandalone },
+  ] as const).forEach((surface) => {
+    test(`${surface.name}: Connect opens the modal with Passkey, Wallet and Agent`, async ({ page }) => {
+      // The PWA used to skip this modal and open the onboarding overlay's own
+      // choice screen instead — a second, different set of options in front of
+      // the same three. Same modal, same cards, same order, everywhere now.
+      await surface.force(page);
+      const auth = await addVirtualAuthenticator(page);
+      await clickConnect(page);
 
-    await auth.dispose();
-  });
+      await expect(passkeyCard(page)).toBeVisible();
+      await expect(walletCard(page)).toBeVisible();
+      await expect(agentCard(page)).toBeVisible();
+      // No onboarding overlay behind or in front of it.
+      await expect(chooseScreen(page)).toHaveCount(0);
 
-  test('the installed app opens onboarding straight onto the passkey option', async ({ page }) => {
-    await forceStandalone(page);
-    const auth = await addVirtualAuthenticator(page);
-    await clickConnect(page);
+      // Enabled, not merely present: the passkey card renders disabled with "Not
+      // available on this device/browser" wherever no platform authenticator
+      // exists, and a regression that hid the wallet again would look like that.
+      await expect(passkeyCard(page)).toBeEnabled();
+      await expect(passkeyCard(page)).not.toContainText(/not available/i);
 
-    await expect(chooseScreen(page)).toBeVisible();
-    await expect(page.getByRole('button', { name: /continue with passkey/i })).toBeEnabled();
-
-    await auth.dispose();
+      await auth.dispose();
+    });
   });
 });
 
-test.describe('importing an existing wallet is PWA-only', () => {
-  test('the installed app offers Import', async ({ page }) => {
-    await forceStandalone(page);
-    const auth = await addVirtualAuthenticator(page);
-    await clickConnect(page);
-
-    await expect(chooseScreen(page)).toBeVisible();
-    await expect(importOption(page)).toBeVisible();
-
-    await auth.dispose();
-  });
-
-  test('a browser tab reaches the same screen with no way to paste a secret', async ({ page }) => {
-    // Same screen, one surface apart — reached in a tab by tapping Passkey with
-    // no vault on the device, which hands off to this overlay. Asserting the
-    // screen is present before asserting the absence is what stops this passing
-    // vacuously on a screen that never rendered.
+test.describe('the wallet card is the one thing that differs', () => {
+  test('a browser tab: it expands, under its own header, into Connect', async ({ page }) => {
     await forceBrowserTab(page);
     const auth = await addVirtualAuthenticator(page);
     await clickConnect(page);
-    await page.getByRole('dialog').getByRole('button', { name: /^passkey/i }).click();
 
-    await expect(chooseScreen(page)).toBeVisible();
-    await expect(page.getByRole('button', { name: /continue with passkey/i })).toBeVisible();
+    await expect(walletCard(page)).toContainText(/connect/i);
+    await walletCard(page).click();
+
+    const connect = modal(page).getByRole('button', { name: /connect wallet/i });
+    await expect(connect).toBeVisible();
+    // Under the wallet card, above the agent card — not appended after the list.
+    const walletY = (await walletCard(page).boundingBox())!.y;
+    const connectY = (await connect.boundingBox())!.y;
+    const agentY = (await agentCard(page).boundingBox())!.y;
+    expect(connectY).toBeGreaterThan(walletY);
+    expect(connectY).toBeLessThan(agentY);
+    // And no way to paste a secret on the web.
+    await expect(importScreen(page)).toHaveCount(0);
     await expect(importOption(page)).toHaveCount(0);
 
     await auth.dispose();
   });
-});
 
-test.describe('connecting an external wallet is web-only', () => {
-  test('a browser tab offers the Superhero Wallet handoff', async ({ page }) => {
-    await forceBrowserTab(page);
-    const auth = await addVirtualAuthenticator(page);
-    await clickConnect(page);
-
-    await expect(page.getByRole('dialog').getByText(/superhero wallet/i).first()).toBeVisible();
-
-    await auth.dispose();
-  });
-
-  test('the installed app never offers it — Connect goes to the in-page wallet', async ({ page }) => {
-    // The redirect that does not come back. Connect must not open the modal at
-    // all here, so this asserts the routing, not just the absence of a card.
+  test('the installed app: it opens the import flow straight onto the phrase field', async ({ page }) => {
+    // The connect handoff is a redirect that does not come back cleanly from an
+    // installed app, so here the card imports instead — and goes directly to
+    // the field, with no choice screen in between.
     await forceStandalone(page);
     const auth = await addVirtualAuthenticator(page);
     await clickConnect(page);
 
-    await expect(chooseScreen(page)).toBeVisible();
-    await expect(page.getByText(/browser extension or mobile app/i)).toHaveCount(0);
+    await expect(walletCard(page)).toContainText(/import/i);
+    await walletCard(page).click();
+
+    await expect(importScreen(page)).toBeVisible();
+    await expect(chooseScreen(page)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /connect wallet/i })).toHaveCount(0);
+
+    // Back returns to the modal, not to a choice screen the user never saw.
+    await page.getByRole('button', { name: /go back/i }).click();
+    await expect(walletCard(page)).toBeVisible();
+    await expect(importScreen(page)).toHaveCount(0);
 
     await auth.dispose();
   });
@@ -176,32 +178,24 @@ test.describe('the passkey wallet can actually be created', () => {
   // is what makes that possible — the BIP39 seed is derived from its output — so
   // skip rather than fail where the virtual authenticator cannot offer it.
   ([
-    // `viaModal` is the entry path, not a detail: in a tab Connect opens the
-    // modal and the overlay is reached through its Passkey card, while in the
-    // app Connect opens the overlay directly. Stated per surface rather than
-    // sniffed at runtime — a locator count taken before the dialog renders is
-    // zero, which silently skips the click and fails much further down.
-    { name: 'the installed app', force: forceStandalone, viaModal: false },
-    { name: 'a browser tab', force: forceBrowserTab, viaModal: true },
+    { name: 'the installed app', force: forceStandalone },
+    { name: 'a browser tab', force: forceBrowserTab },
   ] as const).forEach((surface) => {
-    test(`${surface.name}: a passkey ceremony produces a signable wallet, nothing transcribed`, async ({ page }) => {
+    test(`${surface.name}: tapping Passkey runs the ceremony and produces a signable wallet`, async ({ page }) => {
       test.setTimeout(120_000);
 
       await surface.force(page);
       const auth = await addVirtualAuthenticator(page);
       test.skip(!auth.prf, 'this Chrome build has no PRF virtual authenticator');
       await clickConnect(page);
-
-      if (surface.viaModal) {
-        await page.getByRole('dialog').getByRole('button', { name: /^passkey/i }).click();
-      }
-
-      await expect(chooseScreen(page)).toBeVisible();
       await expect(await inlineManifest(page)).toBeNull();
 
-      await page.getByRole('button', { name: /continue with passkey/i }).click();
-
-      // Argon2id runs between the ceremony and the next screen.
+      // The tap on the card IS the choice: no second screen asking passkey vs
+      // phrase vs import, no second tap. Straight into the ceremony.
+      await passkeyCard(page).click();
+      // Argon2id runs between the ceremony and the next screen. The choice
+      // screen must not have appeared along the way.
+      await expect(chooseScreen(page)).toHaveCount(0);
       await expect(page.getByRole('heading', { name: /save your recovery code/i }))
         .toBeVisible({ timeout: 90_000 });
       await expect(page.getByText(/^[0-9A-F]{4}(-[0-9A-F]{4}){5,}$/)).toBeVisible();

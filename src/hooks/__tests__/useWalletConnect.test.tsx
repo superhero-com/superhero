@@ -383,4 +383,96 @@ describe('useWalletConnect', () => {
 
     expect(walletConnectMocks.mockConnectToWallet).toHaveBeenCalledTimes(1);
   });
+
+  it('preserves a valid persisted session when a reconnect prompt is cancelled', async () => {
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+    localStorage.setItem('account:activeAccount', 'ak_saved');
+    walletConnectMocks.mockConnectToWallet.mockRejectedValueOnce(new Error('prompt dismissed'));
+
+    const store = createStore();
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+    const wallet = {
+      info: { id: 'wallet-id', type: 'extension', origin: 'https://wallet.example' },
+      getConnection: () => ({ connection: true }) as any,
+    };
+
+    let res: string | null = 'sentinel';
+    await act(async () => {
+      const pending = result.current.connectWallet();
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: wallet, wallets: { wallet } });
+      res = await pending;
+    });
+
+    expect(res).toBeNull();
+    // The session the user never chose to leave must survive a cancelled prompt.
+    expect(walletConnectMocks.mockSetActiveAccount).not.toHaveBeenCalledWith(undefined);
+    expect(walletConnectMocks.mockSetAccounts).not.toHaveBeenCalledWith([]);
+    expect(localStorage.getItem('account:activeAccount')).toBe('ak_saved');
+    expect(store.get(walletInfoAtom)).toEqual({ name: 'wallet' });
+  });
+
+  it('reconnects a persisted session through connectWallet without clearing it', async () => {
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+    walletConnectMocks.mockScanForAccounts.mockResolvedValue('ak_saved');
+
+    const store = createStore();
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+    const wallet = {
+      info: { id: 'wallet-id', type: 'extension', origin: 'https://wallet.example' },
+      getConnection: () => ({ connection: true }) as any,
+    };
+
+    let res: string | null = null;
+    await act(async () => {
+      const pending = result.current.connectWallet();
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: wallet, wallets: { wallet } });
+      res = await pending;
+    });
+
+    expect(res).toBe('ak_saved');
+    expect(result.current.walletConnected).toBe(true);
+    expect(walletConnectMocks.mockConnectToWallet).toHaveBeenCalledWith({ connection: true });
+    expect(walletConnectMocks.mockSetActiveAccount).not.toHaveBeenCalledWith(undefined);
+  });
+
+  it('explicit connect with no persisted session still tears down on a cancelled prompt', async () => {
+    // No active account and no walletInfo -> cold connect path, not a reconnect.
+    localStorage.setItem('account:activeAccount', 'ak_stale');
+    walletConnectMocks.mockConnectToWallet.mockRejectedValueOnce(new Error('cancelled'));
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper });
+    const wallet = {
+      info: { id: 'wallet-id', type: 'extension', origin: 'https://wallet.example' },
+      getConnection: () => ({ connection: true }) as any,
+    };
+
+    let res: string | null = 'sentinel';
+    await act(async () => {
+      const pending = result.current.connectWallet();
+      // Cold connect awaits an up-front SDK disconnect before scanning; flush it.
+      for (let i = 0; i < 10 && !walletConnectMocks.getLatestWalletHandler(); i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.resolve();
+      }
+      walletConnectMocks.getLatestWalletHandler()?.({ newWallet: wallet, wallets: { wallet } });
+      res = await pending;
+    });
+
+    expect(res).toBeNull();
+    // The reconnect short-circuit must not swallow an explicit connect's reset.
+    expect(walletConnectMocks.mockSetActiveAccount).toHaveBeenCalledWith(undefined);
+    expect(walletConnectMocks.mockSetAccounts).toHaveBeenCalledWith([]);
+    // A failed cold connect still hard-clears any stale persisted session.
+    expect(localStorage.getItem('account:activeAccount')).toBeNull();
+  });
 });

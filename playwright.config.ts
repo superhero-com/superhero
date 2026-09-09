@@ -20,7 +20,13 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }],
   webServer: {
-    command: 'npm run dev',
+    // VITE_WEBAUTHN_RP_ID is pinned into the bundle at build time and is never
+    // derived from window.location (src/features/wallet/webauthn.ts), so it
+    // defaults to superhero.com — which is not a registrable suffix of
+    // localhost, and every passkey ceremony against this server would fail with
+    // a SecurityError before reaching any product logic. Pin it to the origin
+    // these tests actually run on.
+    command: 'VITE_WEBAUTHN_RP_ID=localhost npm run dev',
     port: 5173,
     reuseExistingServer: !process.env.CI,
   },

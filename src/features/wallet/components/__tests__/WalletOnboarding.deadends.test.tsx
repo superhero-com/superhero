@@ -16,6 +16,9 @@ import {
 const mocks = vi.hoisted(() => ({
   record: null as unknown,
   manifest: null as unknown,
+  // Installed app by default: importing an existing wallet is offered there and
+  // nowhere else, so the import dead-ends below only exist on that surface.
+  standalone: true,
   createWalletFromPasskey: vi.fn(),
   addRecoveryCodeFactor: vi.fn(),
   clear: vi.fn(() => Promise.resolve()),
@@ -27,7 +30,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/utils/displayMode', () => ({
-  isStandalone: () => false,
+  isStandalone: () => mocks.standalone,
   isIOSWebKit: () => false,
   isMobileDevice: () => true,
 }));
@@ -97,6 +100,7 @@ describe('WalletOnboarding — no step is a dead end', () => {
   beforeEach(() => {
     mocks.record = null;
     mocks.manifest = null;
+    mocks.standalone = true;
     mocks.createWalletFromPasskey.mockReset();
     mocks.addRecoveryCodeFactor.mockReset();
     mocks.addPasskeyFactor.mockReset();
@@ -455,6 +459,19 @@ describe('WalletOnboarding — no step is a dead end', () => {
       // `passphrase` renders the shared error note, so a stale one resurfaces here —
       // two screens on from the path that actually failed.
       expect(screen.queryByText(/PRF unsupported on this device/)).not.toBeInTheDocument();
+    });
+
+    it('offers no import path at all in a browser tab, and is still not a dead end', async () => {
+      // Import is the installed app's answer to "I already have a wallet"; the
+      // web's is Connect, which never sees the secret. Removing a control from a
+      // screen that must always offer a way forward is the risk, so this pins
+      // both halves: the import route is gone AND both create routes remain.
+      mocks.standalone = false;
+      await mount();
+
+      expect(screen.queryByRole('button', { name: /import an existing wallet/i })).toBeNull();
+      expect(await screen.findByRole('button', { name: /continue with passkey/i })).toBeEnabled();
+      expect(screen.getByRole('button', { name: /create with a phrase/i })).toBeEnabled();
     });
   });
 });

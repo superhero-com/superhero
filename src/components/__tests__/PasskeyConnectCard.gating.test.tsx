@@ -10,14 +10,17 @@ import {
 /**
  * Creation and signing must agree on where the inline wallet exists.
  *
- * `makeSigner` installs the in-page signer only in a standalone PWA, but this
- * card offered wallet creation in a plain browser tab — producing a real,
- * fundable account whose signatures were routed to the external wallet, which
- * never held that key. Same two conditions on both sides now.
+ * They now agree by being unconditional on both sides: this card is offered on
+ * every surface, and `inlineSignerIndex` installs the in-page signer for any
+ * address in the manifest — which is exactly the set of wallets this card can
+ * create. The previous disagreement is what these tests guard against: the card
+ * was offered in a browser tab while the signer refused there, so a real,
+ * fundable account was created whose signatures went to an external wallet that
+ * never held its key. The fix went the other way (signer follows the card), so
+ * the browser-tab case below asserts the card renders rather than disappears.
  */
 const mocks = vi.hoisted(() => ({
   standalone: true,
-  inlineWalletEnabled: true,
   trigger: vi.fn(),
   openDeviceWallet: vi.fn(),
   deviceWallet: 'none' as string,
@@ -25,10 +28,6 @@ const mocks = vi.hoisted(() => ({
   errorMsg: null as string | null,
   connectedAddress: null as string | null,
   addStaticAccount: vi.fn(),
-}));
-
-vi.mock('@/features/wallet/config', () => ({
-  get INLINE_WALLET_ENABLED() { return mocks.inlineWalletEnabled; },
 }));
 
 vi.mock('@/utils/displayMode', () => ({
@@ -62,10 +61,9 @@ const mount = async () => {
   await act(async () => { render(<PasskeyConnectCard onConnected={vi.fn()} />); });
 };
 
-describe('PasskeyConnectCard — offered only where the wallet can actually sign', () => {
+describe('PasskeyConnectCard — offered everywhere the wallet can actually sign', () => {
   beforeEach(() => {
     mocks.standalone = true;
-    mocks.inlineWalletEnabled = true;
     mocks.trigger.mockClear();
     mocks.openDeviceWallet.mockClear();
     mocks.deviceWallet = 'none';
@@ -80,16 +78,12 @@ describe('PasskeyConnectCard — offered only where the wallet can actually sign
     expect(screen.getByRole('button', { name: /passkey/i })).toBeInTheDocument();
   });
 
-  it('renders nothing in a plain browser tab, where makeSigner returns the delegated account', async () => {
+  it('offers the passkey option in a plain browser tab too', async () => {
+    // The third login option on the website. It disappeared when the card was
+    // gated to standalone + a build flag, leaving the modal with two cards.
     mocks.standalone = false;
-    const { container } = render(<PasskeyConnectCard onConnected={vi.fn()} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it('renders nothing when the wallet is switched off, even in a PWA', async () => {
-    mocks.inlineWalletEnabled = false;
-    const { container } = render(<PasskeyConnectCard onConnected={vi.fn()} />);
-    expect(container).toBeEmptyDOMElement();
+    await mount();
+    expect(screen.getByRole('button', { name: /passkey/i })).toBeInTheDocument();
   });
 
   it('names this device’s passphrase-only wallet instead of a passkey it does not have', async () => {
@@ -133,7 +127,6 @@ describe('PasskeyConnectCard — offered only where the wallet can actually sign
 describe('PasskeyConnectCard — a proven passkey actually connects', () => {
   beforeEach(() => {
     mocks.standalone = true;
-    mocks.inlineWalletEnabled = true;
     mocks.addStaticAccount.mockClear();
     mocks.connectedAddress = null;
   });

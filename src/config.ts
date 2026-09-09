@@ -210,21 +210,19 @@ function isPlaceholder(v: unknown): boolean {
 }
 
 /**
- * Keys where an explicitly empty runtime value is MEANINGFUL and must survive the
- * `isPlaceholder` filter.
+ * True when a runtime value should replace the built-in default.
  *
- * `NOSTR_RELAY_URLS` now has a built-in default, so discarding `''` would make it
- * impossible to turn chat off: the default would win and chat would stay live on a
- * deployment that deliberately blanked it. An unsubstituted `$NOSTR_RELAY_URLS`
- * placeholder is still discarded — that is a broken deploy, not an intent to
- * disable.
+ * An empty string never counts, `NOSTR_RELAY_URLS` included. It used to: the key
+ * was carved out so that blanking the env var deliberately turned chat off. In
+ * practice nothing ever blanked it deliberately — `ssh_deploy.yaml` passed an
+ * unset workflow input straight through as `-e NOSTR_RELAY_URLS=""`, so every
+ * deployed container overrode the built-in relay with '' and served chat dark
+ * while the bundle and the CSP both carried `wss://relay.superhero.chat`. The
+ * relay is not a secret and lives in `COMMON_CONFIG`; a blank runtime value is
+ * now treated as "not configured" like every other key, so the default wins.
  */
-const EMPTY_MEANS_OFF: ReadonlySet<string> = new Set(['NOSTR_RELAY_URLS']);
-
-/** True when a runtime value should replace the built-in default. */
-function isMeaningfulRuntimeValue(key: string, v: unknown): boolean {
+function isMeaningfulRuntimeValue(_key: string, v: unknown): boolean {
   if (v === undefined || v === null) return false;
-  if (EMPTY_MEANS_OFF.has(key) && typeof v === 'string' && v.trim() === '') return true;
   return !isPlaceholder(v);
 }
 

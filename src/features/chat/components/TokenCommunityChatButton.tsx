@@ -9,6 +9,7 @@
  */
 import { Link } from 'react-router-dom';
 import { MessagesSquare } from 'lucide-react';
+import { isStandalone } from '@/utils/displayMode';
 
 type Props = {
   saleAddress: string;
@@ -17,6 +18,15 @@ type Props = {
 
 const TokenCommunityChatButton = ({ saleAddress, symbol }: Props) => {
   if (!saleAddress) return null;
+  // Chat is advertised in the installed app only — the same gate the navigation
+  // applies (see `navigationItems.pwa.test.ts`). Chat derives a Nostr identity
+  // from the wallet seed and keeps key material in client storage; a browser tab
+  // has no durable store for it (Safari's 7-day ITP eviction, "clear browsing
+  // data"), and losing that key silently loses the ability to decrypt your own
+  // history. This button is on the token page rather than in the nav, so it was
+  // missed when the nav gate went in and was the one entry point still offering
+  // chat on the web.
+  if (!isStandalone()) return null;
 
   return (
     <Link

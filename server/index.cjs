@@ -6,6 +6,9 @@ const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
 const { createCspPolicy, CSP_REPORT_PATH } = require('./lib/csp.cjs');
 const { decodedPath, isSubresourceRequest } = require('./lib/subresource.cjs');
+const { buildFaqPageJsonLd } = require('./lib/faq-content.cjs');
+const hubs = require('./lib/hubs.cjs');
+const { createSitemapEngine } = require('./lib/sitemap.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -62,6 +65,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${origin}/`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: origin,
+      },
     };
   }
 
@@ -72,6 +81,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
       canonical: `${origin}/trends/tokens`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${origin}/trends/tokens`,
+      },
     };
   }
 
@@ -108,6 +123,22 @@ async function buildMeta(pathname, origin){
           canonical: `${origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
           ogType: 'article',
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'SocialMediaPosting',
+            headline: truncate(content,120) || 'Post',
+            datePublished: data?.created_at,
+            dateModified: data?.updated_at || data?.created_at,
+            author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
+            image: media,
+            interactionStatistic: [
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'CommentAction',
+                userInteractionCount: data?.total_comments || 0,
+              },
+            ],
+          },
         };
       }
     } catch {}
@@ -119,16 +150,26 @@ async function buildMeta(pathname, origin){
   if (um) {
     const address = um[1];
     let bio = '';
+    let display = address;
     try {
       const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); }
+      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); if (data?.chain_name) display = String(data.chain_name); }
     } catch {}
     return {
-      title: `${address} – Profile – Superhero`,
+      // chain_name-first title, matching netlify/edge-functions/seo.ts; raw address only when unnamed.
+      title: `${display} – Profile – Superhero`,
       description: bio ? truncate(bio,200) : 'View profile on Superhero, the crypto social network.',
       canonical: `${origin}/users/${address}`,
       ogImage: `${origin}/og-default.png`,
       ogType: 'profile',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: display,
+        identifier: address,
+        description: bio || undefined,
+        image: `${origin}/og-default.png`,
+      },
     };
   }
 
@@ -144,7 +185,20 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return {
+          title: `Buy #${symbol} on Superhero.com`,
+          description: truncate(desc,200),
+          canonical: `${origin}/trends/tokens/${tokenName}`,
+          ogImage: tokenImg || `${origin}/og-default.png`,
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'CryptoCurrency',
+            name: data?.name || data?.symbol,
+            symbol: data?.symbol,
+            identifier: data?.address || data?.sale_address,
+            image: tokenImg,
+          },
+        };
       }
     } catch {}
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
@@ -162,7 +216,20 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return {
+          title: `Buy #${symbol} on Superhero.com`,
+          description: truncate(desc,200),
+          canonical: `${origin}/trends/tokens/${tokenName}`,
+          ogImage: tokenImg || `${origin}/og-default.png`,
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'CryptoCurrency',
+            name: data?.name || data?.symbol,
+            symbol: data?.symbol,
+            identifier: data?.address || data?.sale_address,
+            image: tokenImg,
+          },
+        };
       }
     } catch {}
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
@@ -224,7 +291,13 @@ async function buildMeta(pathname, origin){
     return { title: 'Privacy Policy – Superhero', description: 'How Superhero handles your data.', canonical: `${origin}/privacy`, ogImage: `${origin}/og-default.png` };
   }
   if (pathname === '/faq') {
-    return { title: 'FAQ – Superhero', description: 'Frequently asked questions.', canonical: `${origin}/faq`, ogImage: `${origin}/og-default.png` };
+    return {
+      title: 'FAQ – Superhero',
+      description: 'Frequently asked questions.',
+      canonical: `${origin}/faq`,
+      ogImage: `${origin}/og-default.png`,
+      jsonLd: buildFaqPageJsonLd(),
+    };
   }
   if (pathname.startsWith('/meet')) {
     return { title: 'Meet – Superhero', description: 'Join a Superhero meeting.', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
@@ -236,6 +309,76 @@ async function buildMeta(pathname, origin){
 // The policy itself lives in ./lib/csp.cjs so scripts/check-csp-origins.cjs can diff its
 // allowlist against the built bundle and the directives can be asserted in tests.
 const { buildCsp } = createCspPolicy();
+
+// --- crawlable internal-link hubs -----------------------------------------------------
+// Server-rendered directory pages that emit real <a> links to gate-passing profiles and posts,
+// giving user/post pages the crawl path token pages already have via /trends/tokens. These are
+// standalone HTML (no SPA bundle, no scripts), so they carry their own tight, script-free CSP
+// rather than the nonce'd application policy above.
+function hubCsp() {
+  return [
+    "default-src 'none'",
+    "style-src 'unsafe-inline'",
+    "img-src 'self' https: data:",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
+function hubPageParam(req) {
+  const p = parseInt(req.query.page, 10);
+  return Number.isFinite(p) && p > 0 ? p : 1;
+}
+
+async function fetchListPage(pathAndQuery) {
+  const r = await fetch(`${API_BASE.replace(/\/$/, '')}${pathAndQuery}`, { headers: { accept: 'application/json' } });
+  if (!r.ok) return null;
+  return r.json();
+}
+
+function sendHub(res, html, status = 200) {
+  res.status(status);
+  res.setHeader('Content-Security-Policy', hubCsp());
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+}
+
+async function sendHubIndex(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  sendHub(res, hubs.renderHubIndex(origin));
+}
+
+async function sendUserHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/accounts?order_by=total_tx_count&order_direction=DESC&limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = hubs.filterHubAccounts(items).map((a) => hubs.accountHubLink(a, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  const html = hubs.hubListPage({ section: 'users', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
+}
+
+async function sendPostHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/posts?limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = items.map((p) => hubs.postHubLink(p, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  const html = hubs.hubListPage({ section: 'posts', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
+}
 
 // The single place the SPA document is rendered. It reuses the nonce the security-header
 // middleware already put on the response, so the header and the document's
@@ -305,6 +448,27 @@ app.post(
 
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
 
+// Curated sitemap: an in-memory buffer a background timer refreshes (see lib/sitemap.cjs). This
+// handler MUST be registered before express.static below — dist/sitemap.xml is a real file copied
+// from public/, and static would win otherwise (same class as the HARDEN-04 `index: false` bug).
+// Until the first build lands, fall back to that static 9-URL file so a cold start never 404s.
+const sitemap = createSitemapEngine({ apiBase: API_BASE });
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  const buffer = sitemap.getBuffer();
+  if (buffer) {
+    res.setHeader('X-Sitemap-Source', 'buffer');
+    res.setHeader('X-Sitemap-Generated-At', sitemap.getGeneratedAt());
+    return res.send(buffer);
+  }
+  res.setHeader('X-Sitemap-Source', 'static-fallback');
+  try {
+    return res.send(fs.readFileSync(path.join(DIST_DIR, 'sitemap.xml'), 'utf8'));
+  } catch (e) {
+    return res.status(503).send('<!-- sitemap warming up -->');
+  }
+});
+
 // Route literal *.html requests to the document handler before express.static can answer them
 // off disk. Suffix-matched on the decoded path, so it also covers `/./index.html` and, on a
 // case-insensitive filesystem, `/INDEX.HTML`.
@@ -334,6 +498,12 @@ app.use((req, res, next) => {
   if (!isSubresourceRequest(decodedPath(req.path), req.get('sec-fetch-dest'))) return next();
   return res.status(404).type('text/plain').send('Not found');
 });
+
+// Crawlable hubs — registered before the SPA routes and catch-all so they render
+// their own link lists rather than falling through to the client bundle.
+app.get('/hubs', sendHubIndex);
+app.get('/hubs/users', sendUserHub);
+app.get('/hubs/posts', sendPostHub);
 
 // Express 5 (path-to-regexp v8) has no bare `*`: a wildcard must be its own named segment.
 // The `/voting*`-style suffix patterns have no direct equivalent, so they become the literal
@@ -365,4 +535,5 @@ app.get('/*splat', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);
+  sitemap.start(); // build the sitemap buffer at boot, then every 6h.
 });

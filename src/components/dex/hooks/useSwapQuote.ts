@@ -196,6 +196,7 @@ export function useSwapQuote() {
   const quoteTimerRef = useRef<number | null>(null);
   useEffect(() => () => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+    quoteSeqRef.current += 1;
   }, []);
 
   const buildBestPath = useCallback(async (
@@ -264,28 +265,29 @@ export function useSwapQuote() {
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
   ): Promise<QuoteResult> => {
+    // Invalidate previous work before validation: clearing an input must also
+    // cancel a quote that is already waiting on the network.
+    const seq = ++quoteSeqRef.current;
+    if (quoteTimerRef.current) {
+      window.clearTimeout(quoteTimerRef.current);
+      quoteTimerRef.current = null;
+    }
     setError(null);
+    setRouteInfo({ path: [] });
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
-    // Validation
-    if (!drivingAmount || !params.tokenIn || !params.tokenOut) {
-      return { path: [] };
-    }
-
-    if (Number(drivingAmount) === 0) {
+    if (!params.tokenIn || !params.tokenOut
+      || !Number.isFinite(Number(drivingAmount)) || Number(drivingAmount) <= 0) {
       const result: QuoteResult = {
-        amountOut: '', amountIn: '', path: [], priceImpact: 0,
+        amountOut: params.isExactIn ? '' : undefined,
+        amountIn: params.isExactIn ? undefined : '',
+        path: [],
       };
-      setRouteInfo({ path: [], priceImpact: 0 });
+      setQuoteLoading(false);
       onQuoteResult?.(result);
       return result;
     }
 
-    if (Number(drivingAmount) < 0) {
-      return { path: [] };
-    }
-
-    const seq = ++quoteSeqRef.current;
     setQuoteLoading(true);
 
     try {
@@ -349,56 +351,25 @@ export function useSwapQuote() {
       let routerAmountOut: string | undefined;
       let routerAmountIn: string | undefined;
 
-      if (params.isExactIn && amountOut !== undefined) {
-        try {
-          const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
-          const outAettos = decodedResult[decodedResult.length - 1];
-          routerAmountOut = fromAettos(outAettos, params.tokenOut.decimals);
-        } catch (e) {
-          // Ignore and fall back to ratio-based calculation.
-        }
-      } else if (!params.isExactIn && amountIn !== undefined) {
-        try {
-          const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
-          const inAettos = decodedResult[0];
-          routerAmountIn = fromAettos(inAettos, params.tokenIn.decimals);
-        } catch (e) {
-          // Ignore and fall back to ratio-based calculation.
-        }
-      }
-
-      // Use reserve-derived route math for spot ratio and liquidity checks,
-      // but prefer the router quote for the actual displayed swap amounts.
-      if (params.isExactIn && routerAmountOut !== undefined) {
+      // Only a successful router quote is executable. Spot reserve ratios do
+      // not include fees or price impact and cannot stand in for a failed quote.
+      if (params.isExactIn) {
+        const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
+        const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
+        routerAmountOut = fromAettos(decodedResult[decodedResult.length - 1], params.tokenOut.decimals);
         amountOut = routerAmountOut;
-      } else if (!params.isExactIn && routerAmountIn !== undefined) {
+      } else {
+        const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
+        const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
+        routerAmountIn = fromAettos(decodedResult[0], params.tokenIn.decimals);
         amountIn = routerAmountIn;
-      }
-
-      // Fallback to router contract if no pairData available
-      if (amountOut === undefined && amountIn === undefined) {
-        if (params.isExactIn) {
-          const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
-          const { decodedResult } = await router.get_amounts_out(amountInAettos, path);
-          const outAettos = decodedResult[decodedResult.length - 1];
-          amountOut = fromAettos(outAettos, params.tokenOut.decimals);
-          routerAmountOut = amountOut;
-        } else {
-          const amountOutAettos = toAettos(params.amountOut, params.tokenOut.decimals);
-          const { decodedResult } = await router.get_amounts_in(amountOutAettos, path);
-          const inAettos = decodedResult[0];
-          amountIn = fromAettos(inAettos, params.tokenIn.decimals);
-          routerAmountIn = amountIn;
-        }
       }
 
       // Compute price impact when backend provided reserves
       let priceImpact: number | undefined;
       try {
         if (currentRouteForPriceImpact && currentRouteForPriceImpact.length >= 1) {
-          const amountInAettosNum = toAettos(params.amountIn || amountIn || '0', params.tokenIn.decimals);
+          const amountInAettosNum = toAettos((params.isExactIn ? params.amountIn : amountIn) || '0', params.tokenIn.decimals);
           priceImpact = getPriceImpactForRoute(currentRouteForPriceImpact as any, path[0], amountInAettosNum);
         }
       } catch {
@@ -429,6 +400,12 @@ export function useSwapQuote() {
       };
     } catch (e: any) {
       if (seq === quoteSeqRef.current) {
+        setRouteInfo({ path: [] });
+        onQuoteResult?.({
+          amountOut: params.isExactIn ? '' : undefined,
+          amountIn: params.isExactIn ? undefined : '',
+          path: [],
+        });
         setError(errorToUserMessage(e, { action: 'quote' }));
       }
       return { path: [] };
@@ -443,12 +420,26 @@ export function useSwapQuote() {
     delay = 300,
   ) => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+    // Invalidate immediately, including the debounce window before the next request.
+    quoteSeqRef.current += 1;
+    setRouteInfo({ path: [] });
+    setError(null);
+    setQuoteLoading(true);
+    onQuoteResult?.({
+      amountOut: params.isExactIn ? '' : undefined,
+      amountIn: params.isExactIn ? undefined : '',
+      path: [],
+    });
     quoteTimerRef.current = window.setTimeout(() => {
+      quoteTimerRef.current = null;
       void refreshQuote(params, onQuoteResult);
     }, delay);
   }, [refreshQuote]);
 
   const cancelDebouncedQuote = useCallback(() => {
+    quoteSeqRef.current += 1;
+    setQuoteLoading(false);
+    setRouteInfo({ path: [] });
     if (quoteTimerRef.current) {
       window.clearTimeout(quoteTimerRef.current);
       quoteTimerRef.current = null;

@@ -10,7 +10,7 @@ import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import Spinner from '../../../components/Spinner';
 
 const PostTipButton = ({ toAddress, postId }: { toAddress: string; postId: string }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const { openModal } = useModal();
   const [tipStatus] = useAtom(tipStatusAtom);
   const key = makeTipKey(toAddress, postId);
@@ -36,8 +36,8 @@ const PostTipButton = ({ toAddress, postId }: { toAddress: string; postId: strin
   const buttonLabel = useMemo(() => {
     if (isPending) return 'Sending';
     if (isSuccess) return 'Tipped';
-    return formatted ? `${formatted} AE` : 'Tip';
-  }, [formatted, isPending, isSuccess]);
+    return formatted ? `${formatted} AE` : t('buttons.tip');
+  }, [formatted, isPending, isSuccess, t]);
 
   const handleTip = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

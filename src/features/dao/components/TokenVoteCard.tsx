@@ -29,11 +29,13 @@ const TokenVoteCard = ({
   const { t } = useTranslation();
   const { currentBlockHeight } = useAeSdk();
 
-  const { voteState, voteYesPercentage } = useDaoVote({
+  const { voteState, voteYesPercentage, actionError } = useDaoVote({
     tokenSaleAddress: saleAddress,
     voteAddress: address,
     voteId,
   });
+
+  if (actionError) return <div role="alert" className="text-red-400 p-4">{actionError}</div>;
 
   // Loading state
   if (!voteState) {
@@ -67,13 +69,13 @@ const TokenVoteCard = ({
 
   const getVoteStatusColor = () => {
     if (!isOpen) return 'bg-red-500/20 text-red-400 border-red-500/30';
-    if (voteYesPercentage && voteYesPercentage > 0.5) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (voteYesPercentage && voteYesPercentage >= 0.55) return 'bg-green-500/20 text-green-400 border-green-500/30';
     return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
   };
 
   const getVoteStatusText = () => {
     if (!isOpen) return t('dao.voteStatus.closed');
-    if (voteYesPercentage && voteYesPercentage > 0.5) return t('dao.voteStatus.passing');
+    if (voteYesPercentage && voteYesPercentage >= 0.55) return t('dao.voteStatus.passing');
     return t('dao.voteStatus.open');
   };
 

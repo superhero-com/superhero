@@ -47,7 +47,9 @@ interface TokenData {
 export default function TokenDetail() {
   const { t } = useTranslation();
   const { activeNetwork } = useAeSdk();
-  const { tokenAddress } = useParams();
+  const { tokenAddress: routeTokenAddress, id } = useParams();
+  // Older shared links use /explore/tokens/:id.
+  const tokenAddress = routeTokenAddress || id;
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<'24h' | '7d' | '30d'>(
     '24h',

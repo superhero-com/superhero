@@ -31,8 +31,9 @@ function voteTypeHeadlineKey(voteType: VOTE_TYPE): string {
 const VoteSubject = ({ voteState }: VoteSubjectProps) => {
   const { t } = useTranslation('dao');
   const subjectEntries = Object.entries(voteState.metadata.subject);
-  const subjectText = t(voteTypeHeadlineKey(subjectEntries[0][0] as VOTE_TYPE));
-  const beneficiary = subjectEntries[0][1][0];
+  const [type, values] = subjectEntries[0] || [];
+  const subjectText = t(voteTypeHeadlineKey(type as VOTE_TYPE));
+  const beneficiary = values?.[0];
 
   return (
     <div className="text-white flex items-center gap-2 flex-wrap">
@@ -43,7 +44,11 @@ const VoteSubject = ({ voteState }: VoteSubjectProps) => {
           {t('voteSubject.to')}
           {' '}
         </span>
-        <AddressAvatarWithChainName address={beneficiary} variant="feed" />
+        {typeof beneficiary === 'string' ? (
+          <AddressAvatarWithChainName address={beneficiary} variant="feed" />
+        ) : (
+          <span>{beneficiary instanceof Map ? Array.from(beneficiary, ([key, value]) => `${key}: ${value}`).join(', ') : String(beneficiary ?? '')}</span>
+        )}
       </div>
 
     </div>

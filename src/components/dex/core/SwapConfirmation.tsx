@@ -60,8 +60,8 @@ export default function SwapConfirmation({
     return `${Decimal.from(max).prettify()} ${tokenIn.symbol}`;
   })();
 
-  const rate = Number(amountOut || 0) / Math.max(Number(amountIn || 0) || 1, 1);
-  const inverseRate = Number(amountIn || 0) / Math.max(Number(amountOut || 0) || 1, 1);
+  const rate = Number(amountIn) > 0 ? Decimal.from(amountOut || '0').div(amountIn).toString() : '0';
+  const inverseRate = Number(amountOut) > 0 ? Decimal.from(amountIn || '0').div(amountOut).toString() : '0';
 
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>

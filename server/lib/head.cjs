@@ -17,6 +17,12 @@ function escapeAttr(s) {
 }
 
 function injectHead(html, meta) {
+  // Replace template metadata rather than append a second title/canonical. Keep
+  // scripts, styles and unrelated metadata (viewport, CSP, theme) intact.
+  const document = html.replace(/<head\b[^>]*>[\s\S]*?<\/head>/i, (head) => head
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta\b[^>]*>/gi, (tag) => /\b(?:name|property)\s*=\s*(["'])(?:description|og:[^"']+|twitter:[^"']+)\1/i.test(tag) ? '' : tag)
+    .replace(/<link\b[^>]*>/gi, (tag) => /\brel\s*=\s*(["'])canonical\1/i.test(tag) ? '' : tag));
   const parts = [];
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
@@ -33,9 +39,9 @@ function injectHead(html, meta) {
   parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
   parts.push(`<meta name="twitter:image" content="${escapeAttr(meta.ogImage)}">`);
-  const idx = html.indexOf('</head>');
+  const idx = document.search(/<\/head>/i);
   if (idx === -1) return html;
-  return `${html.slice(0, idx)}\n${parts.join('\n')}\n${html.slice(idx)}`;
+  return `${document.slice(0, idx)}\n${parts.join('\n')}\n${document.slice(idx)}`;
 }
 
 module.exports = { escapeHtml, escapeAttr, injectHead };

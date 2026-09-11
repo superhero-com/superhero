@@ -84,11 +84,11 @@ export default function UserProfile({
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Support AENS chain name route: /users/<name.chain>
-  const isChainName = address?.endsWith('.chain');
-  const { address: resolvedAddress } = useAddressByChainName(
+  const isChainName = address?.toLowerCase().endsWith('.chain');
+  const { address: resolvedAddress, isLoading: isAddressLoading } = useAddressByChainName(
     isChainName ? address : undefined,
   );
-  const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
+  const effectiveAddress = isChainName ? (resolvedAddress || '') : (address || '');
   const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
@@ -111,7 +111,7 @@ export default function UserProfile({
   const showWalletActions = walletActionsEnabled && !!activeAccount && !!effectiveAddress;
 
   const { data, refetch: refetchPosts } = useQuery({
-    queryKey: ['PostsService.listAll', address],
+    queryKey: ['PostsService.listAll', effectiveAddress],
     queryFn: () => PostsService.listAll({
       limit: 100,
       page: 1,
@@ -184,7 +184,7 @@ export default function UserProfile({
     const urlTab = searchParams.get('tab') as TabType;
     if (urlTab && ['feed', 'owned', 'created', 'transactions'].includes(urlTab)) {
       setTab(urlTab);
-    } else if (!urlTab) {
+    } else {
       setTab('feed');
     }
   }, [searchParams]);
@@ -331,6 +331,20 @@ export default function UserProfile({
     });
   }, [effectiveAddress, queryClient]);
 
+  if (!effectiveAddress) {
+    const unavailable = (
+      <div className="py-12 text-center text-white/70" role="status">
+        <p>{isAddressLoading ? t('messages.loading') : t('views.notFound.pageDescription')}</p>
+        {!isAddressLoading && (
+          <AeButton variant="ghost" size="sm" onClick={() => navigate('/')}>
+            {t('labels.back')}
+          </AeButton>
+        )}
+      </div>
+    );
+    return standalone ? <Shell right={<RightRail />}>{unavailable}</Shell> : unavailable;
+  }
+
   const content = (
     <div className="w-full">
       <Head
@@ -430,7 +444,7 @@ export default function UserProfile({
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
                 title={t('titles.sendATip')}
               >
-                <IconDiamond className="w-4 h-4 text-white" />
+                <IconDiamond className="w-4 h-4 text-white" aria-hidden />
                 {t('buttons.tip')}
               </AeButton>
             ) : null}
@@ -445,7 +459,7 @@ export default function UserProfile({
               }}
               title={t('titles.openOnAescan')}
             >
-              <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
+              <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" aria-hidden />
             </AeButton>
           </div>
         </div>
@@ -579,7 +593,7 @@ export default function UserProfile({
               {t('explore:posts')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {posts.length.toLocaleString()}
+              {(data?.meta?.totalItems ?? posts.length).toLocaleString()}
             </div>
           </button>
         </div>

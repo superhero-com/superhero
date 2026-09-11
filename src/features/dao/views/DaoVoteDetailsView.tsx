@@ -56,9 +56,11 @@ const DaoVoteDetailsContent = ({
     voteYesPercentage,
     userVoteOrLockedInfo,
     actionLoading,
+    actionError,
     voteOption,
     revokeVote,
     withdraw,
+    applyVote,
   } = useDaoVote({
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
     voteAddress: voteAddress as Encoded.ContractAddress,
@@ -106,13 +108,13 @@ const DaoVoteDetailsContent = ({
 
   const getVoteStatusColor = () => {
     if (!isOpen) return 'bg-red-500/20 text-red-400 border-red-500/30';
-    if (voteYesPercentage && voteYesPercentage > 0.5) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (voteYesPercentage && voteYesPercentage >= 0.55) return 'bg-green-500/20 text-green-400 border-green-500/30';
     return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
   };
 
   const getVoteStatusText = () => {
     if (!isOpen) return t('voteStatus.closed');
-    if (voteYesPercentage && voteYesPercentage > 0.5) return t('voteStatus.passing');
+    if (voteYesPercentage && voteYesPercentage >= 0.55) return t('voteStatus.passing');
     return t('voteStatus.open');
   };
 
@@ -157,6 +159,7 @@ const DaoVoteDetailsContent = ({
 
         {/* Main content */}
         <div className="lg:col-span-3">
+          {actionError && <div role="alert" className="text-red-400 text-sm mb-4">{actionError}</div>}
           {voteState && (
             <>
               {/* Back button */}
@@ -368,6 +371,7 @@ const DaoVoteDetailsContent = ({
                           variant="outline"
                           size="sm"
                           disabled={actionLoading}
+                          onClick={applyVote}
                           className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
                         >
                           {t('apply')}

@@ -1,12 +1,14 @@
 import {
-  useState, useEffect, useCallback, useMemo,
+  useState, useEffect, useCallback, useMemo, useRef,
 } from 'react';
 import { Encoded } from '@aeternity/aepp-sdk';
 import {
-  initDAOVote, toTokenDecimals, Vote, VOTE_STATE_LABEL, VoteState,
+  initDAOVote, toTokenDecimals, Vote, VoteState,
 } from 'bctsl-sdk';
 import { useAeSdk, useAccount } from '@/hooks';
+import { errorToUserMessage } from '@/libs/errorMessages';
 import { useDao } from './useDao';
+import { getVoteStateLabel, voteYesFraction, voteStakeYesFraction } from '../libs/voteCalculations';
 
 export interface UseDaoVoteProps {
   tokenSaleAddress: Encoded.ContractAddress;
@@ -17,15 +19,31 @@ export interface UseDaoVoteProps {
 export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVoteProps) {
   const [vote, setVote] = useState<Vote>();
   const [voteState, setVoteState] = useState<VoteState>();
-  const [voteStateLabel, setVoteStateLabel] = useState<VOTE_STATE_LABEL>();
+  const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
 
-  const { sdk } = useAeSdk();
+  const { sdk, currentBlockHeight } = useAeSdk();
   const { activeAccount } = useAccount();
 
   const dao = useDao({
     tokenSaleAddress,
   });
+
+  const context = useMemo(() => ({
+    sdk, tokenSaleAddress, voteAddress, voteId, activeAccount,
+  }), [sdk, tokenSaleAddress, voteAddress, voteId, activeAccount]);
+  const activeContextRef = useRef(context);
+  activeContextRef.current = context;
+  const actionInFlightRef = useRef(false);
+
+  const voteMatchesDao = dao.state?.votes.get(voteId)?.[1] === voteAddress;
+
+  const voteStateLabel = useMemo(() => (
+    voteMatchesDao && voteState && dao.state
+      && dao.tokenSupply !== undefined && currentBlockHeight > 0
+      ? getVoteStateLabel(voteState, dao.state, dao.tokenSupply, voteId, currentBlockHeight)
+      : undefined
+  ), [voteMatchesDao, voteState, dao.state, dao.tokenSupply, voteId, currentBlockHeight]);
 
   const canVote = useMemo(
     () => activeAccount
@@ -46,7 +64,8 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
   );
 
   const canWithdraw = useMemo(
-    () => voteState
+    () => activeAccount
+      && voteState
       && voteStateLabel
       && sdk
       && vote?.canWithdraw(voteStateLabel, voteState, activeAccount as any),
@@ -54,20 +73,19 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
   );
 
   const canApply = useMemo(
-    () => voteStateLabel && vote?.canApply(voteStateLabel),
-    [voteStateLabel, vote],
+    () => activeAccount && sdk && dao.dao && voteStateLabel && vote?.canApply(voteStateLabel),
+    [activeAccount, sdk, dao.dao, voteStateLabel, vote],
   );
 
   const voteYesPercentage = useMemo(
-    () => voteState && vote?.voteYesPercentage(voteState),
-    [voteState, vote],
+    () => voteState && voteYesFraction(voteState),
+    [voteState],
   );
 
   const voteStakeYesPercentage = useMemo(
-    () => (voteState && dao.tokenSupply
-      ? vote?.voteStakeYesPercentage(voteState, dao.tokenSupply)
-      : 1),
-    [voteState, dao.tokenSupply, vote],
+    () => (voteState && dao.tokenSupply !== undefined
+      ? voteStakeYesFraction(voteState, dao.tokenSupply) : undefined),
+    [voteState, dao.tokenSupply],
   );
 
   const userVoteOrLockedInfo = useMemo(() => {
@@ -105,104 +123,84 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   const refreshVoteState = useCallback(async () => {
     if (!vote) return;
-
     const newVoteState = await vote.state();
-    setVoteState(newVoteState);
+    if (activeContextRef.current === context) setVoteState(newVoteState);
+  }, [vote, context]);
 
-    if (newVoteState && dao.state && dao.tokenSupply !== undefined) {
-      const newVoteStateLabel = await vote.voteStateLabel(
-        newVoteState,
-        dao.state,
-        dao.tokenSupply,
-      );
-      setVoteStateLabel(newVoteStateLabel);
+  // Keep the contract and state tied to this route. A previous request must not
+  // populate a different proposal after navigation.
+  useEffect(() => {
+    let cancelled = false;
+    setVote(undefined);
+    setVoteState(undefined);
+    setActionError(null);
+    setActionLoading(false);
+    actionInFlightRef.current = false;
+    if (sdk) {
+      (async () => {
+        try {
+          const newVote = await initDAOVote(sdk, voteAddress, voteId);
+          const newVoteState = await newVote.state();
+          if (!cancelled && activeContextRef.current === context) {
+            setVote(newVote);
+            setVoteState(newVoteState);
+          }
+        } catch (error) {
+          if (!cancelled) setActionError(errorToUserMessage(error));
+        }
+      })();
     }
-  }, [vote, dao.state, dao.tokenSupply]);
-
-  const init = useCallback(async () => {
-    if (!sdk) return;
-
-    const newVote = await initDAOVote(sdk, voteAddress, voteId);
-    setVote(newVote);
-
-    const newVoteState = await newVote.state();
-    setVoteState(newVoteState);
-
-    if (dao.state && dao.tokenSupply !== undefined) {
-      const newVoteStateLabel = await newVote.voteStateLabel(
-        newVoteState,
-        dao.state,
-        dao.tokenSupply,
-      );
-      setVoteStateLabel(newVoteStateLabel);
-    }
-  }, [sdk, voteAddress, voteId, dao.state, dao.tokenSupply]);
-
-  const runTestCheck = useCallback(async () => {
-    if (!voteState || !vote) {
-      return;
-    }
-
-    if (dao.tokenSupply) {
-      // TODO: check if this is used
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const vsl = await vote.voteStateLabel(
-        voteState,
-        dao.state!,
-        dao.tokenSupply,
-      );
-    }
-
-    if (voteStateLabel && voteState) {
-      // TODO: check if this is used
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const canV = vote.canVote(
-        voteStateLabel,
-        voteState,
-        activeAccount as any,
-      );
-    }
-  }, [voteState, vote, dao.tokenSupply, dao.state, voteStateLabel, activeAccount]);
+    return () => { cancelled = true; };
+  }, [sdk, voteAddress, voteId, context]);
 
   const applyAction = useCallback(async (action: () => unknown | Promise<unknown>) => {
+    if (activeContextRef.current !== context || actionInFlightRef.current) return;
+    actionInFlightRef.current = true;
     setActionLoading(true);
+    setActionError(null);
     try {
       await action();
-    } finally {
-      await refreshVoteState();
+      if (activeContextRef.current !== context) return;
       await dao.init();
-      setActionLoading(false);
+      if (activeContextRef.current !== context) return;
+      await refreshVoteState();
+    } catch (error) {
+      if (activeContextRef.current === context) setActionError(errorToUserMessage(error));
+    } finally {
+      if (activeContextRef.current === context) {
+        actionInFlightRef.current = false;
+        setActionLoading(false);
+      }
     }
-  }, [refreshVoteState, dao]);
+  }, [refreshVoteState, dao, context]);
 
-  const revokeVote = useCallback(() => {
-    if (!vote) return;
-    applyAction(() => vote.revokeVote());
-  }, [vote, applyAction]);
+  const revokeVote = useCallback(async () => {
+    if (!vote || !canRevokeVote) return;
+    await applyAction(() => vote.revokeVote());
+  }, [vote, canRevokeVote, applyAction]);
 
-  const withdraw = useCallback(() => {
-    if (!vote) return;
-    applyAction(() => vote.withdraw());
-  }, [vote, applyAction]);
+  const withdraw = useCallback(async () => {
+    if (!vote || !canWithdraw) return;
+    await applyAction(() => vote.withdraw());
+  }, [vote, canWithdraw, applyAction]);
+
+  const applyVote = useCallback(async () => {
+    if (!dao.dao || !canApply) return;
+    await applyAction(() => dao.dao!.applyVoteSubject(voteId));
+  }, [dao.dao, canApply, voteId, applyAction]);
 
   const voteOption = useCallback(async (option: boolean) => {
-    if (!vote || !dao.userTokenBalance || !dao.tokenInstanceRef) {
-      return;
-    }
-
-    applyAction(async () => vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!));
-  }, [vote, dao.userTokenBalance, dao.tokenInstanceRef, applyAction]);
-
-  // Initialize when tokenSaleAddress changes
-  useEffect(() => {
-    init();
-  }, [tokenSaleAddress, init]);
+    if (!vote || !canVote || !dao.userTokenBalance || !dao.tokenInstanceRef) return;
+    await applyAction(() => vote.vote(option, dao.userTokenBalance!, dao.tokenInstanceRef!));
+  }, [vote, canVote, dao.userTokenBalance, dao.tokenInstanceRef, applyAction]);
 
   return {
     vote,
     voteState,
     voteStateLabel,
     actionLoading,
+    actionError: actionError || (voteState && dao.state && !voteMatchesDao
+      ? 'This proposal does not match the selected DAO and vote number.' : null),
 
     canVote,
     canRevokeVote,
@@ -213,12 +211,13 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     voteYesPercentage,
     voteStakeYesPercentage,
     hasTokenBalance: dao.userTokenBalance,
-    runTestCheck,
+    runTestCheck: refreshVoteState,
 
     // methods
     voteOption,
     revokeVote,
     withdraw,
+    applyVote,
     refreshVoteState,
   };
 }

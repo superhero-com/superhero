@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { checkRouteLiquidity } from '../useSwapQuote';
+import { act, renderHook } from '@testing-library/react';
+import {
+  afterEach, beforeEach, describe, expect, it, vi,
+} from 'vitest';
+import { checkRouteLiquidity, useSwapQuote } from '../useSwapQuote';
 
 describe('checkRouteLiquidity', () => {
   it('derives max output from reserve ratios for the first path hop', () => {
@@ -99,5 +102,110 @@ describe('checkRouteLiquidity', () => {
         pairAddress: 'pair-ab',
       },
     });
+  });
+});
+
+const quoteMocks = vi.hoisted(() => ({
+  getAmountsOut: vi.fn(),
+  getAmountsIn: vi.fn(),
+  sdk: {},
+}));
+
+vi.mock('../../../../hooks', () => ({ useAeSdk: () => ({ sdk: quoteMocks.sdk }) }));
+vi.mock('../../../../libs/dex', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../../../../libs/dex')>(),
+  initDexContracts: async () => ({
+    router: { get_amounts_out: quoteMocks.getAmountsOut, get_amounts_in: quoteMocks.getAmountsIn },
+  }),
+}));
+vi.mock('../../../../libs/dexBackend', () => ({
+  getSwapRoutes: async () => [[{
+    address: 'pair-ab',
+    token0: 'token-a',
+    token1: 'token-b',
+    synchronized: true,
+    liquidityInfo: { reserve0: '1000000', reserve1: '2000000' },
+  }]],
+}));
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
+}
+
+const validParams = {
+  amountIn: '10',
+  amountOut: '',
+  isExactIn: true,
+  tokenIn: { address: 'token-a', decimals: 0, is_ae: false },
+  tokenOut: { address: 'token-b', decimals: 0, is_ae: false },
+} as any;
+
+describe('useSwapQuote request lifecycle', () => {
+  beforeEach(() => {
+    quoteMocks.getAmountsOut.mockResolvedValue({ decodedResult: [10n, 19n] });
+  });
+
+  afterEach(() => { vi.useRealTimers(); });
+
+  it.each(['', '0', '-1', 'invalid', 'Infinity'])('invalidates a pending quote when the new amount is %j', async (amountIn) => {
+    const pending = deferred<{ decodedResult: bigint[] }>();
+    quoteMocks.getAmountsOut.mockReturnValueOnce(pending.promise);
+    const callback = vi.fn();
+    const { result } = renderHook(() => useSwapQuote());
+    let request!: ReturnType<typeof result.current.refreshQuote>;
+    await act(async () => { request = result.current.refreshQuote(validParams, callback); });
+    expect(result.current.quoteLoading).toBe(true);
+
+    await act(async () => {
+      await result.current.refreshQuote({ ...validParams, amountIn }, callback);
+    });
+    expect(result.current.quoteLoading).toBe(false);
+    expect(result.current.routeInfo.path).toEqual([]);
+    expect(callback).toHaveBeenLastCalledWith(expect.objectContaining({ amountOut: '', path: [] }));
+    callback.mockClear();
+
+    await act(async () => {
+      pending.resolve({ decodedResult: [10n, 19n] });
+      await request;
+    });
+    expect(callback).not.toHaveBeenCalled();
+    expect(result.current.routeInfo.path).toEqual([]);
+  });
+
+  it('invalidates previous requests during the debounce interval and when cancelled', async () => {
+    vi.useFakeTimers();
+    const pending = deferred<{ decodedResult: bigint[] }>();
+    quoteMocks.getAmountsOut.mockReturnValueOnce(pending.promise);
+    const callback = vi.fn();
+    const { result } = renderHook(() => useSwapQuote());
+    let request!: ReturnType<typeof result.current.refreshQuote>;
+    await act(async () => { request = result.current.refreshQuote(validParams, callback); });
+    act(() => result.current.debouncedQuote({ ...validParams, amountIn: '20' }, callback));
+    callback.mockClear();
+    await act(async () => {
+      pending.resolve({ decodedResult: [10n, 19n] });
+      await request;
+    });
+    expect(callback).not.toHaveBeenCalled();
+    expect(result.current.routeInfo.path).toEqual([]);
+    expect(result.current.quoteLoading).toBe(true);
+    act(() => result.current.cancelDebouncedQuote());
+    await act(async () => { await vi.runAllTimersAsync(); });
+    expect(quoteMocks.getAmountsOut).toHaveBeenCalledTimes(1);
+    expect(result.current.quoteLoading).toBe(false);
+  });
+
+  it('clears the previous successful quote when the router rejects instead of presenting a spot ratio as executable', async () => {
+    const callback = vi.fn();
+    const { result } = renderHook(() => useSwapQuote());
+    await act(async () => { await result.current.refreshQuote(validParams, callback); });
+    expect(result.current.routeInfo.routerAmountOut).toBe('19');
+    quoteMocks.getAmountsOut.mockRejectedValueOnce(new Error('Router unavailable'));
+    await act(async () => { await result.current.refreshQuote({ ...validParams, amountIn: '20' }, callback); });
+    expect(result.current.error).toBeTruthy();
+    expect(result.current.routeInfo).toEqual({ path: [] });
+    expect(callback).toHaveBeenLastCalledWith(expect.objectContaining({ amountOut: '', path: [] }));
   });
 });

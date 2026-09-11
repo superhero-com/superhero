@@ -548,7 +548,7 @@ export default function TokenCandlestickChart({
         <div ref={chartContainer} className="w-full h-full" />
 
         {/* Chart Info Overlay */}
-        <div className="absolute -top-12 sm:top-0 sm:p-4 left-0 z-20 bg-gradient-to-b from-background/10 via-background/2 to-transparent sm:backdrop-blur-sm">
+        <div className="absolute -top-12 sm:top-0 sm:p-4 left-0 right-0 sm:right-24 z-20 bg-gradient-to-b from-background/10 via-background/2 to-transparent sm:backdrop-blur-sm">
           <div className="flex flex-wrap items-end gap-1 mb-2">
             <div className="text-lg font-bold text-foreground flex items-center gap-2">
               #{token?.symbol}
@@ -564,7 +564,7 @@ export default function TokenCandlestickChart({
           {currentCandlePrice && (
             <div className="text-sm">
               <div className="flex gap-4 flex-wrap mb-2">
-                <div className="hidden md:block flex gap-2">
+                <div className="hidden md:flex flex-wrap gap-2">
                   <span className="text-muted-foreground">
                     O
                     {' '}
@@ -580,7 +580,7 @@ export default function TokenCandlestickChart({
                     </span>
                   </span>
                 </div>
-                <div className="hidden md:block flex gap-2">
+                <div className="hidden md:flex flex-wrap gap-2">
                   <span className="text-muted-foreground">
                     L
                     {' '}

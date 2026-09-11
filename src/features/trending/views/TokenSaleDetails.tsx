@@ -102,7 +102,9 @@ const TokenSaleDetails = () => {
     return params.get('created') === 'true';
   });
   const [txConfirmed, setTxConfirmed] = useState(false);
-  const isMobile = useIsMobile();
+  // Keep the tabbed layout until the fixed navigation, feed and trade sidebar fit.
+  // This also covers every width where the mobile header exposes its Trade action.
+  const isMobile = useIsMobile(1280);
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
     const showTradeParam = params.get('showTrade');
@@ -385,7 +387,14 @@ const TokenSaleDetails = () => {
       {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
 
       {isMobile && (
-        <div className="sticky top-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] z-[1000] -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+        <h1 className="hidden lg:block mb-4 text-2xl font-bold break-words">
+          #
+          {token?.symbol || token?.name || tokenName}
+        </h1>
+      )}
+
+      {isMobile && (
+        <div className="sticky top-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] lg:top-0 z-[1000] -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
           <div className="pt-2 pb-2">
             <div className="overflow-x-auto px-3">
               <div className="flex items-center gap-4 min-w-max">
@@ -469,10 +478,10 @@ const TokenSaleDetails = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(350px,1fr)] gap-6">
         {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={cn(isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1', 'flex flex-col gap-6')}
+          className={cn(isMobile ? 'col-span-1 mb-8' : 'xl:col-start-1', 'min-w-0 flex flex-col gap-6')}
         >
           {/* Token Header */}
           {!isMobile && (
@@ -756,7 +765,7 @@ const TokenSaleDetails = () => {
 
         {/* Desktop Sidebar (Right Column) */}
         {!isMobile && (
-          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6 lg:sticky lg:top-6 self-start">
+          <div className="xl:col-start-2 min-w-0 flex flex-col gap-6 xl:sticky xl:top-6 self-start">
             {(() => {
               if (tokenDoesNotExist) {
                 return (

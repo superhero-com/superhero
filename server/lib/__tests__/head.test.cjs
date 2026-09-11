@@ -33,6 +33,22 @@ describe('server/lib/head.cjs — escapeHtml / escapeAttr', () => {
 });
 
 describe('injectHead — attribute-breakout XSS regression (head hardening)', () => {
+  it('replaces stale template metadata and remains stable when injected twice', () => {
+    const template = '<html><head><title>Old title</title><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="description" content="Old description"><link rel="canonical" href="http://old.example"><meta property="og:title" content="Old title"><meta name="twitter:title" content="Old title"><script nonce="test">window.ready = true;</script></head><body>Page</body></html>';
+    const meta = { title: 'Current post', description: 'Current description', canonical: 'https://superhero.com/post/1', ogImage: 'https://superhero.com/og-default.png' };
+    const doc = parseHtml(injectHead(injectHead(template, meta), meta));
+
+    expect(doc.querySelectorAll('title')).toHaveLength(1);
+    expect(doc.title).toBe('Current post');
+    expect(doc.querySelectorAll('meta[name="description"]')).toHaveLength(1);
+    expect(doc.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+    expect(doc.querySelectorAll('meta[property="og:title"]')).toHaveLength(1);
+    expect(doc.querySelectorAll('meta[name="twitter:title"]')).toHaveLength(1);
+    expect(doc.querySelector('meta[name="viewport"]')).not.toBeNull();
+    expect(doc.querySelector('script').getAttribute('nonce')).toBe('test');
+    expect(doc.body.textContent).toBe('Page');
+  });
+
   // Closes the `content="..."` / `href="..."` attribute, opens a new <script> element, then
   // reopens a dummy attribute so the rest of the original template string stays well-formed.
   const SCRIPT_BREAKOUT = '"><script>alert(document.cookie)</script><meta x="';

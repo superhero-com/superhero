@@ -37,6 +37,8 @@ const NAVIGATION_ONLY = new Set([
 // Strings baked into third-party packages (docs links, JSON-LD vocabulary, placeholder hosts in
 // error messages). They are never requested.
 const LIBRARY_NOISE = new Set([
+  // @azure/core-client normalizes this OAuth resource scope; it is not a fetch URL.
+  'https://disk.azure.com',
   'https://airbnb.io', 'https://links.ethers.org', 'https://react.dev',
   'https://react.i18next.com', 'https://reactrouter.com', 'https://redux-toolkit.js.org',
   'https://redux.js.org', 'https://schema.org', 'https://socket.io',

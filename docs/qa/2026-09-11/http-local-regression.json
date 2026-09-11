@@ -1,0 +1,64 @@
+{
+  "checked_at_utc": "2026-09-11T03:51:27.584Z",
+  "server": "local production Express handler; current workspace fixes",
+  "results": [
+    {
+      "path": "/qa-missing.png",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/missing.svg",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/missing.pdf",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/missing.webmanifest",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/sitemap-missing.xml",
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200,
+      "content_type": "application/manifest+json; charset=utf-8"
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "content_type": "application/xml"
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "/icons/apple-touch-icon-180.png",
+      "status": 200,
+      "content_type": "image/png"
+    },
+    {
+      "path": "/_qa_unknown_route_2026-09-11",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/",
+      "host": "superhero.com",
+      "status": 200,
+      "canonical": "https://superhero.com/",
+      "title_count": 1,
+      "forwarded_spoof_ignored": true
+    }
+  ]
+}

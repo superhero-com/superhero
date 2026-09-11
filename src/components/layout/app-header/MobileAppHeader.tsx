@@ -3,7 +3,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/ae-dropdown-menu';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
-import { formatNumber } from '@/utils/number';
+import { formatNumber, toOptionalFiniteNumber } from '@/utils/number';
 import { TRENDING_ENABLED } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 import { Gift, LogOut, User } from 'lucide-react';
@@ -57,10 +57,11 @@ const MobileAppHeader = () => {
   });
 
   const changeRaw = tokenData?.performance?.[DEFAULT_PAST_TIMEFRAME]?.current_change_percent;
-  const changePercent = Number.isFinite(Number(changeRaw)) ? Number(changeRaw) : null;
-  const priceRaw = Number((tokenData as any)?.price);
-  const priceText = Number.isFinite(priceRaw)
-    ? `$${formatNumber(priceRaw, priceRaw < 1 ? 6 : 2)}`
+  const changePercent = toOptionalFiniteNumber(changeRaw);
+  // The token endpoint quotes `price` in AE, not USD.
+  const priceRaw = toOptionalFiniteNumber(tokenData?.price);
+  const priceText = priceRaw !== null && priceRaw >= 0
+    ? `${formatNumber(priceRaw, priceRaw < 1 ? 6 : 2)} AE`
     : '—';
 
   function onNavigateBack() {

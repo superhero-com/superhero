@@ -85,6 +85,11 @@ async function fetchPostBySegment(baseApi: string, seg: string): Promise<any | n
 }
 
 export function injectHead(html: string, meta: Meta, origin: string): string {
+  // Match the production injector: each route owns one title and metadata set.
+  const document = html.replace(/<head\b[^>]*>[\s\S]*?<\/head>/i, (head) => head
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta\b[^>]*>/gi, (tag) => (/\b(?:name|property)\s*=\s*(["'])(?:description|og:[^"']+|twitter:[^"']+)\1/i.test(tag) ? '' : tag))
+    .replace(/<link\b[^>]*>/gi, (tag) => (/\brel\s*=\s*(["'])canonical\1/i.test(tag) ? '' : tag)));
   const parts: string[] = [];
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
@@ -120,9 +125,9 @@ export function injectHead(html: string, meta: Meta, origin: string): string {
   });
 
   const injection = parts.join('\n');
-  const idx = html.indexOf('</head>');
+  const idx = document.search(/<\/head>/i);
   if (idx === -1) return html;
-  return `${html.slice(0, idx)}\n${injection}\n${html.slice(idx)}`;
+  return `${document.slice(0, idx)}\n${injection}\n${document.slice(idx)}`;
 }
 
 async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {

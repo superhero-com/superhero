@@ -45,30 +45,22 @@ const DirectReplies = ({
     if (!el) return () => {};
     const observer = new IntersectionObserver((entries) => {
       const e = entries[0];
-      if (e.isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage();
+      if (e.isIntersecting && hasNextPage && !isFetchingNextPage && !error) fetchNextPage();
     }, { root: null, rootMargin: '600px 0px', threshold: 0 });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, error]);
 
   // Auto-drain a few pages so short threads show fully without scrolling
   useEffect(() => {
-    if (!data) return () => {};
-    let cancelled = false;
     const maxAutoPages = 5;
-    const drain = async (steps = 0) => {
-      if (cancelled || !hasNextPage || isFetchingNextPage || steps >= maxAutoPages) return;
-      await fetchNextPage();
-      await drain(steps + 1);
-    };
-    if (hasNextPage && !isFetchingNextPage) {
-      drain();
+    if (data && data.pages.length < maxAutoPages && hasNextPage && !isFetchingNextPage && !error) {
+      fetchNextPage();
     }
-    return () => { cancelled = true; };
-  }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [data, hasNextPage, isFetchingNextPage, fetchNextPage, error]);
 
   if (isLoading) return <div className="text-center py-6 text-white/70">{t('social:loadingReplies')}</div>;
-  if (error) {
+  if (error && !data) {
     return (
       <div className="text-center py-6">
         <div className="text-white/70 mb-2">{t('social:errorLoadingReplies')}</div>
@@ -91,7 +83,19 @@ const DirectReplies = ({
           onOpenPost={(replyId) => onOpenPost(String(replyId).replace(/_v3$/, ''))}
         />
       ))}
-      {hasNextPage && <div ref={sentinelRef} className="h-10" />}
+      {hasNextPage && (
+        <div ref={sentinelRef} className="text-center py-4">
+          {error && <div role="status" className="text-white/70 mb-2">{t('social:errorLoadingReplies')}</div>}
+          <button
+            type="button"
+            className="text-sm underline text-white/70"
+            disabled={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+          >
+            {isFetchingNextPage ? t('social:loadingReplies') : t(error ? 'common:buttons.retry' : 'social:loadMore')}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

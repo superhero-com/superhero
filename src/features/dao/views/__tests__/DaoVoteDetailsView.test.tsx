@@ -3,7 +3,9 @@
 // lint rule for this file only.
 /* eslint-disable no-script-url */
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
   describe, expect, it, vi,
@@ -15,7 +17,8 @@ import DaoVoteDetailsView from '../DaoVoteDetailsView';
 
 // `vi.mock` factories are hoisted above the rest of this file, so any values they reference must
 // themselves be declared via `vi.hoisted` (a plain top-level `const` would be a TDZ error).
-const { SALE_ADDRESS, VOTE_ADDRESS } = vi.hoisted(() => ({
+const { SALE_ADDRESS, VOTE_ADDRESS, mockApplyVote } = vi.hoisted(() => ({
+  mockApplyVote: vi.fn(),
   SALE_ADDRESS: 'ct_1PnNLieJHnXKX3MShkSAMX9gcNgYEhxzqYqpQcqgFp75sWNWX',
   VOTE_ADDRESS: 'ct_21T9r7WsZuTuM8VvxmL53ZhUKZEq5qLFw1Efh41cBCxyWcLssz',
 }));
@@ -64,13 +67,14 @@ vi.mock('@/features/dao/hooks/useDaoVote', () => ({
     canVote: false,
     canRevokeVote: false,
     canWithdraw: false,
-    canApply: false,
+    canApply: true,
     voteYesPercentage: 0.5,
     userVoteOrLockedInfo: undefined,
     actionLoading: false,
     voteOption: vi.fn(),
     revokeVote: vi.fn(),
     withdraw: vi.fn(),
+    applyVote: mockApplyVote,
   }),
 }));
 
@@ -135,5 +139,11 @@ describe('DaoVoteDetailsView (scheme-validated poll link)', () => {
     expect(anchor).toHaveAttribute('href', 'https://example.com/proposal');
     expect(anchor).toHaveAttribute('rel', 'noopener noreferrer');
     expect(anchor).toHaveAttribute('target', '_blank');
+  });
+
+  it('connects the Apply button to the proposal action', async () => {
+    renderView();
+    fireEvent.click(await screen.findByRole('button', { name: 'Apply' }));
+    expect(mockApplyVote).toHaveBeenCalledTimes(1);
   });
 });

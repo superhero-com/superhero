@@ -108,9 +108,6 @@ export default function Invite() {
         {/* User Invitations */}
         {activeAccount && (
           <div className="mb-12">
-            <h3 className="text-xl md:text-2xl font-bold m-0 mb-6 text-white">
-              {t('inviteView.yourInvitations')}
-            </h3>
             <InvitationList />
           </div>
         )}

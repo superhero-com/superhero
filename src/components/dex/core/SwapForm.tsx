@@ -97,7 +97,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   // Function to fetch token metadata from middleware
   const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
     try {
-      const _token = DexService.getDexTokenByAddress({ address });
+      const _token = await DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
       return null;
@@ -162,30 +162,17 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       const toParam = searchParams.get('to');
       const defaultToAddress = 'ct_KeTvHnhU85vuuQMMZocaiYkPL9tkoavDRT3Jsy47LK2YqLHYb'; // WTT
 
-      // Set tokenIn based on URL param or default
-      if (fromParam && !tokenIn) {
-        const foundToken = await findTokenByAddressOrSymbol(fromParam);
-        if (foundToken && !cancelled) {
-          setTokenIn(foundToken);
-        }
-      } else if (!tokenIn && !fromParam) {
-        // Default: AE as input token
-        const ae = tokens.find((t) => t.is_ae) || null;
-        setTokenIn(ae || tokens[0] || null);
-      }
-
-      // Set tokenOut based on URL param or default
-      if (toParam && !tokenOut) {
-        const foundToken = await findTokenByAddressOrSymbol(toParam);
-        if (foundToken && !cancelled) {
-          setTokenOut(foundToken);
-        }
-      } else if (!tokenOut && !toParam) {
-        // Default: WTT as output token when no URL param provided
-        const wtt = await findTokenByAddressOrSymbol(defaultToAddress);
-        if (wtt && !cancelled) {
-          setTokenOut(wtt);
-        }
+      // Resolve both sides before committing state. Updating the URL after only
+      // one side loaded used to erase the other deep-link parameter.
+      const [input, output] = await Promise.all([
+        fromParam
+          ? findTokenByAddressOrSymbol(fromParam)
+          : Promise.resolve(tokens.find((token) => token.is_ae) || tokens[0] || null),
+        findTokenByAddressOrSymbol(toParam || defaultToAddress),
+      ]);
+      if (!cancelled) {
+        setTokenIn(input);
+        setTokenOut(output);
       }
     };
 
@@ -194,18 +181,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     return () => {
       cancelled = true;
     };
-  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol]);
-
-  // Update URL parameters when tokens change (after initial load)
-  useEffect(() => {
-    // Skip URL updates during initial load or when tokens are being set from URL params
-    if (!tokens.length || (!tokenIn && !tokenOut)) return;
-
-    // Only update URL if we have at least one token selected and tokens are loaded
-    if (tokenIn || tokenOut) {
-      updateUrlParams(tokenIn, tokenOut);
-    }
-  }, [tokenIn, tokenOut, tokens.length, updateUrlParams]);
+  }, [tokens, location.search, findTokenByAddressOrSymbol]);
 
   // Quote for exact-in mode when amountIn or tokens change
   useEffect(() => {
@@ -235,7 +211,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   // Handle quote results
   const handleSwap = async () => {
-    if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
+    if (isSwapDisabled || quoteLoading || error || !tokenIn || !tokenOut || !amountIn || !amountOut) return;
 
     // Additional validation before executing swap
     if (routeInfo.path.length === 0) {
@@ -247,8 +223,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
 
     try {
-      // Use router's calculated amounts for execution (accounts for constant product formula)
-      // Display amounts (amountIn/amountOut) are ratio-based for correct pricing display
+      // Execute using the current router quote, including fees and price impact.
       const executionAmountOut = routeInfo.routerAmountOut || amountOut;
       const executionAmountIn = routeInfo.routerAmountIn || amountIn;
 
@@ -349,8 +324,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   const isSwapDisabled = useMemo(() => {
     const liquidityExceeded = routeInfo.liquidityStatus?.exceedsLiquidity === true;
-    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
-  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
+    return swapLoading || quoteLoading || !!error || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
+  }, [swapLoading, quoteLoading, error, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
@@ -383,8 +358,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           skipToken={tokenOut}
           amount={amountIn}
           balance={balances.in}
-          onTokenChange={setTokenIn}
-          onAmountChange={setAmountIn}
+          onTokenChange={(token) => {
+            setTokenIn(token);
+            updateUrlParams(token, tokenOut);
+          }}
+          onAmountChange={(amount) => {
+            setIsExactIn(true);
+            setAmountIn(amount);
+          }}
           tokens={filteredInTokens}
           excludeTokens={tokenOut ? [tokenOut] : []}
           disabled={swapLoading}
@@ -399,6 +380,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       <div className="flex justify-center my-4 relative">
         <button
           onClick={handleTokenSwap}
+          aria-label={t('swap.swapTokens')}
           disabled={swapLoading || !tokenIn || !tokenOut}
           className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-in-out shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
@@ -414,7 +396,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           skipToken={tokenIn}
           amount={quoteLoading ? t('swap.quoting') : amountOut}
           balance={balances.out}
-          onTokenChange={setTokenOut}
+          onTokenChange={(token) => {
+            setTokenOut(token);
+            updateUrlParams(tokenIn, token);
+          }}
           onAmountChange={(amount) => {
             setIsExactIn(false);
             setAmountOut(amount);
@@ -507,7 +492,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         isExactIn={isExactIn}
         slippagePct={slippagePct}
         deadlineMins={deadlineMins}
-        priceImpactPct={routeInfo.priceImpact || null}
+        priceImpactPct={routeInfo.priceImpact ?? null}
         routeInfo={routeInfo}
         tokens={tokens}
         loading={swapLoading}

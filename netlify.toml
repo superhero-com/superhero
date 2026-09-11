@@ -63,6 +63,12 @@ for = "/manifest.webmanifest"
     Cache-Control = "public, max-age=3600"
 
 [[headers]]
+for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
 for = "/icons/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"

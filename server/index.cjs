@@ -13,6 +13,11 @@ const { createSitemapEngine } = require('./lib/sitemap.cjs');
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
 const INDEX_HTML = path.join(DIST_DIR, 'index.html');
+const APPLE_APP_SITE_ASSOCIATION = path.join(
+  DIST_DIR,
+  '.well-known',
+  'apple-app-site-association',
+);
 const API_BASE = process.env.SUPERHERO_API_URL || 'https://api.superhero.com';
 
 // Load template once
@@ -554,6 +559,15 @@ app.post(
 );
 
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
+
+// Apple Associated Domains fetches this extensionless file directly. Express static ignores
+// dot-directories by default, so serve it explicitly with the required JSON content type before
+// the SPA fallback can answer the crawler with index.html.
+app.get('/.well-known/apple-app-site-association', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.type('application/json');
+  res.send(fs.readFileSync(APPLE_APP_SITE_ASSOCIATION, 'utf8'));
+});
 
 // Curated sitemap: an in-memory buffer a background timer refreshes (see lib/sitemap.cjs). This
 // handler MUST be registered before express.static below — dist/sitemap.xml is a real file copied

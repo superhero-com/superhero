@@ -54,9 +54,10 @@ jobs:
             HOST_DATA_DIR,
             SHA
           script: |
-            echo $SHA > $HOST_DATA_DIR/REVISION || true
+            set -e
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker pull ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }} || true
+            # Do not stop the serving container unless the new image is available.
+            docker pull ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}
             docker stop ${{ inputs.CONTAINER_NAME }} || true
             docker rm ${{ inputs.CONTAINER_NAME }} || true
             docker run -d --name ${{ inputs.CONTAINER_NAME }} \
@@ -67,3 +68,5 @@ jobs:
               -p ${{secrets.HOST_PORT}}:80 \
               -e NODE_ENV=production \
               ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}
+            mkdir -p "$HOST_DATA_DIR"
+            echo "$SHA" > "$HOST_DATA_DIR/REVISION"

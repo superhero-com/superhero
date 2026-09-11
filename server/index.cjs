@@ -6,10 +6,18 @@ const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
 const { createCspPolicy, CSP_REPORT_PATH } = require('./lib/csp.cjs');
 const { decodedPath, isSubresourceRequest } = require('./lib/subresource.cjs');
+const { buildFaqPageJsonLd } = require('./lib/faq-content.cjs');
+const hubs = require('./lib/hubs.cjs');
+const { createSitemapEngine } = require('./lib/sitemap.cjs');
 
 const PORT = process.env.PORT || 80;
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
 const INDEX_HTML = path.join(DIST_DIR, 'index.html');
+const APPLE_APP_SITE_ASSOCIATION = path.join(
+  DIST_DIR,
+  '.well-known',
+  'apple-app-site-association',
+);
 const API_BASE = process.env.SUPERHERO_API_URL || 'https://api.superhero.com';
 
 // Load template once
@@ -54,6 +62,39 @@ function stripTokenTagEnvelopes(s){ return String(s||'').replace(/(#[\p{L}\p{N}-
 
 function absolutize(url, origin){ if(!url) return undefined; if(/^https?:\/\//i.test(url)) return url; if(url.startsWith('//')) return `https:${url}`; if(url.startsWith('/')) return `${origin}${url}`; return `${origin}/${url}`; }
 
+const BASE_API = API_BASE.replace(/\/$/, '');
+
+async function fetchJson(url){
+  try {
+    const r = await fetch(url, { headers: { accept: 'application/json' } });
+    if (r.ok) return await r.json();
+  } catch {}
+  return null;
+}
+
+// The three entity fetches the SEO <head> injector already relies on, factored out so the
+// per-entity markdown routes below hit the same production API path with the same fallbacks.
+async function fetchPost(segment){
+  let data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(segment)}`);
+  if (!data && /^\d+$/.test(segment)) {
+    data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(`${segment}_v3`)}`);
+  }
+  if (!data) {
+    const sdata = await fetchJson(`${BASE_API}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`);
+    const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+    if (first?.id) data = await fetchJson(`${BASE_API}/api/posts/${encodeURIComponent(String(first.id))}`);
+  }
+  return data;
+}
+
+async function fetchAccount(address){
+  return fetchJson(`${BASE_API}/api/accounts/${encodeURIComponent(address)}`);
+}
+
+async function fetchToken(name){
+  return fetchJson(`${BASE_API}/api/tokens/${encodeURIComponent(String(name).toUpperCase())}`);
+}
+
 async function buildMeta(pathname, origin){
   // Root
   if (pathname === '/' || pathname === '') {
@@ -62,6 +103,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${origin}/`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: origin,
+      },
     };
   }
 
@@ -72,6 +119,12 @@ async function buildMeta(pathname, origin){
       description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
       canonical: `${origin}/trends/tokens`,
       ogImage: `${origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${origin}/trends/tokens`,
+      },
     };
   }
 
@@ -79,38 +132,35 @@ async function buildMeta(pathname, origin){
   const pm = pathname.match(/^\/post\/([^/]+)/);
   if (pm) {
     const segment = pm[1];
-    const baseApi = API_BASE.replace(/\/$/, '');
-    async function fetchPostBySegment(seg){
-      const r = await fetch(`${baseApi}/api/posts/${encodeURIComponent(seg)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) return r.json();
-      return null;
+    const data = await fetchPost(segment);
+    if (data) {
+      const raw = stripTokenTagEnvelopes(String(data?.content || ''));
+      const content = raw.replace(/\s+/g,' ').trim();
+      const media = Array.isArray(data?.media) ? data.media : [];
+      return {
+        title: `${truncate(content,80) || 'Post'} – Superhero`,
+        description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
+        canonical: `${origin}/post/${data?.slug || segment}`,
+        ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
+        ogType: 'article',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'SocialMediaPosting',
+          headline: truncate(content,120) || 'Post',
+          datePublished: data?.created_at,
+          dateModified: data?.updated_at || data?.created_at,
+          author: { '@type': 'Person', name: data?.sender_address, identifier: data?.sender_address },
+          image: media,
+          interactionStatistic: [
+            {
+              '@type': 'InteractionCounter',
+              interactionType: 'CommentAction',
+              userInteractionCount: data?.total_comments || 0,
+            },
+          ],
+        },
+      };
     }
-    try {
-      let data = await fetchPostBySegment(segment);
-      if (!data && /^\d+$/.test(segment)) {
-        data = await fetchPostBySegment(`${segment}_v3`);
-      }
-      if (!data) {
-        const sr = await fetch(`${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`, { headers: { accept: 'application/json' } });
-        if (sr.ok) {
-          const sdata = await sr.json();
-          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
-          if (first?.id) data = await fetchPostBySegment(String(first.id));
-        }
-      }
-      if (data) {
-        const raw = stripTokenTagEnvelopes(String(data?.content || ''));
-        const content = raw.replace(/\s+/g,' ').trim();
-        const media = Array.isArray(data?.media) ? data.media : [];
-        return {
-          title: `${truncate(content,80) || 'Post'} – Superhero`,
-          description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${origin}/post/${data?.slug || segment}`,
-          ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
-          ogType: 'article',
-        };
-      }
-    } catch {}
     return { title: 'Post – Superhero', canonical: `${origin}/post/${segment}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
   }
 
@@ -118,17 +168,24 @@ async function buildMeta(pathname, origin){
   const um = pathname.match(/^\/users\/([^/]+)/);
   if (um) {
     const address = um[1];
-    let bio = '';
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) { const data = await r.json(); bio = String(data?.bio||'').trim(); }
-    } catch {}
+    const data = await fetchAccount(address);
+    const bio = String(data?.bio || '').trim();
+    const display = data?.chain_name ? String(data.chain_name) : address;
     return {
-      title: `${address} – Profile – Superhero`,
+      // chain_name-first title, matching netlify/edge-functions/seo.ts; raw address only when unnamed.
+      title: `${display} – Profile – Superhero`,
       description: bio ? truncate(bio,200) : 'View profile on Superhero, the crypto social network.',
       canonical: `${origin}/users/${address}`,
       ogImage: `${origin}/og-default.png`,
       ogType: 'profile',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: display,
+        identifier: address,
+        description: bio || undefined,
+        image: `${origin}/og-default.png`,
+      },
     };
   }
 
@@ -137,16 +194,26 @@ async function buildMeta(pathname, origin){
   if (tm) {
     const tokenName = tm[1];
     const address = tokenName.toUpperCase();
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
-        const symbol = data?.symbol || data?.name || address;
-        const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
-        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
-      }
-    } catch {}
+    const data = await fetchToken(tokenName);
+    if (data) {
+      const symbol = data?.symbol || data?.name || address;
+      const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
+      const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
+      return {
+        title: `Buy #${symbol} on Superhero.com`,
+        description: truncate(desc,200),
+        canonical: `${origin}/trends/tokens/${tokenName}`,
+        ogImage: tokenImg || `${origin}/og-default.png`,
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'CryptoCurrency',
+          name: data?.name || data?.symbol,
+          symbol: data?.symbol,
+          identifier: data?.address || data?.sale_address,
+          image: tokenImg,
+        },
+      };
+    }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
@@ -155,16 +222,26 @@ async function buildMeta(pathname, origin){
   if (tml) {
     const tokenName = tml[1];
     const address = tokenName.toUpperCase();
-    try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
-        const symbol = data?.symbol || data?.name || address;
-        const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
-        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
-      }
-    } catch {}
+    const data = await fetchToken(tokenName);
+    if (data) {
+      const symbol = data?.symbol || data?.name || address;
+      const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
+      const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
+      return {
+        title: `Buy #${symbol} on Superhero.com`,
+        description: truncate(desc,200),
+        canonical: `${origin}/trends/tokens/${tokenName}`,
+        ogImage: tokenImg || `${origin}/og-default.png`,
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'CryptoCurrency',
+          name: data?.name || data?.symbol,
+          symbol: data?.symbol,
+          identifier: data?.address || data?.sale_address,
+          image: tokenImg,
+        },
+      };
+    }
     return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
@@ -224,7 +301,13 @@ async function buildMeta(pathname, origin){
     return { title: 'Privacy Policy – Superhero', description: 'How Superhero handles your data.', canonical: `${origin}/privacy`, ogImage: `${origin}/og-default.png` };
   }
   if (pathname === '/faq') {
-    return { title: 'FAQ – Superhero', description: 'Frequently asked questions.', canonical: `${origin}/faq`, ogImage: `${origin}/og-default.png` };
+    return {
+      title: 'FAQ – Superhero',
+      description: 'Frequently asked questions.',
+      canonical: `${origin}/faq`,
+      ogImage: `${origin}/og-default.png`,
+      jsonLd: buildFaqPageJsonLd(),
+    };
   }
   if (pathname.startsWith('/meet')) {
     return { title: 'Meet – Superhero', description: 'Join a Superhero meeting.', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
@@ -233,9 +316,157 @@ async function buildMeta(pathname, origin){
   return { title: 'Superhero', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
 }
 
+// Per-entity markdown variants for agent crawlers. The SPA body is client-rendered
+// (`<div id="root">`) and most agent crawlers do not execute JS, so they see nothing. These
+// `.md` routes answer the same three entities the <head> injector fetches, as plain markdown.
+function fmtNum(v){
+  const n = Number(v);
+  if (!isFinite(n)) return undefined;
+  if (n === 0) return '0';
+  if (Math.abs(n) >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  return Number(n.toPrecision(4)).toString();
+}
+
+function mdStatLines(rows){
+  return rows.filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `- ${k}: ${v}`).join('\n');
+}
+
+function postMarkdown(data, segment, origin){
+  const content = stripTokenTagEnvelopes(String(data?.content || '')).trim();
+  const sender = data?.sender || {};
+  const address = sender.address || data?.sender_address || '';
+  const author = sender.public_name || address || 'Unknown';
+  const media = Array.isArray(data?.media) ? data.media.filter(Boolean) : [];
+  const stats = mdStatLines([
+    ['Author', address && author !== address ? `${author} (${address})` : (author || address)],
+    ['Comments', data?.total_comments],
+    ['Posted', data?.created_at],
+    ['URL', `${origin}/post/${data?.slug || segment}`],
+  ]);
+  const parts = [`# Post by ${author}`, content || '_No text content._'];
+  if (media.length) parts.push(media.map((m, i) => `![media ${i + 1}](${absolutize(m, origin)})`).join('\n'));
+  parts.push(stats);
+  return parts.join('\n\n') + '\n';
+}
+
+function userMarkdown(data, address, origin){
+  const name = data?.public_name || data?.chain_name || address;
+  const bio = String(data?.bio || data?.profile?.bio || '').trim();
+  const stats = mdStatLines([
+    ['Address', address],
+    ['Chain name', data?.chain_name || undefined],
+    ['Tokens created', data?.total_created_tokens],
+    ['Holdings', data?.holdings_count],
+    ['Total volume (AE)', fmtNum(data?.total_volume)],
+    ['Transactions', data?.total_tx_count],
+    ['URL', `${origin}/users/${address}`],
+  ]);
+  return [`# ${name}`, bio || '_No bio._', stats].join('\n\n') + '\n';
+}
+
+function tokenMarkdown(data, tokenName, origin){
+  const symbol = data?.symbol || data?.name || tokenName.toUpperCase();
+  const desc = String(data?.metaInfo?.description || '').trim();
+  const priceAe = fmtNum(data?.price_data?.ae ?? data?.price);
+  const priceUsd = fmtNum(data?.price_data?.usd);
+  const stats = mdStatLines([
+    ['Name', data?.name],
+    ['Symbol', data?.symbol],
+    ['Contract', data?.address],
+    ['Sale contract', data?.sale_address],
+    ['Price', priceAe !== undefined ? `${priceAe} AE${priceUsd !== undefined ? ` (~$${priceUsd})` : ''}` : undefined],
+    ['Holders', data?.holders_count],
+    ['Transactions', data?.tx_count],
+    ['Trending score', data?.trending_score],
+    ['Creator', data?.creator_address],
+    ['Created', data?.created_at],
+    ['URL', `${origin}/trends/tokens/${tokenName}`],
+  ]);
+  return [`# #${symbol}`, desc || `Explore #${symbol} token, trades, holders and posts on Superhero.`, stats].join('\n\n') + '\n';
+}
+
+function sendMarkdown(res, body){
+  res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+  res.send(body);
+}
+
+function sendMarkdownNotFound(res){
+  res.status(404).type('text/markdown; charset=utf-8').send('# Not found\n\nNo such entity.\n');
+}
+
 // The policy itself lives in ./lib/csp.cjs so scripts/check-csp-origins.cjs can diff its
 // allowlist against the built bundle and the directives can be asserted in tests.
 const { buildCsp } = createCspPolicy();
+
+// --- crawlable internal-link hubs -----------------------------------------------------
+// Server-rendered directory pages that emit real <a> links to gate-passing profiles and posts,
+// giving user/post pages the crawl path token pages already have via /trends/tokens. These are
+// standalone HTML (no SPA bundle, no scripts), so they carry their own tight, script-free CSP
+// rather than the nonce'd application policy above.
+function hubCsp() {
+  return [
+    "default-src 'none'",
+    "style-src 'unsafe-inline'",
+    "img-src 'self' https: data:",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
+function hubPageParam(req) {
+  const p = parseInt(req.query.page, 10);
+  return Number.isFinite(p) && p > 0 ? p : 1;
+}
+
+async function fetchListPage(pathAndQuery) {
+  const r = await fetch(`${API_BASE.replace(/\/$/, '')}${pathAndQuery}`, { headers: { accept: 'application/json' } });
+  if (!r.ok) return null;
+  return r.json();
+}
+
+function sendHub(res, html, status = 200) {
+  res.status(status);
+  res.setHeader('Content-Security-Policy', hubCsp());
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
+}
+
+async function sendHubIndex(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  sendHub(res, hubs.renderHubIndex(origin));
+}
+
+async function sendUserHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/accounts?order_by=total_tx_count&order_direction=DESC&limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = hubs.filterHubAccounts(items).map((a) => hubs.accountHubLink(a, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  const html = hubs.hubListPage({ section: 'users', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
+}
+
+async function sendPostHub(req, res) {
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const page = hubPageParam(req);
+  let links = [];
+  let totalPages = 1;
+  try {
+    const data = await fetchListPage(`/api/posts?limit=${hubs.HUB_PAGE_SIZE}&page=${page}`);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    links = items.map((p) => hubs.postHubLink(p, origin));
+    totalPages = Number(data?.meta?.totalPages) || 1;
+  } catch {}
+  const html = hubs.hubListPage({ section: 'posts', origin, page, links, totalPages });
+  sendHub(res, html, hubs.hubStatusCode(page, links.length));
+}
 
 // The single place the SPA document is rendered. It reuses the nonce the security-header
 // middleware already put on the response, so the header and the document's
@@ -264,6 +495,30 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   next();
+});
+
+// Per-entity markdown for agent crawlers, matched on the decoded path so it runs ahead of the
+// static and SPA-document handlers that would otherwise answer `.md` with HTML. Kept before the
+// CSP/nonce middleware since a markdown body carries no scripts to protect.
+const MD_ROUTES = [
+  { re: /^\/post\/(.+)\.md$/, fetch: fetchPost, render: postMarkdown },
+  { re: /^\/users\/(.+)\.md$/, fetch: fetchAccount, render: userMarkdown },
+  { re: /^\/trends\/tokens\/(.+)\.md$/, fetch: fetchToken, render: tokenMarkdown },
+];
+app.use(async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const pathname = decodedPath(req.path);
+  const route = MD_ROUTES.find((r) => r.re.test(pathname));
+  if (!route) return next();
+  const key = pathname.match(route.re)[1];
+  try {
+    const data = await route.fetch(key);
+    if (!data) return sendMarkdownNotFound(res);
+    const origin = `${req.protocol}://${req.get('host')}`;
+    return sendMarkdown(res, route.render(data, key, origin));
+  } catch {
+    return sendMarkdownNotFound(res);
+  }
 });
 
 // Content-hashed, immutable subresources. Mounted ahead of the CSP so the ~1.5 kB policy is not
@@ -305,6 +560,36 @@ app.post(
 
 app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png')));
 
+// Apple Associated Domains fetches this extensionless file directly. Express static ignores
+// dot-directories by default, so serve it explicitly with the required JSON content type before
+// the SPA fallback can answer the crawler with index.html.
+app.get('/.well-known/apple-app-site-association', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.type('application/json');
+  res.send(fs.readFileSync(APPLE_APP_SITE_ASSOCIATION, 'utf8'));
+});
+
+// Curated sitemap: an in-memory buffer a background timer refreshes (see lib/sitemap.cjs). This
+// handler MUST be registered before express.static below — dist/sitemap.xml is a real file copied
+// from public/, and static would win otherwise (same class as the HARDEN-04 `index: false` bug).
+// Until the first build lands, fall back to that static 9-URL file so a cold start never 404s.
+const sitemap = createSitemapEngine({ apiBase: API_BASE });
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  const buffer = sitemap.getBuffer();
+  if (buffer) {
+    res.setHeader('X-Sitemap-Source', 'buffer');
+    res.setHeader('X-Sitemap-Generated-At', sitemap.getGeneratedAt());
+    return res.send(buffer);
+  }
+  res.setHeader('X-Sitemap-Source', 'static-fallback');
+  try {
+    return res.send(fs.readFileSync(path.join(DIST_DIR, 'sitemap.xml'), 'utf8'));
+  } catch (e) {
+    return res.status(503).send('<!-- sitemap warming up -->');
+  }
+});
+
 // Route literal *.html requests to the document handler before express.static can answer them
 // off disk. Suffix-matched on the decoded path, so it also covers `/./index.html` and, on a
 // case-insensitive filesystem, `/INDEX.HTML`.
@@ -334,6 +619,12 @@ app.use((req, res, next) => {
   if (!isSubresourceRequest(decodedPath(req.path), req.get('sec-fetch-dest'))) return next();
   return res.status(404).type('text/plain').send('Not found');
 });
+
+// Crawlable hubs — registered before the SPA routes and catch-all so they render
+// their own link lists rather than falling through to the client bundle.
+app.get('/hubs', sendHubIndex);
+app.get('/hubs/users', sendUserHub);
+app.get('/hubs/posts', sendPostHub);
 
 // Express 5 (path-to-regexp v8) has no bare `*`: a wildcard must be its own named segment.
 // The `/voting*`-style suffix patterns have no direct equivalent, so they become the literal
@@ -365,4 +656,5 @@ app.get('/*splat', sendSpaDocument);
 
 app.listen(PORT, () => {
   console.log(`[server] listening on :${PORT}`);
+  sitemap.start(); // build the sitemap buffer at boot, then every 6h.
 });

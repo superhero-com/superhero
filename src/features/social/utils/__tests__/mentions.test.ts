@@ -259,4 +259,49 @@ describe('clampMentionInput', () => {
     expect(serializeMentions(clamped, [marek]).length).toBeLessThanOrEqual(20);
     expect(clamped).toBe('@marek.chain x');
   });
+
+  it('rejects a picked mention whose serialised macro would cross the cap', () => {
+    // Mirrors the picker path: typed query replaced by the display run, counted by macro.
+    // Short display (@marek.chain) but a long [account:…] macro is what pushes over 20.
+    const typed = 'hey @mar';
+    const active = detectActiveMention(typed, typed.length)!;
+    const { text: nextText } = applyMention(typed, active, marek.display);
+    // Serialised "hey [account:ak_marek] " (23) > 20 -> the whole run cannot fit, so the
+    // pick is atomic: the clamp returns something other than nextText and the caller drops it.
+    expect(clampMentionInput(typed, nextText, [marek], 20)).not.toBe(nextText);
+  });
+
+  // Regression: an arbitrary truncation could cut inside a `#SYMBOL{...}` envelope, leaving a
+  // dangling `{` that the reader renders as literal text. The clamp backs the cut off to the
+  // envelope's start, so the tag survives as a bare `#SYMBOL`. Uses the shared envelope grammar.
+  it('backs an over-cap cut off the start of a token envelope, never leaving a dangling {', () => {
+    const body = 'x'.repeat(270);
+    const clamped = clampMentionInput(body, `${body} #SUPERHERO{mode=advanced}`, [], 285);
+    expect(clamped).toBe(`${body} #SUPERHERO`);
+    expect(clamped.endsWith('{')).toBe(false);
+    expect(clamped.length).toBeLessThanOrEqual(285);
+  });
+
+  // The clamp must scan with the same widened symbol class as the composer scanner: a
+  // collection symbol (e.g. Cyrillic/Latin-extended "ÜBER") is only detected as a tag when the
+  // live alphabet is threaded in, otherwise its envelope is cut to a dangling `{`. Mainnet has
+  // Chinese, Arabic and Cyrillic collections, so this is reachable.
+  it('backs off a non-Latin collection envelope when the alphabet is threaded in', () => {
+    const body = 'x'.repeat(270);
+    const next = `${body} #ÜBER{mode=advanced}`;
+    const latinExt = '\\u00c0-\\u024f';
+    expect(clampMentionInput(body, next, [], 285, latinExt)).toBe(`${body} #ÜBER`);
+    expect(clampMentionInput(body, next, [], 285, latinExt)).not.toContain('{');
+    // Without the alphabet the fallback class misses "Ü", the envelope is not detected, and the
+    // brace is left dangling mid-string — the residual this fix closes.
+    expect(clampMentionInput(body, next, [], 285)).toContain('{');
+  });
+
+  it('leaves an envelope untouched when the cut falls entirely outside it', () => {
+    // Room reaches exactly past the whole envelope; only the trailing " gm" is trimmed.
+    const body = 'y'.repeat(250);
+    const clamped = clampMentionInput(body, `${body} #A{mode=advanced} gm`, [], 268);
+    expect(clamped).toBe(`${body} #A{mode=advanced}`);
+    expect(clamped.length).toBeLessThanOrEqual(268);
+  });
 });

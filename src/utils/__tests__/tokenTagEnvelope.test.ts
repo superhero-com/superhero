@@ -1,9 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import {
+  MODE_PRESETS,
   parseTokenTagEnvelope,
+  serializeTokenTagEnvelope,
+  matchPreset,
   isTokenTagEnhanced,
   stripTokenTagEnvelopes,
+  buildTokenNameRegex,
+  walkHashtagRun,
+  type TokenTagDisplayOptions,
 } from '../tokenTagEnvelope';
+
+const opts = (chart: boolean, price: boolean, change: boolean): TokenTagDisplayOptions => ({
+  chart,
+  price,
+  change,
+});
 
 describe('parseTokenTagEnvelope — presets', () => {
   // `tag` carries change:true — it is today's rendering, badge included. See MODE_PRESETS.
@@ -85,6 +97,103 @@ describe('parseTokenTagEnvelope — overrides and degradation', () => {
     expect(parseTokenTagEnvelope('advanced')).toEqual({ chart: false, price: false, change: true });
     expect(parseTokenTagEnvelope('!!garbage!!')).toEqual({ chart: false, price: false, change: true });
     expect(parseTokenTagEnvelope('fps=60;quality=high')).toEqual({ chart: false, price: false, change: true });
+  });
+});
+
+describe('serializeTokenTagEnvelope', () => {
+  it('emits no envelope for the tag default — a bare tag is byte-identical to today', () => {
+    expect(serializeTokenTagEnvelope(MODE_PRESETS.tag)).toBe('');
+  });
+
+  it('emits the named mode for compact and advanced presets', () => {
+    expect(serializeTokenTagEnvelope(MODE_PRESETS.compact)).toBe('{mode=compact}');
+    expect(serializeTokenTagEnvelope(MODE_PRESETS.advanced)).toBe('{mode=advanced}');
+  });
+
+  it('emits {change=0} for the symbol with the change badge explicitly off — not mode=tag', () => {
+    expect(serializeTokenTagEnvelope(opts(false, false, false))).toBe('{change=0}');
+  });
+
+  it('emits the minimal custom mix from the nearest base', () => {
+    expect(serializeTokenTagEnvelope(opts(true, false, true))).toBe('{chart=1}');
+    expect(serializeTokenTagEnvelope(opts(true, false, false))).toBe('{chart=1;change=0}');
+    expect(serializeTokenTagEnvelope(opts(false, true, false))).toBe('{price=1;change=0}');
+    expect(serializeTokenTagEnvelope(opts(true, true, false))).toBe('{mode=advanced;change=0}');
+  });
+
+  it('round-trips every possible options triple through the reader parser', () => {
+    [false, true].forEach((chart) => {
+      [false, true].forEach((price) => {
+        [false, true].forEach((change) => {
+          const triple = opts(chart, price, change);
+          const payload = serializeTokenTagEnvelope(triple).replace(/^\{|\}$/g, '');
+          expect(parseTokenTagEnvelope(payload)).toEqual(triple);
+        });
+      });
+    });
+  });
+});
+
+describe('matchPreset', () => {
+  it('names an exact preset and returns null for a custom mix', () => {
+    expect(matchPreset(MODE_PRESETS.compact)).toBe('compact');
+    expect(matchPreset(MODE_PRESETS.tag)).toBe('tag');
+    expect(matchPreset(opts(true, false, false))).toBeNull();
+  });
+});
+
+// The tag-scanning grammar shared by the reader (linkify) and the composer scan. These test the
+// primitive directly; the reader and composer suites prove each consumer wires it up correctly.
+describe('walkHashtagRun', () => {
+  const walk = (run: string, extra?: string) => walkHashtagRun(run, buildTokenNameRegex(extra));
+
+  it('splits an unseparated pair into two tags with run-relative offsets', () => {
+    expect(walk('#one#two')).toEqual([
+      {
+        type: 'tag', symbol: 'one', start: 0, end: 4, payload: '', hasEnvelope: false,
+      },
+      {
+        type: 'tag', symbol: 'two', start: 4, end: 8, payload: '', hasEnvelope: false,
+      },
+    ]);
+  });
+
+  it('attaches a display envelope to its symbol and reports the payload', () => {
+    expect(walk('#SUPERHERO{mode=advanced}')).toEqual([
+      {
+        type: 'tag',
+        symbol: 'SUPERHERO',
+        start: 0,
+        end: 25,
+        payload: 'mode=advanced',
+        hasEnvelope: true,
+      },
+    ]);
+  });
+
+  it('does not treat an unterminated brace as an envelope — the brace is inert text', () => {
+    expect(walk('#SUPERHERO{mode=advanced')).toEqual([
+      {
+        type: 'tag', symbol: 'SUPERHERO', start: 0, end: 10, payload: '', hasEnvelope: false,
+      },
+      { type: 'inert', text: '{mode=advanced', start: 10 },
+    ]);
+  });
+
+  it('keeps an inert remainder (e.g. ".ai/") as text and resumes at the next #', () => {
+    expect(walk('#emoter.ai/#foo')).toEqual([
+      {
+        type: 'tag', symbol: 'emoter', start: 0, end: 7, payload: '', hasEnvelope: false,
+      },
+      { type: 'inert', text: '.ai/', start: 7 },
+      {
+        type: 'tag', symbol: 'foo', start: 11, end: 15, payload: '', hasEnvelope: false,
+      },
+    ]);
+  });
+
+  it('returns null when no # in the run leads to a valid token', () => {
+    expect(walk('#_bad_stuff')).toBeNull();
   });
 });
 

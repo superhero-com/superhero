@@ -150,6 +150,19 @@ test.describe('enforcing CSP + Trusted Types', () => {
     });
   });
 
+  test('serves the Apple app-site association file as JSON', async ({ request }) => {
+    const response = await request.get('/.well-known/apple-app-site-association');
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('application/json');
+
+    const body = await response.json();
+    expect(body).toEqual({
+      webcredentials: {
+        apps: ['8H7FGC266S.com.superhero.apps'],
+      },
+    });
+  });
+
   // Regression guard. `ServiceWorkerContainer.register()` takes a TrustedScriptURL, so under
   // `require-trusted-types-for 'script'` a policy that implements only `createHTML` makes it
   // throw outright — killing web push for every user who granted permission. The route walk

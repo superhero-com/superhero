@@ -12,23 +12,15 @@ import TokenVoteCard from '@/features/dao/components/TokenVoteCard';
 import { useDao } from '@/features/dao/hooks/useDao';
 import { LivePriceFormatter } from '@/features/shared/components';
 import { Decimal } from '@/libs/decimal';
-import { ensureAddress, ensureString } from '@/utils/common';
-import { Encoded, Encoding, toAe } from '@aeternity/aepp-sdk';
+import { ensureString } from '@/utils/common';
+import { Encoded, toAe } from '@aeternity/aepp-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { VOTE_TYPE, VoteMetadata } from 'bctsl-sdk';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 
-const voteTypes = [
-  VOTE_TYPE.VotePayout,
-  // VOTE_TYPE.VotePayoutAmount, // two fields
-  VOTE_TYPE.ChangeDAO,
-  // VOTE_TYPE.ChangeMetaInfo, // a map
-  VOTE_TYPE.ChangeMinimumTokenThreshold,
-  VOTE_TYPE.AddModerator,
-  VOTE_TYPE.DeleteModerator,
-] as const;
+import { createVoteSubject, supportedVoteTypes as voteTypes } from '../libs/voteSubject';
 
 const Dao = () => {
   const { t } = useTranslation('dao');
@@ -58,17 +50,19 @@ const Dao = () => {
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
   });
 
+  const subjectPlaceholder = newVote.type === VOTE_TYPE.ChangeDAO ? 'ct_…' : 'ak_…';
+
   const validateForm = () => {
     const errors: { value?: string; description?: string; link?: string } = {};
 
-    // Validate subject value (should be an address)
+    // Validate the value against the selected contract variant.
     if (!newVote.value || newVote.value.trim() === '') {
       errors.value = t('subjectValueRequired');
     } else {
       try {
-        ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
-      } catch {
-        errors.value = t('subjectValueInvalid');
+        createVoteSubject(newVote.type, newVote.value);
+      } catch (validationError) {
+        errors.value = validationError instanceof Error ? validationError.message : t('subjectValueInvalid');
       }
     }
 
@@ -115,13 +109,13 @@ const Dao = () => {
     setCreating(true);
     setErrorMessage(null);
     try {
-      const metadata: any = {
-        subject: { VotePayout: [newVote.value] },
+      const metadata: VoteMetadata = {
+        subject: createVoteSubject(newVote.type, newVote.value || ''),
         description: newVote.description || '',
         link: newVote.link || '',
 
       };
-      await addVote(metadata as VoteMetadata);
+      await addVote(metadata);
       await updateState();
     } catch (e: any) {
       setErrorMessage(e?.message || t('failedToCreateVote'));
@@ -173,7 +167,7 @@ const Dao = () => {
 
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
-            to={`/trends/tokens/${encodeURIComponent(token?.name || '')}`}
+            to={`/trends/tokens/${encodeURIComponent(token?.symbol || saleAddress || '')}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
             {t('backToTokenSale')}
@@ -219,9 +213,7 @@ const Dao = () => {
                   </span>
                   {' '}
                   <strong className="text-white">
-                    {Array.isArray((state as any)?.votes)
-                      ? (state as any).votes.length
-                      : 0}
+                    {state?.votes?.size || 0}
                   </strong>
                 </div>
                 {token?.holders_count != null && (
@@ -272,10 +264,10 @@ const Dao = () => {
                     </div>
                     <Select
                       value={newVote.type}
-                      onValueChange={(value) => setNewVote((v) => ({
-                        ...v,
-                        type: value as (typeof voteTypes)[number],
-                      }))}
+                      onValueChange={(value) => {
+                        setNewVote((v) => ({ ...v, type: value as (typeof voteTypes)[number], value: '' }));
+                        clearFieldError('value');
+                      }}
                     >
                       <SelectTrigger className="bg-white/5 border-white/20 text-white">
                         <SelectValue placeholder={t('selectVoteType')} />
@@ -295,7 +287,7 @@ const Dao = () => {
                       {t('subjectValue')}
                     </div>
                     <Input
-                      placeholder={t('subjectValuePlaceholder')}
+                      placeholder={newVote.type === VOTE_TYPE.ChangeMinimumTokenThreshold ? 'Token base units (whole number)' : subjectPlaceholder}
                       value={newVote.value}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, value: e.target.value }));

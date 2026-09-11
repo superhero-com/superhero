@@ -9,8 +9,12 @@
  * a live route into a 404, which no route-walk in the e2e suite would attribute to this rule.
  */
 
-const SUBRESOURCE_EXT_RE = /\.(?:js|mjs|cjs|css|map|woff2?|ttf|otf|eot)$/i;
-const SUBRESOURCE_DESTS = new Set(['script', 'serviceworker', 'style', 'font', 'worker', 'sharedworker']);
+const SUBRESOURCE_EXT_RE = /\.(?:js|mjs|cjs|css|map|woff2?|ttf|otf|eot|avif|bmp|gif|ico|jpe?g|png|svg|tiff?|webp|pdf|mp3|mp4|ogg|wav|webm|webmanifest)$/i;
+const DISCOVERY_RESOURCE_RE = /^\/(?:robots\.txt|sitemap(?:[-/]\w+)?\.xml)$/i;
+const SUBRESOURCE_DESTS = new Set([
+  'script', 'serviceworker', 'style', 'font', 'worker', 'sharedworker',
+  'image', 'manifest', 'audio', 'video',
+]);
 
 /**
  * `req.path` with percent-escapes resolved. serve-static decodes before resolving, so a raw
@@ -27,10 +31,13 @@ function decodedPath(rawPath) {
 
 /**
  * `Sec-Fetch-Dest` is absent on older browsers and on curl, so the extension test carries those
- * cases. A navigation is `document` and matches neither branch.
+ * cases. Recognized asset/discovery paths still 404 when directly navigated to;
+ * ordinary document routes, including .chain names, continue to reach the SPA.
  */
 function isSubresourceRequest(pathname, secFetchDest) {
-  return SUBRESOURCE_EXT_RE.test(pathname) || SUBRESOURCE_DESTS.has(secFetchDest);
+  return SUBRESOURCE_EXT_RE.test(pathname)
+    || DISCOVERY_RESOURCE_RE.test(pathname)
+    || SUBRESOURCE_DESTS.has(secFetchDest);
 }
 
 module.exports = { decodedPath, isSubresourceRequest };

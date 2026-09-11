@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { injectHead } = require('./lib/head.cjs');
+const { publicOrigin } = require('./lib/origin.cjs');
 const { createCspPolicy, CSP_REPORT_PATH } = require('./lib/csp.cjs');
 const { decodedPath, isSubresourceRequest } = require('./lib/subresource.cjs');
 
@@ -244,7 +245,7 @@ async function sendSpaDocument(req, res) {
   const nonce = res.locals.cspNonce;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   try {
-    const origin = `${req.protocol}://${req.get('host')}`;
+    const origin = publicOrigin(req, process.env.PUBLIC_ORIGIN);
     const meta = await buildMeta(req.path, origin);
     res.send(injectHead(envInject(indexHtml), meta).replaceAll('__CSP_NONCE__', nonce));
   } catch (e) {

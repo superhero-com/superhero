@@ -52,7 +52,7 @@ const TokenCreatedActivityItem = memo(({
   const displayName = (profileDisplayNames?.[creator] ?? chainNames?.[creator] ?? '').trim();
   const creatorLabel = displayName || formatAddress(creator, 6, true);
   const tokenName = useTokenName(item);
-  const tokenLink = tokenName ? `/trends/tokens/${tokenName}` : undefined;
+  const tokenLink = tokenName ? `/trends/tokens/${encodeURIComponent(tokenName)}` : undefined;
 
   // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
   // token name may contain. New collections the backend adds are picked up automatically.
@@ -68,7 +68,13 @@ const TokenCreatedActivityItem = memo(({
       role="button"
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
       className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding && 'pt-0'} ${((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding && 'pb-0'} ${((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? t('tokenCreatedActivity.openTrendNamed', { tokenName }) : t('tokenCreatedActivity.openTrend')}
     >

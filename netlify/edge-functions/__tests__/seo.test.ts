@@ -57,6 +57,19 @@ describe('jsonLdSafe', () => {
 });
 
 describe('injectHead — JSON-LD script-breakout XSS regression', () => {
+  it('replaces the template title and stale social metadata', () => {
+    const template = '<html><head><title>Old title</title><meta name="viewport" content="width=device-width"><meta name="description" content="Old"><link rel="canonical" href="http://old.example"><meta property="og:title" content="Old"></head><body>Page</body></html>';
+    const meta = { title: 'Current post', description: 'Current description', canonical: 'https://superhero.com/post/1' };
+    const doc = parseHtml(injectHead(injectHead(template, meta, 'https://superhero.com'), meta, 'https://superhero.com'));
+    expect(doc.querySelectorAll('title')).toHaveLength(1);
+    expect(doc.title).toBe('Current post');
+    expect(doc.querySelectorAll('meta[name="description"]')).toHaveLength(1);
+    expect(doc.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+    expect(doc.querySelectorAll('meta[property="og:title"]')).toHaveLength(1);
+    expect(doc.querySelector('meta[name="viewport"]')).not.toBeNull();
+    expect(doc.body.textContent).toBe('Page');
+  });
+
   it('renders a malicious post headline as inert JSON text, not a second <script> element', () => {
     const html = injectHead(
       BASE_HTML,

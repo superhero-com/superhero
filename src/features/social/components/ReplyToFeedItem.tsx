@@ -273,6 +273,7 @@ const ReplyToFeedItem = memo(({
       )}
       onClick={isActive ? undefined : handleOpen}
       onKeyDown={isActive ? undefined : (event) => {
+        if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           handleOpen();
@@ -368,10 +369,10 @@ const ReplyToFeedItem = memo(({
                 onOpenPost(slugOrId);
               }}
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
-              title={t('openParent')}
+              title={t('social:openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('replyingTo')}</span>
+                <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('social:replyingTo')}</span>
                 <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
                   <div className="translate-y-[2px]">
                     <AddressAvatarWithChainName
@@ -382,7 +383,7 @@ const ReplyToFeedItem = memo(({
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? ((profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? '').trim() || formatAddress(parent.sender_address, 6, true)) : t('parent')}
+                    {parent ? ((profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? '').trim() || formatAddress(parent.sender_address, 6, true)) : t('social:parent')}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
@@ -396,7 +397,7 @@ const ReplyToFeedItem = memo(({
               </div>
               <div className="text-[12px] text-white line-clamp-2">
                 {parentError || !parent
-                  ? t('parentUnavailable')
+                  ? t('social:parentUnavailable')
                   : linkify(parent.content, {
                     knownChainNames: new Set(
                       Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
@@ -408,7 +409,7 @@ const ReplyToFeedItem = memo(({
                     hashtagAllowedChars,
                   })}
               </div>
-              <div className="mt-1 text-[11px] text-white/70">{t('showPost')}</div>
+              <div className="mt-1 text-[11px] text-white/70">{t('social:showPost')}</div>
             </button>
           )}
 
@@ -479,7 +480,7 @@ const ReplyToFeedItem = memo(({
           {showReplies && (
             <div id={`replies-${postId}`} className="mt-3 grid gap-2 pl-3 md:pl-5 border-l border-white/10">
               {childLoading && (
-                <div className="text-[13px] text-white/70">{t('loadingReplies')}</div>
+                <div className="text-[13px] text-white/70">{t('social:loadingReplies')}</div>
               )}
               {childError && (
                 <div className="text-[13px] text-white/70">
@@ -495,7 +496,7 @@ const ReplyToFeedItem = memo(({
                 </div>
               )}
               {!childLoading && !childError && childReplies.length === 0 && (
-                <div className="text-[13px] text-white/60">{t('noRepliesYet')}</div>
+                <div className="text-[13px] text-white/60">{t('social:noRepliesYet')}</div>
               )}
               {childReplies.map((reply: PostDto) => (
                 <ReplyToFeedItem

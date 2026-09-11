@@ -217,14 +217,14 @@ const FeedRailSearch = () => {
   const trimmedInput = searchInput.trim();
   const hasQuery = debounced.length > 0;
   /** Query shown in the Explore row while debounce is catching up. */
-  const activeSearchLabel = debounced || trimmedInput;
+  const activeSearchLabel = trimmedInput;
   const showRecentsPanel = open && trimmedInput.length === 0;
   const showSearchPanel = open && trimmedInput.length > 0;
 
   useEffect(() => {
-    const live = (debounced || trimmedInput).trim();
+    const live = trimmedInput;
     if (live) lastPickSearchRef.current = live;
-  }, [debounced, trimmedInput]);
+  }, [trimmedInput]);
 
   const {
     data: items = [],
@@ -244,7 +244,7 @@ const FeedRailSearch = () => {
    * `placeholderData` + `enabled: hasQuery` can surface the last fetch while debounce
    * catches up (or the field is cleared); never treat that as live hits.
    */
-  const hitsAreForActiveQuery = hasQuery && !isPlaceholderData;
+  const hitsAreForActiveQuery = hasQuery && debounced === trimmedInput && !isPlaceholderData;
 
   useEffect(() => {
     const onDoc = (e: PointerEvent) => {
@@ -271,13 +271,13 @@ const FeedRailSearch = () => {
 
   /** Capture phase so we still see the query before browser `type="search"` clear or blur races. */
   const capturePickSearchTerm = useCallback(() => {
-    const term = (debounced || searchInput.trim()).trim();
+    const term = searchInput.trim();
     if (term) lastPickSearchRef.current = term;
-  }, [debounced, searchInput]);
+  }, [searchInput]);
 
   const go = useCallback(
     (row: FeedRailSearchItem) => {
-      const term = (debounced || searchInput.trim()).trim() || lastPickSearchRef.current;
+      const term = searchInput.trim() || lastPickSearchRef.current;
       switch (row.type) {
         case 'token': {
           const { address, name, symbol } = row.item;
@@ -325,7 +325,7 @@ const FeedRailSearch = () => {
       }
       clearSearchUi();
     },
-    [navigate, clearSearchUi, debounced, searchInput, pushRecent, t],
+    [navigate, clearSearchUi, searchInput, pushRecent, t],
   );
 
   const onPickRecent = useCallback(
@@ -449,14 +449,14 @@ const FeedRailSearch = () => {
             </div>
           </Link>
 
-          {hasQuery && isFetching ? (
+          {trimmedInput !== debounced || (hasQuery && isFetching) ? (
             <div className="flex items-center justify-center gap-2 py-6 text-xs text-white/60">
               <Spinner className="w-4 h-4" />
               <span>{t('feedRailSearch.searching')}</span>
             </div>
           ) : null}
 
-          {hasQuery && !isFetching && isError ? (
+          {debounced === trimmedInput && hasQuery && !isFetching && isError ? (
             <div className="px-3 py-4 text-xs text-white/60 text-center">
               {t('feedRailSearch.searchFailed')}
             </div>

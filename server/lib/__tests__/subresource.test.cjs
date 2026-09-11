@@ -19,12 +19,24 @@ describe('requests that must 404', () => {
     expect(guard('/fonts/inter.ttf')).toBe(true);
   });
 
+  it.each([
+    '/qa-missing.png', '/images/missing.jpg', '/images/missing.jpeg', '/missing.svg',
+    '/missing.webp', '/missing.avif', '/favicon.ico', '/whitepaper.pdf',
+    '/missing.mp4', '/missing.mp3', '/manifest.webmanifest', '/robots.txt',
+    '/sitemap.xml', '/sitemap/0.xml', '/sitemap-posts.xml',
+  ])('does not return an HTML shell for a missing static resource: %s', (path) => {
+    // Existing files are served before this guard. Only missing assets reach it.
+    expect(guard(path)).toBe(true);
+    expect(guard(path, 'document')).toBe(true);
+  });
+
   it('matches the extension case-insensitively', () => {
     expect(guard('/Vendor.JS')).toBe(true);
   });
 
   it('sees through percent-escapes, which serve-static resolves but a literal match would not', () => {
     expect(guard('/missing%2Ejs')).toBe(true);
+    expect(guard('/missing%2Epng')).toBe(true);
   });
 
   it('catches an extensionless request the browser labels as a subresource', () => {
@@ -36,6 +48,10 @@ describe('requests that must 404', () => {
     expect(guard('/inter', 'font')).toBe(true);
     expect(guard('/pool', 'worker')).toBe(true);
     expect(guard('/pool', 'sharedworker')).toBe(true);
+    expect(guard('/cover', 'image')).toBe(true);
+    expect(guard('/manifest', 'manifest')).toBe(true);
+    expect(guard('/recording', 'audio')).toBe(true);
+    expect(guard('/clip', 'video')).toBe(true);
   });
 });
 
@@ -60,13 +76,13 @@ describe('requests that must still reach the SPA', () => {
   it('does not fire on a dot that is not one of the extensions', () => {
     // Chain names are `.chain`, and a filename-looking path is not a subresource by itself.
     expect(guard('/users/nikita.chain')).toBe(false);
-    expect(guard('/og-default.png')).toBe(false);
-    expect(guard('/manifest.webmanifest')).toBe(false);
-    expect(guard('/robots.txt')).toBe(false);
+    expect(guard('/users/alex.chain', 'document')).toBe(false);
+    expect(guard('/post/a.story')).toBe(false);
+    expect(guard('/trends/tokens/V2.0')).toBe(false);
+    expect(guard('/unknown-document')).toBe(false);
   });
 
-  it('does not treat an image or fetch destination as a subresource', () => {
-    expect(guard('/users/ak_x', 'image')).toBe(false);
+  it('does not classify every fetch destination as a subresource', () => {
     expect(guard('/api/thing', 'empty')).toBe(false);
   });
 });

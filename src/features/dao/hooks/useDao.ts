@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useRef, useState,
+  useCallback, useEffect, useRef, useState, useMemo,
 } from 'react';
 import {
   DAO, initFallBack, TokenSale, Vote, VoteMetadata,
@@ -25,10 +25,17 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const { sdk } = useAeSdk();
   const [activeAccount] = useAtom(activeAccountAtom);
 
+  const context = useMemo(() => ({
+    sdk, tokenSaleAddress, activeAccount,
+  }), [sdk, tokenSaleAddress, activeAccount]);
+  const activeContextRef = useRef(context);
+  activeContextRef.current = context;
+
   // Refs for contract instances
   const tokenSaleFactoryRef = useRef<TokenSale>(undefined);
   const tokenInstanceRef = useRef<Contract<ContractMethodsBase>>(undefined);
   const daoRef = useRef<DAO>(undefined);
+  const generationRef = useRef(0);
 
   // State
   const [state, setState] = useState<DAOState>();
@@ -38,63 +45,81 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
   const [tokenMetaInfo, setTokenMetaInfo] = useState<{ symbol: string; decimals: bigint }>();
 
   const updateState = useCallback(async () => {
-    if (!tokenInstanceRef.current || !daoRef.current) return;
+    if (activeContextRef.current !== context
+      || !tokenInstanceRef.current || !daoRef.current) return;
 
+    const generation = generationRef.current;
+    const tokenContract = tokenInstanceRef.current;
+    const daoContract = daoRef.current;
     try {
-      // Get token supply
-      const supplyResult = await tokenInstanceRef.current.total_supply();
+      const [
+        supplyResult, metaResult, daoState, balanceAettos, accountBalance,
+      ] = await Promise.all([
+        tokenContract.total_supply(),
+        tokenContract.meta_info(),
+        daoContract.state(),
+        daoContract.balanceAettos(),
+        activeAccount ? tokenContract.balance(activeAccount) : Promise.resolve(undefined),
+      ]);
+      if (generation !== generationRef.current) return;
       setTokenSupply(supplyResult.decodedResult);
-
-      // Get token meta info
-      const metaResult = await tokenInstanceRef.current.meta_info();
       setTokenMetaInfo(metaResult.decodedResult);
-
-      // Get DAO state
-      const daoState = await daoRef.current.state();
       setState(daoState);
-
-      // Get DAO balance
-      const balanceAettos = await daoRef.current.balanceAettos();
       setBalance(Number(toAe(balanceAettos || 0)));
-
-      // Get user token balance if account is active
-      if (activeAccount) {
-        const balanceResult = await tokenInstanceRef.current.balance(activeAccount);
-        setUserTokenBalance(balanceResult.decodedResult || 0n);
-      }
+      setUserTokenBalance(activeAccount ? accountBalance?.decodedResult || 0n : undefined);
     } catch {
-      // Ignore DAO state update errors
+      // Keep the latest successfully fetched state for this DAO.
     }
-  }, [activeAccount]);
+  }, [activeAccount, context]);
 
   const init = useCallback(async () => {
-    if (!sdk) return;
-
+    if (activeContextRef.current !== context || !sdk) return;
+    const generation = generationRef.current;
     try {
-      // Initialize token sale factory if not already done
       if (!tokenSaleFactoryRef.current) {
-        tokenSaleFactoryRef.current = await initFallBack(sdk, tokenSaleAddress);
-        tokenInstanceRef.current = await tokenSaleFactoryRef.current.tokenContractInstance();
-        daoRef.current = await tokenSaleFactoryRef.current.checkAndGetDAO();
+        const tokenSale = await initFallBack(sdk, tokenSaleAddress);
+        const [tokenContract, daoContract] = await Promise.all([
+          tokenSale.tokenContractInstance(), tokenSale.checkAndGetDAO(),
+        ]);
+        if (generation !== generationRef.current) return;
+        tokenSaleFactoryRef.current = tokenSale;
+        tokenInstanceRef.current = tokenContract;
+        daoRef.current = daoContract;
       }
-
       await updateState();
     } catch {
-      // Ignore DAO init errors
+      // The DAO may not have been deployed for this token yet.
     }
-  }, [sdk, tokenSaleAddress, updateState]);
+  }, [sdk, tokenSaleAddress, updateState, context]);
 
-  const addVote = useCallback(async (metadata: VoteMetadata): Promise<Vote | undefined> => {
-    if (!daoRef.current) return undefined;
-    try {
-      const vote = await daoRef.current.addVote(metadata);
-      await updateState();
-      return vote;
-    } catch {
-      // Ignore vote add errors
-      return undefined;
+  const addVote = useCallback(async (metadata: VoteMetadata): Promise<Vote> => {
+    if (activeContextRef.current !== context || !daoRef.current) {
+      throw new Error('DAO is not available yet. Please try again.');
     }
-  }, [updateState]);
+    const generation = generationRef.current;
+    const vote = await daoRef.current.addVote(metadata);
+    if (generation === generationRef.current) await updateState();
+    return vote;
+  }, [updateState, context]);
+
+  // Reset contracts as well as visible data when switching DAO or wallet SDK.
+  useEffect(() => {
+    generationRef.current += 1;
+    tokenSaleFactoryRef.current = undefined;
+    tokenInstanceRef.current = undefined;
+    daoRef.current = undefined;
+    setState(undefined);
+    setBalance(undefined);
+    setTokenSupply(undefined);
+    setTokenMetaInfo(undefined);
+    setUserTokenBalance(undefined);
+    return () => { generationRef.current += 1; };
+  }, [sdk, tokenSaleAddress]);
+
+  useEffect(() => {
+    generationRef.current += 1;
+    setUserTokenBalance(undefined);
+  }, [activeAccount]);
 
   // Initialize when tokenSaleAddress or sdk changes
   useEffect(() => {

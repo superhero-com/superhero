@@ -18,6 +18,7 @@ import { useInvitation } from '@/hooks/useInvitation';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
 import { ensureSdkInitializeContract } from '@/libs/initializeContractTyped';
+import { PINNED_PROTOCOL_PARAMETERS } from '@/libs/protocolParameters';
 import { APP_NAME } from '@/config';
 import { normalizeSecretKey } from '@/utils/secretKey';
 
@@ -78,6 +79,7 @@ const CollectInvitationLinkCard = ({
         onCompiler: new CompilerHttp('https://v7.compiler.aepps.com'),
         nodes,
         ttl: 10000,
+        protocolParameters: PINNED_PROTOCOL_PARAMETERS,
         accounts: [account],
       });
       tempSdk.selectNode(activeNetwork.name);

@@ -37,17 +37,74 @@ jobs:
       - name: Take screenshots
         run: npm run test:e2e:screenshots
 
-      - name: Deploy report to GitHub Pages
+      # Publish with plain git and a bounded retry. Two PRs' jobs race the one
+      # shared gh-pages ref; the loser gets `cannot lock ref` (or a non-ff).
+      # A lost report push is a convenience, never the suite verdict — so it
+      # retries a few times and, if it still loses, warns and exits 0.
+      - name: Publish report to GitHub Pages
+        id: publish
         if: always()
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./playwright-report
-          destination_dir: pr/${{ github.event.pull_request.number }}
-          keep_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -u
+          REPORT_SRC="playwright-report"
+          DEST="pr/${PR_NUMBER}"
+          ATTEMPTS=3
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"
+
+          if [ ! -d "$REPORT_SRC" ]; then
+            echo "::notice::No playwright-report directory produced; nothing to publish."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          published=false
+          for i in $(seq 1 "$ATTEMPTS"); do
+            work="$(mktemp -d)"
+            # Re-clone the current gh-pages tip on every attempt so a retry
+            # rebuilds on whatever the winning job just pushed.
+            if git clone --depth 1 --branch gh-pages "$remote" "$work" 2>/dev/null; then
+              :
+            else
+              git clone --depth 1 "$remote" "$work"
+              git -C "$work" checkout --orphan gh-pages
+              git -C "$work" rm -rf . >/dev/null 2>&1 || true
+            fi
+
+            # keep_files semantics: replace only this PR's directory, keep the rest.
+            rm -rf "${work:?}/${DEST}"
+            mkdir -p "${work}/${DEST}"
+            cp -R "${REPORT_SRC}/." "${work}/${DEST}/"
+
+            git -C "$work" config user.name "github-actions[bot]"
+            git -C "$work" config user.email "github-actions[bot]@users.noreply.github.com"
+            git -C "$work" add -A
+            if git -C "$work" diff --cached --quiet; then
+              echo "Report already up to date; nothing to push."
+              published=true
+              break
+            fi
+            git -C "$work" commit -q -m "chore: screenshot report for PR #${PR_NUMBER}"
+            if git -C "$work" push origin gh-pages; then
+              published=true
+              break
+            fi
+            echo "Publish attempt ${i}/${ATTEMPTS} lost the shared gh-pages ref-lock race."
+            [ "$i" -lt "$ATTEMPTS" ] && sleep "$((i * 5))"
+          done
+
+          if [ "$published" = true ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Screenshot report publish gave up after ${ATTEMPTS} attempts — repeatedly lost the shared gh-pages ref-lock race (cannot lock ref 'refs/heads/gh-pages'). The screenshots suite result is unaffected; only the report link was not refreshed."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Add report link to PR description
-        if: always()
+        if: steps.publish.outputs.published == 'true'
         uses: actions/github-script@v7
         env:
           REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/

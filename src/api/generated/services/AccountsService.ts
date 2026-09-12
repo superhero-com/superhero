@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AccountSearchResultDto } from '../models/AccountSearchResultDto';
+import type { GetAccountResponseDto } from '../models/GetAccountResponseDto';
 import type { GetPnlResponseDto } from '../models/GetPnlResponseDto';
 import type { LeaderboardResponseDto } from '../models/LeaderboardResponseDto';
 import type { NostrAccountRefDto } from '../models/NostrAccountRefDto';
@@ -405,14 +406,14 @@ export class AccountsService {
         });
     }
     /**
-     * @returns any
+     * @returns GetAccountResponseDto
      * @throws ApiError
      */
     public static getAccount({
         address,
     }: {
         address: string,
-    }): CancelablePromise<any> {
+    }): CancelablePromise<GetAccountResponseDto> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/accounts/{address}',

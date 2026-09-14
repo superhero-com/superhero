@@ -45,24 +45,26 @@ export const TOKEN_TAG_ENVELOPE_PAYLOAD = '[^{}\\r\\n]{0,64}';
  */
 export function parseTokenTagEnvelope(payload: string): TokenTagDisplayOptions {
   const resolved: TokenTagDisplayOptions = { ...TAG_PRESET };
+  // Whitespace around the key, the `=`, and the value is insignificant, so a hand-typed
+  // `{change = 0}` reads the same as `{change=0}` — the payload class admits the space and
+  // both SSR strippers already drop it, so the reader must interpret it, not print it.
   const pairs = String(payload ?? '')
     .toLowerCase()
     .split(';')
-    .map((pair) => pair.trim())
-    .filter(Boolean);
+    .map((pair) => {
+      const eq = pair.indexOf('=');
+      if (eq < 0) return null; // bare flag / garbage: no `key=value`
+      return { key: pair.slice(0, eq).trim(), value: pair.slice(eq + 1).trim() };
+    })
+    .filter((pair): pair is { key: string; value: string } => pair !== null && pair.key !== '');
 
   // `mode` first, so explicit toggles override its preset regardless of their order.
-  const modePair = pairs.find((pair) => pair.startsWith('mode='));
+  const modePair = pairs.find((pair) => pair.key === 'mode');
   if (modePair) {
-    const mode = modePair.slice('mode='.length);
-    Object.assign(resolved, MODE_PRESETS[mode as TokenTagMode] ?? TAG_PRESET);
+    Object.assign(resolved, MODE_PRESETS[modePair.value] ?? TAG_PRESET);
   }
 
-  pairs.forEach((pair) => {
-    const eq = pair.indexOf('=');
-    if (eq < 0) return; // bare flag / garbage: no `key=value`, drop it
-    const key = pair.slice(0, eq);
-    const value = pair.slice(eq + 1);
+  pairs.forEach(({ key, value }) => {
     if (key === 'mode') return; // handled above
     if ((BOOLEAN_KEYS as readonly string[]).includes(key)) {
       if (value === '1') resolved[key as (typeof BOOLEAN_KEYS)[number]] = true;
@@ -139,7 +141,13 @@ export const DEFAULT_TOKEN_NAME_CHARS = 'A-Za-z0-9\\-';
 // "example.com/page#section" without requiring whitespace before every hashtag. The whole run
 // is then walked char-by-char (see `walkHashtagRun`), so an unseparated pair like "#one#two"
 // links both. Compile a fresh instance per consumer — the `g` flag is stateful.
-export const HASHTAG_WORD_REGEX_SOURCE = '(^|[^\\w./])#(\\S+)';
+//
+// The run also swallows a `{payload}` display envelope even though the payload class admits
+// spaces (`{change = 0}`): a bare `\S+` ends at the first space and hands the walker a
+// half-open `{change` that never matches the envelope grammar, so the braces leak out as text.
+// A full `{...}` is consumed as one atom; an unterminated `{` still falls through to `\S`, so
+// anything without a closing brace keeps its old, brace-as-text behaviour.
+export const HASHTAG_WORD_REGEX_SOURCE = `(^|[^\\w./])#((?:\\{${TOKEN_TAG_ENVELOPE_PAYLOAD}\\}|\\S)+)`;
 
 // The `{payload}` display envelope directly after a symbol, anchored to the symbol's end.
 export const TOKEN_TAG_ENVELOPE_REGEX_SOURCE = `^\\{(${TOKEN_TAG_ENVELOPE_PAYLOAD})\\}`;

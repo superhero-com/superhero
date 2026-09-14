@@ -41,6 +41,7 @@ import { AccountTokensService } from '../api/generated/services/AccountTokensSer
 import { TokensService } from '../api/generated/services/TokensService';
 import { TransactionsService } from '../api/generated/services/TransactionsService';
 import { PostApiResponse } from '../features/social/types';
+import ProfileSocialActions from '../features/social/components/ProfileSocialActions';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
@@ -449,6 +450,11 @@ export default function UserProfile({
             </AeButton>
           </div>
         </div>
+
+        {/* Follow / unfollow and block controls — hidden on your own profile. */}
+        <div className="mt-3 md:mt-2 md:flex md:justify-end">
+          <ProfileSocialActions targetAddress={effectiveAddress} />
+        </div>
       </div>
 
       {/* Wallet actions — installed PWA on mobile only. On your own profile this
@@ -549,6 +555,26 @@ export default function UserProfile({
               })() : t('messages.loading')}
             </div>
           </div>
+          {typeof accountInfo?.profile?.followers_count === 'number' && (
+            <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+              <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                {t('socialGraph.followers')}
+              </div>
+              <div className="text-base md:text-lg font-bold text-white" data-testid="profile-followers-count">
+                {accountInfo.profile.followers_count.toLocaleString()}
+              </div>
+            </div>
+          )}
+          {typeof accountInfo?.profile?.following_count === 'number' && (
+            <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+              <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                {t('socialGraph.followingCount')}
+              </div>
+              <div className="text-base md:text-lg font-bold text-white" data-testid="profile-following-count">
+                {accountInfo.profile.following_count.toLocaleString()}
+              </div>
+            </div>
+          )}
           <button
             onClick={() => handleTabChange('owned')}
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"

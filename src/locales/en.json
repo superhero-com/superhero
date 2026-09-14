@@ -1,5 +1,29 @@
 {
   "common": {
+    "socialGraph": {
+      "follow": "Follow",
+      "following": "Following",
+      "unfollow": "Unfollow",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blocked": "Blocked",
+      "followers": "Followers",
+      "followingCount": "Following",
+      "blockDialog": {
+        "title": "Block this account?",
+        "body": "Blocking removes any follows between you and this account, in both directions. Unblocking later will not restore them.",
+        "confirm": "Block account",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "blocked": "You can't follow this account.",
+        "blockedBySelf": "You've blocked this account. Unblock to follow.",
+        "maxFollowing": "You're following the maximum of {{max}} accounts. Unfollow someone to follow more.",
+        "maxBlocked": "You've blocked the maximum of {{max}} accounts. Unblock someone to block more.",
+        "cooldown": "You're following accounts too quickly. Try again in a moment.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
     "buttons": {
       "connectWallet": "Connect Wallet",
       "connecting": "Connecting…",

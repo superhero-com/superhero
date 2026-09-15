@@ -781,7 +781,8 @@
           "showInstructions": "Anleitung anzeigen",
           "iosIntro": "Fügen Sie Superhero zu Ihrem Startbildschirm hinzu – für schnellen Zugriff und ein Vollbild-Erlebnis.",
           "iosStep1Hint": "Tippen Sie in der Safari-Symbolleiste auf das <shareIcon/>-Symbol",
-          "iosStep2Hint": "Scrollen Sie und wählen Sie „Zum Home-Bildschirm“"
+          "iosStep2Hint": "Scrollen Sie und wählen Sie „Zum Home-Bildschirm“",
+          "getMobileApp": "Mobile App holen"
         }
       },
       "branding": {
@@ -1014,7 +1015,9 @@
         "or": "oder",
         "downloadAppHint": "Laden Sie die All-in-One-Superhero-App mit integrierter Wallet herunter",
         "downloadOn": "Laden im",
-        "getItOn": "Jetzt bei"
+        "getItOn": "Jetzt bei",
+        "mobileAppTitle": "Mobile App herunterladen",
+        "mobileAppDesc": "Der reibungsloseste Weg, Superhero zu nutzen, und der sicherere Ort für den Chat."
       },
       "welcome": {
         "title": "Willkommen bei Superhero",

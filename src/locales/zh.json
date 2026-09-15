@@ -781,7 +781,8 @@
           "showInstructions": "查看安装步骤",
           "iosIntro": "将 Superhero 添加到主屏幕，快速访问并享受全屏体验。",
           "iosStep1Hint": "点按 Safari 工具栏中的 <shareIcon/> 图标",
-          "iosStep2Hint": "向下滚动并选择“添加到主屏幕”"
+          "iosStep2Hint": "向下滚动并选择“添加到主屏幕”",
+          "getMobileApp": "获取移动应用"
         }
       },
       "branding": {
@@ -1014,7 +1015,9 @@
         "or": "或",
         "downloadAppHint": "下载内置钱包的一体化 Superhero 应用",
         "downloadOn": "下载于",
-        "getItOn": "获取于"
+        "getItOn": "获取于",
+        "mobileAppTitle": "下载移动应用",
+        "mobileAppDesc": "使用 Superhero 最流畅的方式，也是更安全的聊天场所。"
       },
       "welcome": {
         "title": "欢迎来到 Superhero",

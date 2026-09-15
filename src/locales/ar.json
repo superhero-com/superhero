@@ -781,7 +781,8 @@
           "showInstructions": "عرض التعليمات",
           "iosIntro": "أضف Superhero إلى شاشتك الرئيسية للوصول السريع وتجربة بملء الشاشة.",
           "iosStep1Hint": "اضغط على أيقونة <shareIcon/> في شريط أدوات Safari",
-          "iosStep2Hint": "مرّر واختر «إضافة إلى الشاشة الرئيسية»"
+          "iosStep2Hint": "مرّر واختر «إضافة إلى الشاشة الرئيسية»",
+          "getMobileApp": "احصل على تطبيق الجوال"
         }
       },
       "branding": {
@@ -1014,7 +1015,9 @@
         "or": "أو",
         "downloadAppHint": "نزّل تطبيق Superhero الشامل مع محفظة مدمجة",
         "downloadOn": "نزّله من",
-        "getItOn": "احصل عليه من"
+        "getItOn": "احصل عليه من",
+        "mobileAppTitle": "حمّل تطبيق الجوال",
+        "mobileAppDesc": "أسلس طريقة لاستخدام Superhero، والمكان الأكثر أمانًا للدردشة."
       },
       "welcome": {
         "title": "مرحباً بك في Superhero",

@@ -27,9 +27,14 @@ const ProfileSocialStats = ({
 
   const open = (initialTab: 'followers' | 'following') => openModal({
     name: 'follow-connections',
-    props: { address, initialTab },
+    props: {
+      address, initialTab, followersCount, followingCount,
+    },
   });
 
+  // Inline text, not a box (a box was rejected): the touch affordance is an
+  // underline on hover and keyboard focus, and the hit area is grown to 44px
+  // with a symmetric negative margin so nothing around it moves.
   const segment = (
     count: number,
     label: string,
@@ -39,15 +44,16 @@ const ProfileSocialStats = ({
     <button
       type="button"
       onClick={() => open(tab)}
-      className="group flex items-baseline gap-1.5 rounded-md px-1 -mx-1 py-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon-teal)]/50"
+      aria-haspopup="dialog"
+      className="group flex items-baseline gap-1.5 px-1 -mx-1 py-3 -my-3 underline-offset-4 transition-colors hover:underline focus:outline-none focus-visible:underline"
     >
       <span
-        className="text-sm font-bold text-white tabular-nums group-hover:text-[var(--neon-teal)] transition-colors"
+        className="text-sm font-bold text-white tabular-nums"
         data-testid={testid}
       >
         {count.toLocaleString()}
       </span>
-      <span className="text-[13px] text-white/55 group-hover:text-white/80 transition-colors">
+      <span className="text-[13px] text-white/55">
         {label}
       </span>
     </button>

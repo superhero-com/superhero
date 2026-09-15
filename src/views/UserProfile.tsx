@@ -407,52 +407,27 @@ export default function UserProfile({
             </div>
           </div>
 
-          {/* Action buttons — Follow · block · Tip · share, native to the header */}
-          <div className="flex flex-row flex-wrap items-center gap-2 shrink-0 md:max-w-[40%] md:justify-end">
-            <ProfileSocialActions
-              targetAddress={effectiveAddress}
-              errorSlotRef={socialErrorSlotRef}
-            />
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditInitialSection('profile');
-                  setEditOpen(true);
-                }}
-                className={[
-                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-solid',
-                  'box-border whitespace-nowrap px-3 text-[12px] font-semibold leading-none',
-                  '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
-                  'hover:!shadow-none hover:!transform-none',
-                ].join(' ')}
-                style={{
-                  background: 'rgba(0,255,157,0.08)',
-                  borderColor: 'rgba(0,255,157,0.3)',
-                  color: 'var(--neon-teal)',
-                }}
-              >
-                ✦
-                {' '}
-                {t('buttons.editSuperheroId')}
-              </button>
-            ) : null}
-            {!canEdit ? (
+          {/* One action bar, right-aligned: Tip · share · block │ Follow
+              (own profile: share │ Edit SuperheroID). One full-width row below
+              768px with the primary control filling the rest; controls are 44px
+              there and 36px at 768px and above. */}
+          <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0 md:justify-end">
+            {!canEdit && (
               <AeButton
                 onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
                 variant="ghost"
                 size="sm"
-                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
+                className="shrink-0 !rounded-full !h-11 md:!h-9 px-4 justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
                 title={t('titles.sendATip')}
               >
                 <IconDiamond className="w-4 h-4 text-white" />
                 {t('buttons.tip')}
               </AeButton>
-            ) : null}
+            )}
             <AeButton
               variant="ghost"
               size="sm"
-              className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all [&_svg]:!size-[0.9em]"
+              className="shrink-0 !rounded-full !h-11 !w-11 md:!h-9 md:!w-9 !p-0 justify-center inline-flex items-center !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors [&_svg]:!size-[0.9em]"
               onClick={() => {
                 const base = (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '');
                 const url = `${base}/accounts/${effectiveAddress}`;
@@ -462,6 +437,38 @@ export default function UserProfile({
             >
               <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
             </AeButton>
+            {canEdit ? (
+              <>
+                <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditInitialSection('profile');
+                    setEditOpen(true);
+                  }}
+                  className={[
+                    'ml-1 inline-flex h-11 md:h-9 flex-1 md:flex-none items-center justify-center gap-1.5 rounded-full border border-solid',
+                    'box-border whitespace-nowrap px-[18px] text-[12.5px] font-semibold leading-none',
+                    '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
+                    'hover:!shadow-none hover:!transform-none',
+                  ].join(' ')}
+                  style={{
+                    background: 'rgba(0,255,157,0.08)',
+                    borderColor: 'rgba(0,255,157,0.3)',
+                    color: 'var(--neon-teal)',
+                  }}
+                >
+                  ✦
+                  {' '}
+                  {t('buttons.editSuperheroId')}
+                </button>
+              </>
+            ) : (
+              <ProfileSocialActions
+                targetAddress={effectiveAddress}
+                errorSlotRef={socialErrorSlotRef}
+              />
+            )}
           </div>
         </div>
 

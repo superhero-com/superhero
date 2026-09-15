@@ -41,7 +41,7 @@ const ProfileSocialActions = ({
   if (!targetAddress?.startsWith('ak_')) return null;
   if (isSelf || !viewer) return null;
   // Reserve space while the config (caps + contract address) and relationship load.
-  if (configLoading || relationshipLoading) return <div className="h-9" aria-hidden />;
+  if (configLoading || relationshipLoading) return <div className="h-11 md:h-9" aria-hidden />;
   // No contract configured — degrade to nothing rather than a broken control.
   if (!isReady && !hasBlocked) return null;
 
@@ -72,10 +72,13 @@ const ProfileSocialActions = ({
 
   return (
     <>
-      <div className="flex flex-row flex-wrap items-center gap-2">
+      <div className="flex flex-1 flex-row items-center gap-2 md:flex-none">
         {hasBlocked ? (
           <>
-            <span className="inline-flex h-9 items-center gap-1.5 rounded-full border border-solid border-white/15 px-3.5 text-[12px] font-semibold text-white/60">
+            {/* When blocked, the status label and Unblock sit after the divider —
+                the primary slot, past the header's utility group. */}
+            <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
+            <span className="ml-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-white/55">
               <Ban className="h-3.5 w-3.5" />
               {t('socialGraph.blocked')}
             </span>
@@ -86,7 +89,7 @@ const ProfileSocialActions = ({
               disabled={busy}
               onClick={unblock}
               data-testid="social-unblock-button"
-              className="!rounded-full !h-9 px-4 inline-flex items-center gap-1.5 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
+              className="!rounded-full !h-11 md:!h-9 flex-1 md:flex-none px-4 justify-center inline-flex items-center gap-1.5 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
             >
               {pendingAction !== 'unblock' && <ShieldOff className="h-4 w-4" />}
               {t('socialGraph.unblock')}
@@ -94,6 +97,21 @@ const ProfileSocialActions = ({
           </>
         ) : (
           <>
+            {/* Block is a utility, so it leads the group and never sits at the
+                row's outer edge; the divider then hands off to the primary. */}
+            <AeButton
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => setConfirmBlockOpen(true)}
+              data-testid="social-block-button"
+              title={t('socialGraph.block')}
+              aria-label={t('socialGraph.block')}
+              className="!rounded-full !h-11 !w-11 md:!h-9 md:!w-9 !p-0 shrink-0 justify-center inline-flex items-center text-white/55 !border !border-solid !border-white/15 hover:!border-red-400/50 hover:!bg-red-500/10 hover:!text-red-200 transition-colors"
+            >
+              <Ban className="h-4 w-4" />
+            </AeButton>
+            <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
             {isFollowing ? (
               <AeButton
                 variant="secondary"
@@ -104,7 +122,7 @@ const ProfileSocialActions = ({
                 data-testid="social-following-button"
                 title={t('socialGraph.unfollow')}
                 aria-label={t('socialGraph.unfollow')}
-                className="group !rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/15 hover:!border-red-400/40 hover:!bg-red-500/10 hover:!text-red-200 focus-visible:!border-red-400/40 focus-visible:!bg-red-500/10 focus-visible:!text-red-200 transition-colors"
+                className="group ml-1 !rounded-full !h-11 md:!h-9 flex-1 md:flex-none px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/15 hover:!border-red-400/40 hover:!bg-red-500/10 hover:!text-red-200 focus-visible:!border-red-400/40 focus-visible:!bg-red-500/10 focus-visible:!text-red-200 transition-colors"
               >
                 {pendingAction !== 'unfollow' && (
                   <>
@@ -122,7 +140,7 @@ const ProfileSocialActions = ({
                 disabled={busy}
                 onClick={follow}
                 data-testid="social-follow-button"
-                className={`!rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !text-[#031b12]${pendingAction === 'follow' ? ' cursor-wait disabled:!opacity-100' : ''}`}
+                className={`ml-1 !rounded-full !h-11 md:!h-9 flex-1 md:flex-none px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !text-[#031b12]${pendingAction === 'follow' ? ' cursor-wait disabled:!opacity-100' : ''}`}
               >
                 {pendingAction === 'follow'
                   ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -130,18 +148,6 @@ const ProfileSocialActions = ({
                 {t('socialGraph.follow')}
               </AeButton>
             )}
-            <AeButton
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => setConfirmBlockOpen(true)}
-              data-testid="social-block-button"
-              title={t('socialGraph.block')}
-              aria-label={t('socialGraph.block')}
-              className="!rounded-full !h-9 !w-9 !p-0 justify-center inline-flex items-center text-white/55 !border !border-solid !border-white/15 hover:!border-red-400/50 hover:!bg-red-500/10 hover:!text-red-200 transition-colors"
-            >
-              <Ban className="h-4 w-4" />
-            </AeButton>
           </>
         )}
       </div>

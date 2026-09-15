@@ -1003,7 +1003,7 @@
       },
       "titleSuffix": "Fenêtre {{name}}",
       "onboarding": {
-        "title": "Modifier le SuperheroID",
+        "title": "Compte SuperheroID",
         "subtitle": "Connectez votre portefeuille pour créer et gérer votre SuperheroID",
         "stepWalletApp": "Assurez-vous d'avoir l'application Superhero Wallet",
         "stepExtension": "Assurez-vous d'avoir l'extension",

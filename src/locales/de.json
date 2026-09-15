@@ -1003,7 +1003,7 @@
       },
       "titleSuffix": "{{name}}-Modal",
       "onboarding": {
-        "title": "SuperheroID bearbeiten",
+        "title": "SuperheroID-Konto",
         "subtitle": "Verbinden Sie Ihre Wallet, um Ihre SuperheroID zu erstellen und zu verwalten",
         "stepWalletApp": "Stellen Sie sicher, dass Sie die Superhero Wallet App haben",
         "stepExtension": "Stellen Sie sicher, dass Sie die Erweiterung haben",

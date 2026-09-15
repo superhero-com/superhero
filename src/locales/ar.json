@@ -1003,7 +1003,7 @@
       },
       "titleSuffix": "نافذة {{name}}",
       "onboarding": {
-        "title": "تعديل SuperheroID",
+        "title": "حساب SuperheroID",
         "subtitle": "اربط محفظتك لإنشاء SuperheroID الخاص بك وإدارته",
         "stepWalletApp": "تأكّد من أن لديك تطبيق محفظة Superhero",
         "stepExtension": "تأكّد من أن لديك الإضافة",

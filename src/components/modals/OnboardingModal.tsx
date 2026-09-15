@@ -149,7 +149,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
         <div className="flex items-center justify-center gap-2 mb-2">
           <Favicon className="w-8 h-8" />
           <h2 className="text-xl font-bold text-white/95">
-            {t('common.modals.onboarding.title', { defaultValue: 'Connect to Superhero' })}
+            {t('common.modals.onboarding.title', { defaultValue: 'SuperheroID Account' })}
           </h2>
         </div>
         <p className="text-sm text-white/50">

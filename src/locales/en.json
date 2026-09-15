@@ -512,7 +512,7 @@
         "and": "and"
       },
       "onboarding": {
-        "title": "Edit SuperheroID",
+        "title": "SuperheroID Account",
         "subtitle": "Connect your wallet to create and manage your SuperheroID",
         "stepWalletApp": "Make sure you have the Superhero Wallet app",
         "stepExtension": "Make sure you have the extension",

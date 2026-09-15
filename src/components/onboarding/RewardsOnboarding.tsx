@@ -24,6 +24,7 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
   const {
     status,
     statusLoading,
+    statusUnavailable,
     isXLinked,
     isOnboardingPaid,
     onboardingComplete,
@@ -43,6 +44,9 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
   // flash before the status is known.
   if (!activeAccount) return null;
   if (statusLoading && !status) return null;
+  // A failed status read is not "nothing done yet": rendering the card anyway
+  // showed a fully paid user an empty two-step checklist.
+  if (statusUnavailable && !status) return null;
   if (onboardingComplete) return null;
 
   const steps = [

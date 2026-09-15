@@ -781,7 +781,8 @@
           "showInstructions": "Voir les instructions",
           "iosIntro": "Ajoutez Superhero à votre écran d'accueil pour un accès rapide et une expérience en plein écran.",
           "iosStep1Hint": "Appuyez sur l'icône <shareIcon/> dans la barre d'outils de Safari",
-          "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »"
+          "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »",
+          "getMobileApp": "Obtenir l'application mobile"
         }
       },
       "branding": {
@@ -1014,7 +1015,9 @@
         "or": "ou",
         "downloadAppHint": "Téléchargez l'application tout-en-un Superhero avec portefeuille intégré",
         "downloadOn": "Télécharger sur",
-        "getItOn": "Disponible sur"
+        "getItOn": "Disponible sur",
+        "mobileAppTitle": "Télécharger l'application mobile",
+        "mobileAppDesc": "La façon la plus fluide d'utiliser Superhero, et l'endroit le plus sûr pour discuter."
       },
       "welcome": {
         "title": "Bienvenue sur Superhero",

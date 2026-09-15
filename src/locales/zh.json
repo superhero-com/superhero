@@ -1003,7 +1003,7 @@
       },
       "titleSuffix": "{{name}} 弹窗",
       "onboarding": {
-        "title": "编辑 SuperheroID",
+        "title": "SuperheroID 账户",
         "subtitle": "连接钱包以创建和管理你的 SuperheroID",
         "stepWalletApp": "确保你已安装 Superhero Wallet 应用",
         "stepExtension": "确保你已安装浏览器扩展",

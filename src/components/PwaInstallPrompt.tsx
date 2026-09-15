@@ -125,23 +125,29 @@ export const PwaInstallPrompt = () => {
               <div className="mb-1.5 text-[11px] font-medium text-white/60">
                 {t('common.views.landing.pwaInstall.getMobileApp', { defaultValue: 'Get the mobile app' })}
               </div>
-              <div className="flex gap-2">
+              {/* Stacked, not side by side. The card is `w-72` with
+                  `overflow-hidden`, which leaves roughly 84px of text room per
+                  pill in a two-up row — less than half what these labels need,
+                  and worse in German. Side by side clipped the second pill, so
+                  the Play Store action this change exists to expose could
+                  vanish. Full width each costs one row and cannot truncate. */}
+              <div className="flex flex-col gap-2">
                 <a
                   href={APP_STORE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                  className="w-full inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
+                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
                   {t('common.modals.connectWallet.downloadAppStore')}
                 </a>
                 <a
                   href={PLAY_STORE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                  className="w-full inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
+                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
                   {t('common.modals.connectWallet.downloadGooglePlay')}
                 </a>
               </div>

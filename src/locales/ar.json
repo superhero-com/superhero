@@ -2396,6 +2396,8 @@
       "status": {
         "completed": "مكتمل",
         "inProgress": "قيد التنفيذ",
+        "step": "الخطوة {{current}} من {{total}}",
+        "postsProgress": "{{current}} من {{total}} منشورات",
         "locked": "مقفل"
       },
       "check": {

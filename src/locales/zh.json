@@ -2396,6 +2396,8 @@
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
+        "step": "第 {{current}} / {{total}} 步",
+        "postsProgress": "{{current}} / {{total}} 条帖子",
         "locked": "已锁定"
       },
       "check": {

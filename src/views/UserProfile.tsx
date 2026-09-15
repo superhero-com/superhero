@@ -556,24 +556,38 @@ export default function UserProfile({
             </div>
           </div>
           {typeof accountInfo?.profile?.followers_count === 'number' && (
-            <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+            <button
+              type="button"
+              onClick={() => openModal({
+                name: 'follow-connections',
+                props: { address: effectiveAddress, initialTab: 'followers' },
+              })}
+              className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none flex flex-col justify-center"
+            >
               <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
                 {t('socialGraph.followers')}
               </div>
               <div className="text-base md:text-lg font-bold text-white" data-testid="profile-followers-count">
                 {accountInfo.profile.followers_count.toLocaleString()}
               </div>
-            </div>
+            </button>
           )}
           {typeof accountInfo?.profile?.following_count === 'number' && (
-            <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+            <button
+              type="button"
+              onClick={() => openModal({
+                name: 'follow-connections',
+                props: { address: effectiveAddress, initialTab: 'following' },
+              })}
+              className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none flex flex-col justify-center"
+            >
               <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
                 {t('socialGraph.followingCount')}
               </div>
               <div className="text-base md:text-lg font-bold text-white" data-testid="profile-following-count">
                 {accountInfo.profile.following_count.toLocaleString()}
               </div>
-            </div>
+            </button>
           )}
           <button
             onClick={() => handleTabChange('owned')}

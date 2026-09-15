@@ -22,6 +22,22 @@
         "maxBlocked": "You've blocked the maximum of {{max}} accounts. Unblock someone to block more.",
         "cooldown": "You're following accounts too quickly. Try again in a moment.",
         "generic": "Something went wrong. Please try again."
+      },
+      "list": {
+        "tab": {
+          "followers": "Followers",
+          "following": "Following"
+        },
+        "searchPlaceholder": "Search by name or address",
+        "loading": "Loading…",
+        "empty": {
+          "followers": "No followers yet",
+          "following": "Not following anyone yet"
+        },
+        "emptySearch": "No accounts match your search",
+        "error": "Couldn't load this list.",
+        "retry": "Try again",
+        "close": "Close"
       }
     },
     "buttons": {

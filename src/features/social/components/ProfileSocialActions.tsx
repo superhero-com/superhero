@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Ban, Check, ShieldOff, UserPlus,
+  Ban, Check, ShieldOff, UserMinus, UserPlus,
 } from 'lucide-react';
 import AeButton from '../../../components/AeButton';
 import Spinner from '../../../components/Spinner';
@@ -30,7 +30,7 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
   if (!targetAddress?.startsWith('ak_')) return null;
   if (isSelf || !viewer) return null;
   // Reserve space while the config (caps + contract address) and relationship load.
-  if (configLoading || relationshipLoading) return <div className="h-8" aria-hidden />;
+  if (configLoading || relationshipLoading) return <div className="h-9" aria-hidden />;
   // No contract configured — degrade to nothing rather than a broken control.
   if (!isReady && !hasBlocked) return null;
 
@@ -46,7 +46,7 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
       <div className="flex flex-row flex-wrap items-center gap-2 md:justify-end">
         {hasBlocked ? (
           <>
-            <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-solid border-white/15 px-3 text-[12px] font-semibold text-white/60">
+            <span className="inline-flex h-9 items-center gap-1.5 rounded-full border border-solid border-white/15 px-3.5 text-[12px] font-semibold text-white/60">
               <Ban className="h-3.5 w-3.5" />
               {t('socialGraph.blocked')}
             </span>
@@ -57,9 +57,9 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
               disabled={busy}
               onClick={unblock}
               data-testid="social-unblock-button"
-              className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-1.5"
+              className="!rounded-full !h-9 px-4 inline-flex items-center gap-1.5 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
             >
-              <ShieldOff className="h-4 w-4" />
+              {pendingAction !== 'unblock' && <ShieldOff className="h-4 w-4" />}
               {t('socialGraph.unblock')}
             </AeButton>
           </>
@@ -74,21 +74,26 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
                 onClick={unfollow}
                 data-testid="social-following-button"
                 title={t('socialGraph.unfollow')}
-                className="group inline-flex items-center gap-1.5 min-w-[104px] justify-center"
+                className="group !rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/15 hover:!border-red-400/40 hover:!bg-red-500/10 hover:!text-red-200 transition-colors"
               >
-                {pendingAction !== 'unfollow' && <Check className="h-4 w-4" />}
+                {pendingAction !== 'unfollow' && (
+                  <>
+                    <Check className="h-4 w-4 group-hover:hidden" />
+                    <UserMinus className="hidden h-4 w-4 group-hover:inline-block" />
+                  </>
+                )}
                 <span className="group-hover:hidden">{t('socialGraph.following')}</span>
                 <span className="hidden group-hover:inline">{t('socialGraph.unfollow')}</span>
               </AeButton>
             ) : (
               <AeButton
-                variant="primary"
+                variant="success"
                 size="sm"
                 loading={pendingAction === 'follow'}
                 disabled={busy}
                 onClick={follow}
                 data-testid="social-follow-button"
-                className="inline-flex items-center gap-1.5 min-w-[104px] justify-center"
+                className="!rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !text-[#031b12]"
               >
                 {pendingAction !== 'follow' && <UserPlus className="h-4 w-4" />}
                 {t('socialGraph.follow')}
@@ -101,10 +106,10 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
               onClick={() => setConfirmBlockOpen(true)}
               data-testid="social-block-button"
               title={t('socialGraph.block')}
-              className="!border !border-solid !border-white/20 hover:!border-red-400/50 hover:bg-red-500/10 transition-all inline-flex items-center gap-1.5"
+              aria-label={t('socialGraph.block')}
+              className="!rounded-full !h-9 !w-9 !p-0 justify-center inline-flex items-center text-white/55 !border !border-solid !border-white/15 hover:!border-red-400/50 hover:!bg-red-500/10 hover:!text-red-200 transition-colors"
             >
               <Ban className="h-4 w-4" />
-              {t('socialGraph.block')}
             </AeButton>
           </>
         )}

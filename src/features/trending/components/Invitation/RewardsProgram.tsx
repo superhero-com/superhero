@@ -83,6 +83,11 @@ const RewardsProgram = () => {
   const postStatus = postCompleted ? 'completed' : verifyCompleted ? 'in_progress' : 'locked'; // eslint-disable-line no-nested-ternary
 
   const currentVerifyStep = verifySteps.findIndex((s) => !s.done);
+  // Label the milestone with the step the user is actually on. Nothing runs in
+  // the background between visits — rewards are only evaluated when the user
+  // presses "Check rewards" — so an "in progress" state with a spinner reads as
+  // "the system is working on it" and is misleading.
+  const currentVerifyStepNumber = currentVerifyStep === -1 ? verifyTotal : currentVerifyStep + 1;
 
   // --- actions ---
   const handleVerifyAction = useCallback(async () => {
@@ -191,8 +196,10 @@ const RewardsProgram = () => {
               >
                 {verifyStatus === 'completed'
                   ? <CheckCircle2 className="w-3 h-3" />
-                  : <Loader2 className="w-3 h-3 animate-spin" />}
-                {verifyStatus === 'completed' ? t('rewardsProgram.status.completed') : t('rewardsProgram.status.inProgress')}
+                  : <Target className="w-3 h-3" />}
+                {verifyStatus === 'completed'
+                  ? t('rewardsProgram.status.completed')
+                  : t('rewardsProgram.status.step', { current: currentVerifyStepNumber, total: verifyTotal })}
               </span>
             </div>
           </div>
@@ -346,10 +353,10 @@ const RewardsProgram = () => {
                 )}
               >
                 {postStatus === 'completed' && <CheckCircle2 className="w-3 h-3" />}
-                {postStatus === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
+                {postStatus === 'in_progress' && <Target className="w-3 h-3" />}
                 {postStatus === 'locked' && <Lock className="w-3 h-3" />}
                 {postStatus === 'completed' && t('rewardsProgram.status.completed')}
-                {postStatus === 'in_progress' && t('rewardsProgram.status.inProgress')}
+                {postStatus === 'in_progress' && t('rewardsProgram.status.postsProgress', { current: rewardedPostCount, total: POST_TOTAL })}
                 {postStatus === 'locked' && t('rewardsProgram.status.locked')}
               </span>
             </div>

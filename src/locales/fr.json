@@ -2396,6 +2396,8 @@
       "status": {
         "completed": "TERMINÉ",
         "inProgress": "EN COURS",
+        "step": "ÉTAPE {{current}} SUR {{total}}",
+        "postsProgress": "{{current}} SUR {{total}} POSTS",
         "locked": "VERROUILLÉ"
       },
       "check": {

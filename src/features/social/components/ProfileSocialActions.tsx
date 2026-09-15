@@ -37,7 +37,7 @@ const ProfileSocialActions = ({
   if (!targetAddress?.startsWith('ak_')) return null;
   if (isSelf || !viewer) return null;
   // Reserve space while the config (caps + contract address) and relationship load.
-  if (configLoading || relationshipLoading) return <div className="h-11 md:h-9" aria-hidden />;
+  if (configLoading || relationshipLoading) return <div aria-hidden className="h-11 flex-1 md:h-9 md:w-[193px] md:flex-none" />;
   // No contract configured — degrade to nothing rather than a broken control.
   if (!isReady && !hasBlocked) return null;
 

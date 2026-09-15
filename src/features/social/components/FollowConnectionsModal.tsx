@@ -47,7 +47,7 @@ const ConnectionRow = (
           <div className="truncate text-sm font-semibold text-white">{publicName}</div>
         )}
         {/* Not AddressFormatted: its Truncate forces bold 14px and marquee-scrolls. */}
-        <div className="font-mono text-[12px] font-normal text-white/55">
+        <div className={`font-mono ${showName ? 'text-[12px] font-normal text-white/55' : 'text-sm text-white/80'}`}>
           {formatAddress(address, 10)}
         </div>
       </div>

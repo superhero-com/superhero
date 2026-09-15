@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Ban, Check, ShieldOff, UserMinus, UserPlus,
+  Ban, Check, Loader2, ShieldOff, UserMinus, UserPlus,
 } from 'lucide-react';
 import AeButton from '../../../components/AeButton';
 import Spinner from '../../../components/Spinner';
@@ -74,28 +74,30 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
                 onClick={unfollow}
                 data-testid="social-following-button"
                 title={t('socialGraph.unfollow')}
-                className="group !rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/15 hover:!border-red-400/40 hover:!bg-red-500/10 hover:!text-red-200 transition-colors"
+                aria-label={t('socialGraph.unfollow')}
+                className="group !rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/15 hover:!border-red-400/40 hover:!bg-red-500/10 hover:!text-red-200 focus-visible:!border-red-400/40 focus-visible:!bg-red-500/10 focus-visible:!text-red-200 transition-colors"
               >
                 {pendingAction !== 'unfollow' && (
                   <>
-                    <Check className="h-4 w-4 group-hover:hidden" />
-                    <UserMinus className="hidden h-4 w-4 group-hover:inline-block" />
+                    <Check className="h-4 w-4 group-hover:hidden group-focus-visible:hidden" />
+                    <UserMinus className="hidden h-4 w-4 group-hover:inline-block group-focus-visible:inline-block" />
                   </>
                 )}
-                <span className="group-hover:hidden">{t('socialGraph.following')}</span>
-                <span className="hidden group-hover:inline">{t('socialGraph.unfollow')}</span>
+                <span className="group-hover:hidden group-focus-visible:hidden">{t('socialGraph.following')}</span>
+                <span className="hidden group-hover:inline group-focus-visible:inline">{t('socialGraph.unfollow')}</span>
               </AeButton>
             ) : (
               <AeButton
                 variant="success"
                 size="sm"
-                loading={pendingAction === 'follow'}
                 disabled={busy}
                 onClick={follow}
                 data-testid="social-follow-button"
-                className="!rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !text-[#031b12]"
+                className={`!rounded-full !h-9 px-5 min-w-[136px] justify-center inline-flex items-center gap-2 text-[13px] font-semibold !text-[#031b12]${pendingAction === 'follow' ? ' cursor-wait disabled:!opacity-100' : ''}`}
               >
-                {pendingAction !== 'follow' && <UserPlus className="h-4 w-4" />}
+                {pendingAction === 'follow'
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <UserPlus className="h-4 w-4" />}
                 {t('socialGraph.follow')}
               </AeButton>
             )}

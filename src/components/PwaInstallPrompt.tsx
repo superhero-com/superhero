@@ -116,16 +116,35 @@ export const PwaInstallPrompt = () => {
                 </li>
               </ul>
 
-              {/* Primary action: the store listing. */}
-              <a
-                href={isIOS ? APP_STORE_URL : PLAY_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full group inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
+              {/* Primary action: the store listings.
+                  Both are shown rather than branching on `isIOS`. This prompt is
+                  hidden on mobile iOS (see App.tsx), so it renders on desktop and
+                  on non-iOS mobile — meaning `isIOS` is false for every desktop
+                  visitor, and a single branch sent Mac users to Google Play while
+                  the App Store link was never reachable. */}
+              <div className="mb-1.5 text-[11px] font-medium text-white/60">
                 {t('common.views.landing.pwaInstall.getMobileApp', { defaultValue: 'Get the mobile app' })}
-              </a>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={APP_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  {t('common.modals.connectWallet.downloadAppStore')}
+                </a>
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  {t('common.modals.connectWallet.downloadGooglePlay')}
+                </a>
+              </div>
 
               {/* Secondary action: install the web app. Still one tap away. */}
               {isIOS ? (

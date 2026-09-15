@@ -56,11 +56,14 @@ const RewardsProgram = () => {
     nextCheckAt,
     fetchReferralLink,
     runRewardCheck,
+    // Take the derived flags from the hook rather than recomputing them here:
+    // this page and the onboarding cards used to hold two copies of the same
+    // expression, which is one edit away from disagreeing about the same user.
+    isXLinked,
+    isOnboardingPaid,
   } = useXPostingReward();
 
   // --- derived state ---
-  const isXLinked = Boolean(rewardData?.x_username) || (rewardData != null && rewardData.status !== 'not_started');
-  const isOnboardingPaid = rewardData?.status === 'paid';
   // "Referral posts rewarded" — always use per_post_total_paid_count, never qualified_posts_count.
   const rewardedPostCount = rewardData?.per_post_total_paid_count ?? 0;
   const streakDays = rewardData?.current_streak_days ?? 0;

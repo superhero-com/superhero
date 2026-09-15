@@ -1,6 +1,5 @@
-import {
-  useState, useEffect, useCallback, useRef,
-} from 'react';
+import { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   SuperheroApi,
   type XPostingRewardStatus,
@@ -25,6 +24,16 @@ const isUserRejection = (err: unknown) => {
 // The API client wraps backend messages as "Superhero API error (NNN): <reason>".
 // Strip that prefix so the user sees just the human-readable reason.
 const cleanErrorMessage = (raw: string): string => raw.replace(/^Superhero API error \(\d+\):\s*/, '').trim() || raw;
+
+/**
+ * Shared cache key for the reward status.
+ *
+ * The status drives three separate surfaces (home feed card, right rail card,
+ * rewards page) that can be mounted at the same time. Keying them together
+ * means one request instead of three, and a recheck on the rewards page is
+ * reflected by the other two immediately rather than on their next remount.
+ */
+export const X_POSTING_REWARD_QUERY_KEY = 'xPostingRewardStatus';
 
 export function useXPostingReward() {
   const {
@@ -58,9 +67,8 @@ export function useXPostingReward() {
     connectWallet: reconnectWallet,
     restoreAccount: addStaticAccount,
   });
-  const [status, setStatus] = useState<XPostingRewardStatus | null>(null);
-  const [referralLink, setReferralLink] = useState<string | null>(null);
-  const [statusLoading, setStatusLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const [referralLinkOverride, setReferralLinkOverride] = useState<string | null>(null);
   const [checkLoading, setCheckLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,29 +79,37 @@ export function useXPostingReward() {
     setError(cleanErrorMessage(message));
   }, []);
 
-  // Track whether status has been loaded at least once for this address.
-  const loadedForRef = useRef<string | undefined>(undefined);
+  const {
+    data: statusData,
+    isPending: statusPending,
+    isError: statusUnavailable,
+    refetch: refetchStatus,
+  } = useQuery({
+    queryKey: [X_POSTING_REWARD_QUERY_KEY, activeAccount],
+    queryFn: () => SuperheroApi.getXPostingRewardStatus(activeAccount as string),
+    enabled: Boolean(activeAccount),
+    staleTime: 10_000,
+  });
+  const status = statusData ?? null;
+  // `isPending` is true for a disabled query too, so a signed-out visitor would
+  // otherwise look like a perpetual load.
+  const statusLoading = Boolean(activeAccount) && statusPending;
+
+  /** Publish a fresh status to every surface reading this address. */
+  const writeStatus = useCallback((updated: XPostingRewardStatus) => {
+    queryClient.setQueryData(
+      [X_POSTING_REWARD_QUERY_KEY, activeAccount],
+      updated,
+    );
+  }, [queryClient, activeAccount]);
 
   const loadStatus = useCallback(async () => {
     if (!activeAccount) return;
-    setStatusLoading(true);
-    try {
-      const s = await SuperheroApi.getXPostingRewardStatus(activeAccount);
-      setStatus(s);
-      if (s.referral_link) setReferralLink(s.referral_link);
-      loadedForRef.current = activeAccount;
-    } catch {
-      // fail silently — status unavailable (API may not be deployed yet)
-    } finally {
-      setStatusLoading(false);
-    }
-  }, [activeAccount]);
+    await refetchStatus();
+  }, [activeAccount, refetchStatus]);
 
-  useEffect(() => {
-    if (activeAccount && loadedForRef.current !== activeAccount) {
-      loadStatus();
-    }
-  }, [activeAccount, loadStatus]);
+  // The freshly minted link wins until the next status read carries it.
+  const referralLink = referralLinkOverride ?? status?.referral_link ?? null;
 
   const buildSignedProof = useCallback(async (address: string) => {
     // Recreate the signer from the saved address (e.g. after a page reload)
@@ -119,7 +135,7 @@ export function useXPostingReward() {
     try {
       const proof = await buildSignedProof(activeAccount);
       const result = await SuperheroApi.getXReferralLink(activeAccount, proof);
-      setReferralLink(result.link);
+      setReferralLinkOverride(result.link);
       return result;
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -141,8 +157,8 @@ export function useXPostingReward() {
     try {
       const proof = await buildSignedProof(activeAccount);
       const updated = await SuperheroApi.runXPostingRewardRecheck(activeAccount, proof);
-      setStatus(updated);
-      if (updated.referral_link) setReferralLink(updated.referral_link);
+      writeStatus(updated);
+      if (updated.referral_link) setReferralLinkOverride(updated.referral_link);
       // A successful (HTTP 200) recheck still reports via `error` why no reward
       // was sent (below follower minimum, identity already rewarded, payout
       // failed, etc.). Surface it instead of silently showing "no change".
@@ -156,7 +172,7 @@ export function useXPostingReward() {
     } finally {
       setCheckLoading(false);
     }
-  }, [activeAccount, buildSignedProof, surfaceError]);
+  }, [activeAccount, buildSignedProof, surfaceError, writeStatus]);
 
   const nextCheckAt = status?.next_check_allowed_at
     ? new Date(status.next_check_allowed_at)
@@ -175,6 +191,9 @@ export function useXPostingReward() {
     status,
     referralLink,
     statusLoading,
+    // The status read failed. Surfaces should stay quiet rather than render a
+    // null status as "no steps done", which is what a paid user used to see.
+    statusUnavailable,
     checkLoading,
     linkLoading,
     error,

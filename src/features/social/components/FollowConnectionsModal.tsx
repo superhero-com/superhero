@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, X } from 'lucide-react';
 import AddressAvatar from '../../../components/AddressAvatar';
-import { AddressFormatted } from '../../../components/AddressFormatted';
 import { Input } from '../../../components/ui/input';
 import Spinner from '../../../components/Spinner';
 import {
@@ -13,6 +12,7 @@ import {
   type ConnectionsDirection,
 } from '../../../hooks/useSocialConnections';
 import type { SocialGraphAccount } from '../../../api/socialGraphConnections';
+import { formatAddress } from '../../../utils/address';
 
 type Props = {
   address: string;
@@ -42,11 +42,11 @@ const ConnectionRow = (
         {showName && (
           <div className="truncate text-sm font-semibold text-white">{publicName}</div>
         )}
-        <AddressFormatted
-          address={address}
-          truncate
-          className={showName ? 'text-xs text-white/50' : 'text-sm text-white/80'}
-        />
+        <div
+          className={`truncate font-mono ${showName ? 'text-xs text-white/50' : 'text-sm text-white/80'}`}
+        >
+          {formatAddress(address, 10, true)}
+        </div>
       </div>
     </Link>
   );

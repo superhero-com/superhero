@@ -11,7 +11,7 @@
   max-len,
   no-console
 */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -97,6 +97,9 @@ export default function UserProfile({
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
+  // Full-width slot under the header for the follow/block error banner, so it is
+  // not squeezed into the header's action-button column.
+  const socialErrorSlotRef = useRef<HTMLDivElement>(null);
 
   // Send/Receive is the installed-PWA-on-mobile wallet surface: in a plain
   // browser tab, and on a desktop that merely has the app installed, the wallet
@@ -404,8 +407,12 @@ export default function UserProfile({
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-row flex-wrap gap-2 shrink-0 md:max-w-[40%] md:justify-end">
+          {/* Action buttons — Follow · block · Tip · share, native to the header */}
+          <div className="flex flex-row flex-wrap items-center gap-2 shrink-0 md:max-w-[40%] md:justify-end">
+            <ProfileSocialActions
+              targetAddress={effectiveAddress}
+              errorSlotRef={socialErrorSlotRef}
+            />
             {canEdit ? (
               <button
                 type="button"
@@ -458,10 +465,8 @@ export default function UserProfile({
           </div>
         </div>
 
-        {/* Follow / unfollow and block controls — hidden on your own profile. */}
-        <div className="mt-3 md:mt-2 md:flex md:justify-end">
-          <ProfileSocialActions targetAddress={effectiveAddress} />
-        </div>
+        {/* Follow / unfollow errors render full width here, under the header. */}
+        <div ref={socialErrorSlotRef} />
       </div>
 
       {/* Wallet actions — installed PWA on mobile only. On your own profile this

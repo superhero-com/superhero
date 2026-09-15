@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Ban, Check, Loader2, ShieldOff, UserMinus, UserPlus,
@@ -15,8 +16,18 @@ import { useSocialGraph } from '../../../hooks/useSocialGraph';
  * nothing on your own profile or when there is no connected account. Button
  * state comes from the uncached relationship route; a block is confirmed first
  * because the contract severs follows in both directions and never restores them.
+ *
+ * The follow/block buttons render inline so the profile header can place them in
+ * its action-button row; the error banner portals to `errorSlotRef` so it spans
+ * the full header width instead of being squeezed into that button column.
  */
-const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
+const ProfileSocialActions = ({
+  targetAddress,
+  errorSlotRef,
+}: {
+  targetAddress: string;
+  errorSlotRef?: RefObject<HTMLElement | null>;
+}) => {
   const { t } = useTranslation('common');
   const {
     isSelf, viewer, isReady, isFollowing, hasBlocked,
@@ -41,9 +52,27 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
     setConfirmBlockOpen(false);
   };
 
+  const errorBanner = error ? (
+    <div
+      data-testid="social-error"
+      className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-solid border-red-400/30 bg-red-500/10 px-3 py-1.5 text-[12px] text-red-200"
+    >
+      <span>{error.message}</span>
+      {error.offerUnblock && (
+        <button
+          type="button"
+          onClick={() => { clearError(); unblock(); }}
+          className="font-semibold text-red-100 underline underline-offset-2 hover:text-white"
+        >
+          {t('socialGraph.unblock')}
+        </button>
+      )}
+    </div>
+  ) : null;
+
   return (
-    <div className="flex flex-col items-stretch gap-1.5 md:items-end">
-      <div className="flex flex-row flex-wrap items-center gap-2 md:justify-end">
+    <>
+      <div className="flex flex-row flex-wrap items-center gap-2">
         {hasBlocked ? (
           <>
             <span className="inline-flex h-9 items-center gap-1.5 rounded-full border border-solid border-white/15 px-3.5 text-[12px] font-semibold text-white/60">
@@ -117,23 +146,9 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
         )}
       </div>
 
-      {error && (
-        <div
-          data-testid="social-error"
-          className="flex flex-wrap items-center gap-2 rounded-lg border border-solid border-red-400/30 bg-red-500/10 px-3 py-1.5 text-[12px] text-red-200 md:justify-end"
-        >
-          <span>{error.message}</span>
-          {error.offerUnblock && (
-            <button
-              type="button"
-              onClick={() => { clearError(); unblock(); }}
-              className="font-semibold text-red-100 underline underline-offset-2 hover:text-white"
-            >
-              {t('socialGraph.unblock')}
-            </button>
-          )}
-        </div>
-      )}
+      {errorBanner && (errorSlotRef?.current
+        ? createPortal(errorBanner, errorSlotRef.current)
+        : errorBanner)}
 
       <Dialog open={confirmBlockOpen} onOpenChange={(open) => !busy && setConfirmBlockOpen(open)}>
         <DialogContent>
@@ -166,7 +181,7 @@ const ProfileSocialActions = ({ targetAddress }: { targetAddress: string }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 

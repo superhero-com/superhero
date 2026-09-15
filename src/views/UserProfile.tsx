@@ -97,8 +97,6 @@ export default function UserProfile({
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
-  // Full-width slot under the header for the follow/block error banner, so it is
-  // not squeezed into the header's action-button column.
   const socialErrorSlotRef = useRef<HTMLDivElement>(null);
 
   // Send/Receive is the installed-PWA-on-mobile wallet surface: in a plain
@@ -407,10 +405,6 @@ export default function UserProfile({
             </div>
           </div>
 
-          {/* One action bar, right-aligned: Tip · share · block │ Follow
-              (own profile: share │ Edit SuperheroID). One full-width row below
-              768px with the primary control filling the rest; controls are 44px
-              there and 36px at 768px and above. */}
           <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0 md:justify-end">
             {!canEdit && (
               <AeButton

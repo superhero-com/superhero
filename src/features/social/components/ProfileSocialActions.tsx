@@ -16,10 +16,6 @@ import { useSocialGraph } from '../../../hooks/useSocialGraph';
  * nothing on your own profile or when there is no connected account. Button
  * state comes from the uncached relationship route; a block is confirmed first
  * because the contract severs follows in both directions and never restores them.
- *
- * The follow/block buttons render inline so the profile header can place them in
- * its action-button row; the error banner portals to `errorSlotRef` so it spans
- * the full header width instead of being squeezed into that button column.
  */
 const ProfileSocialActions = ({
   targetAddress,
@@ -75,8 +71,6 @@ const ProfileSocialActions = ({
       <div className="flex flex-1 flex-row items-center gap-2 md:flex-none">
         {hasBlocked ? (
           <>
-            {/* When blocked, the status label and Unblock sit after the divider —
-                the primary slot, past the header's utility group. */}
             <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
             <span className="ml-1 inline-flex items-center gap-1.5 text-[12px] font-semibold text-white/55">
               <Ban className="h-3.5 w-3.5" />
@@ -97,8 +91,6 @@ const ProfileSocialActions = ({
           </>
         ) : (
           <>
-            {/* Block is a utility, so it leads the group and never sits at the
-                row's outer edge; the divider then hands off to the primary. */}
             <AeButton
               variant="ghost"
               size="sm"

@@ -46,10 +46,7 @@ const ConnectionRow = (
         {showName && (
           <div className="truncate text-sm font-semibold text-white">{publicName}</div>
         )}
-        {/* Address is the secondary line: lighter than the name and shortened
-            with a middle ellipsis so a long ak_ never out-shouts it or clips
-            mid-character. Not AddressFormatted/Truncate — that hard-codes a
-            bold 14px face and marquee-scrolls on overflow. */}
+        {/* Not AddressFormatted: its Truncate forces bold 14px and marquee-scrolls. */}
         <div className="font-mono text-[12px] font-normal text-white/55">
           {formatAddress(address, 10)}
         </div>

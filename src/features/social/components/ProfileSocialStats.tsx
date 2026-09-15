@@ -8,13 +8,6 @@ interface ProfileSocialStatsProps {
   className?: string;
 }
 
-/**
- * Followers and following presented as one integrated inline unit that reads as
- * part of the profile identity — a count over its label, the two joined by a
- * hairline divider. Each segment opens the connections list for its tab. A
- * segment is omitted when its count is absent (social graph unavailable); the
- * whole unit renders nothing when neither count is present.
- */
 const ProfileSocialStats = ({
   address, followersCount, followingCount, className = '',
 }: ProfileSocialStatsProps) => {
@@ -32,9 +25,6 @@ const ProfileSocialStats = ({
     },
   });
 
-  // Inline text, not a box (a box was rejected): the touch affordance is an
-  // underline on hover and keyboard focus, and the hit area is grown to 44px
-  // with a symmetric negative margin so nothing around it moves.
   const segment = (
     count: number,
     label: string,

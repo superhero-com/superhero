@@ -24,6 +24,7 @@ import {
 import ProfileEditModal from './components/modals/ProfileEditModal';
 import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
+import { MobileAppInstallDialog } from './components/MobileAppInstall';
 import { usePwaInstall } from './hooks/usePwaInstall';
 import { isMobileDevice } from './utils/displayMode';
 
@@ -64,6 +65,18 @@ const App = () => {
     canPrompt, promptInstall, isIOS, isInstalled,
   } = usePwaInstall();
   const [installGuideOpen, setInstallGuideOpen] = React.useState(false);
+  const [mobileAppDialogOpen, setMobileAppDialogOpen] = React.useState(false);
+  // The web-app path, now reached from inside the mobile-app dialog rather than
+  // straight off the install button: the native prompt where the browser gave
+  // us one, the hand-written Safari steps where it did not.
+  const handleInstallWebApp = React.useCallback(async () => {
+    setMobileAppDialogOpen(false);
+    if (canPrompt) {
+      await promptInstall();
+      return;
+    }
+    setInstallGuideOpen(true);
+  }, [canPrompt, promptInstall]);
   const { loadAccountData } = useAccount();
   const {
     attemptReconnection,
@@ -223,12 +236,17 @@ const App = () => {
               so landscape phones don't lose the install affordance. */}
           {isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
-              canNativePrompt={canPrompt}
-              onNativePrompt={promptInstall}
-              onOpenGuide={() => setInstallGuideOpen(true)}
+              onOpen={() => setMobileAppDialogOpen(true)}
               isInstalled={isInstalled}
             />
           )}
+          {/* What both floating install affordances open: the store builds
+              first, the PWA as the secondary line. */}
+          <MobileAppInstallDialog
+            open={mobileAppDialogOpen}
+            onOpenChange={setMobileAppDialogOpen}
+            onInstallWebApp={handleInstallWebApp}
+          />
           <PwaInstallGuide
             open={installGuideOpen}
             onOpenChange={setInstallGuideOpen}

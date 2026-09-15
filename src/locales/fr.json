@@ -769,19 +769,15 @@
         "pwaInstall": {
           "title": "Installer l'application Superhero",
           "description": "Ajoutez Superhero à votre écran d'accueil pour une expérience plus rapide et en plein écran — sans passer par un app store.",
-          "installButton": "Installer",
           "iosStep1": "Appuyez sur le bouton Partager",
           "iosStep2": "Choisissez « Sur l'écran d'accueil »",
           "installApp": "Installer l'app",
-          "minimize": "Réduire",
           "dismiss": "Fermer",
-          "benefitHomescreen": "S'ajoute à l'écran d'accueil",
-          "benefitWallet": "Portefeuille intégré",
-          "benefitNotifications": "Notifications push",
-          "showInstructions": "Voir les instructions",
           "iosIntro": "Ajoutez Superhero à votre écran d'accueil pour un accès rapide et une expérience en plein écran.",
           "iosStep1Hint": "Appuyez sur l'icône <shareIcon/> dans la barre d'outils de Safari",
-          "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »"
+          "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »",
+          "getMobileApp": "Obtenir l'application mobile",
+          "installWebAppInstead": "Installer plutôt l'application web"
         }
       },
       "branding": {
@@ -1007,14 +1003,16 @@
       },
       "titleSuffix": "Fenêtre {{name}}",
       "onboarding": {
-        "title": "Modifier le SuperheroID",
+        "title": "Compte SuperheroID",
         "subtitle": "Connectez votre portefeuille pour créer et gérer votre SuperheroID",
         "stepWalletApp": "Assurez-vous d'avoir l'application Superhero Wallet",
         "stepExtension": "Assurez-vous d'avoir l'extension",
         "or": "ou",
         "downloadAppHint": "Téléchargez l'application tout-en-un Superhero avec portefeuille intégré",
         "downloadOn": "Télécharger sur",
-        "getItOn": "Disponible sur"
+        "getItOn": "Disponible sur",
+        "mobileAppTitle": "Télécharger l'application mobile",
+        "mobileAppDesc": "La façon la plus fluide d'utiliser Superhero, et l'endroit le plus sûr pour discuter."
       },
       "welcome": {
         "title": "Bienvenue sur Superhero",
@@ -2396,6 +2394,8 @@
       "status": {
         "completed": "TERMINÉ",
         "inProgress": "EN COURS",
+        "step": "ÉTAPE {{current}} SUR {{total}}",
+        "postsProgress": "{{current}} SUR {{total}} POSTS",
         "locked": "VERROUILLÉ"
       },
       "check": {
@@ -3007,24 +3007,15 @@
     "gateTitle": "Échanger ou acheter sur Gate.io",
     "gateDescription": "Gate.io propose un marché AE/USDT et constitue l'une des principales options de plateforme d'échange centralisée pour la liquidité de l'AE.",
     "gateAction": "Ouvrir Gate.io AE/USDT",
-    "changellyTitle": "Échanger ou acheter sur Changelly",
-    "changellyDescription": "Changelly propose de nombreuses paires AE et constitue l'une des meilleures options pour la liquidité de l'AE.",
-    "changellyAction": "Ouvrir Changelly",
-    "swapzoneTitle": "Échanger de l'ETH contre de l'AE sur Swapzone",
-    "swapzoneDescription": "Utilisez Swapzone pour comparer les fournisseurs d'échange et convertir de l'ETH en AE via les options de route disponibles.",
-    "swapzoneAction": "Ouvrir Swapzone ETH vers AE",
-    "swapspaceTitle": "Échanger de l'ETH contre de l'AE sur SwapSpace",
-    "swapspaceDescription": "Utilisez SwapSpace pour échanger de l'ETH contre de l'AE avec des options de routage direct lorsqu'elles sont disponibles.",
-    "swapspaceAction": "Ouvrir SwapSpace ETH vers AE",
     "bridgeTitle": "Faire un pont ou échanger depuis d'autres actifs",
     "bridgeDescription": "Si vous détenez déjà de la crypto, utilisez les outils DeFi Superhero disponibles ou les ponts et échanges pris en charge pour déplacer de la valeur vers l'AE lorsque des routes sont disponibles.",
     "bridgeAction": "Ouvrir Superhero DeFi",
     "referTitle": "Utiliser Parrainez & Gagnez",
     "referDescription": "Les invitations Superhero peuvent aider à développer le réseau et à débloquer des récompenses lorsque les invités deviennent actifs. Utilisez la page d'invitation pour créer des liens et suivre les récompenses.",
     "referAction": "Ouvrir Parrainez & Gagnez",
-    "xEarnTitle": "Gagner en publiant sur X",
-    "xEarnDescription": "Une future voie de gain récompensera l'activité de publication sur X. Cette option arrive bientôt.",
-    "comingSoon": "Bientôt disponible",
+    "xEarnTitle": "Gagnez en publiant sur X",
+    "xEarnDescription": "Associez votre compte X et publiez un message éligible à propos de Superhero pour gagner 50 AE. Continuez à publier pour gagner davantage.",
+    "xEarnAction": "Voir les récompenses",
     "safetyTitle": "Avant d'acheter",
     "safetyLi1": "Confirmez le token, le réseau, l'adresse de dépôt, les frais de retrait et le montant minimum de retrait.",
     "safetyLi2": "Commencez par une petite transaction test avant de déplacer des montants plus importants.",

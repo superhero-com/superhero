@@ -769,19 +769,15 @@
         "pwaInstall": {
           "title": "تثبيت تطبيق Superhero",
           "description": "أضف Superhero إلى شاشتك الرئيسية لتجربة أسرع وبملء الشاشة — دون الحاجة إلى متجر تطبيقات.",
-          "installButton": "تثبيت",
           "iosStep1": "اضغط على زر المشاركة",
           "iosStep2": "اختر «إضافة إلى الشاشة الرئيسية»",
           "installApp": "تثبيت التطبيق",
-          "minimize": "تصغير",
           "dismiss": "إغلاق",
-          "benefitHomescreen": "يُحفظ على الشاشة الرئيسية",
-          "benefitWallet": "محفظة مدمجة",
-          "benefitNotifications": "إشعارات فورية",
-          "showInstructions": "عرض التعليمات",
           "iosIntro": "أضف Superhero إلى شاشتك الرئيسية للوصول السريع وتجربة بملء الشاشة.",
           "iosStep1Hint": "اضغط على أيقونة <shareIcon/> في شريط أدوات Safari",
-          "iosStep2Hint": "مرّر واختر «إضافة إلى الشاشة الرئيسية»"
+          "iosStep2Hint": "مرّر واختر «إضافة إلى الشاشة الرئيسية»",
+          "getMobileApp": "احصل على تطبيق الجوال",
+          "installWebAppInstead": "ثبّت تطبيق الويب بدلاً من ذلك"
         }
       },
       "branding": {
@@ -1007,14 +1003,16 @@
       },
       "titleSuffix": "نافذة {{name}}",
       "onboarding": {
-        "title": "تعديل SuperheroID",
+        "title": "حساب SuperheroID",
         "subtitle": "اربط محفظتك لإنشاء SuperheroID الخاص بك وإدارته",
         "stepWalletApp": "تأكّد من أن لديك تطبيق محفظة Superhero",
         "stepExtension": "تأكّد من أن لديك الإضافة",
         "or": "أو",
         "downloadAppHint": "نزّل تطبيق Superhero الشامل مع محفظة مدمجة",
         "downloadOn": "نزّله من",
-        "getItOn": "احصل عليه من"
+        "getItOn": "احصل عليه من",
+        "mobileAppTitle": "حمّل تطبيق الجوال",
+        "mobileAppDesc": "أسلس طريقة لاستخدام Superhero، والمكان الأكثر أمانًا للدردشة."
       },
       "welcome": {
         "title": "مرحباً بك في Superhero",
@@ -2396,6 +2394,8 @@
       "status": {
         "completed": "مكتمل",
         "inProgress": "قيد التنفيذ",
+        "step": "الخطوة {{current}} من {{total}}",
+        "postsProgress": "{{current}} من {{total}} منشورات",
         "locked": "مقفل"
       },
       "check": {
@@ -3007,24 +3007,15 @@
     "gateTitle": "بادل أو اشترِ على Gate.io",
     "gateDescription": "يوفّر Gate.io سوق AE/USDT وهو أحد الخيارات الرئيسية للمنصات المركزية لسيولة AE.",
     "gateAction": "فتح Gate.io AE/USDT",
-    "changellyTitle": "بادل أو اشترِ على Changelly",
-    "changellyDescription": "يوفّر Changelly العديد من أزواج AE وهو أحد أفضل الخيارات لسيولة AE.",
-    "changellyAction": "فتح Changelly",
-    "swapzoneTitle": "بادل ETH إلى AE على Swapzone",
-    "swapzoneDescription": "استخدم Swapzone لمقارنة مزوّدي المبادلة وتبديل ETH إلى AE عبر خيارات المسار المتاحة.",
-    "swapzoneAction": "فتح Swapzone ETH إلى AE",
-    "swapspaceTitle": "بادل ETH إلى AE على SwapSpace",
-    "swapspaceDescription": "استخدم SwapSpace لتبديل ETH بـ AE مع خيارات توجيه مباشرة عند توفرها.",
-    "swapspaceAction": "فتح SwapSpace ETH إلى AE",
     "bridgeTitle": "اجسر أو بادل من أصول أخرى",
     "bridgeDescription": "إذا كنت تملك عملات رقمية بالفعل، استخدم أدوات DeFi المتاحة في Superhero أو الجسور والمبادلات المدعومة لنقل القيمة نحو AE عند توفر المسارات.",
     "bridgeAction": "فتح Superhero DeFi",
     "referTitle": "استخدم برنامج الدعوة والكسب",
     "referDescription": "يمكن لدعوات Superhero أن تساعد في تنمية الشبكة وفتح المكافآت عندما يصبح المدعوون نشطين. استخدم صفحة الدعوة لإنشاء الروابط وتتبّع المكافآت.",
     "referAction": "فتح الدعوة والكسب",
-    "xEarnTitle": "اكسب عبر النشر على X",
-    "xEarnDescription": "سيكافئ مسار كسب مستقبلي النشاط الناتج عن النشر على X (تويتر سابقاً). هذا الخيار قادم قريباً.",
-    "comingSoon": "قريباً",
+    "xEarnTitle": "اربح عبر النشر على X",
+    "xEarnDescription": "اربط حساب X الخاص بك وانشر منشورًا مؤهلًا عن Superhero لتربح 50 AE. واصل النشر لتربح المزيد.",
+    "xEarnAction": "اذهب إلى المكافآت",
     "safetyTitle": "قبل أن تشتري",
     "safetyLi1": "تأكد من الرمز، والشبكة، وعنوان الإيداع، ورسوم السحب، والحد الأدنى لمبلغ السحب.",
     "safetyLi2": "ابدأ بمعاملة اختبارية صغيرة قبل نقل مبالغ أكبر.",

@@ -782,7 +782,8 @@
           "iosIntro": "Ajoutez Superhero à votre écran d'accueil pour un accès rapide et une expérience en plein écran.",
           "iosStep1Hint": "Appuyez sur l'icône <shareIcon/> dans la barre d'outils de Safari",
           "iosStep2Hint": "Faites défiler et sélectionnez « Sur l'écran d'accueil »",
-          "getMobileApp": "Obtenir l'application mobile"
+          "getMobileApp": "Obtenir l'application mobile",
+          "installWebAppInstead": "Installer plutôt l'application web"
         }
       },
       "branding": {

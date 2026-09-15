@@ -782,7 +782,8 @@
           "iosIntro": "将 Superhero 添加到主屏幕，快速访问并享受全屏体验。",
           "iosStep1Hint": "点按 Safari 工具栏中的 <shareIcon/> 图标",
           "iosStep2Hint": "向下滚动并选择“添加到主屏幕”",
-          "getMobileApp": "获取移动应用"
+          "getMobileApp": "获取移动应用",
+          "installWebAppInstead": "改为安装网页应用"
         }
       },
       "branding": {

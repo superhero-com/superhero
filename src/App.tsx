@@ -55,6 +55,9 @@ const SendModal = React.lazy(
 const ReceiveModal = React.lazy(
   () => import('./components/modals/ReceiveModal'),
 );
+const FollowConnectionsModal = React.lazy(
+  () => import('./features/social/components/FollowConnectionsModal'),
+);
 
 const App = () => {
   const navigate = useNavigate();
@@ -191,6 +194,7 @@ const App = () => {
                 onboarding: OnboardingModal,
                 send: SendModal,
                 receive: ReceiveModal,
+                'follow-connections': FollowConnectionsModal,
               }}
             />
           </Suspense>

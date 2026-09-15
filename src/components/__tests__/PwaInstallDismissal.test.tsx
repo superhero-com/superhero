@@ -78,6 +78,8 @@ beforeEach(() => {
   mocks.isInstalled = false;
   mocks.mobile = true;
   mocks.standalone = false;
+  // Shared across the file, so "was it called" assertions need a clean slate.
+  mocks.promptInstall.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
@@ -95,14 +97,14 @@ describe('PwaInstallFab', () => {
   it('can be dismissed, and stays dismissed across a remount', async () => {
     // The regression: the FAB had no dismiss control at all, on every route, for
     // the life of the session.
-    const { unmount } = render(<PwaInstallFab canNativePrompt onOpenGuide={vi.fn()} />);
+    const { unmount } = render(<PwaInstallFab onOpen={vi.fn()} />);
     await showFab();
 
     await act(async () => { screen.getByRole('button', { name: 'Dismiss' }).click(); });
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
 
     unmount();
-    render(<PwaInstallFab canNativePrompt onOpenGuide={vi.fn()} />);
+    render(<PwaInstallFab onOpen={vi.fn()} />);
     await showFab();
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
   });
@@ -110,7 +112,7 @@ describe('PwaInstallFab', () => {
   it('hides once the app reports itself installed', async () => {
     // isStandalone() is false in the tab the install was started from, so without
     // the isInstalled prop the FAB kept offering to install an installed app.
-    render(<PwaInstallFab canNativePrompt onOpenGuide={vi.fn()} isInstalled />);
+    render(<PwaInstallFab onOpen={vi.fn()} isInstalled />);
     await showFab();
 
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
@@ -119,7 +121,7 @@ describe('PwaInstallFab', () => {
   it('stops pulsing instead of re-rendering twice every nine seconds forever', async () => {
     // The pulse interval used to run for the life of the page.
     const clearSpy = vi.spyOn(globalThis, 'clearInterval');
-    render(<PwaInstallFab canNativePrompt onOpenGuide={vi.fn()} />);
+    render(<PwaInstallFab onOpen={vi.fn()} />);
     await showFab();
     clearSpy.mockClear();
 
@@ -138,7 +140,7 @@ describe('the two affordances share one dismissal', () => {
   // the FAB and then receiving a late prompt surfaced the card anyway.
   const Both = () => (
     <>
-      <PwaInstallFab canNativePrompt={false} onOpenGuide={vi.fn()} />
+      <PwaInstallFab onOpen={vi.fn()} />
       <PwaInstallPrompt />
     </>
   );
@@ -163,8 +165,6 @@ describe('PwaInstallPrompt', () => {
     // The regression: dismissal lived in component state, so the card returned on
     // every reload with no way to ever say "never".
     const { unmount } = render(<PwaInstallPrompt />);
-    // The card ships collapsed; the X lives in the expanded state.
-    await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
     await act(async () => { screen.getByRole('button', { name: 'Dismiss' }).click(); });
     expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull();
 
@@ -186,7 +186,9 @@ describe('PwaInstallPrompt', () => {
     mocks.canPrompt = false;
     render(<PwaInstallPrompt />);
     await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
-    await act(async () => { screen.getByRole('button', { name: 'Show Instructions' }).click(); });
+    await act(async () => {
+      screen.getByRole('button', { name: 'Install the web app instead' }).click();
+    });
 
     const strings = en.common.views.landing.pwaInstall;
     expect(screen.getByText(strings.iosIntro)).toBeTruthy();
@@ -197,6 +199,48 @@ describe('PwaInstallPrompt', () => {
     // Radix only sets aria-describedby when a DialogDescription is present, so
     // without one a screen reader announces the title and nothing else.
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-describedby');
+  });
+
+  it('opens the store dialog, not a PWA install', async () => {
+    // The regression this pins: the button used to expand a card selling the
+    // PWA (and on the FAB, fire the install prompt outright). It must now lead
+    // to the store builds, with the web app demoted to a secondary line.
+    render(<PwaInstallPrompt />);
+    await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
+
+    expect(mocks.promptInstall).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('link', { name: en.common.modals.connectWallet.downloadAppStore })
+        .getAttribute('href'),
+    ).toContain('apps.apple.com');
+    expect(
+      screen.getByRole('link', { name: en.common.modals.connectWallet.downloadGooglePlay })
+        .getAttribute('href'),
+    ).toContain('play.google.com');
+  });
+
+  it('offers both stores on a platform that reports itself as iOS', async () => {
+    // Branching on the user agent sent Mac users to Google Play and left the
+    // App Store link unreachable. Whatever the device says, both are offered.
+    mocks.isIOS = true;
+    mocks.canPrompt = false;
+    render(<PwaInstallPrompt />);
+    await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
+
+    expect(screen.getByRole('link', { name: /App Store/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Google Play/i })).toBeTruthy();
+  });
+
+  it('still reaches the native install prompt through the secondary line', async () => {
+    // Demoted, not removed: a browser that offered us an install prompt must
+    // still be able to use it.
+    render(<PwaInstallPrompt />);
+    await act(async () => { screen.getByRole('button', { name: /install app/i }).click(); });
+    await act(async () => {
+      screen.getByRole('button', { name: 'Install the web app instead' }).click();
+    });
+
+    expect(mocks.promptInstall).toHaveBeenCalled();
   });
 
   it('survives a localStorage that throws', () => {

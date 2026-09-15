@@ -782,7 +782,8 @@
           "iosIntro": "Fügen Sie Superhero zu Ihrem Startbildschirm hinzu – für schnellen Zugriff und ein Vollbild-Erlebnis.",
           "iosStep1Hint": "Tippen Sie in der Safari-Symbolleiste auf das <shareIcon/>-Symbol",
           "iosStep2Hint": "Scrollen Sie und wählen Sie „Zum Home-Bildschirm“",
-          "getMobileApp": "Mobile App holen"
+          "getMobileApp": "Mobile App holen",
+          "installWebAppInstead": "Stattdessen die Web-App installieren"
         }
       },
       "branding": {

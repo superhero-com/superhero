@@ -9,6 +9,7 @@ import { useAeSdk, useWalletConnect } from '@/hooks';
 import PasskeyConnectCard from '@/components/PasskeyConnectCard';
 import AgentOnboardCard from '@/components/AgentOnboardCard';
 import { isStandalone } from '@/utils/displayMode';
+import { MobileAppCard } from '@/components/MobileAppInstall';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
@@ -160,6 +161,10 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
         {/* 1. Passkey — unlock where a vault has one, create where there is none. */}
         <PasskeyConnectCard onConnected={advanceAfterConnect} />
 
+        {/* 2. The mobile app, directly under the passkey, because it is the
+            build we want people on. It always offers both stores. */}
+        <MobileAppCard />
+
         {/* 2. Superhero Wallet — connect (web) or import (installed app). The
             expansion lives INSIDE this card so it opens under its own header,
             not under whichever card happens to be last in the list. */}
@@ -286,44 +291,6 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
 
         {/* 3. AI agent — expandable setup guide */}
         <AgentOnboardCard />
-
-        {/* 4. The mobile app. Listed as a first-class way in rather than buried
-            under the wallet options, because it is the install path we actually
-            want people on — the PWA stays available but is no longer the
-            headline. Links target the Superhero social app, not the wallet. */}
-        <div className="relative flex items-center gap-4 w-full rounded-2xl p-4 text-left bg-white/[0.04] border border-white/10">
-          <div
-            className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0"
-            style={{ background: 'rgba(34,211,238,0.12)' }}
-          >
-            <Smartphone className="w-5 h-5 text-cyan-300" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="font-bold text-white text-sm">
-              {t('common.modals.onboarding.mobileAppTitle', { defaultValue: 'Download the mobile app' })}
-            </span>
-            <p className="text-xs text-white/50 mt-0.5">
-              {t('common.modals.onboarding.mobileAppDesc', {
-                defaultValue: 'The smoothest way to use Superhero, and the safer place for chat.',
-              })}
-            </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {(device.isMobile ? [device.isIOS] : [true, false]).map((ios) => (
-                <a
-                  key={ios ? 'ios' : 'android'}
-                  href={ios ? APP_LINKS.appStore : APP_LINKS.playStore}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="no-underline text-xs font-medium text-white/80 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  {ios
-                    ? t('common.modals.connectWallet.downloadAppStore')
-                    : t('common.modals.connectWallet.downloadGooglePlay')}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="text-center text-[11px] text-white/40 leading-relaxed">

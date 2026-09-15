@@ -1049,7 +1049,8 @@
           "iosIntro": "Add Superhero to your home screen for quick access and a full-screen experience.",
           "iosStep1Hint": "Tap the <shareIcon/> icon in Safari's toolbar",
           "iosStep2Hint": "Scroll and select \"Add to Home Screen\"",
-          "getMobileApp": "Get the mobile app"
+          "getMobileApp": "Get the mobile app",
+          "installWebAppInstead": "Install the web app instead"
         },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",

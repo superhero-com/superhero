@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import {
-  Download, MonitorSmartphone, Share, X, ChevronDown,
+  Download, MonitorSmartphone, Share, Smartphone, X, ChevronDown,
 } from 'lucide-react';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { usePwaInstallSnooze } from '@/hooks/usePwaInstallSnooze';
@@ -9,10 +9,18 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 
+/** Superhero social app, not the wallet. */
+const APP_STORE_URL = 'https://apps.apple.com/us/app/superhero-web3-communities/id6758045846';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.superhero.apps';
+
 /**
- * Floating bottom-right PWA install prompt that appears globally across the app.
+ * Floating bottom-right install prompt that appears globally across the app.
  * Displays above the bottom navigation bar with expandable/collapsible states.
- * Platform-aware: shows native install button on Chromium, manual instructions on iOS.
+ *
+ * The store listing is the primary action. Installing the PWA stays available
+ * as the secondary one — it still works, it is just no longer what we push
+ * people towards, since the native app is better sandboxed and is the build we
+ * actually want in people's hands.
  */
 export const PwaInstallPrompt = () => {
   const { t } = useTranslation();
@@ -108,13 +116,24 @@ export const PwaInstallPrompt = () => {
                 </li>
               </ul>
 
-              {/* Action button */}
+              {/* Primary action: the store listing. */}
+              <a
+                href={isIOS ? APP_STORE_URL : PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full group inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                {t('common.views.landing.pwaInstall.getMobileApp', { defaultValue: 'Get the mobile app' })}
+              </a>
+
+              {/* Secondary action: install the web app. Still one tap away. */}
               {isIOS ? (
                 <button
                   ref={iosTriggerRef}
                   type="button"
                   onClick={() => setIosDialogOpen(true)}
-                  className="w-full group inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                  className="mt-2 w-full inline-flex items-center justify-center gap-1.5 bg-white/[0.06] border border-white/10 text-white/70 font-medium text-xs px-3 py-2 rounded-full transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <Share className="w-3.5 h-3.5" />
                   {t('common.views.landing.pwaInstall.showInstructions')}
@@ -128,7 +147,7 @@ export const PwaInstallPrompt = () => {
                       setJustInstalled(true);
                     }
                   }}
-                  className="w-full group inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium text-xs px-3 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                  className="mt-2 w-full inline-flex items-center justify-center gap-1.5 bg-white/[0.06] border border-white/10 text-white/70 font-medium text-xs px-3 py-2 rounded-full transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <Download className="w-3.5 h-3.5" />
                   {t('common.views.landing.pwaInstall.installButton')}

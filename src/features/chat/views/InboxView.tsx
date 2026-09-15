@@ -25,6 +25,7 @@ import { useChatList, type ChatTab } from '../hooks/useChatList';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { isChatRelayConfigured } from '../core/relay-config';
 import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
+import { WebChatSafetyNotice } from '../components/WebChatSafetyNotice';
 
 const TABS: { key: ChatTab; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -53,6 +54,7 @@ const InboxView = () => {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6">
+      <WebChatSafetyNotice />
       <header className="mb-4 flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-foreground">Chat</h1>
         <div className="flex items-center gap-2">

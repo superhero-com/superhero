@@ -6,7 +6,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeftRight,
   ExternalLink,
   Gift,
   Handshake,
@@ -65,8 +64,8 @@ const METHOD_DEFS: MethodDef[] = [
     Icon: IconX,
     titleKey: 'xEarnTitle',
     descriptionKey: 'xEarnDescription',
-    actionKey: 'comingSoon',
-    disabled: true,
+    actionKey: 'xEarnAction',
+    to: '/trends/invite',
   },
   {
     id: 'gate',
@@ -77,33 +76,10 @@ const METHOD_DEFS: MethodDef[] = [
     actionKey: 'gateAction',
     href: 'https://www.gate.io/trade/AE_USDT',
   },
-  {
-    id: 'Changelly',
-    section: 'buy',
-    Icon: ArrowLeftRight,
-    titleKey: 'changellyTitle',
-    descriptionKey: 'changellyDescription',
-    actionKey: 'changellyAction',
-    href: 'https://changelly.com/',
-  },
-  {
-    id: 'swapzone',
-    section: 'buy',
-    Icon: ArrowLeftRight,
-    titleKey: 'swapzoneTitle',
-    descriptionKey: 'swapzoneDescription',
-    actionKey: 'swapzoneAction',
-    href: 'https://swapzone.io/exchange/eth/ae',
-  },
-  {
-    id: 'swapspace',
-    section: 'buy',
-    Icon: ArrowLeftRight,
-    titleKey: 'swapspaceTitle',
-    descriptionKey: 'swapspaceDescription',
-    actionKey: 'swapspaceAction',
-    href: 'https://swapspace.co/?direction=direct&from=eth&fromNetwork=ETH&to=ae&toNetwork=AE',
-  },
+  // Changelly, Swapzone and SwapSpace were listed here and no longer complete
+  // an AE purchase, so they sent people down a dead end. Gate.io is the only
+  // external route currently confirmed working. If one of them is fixed, add it
+  // back with its locale keys, which are still in place.
 ];
 
 const EARN_METHODS = METHOD_DEFS.filter((method) => method.section === 'earn');

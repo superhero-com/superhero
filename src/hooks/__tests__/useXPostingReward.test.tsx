@@ -10,19 +10,21 @@ import { useXPostingReward } from '../useXPostingReward';
 const mockGetStatus = vi.fn();
 const mockRecheck = vi.fn();
 const mockCreateChallenge = vi.fn();
+const mockGetReferralLink = vi.fn();
+let activeAccount = 'ak_wallet';
 
 vi.mock('@/api/backend', () => ({
   SuperheroApi: {
     getXPostingRewardStatus: (...args: any[]) => mockGetStatus(...args),
     runXPostingRewardRecheck: (...args: any[]) => mockRecheck(...args),
     createXRecheckChallenge: (...args: any[]) => mockCreateChallenge(...args),
-    getXReferralLink: vi.fn(),
+    getXReferralLink: (...args: any[]) => mockGetReferralLink(...args),
   },
 }));
 
 vi.mock('../useAeSdk', () => ({
   useAeSdk: () => ({
-    activeAccount: 'ak_wallet',
+    activeAccount,
     aeSdk: {},
     sdk: {},
     staticAeSdk: {},
@@ -74,6 +76,7 @@ function makeClient() {
 describe('useXPostingReward', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    activeAccount = 'ak_wallet';
     mockGetStatus.mockResolvedValue(paidStatus);
   });
 
@@ -117,6 +120,42 @@ describe('useXPostingReward', () => {
     // The card never refetched; it reads the value the page wrote.
     await waitFor(() => {
       expect(card.result.current.isOnboardingPaid).toBe(true);
+    });
+  });
+
+  it('never hands a new account the previous account`s referral link', async () => {
+    const client = makeClient();
+    const Wrapper = wrapper(client);
+    mockGetStatus.mockImplementation(async (address: string) => ({
+      ...paidStatus,
+      referral_link: address === 'ak_wallet' ? null : 'https://superhero.com?ref=second',
+    }));
+    mockCreateChallenge.mockResolvedValue({
+      message: 'sign me',
+      nonce: '1',
+      expires_at: 123,
+    });
+    mockGetReferralLink.mockResolvedValue({
+      link: 'https://superhero.com?ref=first',
+    });
+
+    const { result, rerender } = renderHook(() => useXPostingReward(), {
+      wrapper: Wrapper,
+    });
+    await waitFor(() => expect(result.current.status).not.toBeNull());
+
+    await act(async () => {
+      await result.current.fetchReferralLink();
+    });
+    expect(result.current.referralLink).toBe('https://superhero.com?ref=first');
+
+    // Switch wallet on a page that stays mounted. Posting with the previous
+    // wallet's referral code would credit the wrong account.
+    activeAccount = 'ak_other';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.referralLink).toBe('https://superhero.com?ref=second');
     });
   });
 

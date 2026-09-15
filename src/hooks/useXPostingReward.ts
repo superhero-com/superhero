@@ -68,7 +68,13 @@ export function useXPostingReward() {
     restoreAccount: addStaticAccount,
   });
   const queryClient = useQueryClient();
-  const [referralLinkOverride, setReferralLinkOverride] = useState<string | null>(null);
+  // Keyed by the address it was minted for. The status query is account-keyed,
+  // but this override is plain component state: without the address it would
+  // outlive an account switch on a still-mounted page and hand the next wallet
+  // the previous wallet's referral URL to post with.
+  const [referralLinkOverride, setReferralLinkOverride] = useState<
+  { address: string; link: string } | null
+  >(null);
   const [checkLoading, setCheckLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,8 +114,13 @@ export function useXPostingReward() {
     await refetchStatus();
   }, [activeAccount, refetchStatus]);
 
-  // The freshly minted link wins until the next status read carries it.
-  const referralLink = referralLinkOverride ?? status?.referral_link ?? null;
+  // The freshly minted link wins until the next status read carries it, but
+  // only for the account it was minted for.
+  const referralLink = (
+    referralLinkOverride && referralLinkOverride.address === activeAccount
+      ? referralLinkOverride.link
+      : null
+  ) ?? status?.referral_link ?? null;
 
   const buildSignedProof = useCallback(async (address: string) => {
     // Recreate the signer from the saved address (e.g. after a page reload)
@@ -135,7 +146,7 @@ export function useXPostingReward() {
     try {
       const proof = await buildSignedProof(activeAccount);
       const result = await SuperheroApi.getXReferralLink(activeAccount, proof);
-      setReferralLinkOverride(result.link);
+      setReferralLinkOverride({ address: activeAccount, link: result.link });
       return result;
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -158,7 +169,12 @@ export function useXPostingReward() {
       const proof = await buildSignedProof(activeAccount);
       const updated = await SuperheroApi.runXPostingRewardRecheck(activeAccount, proof);
       writeStatus(updated);
-      if (updated.referral_link) setReferralLinkOverride(updated.referral_link);
+      if (updated.referral_link) {
+        setReferralLinkOverride({
+          address: activeAccount,
+          link: updated.referral_link,
+        });
+      }
       // A successful (HTTP 200) recheck still reports via `error` why no reward
       // was sent (below follower minimum, identity already rewarded, payout
       // failed, etc.). Surface it instead of silently showing "no change".

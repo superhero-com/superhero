@@ -2436,6 +2436,8 @@
       "status": {
         "completed": "COMPLETED",
         "inProgress": "IN PROGRESS",
+        "step": "STEP {{current}} OF {{total}}",
+        "postsProgress": "{{current}} OF {{total}} POSTS",
         "locked": "LOCKED"
       },
       "check": {

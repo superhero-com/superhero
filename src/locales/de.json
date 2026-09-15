@@ -2396,6 +2396,8 @@
       "status": {
         "completed": "ABGESCHLOSSEN",
         "inProgress": "IN BEARBEITUNG",
+        "step": "SCHRITT {{current}} VON {{total}}",
+        "postsProgress": "{{current}} VON {{total}} BEITRÄGEN",
         "locked": "GESPERRT"
       },
       "check": {

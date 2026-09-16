@@ -108,7 +108,8 @@
       "tipPost": "إكرامية للمنشور",
       "openPost": "فتح المنشور",
       "dismissNotification": "إخفاء الإشعار",
-      "viewToken": "عرض {{token}}"
+      "viewToken": "عرض {{token}}",
+      "language": "اللغة / النص"
     },
     "placeholders": {
       "bio": "أخبر العالم عن نفسك",

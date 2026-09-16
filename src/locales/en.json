@@ -148,7 +148,8 @@
       "openTrade": "Open trade",
       "tipPost": "Tip post",
       "openPost": "Open post",
-      "dismissNotification": "Dismiss notification"
+      "dismissNotification": "Dismiss notification",
+      "language": "Language / Script"
     },
     "placeholders": {
       "bio": "Tell the world about you",

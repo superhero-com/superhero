@@ -69,6 +69,8 @@ describe('ProfileActionBar', () => {
     fireEvent.click(screen.getByTestId('profile-connect-to-follow'));
     expect(state.connectWallet).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('social-actions-stub')).toBeNull();
+    // Tipping needs a wallet too, so the connect prompt stands in for it.
+    expect(screen.queryByTestId('profile-tip-button')).toBeNull();
   });
 
   it('stays silent on follow when the social graph is unconfigured', () => {

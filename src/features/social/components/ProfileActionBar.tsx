@@ -154,17 +154,20 @@ const ProfileActionBar = ({
           ) : (
             <ProfileSocialActions targetAddress={address} errorSlotRef={errorSlotRef} />
           )}
-          <AeButton
-            variant="ghost"
-            size="sm"
-            onClick={onTip}
-            title={t('titles.sendATip')}
-            data-testid="profile-tip-button"
-            className={controlBase}
-          >
-            <IconDiamond className="w-4 h-4 text-white" />
-            {t('buttons.tip')}
-          </AeButton>
+          {/* Tipping also needs a connected wallet, so the connect prompt stands in for it. */}
+          {!needsWallet && (
+            <AeButton
+              variant="ghost"
+              size="sm"
+              onClick={onTip}
+              title={t('titles.sendATip')}
+              data-testid="profile-tip-button"
+              className={controlBase}
+            >
+              <IconDiamond className="w-4 h-4 text-white" />
+              {t('buttons.tip')}
+            </AeButton>
+          )}
           {shareButton}
           {overflow}
         </>

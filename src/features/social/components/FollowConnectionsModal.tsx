@@ -3,9 +3,10 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, X } from 'lucide-react';
+import {
+  Inbox, Search, SearchX, TriangleAlert, X,
+} from 'lucide-react';
 import AddressAvatar from '../../../components/AddressAvatar';
-import { AddressFormatted } from '../../../components/AddressFormatted';
 import { Input } from '../../../components/ui/input';
 import Spinner from '../../../components/Spinner';
 import {
@@ -13,10 +14,13 @@ import {
   type ConnectionsDirection,
 } from '../../../hooks/useSocialConnections';
 import type { SocialGraphAccount } from '../../../api/socialGraphConnections';
+import { formatAddress } from '../../../utils/address';
 
 type Props = {
   address: string;
   initialTab?: ConnectionsDirection;
+  followersCount?: number | null;
+  followingCount?: number | null;
   onClose?: () => void;
 };
 
@@ -42,11 +46,10 @@ const ConnectionRow = (
         {showName && (
           <div className="truncate text-sm font-semibold text-white">{publicName}</div>
         )}
-        <AddressFormatted
-          address={address}
-          truncate
-          className={showName ? 'text-xs text-white/50' : 'text-sm text-white/80'}
-        />
+        {/* Not AddressFormatted: its Truncate forces bold 14px and marquee-scrolls. */}
+        <div className={`font-mono ${showName ? 'text-[12px] font-normal text-white/55' : 'text-sm text-white/80'}`}>
+          {formatAddress(address, 10)}
+        </div>
       </div>
     </Link>
   );
@@ -57,7 +60,9 @@ const ConnectionRow = (
  * Two tabs share a search box and an infinite, keyset-paged list; the connected
  * account's own follow/unfollow/block controls live on the profile, untouched.
  */
-const FollowConnectionsModal = ({ address, initialTab = 'followers', onClose }: Props) => {
+const FollowConnectionsModal = ({
+  address, initialTab = 'followers', followersCount, followingCount, onClose,
+}: Props) => {
   const { t } = useTranslation('common');
   const [tab, setTab] = useState<ConnectionsDirection>(initialTab);
   const [searchInput, setSearchInput] = useState('');
@@ -111,7 +116,7 @@ const FollowConnectionsModal = ({ address, initialTab = 'followers', onClose }: 
     if (isError) {
       return (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <span className="text-3xl opacity-60" aria-hidden>⚠️</span>
+          <TriangleAlert aria-hidden className="h-[30px] w-[30px] text-white/35" />
           <p className="text-sm text-white/70">
             {error instanceof Error ? error.message : t('socialGraph.list.error')}
           </p>
@@ -128,7 +133,9 @@ const FollowConnectionsModal = ({ address, initialTab = 'followers', onClose }: 
     if (items.length === 0) {
       return (
         <div className="flex flex-col items-center gap-2 py-12 text-center text-white/60">
-          <span className="text-3xl opacity-60" aria-hidden>{hasSearch ? '🔍' : '📭'}</span>
+          {hasSearch
+            ? <SearchX aria-hidden className="h-[30px] w-[30px] text-white/35" />
+            : <Inbox aria-hidden className="h-[30px] w-[30px] text-white/35" />}
           <p className="text-sm">
             {hasSearch
               ? t('socialGraph.list.emptySearch')
@@ -160,21 +167,27 @@ const FollowConnectionsModal = ({ address, initialTab = 'followers', onClose }: 
     <div className="flex flex-col gap-3" data-testid="follow-connections-modal">
       <div className="flex items-center justify-between">
         <div className="flex gap-1 rounded-full bg-white/5 p-1" role="tablist">
-          {TABS.map((direction) => (
-            <button
-              key={direction}
-              type="button"
-              role="tab"
-              aria-selected={tab === direction}
-              onClick={() => setTab(direction)}
-              data-testid={`connections-tab-${direction}`}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-                tab === direction ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {t(`socialGraph.list.tab.${direction}`)}
-            </button>
-          ))}
+          {TABS.map((direction) => {
+            const count = direction === 'followers' ? followersCount : followingCount;
+            return (
+              <button
+                key={direction}
+                type="button"
+                role="tab"
+                aria-selected={tab === direction}
+                onClick={() => setTab(direction)}
+                data-testid={`connections-tab-${direction}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                  tab === direction ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                {t(`socialGraph.list.tab.${direction}`)}
+                {typeof count === 'number' && (
+                  <span className="tabular-nums text-white/55">{count.toLocaleString()}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
         {onClose && (
           <button

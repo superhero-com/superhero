@@ -769,19 +769,15 @@
         "pwaInstall": {
           "title": "安装 Superhero 应用",
           "description": "将 Superhero 添加到主屏幕，获得更快的全屏体验——无需应用商店。",
-          "installButton": "安装",
           "iosStep1": "点按“分享”按钮",
           "iosStep2": "选择“添加到主屏幕”",
           "installApp": "安装应用",
-          "minimize": "最小化",
           "dismiss": "关闭",
-          "benefitHomescreen": "保存到主屏幕",
-          "benefitWallet": "集成钱包",
-          "benefitNotifications": "推送通知",
-          "showInstructions": "查看安装步骤",
           "iosIntro": "将 Superhero 添加到主屏幕，快速访问并享受全屏体验。",
           "iosStep1Hint": "点按 Safari 工具栏中的 <shareIcon/> 图标",
-          "iosStep2Hint": "向下滚动并选择“添加到主屏幕”"
+          "iosStep2Hint": "向下滚动并选择“添加到主屏幕”",
+          "getMobileApp": "获取移动应用",
+          "installWebAppInstead": "改为安装网页应用"
         }
       },
       "branding": {
@@ -1007,14 +1003,16 @@
       },
       "titleSuffix": "{{name}} 弹窗",
       "onboarding": {
-        "title": "编辑 SuperheroID",
+        "title": "SuperheroID 账户",
         "subtitle": "连接钱包以创建和管理你的 SuperheroID",
         "stepWalletApp": "确保你已安装 Superhero Wallet 应用",
         "stepExtension": "确保你已安装浏览器扩展",
         "or": "或",
         "downloadAppHint": "下载内置钱包的一体化 Superhero 应用",
         "downloadOn": "下载于",
-        "getItOn": "获取于"
+        "getItOn": "获取于",
+        "mobileAppTitle": "下载移动应用",
+        "mobileAppDesc": "使用 Superhero 最流畅的方式，也是更安全的聊天场所。"
       },
       "welcome": {
         "title": "欢迎来到 Superhero",
@@ -2396,6 +2394,8 @@
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
+        "step": "第 {{current}} / {{total}} 步",
+        "postsProgress": "{{current}} / {{total}} 条帖子",
         "locked": "已锁定"
       },
       "check": {
@@ -3007,24 +3007,15 @@
     "gateTitle": "在 Gate.io 上兑换或购买",
     "gateDescription": "Gate.io 提供 AE/USDT 市场，是 AE 流动性的主要中心化交易所选项之一。",
     "gateAction": "打开 Gate.io AE/USDT",
-    "changellyTitle": "在 Changelly 上兑换或购买",
-    "changellyDescription": "Changelly 提供众多 AE 交易对，是 AE 流动性的最佳选项之一。",
-    "changellyAction": "打开 Changelly",
-    "swapzoneTitle": "在 Swapzone 上将 ETH 兑换为 AE",
-    "swapzoneDescription": "使用 Swapzone 比较兑换服务商，并通过可用路径选项将 ETH 兑换为 AE。",
-    "swapzoneAction": "打开 Swapzone ETH 兑换 AE",
-    "swapspaceTitle": "在 SwapSpace 上将 ETH 兑换为 AE",
-    "swapspaceDescription": "使用 SwapSpace 将 ETH 兑换为 AE，在可用时提供直接路由选项。",
-    "swapspaceAction": "打开 SwapSpace ETH 兑换 AE",
     "bridgeTitle": "从其他资产跨链或兑换",
     "bridgeDescription": "如果你已持有加密货币，请在路径可用时使用 Superhero DeFi 工具或受支持的跨链桥和兑换，将价值转移到 AE。",
     "bridgeAction": "打开 Superhero DeFi",
     "referTitle": "使用“推荐赚取”",
     "referDescription": "Superhero 邀请有助于发展网络，并在受邀人变得活跃时解锁奖励。使用邀请页面创建链接并追踪奖励。",
     "referAction": "打开“推荐赚取”",
-    "xEarnTitle": "通过在 X 上发帖赚取",
-    "xEarnDescription": "未来的一种赚取途径将奖励在 X 上发帖的活动。此选项即将推出。",
-    "comingSoon": "即将推出",
+    "xEarnTitle": "在 X 上发帖赚取",
+    "xEarnDescription": "关联你的 X 账户并发布一条符合条件的 Superhero 相关帖子即可赚取 50 AE。持续发帖可赚取更多。",
+    "xEarnAction": "前往奖励",
     "safetyTitle": "购买之前",
     "safetyLi1": "确认代币、网络、存款地址、提现手续费和最低提现金额。",
     "safetyLi2": "在转移大额资金前，先进行小额测试交易。",

@@ -512,14 +512,16 @@
         "and": "and"
       },
       "onboarding": {
-        "title": "Edit SuperheroID",
+        "title": "SuperheroID Account",
         "subtitle": "Connect your wallet to create and manage your SuperheroID",
         "stepWalletApp": "Make sure you have the Superhero Wallet app",
         "stepExtension": "Make sure you have the extension",
         "or": "or",
         "downloadAppHint": "Download the all-in-one Superhero app with a built-in wallet",
         "downloadOn": "Download on",
-        "getItOn": "Get it on"
+        "getItOn": "Get it on",
+        "mobileAppTitle": "Download the mobile app",
+        "mobileAppDesc": "The smoothest way to use Superhero, and the safer place for chat."
       },
       "welcome": {
         "title": "Welcome to Superhero",
@@ -1034,19 +1036,15 @@
         "pwaInstall": {
           "title": "Install the Superhero app",
           "description": "Add Superhero to your home screen for a faster, full-screen experience — no app store required.",
-          "installButton": "Install",
           "iosStep1": "Tap the Share button",
           "iosStep2": "Choose \"Add to Home Screen\"",
           "installApp": "Install App",
-          "minimize": "Minimize",
           "dismiss": "Dismiss",
-          "benefitHomescreen": "Saves to homescreen",
-          "benefitWallet": "Integrated wallet",
-          "benefitNotifications": "Push notifications",
-          "showInstructions": "Show Instructions",
           "iosIntro": "Add Superhero to your home screen for quick access and a full-screen experience.",
           "iosStep1Hint": "Tap the <shareIcon/> icon in Safari's toolbar",
-          "iosStep2Hint": "Scroll and select \"Add to Home Screen\""
+          "iosStep2Hint": "Scroll and select \"Add to Home Screen\"",
+          "getMobileApp": "Get the mobile app",
+          "installWebAppInstead": "Install the web app instead"
         },
         "whatIsEyebrow": "What is Superhero?",
         "whatIsTitleLine1": "A decentralized attention market",
@@ -2436,6 +2434,8 @@
       "status": {
         "completed": "COMPLETED",
         "inProgress": "IN PROGRESS",
+        "step": "STEP {{current}} OF {{total}}",
+        "postsProgress": "{{current}} OF {{total}} POSTS",
         "locked": "LOCKED"
       },
       "check": {
@@ -3051,15 +3051,6 @@
     "gateTitle": "Swap or Buy on Gate.io",
     "gateDescription": "Gate.io provides an AE/USDT market and is one of the main centralized exchange options for AE liquidity.",
     "gateAction": "Open Gate.io AE/USDT",
-    "changellyTitle": "Swap or Buy on Changelly",
-    "changellyDescription": "Changelly provides many AE pairs and is one of the best options for AE liquidity.",
-    "changellyAction": "Open Changelly",
-    "swapzoneTitle": "Swap ETH to AE on Swapzone",
-    "swapzoneDescription": "Use Swapzone to compare swap providers and exchange ETH to AE through the available route options.",
-    "swapzoneAction": "Open Swapzone ETH to AE",
-    "swapspaceTitle": "Swap ETH to AE on SwapSpace",
-    "swapspaceDescription": "Use SwapSpace to exchange ETH for AE with direct routing options when available.",
-    "swapspaceAction": "Open SwapSpace ETH to AE",
     "bridgeTitle": "Bridge or swap from other assets",
     "bridgeDescription": "If you already hold crypto, use available Superhero DeFi tools or supported bridges and swaps to move value toward AE when routes are available.",
     "bridgeAction": "Open Superhero DeFi",
@@ -3067,8 +3058,8 @@
     "referDescription": "Superhero invitations can help grow the network and unlock rewards when invitees become active. Use the invite page to create links and track rewards.",
     "referAction": "Open Refer & Earn",
     "xEarnTitle": "Earn by posting on X",
-    "xEarnDescription": "A future earning path will reward activity from posting on X. This option is coming soon.",
-    "comingSoon": "Coming soon",
+    "xEarnDescription": "Link your X account and make one qualifying post about Superhero to earn 50 AE. Keep posting to earn more.",
+    "xEarnAction": "Go to Rewards",
     "safetyTitle": "Before you buy",
     "safetyLi1": "Confirm the token, network, deposit address, withdrawal fees, and minimum withdrawal amount.",
     "safetyLi2": "Start with a small test transaction before moving larger amounts.",

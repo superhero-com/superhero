@@ -204,12 +204,33 @@ const OptionCard = ({
   </div>
 );
 
+/**
+ * Where the caller already decided how the wallet comes into being.
+ *
+ * The connect modal offers the choice — passkey card, wallet card — so the
+ * flow must not ask it again on a second screen. `passkey` runs the ceremony
+ * the moment the vault probe confirms there is nothing here yet; `import`
+ * opens straight onto the phrase field. Left unset, the flow starts on its own
+ * `choose` screen (WalletLab, tests).
+ */
+export type OnboardingEntry = 'passkey' | 'import';
+
 interface Props {
   store?: VaultStore;
+  entry?: OnboardingEntry;
   onComplete?: (record: VaultRecord, firstAddress: string) => void;
+  /**
+   * Back out of the first screen to whatever launched the flow. Only meaningful
+   * with `entry`: the modal's own options are the previous screen, so Back on
+   * the phrase field or the passkey fallback returns there instead of to a
+   * `choose` screen the user never saw.
+   */
+  onCancel?: () => void;
 }
 
-const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
+const WalletOnboarding = ({
+  store = defaultStore, entry, onComplete, onCancel,
+}: Props) => {
   const [step, setStep] = useState<Step>('choose');
   const [mnemonic, setMnemonic] = useState('');
   const [importText, setImportText] = useState('');
@@ -318,13 +339,17 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
       .finally(() => bumpEstimator((n) => n + 1));
   }, []);
 
+  // True once the probe has answered either way. `entry` waits on it: an
+  // existing vault must win over an auto-started create or import.
+  const [probed, setProbed] = useState(false);
   useEffect(() => {
     store.load()
       .then((r) => { if (r) { setRecord(r); setStep('exists'); } })
       // A failed probe is not "no wallet" — private mode and blocked upgrades
       // land here too, and treating them as empty offers to overwrite a vault
       // we merely couldn't read.
-      .catch(() => setError('Couldn’t read this device’s wallet storage. If you’re in a private window, try a normal one.'));
+      .catch(() => setError('Couldn’t read this device’s wallet storage. If you’re in a private window, try a normal one.'))
+      .finally(() => setProbed(true));
   }, [store]);
 
   // Closing the modal mid-ceremony is the one exit `dropRecovered` can't cover.
@@ -378,6 +403,12 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
   if (step === 'create-show' || step === 'import-enter' || canBackOut) backTarget = 'choose';
   else if (step === 'create-verify') backTarget = 'create-show';
   else if (step === 'passphrase') backTarget = fromImport ? 'import-enter' : 'create-verify';
+  // With an `entry`, `choose` was never shown — the caller's options were the
+  // previous screen, so Back from the first step returns there. The passkey
+  // fallback (`choose` after a failed auto-ceremony) gets the same exit.
+  const backsOut = !!entry && !!onCancel
+    && (backTarget === 'choose' || (step === 'choose' && entry === 'passkey'));
+  if (backsOut) backTarget = 'choose';
 
   let importMsg = 'Your phrase is checked locally on this device.';
   if (importText.length > 0) {
@@ -596,6 +627,25 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
     }
   }, [store, goToRecovery]);
 
+  // Take the path the caller chose, once — only from a fresh `choose`, so an
+  // existing vault (`exists`) and a failed ceremony that fell back to `choose`
+  // are both left alone. The passkey ceremony needs the user's activation from
+  // the tap that opened this flow; the chunk is preloaded by the card so the
+  // mount lands well inside that window, and on failure the fallback screen
+  // below keeps a real button to tap.
+  const entryTakenRef = useRef(false);
+  useEffect(() => {
+    if (!entry || !probed || step !== 'choose' || entryTakenRef.current) return;
+    entryTakenRef.current = true;
+    if (entry === 'import') {
+      setError('');
+      setImportText('');
+      setStep('import-enter');
+    } else {
+      createWithPasskey();
+    }
+  }, [entry, probed, step, createWithPasskey]);
+
   /** DEVICE-GATED. Recovery ceremony → show the derived address; persists nothing. */
   const startRecover = useCallback(async () => {
     setError('');
@@ -758,6 +808,7 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                   // Backing out of the recovery confirm must drop the derived
                   // seed material — nothing was persisted, nothing may linger.
                   if (step === 'recover-confirm') dropRecovered();
+                  if (backsOut) { onCancel?.(); return; }
                   setStep(backTarget as Step);
                 }}
                 className="mb-2 -ml-2 h-auto min-h-[44px] gap-1 px-2 text-sm text-muted-foreground hover:text-foreground"
@@ -947,14 +998,19 @@ const WalletOnboarding = ({ store = defaultStore, onComplete }: Props) => {
                     onClick={createWithPasskey}
                   />
 
-                  <OptionCard
-                    icon={KeyRound}
-                    title="Use a recovery phrase"
-                    body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
-                    cta="Create with a phrase"
-                    onClick={startCreate}
-                  />
-                  {importAllowed && (
+                  {/* Under a passkey `entry` this screen is only ever the fallback
+                      after a failed ceremony, so it offers the retry and the
+                      restore — the other ways in live on the modal that opened it. */}
+                  {entry !== 'passkey' && (
+                    <OptionCard
+                      icon={KeyRound}
+                      title="Use a recovery phrase"
+                      body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
+                      cta="Create with a phrase"
+                      onClick={startCreate}
+                    />
+                  )}
+                  {importAllowed && entry !== 'passkey' && (
                     <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
                   )}
                   {passkeySupported && (

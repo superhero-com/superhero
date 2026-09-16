@@ -9,6 +9,8 @@
       "blocked": "Blocked",
       "followers": "Followers",
       "followingCount": "Following",
+      "posts": "Posts",
+      "connectToFollow": "Connect wallet to follow",
       "blockDialog": {
         "title": "Block this account?",
         "body": "Blocking removes any follows between you and this account, in both directions. Unblocking later will not restore them.",
@@ -68,6 +70,10 @@
       "retry": "Retry",
       "connectX": "Connect X",
       "tip": "Tip",
+      "shareProfile": "Share profile",
+      "copyAddress": "Copy address",
+      "viewOnAescan": "View on æScan",
+      "showMore": "more",
       "viewPortfolio": "View Portfolio",
       "done": "Done",
       "trade": "Trade",
@@ -127,6 +133,8 @@
       "liquiditySettings": "Liquidity Settings",
       "sendATip": "Send a tip",
       "openOnAescan": "Open on æScan",
+      "copyAddress": "Copy address",
+      "moreActions": "More",
       "clickToReverseRankingOrder": "Click to reverse current ranking order",
       "conference": "Conference",
       "sortByBalance": "Sort by balance",
@@ -307,7 +315,8 @@
       "xVerifiedTitle": "X account verified: @{{username}}",
       "xVerified": "X account verified",
       "linkXCtaTitle": "Link your X account",
-      "linkXCtaDescription": "to show your X username on your profile."
+      "linkXCtaDescription": "to show your X username on your profile.",
+      "emptyBioPrompt": "Add a line about yourself — it shows up wherever you post."
     },
     "errorBoundary": {
       "title": "Something went wrong.",

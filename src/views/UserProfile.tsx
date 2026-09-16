@@ -3,20 +3,15 @@
   import/order,
   react/function-component-definition,
   @typescript-eslint/no-unused-vars,
-  react-hooks/exhaustive-deps,
-  no-restricted-syntax,
-  no-shadow,
   no-nested-ternary,
   react/button-has-type,
-  max-len,
-  no-console
+  max-len
 */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AccountCreatedToken from '@/components/Account/AccountCreatedToken';
 import AccountFeed from '@/components/Account/AccountFeed';
 import AccountOwnedTokens from '@/components/Account/AccountOwnedTokens';
@@ -31,6 +26,7 @@ import type { PostDto } from '../api/generated';
 import {
   getLinkedBio,
   getLinkedPreferredAensName,
+  getLinkedSite,
   getLinkedXUsername,
   isXLinked,
   patchAccountCacheEntry,
@@ -41,40 +37,18 @@ import { AccountTokensService } from '../api/generated/services/AccountTokensSer
 import { TokensService } from '../api/generated/services/TokensService';
 import { TransactionsService } from '../api/generated/services/TransactionsService';
 import { PostApiResponse } from '../features/social/types';
-import ProfileSocialActions from '../features/social/components/ProfileSocialActions';
-import ProfileSocialStats from '../features/social/components/ProfileSocialStats';
+import ProfileHeaderCard from '../features/social/components/ProfileHeaderCard';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
-import { CONFIG } from '../config';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
-import { IconDiamond, IconLink } from '../icons';
 import { formatAddress } from '../utils/address';
 import { isMobileDevice, isStandalone } from '../utils/displayMode';
-
-const XVerifiedBadge = ({ username }: { username?: string | null }) => {
-  const { t } = useTranslation('common');
-  return (
-    <span
-      className="ml-1.5 inline-flex shrink-0 items-center justify-center align-middle relative -top-px"
-      title={username ? t('account.xVerifiedTitle', { username }) : t('account.xVerified')}
-    >
-      <span
-        className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full"
-        style={{ background: 'var(--neon-teal)' }}
-      >
-        <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] fill-black" aria-hidden>
-          <path d="M20.285 6.709a1 1 0 0 0-1.414-1.418l-9.373 9.393-3.373-3.375a1 1 0 1 0-1.414 1.417l4.08 4.083a1 1 0 0 0 1.415 0z" />
-        </svg>
-      </span>
-    </span>
-  );
-};
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
 export default function UserProfile({
@@ -204,6 +178,16 @@ export default function UserProfile({
     || formatAddress(effectiveAddress, 6, true);
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
+  const linkedSite = getLinkedSite(accountInfo);
+  // Posts count is the true total the list response already carries, not the
+  // 100-capped page length. Undefined until loaded — the counts row renders
+  // nothing rather than a zero.
+  const postsTotal = data?.meta?.totalItems;
+
+  const openProfileEdit = () => {
+    setEditInitialSection('profile');
+    setEditOpen(true);
+  };
 
   useEffect(() => {
     if (!effectiveAddress) return;
@@ -368,107 +352,25 @@ export default function UserProfile({
         </AeButton>
       </div>
 
-      {/* Compact Profile Header */}
-      <div className="mb-4 md:mb-4">
-        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
-          {/* Avatar and Identity */}
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 rounded-xl bg-[var(--neon-teal)]/20 blur-lg opacity-50" />
-              <AddressAvatarWithChainName
-                address={effectiveAddress}
-                size={64}
-                showAddressAndChainName={false}
-                isHoverEnabled
-                className="relative"
-              />
-            </div>
-            <div className="min-w-0 flex-1 md:pr-3">
-              <h1 className="text-xl md:text-2xl font-extrabold text-[var(--neon-teal)] tracking-tight leading-tight break-all">
-                {displayName}
-                {isXVerified && <XVerifiedBadge username={linkedXUsername} />}
-              </h1>
-              <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
-                {effectiveAddress}
-              </div>
-              {bioText && (
-                <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
-                  <span>{bioText}</span>
-                </div>
-              )}
-              <ProfileSocialStats
-                address={effectiveAddress}
-                followersCount={accountInfo?.profile?.followers_count}
-                followingCount={accountInfo?.profile?.following_count}
-                className="mt-2.5"
-              />
-            </div>
-          </div>
-
-          <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0 md:justify-end">
-            {!canEdit && (
-              <AeButton
-                onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
-                variant="ghost"
-                size="sm"
-                className="shrink-0 !rounded-full !h-11 md:!h-9 px-4 justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
-                title={t('titles.sendATip')}
-              >
-                <IconDiamond className="w-4 h-4 text-white" />
-                {t('buttons.tip')}
-              </AeButton>
-            )}
-            <AeButton
-              variant="ghost"
-              size="sm"
-              className="shrink-0 !rounded-full !h-11 !w-11 md:!h-9 md:!w-9 !p-0 justify-center inline-flex items-center !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors [&_svg]:!size-[0.9em]"
-              onClick={() => {
-                const base = (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '');
-                const url = `${base}/accounts/${effectiveAddress}`;
-                window.open(url, '_blank', 'noopener,noreferrer');
-              }}
-              title={t('titles.openOnAescan')}
-            >
-              <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
-            </AeButton>
-            {canEdit ? (
-              <>
-                <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditInitialSection('profile');
-                    setEditOpen(true);
-                  }}
-                  className={[
-                    'ml-1 inline-flex h-11 md:h-9 flex-1 md:flex-none items-center justify-center gap-1.5 rounded-full border border-solid',
-                    'box-border whitespace-nowrap px-[18px] text-[12.5px] font-semibold leading-none',
-                    '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
-                    'hover:!shadow-none hover:!transform-none',
-                  ].join(' ')}
-                  style={{
-                    background: 'rgba(0,255,157,0.08)',
-                    borderColor: 'rgba(0,255,157,0.3)',
-                    color: 'var(--neon-teal)',
-                  }}
-                >
-                  ✦
-                  {' '}
-                  {t('buttons.editSuperheroId')}
-                </button>
-              </>
-            ) : (
-              <ProfileSocialActions
-                targetAddress={effectiveAddress}
-                errorSlotRef={socialErrorSlotRef}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Follow / unfollow errors render full width here, under the header. */}
-        <div ref={socialErrorSlotRef} />
-      </div>
+      {/* Blocks 1-4: band -> identity -> counts -> action bar. */}
+      <ProfileHeaderCard
+        address={effectiveAddress}
+        displayName={displayName}
+        handle={chainName}
+        isVerified={isXVerified}
+        verifiedUsername={linkedXUsername}
+        bio={bioText}
+        site={linkedSite}
+        ownProfile={canEdit}
+        followersCount={accountInfo?.profile?.followers_count}
+        followingCount={accountInfo?.profile?.following_count}
+        postsCount={postsTotal}
+        onEdit={openProfileEdit}
+        onEditBio={openProfileEdit}
+        onTip={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
+        onPostsClick={() => handleTabChange('feed')}
+        errorSlotRef={socialErrorSlotRef}
+      />
 
       {/* Wallet actions — installed PWA on mobile only. On your own profile this
           is the wallet home pair; on someone else's it is a pre-addressed Send. */}
@@ -598,7 +500,7 @@ export default function UserProfile({
               {t('explore:posts')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {posts.length.toLocaleString()}
+              {(postsTotal ?? posts.length).toLocaleString()}
             </div>
           </button>
         </div>

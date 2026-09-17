@@ -12,13 +12,11 @@ vi.mock('@/utils/address', () => ({ copyToClipboard }));
 const ADDR = 'ak_2XfPqR7nL9vK4mB1sT6wY8dH3jN5cZ0gQxEeUuIiOoPp8K7Qr';
 
 describe('AddressCopyChip', () => {
-  it('shows a middle-truncated address but carries the full value on the title', () => {
+  it('renders the full address and carries it on the title', () => {
     render(<AddressCopyChip address={ADDR} />);
     const chip = screen.getByTestId('profile-address-chip');
     expect(chip).toHaveAttribute('title', ADDR);
-    expect(chip.textContent).toContain('ak_2XfP');
-    expect(chip.textContent).toContain('8K7Qr'.slice(-4));
-    expect(chip.textContent).not.toContain(ADDR); // never the full string as body text
+    expect(chip.textContent).toContain(ADDR); // full address, never middle-truncated
   });
 
   it('copies the full address to the clipboard on click', async () => {

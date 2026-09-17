@@ -22,6 +22,9 @@ interface AddressAvatarWithChainNameProps {
     showBalance?: boolean;
     showBalanceInHover?: boolean;
     className?: string;
+    // Shape of the identicon; defaults to a circle. Pass e.g. '20px' for a
+    // rounded square.
+    avatarBorderRadius?: string;
     isHoverEnabled?: boolean;
     hideFallbackName?: boolean;
     secondary?: React.ReactNode;
@@ -37,6 +40,7 @@ export const AddressAvatarWithChainName = memo(({
   showBalance = false,
   showBalanceInHover,
   className,
+  avatarBorderRadius = '50%',
   isHoverEnabled = true,
   hideFallbackName = false,
   secondary,
@@ -135,11 +139,11 @@ export const AddressAvatarWithChainName = memo(({
     <>
       <div className="relative flex-shrink-0">
         <div className="relative">
-          <div className="rounded-full overflow-hidden shadow-md">
+          <div className="overflow-hidden shadow-md" style={{ borderRadius: avatarBorderRadius }}>
             <AddressAvatar
               address={address}
               size={size}
-              borderRadius="50%"
+              borderRadius={avatarBorderRadius}
             />
           </div>
         </div>

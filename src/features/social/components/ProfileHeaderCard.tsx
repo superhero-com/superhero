@@ -43,6 +43,7 @@ const Avatar = ({ address, size, className }: {
       address={address}
       size={size}
       showAddressAndChainName={false}
+      avatarBorderRadius="20px"
       isHoverEnabled
       className="rounded-[20px] overflow-hidden"
     />
@@ -100,7 +101,8 @@ const ProfileHeaderCard = ({
           <div className="min-w-0 md:flex md:flex-1 md:items-center md:gap-4">
             <Avatar address={address} size={72} className="-mt-[36px] md:hidden" />
             <Avatar address={address} size={88} className="-mt-[44px] hidden md:block" />
-            <div className="mt-3 min-w-0 md:mt-0">
+            {/* Nudge the name up on desktop so it centres with the avatar. */}
+            <div className="mt-3 min-w-0 md:mt-0 md:-translate-y-[7px]">
               <ProfileIdentity
                 address={address}
                 displayName={displayName}

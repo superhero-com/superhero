@@ -510,6 +510,7 @@ export const SuperheroApi = {
   listPopularPosts(params: {
     page?: number;
     limit?: number;
+    language?: 'en'|'zh'|'ar'|'ru';
     weights?: Partial<Record<
       'comments'|'tipsAmountAE'|'tipsCount'|'uniqueTippers'|'trendingBoost'|'contentQuality'|'reads'|'interactionsPerHour',
       'low'|'med'|'high'
@@ -518,6 +519,7 @@ export const SuperheroApi = {
     const qp = new URLSearchParams();
     if (params.page != null) qp.set('page', String(params.page));
     if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.language) qp.set('language', params.language);
     if (params.weights) {
       Object.entries(params.weights).forEach(([key, value]) => {
         if (value) qp.set(key, value);
@@ -692,7 +694,7 @@ export const SuperheroApi = {
     return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
   },
   // Posts endpoints
-  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
+  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string; language?: 'en'|'zh'|'ar'|'ru' } = {}) {
     const qp = new URLSearchParams();
     if (params.limit != null) qp.set('limit', String(params.limit));
     if (params.page != null) qp.set('page', String(params.page));
@@ -701,6 +703,7 @@ export const SuperheroApi = {
     if (params.search) qp.set('search', params.search);
     if (params.accountAddress) qp.set('account_address', params.accountAddress);
     if (params.topics) qp.set('topics', params.topics);
+    if (params.language) qp.set('language', params.language);
     const query = qp.toString();
     return this.fetchJson(`/api/posts${query ? `?${query}` : ''}`);
   },

@@ -37,7 +37,7 @@ const Avatar = ({ address, size, className }: {
   className?: string;
 }) => (
   <div
-    className={`w-fit shrink-0 rounded-[20px] ring-[3px] ring-[var(--background-color)] bg-[var(--background-color)] ${className || ''}`}
+    className={`relative z-10 w-fit shrink-0 rounded-[20px] ring-[3px] ring-[var(--background-color)] bg-[var(--background-color)] ${className || ''}`}
   >
     <AddressAvatarWithChainName
       address={address}
@@ -99,10 +99,9 @@ const ProfileHeaderCard = ({
             bar shares the same row on desktop and drops below on mobile. */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
           <div className="min-w-0 md:flex md:flex-1 md:items-center md:gap-4">
-            <Avatar address={address} size={72} className="-mt-[36px] md:hidden" />
-            <Avatar address={address} size={88} className="-mt-[44px] hidden md:block" />
-            {/* Nudge the name up on desktop so it centres with the avatar. */}
-            <div className="mt-3 min-w-0 md:mt-0 md:-translate-y-[7px]">
+            <Avatar address={address} size={72} className="-mt-[26px] md:hidden" />
+            <Avatar address={address} size={88} className="-mt-[30px] hidden md:block" />
+            <div className="mt-3 min-w-0 md:mt-0">
               <ProfileIdentity
                 address={address}
                 displayName={displayName}

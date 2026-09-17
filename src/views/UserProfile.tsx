@@ -43,6 +43,7 @@ import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
+import ProfileTabPanel from '../features/social/components/ProfileTabPanel';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
@@ -435,87 +436,16 @@ export default function UserProfile({
         </button>
       )}
 
-      {/* Portfolio Chart and Stats - Side by side on md+ */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
-        {/* Portfolio Chart - Smaller on md+ */}
-        <div className="w-full -mt-4 -mb-6">
-          <AccountPortfolio address={effectiveAddress} />
-        </div>
-
-        {/* Stats Grid - Right column on md+, full width on mobile */}
-        <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
-          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              {t('account.aeBalance')}
-            </div>
-            <div className="text-base md:text-lg font-bold text-white">
-              {decimalBalance ? (() => {
-                try {
-                  const decimalBalanceValue = decimalBalance as any;
-                  const value = typeof decimalBalanceValue?.toNumber === 'function'
-                    ? decimalBalanceValue.toNumber()
-                    : typeof decimalBalance === 'number'
-                      ? decimalBalance
-                      : Number(decimalBalance);
-                  // If value is above 1 AE, show 2 decimals
-                  if (value >= 1) {
-                    return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
-                  }
-                  // Otherwise use prettify for values below 1 AE
-                  return `${decimalBalance.prettify()} AE`;
-                } catch {
-                  // Fallback to prettify if conversion fails
-                  return `${decimalBalance.prettify()} AE`;
-                }
-              })() : t('messages.loading')}
-            </div>
-          </div>
-          <button
-            onClick={() => handleTabChange('owned')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
-          >
-            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              {t('explore:ownedTrends')}
-            </div>
-            <div className="text-base md:text-lg font-bold text-white">
-              {(accountInfo?.holdings_count ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
-            </div>
-          </button>
-          <button
-            onClick={() => handleTabChange('created')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
-          >
-            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              {t('explore:createdTrends')}
-            </div>
-            <div className="text-base md:text-lg font-bold text-white">
-              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
-            </div>
-          </button>
-          <button
-            onClick={() => handleTabChange('feed')}
-            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
-          >
-            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              {t('explore:posts')}
-            </div>
-            <div className="text-base md:text-lg font-bold text-white">
-              {(postsTotal ?? posts.length).toLocaleString()}
-            </div>
-          </button>
-        </div>
-      </div>
-
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
       <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
         <div>
           <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
             {([
-              { key: 'feed', label: t('explore:feed') },
-              { key: 'owned', label: t('explore:ownedTrends') },
-              { key: 'created', label: t('explore:createdTrends') },
-              { key: 'transactions', label: t('explore:transactions') },
+              { key: 'feed', label: t('explore:posts') },
+              { key: 'owned', label: t('explore:holdings') },
+              { key: 'created', label: t('explore:created') },
+              { key: 'transactions', label: t('explore:activity') },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
@@ -537,13 +467,89 @@ export default function UserProfile({
         {/* No desktop pill group; using the same layout across breakpoints */}
       </div>
 
-      {tab === 'feed' && (<AccountFeed address={effectiveAddress} tab="feed" />)}
+      <ProfileTabPanel activeTab={tab}>
+        {tab === 'feed' && (<AccountFeed address={effectiveAddress} tab="feed" />)}
 
-      {tab === 'owned' && (<AccountOwnedTokens address={effectiveAddress} tab="owned" />)}
+        {tab === 'owned' && (
+          <>
+            {/* Holdings panel header: portfolio chart + stat tiles, moved here from above the tabs. */}
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
+              {/* Portfolio Chart - Smaller on md+ */}
+              <div className="w-full -mt-4 -mb-6">
+                <AccountPortfolio address={effectiveAddress} />
+              </div>
 
-      {tab === 'created' && (<AccountCreatedToken address={effectiveAddress} tab="created" />)}
+              {/* Stats Grid - Right column on md+, full width on mobile */}
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
+                <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+                  <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                    {t('account.aeBalance')}
+                  </div>
+                  <div className="text-base md:text-lg font-bold text-white">
+                    {decimalBalance ? (() => {
+                      try {
+                        const decimalBalanceValue = decimalBalance as any;
+                        const value = typeof decimalBalanceValue?.toNumber === 'function'
+                          ? decimalBalanceValue.toNumber()
+                          : typeof decimalBalance === 'number'
+                            ? decimalBalance
+                            : Number(decimalBalance);
+                        // If value is above 1 AE, show 2 decimals
+                        if (value >= 1) {
+                          return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
+                        }
+                        // Otherwise use prettify for values below 1 AE
+                        return `${decimalBalance.prettify()} AE`;
+                      } catch {
+                        // Fallback to prettify if conversion fails
+                        return `${decimalBalance.prettify()} AE`;
+                      }
+                    })() : t('messages.loading')}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleTabChange('owned')}
+                  className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+                >
+                  <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                    {t('explore:ownedTrends')}
+                  </div>
+                  <div className="text-base md:text-lg font-bold text-white">
+                    {(accountInfo?.holdings_count ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('created')}
+                  className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+                >
+                  <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                    {t('explore:createdTrends')}
+                  </div>
+                  <div className="text-base md:text-lg font-bold text-white">
+                    {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange('feed')}
+                  className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+                >
+                  <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+                    {t('explore:posts')}
+                  </div>
+                  <div className="text-base md:text-lg font-bold text-white">
+                    {(postsTotal ?? posts.length).toLocaleString()}
+                  </div>
+                </button>
+              </div>
+            </div>
+            <AccountOwnedTokens address={effectiveAddress} tab="owned" />
+          </>
+        )}
 
-      {tab === 'transactions' && (<AccountTrades address={effectiveAddress} tab="transactions" />)}
+        {tab === 'created' && (<AccountCreatedToken address={effectiveAddress} tab="created" />)}
+
+        {tab === 'transactions' && (<AccountTrades address={effectiveAddress} tab="transactions" />)}
+      </ProfileTabPanel>
 
       {/* User comments list removed in unified posts model */}
     </div>

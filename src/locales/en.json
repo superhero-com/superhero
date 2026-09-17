@@ -1693,6 +1693,12 @@
   },
   "social": {
     "copiedAddress": "Copied address",
+    "profileTabs": {
+      "offline": "Offline — showing last loaded",
+      "loadFailedTitle": "Couldn't load this tab",
+      "loadFailedSubtitle": "The header above is real — only this tab failed.",
+      "tryAgain": "Try again"
+    },
     "emptyState": {
       "failedToLoadPosts": "Failed to load posts",
       "errorFetchingPosts": "An error occurred while fetching posts",
@@ -2810,6 +2816,9 @@
     "ownedTrends": "Owned Trends",
     "transactions": "Transactions",
     "posts": "Posts",
+    "holdings": "Holdings",
+    "created": "Created",
+    "activity": "Activity",
     "noOwnedTokens": "This user doesn't own any Trendminer tokens yet.",
     "feedDescription": "Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.",
     "leaderboardDescription": "Discover top performing trading assets on Superhero based on on-chain performance.",

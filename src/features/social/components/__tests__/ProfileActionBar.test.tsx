@@ -43,15 +43,16 @@ describe('ProfileActionBar', () => {
     state.connectWallet.mockClear();
   });
 
-  it('shows the own-profile controls: edit, share, overflow — never tip or follow', () => {
+  it('shows the own-profile control: edit only — never tip, follow, share or overflow', () => {
     const onEdit = vi.fn();
     renderBar({ ownProfile: true, onEdit });
     fireEvent.click(screen.getByTestId('profile-edit-button'));
     expect(onEdit).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId('profile-share-button')).toBeInTheDocument();
-    expect(screen.getByTestId('profile-overflow-trigger')).toBeInTheDocument();
     expect(screen.queryByTestId('profile-tip-button')).toBeNull();
     expect(screen.queryByTestId('social-actions-stub')).toBeNull();
+    // Share and overflow moved to the cover — not in the action bar.
+    expect(screen.queryByTestId('profile-share-button')).toBeNull();
+    expect(screen.queryByTestId('profile-overflow-trigger')).toBeNull();
   });
 
   it('shows the viewer controls when a wallet is connected: follow actions and tip', () => {
@@ -78,7 +79,7 @@ describe('ProfileActionBar', () => {
     state.contractAddress = null;
     renderBar();
     expect(screen.queryByTestId('profile-connect-to-follow')).toBeNull();
-    // Tip and overflow remain; the follow control simply does not appear.
+    // Tip remains; the follow control simply does not appear.
     expect(screen.getByTestId('profile-tip-button')).toBeInTheDocument();
   });
 });

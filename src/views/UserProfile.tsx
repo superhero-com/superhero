@@ -17,7 +17,6 @@ import AccountFeed from '@/components/Account/AccountFeed';
 import AccountOwnedTokens from '@/components/Account/AccountOwnedTokens';
 import AccountTrades from '@/components/Account/AccountTrades';
 import Head from '../seo/Head';
-import AeButton from '../components/AeButton';
 import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
 
@@ -332,27 +331,7 @@ export default function UserProfile({
           description: bioText || undefined,
         }}
       />
-      {/* Back button */}
-      <div className="mb-4 md:mb-6">
-        <AeButton
-          onClick={() => {
-            const state = (window.history?.state as any) || {};
-            const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : window.history.length > 1;
-            if (canGoBack) navigate(-1);
-            else navigate('/', { replace: true });
-          }}
-          variant="ghost"
-          size="sm"
-          outlined
-          className="!border !border-solid !border-white/15 hover:!border-white/35"
-        >
-          ←
-          {' '}
-          {t('labels.back')}
-        </AeButton>
-      </div>
-
-      {/* Blocks 1-4: band -> identity -> counts -> action bar. */}
+      {/* Blocks 1-4: band (with back + share/more over it) -> identity -> counts. */}
       <ProfileHeaderCard
         address={effectiveAddress}
         displayName={displayName}
@@ -365,6 +344,12 @@ export default function UserProfile({
         followersCount={accountInfo?.profile?.followers_count}
         followingCount={accountInfo?.profile?.following_count}
         postsCount={postsTotal}
+        onBack={() => {
+          const state = (window.history?.state as any) || {};
+          const canGoBack = typeof state.idx === 'number' ? state.idx > 0 : window.history.length > 1;
+          if (canGoBack) navigate(-1);
+          else navigate('/', { replace: true });
+        }}
         onEdit={openProfileEdit}
         onEditBio={openProfileEdit}
         onTip={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}

@@ -152,7 +152,10 @@ describe('FollowConnectionsModal', () => {
 
     renderModal();
 
-    expect(await screen.findByText('boom')).toBeInTheDocument();
+    // The localized message is shown, never the raw API error ("boom"), which
+    // would reach users untranslated in every locale.
+    expect(await screen.findByText("Couldn't load this list.")).toBeInTheDocument();
+    expect(screen.queryByText('boom')).toBeNull();
     fireEvent.click(screen.getByText('Try again'));
     expect(await screen.findByText('Alice')).toBeInTheDocument();
   });

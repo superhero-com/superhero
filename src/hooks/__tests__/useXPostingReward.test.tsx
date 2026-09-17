@@ -159,6 +159,47 @@ describe('useXPostingReward', () => {
     });
   });
 
+  it('surfaces the reason a 200 status read carries instead of dropping it', async () => {
+    const client = makeClient();
+    mockGetStatus.mockResolvedValue({
+      ...paidStatus,
+      error: 'Posting rewards are temporarily unavailable.',
+    });
+
+    const { result } = renderHook(() => useXPostingReward(), {
+      wrapper: wrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Posting rewards are temporarily unavailable.');
+    });
+  });
+
+  it('clears the banner reason when the active account changes', async () => {
+    const client = makeClient();
+    mockGetStatus.mockImplementation(async (address: string) => (
+      address === 'ak_wallet'
+        ? { ...paidStatus, error: 'Wallet A needs 100 followers' }
+        : { ...paidStatus, error: null }
+    ));
+
+    const { result, rerender } = renderHook(() => useXPostingReward(), {
+      wrapper: wrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Wallet A needs 100 followers');
+    });
+
+    // Wallet A's reason must not stay pinned against wallet B's data.
+    activeAccount = 'ak_other';
+    rerender();
+
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+    });
+  });
+
   it('reports an unavailable status instead of an empty one', async () => {
     const client = makeClient();
     mockGetStatus.mockRejectedValue(new Error('boom'));

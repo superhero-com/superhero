@@ -227,11 +227,19 @@ export function useWalletConnect() {
 
   async function connectWallet(): Promise<string | null> {
     // A persisted session (active account + walletInfo) means the wallet was
-    // already connected and only needs its RPC link re-established — a reconnect,
-    // not a cold connect. Route it through the non-destructive path so a
+    // already connected and normally only needs its RPC link re-established — a
+    // reconnect, not a cold connect. Try the non-destructive path first so a
     // cancelled or failed prompt cannot clear a session the user never left.
     if (activeAccountRef.current && walletInfoRef.current) {
-      return reconnectWallet();
+      const reconnected = await reconnectWallet();
+      if (reconnected) return reconnected;
+      // Reconnect returned null. If a wallet was actually detected, the user
+      // dismissed the prompt — keep the session intact. If no wallet answered
+      // at all (extension uninstalled, disabled, blocked, or not injected in
+      // time), fall through to the cold path so the reset and deep link run,
+      // rather than leaving the button a permanent no-op while the address is
+      // still shown as connected.
+      if (wallet.current) return null;
     }
 
     // Cold connect: reset all state and drop any stale wallet session first.
@@ -290,7 +298,13 @@ export function useWalletConnect() {
         ? undefined
         : RECONNECT_WALLET_DETECTION_TIMEOUT_MS;
       wallet.current ??= await scanForWallets(detectionTimeout);
-      if (!wallet.current) return null;
+      if (!wallet.current) {
+        // No wallet answered — the RPC link could not be re-established, so the
+        // flag must not stay true (a cancel/failure otherwise leaves it set with
+        // the connection gone until the 5s health check catches up).
+        setWalletConnected(false);
+        return null;
+      }
 
       try {
         await aeSdk.disconnectWallet();
@@ -301,11 +315,15 @@ export function useWalletConnect() {
       setWalletInfo(newWalletInfo);
 
       const connectedAccount = await subscribeAddress({ resetActiveAccount: false });
-      if (!connectedAccount) return null;
+      if (!connectedAccount) {
+        setWalletConnected(false);
+        return null;
+      }
       setWalletConnected(true);
       return connectedAccount;
     } catch {
       // Keep persisted state intact; the user can still act via deep-link signing.
+      setWalletConnected(false);
       return null;
     } finally {
       setConnectingWallet(false);

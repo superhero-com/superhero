@@ -78,7 +78,6 @@ const FollowConnectionsModal = ({
     items,
     isLoading,
     isError,
-    error,
     refetch,
     fetchNextPage,
     hasNextPage,
@@ -118,7 +117,7 @@ const FollowConnectionsModal = ({
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <TriangleAlert aria-hidden className="h-[30px] w-[30px] text-white/35" />
           <p className="text-sm text-white/70">
-            {error instanceof Error ? error.message : t('socialGraph.list.error')}
+            {t('socialGraph.list.error')}
           </p>
           <button
             type="button"
@@ -160,7 +159,7 @@ const FollowConnectionsModal = ({
       </div>
     );
   }, [
-    isLoading, isError, error, items, hasSearch, tab, t, refetch, onClose, isFetchingNextPage,
+    isLoading, isError, items, hasSearch, tab, t, refetch, onClose, isFetchingNextPage,
   ]);
 
   return (

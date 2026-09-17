@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   SuperheroApi,
@@ -89,17 +89,40 @@ export function useXPostingReward() {
     data: statusData,
     isPending: statusPending,
     isError: statusUnavailable,
+    error: statusError,
     refetch: refetchStatus,
+    // Inherit the app-wide 5-minute default (main.tsx) rather than a 10s
+    // staleTime: the shared cache is the point, and a 10s window refires this
+    // 10-req/min-per-IP endpoint on every remount or tab-focus.
   } = useQuery({
     queryKey: [X_POSTING_REWARD_QUERY_KEY, activeAccount],
     queryFn: () => SuperheroApi.getXPostingRewardStatus(activeAccount as string),
     enabled: Boolean(activeAccount),
-    staleTime: 10_000,
   });
   const status = statusData ?? null;
+  // Reason to show when the status read itself failed (network / 5xx), as
+  // opposed to a 200 that carries `error`. Cleaned of the client's wrapper.
+  const statusErrorMessage = statusUnavailable
+    ? cleanErrorMessage(statusError instanceof Error ? statusError.message : '')
+    : null;
   // `isPending` is true for a disabled query too, so a signed-out visitor would
   // otherwise look like a perpetual load.
   const statusLoading = Boolean(activeAccount) && statusPending;
+
+  // The banner is component state, so on an account switch wallet A's reason
+  // ("needs 100 followers", ...) would otherwise stay pinned against wallet B's
+  // data. Reset it whenever the active account changes.
+  useEffect(() => {
+    setError(null);
+  }, [activeAccount]);
+
+  // A 200 status read still reports via `error` why no reward was sent (program
+  // disabled, below the follower minimum, identity already rewarded, payout
+  // failed, ...). Surface it on load the same way a manual recheck does at
+  // runRewardCheck, instead of dropping it and rendering a normal earn page.
+  useEffect(() => {
+    if (statusData?.error) surfaceError(statusData.error);
+  }, [statusData, surfaceError]);
 
   /** Publish a fresh status to every surface reading this address. */
   const writeStatus = useCallback((updated: XPostingRewardStatus) => {
@@ -147,6 +170,15 @@ export function useXPostingReward() {
       const proof = await buildSignedProof(activeAccount);
       const result = await SuperheroApi.getXReferralLink(activeAccount, proof);
       setReferralLinkOverride({ address: activeAccount, link: result.link });
+      // Publish into the shared status cache too, so the other two surfaces get
+      // the freshly minted link and it survives navigation — not just this
+      // component's local override.
+      queryClient.setQueryData(
+        [X_POSTING_REWARD_QUERY_KEY, activeAccount],
+        (prev: XPostingRewardStatus | undefined) => (
+          prev ? { ...prev, referral_link: result.link } : prev
+        ),
+      );
       return result;
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -156,7 +188,7 @@ export function useXPostingReward() {
     } finally {
       setLinkLoading(false);
     }
-  }, [activeAccount, buildSignedProof, surfaceError]);
+  }, [activeAccount, buildSignedProof, surfaceError, queryClient]);
 
   const runRewardCheck = useCallback(async (): Promise<XPostingRewardStatus | null> => {
     if (!activeAccount) {
@@ -210,6 +242,7 @@ export function useXPostingReward() {
     // The status read failed. Surfaces should stay quiet rather than render a
     // null status as "no steps done", which is what a paid user used to see.
     statusUnavailable,
+    statusErrorMessage,
     checkLoading,
     linkLoading,
     error,

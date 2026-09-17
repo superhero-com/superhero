@@ -385,6 +385,10 @@ export type XPostingRewardStatus = {
   status?: XPostingRewardOnboardingStatus | string;
   x_username?: string | null;
   per_post_total_paid_count?: number;
+  // Settled per-post reward total in aettos — the authoritative figure for what
+  // the user has actually earned from per-post rewards, priced at each post's
+  // own tier rather than the current one.
+  per_post_total_paid_aettos?: string;
   current_streak_days?: number;
   tier_amount_ae?: number;
   follower_count?: number;

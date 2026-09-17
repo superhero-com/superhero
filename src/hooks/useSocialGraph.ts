@@ -40,7 +40,12 @@ export function useSocialGraphConfig() {
  * cached account route — is what drives the button state.
  */
 export function useRelationship(from?: string, to?: string) {
-  const enabled = !!from && !!to && from !== to;
+  // Behind the same kill switch as the mutations: with social-graph disabled the
+  // config carries no contract_address, so there is nothing to act on. Reading a
+  // stale relationship anyway would render a "blocked / Unblock" control whose
+  // click is a no-op (runAction bails without a contract address).
+  const { data: config } = useSocialGraphConfig();
+  const enabled = !!from && !!to && from !== to && !!config?.contract_address;
   return useQuery({
     queryKey: relationshipKey(from, to),
     queryFn: () => SocialGraphService.getSocialGraphRelationship({ from: from!, to: to! }),
@@ -155,8 +160,8 @@ export function useSocialGraph(targetAddress?: string) {
         : undefined;
       try {
         // Sign with the connected wallet, never a locally held key. connectWallet
-        // returns null on cancel/failure — and clears the active account doing so —
-        // so abort rather than continue into a signed write with no session.
+        // returns null on cancel/failure — abort rather than continue into a
+        // signed write with no session.
         if (!walletConnected) {
           const connected = await connectWallet();
           if (!connected) return;

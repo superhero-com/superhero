@@ -30,6 +30,7 @@ const walletConnectMocks = vi.hoisted(() => {
   const mockSetAccounts = vi.fn();
   const mockSubscribeAddress = vi.fn();
   const mockStopScan = vi.fn();
+  const mockOpenDeepLink = vi.fn();
   const createdConnections: Array<{ disconnect: ReturnType<typeof vi.fn> }> = [];
 
   class MockBrowserWindowMessageConnection {
@@ -59,6 +60,7 @@ const walletConnectMocks = vi.hoisted(() => {
     mockSetAccounts,
     mockStopScan,
     mockSubscribeAddress,
+    mockOpenDeepLink,
     mockValidateHash,
     MockBrowserWindowMessageConnection,
     resetState: () => {
@@ -123,6 +125,10 @@ vi.mock('@/hooks/useAeSdk', () => ({
 
 vi.mock('../../utils/address', () => ({
   validateHash: (...args: any[]) => walletConnectMocks.mockValidateHash(...args),
+}));
+
+vi.mock('../../utils/url', () => ({
+  openDeepLink: (...args: any[]) => walletConnectMocks.mockOpenDeepLink(...args),
 }));
 
 describe('useWalletConnect', () => {
@@ -414,6 +420,42 @@ describe('useWalletConnect', () => {
     expect(walletConnectMocks.mockSetAccounts).not.toHaveBeenCalledWith([]);
     expect(localStorage.getItem('account:activeAccount')).toBe('ak_saved');
     expect(store.get(walletInfoAtom)).toEqual({ name: 'wallet' });
+  });
+
+  it('falls through to the cold connect path when a persisted session finds no wallet', async () => {
+    // Persisted address + walletInfo, but the extension is uninstalled / disabled
+    // / not injected, so no wallet ever answers. A user-initiated connect must not
+    // become a permanent no-op: it recovers or resets to a usable cold state.
+    walletConnectMocks.setActiveAccountValue('ak_saved');
+    localStorage.setItem('account:activeAccount', 'ak_saved');
+
+    const store = createStore();
+    store.set(walletInfoAtom, { name: 'wallet' } as any);
+    const storeWrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+
+    const { result } = renderHook(() => useWalletConnect(), { wrapper: storeWrapper });
+
+    let res: string | null = 'sentinel';
+    await act(async () => {
+      const pending = result.current.connectWallet();
+      // No wallet answers either the reconnect scan or the following cold-path
+      // scan; feed each detector handler undefined as it is registered.
+      for (let i = 0; i < 40; i += 1) {
+        walletConnectMocks.getLatestWalletHandler()?.({ newWallet: undefined, wallets: {} });
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.resolve();
+      }
+      res = await pending;
+    });
+
+    expect(res).toBeNull();
+    // Not a silent no-op: the cold path ran and reset to a usable connect state.
+    expect(walletConnectMocks.mockSetActiveAccount).toHaveBeenCalledWith(undefined);
+    expect(walletConnectMocks.mockSetAccounts).toHaveBeenCalledWith([]);
+    // And offered the deep-link escape hatch for a browser with no extension.
+    expect(walletConnectMocks.mockOpenDeepLink).toHaveBeenCalled();
   });
 
   it('reconnects a persisted session through connectWallet without clearing it', async () => {

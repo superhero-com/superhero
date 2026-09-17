@@ -2431,6 +2431,8 @@
       "rewardsEarnedBadge": "Rewards Earned",
       "aeEarned": "{{amount}} AE Earned",
       "rewardsSentAutomatically": "Your AE rewards have been sent automatically to your connected wallet.",
+      "statusUnavailable": "We couldn't load your rewards status right now. Please try again.",
+      "statusRetry": "Try again",
       "status": {
         "completed": "COMPLETED",
         "inProgress": "IN PROGRESS",

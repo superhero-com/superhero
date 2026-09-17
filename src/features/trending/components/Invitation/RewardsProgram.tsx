@@ -6,6 +6,7 @@ import {
   ArrowRight, Target, PartyPopper, RefreshCw, Clock, UserCheck, Send,
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
+import { toAe } from '../../../../utils/bondingCurve';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
@@ -49,6 +50,8 @@ const RewardsProgram = () => {
     status: rewardData,
     referralLink,
     statusLoading,
+    statusUnavailable,
+    statusErrorMessage,
     checkLoading,
     linkLoading,
     error,
@@ -56,6 +59,7 @@ const RewardsProgram = () => {
     nextCheckAt,
     fetchReferralLink,
     runRewardCheck,
+    refresh,
     // Take the derived flags from the hook rather than recomputing them here:
     // this page and the onboarding cards used to hold two copies of the same
     // expression, which is one edit away from disagreeing about the same user.
@@ -68,7 +72,10 @@ const RewardsProgram = () => {
   const rewardedPostCount = rewardData?.per_post_total_paid_count ?? 0;
   const streakDays = rewardData?.current_streak_days ?? 0;
   const tierAe = rewardData?.tier_amount_ae ?? 0;
-  const totalEarned = (isOnboardingPaid ? 50 : 0) + rewardedPostCount * tierAe;
+  // The earned figure is the server-settled per-post total, never
+  // count × current-tier: historical posts keep the tier they were paid at.
+  const perPostEarnedAe = toAe(rewardData?.per_post_total_paid_aettos ?? 0);
+  const totalEarned = perPostEarnedAe;
 
   const verifySteps = [
     { text: t('rewardsProgram.milestone1.step1'), done: isXLinked, Icon: UserCheck },
@@ -126,6 +133,30 @@ const RewardsProgram = () => {
     if (!canCheck && nextCheckAt) return <Clock className="w-4 h-4" />;
     return <RefreshCw className="w-4 h-4" />;
   };
+
+  // A failed status read must not fall through to the status===null layout — a
+  // paid user would see a zeroed "STEP 1 OF 2" checklist with no hint anything
+  // went wrong. Show the reason and a retry instead.
+  if (statusUnavailable && !rewardData) {
+    return (
+      <div className="mb-10">
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/[0.06] px-6 py-10 text-center">
+          <AlertTriangle className="w-8 h-8 text-red-400" />
+          <p className="m-0 text-sm text-white/70 max-w-md">
+            {statusErrorMessage || t('rewardsProgram.statusUnavailable')}
+          </p>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold bg-white/10 hover:bg-white/15 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            {t('rewardsProgram.statusRetry')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-10">
@@ -480,7 +511,7 @@ const RewardsProgram = () => {
               {postStatus === 'completed' && (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium animate-celebrationPop success-celebration">
                   <TrophyIcon className="w-5 h-5 animate-bounce" />
-                  {t('rewardsProgram.milestone2.complete', { amount: rewardedPostCount * tierAe })}
+                  {t('rewardsProgram.milestone2.complete', { amount: perPostEarnedAe })}
                   <CelebrationIcon className="w-4 h-4 animate-sparkle" />
                 </div>
               )}

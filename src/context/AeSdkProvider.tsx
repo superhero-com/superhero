@@ -1,4 +1,5 @@
 import WebSocketClient from '@/libs/WebSocketClient';
+import { PINNED_PROTOCOL_PARAMETERS } from '@/libs/protocolParameters';
 import { createInlineSdkAccount } from '@/features/wallet/inline-sdk-account';
 import { indexForAddress } from '@/features/wallet/manifest-store';
 import { requestUnlock } from '@/features/wallet/unlock-broker';
@@ -604,6 +605,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       name: 'Superhero',
       nodes,
       ttl: 10000,
+      protocolParameters: PINNED_PROTOCOL_PARAMETERS,
       onCompiler: new CompilerHttp(CURRENT_NETWORK.compilerUrl),
       onAddressChange: (a: any) => {
         const newAddress = Object.keys(a.current || {})[0] as any;
@@ -624,6 +626,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     const staticAeSdkInstance = new AeSdk({
       ttl: 10000,
+      protocolParameters: PINNED_PROTOCOL_PARAMETERS,
       nodes,
       onCompiler: new CompilerHttp(CURRENT_NETWORK.compilerUrl),
     });

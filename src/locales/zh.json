@@ -1,5 +1,11 @@
 {
   "common": {
+    "postLanguageFilter": {
+      "label": "按语言筛选帖子",
+      "allLanguages": "所有语言",
+      "empty": "暂无{{language}}的帖子",
+      "showAll": "显示所有语言"
+    },
     "buttons": {
       "connectWallet": "连接钱包",
       "connecting": "连接中…",

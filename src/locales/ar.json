@@ -1,5 +1,11 @@
 {
   "common": {
+    "postLanguageFilter": {
+      "label": "تصفية المنشورات حسب اللغة",
+      "allLanguages": "كل اللغات",
+      "empty": "لا توجد منشورات بـ{{language}} حتى الآن",
+      "showAll": "عرض كل اللغات"
+    },
     "buttons": {
       "connectWallet": "ربط المحفظة",
       "connecting": "جارٍ الربط…",

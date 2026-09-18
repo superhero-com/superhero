@@ -4,9 +4,11 @@ import React, {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { PostsService } from '../../../api/generated';
 import type { PostDto } from '../../../api/generated';
 import { SuperheroApi } from '../../../api/backend';
+import { usePostLanguageFilter } from '../../../hooks/usePostLanguageFilter';
+import PostLanguageFilterControl from '../components/PostLanguageFilterControl';
+import PostLanguageEmptyState from '../components/PostLanguageEmptyState';
 import WebSocketClient from '../../../libs/WebSocketClient';
 import AeButton from '../../../components/AeButton';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
@@ -81,6 +83,15 @@ const FeedList = ({
   const sortBy = !popularFeedEnabled ? 'latest' : (urlSortBy || 'hot');
   const filterBy = urlQuery.get('filterBy') || 'all';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
+
+  // Content-language filter shared with Explore. `languageParam` is undefined
+  // for "all", so it drops out of query keys and requests and the feed behaves
+  // exactly as before until a language is chosen.
+  const {
+    filter: languageFilter,
+    setFilter: setLanguageFilter,
+    languageParam,
+  } = usePostLanguageFilter();
 
   // Keep sortByRef in sync with sortBy to avoid stale closures in callbacks
   useEffect(() => {
@@ -259,13 +270,14 @@ const FeedList = ({
   } = useInfiniteQuery({
     enabled: sortBy !== 'hot',
     queryKey: ['posts', {
-      limit: 10, sortBy, filterBy,
+      limit: 10, sortBy, filterBy, language: languageParam,
     }],
-    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+    queryFn: ({ pageParam = 1 }) => SuperheroApi.listPosts({
       limit: 10,
       page: pageParam,
       orderBy: 'created_at',
       orderDirection: 'DESC',
+      language: languageParam,
     }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
       if (
@@ -328,13 +340,14 @@ const FeedList = ({
       // Prefetch posts in the background for faster loading (only first page, no search/filter)
       queryClient.prefetchInfiniteQuery({
         queryKey: ['posts', {
-          limit: 10, sortBy: 'latest', filterBy: 'all',
+          limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
         }],
-        queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+        queryFn: ({ pageParam = 1 }) => SuperheroApi.listPosts({
           limit: 10,
           page: pageParam,
           orderBy: 'created_at',
           orderDirection: 'DESC',
+          language: languageParam,
         }) as unknown as Promise<PostApiResponse>,
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
@@ -351,7 +364,7 @@ const FeedList = ({
     }
 
     prevSortByForPrefetch.current = sortBy;
-  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE]);
+  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE, languageParam]);
 
   // Refetch in background when switching to latest (non-blocking)
   // This updates the feed with new items without blocking the UI
@@ -378,12 +391,13 @@ const FeedList = ({
     refetch: refetchPopular,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot',
-    queryKey: ['popular-posts', { limit: 10, weights: popularWeights }],
+    queryKey: ['popular-posts', { limit: 10, weights: popularWeights, language: languageParam }],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await SuperheroApi.listPopularPosts({
         page: pageParam as number,
         limit: 10,
         weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
+        language: languageParam,
       }) as PostApiResponse;
       const items = (response as any)?.items;
       if (Array.isArray(items) && items.length > 1) {
@@ -502,7 +516,7 @@ const FeedList = ({
     isFetchingNextPage: fetchingMoreLatestForHot,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot' && (popularExhausted || (popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length < 10 : false)),
-    queryKey: ['latest-posts-for-hot', { limit: 10, excludeIds: Array.from(popularPostIds).sort().join(',') }],
+    queryKey: ['latest-posts-for-hot', { limit: 10, excludeIds: Array.from(popularPostIds).sort().join(','), language: languageParam }],
     queryFn: async ({ pageParam = 1 }) => {
       // Get fresh popularPostIds from the current popularData
       const currentPopularIds = new Set<string>();
@@ -516,12 +530,13 @@ const FeedList = ({
         });
       }
 
-      const response = await PostsService.listAll({
+      const response = await SuperheroApi.listPosts({
         limit: 10,
         page: pageParam,
         orderBy: 'created_at',
         orderDirection: 'DESC',
         search: '',
+        language: languageParam,
       }) as unknown as PostApiResponse;
 
       // Filter out popular posts on the frontend using current popularPostIds
@@ -630,10 +645,10 @@ const FeedList = ({
 
     // Also check React Query cache directly for cached data (even if queries are disabled)
     const cachedPosts = queryClient.getQueryData(['posts', {
-      limit: 10, sortBy: 'latest', filterBy: 'all',
+      limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
     }])
       || queryClient.getQueryData(['posts', {
-        limit: 10, sortBy, filterBy,
+        limit: 10, sortBy, filterBy, language: languageParam,
       }]);
     const cachedActivities = queryClient.getQueryData(['home-activities']);
 
@@ -648,7 +663,7 @@ const FeedList = ({
     }
 
     return false;
-  }, [sortBy, latestData, activitiesPages, queryClient, filterBy]);
+  }, [sortBy, latestData, activitiesPages, queryClient, filterBy, languageParam]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo<FeedItem[]>(() => {
@@ -667,10 +682,10 @@ const FeedList = ({
     // If queries don't have data yet, try to get cached data
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
       const cachedPosts = queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy: 'latest', filterBy: 'all',
+        limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
       }])
         || queryClient.getQueryData<any>(['posts', {
-          limit: 10, sortBy, filterBy,
+          limit: 10, sortBy, filterBy, language: languageParam,
         }]);
 
       if (cachedPosts?.pages) {
@@ -719,7 +734,7 @@ const FeedList = ({
     latestListForHot,
     bothQueriesReady,
     latestData,
-    activitiesPages, queryClient, filterBy,
+    activitiesPages, queryClient, filterBy, languageParam,
   ]);
 
   // Memoized filtered list
@@ -822,6 +837,14 @@ const FeedList = ({
       }
       // Show skeleton loaders when there are no popular posts for the selected window
       if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
+        if (languageParam) {
+          return (
+            <PostLanguageEmptyState
+              language={languageParam}
+              onShowAll={() => setLanguageFilter('all')}
+            />
+          );
+        }
         return (
           <div className="w-full flex flex-col gap-2">
             {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
@@ -847,10 +870,10 @@ const FeedList = ({
       && activitiesPages.pages.length > 0
     );
     const cachedPosts = queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy: 'latest', filterBy: 'all',
+      limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
     }])
       || queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy, filterBy,
+        limit: 10, sortBy, filterBy, language: languageParam,
       }]);
     const cachedActivities = queryClient.getQueryData<any>(['home-activities']);
     const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
@@ -865,6 +888,14 @@ const FeedList = ({
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
     if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
+      if (languageParam) {
+        return (
+          <PostLanguageEmptyState
+            language={languageParam}
+            onShowAll={() => setLanguageFilter('all')}
+          />
+        );
+      }
       // Show skeleton loaders instead of empty state
       return (
         <div className="w-full flex flex-col gap-2">
@@ -1125,10 +1156,10 @@ const FeedList = ({
   // For latest feed: show cached data immediately if available (from queries or cache)
   const hasQueryDataForLatest = sortBy !== 'hot' && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
   const cachedPostsForLatest = queryClient.getQueryData<any>(['posts', {
-    limit: 10, sortBy: 'latest', filterBy: 'all',
+    limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
   }])
     || queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy, filterBy,
+      limit: 10, sortBy, filterBy, language: languageParam,
     }]);
   const cachedActivitiesForLatest = queryClient.getQueryData<any>(['home-activities']);
   const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;
@@ -1287,6 +1318,13 @@ const FeedList = ({
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
+          />
+        </div>
+        <div className="px-4 mt-3 md:mt-1 mb-1 flex justify-start">
+          <PostLanguageFilterControl
+            value={languageFilter}
+            onChange={setLanguageFilter}
+            className="w-auto"
           />
         </div>
       </div>

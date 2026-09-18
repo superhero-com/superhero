@@ -1,5 +1,11 @@
 {
   "common": {
+    "postLanguageFilter": {
+      "label": "Filter posts by language",
+      "allLanguages": "All languages",
+      "empty": "No posts in {{language}} yet",
+      "showAll": "Show all languages"
+    },
     "socialGraph": {
       "follow": "Follow",
       "following": "Following",

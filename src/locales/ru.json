@@ -1,5 +1,11 @@
 {
   "common": {
+    "postLanguageFilter": {
+      "label": "Фильтр постов по языку",
+      "allLanguages": "Все языки",
+      "empty": "Пока нет постов на языке {{language}}",
+      "showAll": "Показать все языки"
+    },
     "nav": {
       "home": "Главная",
       "explore": "Обзор",

@@ -9,8 +9,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnsureFactorySchemaLoaded } from '@/hooks/useCommunityFactory';
+import { usePostLanguageFilter } from '@/hooks/usePostLanguageFilter';
 import { collectionLabel } from '@/utils/collection';
 import { TokensService } from '../../../api/generated';
+import PostLanguageFilterControl from '../../social/components/PostLanguageFilterControl';
+import PostLanguageEmptyState from '../../social/components/PostLanguageEmptyState';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import {
   Select,
@@ -114,6 +117,12 @@ const TokenList = () => {
   const [collection, setCollection] = useState<string>(collectionFromUrl);
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
+  // Content-language filter shared with home; only applies to the Posts tab.
+  const {
+    filter: languageFilter,
+    setFilter: setLanguageFilter,
+    languageParam,
+  } = usePostLanguageFilter();
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
   const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
@@ -255,8 +264,8 @@ const TokenList = () => {
 
   const postsTabQuery = useQuery({
     enabled: !hasSearch && activeTab === 'posts',
-    queryKey: ['trends', 'popular-posts', DEFAULT_TAB_LIMIT],
-    queryFn: () => fetchPopularPosts(DEFAULT_TAB_LIMIT),
+    queryKey: ['trends', 'popular-posts', DEFAULT_TAB_LIMIT, languageParam],
+    queryFn: () => fetchPopularPosts(DEFAULT_TAB_LIMIT, languageParam),
     staleTime: 60 * 1000,
   });
 
@@ -694,21 +703,36 @@ const TokenList = () => {
           ) : null}
 
           {!hasSearch && activeTab === 'posts' ? (
-            <SearchSectionShell
-              title={t('tokenList.popularPostsTitle')}
-              subtitle={t('tokenList.popularPostsSubtitle')}
-            >
-              {postsTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
-              {!postsTabQuery.isLoading && postsTabQuery.data?.items.length ? (
-                <PostResultsList
-                  items={postsTabQuery.data.items}
-                  onOpenPost={handleOpenPost}
+            <>
+              <div className="mb-4 flex justify-end">
+                <PostLanguageFilterControl
+                  value={languageFilter}
+                  onChange={setLanguageFilter}
+                  className="w-auto"
                 />
-              ) : null}
-              {!postsTabQuery.isLoading && !postsTabQuery.data?.items.length ? (
-                <div className="py-6 text-sm text-white/60">{t('tokenList.noPopularPosts')}</div>
-              ) : null}
-            </SearchSectionShell>
+              </div>
+              <SearchSectionShell
+                title={t('tokenList.popularPostsTitle')}
+                subtitle={t('tokenList.popularPostsSubtitle')}
+              >
+                {postsTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
+                {!postsTabQuery.isLoading && postsTabQuery.data?.items.length ? (
+                  <PostResultsList
+                    items={postsTabQuery.data.items}
+                    onOpenPost={handleOpenPost}
+                  />
+                ) : null}
+                {!postsTabQuery.isLoading && !postsTabQuery.data?.items.length && languageParam ? (
+                  <PostLanguageEmptyState
+                    language={languageParam}
+                    onShowAll={() => setLanguageFilter('all')}
+                  />
+                ) : null}
+                {!postsTabQuery.isLoading && !postsTabQuery.data?.items.length && !languageParam ? (
+                  <div className="py-6 text-sm text-white/60">{t('tokenList.noPopularPosts')}</div>
+                ) : null}
+              </SearchSectionShell>
+            </>
           ) : null}
         </div>
       </div>

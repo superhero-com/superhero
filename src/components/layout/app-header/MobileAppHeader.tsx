@@ -11,6 +11,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AddressAvatar from '../../AddressAvatar';
+import LanguageSwitcher from '../LanguageSwitcher';
 import { HeaderLogo } from '../../../icons';
 import { NotificationBell } from '../../../features/notifications';
 import { TokensService } from '../../../api/generated/services/TokensService';
@@ -139,6 +140,7 @@ const MobileAppHeader = () => {
             >
               <HeaderLogo className="h-7 w-auto" />
             </Link>
+            <LanguageSwitcher variant="compact" side="bottom" align="start" />
             <div className="flex-grow" />
             {TRENDING_ENABLED && (
               <Link

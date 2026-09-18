@@ -108,7 +108,8 @@
       "tipPost": "打赏帖子",
       "openPost": "打开帖子",
       "dismissNotification": "关闭通知",
-      "viewToken": "查看 {{token}}"
+      "viewToken": "查看 {{token}}",
+      "language": "语言 / 文字"
     },
     "placeholders": {
       "bio": "向世界介绍你自己",

@@ -2,28 +2,27 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
-import fr from './locales/fr.json';
-import de from './locales/de.json';
 import ar from './locales/ar.json';
+import ru from './locales/ru.json';
 
 const LOCALES = {
-  en, zh, fr, de, ar,
+  en, zh, ar, ru,
 } as const;
 
 export type LanguageCode = keyof typeof LOCALES;
 
+// The four language/script experiences the product supports, shown in the
+// switcher in the client's stated order. Each label is written in its own
+// script so the choice reads as a script choice, not only a locale code.
 export const SUPPORTED_LANGUAGES: {
   code: LanguageCode;
   label: string;
   flag: string;
 }[] = [
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'zh', label: '中文', flag: '🇨🇳' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  // Arabic is translated and registered, but hidden from the switcher for now.
-  // Re-enable by uncommenting (RTL handling is already wired via RTL_LANGUAGES).
-  // { code: 'ar', label: 'العربية', flag: '🇸🇦' },
 ];
 
 // Languages that should render right-to-left.

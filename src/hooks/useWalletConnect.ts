@@ -225,10 +225,16 @@ export function useWalletConnect() {
     });
   }
 
-  // eslint-disable-next-line consistent-return
   async function connectWallet(): Promise<string | null> {
-    // when trying to connect to the wallet all states should be reset
-    // and sdk should be disconnected
+    // A persisted session (active account + walletInfo) means the wallet was
+    // already connected and only needs its RPC link re-established — a reconnect,
+    // not a cold connect. Route it through the non-destructive path so a
+    // cancelled or failed prompt cannot clear a session the user never left.
+    if (activeAccountRef.current && walletInfoRef.current) {
+      return reconnectWallet();
+    }
+
+    // Cold connect: reset all state and drop any stale wallet session first.
     setWalletConnected(false);
     setWalletInfo(undefined);
     setActiveAccount(undefined);

@@ -461,4 +461,36 @@ describe('linkify token-tag envelope reader', () => {
     expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
     expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
   });
+
+  // The whitespace-parity fix: the run grammar used to end at the first space inside a `{...}`,
+  // so a spaced envelope printed its braces as text instead of being read. All five forms must
+  // now be consumed and resolve to `change=0`, never leaking a brace.
+  it.each([
+    '#SUPERHERO{change = 0}',
+    '#SUPERHERO{ change=0 }',
+    '#SUPERHERO{change= 0}',
+    '#SUPERHERO{change =0}',
+    '#SUPERHERO{\tchange=0}',
+  ])('reads a spaced %j as the badge-off plain tag, no braces', (input) => {
+    renderLinkify(input);
+
+    expect(screen.getByRole('link', { name: '#SUPERHERO' })).toBeInTheDocument();
+    expect(screen.queryByTestId('post-token-tag')).not.toBeInTheDocument();
+    const { textContent } = screen.getByTestId('content');
+    expect(textContent).toBe('#SUPERHERO');
+    expect(textContent).not.toContain('{');
+    expect(textContent).not.toContain('}');
+  });
+
+  it('reads a spaced widget envelope and preserves the surrounding text', () => {
+    renderLinkify('gm #SUPERHERO{ mode = advanced } to the moon');
+
+    const widget = screen.getByTestId('post-token-tag');
+    expect(widget).toHaveAttribute('data-symbol', 'SUPERHERO');
+    expect(widget).toHaveAttribute('data-chart', 'true');
+    const { textContent } = screen.getByTestId('content');
+    expect(textContent).toBe('gm #SUPERHERO to the moon');
+    expect(textContent).not.toContain('{');
+    expect(textContent).not.toContain('}');
+  });
 });

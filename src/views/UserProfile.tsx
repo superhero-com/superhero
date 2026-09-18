@@ -11,7 +11,7 @@
   max-len,
   no-console
 */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -41,6 +41,8 @@ import { AccountTokensService } from '../api/generated/services/AccountTokensSer
 import { TokensService } from '../api/generated/services/TokensService';
 import { TransactionsService } from '../api/generated/services/TransactionsService';
 import { PostApiResponse } from '../features/social/types';
+import ProfileSocialActions from '../features/social/components/ProfileSocialActions';
+import ProfileSocialStats from '../features/social/components/ProfileSocialStats';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
@@ -95,6 +97,7 @@ export default function UserProfile({
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
+  const socialErrorSlotRef = useRef<HTMLDivElement>(null);
 
   // Send/Receive is the installed-PWA-on-mobile wallet surface: in a plain
   // browser tab, and on a desktop that merely has the app installed, the wallet
@@ -393,51 +396,32 @@ export default function UserProfile({
                   <span>{bioText}</span>
                 </div>
               )}
+              <ProfileSocialStats
+                address={effectiveAddress}
+                followersCount={accountInfo?.profile?.followers_count}
+                followingCount={accountInfo?.profile?.following_count}
+                className="mt-2.5"
+              />
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-row flex-wrap gap-2 shrink-0 md:max-w-[40%] md:justify-end">
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditInitialSection('profile');
-                  setEditOpen(true);
-                }}
-                className={[
-                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-solid',
-                  'box-border whitespace-nowrap px-3 text-[12px] font-semibold leading-none',
-                  '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
-                  'hover:!shadow-none hover:!transform-none',
-                ].join(' ')}
-                style={{
-                  background: 'rgba(0,255,157,0.08)',
-                  borderColor: 'rgba(0,255,157,0.3)',
-                  color: 'var(--neon-teal)',
-                }}
-              >
-                ✦
-                {' '}
-                {t('buttons.editSuperheroId')}
-              </button>
-            ) : null}
-            {!canEdit ? (
+          <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0 md:justify-end">
+            {!canEdit && (
               <AeButton
                 onClick={() => openModal({ name: 'tip', props: { toAddress: effectiveAddress } })}
                 variant="ghost"
                 size="sm"
-                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
+                className="shrink-0 !rounded-full !h-11 md:!h-9 px-4 justify-center inline-flex items-center gap-2 text-[13px] font-semibold !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors"
                 title={t('titles.sendATip')}
               >
                 <IconDiamond className="w-4 h-4 text-white" />
                 {t('buttons.tip')}
               </AeButton>
-            ) : null}
+            )}
             <AeButton
               variant="ghost"
               size="sm"
-              className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all [&_svg]:!size-[0.9em]"
+              className="shrink-0 !rounded-full !h-11 !w-11 md:!h-9 md:!w-9 !p-0 justify-center inline-flex items-center !border !border-solid !border-white/20 hover:!border-white/40 hover:!bg-white/10 transition-colors [&_svg]:!size-[0.9em]"
               onClick={() => {
                 const base = (CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '');
                 const url = `${base}/accounts/${effectiveAddress}`;
@@ -447,8 +431,43 @@ export default function UserProfile({
             >
               <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
             </AeButton>
+            {canEdit ? (
+              <>
+                <span aria-hidden className="h-5 w-px shrink-0 bg-[#ffffff1f]" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditInitialSection('profile');
+                    setEditOpen(true);
+                  }}
+                  className={[
+                    'ml-1 inline-flex h-11 md:h-9 flex-1 md:flex-none items-center justify-center gap-1.5 rounded-full border border-solid',
+                    'box-border whitespace-nowrap px-[18px] text-[12.5px] font-semibold leading-none',
+                    '!normal-case !tracking-normal !shadow-none !transform-none transition-colors',
+                    'hover:!shadow-none hover:!transform-none',
+                  ].join(' ')}
+                  style={{
+                    background: 'rgba(0,255,157,0.08)',
+                    borderColor: 'rgba(0,255,157,0.3)',
+                    color: 'var(--neon-teal)',
+                  }}
+                >
+                  ✦
+                  {' '}
+                  {t('buttons.editSuperheroId')}
+                </button>
+              </>
+            ) : (
+              <ProfileSocialActions
+                targetAddress={effectiveAddress}
+                errorSlotRef={socialErrorSlotRef}
+              />
+            )}
           </div>
         </div>
+
+        {/* Follow / unfollow errors render full width here, under the header. */}
+        <div ref={socialErrorSlotRef} />
       </div>
 
       {/* Wallet actions — installed PWA on mobile only. On your own profile this

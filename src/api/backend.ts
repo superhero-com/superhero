@@ -385,6 +385,13 @@ export type XPostingRewardStatus = {
   status?: XPostingRewardOnboardingStatus | string;
   x_username?: string | null;
   per_post_total_paid_count?: number;
+  // What each program has ACTUALLY paid this wallet, in aettos (and AE for the
+  // onboarding reward, whose row records no amount). Optional because a
+  // frontend can deploy ahead of the API; the UI falls back to its previous
+  // estimate rather than showing zero.
+  per_post_total_paid_aettos?: string;
+  streak_bonus_total_paid_aettos?: string;
+  onboarding_amount_ae?: string | null;
   current_streak_days?: number;
   tier_amount_ae?: number;
   follower_count?: number;

@@ -9,6 +9,7 @@ import { useAeSdk, useWalletConnect } from '@/hooks';
 import PasskeyConnectCard from '@/components/PasskeyConnectCard';
 import AgentOnboardCard from '@/components/AgentOnboardCard';
 import { isStandalone } from '@/utils/displayMode';
+import { MobileAppCard } from '@/components/MobileAppInstall';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
 import firefoxLogoUrl from '@/svg/brands/firefox-logo.svg';
 import Favicon from '@/svg/favicon.svg?react';
@@ -148,7 +149,7 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
         <div className="flex items-center justify-center gap-2 mb-2">
           <Favicon className="w-8 h-8" />
           <h2 className="text-xl font-bold text-white/95">
-            {t('common.modals.onboarding.title', { defaultValue: 'Connect to Superhero' })}
+            {t('common.modals.onboarding.title', { defaultValue: 'SuperheroID Account' })}
           </h2>
         </div>
         <p className="text-sm text-white/50">
@@ -159,6 +160,10 @@ const OnboardingModal = ({ onClose, onConnected }: Props) => {
       <div className="grid grid-cols-1 gap-3 mb-4">
         {/* 1. Passkey — unlock where a vault has one, create where there is none. */}
         <PasskeyConnectCard onConnected={advanceAfterConnect} />
+
+        {/* 2. The mobile app, directly under the passkey, because it is the
+            build we want people on. It always offers both stores. */}
+        <MobileAppCard />
 
         {/* 2. Superhero Wallet — connect (web) or import (installed app). The
             expansion lives INSIDE this card so it opens under its own header,

@@ -54,6 +54,20 @@ describe('EditProfileDialog — æ address is a confirmed choice', () => {
     expect(updateMyProfile.mock.calls[0][0].aeAddress).toBeUndefined();
   });
 
+  it('shows why a confirmed publish failed instead of looking like a no-op', async () => {
+    updateMyProfile.mockRejectedValueOnce(new Error('Relay rejected the update.'));
+    render(<EditProfileDialog open onOpenChange={() => {}} />);
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm & publish' }));
+
+    // The failure has to be readable on the confirm step: the edit dialog that
+    // also renders `error` is unmounted while this one is open.
+    await waitFor(() => expect(screen.getByText('Relay rejected the update.')).toBeInTheDocument());
+    expect(screen.getByText('Publish your æternity address?')).toBeInTheDocument();
+  });
+
   it('lets a user who already published turn the choice off, clearing the address', async () => {
     mockProfile = { name: 'Alice', aeAddress: 'ak_published' };
     render(<EditProfileDialog open onOpenChange={() => {}} />);

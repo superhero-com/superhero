@@ -180,7 +180,16 @@ export function useSocialGraph(targetAddress?: string) {
         await contract[action](targetAddress as Encoded.AccountAddress);
 
         applyOptimistic(action, before);
-        await queryClient.invalidateQueries({ queryKey: relationshipKey(viewer, targetAddress) });
+        // Mark stale but do not refetch now: the relationship route is served
+        // uncached from the index, which has not necessarily seen this
+        // transaction yet, so refetching here would repaint the button with the
+        // pre-write pair and make a confirmed follow look like it failed. The
+        // next natural trigger — remount, focus, or the 15s staleTime elapsing —
+        // reconverges on chain truth once the index has caught up.
+        queryClient.invalidateQueries({
+          queryKey: relationshipKey(viewer, targetAddress),
+          refetchType: 'none',
+        });
       } catch (txError) {
         handleError(txError);
       } finally {

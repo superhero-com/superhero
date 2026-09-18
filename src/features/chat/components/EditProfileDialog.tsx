@@ -182,6 +182,11 @@ export const EditProfileDialog = ({ open, onOpenChange }: EditProfileDialogProps
             <p className="mt-1 break-all font-mono text-sm">{publishableAddress}</p>
           </div>
 
+          {/* The edit dialog behind this one is unmounted while confirming, so a
+              failed publish has nowhere else to surface — without this the user
+              sees a no-op and taps Confirm again. */}
+          {error && <p className="text-xs text-error">{error}</p>}
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={isSaving}>
               Back

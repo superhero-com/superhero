@@ -9,6 +9,7 @@ import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
+import { toAe } from '../../../../utils/bondingCurve';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 import CelebrationIcon from '../../../../svg/iconCelebration.svg?react';
@@ -68,7 +69,27 @@ const RewardsProgram = () => {
   const rewardedPostCount = rewardData?.per_post_total_paid_count ?? 0;
   const streakDays = rewardData?.current_streak_days ?? 0;
   const tierAe = rewardData?.tier_amount_ae ?? 0;
-  const totalEarned = (isOnboardingPaid ? 50 : 0) + rewardedPostCount * tierAe;
+
+  // What was actually paid, from the amounts the API records per program.
+  //
+  // This used to be `(paid ? 50 : 0) + rewardedPosts * currentTier`, which was
+  // wrong three ways: it hardcoded an onboarding figure the server is free to
+  // change, it repriced every historical post at today's follower tier (so
+  // crossing a tier boundary silently rewrote past earnings), and it left
+  // streak bonuses out of the total altogether.
+  //
+  // Falls back to the old estimate when the fields are absent, so a frontend
+  // deployed ahead of the API shows the previous number rather than zero.
+  const perPostPaidAe = rewardData?.per_post_total_paid_aettos
+    ? toAe(rewardData.per_post_total_paid_aettos)
+    : rewardedPostCount * tierAe;
+  const streakPaidAe = rewardData?.streak_bonus_total_paid_aettos
+    ? toAe(rewardData.streak_bonus_total_paid_aettos)
+    : 0;
+  const onboardingPaidAe = isOnboardingPaid
+    ? Number(rewardData?.onboarding_amount_ae ?? 50)
+    : 0;
+  const totalEarned = onboardingPaidAe + perPostPaidAe + streakPaidAe;
 
   const verifySteps = [
     { text: t('rewardsProgram.milestone1.step1'), done: isXLinked, Icon: UserCheck },

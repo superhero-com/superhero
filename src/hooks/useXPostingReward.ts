@@ -77,12 +77,15 @@ export function useXPostingReward() {
   >(null);
   const [checkLoading, setCheckLoading] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Holds only *action* failures (fetch link, recheck, connect-first). The
+  // reason a 200 status read carries is derived from the query data below, not
+  // stored here — so a later refetch clears it on its own.
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // Surface a reward failure as the persistent banner (error state) so the user
-  // sees why the reward was not sent, shown as the red wording in the header.
+  // Surface an action failure as the persistent banner, shown as the red
+  // wording in the header, so the user sees why the action did not complete.
   const surfaceError = useCallback((message: string) => {
-    setError(cleanErrorMessage(message));
+    setActionError(cleanErrorMessage(message));
   }, []);
 
   const {
@@ -109,20 +112,20 @@ export function useXPostingReward() {
   // otherwise look like a perpetual load.
   const statusLoading = Boolean(activeAccount) && statusPending;
 
-  // The banner is component state, so on an account switch wallet A's reason
-  // ("needs 100 followers", ...) would otherwise stay pinned against wallet B's
-  // data. Reset it whenever the active account changes.
-  useEffect(() => {
-    setError(null);
-  }, [activeAccount]);
-
   // A 200 status read still reports via `error` why no reward was sent (program
   // disabled, below the follower minimum, identity already rewarded, payout
-  // failed, ...). Surface it on load the same way a manual recheck does at
-  // runRewardCheck, instead of dropping it and rendering a normal earn page.
+  // failed, ...). Derive it straight from the query data instead of mirroring it
+  // into local state: a later background refetch returning `error: null` then
+  // clears the banner on its own, and a stale reason cannot outlive the read.
+  const statusReason = statusData?.error ? cleanErrorMessage(statusData.error) : null;
+
+  // The action banner is component state, so on an account switch wallet A's
+  // action failure would otherwise stay pinned against wallet B. Reset it
+  // whenever the active account changes; the status reason above is account-
+  // keyed via the query and resets itself.
   useEffect(() => {
-    if (statusData?.error) surfaceError(statusData.error);
-  }, [statusData, surfaceError]);
+    setActionError(null);
+  }, [activeAccount]);
 
   /** Publish a fresh status to every surface reading this address. */
   const writeStatus = useCallback((updated: XPostingRewardStatus) => {
@@ -161,10 +164,10 @@ export function useXPostingReward() {
 
   const fetchReferralLink = useCallback(async (): Promise<XReferralLinkResponse | null> => {
     if (!activeAccount) {
-      setError(i18n.t('common.messages.connectWalletFirst'));
+      setActionError(i18n.t('common.messages.connectWalletFirst'));
       return null;
     }
-    setError(null);
+    setActionError(null);
     setLinkLoading(true);
     try {
       const proof = await buildSignedProof(activeAccount);
@@ -192,14 +195,18 @@ export function useXPostingReward() {
 
   const runRewardCheck = useCallback(async (): Promise<XPostingRewardStatus | null> => {
     if (!activeAccount) {
-      setError(i18n.t('common.messages.connectWalletFirst'));
+      setActionError(i18n.t('common.messages.connectWalletFirst'));
       return null;
     }
-    setError(null);
+    setActionError(null);
     setCheckLoading(true);
     try {
       const proof = await buildSignedProof(activeAccount);
       const updated = await SuperheroApi.runXPostingRewardRecheck(activeAccount, proof);
+      // A successful (HTTP 200) recheck still reports via `error` why no reward
+      // was sent (below follower minimum, identity already rewarded, payout
+      // failed, etc.). Publishing it to the status cache surfaces the reason via
+      // `statusReason` — no separate mirror to keep in sync or clear.
       writeStatus(updated);
       if (updated.referral_link) {
         setReferralLinkOverride({
@@ -207,10 +214,6 @@ export function useXPostingReward() {
           link: updated.referral_link,
         });
       }
-      // A successful (HTTP 200) recheck still reports via `error` why no reward
-      // was sent (below follower minimum, identity already rewarded, payout
-      // failed, etc.). Surface it instead of silently showing "no change".
-      if (updated.error) surfaceError(updated.error);
       return updated;
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -245,7 +248,9 @@ export function useXPostingReward() {
     statusErrorMessage,
     checkLoading,
     linkLoading,
-    error,
+    // An in-flight action's own failure takes precedence over the standing
+    // status reason; when there is none, fall back to the derived reason.
+    error: actionError ?? statusReason,
     canCheck,
     nextCheckAt,
     isXLinked,

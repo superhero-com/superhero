@@ -200,6 +200,61 @@ describe('useXPostingReward', () => {
     });
   });
 
+  it('clears the banner reason when a later status read returns error: null', async () => {
+    const client = makeClient();
+    mockGetStatus.mockResolvedValueOnce({
+      ...paidStatus,
+      error: 'Posting rewards are temporarily unavailable.',
+    });
+
+    const { result } = renderHook(() => useXPostingReward(), {
+      wrapper: wrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe('Posting rewards are temporarily unavailable.');
+    });
+
+    // A background refetch that no longer carries a reason must clear the
+    // banner rather than leave the stale one pinned.
+    mockGetStatus.mockResolvedValue({ ...paidStatus, error: null });
+    await act(async () => {
+      await result.current.refresh();
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+    });
+  });
+
+  it('keeps an action failure visible across a later successful refetch', async () => {
+    const client = makeClient();
+    mockGetStatus.mockResolvedValue({ ...paidStatus, error: null });
+    mockCreateChallenge.mockResolvedValue({
+      message: 'sign me',
+      nonce: '1',
+      expires_at: 123,
+    });
+    mockGetReferralLink.mockRejectedValue(new Error('Superhero API error (500): link mint failed'));
+
+    const { result } = renderHook(() => useXPostingReward(), {
+      wrapper: wrapper(client),
+    });
+    await waitFor(() => expect(result.current.status).not.toBeNull());
+
+    await act(async () => {
+      await result.current.fetchReferralLink();
+    });
+    expect(result.current.error).toBe('link mint failed');
+
+    // A background status refetch returning error: null must not wipe the
+    // action failure the user still needs to see.
+    await act(async () => {
+      await result.current.refresh();
+    });
+    expect(result.current.error).toBe('link mint failed');
+  });
+
   it('reports an unavailable status instead of an empty one', async () => {
     const client = makeClient();
     mockGetStatus.mockRejectedValue(new Error('boom'));

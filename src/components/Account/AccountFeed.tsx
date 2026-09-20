@@ -117,6 +117,9 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
     },
     refetchOnMount: false, // Use cached data when switching tabs
     staleTime: 30_000, // Consider data fresh for 30 seconds
+    // Surface a first-load failure to the profile tab panel's error state; a
+    // background refetch that still has cached posts keeps showing them.
+    throwOnError: (_error, query) => query.state.data === undefined,
   });
 
   const list = useMemo(

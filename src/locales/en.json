@@ -9,6 +9,8 @@
       "blocked": "Blocked",
       "followers": "Followers",
       "followingCount": "Following",
+      "posts": "Posts",
+      "connectToFollow": "Connect wallet to follow",
       "blockDialog": {
         "title": "Block this account?",
         "body": "Blocking removes any follows between you and this account, in both directions. Unblocking later will not restore them.",
@@ -68,6 +70,10 @@
       "retry": "Retry",
       "connectX": "Connect X",
       "tip": "Tip",
+      "shareProfile": "Share profile",
+      "copyAddress": "Copy address",
+      "viewOnAescan": "View on æScan",
+      "showMore": "more",
       "viewPortfolio": "View Portfolio",
       "done": "Done",
       "trade": "Trade",
@@ -127,6 +133,8 @@
       "liquiditySettings": "Liquidity Settings",
       "sendATip": "Send a tip",
       "openOnAescan": "Open on æScan",
+      "copyAddress": "Copy address",
+      "moreActions": "More",
       "clickToReverseRankingOrder": "Click to reverse current ranking order",
       "conference": "Conference",
       "sortByBalance": "Sort by balance",
@@ -271,6 +279,22 @@
       "requestFailed": "Request failed"
     },
     "portfolio": {
+      "details": "Details",
+      "overview": "Portfolio overview",
+      "currency": "Display currency",
+      "valueChange": "Value change",
+      "timeRange": "Chart period",
+      "chart": "Portfolio value history",
+      "allTimeShort": "ALL",
+      "allTime": "All time",
+      "tokenValue": "Token value",
+      "tradingPnl": "Trading P/L",
+      "aboutValues": "About these values",
+      "valuesExplanation": "Portfolio value includes AE and trend tokens. Value change includes deposits, withdrawals and market movements; it is not trading profit. Trading P/L combines realized and unrealized token gains across all time. The chart period only changes the chart and value change.",
+      "viewHoldings": "Holdings",
+      "refreshFailed": "Couldn’t refresh. Showing the last available values.",
+      "historyFailed": "Couldn’t load the chart.",
+      "notEnoughHistory": "Not enough history for this period.",
       "portfolioValue": "Portfolio Value",
       "failedToLoad": "Failed to load portfolio data",
       "profitLoss": "Profit/Loss:",
@@ -307,7 +331,8 @@
       "xVerifiedTitle": "X account verified: @{{username}}",
       "xVerified": "X account verified",
       "linkXCtaTitle": "Link your X account",
-      "linkXCtaDescription": "to show your X username on your profile."
+      "linkXCtaDescription": "to show your X username on your profile.",
+      "emptyBioPrompt": "Add a line about yourself — it shows up wherever you post."
     },
     "errorBoundary": {
       "title": "Something went wrong.",
@@ -1684,6 +1709,12 @@
   },
   "social": {
     "copiedAddress": "Copied address",
+    "profileTabs": {
+      "offline": "Offline — showing last loaded",
+      "loadFailedTitle": "Couldn't load this tab",
+      "loadFailedSubtitle": "The header above is real — only this tab failed.",
+      "tryAgain": "Try again"
+    },
     "emptyState": {
       "failedToLoadPosts": "Failed to load posts",
       "errorFetchingPosts": "An error occurred while fetching posts",
@@ -2801,6 +2832,9 @@
     "ownedTrends": "Owned Trends",
     "transactions": "Transactions",
     "posts": "Posts",
+    "holdings": "Holdings",
+    "created": "Created",
+    "activity": "Activity",
     "noOwnedTokens": "This user doesn't own any Trendminer tokens yet.",
     "feedDescription": "Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.",
     "leaderboardDescription": "Discover top performing trading assets on Superhero based on on-chain performance.",

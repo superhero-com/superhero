@@ -95,13 +95,13 @@ const ProfileHeaderCard = ({
       </div>
 
       <div className="px-4 pb-4 md:px-6 md:pb-5">
-        {/* Avatar overlaps the band and sits inline with the identity; the action
-            bar shares the same row on desktop and drops below on mobile. */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
-          <div className="min-w-0 md:flex md:flex-1 md:items-center md:gap-4">
-            <Avatar address={address} size={72} className="-mt-[26px] md:hidden" />
-            <Avatar address={address} size={88} className="-mt-[30px] hidden md:block" />
-            <div className="mt-3 min-w-0 md:mt-0">
+        {/* Center the avatar and identity on the cover boundary at both sizes.
+            Actions sit below that row on mobile and beside it on desktop. */}
+        <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11 md:flex-row md:items-center md:justify-between md:gap-6">
+          <div className="flex min-w-0 items-center gap-3 md:flex-1 md:gap-4">
+            <Avatar address={address} size={60} className="flex md:hidden" />
+            <Avatar address={address} size={88} className="hidden md:flex" />
+            <div className="min-w-0 flex-1">
               <ProfileIdentity
                 address={address}
                 displayName={displayName}

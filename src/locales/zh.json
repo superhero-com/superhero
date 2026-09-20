@@ -108,7 +108,8 @@
       "tipPost": "打赏帖子",
       "openPost": "打开帖子",
       "dismissNotification": "关闭通知",
-      "viewToken": "查看 {{token}}"
+      "viewToken": "查看 {{token}}",
+      "language": "语言 / 文字"
     },
     "placeholders": {
       "bio": "向世界介绍你自己",
@@ -1218,6 +1219,13 @@
       "liquidityRemoved": "流动性已移除",
       "profileUpdated": "个人资料已更新",
       "fieldsSaved": "{{fields}}已保存"
+    },
+    "postLanguageFilter": {
+      "label": "按语言筛选帖子",
+      "allLanguages": "所有语言",
+      "empty": "暂无{{language}}的帖子",
+      "showAll": "显示所有语言",
+      "error": "无法加载{{language}}的帖子。请重试或显示所有语言的帖子。"
     }
   },
   "dex": {

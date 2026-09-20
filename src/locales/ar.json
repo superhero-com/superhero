@@ -108,7 +108,8 @@
       "tipPost": "إكرامية للمنشور",
       "openPost": "فتح المنشور",
       "dismissNotification": "إخفاء الإشعار",
-      "viewToken": "عرض {{token}}"
+      "viewToken": "عرض {{token}}",
+      "language": "اللغة / النص"
     },
     "placeholders": {
       "bio": "أخبر العالم عن نفسك",
@@ -1218,6 +1219,13 @@
       "liquidityRemoved": "تمت إزالة السيولة",
       "profileUpdated": "تم تحديث الملف الشخصي",
       "fieldsSaved": "تم حفظ {{fields}}"
+    },
+    "postLanguageFilter": {
+      "label": "تصفية المنشورات حسب اللغة",
+      "allLanguages": "كل اللغات",
+      "empty": "لا توجد منشورات بـ{{language}} حتى الآن",
+      "showAll": "عرض كل اللغات",
+      "error": "تعذّر تحميل المنشورات باللغة {{language}}. أعد المحاولة أو اعرض المنشورات بكل اللغات."
     }
   },
   "dex": {

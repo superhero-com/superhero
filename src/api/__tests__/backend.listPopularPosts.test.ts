@@ -111,4 +111,16 @@ describe('SuperheroApi.listPopularPosts', () => {
     const params = new URL(url).searchParams;
     expect([...params.keys()]).toEqual(['page', 'limit']);
   });
+
+  it('appends the language param when set', async () => {
+    await SuperheroApi.listPopularPosts({ page: 1, limit: 10, language: 'zh' });
+    const url = getCalledUrl();
+    expect(url).toContain('language=zh');
+  });
+
+  it('omits the language param when not set', async () => {
+    await SuperheroApi.listPopularPosts({ page: 1, limit: 10 });
+    const url = getCalledUrl();
+    expect(url).not.toContain('language=');
+  });
 });

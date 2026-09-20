@@ -2,28 +2,27 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
-import fr from './locales/fr.json';
-import de from './locales/de.json';
 import ar from './locales/ar.json';
+import ru from './locales/ru.json';
 
 const LOCALES = {
-  en, zh, fr, de, ar,
+  en, zh, ar, ru,
 } as const;
 
 export type LanguageCode = keyof typeof LOCALES;
 
+// The four language/script experiences the product supports, shown in the
+// switcher in the client's stated order. Each label is written in its own
+// script so the choice reads as a script choice, not only a locale code.
 export const SUPPORTED_LANGUAGES: {
   code: LanguageCode;
   label: string;
   flag: string;
 }[] = [
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'zh', label: '中文', flag: '🇨🇳' },
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  // Arabic is translated and registered, but hidden from the switcher for now.
-  // Re-enable by uncommenting (RTL handling is already wired via RTL_LANGUAGES).
-  // { code: 'ar', label: 'العربية', flag: '🇸🇦' },
 ];
 
 // Languages that should render right-to-left.
@@ -41,19 +40,24 @@ const resources = Object.fromEntries(
 );
 
 function isSupported(code: string): code is LanguageCode {
-  return code in LOCALES;
+  return Object.prototype.hasOwnProperty.call(LOCALES, code);
+}
+
+/** Normalize browser/region tags and retire unsupported saved locales safely. */
+export function toSupportedLanguage(language: unknown): LanguageCode {
+  const base = typeof language === 'string' ? language.toLowerCase().split(/[-_]/)[0] : '';
+  return isSupported(base) ? base : 'en';
 }
 
 function detectInitialLanguage(): LanguageCode {
   try {
     const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (saved && isSupported(saved)) return saved;
+    if (saved) return toSupportedLanguage(saved);
   } catch {
     // localStorage may be unavailable (SSR / privacy mode) — fall through.
   }
   try {
-    const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
-    if (isSupported(nav)) return nav;
+    return toSupportedLanguage(navigator.language);
   } catch {
     // navigator may be unavailable — fall through.
   }
@@ -65,8 +69,9 @@ function detectInitialLanguage(): LanguageCode {
 function applyDocumentLanguage(code: string) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  root.lang = code;
-  root.dir = RTL_LANGUAGES.includes(code as LanguageCode) ? 'rtl' : 'ltr';
+  const language = toSupportedLanguage(code);
+  root.lang = language;
+  root.dir = RTL_LANGUAGES.includes(language) ? 'rtl' : 'ltr';
 }
 
 const initialLanguage = detectInitialLanguage();
@@ -75,6 +80,8 @@ i18n.use(initReactI18next).init({
   resources,
   lng: initialLanguage,
   fallbackLng: 'en',
+  supportedLngs: Object.keys(LOCALES),
+  load: 'languageOnly',
   defaultNS: 'translation',
   ns: ['translation', ...Object.keys(en)],
   interpolation: { escapeValue: false },
@@ -85,12 +92,13 @@ i18n.on('languageChanged', applyDocumentLanguage);
 
 /** Change the active language and persist the choice. */
 export function changeLanguage(code: LanguageCode): Promise<unknown> {
+  const language = toSupportedLanguage(code);
   try {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, code);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch {
     // Persisting is best-effort; ignore storage failures.
   }
-  return i18n.changeLanguage(code);
+  return i18n.changeLanguage(language);
 }
 
 export default i18n;

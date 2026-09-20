@@ -5,6 +5,7 @@ import { useSetAtom } from 'jotai';
 import { HeaderLogo } from '../../../icons';
 import { NotificationBell } from '../../../features/notifications';
 import HeaderWalletButton from './HeaderWalletButton';
+import LanguageSwitcher from '../LanguageSwitcher';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import { getActiveNavigationPath, getAppNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
@@ -88,6 +89,10 @@ const WebAppHeader = () => {
           <HeaderLogo className="h-8 w-auto" />
         </Link>
         <NotificationBell />
+      </div>
+
+      <div className="px-4 pb-3">
+        <LanguageSwitcher variant="bar" side="bottom" align="start" />
       </div>
 
       <nav className="flex flex-col gap-1 px-3" aria-label={t('aria.main')}>

@@ -156,7 +156,8 @@
       "openTrade": "Open trade",
       "tipPost": "Tip post",
       "openPost": "Open post",
-      "dismissNotification": "Dismiss notification"
+      "dismissNotification": "Dismiss notification",
+      "language": "Language / Script"
     },
     "placeholders": {
       "bio": "Tell the world about you",
@@ -1267,6 +1268,13 @@
       "liquidityRemoved": "Liquidity removed",
       "profileUpdated": "Profile updated",
       "fieldsSaved": "{{fields}} saved"
+    },
+    "postLanguageFilter": {
+      "label": "Filter posts by language",
+      "allLanguages": "All languages",
+      "empty": "No posts in {{language}} yet",
+      "showAll": "Show all languages",
+      "error": "Couldn’t load posts in {{language}}. Try again or show posts in all languages."
     }
   },
   "dex": {

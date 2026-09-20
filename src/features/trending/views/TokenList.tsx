@@ -9,8 +9,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnsureFactorySchemaLoaded } from '@/hooks/useCommunityFactory';
-import { collectionLabel } from '@/utils/collection';
+import { usePostLanguageFilter } from '@/hooks/usePostLanguageFilter';
+import { collectionLabel, LANGUAGE_COLLECTIONS } from '@/utils/collection';
 import { TokensService } from '../../../api/generated';
+import PostLanguageFilterControl from '../../social/components/PostLanguageFilterControl';
+import PostLanguageEmptyState from '../../social/components/PostLanguageEmptyState';
+import PostLanguageErrorState from '../../social/components/PostLanguageErrorState';
+import EmptyState from '../../social/components/EmptyState';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import {
   Select,
@@ -104,16 +109,48 @@ const InlineLoading = ({ label }: { label: string }) => (
 );
 
 const TokenList = () => {
-  const { t } = useTranslation('trending');
+  const { t, i18n } = useTranslation('trending');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
-  const collectionFromUrl = searchParams.get('collection')?.toUpperCase() ?? 'all';
+  const collectionParam = searchParams.get('collection');
+  const collectionFromUrl = collectionParam?.toLowerCase() === 'all'
+    ? 'all' : collectionParam?.toUpperCase();
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
-  const [collection, setCollection] = useState<string>(collectionFromUrl);
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
+  // Content-language filter shared with home; only applies to the Posts tab.
+  const {
+    filter: languageFilter,
+    setFilter: setLanguageFilter,
+    languageParam,
+    uiLanguage,
+  } = usePostLanguageFilter();
+  const previousUiLanguage = useRef(uiLanguage);
+  const uiLanguageChanged = previousUiLanguage.current !== uiLanguage;
+  // Explicit links/manual choices win until the next global language change.
+  // Derive the new collection immediately, before clearing the old URL override.
+  const collection = uiLanguageChanged
+    ? LANGUAGE_COLLECTIONS[uiLanguage]
+    : collectionFromUrl || LANGUAGE_COLLECTIONS[uiLanguage];
+  const setCollection = useCallback((value: string) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('collection', value);
+      return next;
+    });
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    if (previousUiLanguage.current === uiLanguage) return;
+    previousUiLanguage.current = uiLanguage;
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete('collection');
+      return next;
+    }, { replace: true });
+  }, [uiLanguage, setSearchParams]);
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
   const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
@@ -255,8 +292,8 @@ const TokenList = () => {
 
   const postsTabQuery = useQuery({
     enabled: !hasSearch && activeTab === 'posts',
-    queryKey: ['trends', 'popular-posts', DEFAULT_TAB_LIMIT],
-    queryFn: () => fetchPopularPosts(DEFAULT_TAB_LIMIT),
+    queryKey: ['trends', 'popular-posts', DEFAULT_TAB_LIMIT, languageParam],
+    queryFn: () => fetchPopularPosts(DEFAULT_TAB_LIMIT, languageParam),
     staleTime: 60 * 1000,
   });
 
@@ -617,8 +654,8 @@ const TokenList = () => {
                   </div>
                   {activeFactoryCollections.length > 0 && (
                     <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
-                      <Select value={collection} onValueChange={setCollection}>
-                        <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+                      <Select dir={i18n.dir()} value={collection} onValueChange={setCollection}>
+                        <SelectTrigger aria-label={t('tokenListTable.collection')} className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-white/10">
@@ -694,21 +731,43 @@ const TokenList = () => {
           ) : null}
 
           {!hasSearch && activeTab === 'posts' ? (
-            <SearchSectionShell
-              title={t('tokenList.popularPostsTitle')}
-              subtitle={t('tokenList.popularPostsSubtitle')}
-            >
-              {postsTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
-              {!postsTabQuery.isLoading && postsTabQuery.data?.items.length ? (
-                <PostResultsList
-                  items={postsTabQuery.data.items}
-                  onOpenPost={handleOpenPost}
+            <>
+              <div className="mb-4 flex justify-end">
+                <PostLanguageFilterControl
+                  value={languageFilter}
+                  onChange={setLanguageFilter}
+                  className="w-auto"
                 />
-              ) : null}
-              {!postsTabQuery.isLoading && !postsTabQuery.data?.items.length ? (
-                <div className="py-6 text-sm text-white/60">{t('tokenList.noPopularPosts')}</div>
-              ) : null}
-            </SearchSectionShell>
+              </div>
+              <SearchSectionShell
+                title={t('tokenList.popularPostsTitle')}
+                subtitle={t('tokenList.popularPostsSubtitle')}
+              >
+                {postsTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
+                {!postsTabQuery.isLoading && postsTabQuery.data?.items.length ? (
+                  <PostResultsList
+                    items={postsTabQuery.data.items}
+                    onOpenPost={handleOpenPost}
+                  />
+                ) : null}
+                {postsTabQuery.isError && (languageParam ? (
+                  <PostLanguageErrorState
+                    language={languageParam}
+                    onRetry={() => postsTabQuery.refetch()}
+                    onShowAll={() => setLanguageFilter('all')}
+                  />
+                ) : <EmptyState type="error" onRetry={() => postsTabQuery.refetch()} />)}
+                {postsTabQuery.isSuccess && !postsTabQuery.data?.items.length && languageParam ? (
+                  <PostLanguageEmptyState
+                    language={languageParam}
+                    onShowAll={() => setLanguageFilter('all')}
+                  />
+                ) : null}
+                {postsTabQuery.isSuccess && !postsTabQuery.data?.items.length && !languageParam ? (
+                  <div className="py-6 text-sm text-white/60">{t('tokenList.noPopularPosts')}</div>
+                ) : null}
+              </SearchSectionShell>
+            </>
           ) : null}
         </div>
       </div>

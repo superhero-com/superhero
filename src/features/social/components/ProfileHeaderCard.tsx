@@ -95,9 +95,9 @@ const ProfileHeaderCard = ({
       </div>
 
       <div className="px-4 pb-4 md:px-6 md:pb-5">
-        {/* Center the avatar and identity on the cover boundary at both sizes.
-            Actions sit below that row on mobile and beside it on desktop. */}
-        <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11 md:flex-row md:items-center md:justify-between md:gap-6">
+        {/* Give the complete address the identity row's width at every breakpoint.
+            Actions always sit below it, including on desktop. */}
+        <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11">
           <div className="flex min-w-0 items-center gap-3 md:flex-1 md:gap-4">
             <Avatar address={address} size={60} className="flex md:hidden" />
             <Avatar address={address} size={88} className="hidden md:flex" />
@@ -116,23 +116,26 @@ const ProfileHeaderCard = ({
             </div>
           </div>
 
-          <ProfileActionBar
-            address={address}
-            ownProfile={ownProfile}
-            onEdit={onEdit}
-            onTip={onTip}
-            errorSlotRef={errorSlotRef}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <ProfileSocialStats
+              address={address}
+              followersCount={followersCount}
+              followingCount={followingCount}
+              postsCount={postsCount}
+              onPostsClick={onPostsClick}
+              className="min-w-0 flex-wrap"
+            />
+            <div className="ml-auto max-w-full grow min-[480px]:grow-0">
+              <ProfileActionBar
+                address={address}
+                ownProfile={ownProfile}
+                onEdit={onEdit}
+                onTip={onTip}
+                errorSlotRef={errorSlotRef}
+              />
+            </div>
+          </div>
         </div>
-
-        <ProfileSocialStats
-          address={address}
-          followersCount={followersCount}
-          followingCount={followingCount}
-          postsCount={postsCount}
-          onPostsClick={onPostsClick}
-          className="mt-3"
-        />
 
         {/* Follow / unfollow errors render full width here, under the header. */}
         <div ref={errorSlotRef as RefObject<HTMLDivElement>} className="mt-3 empty:mt-0" />

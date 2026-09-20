@@ -123,15 +123,19 @@ const ProfileIdentity = ({
   // The handle is the resolved .chain name; suppress it when it is already the
   // display name so the two lines do not duplicate.
   const showHandle = !!handle && handle.trim().toLowerCase() !== displayName.trim().toLowerCase();
+  const isAddressName = displayName === address;
 
   return (
     <div className="min-w-0">
       <h1
         title={displayName}
+        aria-label={isAddressName ? address : undefined}
         data-testid="profile-display-name"
-        className="flex items-center text-[21px] md:text-[27px] font-extrabold text-[var(--standard-font-color)] tracking-tight leading-tight"
+        className={`flex items-center font-extrabold text-[var(--standard-font-color)] tracking-tight leading-tight ${isAddressName ? 'text-sm min-[480px]:text-base md:text-xl' : 'text-[18px] min-[480px]:text-[21px] md:text-[27px]'}`}
       >
-        <span className="truncate">{displayName}</span>
+        <span dir={isAddressName ? 'ltr' : undefined} className="min-w-0 [overflow-wrap:anywhere]">
+          {displayName}
+        </span>
         {isVerified && <VerifiedBadge username={verifiedUsername} />}
       </h1>
 
@@ -139,7 +143,7 @@ const ProfileIdentity = ({
         {showHandle && (
           <span
             data-testid="profile-handle"
-            className="text-sm font-semibold text-[var(--neon-teal)]"
+            className="min-w-0 [overflow-wrap:anywhere] text-sm font-semibold text-[var(--neon-teal)]"
           >
             {handle}
           </span>

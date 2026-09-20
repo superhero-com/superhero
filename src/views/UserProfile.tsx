@@ -3,7 +3,6 @@
   import/order,
   react/function-component-definition,
   @typescript-eslint/no-unused-vars,
-  no-nested-ternary,
   react/button-has-type,
   max-len
 */
@@ -47,7 +46,6 @@ import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
-import { formatAddress } from '../utils/address';
 import { isMobileDevice, isStandalone } from '../utils/displayMode';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
@@ -65,7 +63,7 @@ export default function UserProfile({
     isChainName ? address : undefined,
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
-  const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
+  const { aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
   const { activeAccount } = useAeSdk();
@@ -172,7 +170,7 @@ export default function UserProfile({
   const bioText = getLinkedBio(accountInfo) || '';
   const linkedPreferredName = getLinkedPreferredAensName(accountInfo);
   const displayName = (linkedPreferredName || accountInfo?.public_name || chainName || '').trim()
-    || formatAddress(effectiveAddress, 6, true);
+    || effectiveAddress;
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
   const linkedSite = getLinkedSite(accountInfo);
@@ -418,6 +416,11 @@ export default function UserProfile({
         </button>
       )}
 
+      <AccountPortfolio
+        key={effectiveAddress}
+        address={effectiveAddress}
+      />
+
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
       <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
@@ -464,48 +467,7 @@ export default function UserProfile({
       <ProfileTabPanel activeTab={tab}>
         {tab === 'feed' && (<AccountFeed address={effectiveAddress} tab="feed" />)}
 
-        {tab === 'owned' && (
-          <>
-            {/* Holdings panel header: the portfolio chart/card, moved here from above the tabs.
-                The Owned/Created/Posts tiles were removed — those numbers are the tab counts now;
-                only AE balance (a wallet figure, not a tab count) stays alongside the chart. */}
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
-              {/* Portfolio Chart - Smaller on md+ */}
-              <div className="w-full -mt-4 -mb-6">
-                <AccountPortfolio address={effectiveAddress} />
-              </div>
-
-              {/* AE balance — the one figure that is not represented by a tab count. */}
-              <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center md:self-start">
-                <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-                  {t('account.aeBalance')}
-                </div>
-                <div className="text-base md:text-lg font-bold text-white">
-                  {decimalBalance ? (() => {
-                    try {
-                      const decimalBalanceValue = decimalBalance as any;
-                      const value = typeof decimalBalanceValue?.toNumber === 'function'
-                        ? decimalBalanceValue.toNumber()
-                        : typeof decimalBalance === 'number'
-                          ? decimalBalance
-                          : Number(decimalBalance);
-                      // If value is above 1 AE, show 2 decimals
-                      if (value >= 1) {
-                        return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
-                      }
-                      // Otherwise use prettify for values below 1 AE
-                      return `${decimalBalance.prettify()} AE`;
-                    } catch {
-                      // Fallback to prettify if conversion fails
-                      return `${decimalBalance.prettify()} AE`;
-                    }
-                  })() : t('messages.loading')}
-                </div>
-              </div>
-            </div>
-            <AccountOwnedTokens address={effectiveAddress} tab="owned" />
-          </>
-        )}
+        {tab === 'owned' && <AccountOwnedTokens address={effectiveAddress} tab="owned" />}
 
         {tab === 'created' && (<AccountCreatedToken address={effectiveAddress} tab="created" />)}
 

@@ -37,6 +37,15 @@ describe('ProfileIdentity', () => {
     expect(screen.getByTestId('profile-address-chip')).toBeInTheDocument();
   });
 
+  it('shows the complete fallback address as a heading with a separate copy badge below', () => {
+    renderIdentity({ displayName: ADDR, handle: null });
+    const heading = screen.getByRole('heading', { level: 1 });
+    const badge = screen.getByTestId('profile-address-chip');
+    expect(heading).toHaveTextContent(ADDR);
+    expect(badge).toHaveTextContent(ADDR);
+    expect(heading).not.toContainElement(badge);
+  });
+
   it('shows the teal handle only when it differs from the display name', () => {
     renderIdentity();
     const handle = screen.getByTestId('profile-handle');

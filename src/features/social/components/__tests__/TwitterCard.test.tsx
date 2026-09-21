@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  render, screen, waitFor, fireEvent,
+  act, render, screen, waitFor, fireEvent,
 } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
-  afterEach, beforeEach, describe, expect, it, onTestFinished, vi,
+  afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
 import { TwitterCard } from '../TwitterCard';
@@ -86,39 +86,35 @@ describe('TwitterCard (sandboxed embed)', () => {
   });
 
   it('only accepts postMessage height updates from the Twitter embed origin', async () => {
-    render(<TwitterCard url={TWEET_URL} />);
-    const iframe = await screen.findByTitle('Twitter post') as HTMLIFrameElement;
-
-    // Stub on the prototype, not on this node: the component re-renders while the oEmbed
-    // promise settles, and a stub pinned to one element loses its effect if that render
-    // hands `iframeRef` a different node — which made this test flaky. The handler still has
-    // to clear both its real gates (embed origin, and source === the frame's contentWindow).
-    const realContentWindow = Object.getOwnPropertyDescriptor(
-      HTMLIFrameElement.prototype,
-      'contentWindow',
-    );
-    Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
-      configurable: true,
-      get: () => window,
+    // Flush the availability promise and passive effects before dispatching messages.
+    // Finding the iframe alone can race the message-listener effect under CI load.
+    await act(async () => {
+      render(<TwitterCard url={TWEET_URL} />);
     });
-    onTestFinished(() => {
-      if (realContentWindow) {
-        Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', realContentWindow);
-      }
-    });
+    const iframe = screen.getByTitle('Twitter post') as HTMLIFrameElement;
+    const source = iframe.contentWindow;
+    expect(source).not.toBeNull();
 
     // Malicious/foreign origin: ignored.
     fireEvent(window, new MessageEvent('message', {
       origin: 'https://evil.example',
-      source: window,
+      source,
       data: JSON.stringify({ method: 'twttr.private.resize', params: [{ height: 999 }] }),
     }));
     expect(iframe.style.height).not.toBe('999px');
 
-    // Legitimate Twitter embed origin: applied.
+    // A different frame cannot resize this embed, even with the trusted origin.
     fireEvent(window, new MessageEvent('message', {
       origin: 'https://platform.twitter.com',
       source: window,
+      data: JSON.stringify({ method: 'twttr.private.resize', params: [{ height: 999 }] }),
+    }));
+    expect(iframe.style.height).toBe('300px');
+
+    // Legitimate Twitter embed origin: applied.
+    fireEvent(window, new MessageEvent('message', {
+      origin: 'https://platform.twitter.com',
+      source,
       data: JSON.stringify({ method: 'twttr.private.resize', params: [{ height: 555 }] }),
     }));
     await waitFor(() => expect(iframe.style.height).toBe('555px'));

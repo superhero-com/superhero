@@ -12,7 +12,7 @@ import {
 
 type LanguageSwitcherProps = {
   // `bar` is the roomy sidebar form (flag + name); `compact` is the tight
-  // mobile-header form (locale code; native names remain in the dropdown).
+  // mobile-header form (flag only; native names remain in the dropdown).
   variant?: 'bar' | 'compact';
   side?: 'top' | 'bottom';
   align?: 'start' | 'center' | 'end';
@@ -45,7 +45,7 @@ const LanguageSwitcher = ({
       >
         <span className="inline-flex items-center gap-2">
           {!compact && <Globe className="w-4 h-4 shrink-0" aria-hidden="true" />}
-          <span className="text-sm leading-none" aria-hidden="true">{compact ? current.toUpperCase() : active?.flag}</span>
+          <span className="text-base leading-none" aria-hidden="true">{active?.flag}</span>
           {!compact && <span lang={current} dir="auto">{active?.label}</span>}
         </span>
       </SelectTrigger>

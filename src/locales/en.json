@@ -1270,6 +1270,8 @@
       "fieldsSaved": "{{fields}} saved"
     },
     "postLanguageFilter": {
+      "shortLabel": "Language",
+      "allShort": "All",
       "label": "Filter posts by language",
       "allLanguages": "All languages",
       "empty": "No posts in {{language}} yet",

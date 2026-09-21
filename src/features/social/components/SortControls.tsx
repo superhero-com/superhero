@@ -61,6 +61,7 @@ interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
   className?: string;
+  filters?: React.ReactNode;
   popularFeedEnabled?: boolean;
   popularWeights?: PopularWeights;
   onPopularWeightsChange?: (weights: PopularWeights) => void;
@@ -69,7 +70,7 @@ interface SortControlsProps {
 // Component: Sort Controls
 const SortControls = memo(
   ({
-    sortBy, onSortChange, className = '', popularFeedEnabled = true,
+    sortBy, onSortChange, className = '', filters, popularFeedEnabled = true,
     popularWeights = {}, onPopularWeightsChange,
   }: SortControlsProps) => {
     const { t } = useTranslation();
@@ -148,19 +149,6 @@ const SortControls = memo(
       }
     }, [sortBy]);
 
-    // Show "Latest Feed" title if popular feed is disabled
-    if (!popularFeedEnabled) {
-      return (
-        <div className={cn('w-full mb-0 md:mb-3 mt-4 md:mt-0', className)}>
-          <h2 className="text-lg md:text-lg font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white]">
-            {t('social.sortControls.latestFeed')}
-          </h2>
-          {/* Mobile horizontal line */}
-          <div className="md:hidden border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] mt-3" />
-        </div>
-      );
-    }
-
     const getMobileTitle = () => {
       if (sortBy === 'latest') {
         return t('social.sortControls.latest');
@@ -173,7 +161,7 @@ const SortControls = memo(
       onSortChange(newSort);
     };
 
-    const hasCustomSettings = hasCustomWeights;
+    const hasCustomSettings = popularFeedEnabled && sortBy === 'hot' && hasCustomWeights;
 
     const renderCustomizeControls = (isMobile = false) => (
       <>
@@ -196,42 +184,47 @@ const SortControls = memo(
             )}
           </div>
         )}
-        <div className="px-4 pt-2 pb-1">
-          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">{t('social.sortControls.weightsLabel')}</span>
-        </div>
-        <div className="px-3 pb-3 flex flex-col gap-2">
-          {WEIGHT_KEYS.map((key) => (
-            <div key={key} className="flex items-center justify-between gap-3 px-1">
-              <span className="text-xs text-white/70 min-w-[90px]">{t(WEIGHT_LABEL_KEYS[key])}</span>
-              <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
-                {WEIGHT_VALUES.map((val) => {
-                  const isActive = getEffectiveWeight(key) === val;
-                  return (
-                    <button
-                      type="button"
-                      key={val}
-                      onClick={(e) => {
-                        if (!isMobile) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }
-                        handleWeightChange(key, val);
-                      }}
-                      className={cn(
-                        'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
-                        isActive
-                          ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                          : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
-                      )}
-                    >
-                      {val}
-                    </button>
-                  );
-                })}
+        {filters && <div className="px-4 py-3 border-b border-white/10">{filters}</div>}
+        {popularFeedEnabled && sortBy === 'hot' && (
+        <>
+          <div className="px-4 pt-2 pb-1">
+            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">{t('social.sortControls.weightsLabel')}</span>
+          </div>
+          <div className="px-3 pb-3 flex flex-col gap-2">
+            {WEIGHT_KEYS.map((key) => (
+              <div key={key} className="flex items-center justify-between gap-3 px-1">
+                <span className="text-xs text-white/70 min-w-[90px]">{t(WEIGHT_LABEL_KEYS[key])}</span>
+                <div className="inline-flex items-center gap-0.5 bg-white/5 rounded-full p-0.5 border border-white/10">
+                  {WEIGHT_VALUES.map((val) => {
+                    const isActive = getEffectiveWeight(key) === val;
+                    return (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={(e) => {
+                          if (!isMobile) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }
+                          handleWeightChange(key, val);
+                        }}
+                        className={cn(
+                          'px-2.5 py-1 text-[10px] rounded-full border transition-all duration-200 capitalize',
+                          isActive
+                            ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                            : 'bg-transparent text-white/60 border-transparent hover:text-white/90 hover:bg-white/10',
+                        )}
+                      >
+                        {val}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
+        )}
       </>
     );
 
@@ -254,6 +247,31 @@ const SortControls = memo(
         {renderCustomizeControls()}
       </DropdownMenuContent>
     );
+
+    // Show "Latest Feed" title if popular feed is disabled
+    if (!popularFeedEnabled) {
+      return (
+        <div className={cn('w-full mb-0 md:mb-3 mt-4 md:mt-0', className)}>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg md:text-lg font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white]">
+              {t('social.sortControls.latestFeed')}
+            </h2>
+            {filters && (
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <button type="button" className="p-2.5 text-white/70" aria-label={t('social.sortControls.customizeFeed')}>
+                  <SlidersHorizontal className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              {renderCustomizeDropdownContent('min-w-[280px]')}
+            </DropdownMenu>
+            )}
+          </div>
+          {/* Mobile horizontal line */}
+          <div className="md:hidden border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] mt-3" />
+        </div>
+      );
+    }
 
     return (
       <div className={cn('w-full mb-0 md:mb-3', className)}>
@@ -307,7 +325,7 @@ const SortControls = memo(
                   <ChevronDown className={cn('h-4 w-4 text-white/70 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
                 </button>
               </div>
-              {sortBy === 'hot' && (
+              {(sortBy === 'hot' || filters) && (
                 <Dialog open={mobileCustomizeOpen} onOpenChange={setMobileCustomizeOpen}>
                   <button
                     type="button"
@@ -321,7 +339,7 @@ const SortControls = memo(
                         ? 'text-[#1161FE]'
                         : 'text-white/50 hover:text-white/80',
                     )}
-                    title={t('social.sortControls.customizePopularFeed')}
+                    title={t(filters ? 'social.sortControls.customizeFeed' : 'social.sortControls.customizePopularFeed')}
                   >
                     <SlidersHorizontal className="h-5 w-5" />
                     {hasCustomSettings && (
@@ -340,7 +358,7 @@ const SortControls = memo(
                             {t('social.sortControls.customizeFeed')}
                           </DialogTitle>
                           <DialogDescription className="mt-1 text-sm text-white/60">
-                            {t('social.sortControls.tunePopularFeed')}
+                            {t(sortBy === 'hot' ? 'social.sortControls.tunePopularFeed' : 'common:postLanguageFilter.label')}
                           </DialogDescription>
                         </div>
                         <button
@@ -352,21 +370,23 @@ const SortControls = memo(
                           <X className="h-4 w-4" />
                         </button>
                       </div>
+                      {sortBy === 'hot' && (
                       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
                         <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
                           {t('social.sortControls.popularFeedSettings')}
                         </span>
                         {hasCustomSettings && (
-                          <button
-                            type="button"
-                            onClick={handleResetCustomSettings}
-                            className="flex items-center gap-1 text-[11px] text-white/50 transition-colors hover:text-white/80"
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                            Reset
-                          </button>
+                        <button
+                          type="button"
+                          onClick={handleResetCustomSettings}
+                          className="flex items-center gap-1 text-[11px] text-white/50 transition-colors hover:text-white/80"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          Reset
+                        </button>
                         )}
                       </div>
+                      )}
                       {renderCustomizeControls(true)}
                       <div className="px-4 pt-2">
                         <button
@@ -424,7 +444,7 @@ const SortControls = memo(
               Latest
             </AeButton>
           </div>
-          {sortBy === 'hot' && (
+          {(sortBy === 'hot' || filters) && (
             <DropdownMenu open={customizeOpen} onOpenChange={setCustomizeOpen} modal={false}>
               <DropdownMenuTrigger asChild>
                 <button
@@ -435,7 +455,7 @@ const SortControls = memo(
                       ? 'bg-[#1161FE]/20 border-[#1161FE]/50 text-[#1161FE]'
                       : 'bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10',
                   )}
-                  title={t('social.sortControls.customizePopularFeedAria')}
+                  title={t(filters ? 'social.sortControls.customizeFeed' : 'social.sortControls.customizePopularFeedAria')}
                 >
                   <SlidersHorizontal className="h-5 w-5" />
                   {hasCustomSettings && (

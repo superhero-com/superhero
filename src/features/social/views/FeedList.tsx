@@ -1260,6 +1260,13 @@ const FeedList = ({
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
+            filters={(
+              <PostLanguageFilterControl
+                variant="buttons"
+                value={languageFilter}
+                onChange={setLanguageFilter}
+              />
+            )}
           />
         </div>
         <div className="hidden md:block">
@@ -1269,15 +1276,16 @@ const FeedList = ({
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
+            filters={(
+              <PostLanguageFilterControl
+                variant="buttons"
+                value={languageFilter}
+                onChange={setLanguageFilter}
+              />
+            )}
           />
         </div>
-        <div className="px-4 mt-3 md:mt-1 mb-1 flex justify-start">
-          <PostLanguageFilterControl
-            value={languageFilter}
-            onChange={setLanguageFilter}
-            className="w-auto"
-          />
-        </div>
+
       </div>
 
       <div className="w-full flex flex-col gap-0 md:mx-0">

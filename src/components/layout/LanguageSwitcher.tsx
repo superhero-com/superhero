@@ -34,11 +34,12 @@ const LanguageSwitcher = ({
       <SelectTrigger
         aria-label={t('aria.language')}
         className={`${compact
-          ? 'h-auto w-auto min-h-[44px] justify-center gap-1.5 px-2'
+          ? 'h-auto w-auto min-h-[44px] shrink-0 justify-center gap-1.5 px-2'
           : 'h-auto w-full justify-between gap-2 px-3 py-2 text-sm'} bg-white/[0.02] border border-white/[0.06] rounded-lg text-[var(--light-font-color)] hover:bg-white/[0.05] ${className}`}
       >
-        <span className="inline-flex items-center gap-2">
-          <Globe className="w-4 h-4 shrink-0" aria-hidden="true" />
+        {/* Keep this row flex despite SelectTrigger's direct-span line clamp. */}
+        <span className="!inline-flex items-center gap-2">
+          {!compact && <Globe className="w-4 h-4 shrink-0" aria-hidden="true" />}
           <span className="text-base leading-none" aria-hidden="true">{active?.flag}</span>
           {!compact && <span>{active?.label}</span>}
         </span>

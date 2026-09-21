@@ -1,6 +1,8 @@
 {
   "common": {
     "postLanguageFilter": {
+      "shortLabel": "اللغة",
+      "allShort": "الكل",
       "label": "تصفية المنشورات حسب اللغة",
       "allLanguages": "كل اللغات",
       "empty": "لا توجد منشورات بـ{{language}} حتى الآن",

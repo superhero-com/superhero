@@ -1,6 +1,8 @@
 {
   "common": {
     "postLanguageFilter": {
+      "shortLabel": "Язык",
+      "allShort": "Все",
       "label": "Фильтр постов по языку",
       "allLanguages": "Все языки",
       "empty": "Пока нет постов на языке {{language}}",

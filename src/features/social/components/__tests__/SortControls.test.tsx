@@ -218,6 +218,23 @@ describe('SortControls', () => {
     });
   });
 
+  describe('feed filters', () => {
+    it('keeps filters accessible in Latest without popular ranking controls', () => {
+      renderControls({ sortBy: 'latest', filters: <button type="button">Language filter</button> });
+      expect(screen.getAllByTitle('Customize Feed').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByTestId('dropdown-content')).toHaveTextContent('Language filter');
+      expect(screen.getByTestId('dialog-content')).toHaveTextContent('Language filter');
+      expect(screen.queryByText('Comments')).not.toBeInTheDocument();
+    });
+
+    it('keeps filters accessible when popular feed is disabled', () => {
+      renderControls({ popularFeedEnabled: false, filters: <button type="button">Language filter</button> });
+      expect(screen.getByRole('button', { name: 'Customize Feed' })).toBeInTheDocument();
+      expect(screen.getByTestId('dropdown-content')).toHaveTextContent('Language filter');
+      expect(screen.queryByText('Comments')).not.toBeInTheDocument();
+    });
+  });
+
   describe('reset button', () => {
     it('renders Reset when custom weights exist', () => {
       renderControls({ popularWeights: { comments: 'high' } });

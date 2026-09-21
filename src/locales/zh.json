@@ -1221,6 +1221,8 @@
       "fieldsSaved": "{{fields}}已保存"
     },
     "postLanguageFilter": {
+      "shortLabel": "语言",
+      "allShort": "全部",
       "label": "按语言筛选帖子",
       "allLanguages": "所有语言",
       "empty": "暂无{{language}}的帖子",

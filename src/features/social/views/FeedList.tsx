@@ -840,7 +840,13 @@ const FeedList = ({
     : (!bothQueriesReady && (latestLoading || activitiesLoading));
   const initialLoading = sortBy === 'hot' ? hotInitialLoading : latestInitialLoading;
 
-  const feedError = sortBy === 'hot' ? popularError || latestForHotError : latestError;
+  // Hot's latest-post backfill only runs once popular is exhausted, so its
+  // failure is a feed error only while nothing is on screen. With popular items
+  // already rendered it must not paint an error state over them — and leaving
+  // `feedError` clear here keeps the load-more button, which is how it retries.
+  const feedError = sortBy === 'hot'
+    ? popularError || (popularList.length === 0 ? latestForHotError : undefined)
+    : latestError;
   const hasMoreFeedItems = sortBy === 'hot'
     ? hasMorePopular || hasMoreLatestForHot
     : hasMoreLatest || (!languageParam && hasMoreActivities);

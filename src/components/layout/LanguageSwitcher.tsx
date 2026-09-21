@@ -9,6 +9,13 @@ import {
 import {
   changeLanguage, SUPPORTED_LANGUAGES, toSupportedLanguage, type LanguageCode,
 } from '@/i18n';
+// Side-effect import: that module's `languageChanged` listener resets the post
+// language preference, but the module lives in the lazily loaded feed chunks
+// (see routes.tsx). This switcher is always mounted and is the one place a user
+// changes language, so loading the module here guarantees the listener exists
+// before the first change — otherwise a round trip made on a non-feed page
+// (en → ar → en) resurrects a stale "All languages" choice on the next feed visit.
+import '@/hooks/usePostLanguageFilter';
 
 type LanguageSwitcherProps = {
   // `bar` is the roomy sidebar form (flag + name); `compact` is the tight

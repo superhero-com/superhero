@@ -431,8 +431,11 @@ export default function UserProfile({
               {
                 key: 'owned',
                 label: t('explore:holdings'),
+                // `aex9Balances` is always an array and starts empty, so its
+                // length is only a real count once something has loaded into it.
+                // Until then show nothing rather than a zero the API may contradict.
                 count: accountInfo?.holdings_count
-                  ?? (Array.isArray(aex9Balances) ? aex9Balances.length : undefined),
+                  ?? (aex9Balances.length > 0 ? aex9Balances.length : undefined),
               },
               { key: 'created', label: t('explore:created'), count: accountInfo?.total_created_tokens },
               { key: 'transactions', label: t('explore:activity'), count: undefined },

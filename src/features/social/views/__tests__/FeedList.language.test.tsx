@@ -114,6 +114,29 @@ describe('Home connected post languages', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('keeps popular posts on screen when the Hot backfill fails, instead of an error over them', async () => {
+    // Popular resolves with a single, final page, so the latest-post backfill
+    // runs — and fails. That failure is supplementary once posts are showing.
+    vi.mocked(SuperheroApi.listPopularPosts).mockResolvedValue(page([post('Popular post')]));
+    let failLatest!: (reason: Error) => void;
+    vi.mocked(SuperheroApi.listPosts).mockImplementation(() => new Promise((_, reject) => {
+      failLatest = reject;
+    }));
+    const client = mount('hot');
+    await screen.findByText('Popular post');
+    await waitFor(() => expect(failLatest).toBeDefined());
+    await act(async () => failLatest(new Error('Unavailable')));
+    // Wait on the query itself, not the DOM: the point is that an error which
+    // HAS landed produces no error UI, so "no alert yet" must not pass early.
+    await waitFor(() => expect(
+      client.getQueryCache().findAll({ queryKey: ['latest-posts-for-hot'] })
+        .some((query) => query.state.status === 'error'),
+    ).toBe(true));
+    expect(screen.getByText('Popular post')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  });
+
   it('keeps the selected language when loading the next Latest page', async () => {
     let intersect!: (entries: Array<{ isIntersecting: boolean }>) => void;
     vi.stubGlobal('IntersectionObserver', class {

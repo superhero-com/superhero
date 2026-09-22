@@ -43,6 +43,7 @@ import { useAddressByChainName, useChainName } from '../hooks/useChainName';
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileTabPanel from '../features/social/components/ProfileTabPanel';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
+import { useProfileEditDeepLink } from '../hooks/useProfileEditDeepLink';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
@@ -183,6 +184,11 @@ export default function UserProfile({
     setEditInitialSection('profile');
     setEditOpen(true);
   };
+
+  useProfileEditDeepLink(canEdit, (section) => {
+    setEditInitialSection(section);
+    setEditOpen(true);
+  });
 
   useEffect(() => {
     if (!effectiveAddress) return;

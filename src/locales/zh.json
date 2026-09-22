@@ -2422,6 +2422,35 @@
       "rewardsEarnedBadge": "已获奖励",
       "aeEarned": "已获得 {{amount}} AE",
       "rewardsSentAutomatically": "您的 AE 奖励已自动发送至您绑定的钱包。",
+      "history": {
+        "title": "奖励记录",
+        "subtitle": "奖励会自动发送到您的钱包。点击任意一笔即可在 æScan 上查看。",
+        "empty": "暂无奖励。您在 X 上发布第一条符合条件的帖子后，第一笔奖励将自动发送。",
+        "seeHistory": "查看付款记录",
+        "showAll": "显示全部（{{total}}）",
+        "showLess": "收起",
+        "truncated": "仅显示最近 {{limit}} 笔付款。",
+        "viewOnAescan": "在 æScan 上查看",
+        "amount": "+{{amount}} AE",
+        "kind": {
+          "onboarding": "欢迎奖励",
+          "per_post": "发帖奖励",
+          "streak_bonus": "连续发帖奖励",
+          "invite_milestone": "邀请奖励",
+          "unknown": "奖励"
+        },
+        "detail": {
+          "onboarding": "已绑定 X 并发布了关于 Superhero 的帖子",
+          "per_post": "包含您推荐链接的帖子",
+          "streak_bonus": "连续 {{days}} 天发帖",
+          "invite_milestone": "{{friends}} 位好友通过您的链接加入"
+        },
+        "status": {
+          "paid": "已支付",
+          "pending": "发送中",
+          "failed": "正在重试"
+        }
+      },
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",

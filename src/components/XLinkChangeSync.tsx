@@ -49,7 +49,12 @@ export const XLinkChangeSync = () => {
     refreshXLinkState(address);
     const payload = xLinkChangePayload(change);
     const banner = bannerRef.current;
-    const bannerShowsIt = banner.status === 'pending' && banner.payload.type === payload.type;
+    // This change exactly, not just any link or unlink: every stored wallet is
+    // polled, and another wallet's change must not settle or clear this one.
+    const bannerShowsIt = banner.status === 'pending'
+      && banner.payload.type === payload.type
+      && 'startedAt' in banner.payload
+      && banner.payload.startedAt === change.startedAt;
     if (outcome === 'timed_out') {
       // Nothing true to announce; stop claiming it is on its way.
       if (bannerShowsIt) dismissNotification();

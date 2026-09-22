@@ -234,7 +234,8 @@
       "bioRequiredToLink": "أدخل نبذة تعريفية قبل ربطها",
       "siteRequiredToLink": "أدخل موقعاً إلكترونياً قبل ربطه",
       "preferredNameRequiredToLink": "اختر اسماً مفضّلاً قبل ربطه",
-      "requestFailed": "فشل الطلب"
+      "requestFailed": "فشل الطلب",
+      "xCallbackTakingLong": "يستغرق هذا وقتًا أطول من المعتاد. تحقّق من ملفك الشخصي بعد بضع دقائق لمعرفة ما إذا تم ربط حسابك على X."
     },
     "portfolio": {
       "details": "التفاصيل",

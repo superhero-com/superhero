@@ -162,6 +162,36 @@ describe('XLinkChangeSync', () => {
     expect(mockNotifyConfirmed).not.toHaveBeenCalled();
   });
 
+  it("never settles or dismisses this wallet's banner for another wallet's change", async () => {
+    const mine = Date.now() - 30_000;
+    const theirs = Date.now() - X_LINK_CHANGE_TIMEOUT_MS + X_LINK_CHANGE_POLL_MS;
+    window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({
+      [OWNER]: {
+        kind: 'unlink', txHash: 'th_mine', username: 'untracenetwork', startedAt: mine,
+      },
+      // Left pending by a wallet this browser used before.
+      ak_other: {
+        kind: 'unlink', txHash: 'th_theirs', username: 'someone', startedAt: theirs,
+      },
+    }));
+    mockGetAccount.mockImplementation(async (address: string) => (
+      address === OWNER
+        ? { address, links: { x: 'untracenetwork' } }
+        : { address, links: {} }
+    ));
+    // The banner is showing this wallet's unlink.
+    mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt: mine }, txHash: '' };
+    renderSync();
+
+    // The other wallet's unlink settles at once; later it would time out.
+    await waitFor(() => expect(pendingXLinkChange('ak_other')).toBeNull());
+    await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS * 2); });
+
+    expect(mockNotifyConfirmed).not.toHaveBeenCalled();
+    expect(mockDismiss).not.toHaveBeenCalled();
+    expect(pendingXLinkChange(OWNER)).not.toBeNull();
+  });
+
   it('stops showing a change that never lands as on its way', async () => {
     const startedAt = Date.now() - X_LINK_CHANGE_TIMEOUT_MS + X_LINK_CHANGE_POLL_MS;
     leftPending(OWNER, {

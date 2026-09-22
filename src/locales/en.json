@@ -282,7 +282,8 @@
       "missingAddressForBioUnlink": "Missing address for bio unlink",
       "missingAddressForSiteUnlink": "Missing address for site unlink",
       "missingAddressForXUnlink": "Missing address for X unlink",
-      "requestFailed": "Request failed"
+      "requestFailed": "Request failed",
+      "xCallbackTakingLong": "This is taking longer than usual. Check your profile again in a few minutes to see whether your X account is linked."
     },
     "portfolio": {
       "details": "Details",

@@ -144,7 +144,7 @@ const ProfileXCallback = () => {
   const refreshLinkedAccount = useRefreshXLinkState();
   const { notifyPending, notifyConfirmed } = useTransactionNotification();
   const [status, setStatus] = useState<
-    'loading' | 'confirm_wallet' | 'confirming' | 'done' | 'error'
+    'loading' | 'confirm_wallet' | 'confirming' | 'done' | 'timed_out' | 'error'
   >('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
@@ -162,9 +162,11 @@ const ProfileXCallback = () => {
 
   // Done when the backend shows the link, not merely when it is mined: that
   // is when the profile and rewards pages show it too. The app-level sync
-  // refetches them and updates the banner, with or without this page.
+  // refetches them and updates the banner, with or without this page. If the
+  // tracker gives up, stop showing a wait that is no longer being watched.
   useEffect(() => onXLinkChangeSettled(({ change, outcome }) => {
-    if (outcome === 'settled' && change === pendingLinkRef.current) setStatus('done');
+    if (change !== pendingLinkRef.current) return;
+    setStatus(outcome === 'settled' ? 'done' : 'timed_out');
   }), []);
 
   const handleLinkSubmitted = useCallback((linkedAddress: string, txHash: string | undefined) => {
@@ -264,6 +266,22 @@ const ProfileXCallback = () => {
             {t('messages.xCallbackConfirmingDesc')}
           </p>
           {pendingLink && <LinkProgress change={pendingLink} />}
+          <button
+            type="button"
+            onClick={goToProfile}
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-black text-sm font-semibold text-white transition-all duration-200 hover:bg-black/80"
+          >
+            {t('messages.xCallbackGoToProfile')}
+          </button>
+        </>
+      )}
+
+      {status === 'timed_out' && (
+        <>
+          <XGlyph />
+          <p className="m-0 mb-6 text-sm leading-relaxed text-white/60" role="status">
+            {t('messages.xCallbackTakingLong')}
+          </p>
           <button
             type="button"
             onClick={goToProfile}

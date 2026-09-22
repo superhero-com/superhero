@@ -9,7 +9,8 @@ import {
 } from 'vitest';
 import ProfileXCallback from '@/views/ProfileXCallback';
 import {
-  X_LINK_CHANGES_STORAGE_KEY, X_LINK_CHANGE_POLL_MS, clearConfirmedXLinks, pendingXLinkChange,
+  X_LINK_CHANGES_STORAGE_KEY, X_LINK_CHANGE_POLL_MS, X_LINK_CHANGE_TIMEOUT_MS,
+  clearConfirmedXLinks, pendingXLinkChange,
 } from '@/utils/confirmedXLink';
 
 const mockClaimXAddressLinkFromCode = vi.fn();
@@ -269,6 +270,24 @@ describe('ProfileXCallback', () => {
 
       expect(await screen.findByRole('heading', { name: 'X account linked' })).toBeInTheDocument();
       expect(pendingXLinkChange('ak_test_1')).toBeNull();
+    });
+
+    it('stops showing the wait once the link is given up on', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      renderCallback(CALLBACK_ROUTE);
+      fireEvent.click(await screen.findByRole('button', { name: /sign in wallet to link/i }));
+      await screen.findByText(/confirming on the blockchain/i);
+
+      // The backend never shows the link.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_TIMEOUT_MS + X_LINK_CHANGE_POLL_MS);
+      });
+
+      expect(await screen.findByText(/taking longer than usual/i)).toBeInTheDocument();
+      expect(screen.queryByText(/confirming on the blockchain/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'X account linked' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /go to profile/i })).toBeInTheDocument();
     });
 
     it('falls back to linked when the backend returns no hash to poll', async () => {

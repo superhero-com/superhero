@@ -234,7 +234,8 @@
       "bioRequiredToLink": "请先输入简介再进行关联",
       "siteRequiredToLink": "请先输入网站再进行关联",
       "preferredNameRequiredToLink": "请先选择首选名称再进行关联",
-      "requestFailed": "请求失败"
+      "requestFailed": "请求失败",
+      "xCallbackTakingLong": "耗时比平时更长。请几分钟后再查看你的个人资料，确认 X 账户是否已关联。"
     },
     "portfolio": {
       "details": "详情",

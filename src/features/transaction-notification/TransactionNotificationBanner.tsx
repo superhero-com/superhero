@@ -35,7 +35,9 @@ function formatChangedFields(
 // Toasts backed by a central icon other than the Superhero mark (e.g. the blue diamond
 // used for Superhero ID / profile updates).
 function getIconVariant(payload: TxPayload): 'superhero' | 'diamond' {
-  return payload.type === TxPayloadType.UpdateProfile ? 'diamond' : 'superhero';
+  return payload.type === TxPayloadType.UpdateProfile || payload.type === TxPayloadType.LinkX
+    ? 'diamond'
+    : 'superhero';
 }
 
 // User must sign in their wallet — the app is waiting for that action.
@@ -121,6 +123,11 @@ function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; su
         subtitle: t('common.transactionNotification.signToUpdateFields', {
           fields: formatChangedFields(payload.fields, t),
         }),
+      };
+    case TxPayloadType.LinkX:
+      return {
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.signToLinkX'),
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
@@ -210,6 +217,13 @@ function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subt
         subtitle: t('common.transactionNotification.savingYourFields', {
           fields: formatChangedFields(payload.fields, t),
         }),
+      };
+    // Same shape as CreateToken's pending state on purpose: what the user is
+    // waiting on is the chain, and the subtitle says so.
+    case TxPayloadType.LinkX:
+      return {
+        title: t('common.transactionNotification.linkingXAccount'),
+        subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
@@ -323,6 +337,8 @@ function getConfirmedMeta(payload: TxPayload, t: TFunction): {
           leftColor: '#4ade80',
         },
       };
+    case TxPayloadType.LinkX:
+      return { title: t('common.transactionNotification.xAccountLinked'), line: null };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }

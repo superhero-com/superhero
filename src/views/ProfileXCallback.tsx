@@ -8,8 +8,22 @@ import type { XAddressLinkClaimResponse } from '@/api/backend';
 import { SuperheroApi } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
+import { X_POSTING_REWARD_QUERY_KEY } from '@/hooks/useXPostingReward';
+import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
+
+const LINK_X_PAYLOAD = { type: TxPayloadType.LinkX } as const;
+
+/**
+ * Mined is not indexed. The poll confirms the transaction against the node,
+ * but the profile and reward status are read from the backend, which learns
+ * about the link from its own indexer a few seconds later. Refetching only at
+ * the moment of confirmation would often read the pre-link profile — the same
+ * stale view this flow exists to fix — so refetch again as the indexer catches
+ * up. Invalidating an unmounted query is free; a mounted one just refetches.
+ */
+const INDEXER_CATCHUP_DELAYS_MS = [4_000, 12_000];
 
 /**
  * Full-height, centered shell so every state shares the same clean layout.
@@ -43,10 +57,11 @@ const ConfirmWalletStep = ({
 }: {
   address: string;
   claim: XAddressLinkClaimResponse;
-  onDone: () => void;
+  onDone: (txHash: string | undefined) => void;
 }) => {
   const { t } = useTranslation('common');
   const { completeXAddressLink } = useProfile(address);
+  const { notifySubmitted, notifyError } = useTransactionNotification();
   const [signing, setSigning] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,17 +71,23 @@ const ConfirmWalletStep = ({
     setSigning(true);
     setError(null);
     setAttempted(true);
+    notifySubmitted(LINK_X_PAYLOAD);
     try {
-      await completeXAddressLink(claim);
-      onDone();
+      // The backend broadcasts the link on the user's behalf and returns its
+      // hash. This used to be discarded, which is why the page went straight to
+      // "linked" while the chain had not seen anything yet.
+      const txHash = await completeXAddressLink(claim);
+      onDone(txHash);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[x-callback] wallet confirm step failed', err);
-      setError((err as Error)?.message || t('messages.failedToUpdateProfile'));
+      const message = (err as Error)?.message || t('messages.failedToUpdateProfile');
+      setError(message);
+      notifyError(message);
     } finally {
       setSigning(false);
     }
-  }, [claim, completeXAddressLink, onDone, signing, t]);
+  }, [claim, completeXAddressLink, notifyError, notifySubmitted, onDone, signing, t]);
 
   const buttonLabel = attempted
     ? t('messages.xCallbackRetry')
@@ -119,16 +140,50 @@ const ProfileXCallback = () => {
   const { t } = useTranslation('common');
   const { activeAccount, addStaticAccount } = useAeSdk();
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<'loading' | 'confirm_wallet' | 'done' | 'error'>('loading');
+  const { notifyPendingTx, notifyConfirmed } = useTransactionNotification();
+  const [status, setStatus] = useState<
+    'loading' | 'confirm_wallet' | 'confirming' | 'done' | 'error'
+  >('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [claim, setClaim] = useState<XAddressLinkClaimResponse | null>(null);
   const startedRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const goToProfile = useCallback(() => {
     if (address) navigate(`/users/${address}`);
     else navigate('/');
   }, [address, navigate]);
+
+  const refreshLinkedAccount = useCallback((linkedAddress: string) => {
+    const invalidate = () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', linkedAddress] }),
+      queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', linkedAddress] }),
+      // The feed and rewards cards read isXLinked from here, not from the profile.
+      queryClient.invalidateQueries({ queryKey: [X_POSTING_REWARD_QUERY_KEY] }),
+    ]);
+    invalidate();
+    INDEXER_CATCHUP_DELAYS_MS.forEach((ms) => { setTimeout(invalidate, ms); });
+  }, [queryClient]);
+
+  const handleLinkSubmitted = useCallback((linkedAddress: string, txHash: string | undefined) => {
+    const onConfirmed = () => {
+      refreshLinkedAccount(linkedAddress);
+      // The user may have gone to their profile by now; the banner and the
+      // refetch above carry on without this page.
+      if (mountedRef.current) setStatus('done');
+    };
+    if (txHash) {
+      notifyPendingTx(LINK_X_PAYLOAD, txHash, { onConfirmed });
+      setStatus('confirming');
+    } else {
+      // Nothing to poll. Keep the previous behaviour rather than a spinner
+      // that could never resolve.
+      notifyConfirmed(LINK_X_PAYLOAD);
+      onConfirmed();
+    }
+  }, [notifyConfirmed, notifyPendingTx, refreshLinkedAccount]);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -195,13 +250,29 @@ const ProfileXCallback = () => {
         <ConfirmWalletStep
           address={address}
           claim={claim}
-          onDone={async () => {
-            await queryClient.invalidateQueries({
-              queryKey: ['AccountsService.getAccount', address],
-            });
-            setStatus('done');
-          }}
+          onDone={(txHash) => handleLinkSubmitted(address, txHash)}
         />
+      )}
+
+      {status === 'confirming' && (
+        <>
+          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06] border border-white/10">
+            <Loader2 className="h-7 w-7 animate-spin text-white/80" aria-hidden />
+          </div>
+          <h1 className="m-0 mb-3 text-xl font-bold text-white">
+            {t('messages.xCallbackConfirmingTitle')}
+          </h1>
+          <p className="m-0 mb-6 text-sm leading-relaxed text-white/60" role="status">
+            {t('messages.xCallbackConfirmingDesc')}
+          </p>
+          <button
+            type="button"
+            onClick={goToProfile}
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-black text-sm font-semibold text-white transition-all duration-200 hover:bg-black/80"
+          >
+            {t('messages.xCallbackGoToProfile')}
+          </button>
+        </>
       )}
 
       {status === 'done' && (

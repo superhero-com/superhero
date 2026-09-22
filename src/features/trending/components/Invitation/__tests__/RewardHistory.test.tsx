@@ -10,11 +10,21 @@ import { RewardHistory } from '../RewardHistory';
 
 let mockQuery: any;
 const mockUseXRewardHistory = vi.fn();
+// What the chain says, per transaction hash. Absent = not read (yet).
+let mockChain: Record<string, any> = {};
+const mockUseOnChainPayout = vi.fn();
 
 vi.mock('../../../../../hooks/useXRewardHistory', () => ({
   useXRewardHistory: (...args: any[]) => {
     mockUseXRewardHistory(...args);
     return mockQuery;
+  },
+}));
+
+vi.mock('../../../../../hooks/useOnChainPayout', () => ({
+  useOnChainPayout: (txHash: string | null, recipient: string) => {
+    mockUseOnChainPayout(txHash, recipient);
+    return { data: txHash ? mockChain[txHash] : undefined };
   },
 }));
 
@@ -46,6 +56,7 @@ const rows = () => within(screen.getByRole('list')).getAllByRole('listitem');
 describe('RewardHistory', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockChain = {};
     loaded([]);
   });
 
@@ -165,6 +176,66 @@ describe('RewardHistory', () => {
 
     expect(rows()).toHaveLength(1);
     expect(screen.getByRole('link')).toHaveAttribute('href', `${EXPLORER}/th_kept`);
+  });
+
+  it('shows what the chain recorded once it confirms a payout', () => {
+    // The API only estimates the welcome reward: the amount is the configured
+    // value and the date is when X was linked. The chain has the real ones.
+    loaded([item({
+      kind: 'onboarding',
+      amount_ae: '50',
+      amount_recorded: false,
+      occurred_at: '2026-06-24T00:00:00.000Z',
+      tx_hash: 'th_welcome',
+      explorer_url: `${EXPLORER}/th_welcome`,
+    })]);
+    mockChain.th_welcome = {
+      mined: true, verified: true, amountAe: '0.05', time: '2026-07-01T09:30:00.000Z',
+    };
+    render(<RewardHistory address={ADDRESS} />);
+
+    const [row] = rows();
+    expect(mockUseOnChainPayout).toHaveBeenCalledWith('th_welcome', ADDRESS);
+    expect(row).toHaveTextContent('+0.05 AE');
+    expect(row).not.toHaveTextContent('+50 AE');
+    expect(row).toHaveTextContent('Jul 1, 2026');
+    expect(row).toHaveTextContent('Verified');
+    expect(within(row).getByTitle('Paid, and confirmed on the blockchain')).toBeInTheDocument();
+  });
+
+  it('settles a payout the API still shows as on its way once its block lands', () => {
+    loaded([item({
+      status: 'pending', tx_hash: 'th_broadcast', explorer_url: `${EXPLORER}/th_broadcast`,
+    })]);
+    mockChain.th_broadcast = {
+      mined: true, verified: true, amountAe: '10', time: '2026-07-02T12:00:00.000Z',
+    };
+    render(<RewardHistory address={ADDRESS} />);
+
+    expect(rows()[0]).toHaveTextContent('Verified');
+    expect(rows()[0]).not.toHaveTextContent('On its way');
+  });
+
+  it("keeps the API's data when the hash is not a payment to this wallet", () => {
+    loaded([item({
+      amount_ae: '10', tx_hash: 'th_elsewhere', explorer_url: `${EXPLORER}/th_elsewhere`,
+    })]);
+    mockChain.th_elsewhere = {
+      mined: true, verified: false, amountAe: null, time: null,
+    };
+    render(<RewardHistory address={ADDRESS} />);
+
+    expect(rows()[0]).toHaveTextContent('+10 AE');
+    expect(rows()[0]).toHaveTextContent('Paid');
+    expect(rows()[0]).not.toHaveTextContent('Verified');
+  });
+
+  it('shows the API data while the chain has not answered', () => {
+    loaded([item({ amount_ae: '10', tx_hash: 'th_slow', explorer_url: `${EXPLORER}/th_slow` })]);
+    render(<RewardHistory address={ADDRESS} />);
+
+    expect(rows()[0]).toHaveTextContent('+10 AE');
+    expect(rows()[0]).toHaveTextContent('Paid');
   });
 
   it('renders nothing without a wallet', () => {

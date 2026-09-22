@@ -1,10 +1,11 @@
 import { useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  CheckCircle2, Clock, ExternalLink, Gift, Loader2, Send, Users,
+  CheckCircle2, Clock, ExternalLink, Gift, Loader2, Send, ShieldCheck, Users,
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 import { useXRewardHistory } from '../../../../hooks/useXRewardHistory';
+import { useOnChainPayout } from '../../../../hooks/useOnChainPayout';
 import type { XRewardHistoryItem } from '../../../../api/backend';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 
@@ -35,6 +36,8 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
   pending: { Icon: Loader2, className: 'bg-cyan-500/15 text-cyan-300', spin: true },
   // Failed sends are retried automatically, so this is a delay, not a loss.
   failed: { Icon: Clock, className: 'bg-amber-500/15 text-amber-300' },
+  // Paid, and the transaction was read back from the chain itself.
+  verified: { Icon: ShieldCheck, className: 'bg-emerald-500/15 text-emerald-300' },
 };
 
 type TFunc = (key: string, options?: Record<string, unknown>) => string;
@@ -64,12 +67,17 @@ const formatAmount = (amount: string | null, language: string) => {
   }
 };
 
-const describeItem = (item: XRewardHistoryItem, language: string, t: TFunc) => {
+const describeItem = (
+  item: XRewardHistoryItem,
+  occurredAt: string | null,
+  language: string,
+  t: TFunc,
+) => {
   // A post reward is dated by the post that earned it, which is the date the
   // user will recognise; `post_day` is a UTC calendar day.
   const date = item.kind === 'per_post' && item.post_day
     ? formatDate(`${item.post_day}T00:00:00Z`, language, true)
-    : formatDate(item.occurred_at, language);
+    : formatDate(occurredAt, language);
   const kind = KIND_STYLES[item.kind] ? item.kind : 'unknown';
   const title = t(`rewardsProgram.history.kind.${kind}`);
   const detail = kind === 'unknown'
@@ -81,15 +89,36 @@ const describeItem = (item: XRewardHistoryItem, language: string, t: TFunc) => {
   return { title, date, detail };
 };
 
-type HistoryRowProps = { item: XRewardHistoryItem; language: string; t: TFunc };
+type HistoryRowProps = {
+  item: XRewardHistoryItem;
+  address: string;
+  language: string;
+  t: TFunc;
+};
 
-const HistoryRow = ({ item, language, t }: HistoryRowProps) => {
+const HistoryRow = ({
+  item, address, language, t,
+}: HistoryRowProps) => {
+  // The chain is the authority on a payout that reached it: what it records
+  // replaces what the API reported. That fixes the two things the API can
+  // only estimate (welcome and invite amounts are the configured value, and
+  // the welcome reward is dated by when X was linked), and settles a row the
+  // API still shows as on its way once its transaction is in a block. Until
+  // the read returns, or if it cannot, the row shows the API's data as before.
+  const { data: chain } = useOnChainPayout(item.tx_hash, address);
+  const verified = chain?.verified === true;
+  const status = verified ? 'verified' : item.status;
+  const amountAe = (verified && chain.amountAe) || item.amount_ae;
+  const occurredAt = (verified && chain.time) || item.occurred_at;
+
   const { Icon, tint } = KIND_STYLES[item.kind] ?? FALLBACK_STYLE;
-  const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.pending;
+  const statusKey = STATUS_STYLES[status] ? status : 'pending';
+  const statusStyle = STATUS_STYLES[statusKey];
   const StatusIcon = statusStyle.Icon;
-  const { title, date, detail } = describeItem(item, language, t);
-  const amount = formatAmount(item.amount_ae, language);
-  const statusLabel = t(`rewardsProgram.history.status.${STATUS_STYLES[item.status] ? item.status : 'pending'}`);
+  const { title, date, detail } = describeItem(item, occurredAt, language, t);
+  const amount = formatAmount(amountAe, language);
+  const statusLabel = t(`rewardsProgram.history.status.${statusKey}`);
+  const settled = status === 'paid' || status === 'verified';
 
   const body = (
     <>
@@ -111,13 +140,14 @@ const HistoryRow = ({ item, language, t }: HistoryRowProps) => {
             dir="ltr"
             className={cn(
               'text-sm font-bold tabular-nums',
-              item.status === 'paid' ? 'text-emerald-300' : 'text-white/70',
+              settled ? 'text-emerald-300' : 'text-white/70',
             )}
           >
             {t('rewardsProgram.history.amount', { amount })}
           </span>
         )}
         <span
+          title={verified ? t('rewardsProgram.history.verifiedTooltip') : undefined}
           className={cn(
             'inline-flex items-center gap-1 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full',
             statusStyle.className,
@@ -246,6 +276,7 @@ export const RewardHistory = ({ address, showEmpty = false, className }: RewardH
               // their position and kind.
               key={item.tx_hash ?? `${item.kind}-${item.occurred_at}-${i}`}
               item={item}
+              address={address}
               language={language}
               t={t}
             />

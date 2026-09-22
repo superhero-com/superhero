@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
+import { profileEditPath } from '../../../../hooks/useProfileEditDeepLink';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
 import { toAe } from '../../../../utils/bondingCurve';
@@ -116,8 +117,9 @@ const RewardsProgram = () => {
   // --- actions ---
   const handleVerifyAction = useCallback(async () => {
     if (currentVerifyStep === 0) {
-      // Navigate to profile page to link X
-      if (activeAccount) navigate(`/users/${encodeURIComponent(activeAccount)}`);
+      // Profile page with the editor open at the X section — same destination
+      // as the feed's onboarding card.
+      if (activeAccount) navigate(profileEditPath(activeAccount, 'x'));
       return;
     }
     // Step 1: post about Superhero — a regular post, no referral link needed.

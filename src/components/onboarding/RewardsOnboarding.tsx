@@ -5,6 +5,7 @@ import { Check, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAeSdk } from '../../hooks/useAeSdk';
 import { useXPostingReward } from '../../hooks/useXPostingReward';
+import { profileEditPath } from '../../hooks/useProfileEditDeepLink';
 
 type RewardsOnboardingProps = {
   /** `feed` = wide card injected between home-feed items; `rail` = compact side-menu card. */
@@ -32,8 +33,9 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
 
   const handleContinue = useCallback(() => {
     if (!isXLinked) {
-      // Step 1: link X — done on the profile page.
-      if (activeAccount) navigate(`/users/${encodeURIComponent(activeAccount)}`);
+      // Step 1: link X — on the profile page, with the editor already open at
+      // the X section so the next tap is the one that links.
+      if (activeAccount) navigate(profileEditPath(activeAccount, 'x'));
       return;
     }
     // Step 2: post & earn — handled on the rewards page.

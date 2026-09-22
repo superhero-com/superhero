@@ -255,6 +255,8 @@
       "xCallbackRetry": "Try again",
       "xCallbackDoneTitle": "X account linked",
       "xCallbackGoBack": "Go back",
+      "xCallbackConfirmingTitle": "Confirming on the blockchain",
+      "xCallbackConfirmingDesc": "Your X account is being linked on-chain. This usually takes under a minute — you can keep browsing, and the banner at the top will tell you when it's done.",
       "chainNameClaimLengthHint": "{{length}}/13 characters before .chain",
       "connectWalletFirst": "Connect your wallet first",
       "referralLinkFailed": "Failed to get referral link",
@@ -1267,7 +1269,10 @@
       "liquidityAdded": "Liquidity added",
       "liquidityRemoved": "Liquidity removed",
       "profileUpdated": "Profile updated",
-      "fieldsSaved": "{{fields}} saved"
+      "fieldsSaved": "{{fields}} saved",
+      "signToLinkX": "Sign the message to link your X account",
+      "linkingXAccount": "Linking your X account…",
+      "xAccountLinked": "X account linked"
     },
     "postLanguageFilter": {
       "shortLabel": "Language",

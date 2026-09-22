@@ -19,6 +19,7 @@ export const TxPayloadType = {
   AddLiquidity: 'add_liquidity',
   RemoveLiquidity: 'remove_liquidity',
   UpdateProfile: 'update_profile',
+  LinkX: 'link_x',
 } as const;
 
 export type TxPayload =
@@ -34,7 +35,10 @@ export type TxPayload =
   | { type: typeof TxPayloadType.UnwrapToken; amount: string }
   | { type: typeof TxPayloadType.AddLiquidity; tokenASymbol: string; tokenBSymbol: string; amountA: string; amountB: string; lpTokensEstimate?: string }
   | { type: typeof TxPayloadType.RemoveLiquidity; tokenASymbol: string; tokenBSymbol: string; liquidityPct: string; lpAmount: string }
-  | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> };
+  | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> }
+  // No handle carried: the claim's `value` may be the X user id rather than the
+  // username, and "@1234567890" in a toast is worse than no handle at all.
+  | { type: typeof TxPayloadType.LinkX };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 
@@ -45,11 +49,22 @@ export type NotificationState =
   | { status: 'confirmed'; payload: TxPayload }
   | { status: 'error'; message: string };
 
+export type PendingTxOptions = {
+  /**
+   * Runs once, when the poll sees the transaction mined. The notification
+   * provider is app-level, so this fires even after the caller's page has
+   * unmounted — which is the point: a flow that navigates away while the chain
+   * catches up can still refresh the data it changed. Not called if a newer
+   * notification supersedes this one before it confirms.
+   */
+  onConfirmed?: () => void;
+};
+
 type TransactionNotificationContextValue = {
   notificationState: NotificationState;
   notifySubmitted: (payload: TxPayload) => void;
   notifyPending: (payload: TxPayload) => void;
-  notifyPendingTx: (payload: TxPayload, txHash: string) => void;
+  notifyPendingTx: (payload: TxPayload, txHash: string, options?: PendingTxOptions) => void;
   notifyConfirmed: (payload: TxPayload) => void;
   notifyError: (message: string) => void;
   dismissNotification: () => void;
@@ -124,7 +139,7 @@ export const TransactionNotificationProvider: React.FC<{
   }, []);
 
   const notifyPendingTx = useCallback(
-    (payload: TxPayload, txHash: string) => {
+    (payload: TxPayload, txHash: string, options?: PendingTxOptions) => {
       clearDismissTimer();
       clearPollInterval();
       // Capture the generation after clearing so this poll cycle has a unique token.
@@ -139,6 +154,14 @@ export const TransactionNotificationProvider: React.FC<{
           clearPollInterval();
           setNotificationState({ status: 'confirmed', payload });
           scheduleAutoDismiss(payload, AUTO_DISMISS_MS);
+          // After clearPollInterval, so a slow callback can't overlap a re-poll,
+          // and isolated so a throwing callback can't strand the banner.
+          try {
+            options?.onConfirmed?.();
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[tx-notification] onConfirmed callback failed', err);
+          }
         }
       };
 

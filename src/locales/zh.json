@@ -166,6 +166,8 @@
       "xCallbackRetry": "重试",
       "xCallbackDoneTitle": "X 账户已关联",
       "xCallbackGoBack": "返回",
+      "xCallbackConfirmingTitle": "正在区块链上确认",
+      "xCallbackConfirmingDesc": "你的 X 账户正在链上关联，通常不到一分钟即可完成。你可以继续浏览，完成后顶部横幅会通知你。",
       "missingAddressForXVerification": "缺少 X 验证地址",
       "missingXOAuthToken": "缺少 X OAuth 令牌",
       "missingAddressForBioLink": "缺少 bio 关联地址",
@@ -1218,7 +1220,10 @@
       "liquidityAdded": "流动性已添加",
       "liquidityRemoved": "流动性已移除",
       "profileUpdated": "个人资料已更新",
-      "fieldsSaved": "{{fields}}已保存"
+      "fieldsSaved": "{{fields}}已保存",
+      "signToLinkX": "签署消息以关联你的 X 账户",
+      "linkingXAccount": "正在关联你的 X 账户…",
+      "xAccountLinked": "X 账户已关联"
     },
     "postLanguageFilter": {
       "shortLabel": "语言",

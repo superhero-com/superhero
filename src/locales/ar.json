@@ -166,6 +166,8 @@
       "xCallbackRetry": "حاول مرة أخرى",
       "xCallbackDoneTitle": "تم ربط حساب X",
       "xCallbackGoBack": "العودة",
+      "xCallbackConfirmingTitle": "جارٍ التأكيد على البلوكتشين",
+      "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً أقل من دقيقة — يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
       "missingAddressForXVerification": "عنوان X للتحقق مفقود",
       "missingXOAuthToken": "رمز X OAuth مفقود",
       "missingAddressForBioLink": "عنوان الربط الخاص بالـ bio مفقود",
@@ -1218,7 +1220,10 @@
       "liquidityAdded": "تمت إضافة السيولة",
       "liquidityRemoved": "تمت إزالة السيولة",
       "profileUpdated": "تم تحديث الملف الشخصي",
-      "fieldsSaved": "تم حفظ {{fields}}"
+      "fieldsSaved": "تم حفظ {{fields}}",
+      "signToLinkX": "وقّع الرسالة لربط حسابك على X",
+      "linkingXAccount": "جارٍ ربط حسابك على X…",
+      "xAccountLinked": "تم ربط حساب X"
     },
     "postLanguageFilter": {
       "shortLabel": "اللغة",

@@ -3,9 +3,11 @@ import {
   act, fireEvent, render, screen, waitFor, within,
 } from '@testing-library/react';
 import {
-  beforeEach, describe, expect, it, vi,
+  afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { clearConfirmedXLinks, resolveXLink } from '@/utils/confirmedXLink';
+import {
+  X_UNLINK_POLL_MS, clearConfirmedXLinks, pendingXUnlink, resolveXLink,
+} from '@/utils/confirmedXLink';
 import { XLinkedAccountRow } from '../XLinkedAccountRow';
 import { Dialog, DialogContent, DialogTitle } from '../../ui/dialog';
 
@@ -16,6 +18,11 @@ const mockNotifyPendingTx = vi.fn();
 const mockNotifyConfirmed = vi.fn();
 const mockNotifyError = vi.fn();
 let mockNotificationState: any = { status: 'idle' };
+const mockIsTransactionMined = vi.fn();
+
+vi.mock('@/utils/apiRead', () => ({
+  isTransactionMined: (...args: any[]) => mockIsTransactionMined(...args),
+}));
 
 vi.mock('@/hooks/useProfile', () => ({
   useProfile: () => ({ unlinkXAccount: (...args: any[]) => mockUnlinkXAccount(...args) }),
@@ -57,6 +64,14 @@ describe('XLinkedAccountRow', () => {
     clearConfirmedXLinks();
     mockNotificationState = { status: 'idle' };
     mockUnlinkXAccount.mockResolvedValue('th_unlink');
+    // Not mined until a test says so.
+    mockIsTransactionMined.mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    // Stops any unlink still being tracked, so no poll outlives its test.
+    clearConfirmedXLinks();
+    vi.useRealTimers();
   });
 
   it('asks before unlinking, and says what unlinking costs', () => {
@@ -92,11 +107,10 @@ describe('XLinkedAccountRow', () => {
     await waitFor(() => expect(mockNotifyPendingTx).toHaveBeenCalledTimes(1));
     expect(mockNotifySubmitted).toHaveBeenCalledWith({ type: 'unlink_x' });
     expect(mockUnlinkXAccount).toHaveBeenCalledWith(ADDRESS);
-    expect(mockNotifyPendingTx).toHaveBeenCalledWith(
-      { type: 'unlink_x' },
-      'th_unlink',
-      expect.objectContaining({ onConfirmed: expect.any(Function) }),
-    );
+    expect(mockNotifyPendingTx).toHaveBeenCalledWith({ type: 'unlink_x' }, 'th_unlink');
+    // Tracked on its own too, so a later transaction taking over the banner
+    // cannot drop it.
+    expect(pendingXUnlink(ADDRESS)).toBe('th_unlink');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     // Not unlinked yet: the editor keeps showing the account until the chain confirms.
@@ -105,16 +119,41 @@ describe('XLinkedAccountRow', () => {
   });
 
   it('switches the editor back and refreshes once the chain confirms', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const { onUnlinked } = setup();
     fireEvent.click(within(openConfirm()).getByRole('button', { name: 'Unlink' }));
     await waitFor(() => expect(mockNotifyPendingTx).toHaveBeenCalled());
+    expect(onUnlinked).not.toHaveBeenCalled();
 
-    mockNotifyPendingTx.mock.calls[0][2].onConfirmed();
+    mockIsTransactionMined.mockResolvedValue(true);
+    await act(async () => { vi.advanceTimersByTime(X_UNLINK_POLL_MS); });
 
-    expect(onUnlinked).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onUnlinked).toHaveBeenCalledTimes(1));
+    expect(mockIsTransactionMined).toHaveBeenCalledWith('th_unlink');
     expect(mockRefreshXLinkState).toHaveBeenCalledWith(ADDRESS);
     // Remembered, so a reopened editor that re-reads a not-yet-indexed account
     // record does not show the account as linked again.
+    expect(resolveXLink(ADDRESS, 'untracenetwork')).toBeNull();
+    expect(pendingXUnlink(ADDRESS)).toBeNull();
+  });
+
+  it('keeps the unlink on its way, and settles it, after another transaction takes the banner', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { onUnlinked, rerender } = setup();
+    fireEvent.click(within(openConfirm()).getByRole('button', { name: 'Unlink' }));
+    await waitFor(() => expect(mockNotifyPendingTx).toHaveBeenCalled());
+
+    // Saving the profile (or any other transaction) replaces the banner.
+    mockNotificationState = { status: 'pending', payload: { type: 'create_post', content: 'gm' }, txHash: 'th_post' };
+    rerender(<XLinkedAccountRow address={ADDRESS} username="untracenetwork" onUnlinked={onUnlinked} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Unlinking your X account…');
+    expect(screen.queryByRole('button', { name: /unlink/i })).not.toBeInTheDocument();
+
+    mockIsTransactionMined.mockResolvedValue(true);
+    await act(async () => { vi.advanceTimersByTime(X_UNLINK_POLL_MS); });
+
+    await waitFor(() => expect(onUnlinked).toHaveBeenCalledTimes(1));
     expect(resolveXLink(ADDRESS, 'untracenetwork')).toBeNull();
   });
 

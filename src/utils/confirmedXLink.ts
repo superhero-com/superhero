@@ -14,12 +14,49 @@
  * comes back to a fresh app.
  */
 
+import { isTransactionMined } from '@/utils/apiRead';
+
 /** Long enough to cover indexer lag; short enough never to mask a real change. */
 export const CONFIRMED_X_LINK_TTL_MS = 10 * 60_000;
+
+/** How often a tracked unlink checks whether its transaction is in a block. */
+export const X_UNLINK_POLL_MS = 5_000;
+
+/** A transaction not mined by then was dropped; stop showing it as on its way. */
+export const X_UNLINK_TRACK_TIMEOUT_MS = 15 * 60_000;
 
 type ConfirmedChange = { username: string | null; at: number };
 
 const confirmed = new Map<string, ConfirmedChange>();
+
+type PendingUnlink = { txHash: string; startedAt: number; timer: ReturnType<typeof setInterval> };
+
+const pending = new Map<string, PendingUnlink>();
+
+const listeners = new Set<() => void>();
+let version = 0;
+
+const emit = () => {
+  version += 1;
+  listeners.forEach((listener) => listener());
+};
+
+/** For useSyncExternalStore: re-render when a tracked or confirmed change moves. */
+export function subscribeXLinkChanges(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+/** Changes whenever any tracked or confirmed X link change does. */
+export function xLinkChangesVersion(): number {
+  return version;
+}
+
+const stopTracking = (address: string) => {
+  const current = pending.get(address);
+  if (current) clearInterval(current.timer);
+  pending.delete(address);
+};
 
 const normalize = (username: string | null | undefined) => (
   username ? username.replace(/^@/u, '').toLowerCase() : null
@@ -27,7 +64,73 @@ const normalize = (username: string | null | undefined) => (
 
 /** Record a link state the chain has confirmed: a handle, or null for unlinked. */
 export function rememberConfirmedXLink(address: string, username: string | null): void {
+  stopTracking(address);
   confirmed.set(address, { username: normalize(username), at: Date.now() });
+  emit();
+}
+
+/** The hash of an unlink for `address` still waiting to be mined, if any. */
+export function pendingXUnlink(address: string): string | null {
+  return pending.get(address)?.txHash ?? null;
+}
+
+/**
+ * Watch an unlink transaction until it is mined, on its own.
+ *
+ * The top banner watches it too, but the banner holds one transaction at a
+ * time: anything submitted afterwards (saving the profile, a tip) replaces it
+ * and drops the unlink's confirmation. Kept here instead, the unlink shows as
+ * on its way and then settles no matter what the banner is doing, and with
+ * the editor open or closed.
+ */
+export function trackXUnlink(
+  address: string,
+  txHash: string,
+  options: {
+    onConfirmed?: () => void;
+    isMined?: (hash: string) => Promise<boolean>;
+  } = {},
+): void {
+  const isMined = options.isMined ?? isTransactionMined;
+  stopTracking(address);
+  let checking = false;
+
+  const check = async () => {
+    const current = pending.get(address);
+    // Settled, replaced by a newer unlink, or cleared.
+    if (!current || current.txHash !== txHash) return;
+    if (Date.now() - current.startedAt > X_UNLINK_TRACK_TIMEOUT_MS) {
+      stopTracking(address);
+      emit();
+      return;
+    }
+    if (checking) return;
+    checking = true;
+    let mined = false;
+    try {
+      mined = await isMined(txHash);
+    } catch {
+      // A failed read is not an answer; the next tick asks again.
+    } finally {
+      checking = false;
+    }
+    if (!mined || pending.get(address)?.txHash !== txHash) return;
+    rememberConfirmedXLink(address, null);
+    try {
+      options.onConfirmed?.();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[x-unlink] onConfirmed failed', err);
+    }
+  };
+
+  pending.set(address, {
+    txHash,
+    startedAt: Date.now(),
+    timer: setInterval(check, X_UNLINK_POLL_MS),
+  });
+  emit();
+  check();
 }
 
 /**
@@ -68,5 +171,7 @@ export function effectiveXLink(address: string, loaded: LinkState): LinkState {
 
 /** Test helper. */
 export function clearConfirmedXLinks(): void {
+  Array.from(pending.keys()).forEach(stopTracking);
   confirmed.clear();
+  emit();
 }

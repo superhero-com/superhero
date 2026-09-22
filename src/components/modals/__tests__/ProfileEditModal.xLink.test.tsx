@@ -6,7 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { clearConfirmedXLinks, rememberConfirmedXLink } from '@/utils/confirmedXLink';
+import {
+  X_UNLINK_POLL_MS, clearConfirmedXLinks, rememberConfirmedXLink, trackXUnlink,
+} from '@/utils/confirmedXLink';
 import ProfileEditModal from '../ProfileEditModal';
 
 const ADDRESS = 'ak_owner';
@@ -109,7 +111,9 @@ describe('ProfileEditModal X section', () => {
   });
 
   afterEach(() => {
+    clearConfirmedXLinks();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('shows a linked X account', async () => {
@@ -138,6 +142,25 @@ describe('ProfileEditModal X section', () => {
   it('keeps a confirmed unlink when reopened before the API catches up', async () => {
     rememberConfirmedXLink(ADDRESS, null);
     renderEditor();
+
+    expect(await screen.findByRole('button', { name: 'Link account' })).toBeInTheDocument();
+    expect(screen.queryByText('@untracenetwork')).not.toBeInTheDocument();
+  });
+
+  it('shows an unlink on its way even when the banner has moved on, and settles it in place', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // Unlinked earlier; the banner has since been taken by another
+    // transaction, so only the tracker still knows.
+    const isMined = vi.fn().mockResolvedValue(false);
+    trackXUnlink(ADDRESS, 'th_unlink', { isMined });
+    renderEditor();
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Unlinking your X account…');
+    expect(screen.queryByRole('button', { name: /unlink @untracenetwork/i })).not.toBeInTheDocument();
+
+    // Mined: the open editor switches over by itself, with no reload.
+    isMined.mockResolvedValue(true);
+    await act(async () => { vi.advanceTimersByTime(X_UNLINK_POLL_MS); });
 
     expect(await screen.findByRole('button', { name: 'Link account' })).toBeInTheDocument();
     expect(screen.queryByText('@untracenetwork')).not.toBeInTheDocument();

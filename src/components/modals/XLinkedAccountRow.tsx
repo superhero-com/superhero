@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Check, Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
-import { rememberConfirmedXLink } from '@/utils/confirmedXLink';
+import { pendingXUnlink, rememberConfirmedXLink, trackXUnlink } from '@/utils/confirmedXLink';
+import { useXLinkChanges } from '@/hooks/useXLinkChanges';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -28,10 +29,11 @@ type XLinkedAccountRowProps = {
  * linking: an explicit confirm first — it ends X posting rewards — then the
  * wallet signature, then the top banner while the chain confirms.
  *
- * The pending state is read from the global notification rather than kept
- * here, because the editor can be closed and reopened while the transaction is
- * still confirming. Held locally, a reopened editor would offer "Unlink" again
- * for an unlink that is already on its way.
+ * The pending state lives outside this component, because the editor can be
+ * closed and reopened while the transaction is still confirming. Held locally,
+ * a reopened editor would offer "Unlink" again for an unlink already on its
+ * way. It is tracked in `confirmedXLink` rather than read only from the top
+ * banner, which any later transaction replaces.
  */
 export const XLinkedAccountRow = ({
   address,
@@ -49,9 +51,11 @@ export const XLinkedAccountRow = ({
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useXLinkChanges();
   const handle = `@${username.replace(/^@/u, '')}`;
-  const unlinkPending = notificationState.status === 'pending'
-    && notificationState.payload.type === TxPayloadType.UnlinkX;
+  const unlinkPending = Boolean(pendingXUnlink(address))
+    || (notificationState.status === 'pending'
+      && notificationState.payload.type === TxPayloadType.UnlinkX);
 
   const handleUnlink = useCallback(async () => {
     if (signing) return;
@@ -61,17 +65,19 @@ export const XLinkedAccountRow = ({
     try {
       const txHash = await unlinkXAccount(address);
       const onConfirmed = () => {
-        // The API can list the handle for a while after this; without the
-        // note, a reopened editor would read it and offer Unlink again.
-        rememberConfirmedXLink(address, null);
         refreshXLinkState(address);
         onUnlinked();
       };
       setConfirmOpen(false);
       if (txHash) {
-        notifyPendingTx(UNLINK_X_PAYLOAD, txHash, { onConfirmed });
+        // The tracker settles the unlink (records it, so a reopened editor
+        // that reads a not-yet-indexed account record does not offer Unlink
+        // again) whether or not the banner is still showing this transaction.
+        trackXUnlink(address, txHash, { onConfirmed });
+        notifyPendingTx(UNLINK_X_PAYLOAD, txHash);
       } else {
         // Nothing to poll. Say it's done rather than show a wait that can't end.
+        rememberConfirmedXLink(address, null);
         notifyConfirmed(UNLINK_X_PAYLOAD);
         onConfirmed();
       }

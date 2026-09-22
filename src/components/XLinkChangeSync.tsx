@@ -76,18 +76,23 @@ export const XLinkChangeSync = () => {
       if (bannerShowsIt) dismissNotification();
       return;
     }
-    // Only ever to the wallet it happened to. Another transaction owning the
-    // banner, or another wallet connected: the screens update, the banner
-    // is left alone.
-    if (address !== accountRef.current) return;
+    // Only ever to the wallet it happened to. Another wallet connected: the
+    // screens update, and a wait still showing for this change is cleared
+    // rather than left spinning (it can get there when the wallet is
+    // switched while this one's signature is still out). Another
+    // transaction owning the banner: it is left alone.
+    if (address !== accountRef.current) {
+      if (bannerShowsIt) dismissNotification();
+      return;
+    }
     if (bannerShowsIt || banner.status === 'idle') notifyConfirmed(payload);
   }), [dismissNotification, notifyConfirmed, refreshXLinkState]);
 
   // On a switch to another wallet (or none), an X link banner left by the
   // previous one, still waiting or just announcing "linked/unlinked", is not
-  // this wallet's: clear it. Then, once per wallet, show the wallet's own
+  // this wallet's: clear it. Then, once per visit to a wallet, show its own
   // wait if it has one: after a reload the banner starts empty, and after a
-  // switch it is the new wallet's turn. If another transaction holds the
+  // switch it is this wallet's turn. If another transaction holds the
   // banner, the wait is shown when it lets go. Not again once dismissed.
   const switchedTo = useRef<string | null | undefined>(undefined);
   const restoredFor = useRef<string | null | undefined>(undefined);
@@ -100,6 +105,10 @@ export const XLinkChangeSync = () => {
       // The first wallet seen is not a switch away from anything.
       const switched = switchedTo.current !== undefined;
       switchedTo.current = account;
+      // Every visit to a wallet gets its own restore. Otherwise a restore put
+      // off for one wallet leaves the last wallet marked as done, and
+      // switching back to it would never show its wait again.
+      restoredFor.current = undefined;
       if (switched && isXLinkBanner(banner) && !(change && bannerShowsChange(banner, change))) {
         dismissNotification();
         banner = { status: 'idle' };

@@ -55,14 +55,19 @@ function renderSync(activeAccount: string | undefined = OWNER) {
   store.set(activeAccountAtom, activeAccount);
   const queryClient = new QueryClient();
   const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
-  const view = render(
+  const tree = () => (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <XLinkChangeSync />
       </Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { ...view, invalidate, store };
+  const view = render(tree());
+  // Re-render with whatever the (mocked) banner now holds.
+  const bannerChanged = () => view.rerender(tree());
+  return {
+    ...view, invalidate, store, bannerChanged,
+  };
 }
 
 const invalidatedKeys = (spy: ReturnType<typeof vi.spyOn>) => spy.mock.calls
@@ -248,6 +253,59 @@ describe('XLinkChangeSync', () => {
 
       expect(mockDismiss).not.toHaveBeenCalled();
       expect(mockNotifyPending).not.toHaveBeenCalled();
+    });
+
+    it("clears the previous wallet's just-announced \"unlinked\" too", () => {
+      const startedAt = Date.now() - 30_000;
+      // The owner's unlink landed a moment ago: the banner is announcing it.
+      mockNotificationState = { status: 'confirmed', payload: { type: 'unlink_x', startedAt } };
+      const { store } = renderSync(OWNER);
+
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+
+      expect(mockDismiss).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows the new wallet's own wait in place of the previous wallet's announcement", () => {
+      const walletBStarted = Date.now() - 90_000;
+      leftPending(WALLET_B, {
+        kind: 'unlink', txHash: 'th_b', username: 'someone', startedAt: walletBStarted,
+      });
+      mockNotificationState = { status: 'confirmed', payload: { type: 'unlink_x', startedAt: Date.now() - 30_000 } };
+      const { store } = renderSync(OWNER);
+
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+
+      expect(mockDismiss).toHaveBeenCalledTimes(1);
+      expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'unlink_x', startedAt: walletBStarted });
+    });
+
+    it("shows the new wallet's wait once another transaction lets go of the banner", () => {
+      const walletBStarted = Date.now() - 90_000;
+      leftPending(WALLET_B, {
+        kind: 'link', txHash: 'th_b', username: null, startedAt: walletBStarted,
+      });
+      // A post is being published: its banner is not the X link's to take.
+      mockNotificationState = { status: 'pending', payload: { type: 'create_post', content: 'gm' }, txHash: 'th_post' };
+      const { store, bannerChanged } = renderSync(OWNER);
+
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+      expect(mockDismiss).not.toHaveBeenCalled();
+      expect(mockNotifyPending).not.toHaveBeenCalled();
+
+      // The post's banner goes away.
+      mockNotificationState = { status: 'idle' };
+      bannerChanged();
+
+      expect(mockNotifyPending).toHaveBeenCalledTimes(1);
+      expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'link_x', startedAt: walletBStarted });
+
+      // Shown once: dismissing it does not bring it back.
+      mockNotificationState = { status: 'pending', payload: { type: 'link_x', startedAt: walletBStarted }, txHash: '' };
+      bannerChanged();
+      mockNotificationState = { status: 'idle' };
+      bannerChanged();
+      expect(mockNotifyPending).toHaveBeenCalledTimes(1);
     });
 
     it('clears the wait from the banner when the wallet disconnects', async () => {

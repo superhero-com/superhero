@@ -35,6 +35,13 @@ function bannerShowsChange(banner: NotificationState, change: PendingXLinkChange
     && payload.startedAt === change.startedAt;
 }
 
+/** An X link or unlink in the banner, still waiting or just announced. */
+function isXLinkBanner(banner: NotificationState): boolean {
+  if (banner.status !== 'pending' && banner.status !== 'confirmed') return false;
+  return banner.payload.type === TxPayloadType.LinkX
+    || banner.payload.type === TxPayloadType.UnlinkX;
+}
+
 /**
  * Carries X link changes across the whole app, and across reloads.
  *
@@ -76,26 +83,38 @@ export const XLinkChangeSync = () => {
     if (bannerShowsIt || banner.status === 'idle') notifyConfirmed(payload);
   }), [dismissNotification, notifyConfirmed, refreshXLinkState]);
 
-  // Once per wallet: after a reload the banner starts empty, so show the
-  // change still on its way. Not again after it is dismissed. On a switch to
-  // another wallet (or none), the previous wallet's wait is not this one's:
-  // clear it, and show the new wallet's own wait if it has one.
+  // On a switch to another wallet (or none), an X link banner left by the
+  // previous one, still waiting or just announcing "linked/unlinked", is not
+  // this wallet's: clear it. Then, once per wallet, show the wallet's own
+  // wait if it has one: after a reload the banner starts empty, and after a
+  // switch it is the new wallet's turn. If another transaction holds the
+  // banner, the wait is shown when it lets go. Not again once dismissed.
+  const switchedTo = useRef<string | null | undefined>(undefined);
   const restoredFor = useRef<string | null | undefined>(undefined);
+  const bannerStatus = notificationState.status;
   useEffect(() => {
     const account = activeAccount || null;
-    if (restoredFor.current === account) return;
-    restoredFor.current = account;
     const change = pendingXLinkChange(account);
-    const banner = bannerRef.current;
-    const bannerIsXLinkChange = banner.status === 'pending'
-      && (banner.payload.type === TxPayloadType.LinkX
-        || banner.payload.type === TxPayloadType.UnlinkX);
-    if (change && bannerShowsChange(banner, change)) return;
-    if (bannerIsXLinkChange) dismissNotification();
-    if (change && (banner.status === 'idle' || bannerIsXLinkChange)) {
-      notifyPending(xLinkChangePayload(change));
+    let banner = bannerRef.current;
+    if (switchedTo.current !== account) {
+      // The first wallet seen is not a switch away from anything.
+      const switched = switchedTo.current !== undefined;
+      switchedTo.current = account;
+      if (switched && isXLinkBanner(banner) && !(change && bannerShowsChange(banner, change))) {
+        dismissNotification();
+        banner = { status: 'idle' };
+      }
     }
-  }, [activeAccount, dismissNotification, notifyPending]);
+    if (restoredFor.current === account) return;
+    if (!change || bannerShowsChange(banner, change)) {
+      restoredFor.current = account;
+      return;
+    }
+    // Held by another transaction: wait for it to let go.
+    if (banner.status !== 'idle') return;
+    restoredFor.current = account;
+    notifyPending(xLinkChangePayload(change));
+  }, [activeAccount, bannerStatus, dismissNotification, notifyPending]);
 
   return null;
 };

@@ -2479,13 +2479,14 @@
       "rewardsSentAutomatically": "Your AE rewards have been sent automatically to your connected wallet.",
       "history": {
         "title": "Reward history",
-        "subtitle": "Rewards are sent to your wallet automatically. Tap any payment to see it on æScan.",
+        "subtitle": "Rewards are sent to your wallet automatically, and each payment is checked on the blockchain. Tap one to see it on æScan.",
         "empty": "No rewards yet. Your first one is sent automatically after your first qualifying post on X.",
         "seeHistory": "See payment history",
         "showAll": "Show all ({{total}})",
         "showLess": "Show less",
         "truncated": "Showing your latest {{limit}} payments.",
         "viewOnAescan": "View on æScan",
+        "verifiedTooltip": "Paid, and confirmed on the blockchain",
         "amount": "+{{amount}} AE",
         "kind": {
           "onboarding": "Welcome reward",
@@ -2503,7 +2504,8 @@
         "status": {
           "paid": "Paid",
           "pending": "On its way",
-          "failed": "Retrying"
+          "failed": "Retrying",
+          "verified": "Verified"
         }
       },
       "status": {

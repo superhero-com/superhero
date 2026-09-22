@@ -52,6 +52,7 @@ import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import { effectiveXLink, resolveXLink } from '@/utils/confirmedXLink';
+import { useXLinkChanges } from '@/hooks/useXLinkChanges';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -383,6 +384,9 @@ const ProfileEditModal = ({
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
+  // Re-render when an unlink settles, which can happen with no other state
+  // change here (the banner may have moved on to another transaction).
+  useXLinkChanges();
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);

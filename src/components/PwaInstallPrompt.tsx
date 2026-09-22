@@ -56,14 +56,20 @@ export const PwaInstallPrompt = () => {
 
   return (
     <>
+      {/* Deliberately reads as floating above the page rather than sitting in
+          it. This passes over whatever has scrolled under it — on the feed
+          that is the Tokenize Trend row — and at equal visual weight the two
+          looked like a layout collision. A deeper, wider shadow and a lighter
+          rim give it somewhere to cast onto, and the extra bottom offset keeps
+          it clear of the mobile nav bar. */}
       <div
-        className="fixed bottom-20 right-4 z-40 flex items-center gap-1.5"
+        className="fixed bottom-24 right-4 z-40 flex items-center gap-1.5"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <button
           type="button"
           onClick={() => setAppDialogOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-gray-900/95 backdrop-blur-xl border border-white/10 shadow-2xl px-3 py-2 hover:bg-gray-900 transition-colors"
+          className="flex items-center gap-2 rounded-full bg-gray-900/95 backdrop-blur-xl border border-white/15 shadow-[0_10px_34px_rgba(0,0,0,0.6),0_2px_8px_rgba(0,0,0,0.45)] px-3 py-2 transition-shadow hover:bg-gray-900 hover:shadow-[0_14px_42px_rgba(0,0,0,0.68),0_3px_10px_rgba(0,0,0,0.5)]"
         >
           <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
             <MonitorSmartphone className="w-3.5 h-3.5 text-pink-400" />
@@ -75,7 +81,7 @@ export const PwaInstallPrompt = () => {
         <button
           type="button"
           onClick={snooze}
-          className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-900/95 backdrop-blur-xl border border-white/10 text-white/50 hover:text-white transition-colors"
+          className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-900/95 backdrop-blur-xl border border-white/15 shadow-[0_10px_34px_rgba(0,0,0,0.6)] text-white/50 hover:text-white transition-colors"
           aria-label={t('common.views.landing.pwaInstall.dismiss')}
         >
           <X className="w-3.5 h-3.5" />

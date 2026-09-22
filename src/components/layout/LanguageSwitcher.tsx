@@ -46,9 +46,13 @@ const LanguageSwitcher = ({
     >
       <SelectTrigger
         aria-label={`${t('aria.language')}: ${active?.label}`}
+        // The compact form is flat: no chip, no border. The box around a lone
+        // flag read as heavier than the icon buttons next to it in the mobile
+        // bar. The 44px hit area is kept — only the visible box is dropped, so
+        // it looks slimmer without becoming harder to tap.
         className={`${compact
-          ? 'h-auto w-auto shrink-0 min-h-[44px] justify-center gap-1 px-2'
-          : 'h-auto min-h-[44px] w-full justify-between gap-2 px-3 py-2 text-sm'} bg-white/[0.02] border border-white/[0.06] rounded-lg text-[var(--light-font-color)] hover:bg-white/[0.05] [&>span]:!inline-flex ${className}`}
+          ? 'h-11 w-auto shrink-0 justify-center gap-1 px-1 border-0 bg-transparent hover:bg-white/[0.06]'
+          : 'h-auto min-h-[44px] w-full justify-between gap-2 px-3 py-2 text-sm bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05]'} rounded-lg text-[var(--light-font-color)] [&>span]:!inline-flex ${className}`}
       >
         <span className="inline-flex items-center gap-2">
           {!compact && <Globe className="w-4 h-4 shrink-0" aria-hidden="true" />}

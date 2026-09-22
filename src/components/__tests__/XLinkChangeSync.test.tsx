@@ -308,6 +308,55 @@ describe('XLinkChangeSync', () => {
       expect(mockNotifyPending).toHaveBeenCalledTimes(1);
     });
 
+    it("clears another wallet's wait from the banner when it lands, without announcing it", async () => {
+      // The owner's unlink was signed after the switch to wallet B, so its
+      // wait is in the banner while B is connected.
+      const startedAt = Date.now() - 30_000;
+      leftPending(OWNER, {
+        kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt,
+      });
+      mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt }, txHash: '' };
+      renderSync(WALLET_B);
+      await waitFor(() => expect(mockGetAccount).toHaveBeenCalledWith(OWNER, { cache: 'no-store' }));
+
+      mockGetAccount.mockResolvedValue({ address: OWNER, links: {} });
+      await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS); });
+
+      await waitFor(() => expect(pendingXLinkChange(OWNER)).toBeNull());
+      expect(mockDismiss).toHaveBeenCalledTimes(1);
+      expect(mockNotifyConfirmed).not.toHaveBeenCalled();
+    });
+
+    it('gives a wallet its wait back on a return visit, even when a restore was put off in between', () => {
+      const ownerStarted = Date.now() - 30_000;
+      const walletBStarted = Date.now() - 90_000;
+      window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({
+        [OWNER]: {
+          kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt: ownerStarted,
+        },
+        [WALLET_B]: {
+          kind: 'link', txHash: 'th_b', username: null, startedAt: walletBStarted,
+        },
+      }));
+      const { store, bannerChanged } = renderSync(OWNER);
+      expect(mockNotifyPending).toHaveBeenLastCalledWith({ type: 'unlink_x', startedAt: ownerStarted });
+
+      // A post takes the banner, then the user switches to wallet B: B's
+      // wait has to wait for the post.
+      mockNotificationState = { status: 'pending', payload: { type: 'create_post', content: 'gm' }, txHash: 'th_post' };
+      bannerChanged();
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+      // And back to the owner before the post is done.
+      act(() => { store.set(activeAccountAtom, OWNER); });
+      mockNotifyPending.mockClear();
+
+      mockNotificationState = { status: 'idle' };
+      bannerChanged();
+
+      expect(mockNotifyPending).toHaveBeenCalledTimes(1);
+      expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'unlink_x', startedAt: ownerStarted });
+    });
+
     it('clears the wait from the banner when the wallet disconnects', async () => {
       const startedAt = Date.now() - 30_000;
       leftPending(OWNER, {

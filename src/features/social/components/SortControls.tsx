@@ -402,12 +402,17 @@ const SortControls = memo(
                 </Dialog>
               )}
             </div>
+            {/* Sits flush in the row: flat fill, no shadow, no lift. The
+                floating install button passes over this area, and two raised
+                pills at the same spot read as a collision rather than as one
+                control above another. The shadow belongs to the one that
+                actually floats. */}
             <Link
               to="/trends/create"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] shrink-0"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3 py-1.5 text-xs font-semibold text-white shadow-none transition-colors duration-200 hover:bg-[#0e50d8] active:bg-[#0e50d8] shrink-0"
             >
               <Rocket className="h-3 w-3" />
-              Tokenize Trend
+              {t('trending.tokenList.tokenizeTrend')}
             </Link>
           </div>
         </div>
@@ -471,7 +476,7 @@ const SortControls = memo(
             className="inline-flex items-center gap-1.5 rounded-full bg-[#1161FE] px-3.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#0e50d8] active:scale-[0.97] ml-auto"
           >
             <Rocket className="h-3 w-3" />
-            Tokenize Trend
+            {t('trending.tokenList.tokenizeTrend')}
           </Link>
         </div>
       </div>

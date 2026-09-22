@@ -62,7 +62,7 @@ function renderSync(activeAccount: string | undefined = OWNER) {
       </Provider>
     </QueryClientProvider>,
   );
-  return { ...view, invalidate };
+  return { ...view, invalidate, store };
 }
 
 const invalidatedKeys = (spy: ReturnType<typeof vi.spyOn>) => spy.mock.calls
@@ -190,6 +190,78 @@ describe('XLinkChangeSync', () => {
     expect(mockNotifyConfirmed).not.toHaveBeenCalled();
     expect(mockDismiss).not.toHaveBeenCalled();
     expect(pendingXLinkChange(OWNER)).not.toBeNull();
+  });
+
+  describe('switching wallets', () => {
+    const WALLET_B = 'ak_wallet_b';
+
+    it("clears the previous wallet's wait and never tells the new one it linked or unlinked", async () => {
+      const startedAt = Date.now() - 30_000;
+      leftPending(OWNER, {
+        kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt,
+      });
+      // The banner is showing the owner's unlink.
+      mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt }, txHash: '' };
+      const { store } = renderSync(OWNER);
+      await waitFor(() => expect(mockGetAccount).toHaveBeenCalledWith(OWNER, { cache: 'no-store' }));
+
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+
+      // The owner's wait is not wallet B's.
+      expect(mockDismiss).toHaveBeenCalledTimes(1);
+
+      // The owner's unlink lands while wallet B is connected.
+      mockGetAccount.mockResolvedValue({ address: OWNER, links: {} });
+      await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS); });
+
+      await waitFor(() => expect(pendingXLinkChange(OWNER)).toBeNull());
+      expect(mockNotifyConfirmed).not.toHaveBeenCalled();
+    });
+
+    it("puts the new wallet's own wait in the banner in place of the previous one", () => {
+      const ownerStarted = Date.now() - 30_000;
+      const walletBStarted = Date.now() - 90_000;
+      window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({
+        [OWNER]: {
+          kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt: ownerStarted,
+        },
+        [WALLET_B]: {
+          kind: 'link', txHash: 'th_b', username: null, startedAt: walletBStarted,
+        },
+      }));
+      mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt: ownerStarted }, txHash: '' };
+      const { store } = renderSync(OWNER);
+      mockNotifyPending.mockClear();
+
+      act(() => { store.set(activeAccountAtom, WALLET_B); });
+
+      expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'link_x', startedAt: walletBStarted });
+    });
+
+    it('leaves the banner alone when switching back to the wallet it belongs to', () => {
+      const startedAt = Date.now() - 30_000;
+      leftPending(OWNER, {
+        kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt,
+      });
+      mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt }, txHash: '' };
+      renderSync(OWNER);
+
+      expect(mockDismiss).not.toHaveBeenCalled();
+      expect(mockNotifyPending).not.toHaveBeenCalled();
+    });
+
+    it('clears the wait from the banner when the wallet disconnects', async () => {
+      const startedAt = Date.now() - 30_000;
+      leftPending(OWNER, {
+        kind: 'unlink', txHash: 'th_owner', username: 'untracenetwork', startedAt,
+      });
+      mockNotificationState = { status: 'pending', payload: { type: 'unlink_x', startedAt }, txHash: '' };
+      const { store } = renderSync(OWNER);
+
+      act(() => { store.set(activeAccountAtom, undefined); });
+
+      expect(mockDismiss).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('stops showing a change that never lands as on its way', async () => {

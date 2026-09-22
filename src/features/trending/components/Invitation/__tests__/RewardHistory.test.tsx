@@ -153,6 +153,20 @@ describe('RewardHistory', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('keeps showing what it has when a later refresh fails', () => {
+    // react-query keeps the last data when a refetch errors. Hiding on the
+    // error alone would blank the list mid-read on one failed poll.
+    mockQuery = {
+      data: { items: [item({ tx_hash: 'th_kept', explorer_url: `${EXPLORER}/th_kept` })], truncated: false },
+      isPending: false,
+      isError: true,
+    };
+    render(<RewardHistory address={ADDRESS} />);
+
+    expect(rows()).toHaveLength(1);
+    expect(screen.getByRole('link')).toHaveAttribute('href', `${EXPLORER}/th_kept`);
+  });
+
   it('renders nothing without a wallet', () => {
     loaded([item({})]);
     const { container } = render(<RewardHistory address={null} showEmpty />);

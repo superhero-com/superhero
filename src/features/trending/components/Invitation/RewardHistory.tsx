@@ -186,8 +186,11 @@ export const RewardHistory = ({ address, showEmpty = false, className }: RewardH
   const { data, isPending, isError } = useXRewardHistory(address);
 
   // Hidden, not an error card: the rest of the rewards page works without it,
-  // and an API that predates the route answers 404 here.
-  if (!address || isError) return null;
+  // and an API that predates the route answers 404 here. Only when nothing
+  // has loaded, though: a failed REFETCH keeps the last data in react-query,
+  // and one blip in the pending poll must not take away a list the user is
+  // reading.
+  if (!address || (isError && !data)) return null;
 
   const items = data?.items ?? [];
   // Also covers the first load, so a wallet with nothing to show never gets

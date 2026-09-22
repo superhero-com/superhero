@@ -1127,10 +1127,36 @@ html.ios-webkit .hero-banner--ios-safe .bmini {
     display: none;
   }
 
-  /* Title size on mobile; keep first line clear of the Dismiss control */
+  /* Title size on mobile; keep the first line clear of the Dismiss control.
+     The reserve is a float rather than padding because padding indents EVERY
+     line: on a 375px screen that surrendered a quarter of the width for the
+     whole headline to clear a chip that only overlaps the first line, which
+     cost an extra wrap on the longer slides. The float is only as tall as one
+     line, so line two onward runs full width. `right` matches `.banner-dismiss`,
+     which is itself positioned physically (`right: 14px`), so the two stay on
+     the same side in Arabic as well. */
   .banner-h1 {
     font-size: clamp(20px, 4.4vw, 27px);
-    padding-right: 92px;
+    padding-right: 0;
+  }
+
+  .banner-h1::before {
+    content: '';
+    float: right;
+    width: 92px;
+    height: 1.35em;
+  }
+
+  /* Every slide in the track is sized to the tallest one, so the longest lede
+     set the height of all six. Two lines is what the shortest slides already
+     use, and the carousel is a teaser — the full copy lives on the page each
+     CTA leads to. This is the only cut that actually moves the number: the
+     padding and gaps around it were already at their floor. */
+  .banner-lede {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Reduce banner height on mobile.

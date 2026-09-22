@@ -181,7 +181,13 @@ const MobileAppHeader = () => {
               <ConnectWalletButton
                 variant="dex"
                 label={t('buttons.connectWalletDex')}
-                className="min-h-11 h-auto min-w-0 max-w-[124px] shrink rounded-full px-2 py-2 text-xs leading-tight whitespace-normal normal-case tracking-normal"
+                // One line. `whitespace-normal` inside a 124px cap wrapped
+                // "CONNECT WALLET" onto two rows, which made this the tallest
+                // thing in the bar and pushed the header out of line with the
+                // 44px controls beside it. Nowrap at 11px fits in ~120px, and
+                // the cap stays as a safety net for longer translations —
+                // truncating one is better than re-wrapping the bar.
+                className="h-11 min-w-0 max-w-[150px] shrink rounded-full px-3 text-[11px] font-semibold leading-none whitespace-nowrap overflow-hidden text-ellipsis normal-case tracking-normal"
               />
             )}
           </>

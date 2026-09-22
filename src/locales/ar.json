@@ -34,6 +34,7 @@
       "getChainName": "+ احصل على اسم ‎.chain",
       "claimChainName": "مطالبة",
       "linkAccount": "ربط الحساب",
+      "unlink": "إلغاء الربط",
       "send": "إرسال",
       "receive": "استلام"
     },
@@ -168,6 +169,8 @@
       "xCallbackGoBack": "العودة",
       "xCallbackConfirmingTitle": "جارٍ التأكيد على البلوكتشين",
       "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً أقل من دقيقة — يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
+      "xUnlinkConfirmTitle": "إلغاء ربط حسابك على X؟",
+      "xUnlinkConfirmDesc": "ستتم إزالة {{username}} من SuperheroID الخاص بك، وستتوقف عن كسب مكافآت النشر على X حتى تربط حسابًا مرة أخرى. يُسجَّل هذا التغيير على البلوكتشين، لذا يستغرق تأكيده بعض الوقت.",
       "missingAddressForXVerification": "عنوان X للتحقق مفقود",
       "missingXOAuthToken": "رمز X OAuth مفقود",
       "missingAddressForBioLink": "عنوان الربط الخاص بالـ bio مفقود",
@@ -1223,7 +1226,10 @@
       "fieldsSaved": "تم حفظ {{fields}}",
       "signToLinkX": "وقّع الرسالة لربط حسابك على X",
       "linkingXAccount": "جارٍ ربط حسابك على X…",
-      "xAccountLinked": "تم ربط حساب X"
+      "xAccountLinked": "تم ربط حساب X",
+      "signToUnlinkX": "وقّع الرسالة لإلغاء ربط حسابك على X",
+      "unlinkingXAccount": "جارٍ إلغاء ربط حسابك على X…",
+      "xAccountUnlinked": "تم إلغاء ربط حساب X"
     },
     "postLanguageFilter": {
       "shortLabel": "اللغة",
@@ -2422,6 +2428,37 @@
       "rewardsEarnedBadge": "المكافآت المكتسبة",
       "aeEarned": "{{amount}} AE مكتسب",
       "rewardsSentAutomatically": "تم إرسال مكافآت AE الخاصة بك تلقائياً إلى محفظتك المتصلة.",
+      "history": {
+        "title": "سجل المكافآت",
+        "subtitle": "تُرسل المكافآت إلى محفظتك تلقائياً، ويتم التحقق من كل دفعة على البلوكتشين. اضغط على أي دفعة لعرضها على æScan.",
+        "empty": "لا توجد مكافآت بعد. تُرسل أول مكافأة تلقائياً بعد أول منشور مؤهل لك على X.",
+        "seeHistory": "عرض سجل المدفوعات",
+        "showAll": "عرض الكل ({{total}})",
+        "showLess": "عرض أقل",
+        "truncated": "يتم عرض آخر {{limit}} دفعة.",
+        "viewOnAescan": "عرض على æScan",
+        "verifiedTooltip": "تم الدفع، وتم التأكيد على البلوكتشين",
+        "amount": "+{{amount}} AE",
+        "kind": {
+          "onboarding": "مكافأة الترحيب",
+          "per_post": "مكافأة المنشور",
+          "streak_bonus": "مكافأة الاستمرارية",
+          "invite_milestone": "مكافأة الدعوات",
+          "unknown": "مكافأة"
+        },
+        "detail": {
+          "onboarding": "ربطت حساب X ونشرت عن Superhero",
+          "per_post": "منشور يحتوي على رابط الإحالة الخاص بك",
+          "streak_bonus": "النشر لمدة {{days}} أيام متتالية",
+          "invite_milestone": "انضم {{friends}} أصدقاء عبر رابطك"
+        },
+        "status": {
+          "paid": "تم الدفع",
+          "pending": "قيد الإرسال",
+          "failed": "إعادة المحاولة",
+          "verified": "موثّقة"
+        }
+      },
       "status": {
         "completed": "مكتمل",
         "inProgress": "قيد التنفيذ",

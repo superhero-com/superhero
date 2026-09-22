@@ -425,6 +425,37 @@ export type XReferralLinkResponse = {
   link: string;
 };
 
+/** Which reward program a payout came from. */
+export type XRewardHistoryKind = 'onboarding' | 'per_post' | 'streak_bonus' | 'invite_milestone';
+
+/**
+ * One X reward payout. Rewards are sent automatically, so this is how a user
+ * sees what they got and checks it on-chain.
+ */
+export type XRewardHistoryItem = {
+  kind: XRewardHistoryKind | string;
+  /** `failed` sends are retried automatically; nothing here is final until `paid`. */
+  status: 'paid' | 'pending' | 'failed' | string;
+  /** Decimal AE as a string — 50 AE in aettos is past Number.MAX_SAFE_INTEGER. */
+  amount_ae: string | null;
+  /** False when the amount is the program's configured value, not one recorded on the payout. */
+  amount_recorded: boolean;
+  tx_hash: string | null;
+  /** Null until there is a real transaction to show. */
+  explorer_url: string | null;
+  occurred_at: string | null;
+  /** per_post: UTC day (YYYY-MM-DD) of the post that earned it. */
+  post_day: string | null;
+  streak_days: number | null;
+  invite_count: number | null;
+};
+
+export type XRewardHistory = {
+  items: XRewardHistoryItem[];
+  /** More payouts exist than were returned. */
+  truncated: boolean;
+};
+
 // Superhero API client
 // A pre-language API may silently ignore the query parameter. Do not display an
 // unfiltered page under a language label or derive pagination from a local subset.
@@ -788,6 +819,12 @@ export const SuperheroApi = {
     return this.fetchJson(
       `/api/profile/${encodeURIComponent(address)}/x-posting-reward`,
     ) as Promise<XPostingRewardStatus>;
+  },
+  /** Every X reward payout sent to `address`, newest first. Read-only. */
+  getXPostingRewardHistory(address: string) {
+    return this.fetchJson(
+      `/api/profile/${encodeURIComponent(address)}/x-posting-reward/history`,
+    ) as Promise<XRewardHistory>;
   },
   /**
    * Submit the signed challenge to run the (once-per-24h) capped X scan.

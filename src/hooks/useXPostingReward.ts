@@ -35,6 +35,16 @@ const cleanErrorMessage = (raw: string): string => raw.replace(/^Superhero API e
  */
 export const X_POSTING_REWARD_QUERY_KEY = 'xPostingRewardStatus';
 
+/**
+ * The payout history, under the same root key so anything that refreshes "the
+ * X reward" (linking X, the OAuth callback) refreshes the history with it.
+ */
+export const xRewardHistoryQueryKey = (address: string | null | undefined) => [
+  X_POSTING_REWARD_QUERY_KEY,
+  'history',
+  address,
+] as const;
+
 export function useXPostingReward() {
   const {
     activeAccount,
@@ -169,6 +179,8 @@ export function useXPostingReward() {
       const proof = await buildSignedProof(activeAccount);
       const updated = await SuperheroApi.runXPostingRewardRecheck(activeAccount, proof);
       writeStatus(updated);
+      // A check is what sends a payout, so the history is out of date now.
+      queryClient.invalidateQueries({ queryKey: xRewardHistoryQueryKey(activeAccount) });
       if (updated.referral_link) {
         setReferralLinkOverride({
           address: activeAccount,
@@ -188,7 +200,7 @@ export function useXPostingReward() {
     } finally {
       setCheckLoading(false);
     }
-  }, [activeAccount, buildSignedProof, surfaceError, writeStatus]);
+  }, [activeAccount, buildSignedProof, queryClient, surfaceError, writeStatus]);
 
   const nextCheckAt = status?.next_check_allowed_at
     ? new Date(status.next_check_allowed_at)

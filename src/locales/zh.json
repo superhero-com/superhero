@@ -168,7 +168,7 @@
       "xCallbackDoneTitle": "X 账户已关联",
       "xCallbackGoBack": "返回",
       "xCallbackConfirmingTitle": "正在区块链上确认",
-      "xCallbackConfirmingDesc": "你的 X 账户正在链上关联，通常不到一分钟即可完成。你可以继续浏览，完成后顶部横幅会通知你。",
+      "xCallbackConfirmingDesc": "你的 X 账户正在链上关联，通常需要 2–6 分钟。你可以继续浏览，完成后顶部横幅会通知你。",
       "xUnlinkConfirmTitle": "取消关联你的 X 账户？",
       "xUnlinkConfirmDesc": "{{username}} 将从你的 SuperheroID 中移除，在你重新关联账户之前将无法获得 X 发帖奖励。此操作记录在区块链上，因此需要一点时间确认。",
       "missingAddressForXVerification": "缺少 X 验证地址",
@@ -1229,7 +1229,11 @@
       "xAccountLinked": "X 账户已关联",
       "signToUnlinkX": "签署消息以取消关联你的 X 账户",
       "unlinkingXAccount": "正在取消关联你的 X 账户…",
-      "xAccountUnlinked": "X 账户已取消关联"
+      "xAccountUnlinked": "X 账户已取消关联",
+      "unlinkingXHandle": "正在取消关联 {{username}}…",
+      "xLinkChangeWait": "正在等待区块链确认，通常需要 2–6 分钟。",
+      "xLinkChangeSlow": "比平时要久一些，仍在等待区块链确认…",
+      "xLinkChangeProgressLabel": "区块链确认进度"
     },
     "postLanguageFilter": {
       "shortLabel": "语言",

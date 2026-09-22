@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Check, Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
-import { pendingXUnlink, rememberConfirmedXLink, trackXUnlink } from '@/utils/confirmedXLink';
-import { useXLinkChanges } from '@/hooks/useXLinkChanges';
+import { rememberConfirmedXLink, trackXLinkChange } from '@/utils/confirmedXLink';
+import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import { XLinkChangePending } from '../XLinkChangePending';
+import { xLinkChangePayload } from '../XLinkChangeSync';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -18,7 +20,11 @@ type XLinkedAccountRowProps = {
   username: string;
   /** Not the owner of this profile. */
   disabled?: boolean;
-  /** The unlink confirmed on-chain; the editor should switch back to "Link account". */
+  /**
+   * The unlink is done without anything to wait on (the backend returned no
+   * transaction); the editor should switch back to "Link account". A tracked
+   * unlink reaches the editor through `onXLinkChangeSettled` instead.
+   */
   onUnlinked: () => void;
 };
 
@@ -27,13 +33,12 @@ type XLinkedAccountRowProps = {
  *
  * Unlinking is an on-chain change, so it goes through the same steps as
  * linking: an explicit confirm first — it ends X posting rewards — then the
- * wallet signature, then the top banner while the chain confirms.
+ * wallet signature, then a wait of a few minutes until the backend has it.
  *
- * The pending state lives outside this component, because the editor can be
- * closed and reopened while the transaction is still confirming. Held locally,
- * a reopened editor would offer "Unlink" again for an unlink already on its
- * way. It is tracked in `confirmedXLink` rather than read only from the top
- * banner, which any later transaction replaces.
+ * The pending state lives outside this component, in `confirmedXLink`, and in
+ * localStorage: the editor can be closed and reopened, or the page reloaded,
+ * while the unlink is still on its way. Held locally, either would offer
+ * "Unlink" again for an unlink already sent.
  */
 export const XLinkedAccountRow = ({
   address,
@@ -45,17 +50,14 @@ export const XLinkedAccountRow = ({
   const { unlinkXAccount } = useProfile(address);
   const refreshXLinkState = useRefreshXLinkState();
   const {
-    notificationState, notifySubmitted, notifyPendingTx, notifyConfirmed, notifyError,
+    notifySubmitted, notifyPending, notifyConfirmed, notifyError,
   } = useTransactionNotification();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useXLinkChanges();
+  const pendingChange = usePendingXLinkChange(address);
   const handle = `@${username.replace(/^@/u, '')}`;
-  const unlinkPending = Boolean(pendingXUnlink(address))
-    || (notificationState.status === 'pending'
-      && notificationState.payload.type === TxPayloadType.UnlinkX);
 
   const handleUnlink = useCallback(async () => {
     if (signing) return;
@@ -64,22 +66,19 @@ export const XLinkedAccountRow = ({
     notifySubmitted(UNLINK_X_PAYLOAD);
     try {
       const txHash = await unlinkXAccount(address);
-      const onConfirmed = () => {
-        refreshXLinkState(address);
-        onUnlinked();
-      };
       setConfirmOpen(false);
       if (txHash) {
-        // The tracker settles the unlink (records it, so a reopened editor
-        // that reads a not-yet-indexed account record does not offer Unlink
-        // again) whether or not the banner is still showing this transaction.
-        trackXUnlink(address, txHash, { onConfirmed });
-        notifyPendingTx(UNLINK_X_PAYLOAD, txHash);
+        // Pending until the backend's account record drops the handle, which
+        // is what every other screen reads. Mined alone is not enough: for
+        // minutes after, those screens would still show X as linked.
+        const change = trackXLinkChange(address, { kind: 'unlink', txHash, username });
+        notifyPending(xLinkChangePayload(change));
       } else {
         // Nothing to poll. Say it's done rather than show a wait that can't end.
         rememberConfirmedXLink(address, null);
         notifyConfirmed(UNLINK_X_PAYLOAD);
-        onConfirmed();
+        refreshXLinkState(address);
+        onUnlinked();
       }
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -92,8 +91,8 @@ export const XLinkedAccountRow = ({
       setSigning(false);
     }
   }, [
-    address, notifyConfirmed, notifyError, notifyPendingTx, notifySubmitted,
-    onUnlinked, refreshXLinkState, signing, t, unlinkXAccount,
+    address, notifyConfirmed, notifyError, notifyPending, notifySubmitted,
+    onUnlinked, refreshXLinkState, signing, t, unlinkXAccount, username,
   ]);
 
   // The dialog stays mounted in every state and is closed, never unmounted
@@ -101,21 +100,8 @@ export const XLinkedAccountRow = ({
   // can leave the page's pointer-events locked.
   return (
     <>
-      {unlinkPending ? (
-        <div
-          className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2"
-          role="status"
-        >
-          <Loader2 className="w-4 h-4 shrink-0 animate-spin text-white/60" aria-hidden />
-          <div className="min-w-0">
-            <div className="text-sm text-white/80">
-              {t('transactionNotification.unlinkingXAccount')}
-            </div>
-            <div className="text-xs text-white/45">
-              {t('transactionNotification.confirmingOnBlockchainEllipsis')}
-            </div>
-          </div>
-        </div>
+      {pendingChange?.kind === 'unlink' ? (
+        <XLinkChangePending change={pendingChange} className="mt-1.5" />
       ) : (
         <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
           <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />

@@ -7,7 +7,8 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import {
-  X_UNLINK_POLL_MS, clearConfirmedXLinks, rememberConfirmedXLink, trackXUnlink,
+  X_LINK_CHANGES_STORAGE_KEY, X_LINK_CHANGE_POLL_MS, clearConfirmedXLinks,
+  rememberConfirmedXLink, trackXLinkChange,
 } from '@/utils/confirmedXLink';
 import ProfileEditModal from '../ProfileEditModal';
 
@@ -147,22 +148,58 @@ describe('ProfileEditModal X section', () => {
     expect(screen.queryByText('@untracenetwork')).not.toBeInTheDocument();
   });
 
-  it('shows an unlink on its way even when the banner has moved on, and settles it in place', async () => {
+  it('shows an unlink on its way, offering neither Link nor Unlink, and settles it in place', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    // Unlinked earlier; the banner has since been taken by another
-    // transaction, so only the tracker still knows.
-    const isMined = vi.fn().mockResolvedValue(false);
-    trackXUnlink(ADDRESS, 'th_unlink', { isMined });
+    const readLinkedUsername = vi.fn().mockResolvedValue('untracenetwork');
+    trackXLinkChange(ADDRESS, { kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork' }, { readLinkedUsername });
     renderEditor();
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Unlinking your X account…');
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Unlinking @untracenetwork…');
+    expect(status).toHaveTextContent('This usually takes 2–6 minutes');
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /unlink @untracenetwork/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Link account' })).not.toBeInTheDocument();
 
-    // Mined: the open editor switches over by itself, with no reload.
-    isMined.mockResolvedValue(true);
-    await act(async () => { vi.advanceTimersByTime(X_UNLINK_POLL_MS); });
+    // The backend drops the handle: the open editor switches over by itself.
+    readLinkedUsername.mockResolvedValue(null);
+    await act(async () => { vi.advanceTimersByTime(X_LINK_CHANGE_POLL_MS); });
 
     expect(await screen.findByRole('button', { name: 'Link account' })).toBeInTheDocument();
     expect(screen.queryByText('@untracenetwork')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('shows an unlink sent before a reload as on its way, although the account still lists the handle', async () => {
+    window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({
+      [ADDRESS]: {
+        kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork', startedAt: Date.now() - 60_000,
+      },
+    }));
+    renderEditor();
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Unlinking @untracenetwork…');
+    expect(screen.queryByRole('button', { name: /unlink @untracenetwork/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Link account' })).not.toBeInTheDocument();
+  });
+
+  it('shows a link on its way instead of offering "Link account" again', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // The account record has not caught up: it still says unlinked.
+    mockGetAccount.mockResolvedValue({ address: ADDRESS, links: {} });
+    mockGetProfile.mockResolvedValue({ address: ADDRESS, links: {} });
+    const readLinkedUsername = vi.fn().mockResolvedValue(null);
+    trackXLinkChange(ADDRESS, { kind: 'link', txHash: 'th_link' }, { readLinkedUsername });
+    renderEditor();
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Linking your X account…');
+    expect(screen.queryByRole('button', { name: 'Link account' })).not.toBeInTheDocument();
+
+    readLinkedUsername.mockResolvedValue('untracenetwork');
+    await act(async () => { vi.advanceTimersByTime(X_LINK_CHANGE_POLL_MS); });
+
+    expect(await screen.findByText('@untracenetwork')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /unlink @untracenetwork/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Link account' })).not.toBeInTheDocument();
   });
 });

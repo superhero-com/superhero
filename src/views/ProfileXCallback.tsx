@@ -11,6 +11,13 @@ import { useProfile } from '@/hooks/useProfile';
 import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
+import {
+  onXLinkChangeSettled,
+  trackXLinkChange,
+  type PendingXLinkChange,
+} from '@/utils/confirmedXLink';
+import { XLinkChangeProgressRow, useXLinkChangeElapsed } from '@/components/XLinkChangePending';
+import { xLinkChangePayload } from '@/components/XLinkChangeSync';
 
 const LINK_X_PAYLOAD = { type: TxPayloadType.LinkX } as const;
 
@@ -123,45 +130,58 @@ const ConfirmWalletStep = ({
   );
 };
 
+/** How far along the link is: the bar and the time so far. */
+const LinkProgress = ({ change }: { change: PendingXLinkChange }) => {
+  const elapsed = useXLinkChangeElapsed(change.startedAt);
+  return <XLinkChangeProgressRow elapsedMs={elapsed} className="mb-6" />;
+};
+
 const ProfileXCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { activeAccount, addStaticAccount } = useAeSdk();
   const refreshLinkedAccount = useRefreshXLinkState();
-  const { notifyPendingTx, notifyConfirmed } = useTransactionNotification();
+  const { notifyPending, notifyConfirmed } = useTransactionNotification();
   const [status, setStatus] = useState<
     'loading' | 'confirm_wallet' | 'confirming' | 'done' | 'error'
   >('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [claim, setClaim] = useState<XAddressLinkClaimResponse | null>(null);
+  const [pendingLink, setPendingLink] = useState<PendingXLinkChange | null>(null);
+  // Set synchronously with the tracking, so a change that settles before the
+  // next render is still recognised as this page's.
+  const pendingLinkRef = useRef<PendingXLinkChange | null>(null);
   const startedRef = useRef(false);
-  const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const goToProfile = useCallback(() => {
     if (address) navigate(`/users/${address}`);
     else navigate('/');
   }, [address, navigate]);
 
+  // Done when the backend shows the link, not merely when it is mined: that
+  // is when the profile and rewards pages show it too. The app-level sync
+  // refetches them and updates the banner, with or without this page.
+  useEffect(() => onXLinkChangeSettled(({ change, outcome }) => {
+    if (outcome === 'settled' && change === pendingLinkRef.current) setStatus('done');
+  }), []);
+
   const handleLinkSubmitted = useCallback((linkedAddress: string, txHash: string | undefined) => {
-    const onConfirmed = () => {
-      refreshLinkedAccount(linkedAddress);
-      // The user may have gone to their profile by now; the banner and the
-      // refetch above carry on without this page.
-      if (mountedRef.current) setStatus('done');
-    };
     if (txHash) {
-      notifyPendingTx(LINK_X_PAYLOAD, txHash, { onConfirmed });
+      const change = trackXLinkChange(linkedAddress, { kind: 'link', txHash });
+      pendingLinkRef.current = change;
+      setPendingLink(change);
+      notifyPending(xLinkChangePayload(change));
       setStatus('confirming');
     } else {
       // Nothing to poll. Keep the previous behaviour rather than a spinner
       // that could never resolve.
       notifyConfirmed(LINK_X_PAYLOAD);
-      onConfirmed();
+      refreshLinkedAccount(linkedAddress);
+      setStatus('done');
     }
-  }, [notifyConfirmed, notifyPendingTx, refreshLinkedAccount]);
+  }, [notifyConfirmed, notifyPending, refreshLinkedAccount]);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -243,6 +263,7 @@ const ProfileXCallback = () => {
           <p className="m-0 mb-6 text-sm leading-relaxed text-white/60" role="status">
             {t('messages.xCallbackConfirmingDesc')}
           </p>
+          {pendingLink && <LinkProgress change={pendingLink} />}
           <button
             type="button"
             onClick={goToProfile}

@@ -6,6 +6,8 @@ import { cn } from '../../lib/utils';
 import { useAeSdk } from '../../hooks/useAeSdk';
 import { useXPostingReward } from '../../hooks/useXPostingReward';
 import { profileEditPath } from '../../hooks/useProfileEditDeepLink';
+import { usePendingXLinkChange } from '../../hooks/useXLinkChanges';
+import { XLinkChangePending } from '../XLinkChangePending';
 
 type RewardsOnboardingProps = {
   /** `feed` = wide card injected between home-feed items; `rail` = compact side-menu card. */
@@ -30,6 +32,9 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
     isOnboardingPaid,
     onboardingComplete,
   } = useXPostingReward();
+  // While a link or unlink is on its way the steps above still show the state
+  // from before it; the wait replaces the "Connect X" / "Post on X" button.
+  const pendingXChange = usePendingXLinkChange(activeAccount);
 
   const handleContinue = useCallback(() => {
     if (!isXLinked) {
@@ -133,14 +138,18 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
           {t('onboarding.progress', { done: doneCount, total })}
         </p>
 
-        <button
-          type="button"
-          onClick={handleContinue}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25 hover-lift group"
-        >
-          {ctaLabel}
-          <span className="text-base group-hover:animate-bounce">→</span>
-        </button>
+        {pendingXChange ? (
+          <XLinkChangePending change={pendingXChange} />
+        ) : (
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25 hover-lift group"
+          >
+            {ctaLabel}
+            <span className="text-base group-hover:animate-bounce">→</span>
+          </button>
+        )}
       </div>
     </div>
   );

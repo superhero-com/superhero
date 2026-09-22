@@ -168,7 +168,7 @@
       "xCallbackDoneTitle": "تم ربط حساب X",
       "xCallbackGoBack": "العودة",
       "xCallbackConfirmingTitle": "جارٍ التأكيد على البلوكتشين",
-      "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً أقل من دقيقة — يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
+      "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً من 2 إلى 6 دقائق. يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
       "xUnlinkConfirmTitle": "إلغاء ربط حسابك على X؟",
       "xUnlinkConfirmDesc": "ستتم إزالة {{username}} من SuperheroID الخاص بك، وستتوقف عن كسب مكافآت النشر على X حتى تربط حسابًا مرة أخرى. يُسجَّل هذا التغيير على البلوكتشين، لذا يستغرق تأكيده بعض الوقت.",
       "missingAddressForXVerification": "عنوان X للتحقق مفقود",
@@ -1229,7 +1229,11 @@
       "xAccountLinked": "تم ربط حساب X",
       "signToUnlinkX": "وقّع الرسالة لإلغاء ربط حسابك على X",
       "unlinkingXAccount": "جارٍ إلغاء ربط حسابك على X…",
-      "xAccountUnlinked": "تم إلغاء ربط حساب X"
+      "xAccountUnlinked": "تم إلغاء ربط حساب X",
+      "unlinkingXHandle": "جارٍ إلغاء ربط {{username}}…",
+      "xLinkChangeWait": "بانتظار تأكيد البلوكتشين. يستغرق ذلك عادةً من 2 إلى 6 دقائق.",
+      "xLinkChangeSlow": "يستغرق الأمر وقتًا أطول من المعتاد. ما زلنا بانتظار البلوكتشين…",
+      "xLinkChangeProgressLabel": "تقدّم التأكيد على البلوكتشين"
     },
     "postLanguageFilter": {
       "shortLabel": "اللغة",

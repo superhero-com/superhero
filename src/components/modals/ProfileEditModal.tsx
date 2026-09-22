@@ -51,8 +51,9 @@ import {
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
-import { effectiveXLink, resolveXLink } from '@/utils/confirmedXLink';
-import { useXLinkChanges } from '@/hooks/useXLinkChanges';
+import { effectiveXLink, onXLinkChangeSettled, resolveXLink } from '@/utils/confirmedXLink';
+import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
+import { XLinkChangePending } from '../XLinkChangePending';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -384,9 +385,10 @@ const ProfileEditModal = ({
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const queryClient = useQueryClient();
-  // Re-render when an unlink settles, which can happen with no other state
-  // change here (the banner may have moved on to another transaction).
-  useXLinkChanges();
+  const xLinkAddress = (address as string) || (activeAccount as string) || '';
+  // A link or unlink still on its way to the backend, kept current as it
+  // moves (including when it settles with no other state change here).
+  const pendingXChange = usePendingXLinkChange(xLinkAddress);
   const [form, setForm] = useState<EditableFormState>(EMPTY_FORM);
   const [initialForm, setInitialForm] = useState<EditableFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
@@ -547,6 +549,14 @@ const ProfileEditModal = ({
       setShowChainNameInfo(false);
     }
   }, [open]);
+
+  // When a link or unlink settles, take what the backend now shows, so the
+  // section stays right after the settled-change override expires too.
+  useEffect(() => onXLinkChangeSettled(({ address: settledAddress, outcome, username }) => {
+    if (outcome !== 'settled' || settledAddress !== xLinkAddress) return;
+    setHasXVerified(Boolean(username));
+    setXUsername(username);
+  }), [xLinkAddress]);
 
   useEffect(() => {
     if (!open || initialSection !== 'x') return;
@@ -1160,10 +1170,15 @@ const ProfileEditModal = ({
   // What the X section shows. Resolved at render, not only inside load():
   // load() reads the account record and then awaits several more calls, so an
   // unlink can confirm in between and the stale "linked" would land last.
-  const xLink = effectiveXLink(
-    (address as string) || (activeAccount as string) || '',
-    { linked: hasXVerified, username: xUsername },
-  );
+  const xLink = effectiveXLink(xLinkAddress, { linked: hasXVerified, username: xUsername });
+  // While a change is on its way, the section shows that and nothing else:
+  // neither "Link account" nor "Unlink" for a change already sent.
+  const showLinkXButton = isGuest || (xSectionReady && !pendingXChange && !xLink.linked);
+  // A pending unlink keeps the row: it shows the wait in place of the handle.
+  const showLinkedXRow = pendingXChange
+    ? pendingXChange.kind === 'unlink'
+    : Boolean(xLink.linked && xLink.username);
+  const linkedXRowUsername = xLink.username || pendingXChange?.username || '';
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1361,7 +1376,7 @@ const ProfileEditModal = ({
                   <span className="text-xs text-white/50">{t('messages.loading')}</span>
                 </div>
                 )}
-                {(isGuest || (xSectionReady && !xLink.linked)) && (
+                {showLinkXButton && (
                 <button
                   ref={connectXButtonRef}
                   type="button"
@@ -1404,10 +1419,13 @@ const ProfileEditModal = ({
                   {connectingX ? t('messages.connectingX') : t('buttons.linkAccount')}
                 </button>
                 )}
-                {xSectionReady && xLink.linked && xLink.username && (
+                {!isGuest && xSectionReady && pendingXChange?.kind === 'link' && (
+                <XLinkChangePending change={pendingXChange} className="mt-1.5" />
+                )}
+                {!isGuest && xSectionReady && showLinkedXRow && (
                 <XLinkedAccountRow
-                  address={(address as string) || (activeAccount as string)}
-                  username={xLink.username}
+                  address={xLinkAddress}
+                  username={linkedXRowUsername}
                   disabled={!canEdit}
                   onUnlinked={() => {
                     setHasXVerified(false);

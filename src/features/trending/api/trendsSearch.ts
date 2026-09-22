@@ -205,10 +205,14 @@ export async function fetchTrendingTokens(limit: number = DEFAULT_TAB_LIMIT) {
   }) as PaginatedApiResponse<TrendTokenItem>);
 }
 
-export async function fetchPopularPosts(limit: number = DEFAULT_TAB_LIMIT) {
+export async function fetchPopularPosts(
+  limit: number = DEFAULT_TAB_LIMIT,
+  language?: 'en' | 'zh' | 'ar' | 'ru',
+) {
   return normalizeSection<TrendPostItem>(await SuperheroApi.listPopularPosts({
     limit,
     page: 1,
+    ...(language ? { language } : {}),
   }) as PaginatedApiResponse<TrendPostItem>);
 }
 

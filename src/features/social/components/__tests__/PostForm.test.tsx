@@ -144,7 +144,10 @@ describe('PostForm', () => {
     });
   });
 
-  it('creates a post and optimistically updates the latest and topic caches', async () => {
+  it.each(['en', null])('updates only eligible feed caches when the indexed language is %s', async (language) => {
+    mockGetById.mockResolvedValue({
+      ...(await mockGetById()), language,
+    });
     const onSuccess = vi.fn();
     const onPostCreated = vi.fn();
 
@@ -161,6 +164,10 @@ describe('PostForm', () => {
         meta: { currentPage: 1, totalPages: 1 },
       }],
     });
+    const filteredKeys = ['en', 'ar'].map((code) => ['posts', { sortBy: 'latest', language: code }]);
+    filteredKeys.forEach((key) => queryClient.setQueryData(key, {
+      pageParams: [1], pages: [{ items: [], meta: { currentPage: 1, totalPages: 1 } }],
+    }));
     queryClient.setQueryData(['topic-by-name', '#nancy'], {
       posts: [{ id: 'existing-topic-post' }],
       post_count: 1,
@@ -202,6 +209,9 @@ describe('PostForm', () => {
       tx_hash: 'th_post',
     }));
 
+    expect(queryClient.getQueryData<any>(filteredKeys[0]).pages[0].items)
+      .toHaveLength(language === 'en' ? 1 : 0);
+    expect(queryClient.getQueryData<any>(filteredKeys[1]).pages[0].items).toHaveLength(0);
     const topicFeed = queryClient.getQueryData<any>(['topic-by-name', '#nancy']);
     expect(topicFeed.posts[0]).toEqual(expect.objectContaining({
       id: 'th_post_v3',

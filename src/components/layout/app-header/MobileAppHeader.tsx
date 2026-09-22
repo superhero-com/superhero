@@ -11,6 +11,8 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AddressAvatar from '../../AddressAvatar';
+import LanguageSwitcher from '../LanguageSwitcher';
+import Favicon from '../../../svg/favicon.svg?react';
 import { HeaderLogo } from '../../../icons';
 import { NotificationBell } from '../../../features/notifications';
 import { TokensService } from '../../../api/generated/services/TokensService';
@@ -83,7 +85,7 @@ const MobileAppHeader = () => {
         boxShadow: '0 6px 28px rgba(0,0,0,0.35)',
       }}
     >
-      <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
+      <div className="px-3 flex items-center gap-1 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
         {isTokenDetail ? (
           <>
             <button
@@ -137,8 +139,10 @@ const MobileAppHeader = () => {
               style={{ textDecoration: 'none' }}
               aria-label={t('labels.superheroHome')}
             >
-              <HeaderLogo className="h-7 w-auto" />
+              <HeaderLogo className="hidden min-[400px]:block h-7 w-auto" />
+              <Favicon className="min-[400px]:hidden h-7 w-7" aria-hidden="true" />
             </Link>
+            <LanguageSwitcher variant="compact" side="bottom" align="start" />
             <div className="flex-grow" />
             {TRENDING_ENABLED && (
               <Link
@@ -177,7 +181,7 @@ const MobileAppHeader = () => {
               <ConnectWalletButton
                 variant="dex"
                 label={t('buttons.connectWalletDex')}
-                className="h-10 rounded-full px-4 text-xs normal-case tracking-normal"
+                className="min-h-11 h-auto min-w-0 max-w-[124px] shrink rounded-full px-2 py-2 text-xs leading-tight whitespace-normal normal-case tracking-normal"
               />
             )}
           </>

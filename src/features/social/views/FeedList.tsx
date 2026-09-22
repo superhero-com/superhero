@@ -4,9 +4,12 @@ import React, {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { PostsService } from '../../../api/generated';
 import type { PostDto } from '../../../api/generated';
 import { SuperheroApi } from '../../../api/backend';
+import { usePostLanguageFilter } from '../../../hooks/usePostLanguageFilter';
+import PostLanguageFilterControl from '../components/PostLanguageFilterControl';
+import PostLanguageEmptyState from '../components/PostLanguageEmptyState';
+import PostLanguageErrorState from '../components/PostLanguageErrorState';
 import WebSocketClient from '../../../libs/WebSocketClient';
 import AeButton from '../../../components/AeButton';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
@@ -82,6 +85,14 @@ const FeedList = ({
   const filterBy = urlQuery.get('filterBy') || 'all';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
 
+  // Content-language filter shared with Explore. `languageParam` is undefined
+  // for "all". Otherwise requests and caches follow the selected UI language.
+  const {
+    filter: languageFilter,
+    setFilter: setLanguageFilter,
+    languageParam,
+  } = usePostLanguageFilter();
+
   // Keep sortByRef in sync with sortBy to avoid stale closures in callbacks
   useEffect(() => {
     sortByRef.current = sortBy;
@@ -152,7 +163,7 @@ const FeedList = ({
     refetch: refetchActivities,
   } = useInfiniteQuery<PostDto[], Error>({
     queryKey: ['home-activities'],
-    enabled: sortBy !== 'hot',
+    enabled: sortBy !== 'hot' && !languageParam,
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const resp = await SuperheroApi.listTokens({
@@ -226,7 +237,7 @@ const FeedList = ({
 
   // Live updates for token-created via websocket
   useEffect(() => {
-    if (sortBy === 'hot') return;
+    if (sortBy === 'hot' || languageParam) return;
     const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
       const mapped = mapTokenCreatedToPost(payload);
       queryClient.setQueryData(['home-activities'], (prev: any) => {
@@ -244,7 +255,7 @@ const FeedList = ({
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [mapTokenCreatedToPost, queryClient, sortBy]);
+  }, [mapTokenCreatedToPost, queryClient, sortBy, languageParam]);
 
   // Infinite query for posts
   // For non-hot: single list of latest posts
@@ -259,13 +270,14 @@ const FeedList = ({
   } = useInfiniteQuery({
     enabled: sortBy !== 'hot',
     queryKey: ['posts', {
-      limit: 10, sortBy, filterBy,
+      limit: 10, sortBy, filterBy, language: languageParam,
     }],
-    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+    queryFn: ({ pageParam = 1 }) => SuperheroApi.listPosts({
       limit: 10,
       page: pageParam,
       orderBy: 'created_at',
       orderDirection: 'DESC',
+      language: languageParam,
     }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
       if (
@@ -293,7 +305,7 @@ const FeedList = ({
       || prevSortByForPrefetch.current === undefined
     );
 
-    if (shouldPrefetch) {
+    if (shouldPrefetch && !languageParam) {
       // Prefetch activities (token-created) in the background for faster loading
       queryClient.prefetchInfiniteQuery({
         queryKey: ['home-activities'],
@@ -324,17 +336,19 @@ const FeedList = ({
           ? pages.length + 1
           : undefined),
       });
-
+    }
+    if (shouldPrefetch) {
       // Prefetch posts in the background for faster loading (only first page, no search/filter)
       queryClient.prefetchInfiniteQuery({
         queryKey: ['posts', {
-          limit: 10, sortBy: 'latest', filterBy: 'all',
+          limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
         }],
-        queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+        queryFn: ({ pageParam = 1 }) => SuperheroApi.listPosts({
           limit: 10,
           page: pageParam,
           orderBy: 'created_at',
           orderDirection: 'DESC',
+          language: languageParam,
         }) as unknown as Promise<PostApiResponse>,
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
@@ -351,7 +365,7 @@ const FeedList = ({
     }
 
     prevSortByForPrefetch.current = sortBy;
-  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE]);
+  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE, languageParam]);
 
   // Refetch in background when switching to latest (non-blocking)
   // This updates the feed with new items without blocking the UI
@@ -362,10 +376,10 @@ const FeedList = ({
       // Refetch in background (non-blocking) to get newest posts and activities
       // Cached data is shown immediately, new items will be added when refetch completes
       refetchLatest();
-      refetchActivities();
+      if (!languageParam) refetchActivities();
     }
     prevSortByRef.current = sortBy;
-  }, [sortBy, refetchLatest, refetchActivities]);
+  }, [sortBy, refetchLatest, refetchActivities, languageParam]);
 
   // For hot: fetch popular posts first, then latest posts (filtering out popular ones)
   const {
@@ -378,12 +392,13 @@ const FeedList = ({
     refetch: refetchPopular,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot',
-    queryKey: ['popular-posts', { limit: 10, weights: popularWeights }],
+    queryKey: ['popular-posts', { limit: 10, weights: popularWeights, language: languageParam }],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await SuperheroApi.listPopularPosts({
         page: pageParam as number,
         limit: 10,
         weights: Object.keys(popularWeights).length > 0 ? popularWeights : undefined,
+        language: languageParam,
       }) as PostApiResponse;
       const items = (response as any)?.items;
       if (Array.isArray(items) && items.length > 1) {
@@ -497,12 +512,15 @@ const FeedList = ({
 
   const {
     data: latestDataForHot,
+    isLoading: latestForHotLoading,
+    error: latestForHotError,
+    refetch: refetchLatestForHot,
     fetchNextPage: fetchNextLatestForHot,
     hasNextPage: hasMoreLatestForHot,
     isFetchingNextPage: fetchingMoreLatestForHot,
   } = useInfiniteQuery({
     enabled: sortBy === 'hot' && (popularExhausted || (popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length < 10 : false)),
-    queryKey: ['latest-posts-for-hot', { limit: 10, excludeIds: Array.from(popularPostIds).sort().join(',') }],
+    queryKey: ['latest-posts-for-hot', { limit: 10, excludeIds: Array.from(popularPostIds).sort().join(','), language: languageParam }],
     queryFn: async ({ pageParam = 1 }) => {
       // Get fresh popularPostIds from the current popularData
       const currentPopularIds = new Set<string>();
@@ -516,12 +534,13 @@ const FeedList = ({
         });
       }
 
-      const response = await PostsService.listAll({
+      const response = await SuperheroApi.listPosts({
         limit: 10,
         page: pageParam,
         orderBy: 'created_at',
         orderDirection: 'DESC',
         search: '',
+        language: languageParam,
       }) as unknown as PostApiResponse;
 
       // Filter out popular posts on the frontend using current popularPostIds
@@ -623,6 +642,7 @@ const FeedList = ({
     if (sortBy === 'hot') {
       return true; // Hot feed doesn't need this check
     }
+    if (languageParam) return !!latestData?.pages.length;
 
     // Check if we have data from queries (from cache or fresh)
     const hasPostsData = latestData && latestData.pages.length > 0;
@@ -630,10 +650,10 @@ const FeedList = ({
 
     // Also check React Query cache directly for cached data (even if queries are disabled)
     const cachedPosts = queryClient.getQueryData(['posts', {
-      limit: 10, sortBy: 'latest', filterBy: 'all',
+      limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
     }])
       || queryClient.getQueryData(['posts', {
-        limit: 10, sortBy, filterBy,
+        limit: 10, sortBy, filterBy, language: languageParam,
       }]);
     const cachedActivities = queryClient.getQueryData(['home-activities']);
 
@@ -648,7 +668,7 @@ const FeedList = ({
     }
 
     return false;
-  }, [sortBy, latestData, activitiesPages, queryClient, filterBy]);
+  }, [sortBy, latestData, activitiesPages, queryClient, filterBy, languageParam]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo<FeedItem[]>(() => {
@@ -657,6 +677,10 @@ const FeedList = ({
       const combined = [...popularList, ...latestListForHot];
       return combined;
     }
+
+    // Activities and trades have no detected post language. They belong to the
+    // All languages feed, and must not conceal an empty filtered post result.
+    if (languageParam) return list;
 
     // For latest feed: use cached data if queries don't have data yet
     // This ensures cached/prefetched data shows immediately
@@ -667,10 +691,10 @@ const FeedList = ({
     // If queries don't have data yet, try to get cached data
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
       const cachedPosts = queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy: 'latest', filterBy: 'all',
+        limit: 10, sortBy: 'latest', filterBy: 'all', language: languageParam,
       }])
         || queryClient.getQueryData<any>(['posts', {
-          limit: 10, sortBy, filterBy,
+          limit: 10, sortBy, filterBy, language: languageParam,
         }]);
 
       if (cachedPosts?.pages) {
@@ -719,7 +743,7 @@ const FeedList = ({
     latestListForHot,
     bothQueriesReady,
     latestData,
-    activitiesPages, queryClient, filterBy,
+    activitiesPages, queryClient, filterBy, languageParam,
   ]);
 
   // Memoized filtered list
@@ -809,78 +833,58 @@ const FeedList = ({
     [navigate, location.pathname, location.search],
   );
 
-  // Render helpers
-  const renderEmptyState = () => {
-    if (sortBy === 'hot') {
-      // Only show loading if we don't have cached data
-      const initialLoading = (
-        popularLoading && (!popularData || (popularData as any)?.pages?.length === 0
-        ));
-      const err = popularError;
-      if (err) {
-        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
-      }
-      // Show skeleton loaders when there are no popular posts for the selected window
-      if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
-        return (
-          <div className="w-full flex flex-col gap-2">
-            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
-          </div>
-        );
-      }
-      if (initialLoading && filteredAndSortedList.length === 0) {
-        // Show skeleton loaders instead of loading text
-        return (
-          <div className="w-full flex flex-col gap-2">
-            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-${i}`} />)}
-          </div>
-        );
-      }
-      return null;
-    }
-    // Only show loading if we don't have cached data
-    // For latest feed: show cached data immediately if available (from queries or cache)
-    const hasQueryData = (
-      latestData
-      && latestData.pages.length > 0
-      && activitiesPages
-      && activitiesPages.pages.length > 0
-    );
-    const cachedPosts = queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy: 'latest', filterBy: 'all',
-    }])
-      || queryClient.getQueryData<any>(['posts', {
-        limit: 10, sortBy, filterBy,
-      }]);
-    const cachedActivities = queryClient.getQueryData<any>(['home-activities']);
-    const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
-    const hasCachedActivitiesData = cachedActivities && cachedActivities?.pages?.length > 0;
-    const hasCachedData = sortBy !== 'hot' && (hasQueryData || (hasCachedPostsData && hasCachedActivitiesData));
+  const hotInitialLoading = popularLoading
+    || (popularList.length === 0 && latestForHotLoading);
+  const latestInitialLoading = languageParam
+    ? latestLoading
+    : (!bothQueriesReady && (latestLoading || activitiesLoading));
+  const initialLoading = sortBy === 'hot' ? hotInitialLoading : latestInitialLoading;
 
-    const initialLoading = sortBy === 'hot'
-      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
-      // Only show loading if no cached data and actually loading
-      : (!hasCachedData && (latestLoading || activitiesLoading));
-    if (latestError) {
-      return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
+  // Hot's latest-post backfill only runs once popular is exhausted, so its
+  // failure is a feed error only while nothing is on screen. With popular items
+  // already rendered it must not paint an error state over them — and leaving
+  // `feedError` clear here keeps the load-more button, which is how it retries.
+  const feedError = sortBy === 'hot'
+    ? popularError || (popularList.length === 0 ? latestForHotError : undefined)
+    : latestError;
+  const hasMoreFeedItems = sortBy === 'hot'
+    ? hasMorePopular || hasMoreLatestForHot
+    : hasMoreLatest || (!languageParam && hasMoreActivities);
+
+  // An empty response is distinct from a pending or failed request, including
+  // Hot's latest-post backfill. Keep the language control available in every state.
+  const renderEmptyState = () => {
+    if (feedError) {
+      const onRetry = () => {
+        if (sortBy !== 'hot') refetchLatest();
+        else if (popularError) refetchPopular();
+        else refetchLatestForHot();
+      };
+      return languageParam ? (
+        <PostLanguageErrorState
+          language={languageParam}
+          onRetry={onRetry}
+          onShowAll={() => setLanguageFilter('all')}
+        />
+      ) : <EmptyState type="error" onRetry={onRetry} />;
     }
-    if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
-      // Show skeleton loaders instead of empty state
+    if (filteredAndSortedList.length > 0) return null;
+    if (initialLoading) {
       return (
-        <div className="w-full flex flex-col gap-2">
-          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-empty-${i}`} />)}
+        <div className="w-full flex flex-col gap-2" role="status" aria-label={t('emptyState.loadingPosts')}>
+          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-${i}`} />)}
         </div>
       );
     }
-    if (initialLoading && filteredAndSortedList.length === 0) {
-      // Show skeleton loaders instead of loading text
+    if (languageParam) {
       return (
-        <div className="w-full flex flex-col gap-2">
-          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-${i}`} />)}
-        </div>
+        <PostLanguageEmptyState
+          language={languageParam}
+          onShowAll={() => setLanguageFilter('all')}
+        />
       );
     }
-    return null;
+    return <EmptyState type="empty" />;
   };
 
   // Collapsible groups state keyed by first item id in the group
@@ -1120,31 +1124,10 @@ const FeedList = ({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
-  // Only show loading if we don't have any data yet and queries are still loading
-  // If we have cached data, show it immediately even while refetching
-  // For latest feed: show cached data immediately if available (from queries or cache)
-  const hasQueryDataForLatest = sortBy !== 'hot' && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
-  const cachedPostsForLatest = queryClient.getQueryData<any>(['posts', {
-    limit: 10, sortBy: 'latest', filterBy: 'all',
-  }])
-    || queryClient.getQueryData<any>(['posts', {
-      limit: 10, sortBy, filterBy,
-    }]);
-  const cachedActivitiesForLatest = queryClient.getQueryData<any>(['home-activities']);
-  const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;
-  const hasCachedActivitiesForLatest = (
-    cachedActivitiesForLatest && cachedActivitiesForLatest?.pages?.length > 0
-  );
-  const hasCachedDataForLatest = sortBy !== 'hot' && (hasQueryDataForLatest || (hasCachedPostsForLatest && hasCachedActivitiesForLatest));
-
-  const initialLoading = sortBy === 'hot'
-    ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
-    // Only show loading if no cached data and actually loading
-    : (!hasCachedDataForLatest && (latestLoading || activitiesLoading));
   const [showLoadMore, setShowLoadMore] = useState(false);
-  useEffect(() => { setShowLoadMore(false); }, [sortBy]);
+  useEffect(() => { setShowLoadMore(false); }, [sortBy, languageParam]);
   useEffect(() => {
-    if (initialLoading) return;
+    if (initialLoading || feedError || !hasMoreFeedItems) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) {
@@ -1191,7 +1174,9 @@ const FeedList = ({
         }
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
-        if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+        if (!languageParam && hasMoreActivities && !fetchingMoreActivities) {
+          tasks.push(fetchNextActivities());
+        }
       }
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
@@ -1204,7 +1189,10 @@ const FeedList = ({
     };
   }, [
     initialLoading,
+    feedError,
+    hasMoreFeedItems,
     sortBy,
+    languageParam,
     // latest
     hasMoreLatest,
     fetchingMoreLatest,
@@ -1278,6 +1266,13 @@ const FeedList = ({
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
+            filters={(
+              <PostLanguageFilterControl
+                variant="buttons"
+                value={languageFilter}
+                onChange={setLanguageFilter}
+              />
+            )}
           />
         </div>
         <div className="hidden md:block">
@@ -1287,8 +1282,16 @@ const FeedList = ({
             popularFeedEnabled={popularFeedEnabled}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
+            filters={(
+              <PostLanguageFilterControl
+                variant="buttons"
+                value={languageFilter}
+                onChange={setLanguageFilter}
+              />
+            )}
           />
         </div>
+
       </div>
 
       <div className="w-full flex flex-col gap-0 md:mx-0">
@@ -1304,7 +1307,7 @@ const FeedList = ({
       </div>
 
       {/* Load more button (desktop) */}
-      {!initialLoading && !latestError && !popularError && (
+      {!initialLoading && !feedError && hasMoreFeedItems && (
         <>
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
@@ -1346,7 +1349,7 @@ const FeedList = ({
                   }
                   const tasks: Promise<any>[] = [];
                   if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
-                  if (hasMoreActivities && !fetchingMoreActivities) {
+                  if (!languageParam && hasMoreActivities && !fetchingMoreActivities) {
                     tasks.push(fetchNextActivities());
                   }
                   if (tasks.length > 0) await Promise.all(tasks);

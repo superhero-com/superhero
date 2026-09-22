@@ -4,6 +4,15 @@
 // (e.g. "WORDS-ak_2X6…"). The UI shows the NAME, with a few human-facing
 // overrides (e.g. the "WORDS" collection is presented as "English").
 
+import type { LanguageCode } from '@/i18n';
+
+export const LANGUAGE_COLLECTIONS: Record<LanguageCode, string> = {
+  en: 'WORDS',
+  zh: 'CHINESE',
+  ru: 'RUSSIAN',
+  ar: 'ARABIC',
+};
+
 const COLLECTION_LABEL_OVERRIDES: Record<string, string> = {
   WORDS: 'English',
   CHINESE: 'Chinese',

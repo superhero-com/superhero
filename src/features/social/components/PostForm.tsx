@@ -540,6 +540,10 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         // Update all relevant query keys for the latest feed
         const updatedKeys = new Set<string>();
         const updateLatestFeedCache = (queryKey: any[]) => {
+          // Only the API's detected language can qualify a post for a filtered
+          // cache. Untagged optimistic posts wait for the indexed refetch.
+          const language = queryKey[1]?.language;
+          if (language && created?.language !== language) return;
           const keyStr = JSON.stringify(queryKey);
           // Skip if we've already updated this key to avoid duplicates
           if (updatedKeys.has(keyStr)) {

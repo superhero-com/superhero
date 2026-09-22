@@ -44,6 +44,9 @@ const AccountCreatedToken = ({
     staleTime: 60_000,
     placeholderData: (prev) => prev,
     refetchOnMount: false, // Use cached data when switching tabs
+    // Surface a first-load failure to the profile tab panel's error state; a
+    // background refetch that still has cached tokens keeps showing them.
+    throwOnError: (_error, query) => query.state.data === undefined,
   });
   return (
     <div className="mt-4">

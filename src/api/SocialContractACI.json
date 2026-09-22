@@ -1,0 +1,298 @@
+[
+  {
+    "contract": {
+      "event": {
+        "variant": [
+          {
+            "Followed": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "Unfollowed": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "Blocked": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "Unblocked": [
+              "address",
+              "address"
+            ]
+          }
+        ]
+      },
+      "functions": [
+        {
+          "arguments": [
+            {
+              "name": "max_following",
+              "type": "int"
+            },
+            {
+              "name": "max_blocked",
+              "type": "int"
+            },
+            {
+              "name": "follow_cooldown",
+              "type": "int"
+            }
+          ],
+          "name": "init",
+          "payable": false,
+          "returns": "SocialContract.state",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "follow",
+          "payable": false,
+          "returns": "unit",
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "unfollow",
+          "payable": false,
+          "returns": "unit",
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "block",
+          "payable": false,
+          "returns": "unit",
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "unblock",
+          "payable": false,
+          "returns": "unit",
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "addr",
+              "type": "address"
+            }
+          ],
+          "name": "get_following_count",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "addr",
+              "type": "address"
+            }
+          ],
+          "name": "get_followers_count",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "follower",
+              "type": "address"
+            },
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "is_following",
+          "payable": false,
+          "returns": "bool",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "blocker",
+              "type": "address"
+            },
+            {
+              "name": "target",
+              "type": "address"
+            }
+          ],
+          "name": "is_blocked",
+          "payable": false,
+          "returns": "bool",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
+              "type": "address"
+            },
+            {
+              "name": "b",
+              "type": "address"
+            }
+          ],
+          "name": "get_relationship",
+          "payable": false,
+          "returns": "SocialContract.relationship",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_config",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "int",
+              "int",
+              "int"
+            ]
+          },
+          "stateful": false
+        }
+      ],
+      "kind": "contract_main",
+      "name": "SocialContract",
+      "payable": false,
+      "state": {
+        "record": [
+          {
+            "name": "following",
+            "type": {
+              "map": [
+                "address",
+                {
+                  "map": [
+                    "address",
+                    "bool"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "following_count",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "followers_count",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "blocked",
+            "type": {
+              "map": [
+                "address",
+                {
+                  "map": [
+                    "address",
+                    "bool"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "blocked_count",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "last_follow_height",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "max_following",
+            "type": "int"
+          },
+          {
+            "name": "max_blocked",
+            "type": "int"
+          },
+          {
+            "name": "follow_cooldown",
+            "type": "int"
+          }
+        ]
+      },
+      "typedefs": [
+        {
+          "name": "relationship",
+          "typedef": {
+            "record": [
+              {
+                "name": "a_follows_b",
+                "type": "bool"
+              },
+              {
+                "name": "b_follows_a",
+                "type": "bool"
+              },
+              {
+                "name": "a_blocked_b",
+                "type": "bool"
+              },
+              {
+                "name": "b_blocked_a",
+                "type": "bool"
+              }
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
+  }
+]

@@ -259,4 +259,20 @@ describe('trendsSearch api helpers', () => {
     expect(posts.items[0].id).toBe('popular_v3');
     expect(traders.items[0].address).toBe('ak_trader');
   });
+
+  it('forwards the language filter to listPopularPosts when set', async () => {
+    vi.mocked(SuperheroApi.listPopularPosts).mockResolvedValueOnce({ items: [] } as any);
+    await fetchPopularPosts(3, 'zh');
+    expect(SuperheroApi.listPopularPosts).toHaveBeenCalledWith({
+      limit: 3,
+      page: 1,
+      language: 'zh',
+    });
+  });
+
+  it('omits the language param when no filter is set', async () => {
+    vi.mocked(SuperheroApi.listPopularPosts).mockResolvedValueOnce({ items: [] } as any);
+    await fetchPopularPosts(3);
+    expect(SuperheroApi.listPopularPosts).toHaveBeenCalledWith({ limit: 3, page: 1 });
+  });
 });

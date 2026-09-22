@@ -400,16 +400,16 @@ export const PwaInstallGuide = ({
 
 /**
  * Floating pill button that appears on mobile when the app is not yet installed.
- * Triggers the PwaInstallGuide on iOS/Android-without-prompt, or the native
- * Chromium prompt on Android Chrome (via the provided callback).
+ *
+ * It used to run the PWA install itself — the native Chromium prompt where one
+ * was available, the manual guide above otherwise. It no longer decides: it
+ * calls `onOpen` and the caller shows the mobile-app dialog, which offers the
+ * store builds first and keeps the PWA as the secondary line. The label is
+ * unchanged; only the destination is.
  */
 interface PwaInstallFabProps {
-  /** Call the native Chromium install prompt (from usePwaInstall) if available */
-  onNativePrompt?: () => Promise<boolean>;
-  /** Open the manual guide sheet */
-  onOpenGuide: () => void;
-  /** Whether the native Chromium prompt is available */
-  canNativePrompt: boolean;
+  /** Open the install dialog. The FAB no longer chooses an install path itself. */
+  onOpen: () => void;
   /**
    * From `usePwaInstall`. `isStandalone()` alone cannot hide this: after a
    * successful install the ORIGINAL tab is still not standalone, so the FAB
@@ -424,9 +424,7 @@ interface PwaInstallFabProps {
 const MAX_PULSES = 3;
 
 export const PwaInstallFab = ({
-  onNativePrompt,
-  onOpenGuide,
-  canNativePrompt,
+  onOpen,
   isInstalled: installedProp = false,
 }: PwaInstallFabProps) => {
   const { t } = useTranslation();
@@ -460,14 +458,6 @@ export const PwaInstallFab = ({
 
   if (!visible || hidden) return null;
 
-  const handleClick = async () => {
-    if (canNativePrompt && onNativePrompt) {
-      const accepted = await onNativePrompt();
-      if (accepted) return;
-    }
-    onOpenGuide();
-  };
-
   return (
     <div
       className="fixed z-50 flex items-center gap-1.5"
@@ -475,7 +465,7 @@ export const PwaInstallFab = ({
     >
       <button
         type="button"
-        onClick={handleClick}
+        onClick={onOpen}
         aria-label={t('components.pwaInstallGuide.fabLabel')}
         className="flex items-center gap-2 rounded-full text-white font-bold text-sm transition-all border-0"
         style={{

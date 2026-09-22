@@ -44,6 +44,8 @@ import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileTabPanel from '../features/social/components/ProfileTabPanel';
 import ProfileEditModal from '../components/modals/ProfileEditModal';
 import { useProfileEditDeepLink } from '../hooks/useProfileEditDeepLink';
+import { usePendingXLinkChange } from '../hooks/useXLinkChanges';
+import { XLinkChangePending } from '../components/XLinkChangePending';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
@@ -174,6 +176,9 @@ export default function UserProfile({
     || effectiveAddress;
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
+  // Your own X link or unlink still on its way: shown instead of the "Link
+  // your X account" prompt, which the not-yet-updated account would offer.
+  const pendingXChange = usePendingXLinkChange(canEdit ? effectiveAddress : null);
   const linkedSite = getLinkedSite(accountInfo);
   // Posts count is the true total the list response already carries, not the
   // 100-capped page length. Undefined until loaded — the counts row renders
@@ -393,7 +398,11 @@ export default function UserProfile({
         </div>
       )}
 
-      {canEdit && !isXVerified && (
+      {pendingXChange && (
+        <XLinkChangePending change={pendingXChange} className="mb-4" />
+      )}
+
+      {canEdit && !pendingXChange && !isXVerified && (
         <button
           type="button"
           onClick={() => {

@@ -39,8 +39,10 @@ export type TxPayload =
   | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> }
   // No handle carried: the claim's `value` may be the X user id rather than the
   // username, and "@1234567890" in a toast is worse than no handle at all.
-  | { type: typeof TxPayloadType.LinkX }
-  | { type: typeof TxPayloadType.UnlinkX };
+  // `startedAt` is when the change was broadcast: the wait is minutes, not
+  // seconds, so the pending banner shows how far along it is.
+  | { type: typeof TxPayloadType.LinkX; startedAt?: number }
+  | { type: typeof TxPayloadType.UnlinkX; startedAt?: number };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 

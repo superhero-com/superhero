@@ -711,8 +711,8 @@ export const SuperheroApi = {
     if (params.page != null) qp.set('page', String(params.page));
     return this.fetchJson(`/api/accounts?${qp.toString()}`);
   },
-  getAccount(address: string) {
-    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`) as Promise<AccountAggregate>;
+  getAccount(address: string, init?: RequestInit) {
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}`, init) as Promise<AccountAggregate>;
   },
   // Invitations
   listInvitations(params: { orderBy?: 'amount'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {

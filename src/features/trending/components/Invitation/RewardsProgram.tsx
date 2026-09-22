@@ -11,6 +11,8 @@ import { profileEditPath } from '../../../../hooks/useProfileEditDeepLink';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
 import { toAe } from '../../../../utils/bondingCurve';
+import { usePendingXLinkChange } from '../../../../hooks/useXLinkChanges';
+import { XLinkChangePending } from '../../../../components/XLinkChangePending';
 import { RewardHistory } from './RewardHistory';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
@@ -65,6 +67,9 @@ const RewardsProgram = () => {
     isXLinked,
     isOnboardingPaid,
   } = useXPostingReward();
+  // A link or unlink still on its way: the status below still shows the state
+  // from before it, so say what is happening and don't offer "Link X" again.
+  const pendingXChange = usePendingXLinkChange(activeAccount);
 
   // --- derived state ---
   // "Referral posts rewarded" — always use per_post_total_paid_count, never qualified_posts_count.
@@ -114,6 +119,8 @@ const RewardsProgram = () => {
   // presses "Check rewards" — so an "in progress" state with a spinner reads as
   // "the system is working on it" and is misleading.
   const currentVerifyStepNumber = currentVerifyStep === -1 ? verifyTotal : currentVerifyStep + 1;
+  // The next step is "Link X" but a change is already on its way.
+  const hideVerifyAction = Boolean(pendingXChange) && currentVerifyStep === 0;
 
   // --- actions ---
   const handleVerifyAction = useCallback(async () => {
@@ -266,6 +273,7 @@ const RewardsProgram = () => {
               </p>
             </div>
             <div className="flex-1 mt-10">
+              {pendingXChange && <XLinkChangePending change={pendingXChange} className="mb-4" />}
               <div className="grid gap-2 mb-8">
                 {verifySteps.map((step, i) => (
                   <div
@@ -315,7 +323,7 @@ const RewardsProgram = () => {
                   /
                   {verifyTotal}
                 </span>
-                {!verifyCompleted && activeAccount && (
+                {!verifyCompleted && activeAccount && !hideVerifyAction && (
                   <button
                     type="button"
                     onClick={handleVerifyAction}

@@ -11,6 +11,7 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { TransactionNotificationProvider, TransactionNotificationBanner } from './features/transaction-notification';
+import { XLinkChangeSync } from './components/XLinkChangeSync';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
 // Mint the single Trusted Types policy before any component mounts a DOM sink.
@@ -48,6 +49,7 @@ const queryClient = new QueryClient({
                 <BrowserRouter>
                   <TransactionNotificationProvider>
                     <TransactionNotificationBanner />
+                    <XLinkChangeSync />
                     <ErrorBoundary>
                       <AeSdkProvider>
                         <App />

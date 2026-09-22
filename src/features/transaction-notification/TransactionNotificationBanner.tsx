@@ -7,6 +7,11 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
 import { IconDiamond } from '@/icons';
+import {
+  XLinkChangeProgressRow,
+  useXLinkChangeElapsed,
+  xLinkChangeWaitKey,
+} from '@/components/XLinkChangePending';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
@@ -418,6 +423,23 @@ const NotificationError = ({ message }: { message: string }) => {
   );
 };
 
+// An X link or unlink is done when the backend's indexer has it, which takes
+// minutes. Say so, and show the wait moving, instead of "confirming…" alone.
+const XLinkChangeWaiting = ({ title, startedAt }: { title: string; startedAt: number }) => {
+  const { t } = useTranslation('common');
+  const elapsed = useXLinkChangeElapsed(startedAt);
+  return (
+    <div className={`${cardBase} bg-[#1a1a1a]/95`}>
+      <NotificationIcon variant="loading" icon="diamond" />
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-white font-bold text-sm leading-[18px] m-0">{title}</p>
+        <p className="text-gray-400 text-[13px] leading-[17px] m-0">{t(xLinkChangeWaitKey(elapsed))}</p>
+        <XLinkChangeProgressRow elapsedMs={elapsed} className="pt-1.5" />
+      </div>
+    </div>
+  );
+};
+
 const NotificationWaiting = ({
   payload,
   kind,
@@ -429,6 +451,13 @@ const NotificationWaiting = ({
   const { title, subtitle } = kind === 'submitted'
     ? getSubmittedMeta(payload, t)
     : getPendingMeta(payload, t);
+  if (
+    kind === 'pending'
+    && (payload.type === TxPayloadType.LinkX || payload.type === TxPayloadType.UnlinkX)
+    && payload.startedAt
+  ) {
+    return <XLinkChangeWaiting title={title} startedAt={payload.startedAt} />;
+  }
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
       <NotificationIcon variant="loading" icon={getIconVariant(payload)} />

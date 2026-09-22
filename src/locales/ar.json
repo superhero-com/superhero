@@ -34,6 +34,7 @@
       "getChainName": "+ احصل على اسم ‎.chain",
       "claimChainName": "مطالبة",
       "linkAccount": "ربط الحساب",
+      "unlink": "إلغاء الربط",
       "send": "إرسال",
       "receive": "استلام"
     },
@@ -168,6 +169,8 @@
       "xCallbackGoBack": "العودة",
       "xCallbackConfirmingTitle": "جارٍ التأكيد على البلوكتشين",
       "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً أقل من دقيقة — يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
+      "xUnlinkConfirmTitle": "إلغاء ربط حسابك على X؟",
+      "xUnlinkConfirmDesc": "ستتم إزالة {{username}} من SuperheroID الخاص بك، وستتوقف عن كسب مكافآت النشر على X حتى تربط حسابًا مرة أخرى. يُسجَّل هذا التغيير على البلوكتشين، لذا يستغرق تأكيده بعض الوقت.",
       "missingAddressForXVerification": "عنوان X للتحقق مفقود",
       "missingXOAuthToken": "رمز X OAuth مفقود",
       "missingAddressForBioLink": "عنوان الربط الخاص بالـ bio مفقود",
@@ -1223,7 +1226,10 @@
       "fieldsSaved": "تم حفظ {{fields}}",
       "signToLinkX": "وقّع الرسالة لربط حسابك على X",
       "linkingXAccount": "جارٍ ربط حسابك على X…",
-      "xAccountLinked": "تم ربط حساب X"
+      "xAccountLinked": "تم ربط حساب X",
+      "signToUnlinkX": "وقّع الرسالة لإلغاء ربط حسابك على X",
+      "unlinkingXAccount": "جارٍ إلغاء ربط حسابك على X…",
+      "xAccountUnlinked": "تم إلغاء ربط حساب X"
     },
     "postLanguageFilter": {
       "shortLabel": "اللغة",

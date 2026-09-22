@@ -8,22 +8,11 @@ import type { XAddressLinkClaimResponse } from '@/api/backend';
 import { SuperheroApi } from '@/api/backend';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useProfile } from '@/hooks/useProfile';
-import { X_POSTING_REWARD_QUERY_KEY } from '@/hooks/useXPostingReward';
+import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
-import { useQueryClient } from '@tanstack/react-query';
 import { getAndClearXOAuthPKCE, isOurOAuthState } from '@/utils/xOAuth';
 
 const LINK_X_PAYLOAD = { type: TxPayloadType.LinkX } as const;
-
-/**
- * Mined is not indexed. The poll confirms the transaction against the node,
- * but the profile and reward status are read from the backend, which learns
- * about the link from its own indexer a few seconds later. Refetching only at
- * the moment of confirmation would often read the pre-link profile — the same
- * stale view this flow exists to fix — so refetch again as the indexer catches
- * up. Invalidating an unmounted query is free; a mounted one just refetches.
- */
-const INDEXER_CATCHUP_DELAYS_MS = [4_000, 12_000];
 
 /**
  * Full-height, centered shell so every state shares the same clean layout.
@@ -139,7 +128,7 @@ const ProfileXCallback = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { activeAccount, addStaticAccount } = useAeSdk();
-  const queryClient = useQueryClient();
+  const refreshLinkedAccount = useRefreshXLinkState();
   const { notifyPendingTx, notifyConfirmed } = useTransactionNotification();
   const [status, setStatus] = useState<
     'loading' | 'confirm_wallet' | 'confirming' | 'done' | 'error'
@@ -155,17 +144,6 @@ const ProfileXCallback = () => {
     if (address) navigate(`/users/${address}`);
     else navigate('/');
   }, [address, navigate]);
-
-  const refreshLinkedAccount = useCallback((linkedAddress: string) => {
-    const invalidate = () => Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', linkedAddress] }),
-      queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', linkedAddress] }),
-      // The feed and rewards cards read isXLinked from here, not from the profile.
-      queryClient.invalidateQueries({ queryKey: [X_POSTING_REWARD_QUERY_KEY] }),
-    ]);
-    invalidate();
-    INDEXER_CATCHUP_DELAYS_MS.forEach((ms) => { setTimeout(invalidate, ms); });
-  }, [queryClient]);
 
   const handleLinkSubmitted = useCallback((linkedAddress: string, txHash: string | undefined) => {
     const onConfirmed = () => {

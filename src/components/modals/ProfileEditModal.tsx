@@ -46,7 +46,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
-  Check, Globe, HelpCircle, Link2,
+  Globe, HelpCircle, Link2,
 } from 'lucide-react';
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
@@ -54,6 +54,7 @@ import Spinner from '@/components/Spinner';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
+import { XLinkedAccountRow } from './XLinkedAccountRow';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
@@ -1389,12 +1390,15 @@ const ProfileEditModal = ({
                 </button>
                 )}
                 {xSectionReady && hasXVerified && xUsername && (
-                <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
-                  <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
-                  <span className="text-sm text-white/90">
-                    {`@${xUsername.replace(/^@/u, '')}`}
-                  </span>
-                </div>
+                <XLinkedAccountRow
+                  address={(address as string) || (activeAccount as string)}
+                  username={xUsername}
+                  disabled={!canEdit}
+                  onUnlinked={() => {
+                    setHasXVerified(false);
+                    setXUsername(null);
+                  }}
+                />
                 )}
               </div>
             ) : null}

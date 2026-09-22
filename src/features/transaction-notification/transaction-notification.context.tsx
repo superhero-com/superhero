@@ -20,6 +20,7 @@ export const TxPayloadType = {
   RemoveLiquidity: 'remove_liquidity',
   UpdateProfile: 'update_profile',
   LinkX: 'link_x',
+  UnlinkX: 'unlink_x',
 } as const;
 
 export type TxPayload =
@@ -38,7 +39,8 @@ export type TxPayload =
   | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> }
   // No handle carried: the claim's `value` may be the X user id rather than the
   // username, and "@1234567890" in a toast is worse than no handle at all.
-  | { type: typeof TxPayloadType.LinkX };
+  | { type: typeof TxPayloadType.LinkX }
+  | { type: typeof TxPayloadType.UnlinkX };
 
 // ─── Notification state machine ─────────────────────────────────────────────
 

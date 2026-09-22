@@ -80,6 +80,7 @@
       "getChainName": "+ Get .chain name",
       "claimChainName": "Claim",
       "linkAccount": "Link account",
+      "unlink": "Unlink",
       "send": "Send",
       "receive": "Receive"
     },
@@ -257,6 +258,8 @@
       "xCallbackGoBack": "Go back",
       "xCallbackConfirmingTitle": "Confirming on the blockchain",
       "xCallbackConfirmingDesc": "Your X account is being linked on-chain. This usually takes under a minute — you can keep browsing, and the banner at the top will tell you when it's done.",
+      "xUnlinkConfirmTitle": "Unlink your X account?",
+      "xUnlinkConfirmDesc": "{{username}} will be removed from your SuperheroID, and you'll stop earning X posting rewards until you link an account again. This is recorded on the blockchain, so it takes a moment to confirm.",
       "chainNameClaimLengthHint": "{{length}}/13 characters before .chain",
       "connectWalletFirst": "Connect your wallet first",
       "referralLinkFailed": "Failed to get referral link",
@@ -1272,7 +1275,10 @@
       "fieldsSaved": "{{fields}} saved",
       "signToLinkX": "Sign the message to link your X account",
       "linkingXAccount": "Linking your X account…",
-      "xAccountLinked": "X account linked"
+      "xAccountLinked": "X account linked",
+      "signToUnlinkX": "Sign the message to unlink your X account",
+      "unlinkingXAccount": "Unlinking your X account…",
+      "xAccountUnlinked": "X account unlinked"
     },
     "postLanguageFilter": {
       "shortLabel": "Language",

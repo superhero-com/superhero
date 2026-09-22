@@ -35,7 +35,9 @@ function formatChangedFields(
 // Toasts backed by a central icon other than the Superhero mark (e.g. the blue diamond
 // used for Superhero ID / profile updates).
 function getIconVariant(payload: TxPayload): 'superhero' | 'diamond' {
-  return payload.type === TxPayloadType.UpdateProfile || payload.type === TxPayloadType.LinkX
+  return payload.type === TxPayloadType.UpdateProfile
+    || payload.type === TxPayloadType.LinkX
+    || payload.type === TxPayloadType.UnlinkX
     ? 'diamond'
     : 'superhero';
 }
@@ -128,6 +130,11 @@ function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; su
       return {
         title: t('common.transactionNotification.confirmInWallet'),
         subtitle: t('common.transactionNotification.signToLinkX'),
+      };
+    case TxPayloadType.UnlinkX:
+      return {
+        title: t('common.transactionNotification.confirmInWallet'),
+        subtitle: t('common.transactionNotification.signToUnlinkX'),
       };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
@@ -223,6 +230,11 @@ function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subt
     case TxPayloadType.LinkX:
       return {
         title: t('common.transactionNotification.linkingXAccount'),
+        subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
+      };
+    case TxPayloadType.UnlinkX:
+      return {
+        title: t('common.transactionNotification.unlinkingXAccount'),
         subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
       };
     default:
@@ -339,6 +351,8 @@ function getConfirmedMeta(payload: TxPayload, t: TFunction): {
       };
     case TxPayloadType.LinkX:
       return { title: t('common.transactionNotification.xAccountLinked'), line: null };
+    case TxPayloadType.UnlinkX:
+      return { title: t('common.transactionNotification.xAccountUnlinked'), line: null };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }

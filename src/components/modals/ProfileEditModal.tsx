@@ -51,6 +51,7 @@ import {
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
+import { resolveXLink } from '@/utils/confirmedXLink';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -446,7 +447,9 @@ const ProfileEditModal = ({
       let accountRecord: Awaited<ReturnType<typeof SuperheroApi.getAccount>> | null = null;
       try {
         accountRecord = await SuperheroApi.getAccount(targetAddress);
-        xName = getLinkedXUsername(accountRecord);
+        // A change the chain confirmed wins over an account record the
+        // indexer has not caught up on yet.
+        xName = resolveXLink(targetAddress, getLinkedXUsername(accountRecord));
         const linkedBio = getLinkedBio(accountRecord);
         if (linkedBio) bio = linkedBio;
         const linkedSite = getLinkedSite(accountRecord);

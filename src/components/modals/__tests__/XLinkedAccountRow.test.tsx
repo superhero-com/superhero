@@ -1,11 +1,13 @@
 import React from 'react';
 import {
-  fireEvent, render, screen, waitFor, within,
+  act, fireEvent, render, screen, waitFor, within,
 } from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import { clearConfirmedXLinks, resolveXLink } from '@/utils/confirmedXLink';
 import { XLinkedAccountRow } from '../XLinkedAccountRow';
+import { Dialog, DialogContent, DialogTitle } from '../../ui/dialog';
 
 const mockUnlinkXAccount = vi.fn();
 const mockRefreshXLinkState = vi.fn();
@@ -52,6 +54,7 @@ const openConfirm = () => {
 describe('XLinkedAccountRow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearConfirmedXLinks();
     mockNotificationState = { status: 'idle' };
     mockUnlinkXAccount.mockResolvedValue('th_unlink');
   });
@@ -110,6 +113,17 @@ describe('XLinkedAccountRow', () => {
 
     expect(onUnlinked).toHaveBeenCalledTimes(1);
     expect(mockRefreshXLinkState).toHaveBeenCalledWith(ADDRESS);
+    // Remembered, so a reopened editor that re-reads a not-yet-indexed account
+    // record does not show the account as linked again.
+    expect(resolveXLink(ADDRESS, 'untracenetwork')).toBeNull();
+  });
+
+  it('does not remember an unlink the chain has not confirmed', async () => {
+    setup();
+    fireEvent.click(within(openConfirm()).getByRole('button', { name: 'Unlink' }));
+    await waitFor(() => expect(mockNotifyPendingTx).toHaveBeenCalled());
+
+    expect(resolveXLink(ADDRESS, 'untracenetwork')).toBe('untracenetwork');
   });
 
   it('shows the unlink as confirming instead of offering it again while pending', () => {
@@ -156,6 +170,65 @@ describe('XLinkedAccountRow', () => {
     expect(mockNotifyConfirmed).toHaveBeenCalledWith({ type: 'unlink_x' });
     expect(mockNotifyPendingTx).not.toHaveBeenCalled();
     expect(mockRefreshXLinkState).toHaveBeenCalledWith(ADDRESS);
+  });
+
+  describe('inside the profile editor', () => {
+    // The confirm is a dialog opened from inside the editor's own dialog.
+    const renderInEditor = () => {
+      const onEditorOpenChange = vi.fn();
+      const onUnlinked = vi.fn();
+      render(
+        <Dialog open onOpenChange={onEditorOpenChange}>
+          <DialogContent>
+            <DialogTitle>Edit profile</DialogTitle>
+            <XLinkedAccountRow address={ADDRESS} username="untracenetwork" onUnlinked={onUnlinked} />
+          </DialogContent>
+        </Dialog>,
+      );
+      return { onEditorOpenChange, onUnlinked };
+    };
+    const confirmDialog = () => screen.getByRole('dialog', { name: 'Unlink your X account?' });
+
+    it('Escape closes only the confirm, never the editor behind it', async () => {
+      const { onEditorOpenChange } = renderInEditor();
+      fireEvent.click(screen.getByRole('button', { name: /unlink @untracenetwork/i }));
+      expect(confirmDialog()).toBeInTheDocument();
+
+      fireEvent.keyDown(confirmDialog(), { key: 'Escape' });
+
+      await waitFor(() => expect(
+        screen.queryByRole('dialog', { name: 'Unlink your X account?' }),
+      ).not.toBeInTheDocument());
+      expect(screen.getByRole('dialog', { name: 'Edit profile' })).toBeInTheDocument();
+      expect(onEditorOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('cannot be dismissed while the wallet prompt is out', async () => {
+      let finishSigning: (hash: string) => void = () => {};
+      mockUnlinkXAccount.mockReturnValue(new Promise((resolve) => { finishSigning = resolve; }));
+      const { onEditorOpenChange } = renderInEditor();
+      fireEvent.click(screen.getByRole('button', { name: /unlink @untracenetwork/i }));
+      fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Unlink' }));
+      await waitFor(() => expect(mockUnlinkXAccount).toHaveBeenCalled());
+
+      fireEvent.keyDown(confirmDialog(), { key: 'Escape' });
+
+      expect(confirmDialog()).toBeInTheDocument();
+      expect(onEditorOpenChange).not.toHaveBeenCalled();
+      await act(async () => { finishSigning('th_unlink'); });
+    });
+
+    it('closes the confirm cleanly once signed, leaving the editor usable', async () => {
+      const { onEditorOpenChange } = renderInEditor();
+      fireEvent.click(screen.getByRole('button', { name: /unlink @untracenetwork/i }));
+      fireEvent.click(within(confirmDialog()).getByRole('button', { name: 'Unlink' }));
+
+      await waitFor(() => expect(
+        screen.queryByRole('dialog', { name: 'Unlink your X account?' }),
+      ).not.toBeInTheDocument());
+      expect(screen.getByRole('dialog', { name: 'Edit profile' })).toBeInTheDocument();
+      expect(onEditorOpenChange).not.toHaveBeenCalled();
+    });
   });
 
   it("offers no unlink on a profile you can't edit", () => {

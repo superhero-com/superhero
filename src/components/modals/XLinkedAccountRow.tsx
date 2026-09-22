@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
+import { rememberConfirmedXLink } from '@/utils/confirmedXLink';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -60,6 +61,9 @@ export const XLinkedAccountRow = ({
     try {
       const txHash = await unlinkXAccount(address);
       const onConfirmed = () => {
+        // The API can list the handle for a while after this; without the
+        // note, a reopened editor would read it and offer Unlink again.
+        rememberConfirmedXLink(address, null);
         refreshXLinkState(address);
         onUnlinked();
       };
@@ -86,41 +90,42 @@ export const XLinkedAccountRow = ({
     onUnlinked, refreshXLinkState, signing, t, unlinkXAccount,
   ]);
 
-  if (unlinkPending) {
-    return (
-      <div
-        className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2"
-        role="status"
-      >
-        <Loader2 className="w-4 h-4 shrink-0 animate-spin text-white/60" aria-hidden />
-        <div className="min-w-0">
-          <div className="text-sm text-white/80">
-            {t('transactionNotification.unlinkingXAccount')}
-          </div>
-          <div className="text-xs text-white/45">
-            {t('transactionNotification.confirmingOnBlockchainEllipsis')}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // The dialog stays mounted in every state and is closed, never unmounted
+  // while open: tearing down an open modal from inside the editor's own modal
+  // can leave the page's pointer-events locked.
   return (
     <>
-      <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
-        <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
-        <span className="min-w-0 truncate text-sm text-white/90">{handle}</span>
-        {!disabled && (
-          <button
-            type="button"
-            onClick={() => { setError(null); setConfirmOpen(true); }}
-            aria-label={`${t('buttons.unlink')} ${handle}`}
-            className="ml-auto shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium text-white/55 transition-colors hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
-          >
-            {t('buttons.unlink')}
-          </button>
-        )}
-      </div>
+      {unlinkPending ? (
+        <div
+          className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2"
+          role="status"
+        >
+          <Loader2 className="w-4 h-4 shrink-0 animate-spin text-white/60" aria-hidden />
+          <div className="min-w-0">
+            <div className="text-sm text-white/80">
+              {t('transactionNotification.unlinkingXAccount')}
+            </div>
+            <div className="text-xs text-white/45">
+              {t('transactionNotification.confirmingOnBlockchainEllipsis')}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-1.5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/12 px-3 py-2">
+          <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--neon-teal)' }} aria-hidden />
+          <span className="min-w-0 truncate text-sm text-white/90">{handle}</span>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => { setError(null); setConfirmOpen(true); }}
+              aria-label={`${t('buttons.unlink')} ${handle}`}
+              className="ml-auto shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium text-white/55 transition-colors hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
+            >
+              {t('buttons.unlink')}
+            </button>
+          )}
+        </div>
+      )}
 
       <Dialog
         open={confirmOpen}
@@ -128,7 +133,15 @@ export const XLinkedAccountRow = ({
         // closing this would leave the banner as the only sign it happened.
         onOpenChange={(next) => { if (!signing) setConfirmOpen(next); }}
       >
-        <DialogContent className="bg-gray-900 border-white/12 text-white sm:max-w-[400px] rounded-2xl">
+        <DialogContent
+          className="bg-gray-900 border-white/12 text-white sm:max-w-[400px] rounded-2xl"
+          hideClose={signing}
+          // Nested inside the profile editor's dialog. Radix dismisses only
+          // the top layer, so these reach this confirm and never the editor;
+          // and while the wallet prompt is out they do nothing at all.
+          onInteractOutside={(event) => { if (signing) event.preventDefault(); }}
+          onEscapeKeyDown={(event) => { if (signing) event.preventDefault(); }}
+        >
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">
               {t('messages.xUnlinkConfirmTitle')}

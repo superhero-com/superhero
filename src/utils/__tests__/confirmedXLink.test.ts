@@ -4,6 +4,7 @@ import {
 import {
   CONFIRMED_X_LINK_TTL_MS,
   clearConfirmedXLinks,
+  effectiveXLink,
   rememberConfirmedXLink,
   resolveXLink,
 } from '../confirmedXLink';
@@ -54,5 +55,42 @@ describe('confirmed X link changes', () => {
     rememberConfirmedXLink(ADDRESS, '@SomeOne');
     expect(resolveXLink(ADDRESS, 'someone')).toBe('someone');
     expect(resolveXLink(ADDRESS, 'old_handle')).toBe('old_handle');
+  });
+
+  describe('what the editor renders', () => {
+    const linked = { linked: true, username: 'untracenetwork' };
+    const unlinked = { linked: false, username: null };
+
+    it('shows what was loaded when nothing was confirmed', () => {
+      expect(effectiveXLink(ADDRESS, linked)).toEqual(linked);
+      expect(effectiveXLink(ADDRESS, unlinked)).toEqual(unlinked);
+    });
+
+    it('keeps a confirmed unlink even when a stale load lands after it', () => {
+      // The editor's load() read "linked" before the unlink confirmed, then
+      // finished its other requests and wrote that stale value last.
+      rememberConfirmedXLink(ADDRESS, null);
+      expect(effectiveXLink(ADDRESS, linked)).toEqual(unlinked);
+    });
+
+    it('never clears the note on local state alone', () => {
+      rememberConfirmedXLink(ADDRESS, null);
+      // The row flipped local state to unlinked: that must not count as the
+      // API agreeing, or a stale "linked" written next would show again.
+      expect(effectiveXLink(ADDRESS, unlinked)).toEqual(unlinked);
+      expect(effectiveXLink(ADDRESS, linked)).toEqual(unlinked);
+    });
+
+    it('goes back to what was loaded once the API has agreed', () => {
+      rememberConfirmedXLink(ADDRESS, null);
+      resolveXLink(ADDRESS, null);
+      expect(effectiveXLink(ADDRESS, linked)).toEqual(linked);
+    });
+
+    it('goes back to what was loaded once the note is old', () => {
+      rememberConfirmedXLink(ADDRESS, null);
+      vi.advanceTimersByTime(CONFIRMED_X_LINK_TTL_MS + 1);
+      expect(effectiveXLink(ADDRESS, linked)).toEqual(linked);
+    });
   });
 });

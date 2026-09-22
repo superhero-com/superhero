@@ -51,7 +51,7 @@ import {
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
-import { resolveXLink } from '@/utils/confirmedXLink';
+import { effectiveXLink, resolveXLink } from '@/utils/confirmedXLink';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '../ui/dialog';
@@ -1153,6 +1153,14 @@ const ProfileEditModal = ({
     && lastCheckedValue === normalizedClaimValue,
   );
 
+  // What the X section shows. Resolved at render, not only inside load():
+  // load() reads the account record and then awaits several more calls, so an
+  // unlink can confirm in between and the stale "linked" would land last.
+  const xLink = effectiveXLink(
+    (address as string) || (activeAccount as string) || '',
+    { linked: hasXVerified, username: xUsername },
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -1349,7 +1357,7 @@ const ProfileEditModal = ({
                   <span className="text-xs text-white/50">{t('messages.loading')}</span>
                 </div>
                 )}
-                {(isGuest || (xSectionReady && !hasXVerified)) && (
+                {(isGuest || (xSectionReady && !xLink.linked)) && (
                 <button
                   ref={connectXButtonRef}
                   type="button"
@@ -1392,10 +1400,10 @@ const ProfileEditModal = ({
                   {connectingX ? t('messages.connectingX') : t('buttons.linkAccount')}
                 </button>
                 )}
-                {xSectionReady && hasXVerified && xUsername && (
+                {xSectionReady && xLink.linked && xLink.username && (
                 <XLinkedAccountRow
                   address={(address as string) || (activeAccount as string)}
-                  username={xUsername}
+                  username={xLink.username}
                   disabled={!canEdit}
                   onUnlinked={() => {
                     setHasXVerified(false);

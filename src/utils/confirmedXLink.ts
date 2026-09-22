@@ -9,7 +9,9 @@
  * that the API is the better source again.
  *
  * In memory only: a reload starts clean, which is fine, since by then the
- * indexer has almost always caught up.
+ * indexer has almost always caught up. It also means a note can never hide a
+ * relink: linking X goes through X's sign-in page, a full-page redirect that
+ * comes back to a fresh app.
  */
 
 /** Long enough to cover indexer lag; short enough never to mask a real change. */
@@ -46,6 +48,22 @@ export function resolveXLink(address: string, apiUsername: string | null): strin
   }
   // The API still shows the state from before the confirmed change.
   return change.username;
+}
+
+type LinkState = { linked: boolean; username: string | null };
+
+/**
+ * The X link state to render, given whatever the component last loaded.
+ *
+ * Read-only, unlike {@link resolveXLink}: it never clears the note, because
+ * local state agreeing proves nothing. A load that started before the chain
+ * confirmed can still land afterwards with the old handle; resolving here, on
+ * every render, keeps the confirmed state no matter which write came last.
+ */
+export function effectiveXLink(address: string, loaded: LinkState): LinkState {
+  const change = confirmed.get(address);
+  if (!change || Date.now() - change.at > CONFIRMED_X_LINK_TTL_MS) return loaded;
+  return { linked: change.username !== null, username: change.username };
 }
 
 /** Test helper. */

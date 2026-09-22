@@ -65,7 +65,8 @@ const ProfileSocialActions = ({
       )}
     </div>
   ) : null;
-
+  // temporary return null while implementing the component
+  return null;
   return (
     <>
       <div className="flex flex-1 flex-row items-center gap-2 md:flex-none">

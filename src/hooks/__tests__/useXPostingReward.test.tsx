@@ -123,6 +123,28 @@ describe('useXPostingReward', () => {
     });
   });
 
+  it('refreshes the payout history after a check, since a check is what pays', async () => {
+    const client = makeClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    mockCreateChallenge.mockResolvedValue({
+      message: 'sign me',
+      nonce: '1',
+      expires_at: 123,
+    });
+    mockRecheck.mockResolvedValue(paidStatus);
+
+    const { result } = renderHook(() => useXPostingReward(), { wrapper: wrapper(client) });
+    await waitFor(() => expect(result.current.status).not.toBeNull());
+
+    await act(async () => {
+      await result.current.runRewardCheck();
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ['xPostingRewardStatus', 'history', 'ak_wallet'],
+    });
+  });
+
   it('never hands a new account the previous account`s referral link', async () => {
     const client = makeClient();
     const Wrapper = wrapper(client);

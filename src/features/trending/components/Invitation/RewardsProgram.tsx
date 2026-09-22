@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import {
   Gift, CheckCircle2, Check, AlertTriangle, Lock, Loader2,
-  ArrowRight, Target, PartyPopper, RefreshCw, Clock, UserCheck, Send,
+  ArrowRight, Target, PartyPopper, RefreshCw, Clock, UserCheck, Send, Receipt,
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 import { useXPostingReward } from '../../../../hooks/useXPostingReward';
@@ -11,6 +11,7 @@ import { profileEditPath } from '../../../../hooks/useProfileEditDeepLink';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import { openXComposeIntent } from '../../../../utils/openXLink';
 import { toAe } from '../../../../utils/bondingCurve';
+import { RewardHistory } from './RewardHistory';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 import CelebrationIcon from '../../../../svg/iconCelebration.svg?react';
@@ -136,6 +137,10 @@ const RewardsProgram = () => {
     await runRewardCheck();
   }, [runRewardCheck]);
 
+  const scrollToHistory = useCallback(() => {
+    document.getElementById('reward-history')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const verifyActionLabel = currentVerifyStep === 0
     ? t('rewardsProgram.milestone1.linkX')
     : t('rewardsProgram.milestone1.postOnX');
@@ -174,6 +179,14 @@ const RewardsProgram = () => {
             <p className="text-sm text-white/50 m-0 max-w-lg animate-fadeIn animate-delay-200">
               {t('rewardsProgram.rewardsSentAutomatically')}
             </p>
+            <button
+              type="button"
+              onClick={scrollToHistory}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 transition-colors hover:bg-emerald-500/20 hover:text-emerald-200"
+            >
+              <Receipt className="w-4 h-4" aria-hidden />
+              {t('rewardsProgram.history.seeHistory')}
+            </button>
           </div>
         </div>
       )}
@@ -511,6 +524,10 @@ const RewardsProgram = () => {
           </div>
         </div>
       </div>
+
+      {/* Every payout, linked to æScan. Rewards are sent automatically, so
+          this is where a user sees that they arrived. */}
+      <RewardHistory address={activeAccount} showEmpty={isXLinked} className="mt-5" />
     </div>
   );
 };

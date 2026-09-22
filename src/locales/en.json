@@ -2477,6 +2477,35 @@
       "rewardsEarnedBadge": "Rewards Earned",
       "aeEarned": "{{amount}} AE Earned",
       "rewardsSentAutomatically": "Your AE rewards have been sent automatically to your connected wallet.",
+      "history": {
+        "title": "Reward history",
+        "subtitle": "Rewards are sent to your wallet automatically. Tap any payment to see it on æScan.",
+        "empty": "No rewards yet. Your first one is sent automatically after your first qualifying post on X.",
+        "seeHistory": "See payment history",
+        "showAll": "Show all ({{total}})",
+        "showLess": "Show less",
+        "truncated": "Showing your latest {{limit}} payments.",
+        "viewOnAescan": "View on æScan",
+        "amount": "+{{amount}} AE",
+        "kind": {
+          "onboarding": "Welcome reward",
+          "per_post": "Post reward",
+          "streak_bonus": "Streak bonus",
+          "invite_milestone": "Invite reward",
+          "unknown": "Reward"
+        },
+        "detail": {
+          "onboarding": "Linked X and posted about Superhero",
+          "per_post": "Post with your referral link",
+          "streak_bonus": "{{days}} days of posting in a row",
+          "invite_milestone": "{{friends}} friends joined with your link"
+        },
+        "status": {
+          "paid": "Paid",
+          "pending": "On its way",
+          "failed": "Retrying"
+        }
+      },
       "status": {
         "completed": "COMPLETED",
         "inProgress": "IN PROGRESS",

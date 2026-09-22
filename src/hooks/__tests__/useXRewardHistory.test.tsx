@@ -5,7 +5,11 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { useXRewardHistory, X_REWARD_HISTORY_PENDING_POLL_MS } from '../useXRewardHistory';
+import {
+  useXRewardHistory,
+  X_REWARD_HISTORY_PENDING_POLL_MS,
+  X_REWARD_HISTORY_RETRY_POLL_MS,
+} from '../useXRewardHistory';
 
 const mockGetHistory = vi.fn();
 
@@ -26,6 +30,7 @@ const ADDRESS = 'ak_wallet';
 
 const paid = { status: 'paid', tx_hash: 'th_1', explorer_url: 'https://aescan.io/transactions/th_1' };
 const pending = { status: 'pending', tx_hash: null, explorer_url: null };
+const failed = { status: 'failed', tx_hash: null, explorer_url: null };
 
 function setup(address: string | null = ADDRESS) {
   // Retries on by default, as in the app, so the hook's own `retry: false` is
@@ -72,6 +77,27 @@ describe('useXRewardHistory', () => {
       vi.advanceTimersByTime(X_REWARD_HISTORY_PENDING_POLL_MS);
     });
 
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['xPostingRewardStatus', ADDRESS] });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ['xPostingRewardStatus', 'history', ADDRESS],
+    });
+  });
+
+  it('keeps looking, more slowly, while a failed payout waits for its retry', async () => {
+    mockGetHistory.mockResolvedValue({ items: [failed, paid], truncated: false });
+    const { result, invalidate } = setup();
+    await waitFor(() => expect(result.current.data?.items).toHaveLength(2));
+
+    // Not at the fast in-flight pace...
+    await act(async () => {
+      vi.advanceTimersByTime(X_REWARD_HISTORY_PENDING_POLL_MS);
+    });
+    expect(invalidate).not.toHaveBeenCalled();
+
+    // ...but it does look again, so "Retrying" can turn into "Paid".
+    await act(async () => {
+      vi.advanceTimersByTime(X_REWARD_HISTORY_RETRY_POLL_MS - X_REWARD_HISTORY_PENDING_POLL_MS);
+    });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['xPostingRewardStatus', ADDRESS] });
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: ['xPostingRewardStatus', 'history', ADDRESS],

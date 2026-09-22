@@ -2428,6 +2428,37 @@
       "rewardsEarnedBadge": "المكافآت المكتسبة",
       "aeEarned": "{{amount}} AE مكتسب",
       "rewardsSentAutomatically": "تم إرسال مكافآت AE الخاصة بك تلقائياً إلى محفظتك المتصلة.",
+      "history": {
+        "title": "سجل المكافآت",
+        "subtitle": "تُرسل المكافآت إلى محفظتك تلقائياً، ويتم التحقق من كل دفعة على البلوكتشين. اضغط على أي دفعة لعرضها على æScan.",
+        "empty": "لا توجد مكافآت بعد. تُرسل أول مكافأة تلقائياً بعد أول منشور مؤهل لك على X.",
+        "seeHistory": "عرض سجل المدفوعات",
+        "showAll": "عرض الكل ({{total}})",
+        "showLess": "عرض أقل",
+        "truncated": "يتم عرض آخر {{limit}} دفعة.",
+        "viewOnAescan": "عرض على æScan",
+        "verifiedTooltip": "تم الدفع، وتم التأكيد على البلوكتشين",
+        "amount": "+{{amount}} AE",
+        "kind": {
+          "onboarding": "مكافأة الترحيب",
+          "per_post": "مكافأة المنشور",
+          "streak_bonus": "مكافأة الاستمرارية",
+          "invite_milestone": "مكافأة الدعوات",
+          "unknown": "مكافأة"
+        },
+        "detail": {
+          "onboarding": "ربطت حساب X ونشرت عن Superhero",
+          "per_post": "منشور يحتوي على رابط الإحالة الخاص بك",
+          "streak_bonus": "النشر لمدة {{days}} أيام متتالية",
+          "invite_milestone": "انضم {{friends}} أصدقاء عبر رابطك"
+        },
+        "status": {
+          "paid": "تم الدفع",
+          "pending": "قيد الإرسال",
+          "failed": "إعادة المحاولة",
+          "verified": "موثّقة"
+        }
+      },
       "status": {
         "completed": "مكتمل",
         "inProgress": "قيد التنفيذ",

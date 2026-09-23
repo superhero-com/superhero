@@ -18,6 +18,11 @@ export const SOCIAL_GRAPH_CODES = [
   'MAX_FOLLOWING_REACHED',
   'MAX_BLOCKED_REACHED',
   'FOLLOW_COOLDOWN',
+  'FROZEN',
+  'IMPORTING',
+  'LOW_BALANCE',
+  'CONTRACT_CHANGED',
+  'WRONG_NETWORK',
 ] as const;
 
 export type SocialGraphCode = (typeof SOCIAL_GRAPH_CODES)[number];
@@ -66,6 +71,7 @@ export function extractSocialGraphCode(error: unknown): SocialGraphCode | null {
 }
 
 export type SocialGraphErrorInfo =
+  | { kind: 'cancelled' }
   | { kind: 'silent'; code: SocialGraphCode }
   | {
       kind: 'surface';
@@ -90,6 +96,10 @@ export function classifySocialGraphError(
   error: unknown,
   config?: { max_following?: number; max_blocked?: number },
 ): SocialGraphErrorInfo {
+  const message = error instanceof Error ? error.message : '';
+  if (/transaction cancel(?:led|ed)|(?:rejected|denied) by user|user (?:rejected|denied)/i.test(message)) {
+    return { kind: 'cancelled' };
+  }
   const code = extractSocialGraphCode(error);
 
   if (code && SILENT_RECONCILE_CODES.has(code)) {
@@ -122,6 +132,16 @@ export function classifySocialGraphError(
       };
     case 'FOLLOW_COOLDOWN':
       return { kind: 'surface', code, messageKey: 'socialGraph.errors.cooldown' };
+    case 'FROZEN':
+      return { kind: 'surface', code, messageKey: 'socialGraph.errors.frozen' };
+    case 'IMPORTING':
+      return { kind: 'surface', code, messageKey: 'socialGraph.errors.importing' };
+    case 'LOW_BALANCE':
+      return { kind: 'surface', code, messageKey: 'socialGraph.errors.lowBalance' };
+    case 'CONTRACT_CHANGED':
+      return { kind: 'surface', code, messageKey: 'socialGraph.errors.contractChanged' };
+    case 'WRONG_NETWORK':
+      return { kind: 'surface', code, messageKey: 'socialGraph.errors.wrongNetwork' };
     default:
       return { kind: 'surface', code: null, messageKey: 'socialGraph.errors.generic' };
   }

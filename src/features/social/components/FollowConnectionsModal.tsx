@@ -25,6 +25,7 @@ type Props = {
 };
 
 const TABS: ConnectionsDirection[] = ['followers', 'following'];
+const AUTO_PAGE_LIMIT = 5;
 
 // One row of a followers/following list: the identity the API already resolved,
 // so no per-row name lookup. Navigating to the profile closes the modal — react
@@ -83,26 +84,28 @@ const FollowConnectionsModal = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    data,
   } = useSocialConnections(tab, address, search);
 
   const hasSearch = search.trim().length > 0;
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const fetchingRef = useRef(false);
+  const sentinelRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
-    if (isLoading || !('IntersectionObserver' in window)) return undefined;
+    if (isLoading || typeof window.IntersectionObserver !== 'function') return undefined;
+    // Sparse searches can span millions of slots. Bound automatic work and keep
+    // the continuation button available for deliberate further scanning.
+    if ((data?.pages.length ?? 0) >= AUTO_PAGE_LIMIT) return undefined;
     const sentinel = sentinelRef.current;
     if (!sentinel) return undefined;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (!entry.isIntersecting || fetchingRef.current) return;
+      if (!entry.isIntersecting) return;
       if (!hasNextPage || isFetchingNextPage) return;
-      fetchingRef.current = true;
-      fetchNextPage().finally(() => { fetchingRef.current = false; });
+      fetchNextPage();
     }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, tab, search]);
+  }, [isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, tab, search, data?.pages.length]);
 
   const body = useMemo(() => {
     if (isLoading) {
@@ -130,7 +133,7 @@ const FollowConnectionsModal = ({
         </div>
       );
     }
-    if (items.length === 0) {
+    if (items.length === 0 && !hasNextPage) {
       return (
         <div className="flex flex-col items-center gap-2 py-12 text-center text-white/60">
           {hasSearch
@@ -153,14 +156,24 @@ const FollowConnectionsModal = ({
             onNavigate={() => onClose?.()}
           />
         ))}
-        <div ref={sentinelRef} aria-hidden className="h-1" />
+        {hasNextPage && (
+          <button
+            type="button"
+            ref={sentinelRef}
+            disabled={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            className="my-3 rounded-full border border-white/20 px-4 py-2 text-sm"
+          >
+            {t('socialGraph.list.loadMore', { defaultValue: 'Load more' })}
+          </button>
+        )}
         {isFetchingNextPage && (
           <div className="flex justify-center py-4"><Spinner /></div>
         )}
       </div>
     );
   }, [
-    isLoading, isError, error, items, hasSearch, tab, t, refetch, onClose, isFetchingNextPage,
+    isLoading, isError, error, items, hasSearch, tab, t, refetch, onClose, isFetchingNextPage, hasNextPage, fetchNextPage,
   ]);
 
   return (

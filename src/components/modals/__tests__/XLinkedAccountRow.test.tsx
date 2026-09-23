@@ -13,10 +13,17 @@ import {
   pendingXLinkChange,
   resolveXLink,
 } from '@/utils/confirmedXLink';
+import { PENDING_TRANSACTIONS_STORAGE_KEY } from '@/features/pending-transactions/store';
 import { XLinkedAccountRow } from '../XLinkedAccountRow';
 import { Dialog, DialogContent, DialogTitle } from '../../ui/dialog';
 
 const mockUnlinkXAccount = vi.fn();
+
+// The chain is asked before the API; these tests are about the API.
+vi.mock('@/utils/apiRead', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return { ...actual, isTransactionMined: vi.fn().mockResolvedValue(false) };
+});
 const mockRefreshXLinkState = vi.fn();
 const mockNotifySubmitted = vi.fn();
 const mockNotifyPending = vi.fn();
@@ -132,7 +139,7 @@ describe('XLinkedAccountRow', () => {
 
     const status = screen.getByRole('status');
     expect(status).toHaveTextContent('Unlinking @untracenetwork…');
-    expect(status).toHaveTextContent('This usually takes 2–6 minutes');
+    expect(status).toHaveTextContent('This takes a while. You can leave and come back, then refresh later.');
     expect(within(status).getByRole('progressbar')).toBeInTheDocument();
     // Neither "Unlink" again nor anything that reads as done.
     expect(screen.queryByRole('button', { name: /unlink/i })).not.toBeInTheDocument();
@@ -144,8 +151,10 @@ describe('XLinkedAccountRow', () => {
     setup();
     await unlink();
 
-    const stored = JSON.parse(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY) || '{}');
-    expect(stored[ADDRESS]).toMatchObject({ kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork' });
+    const stored = JSON.parse(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY) || '[]');
+    expect(stored).toEqual([expect.objectContaining({
+      kind: 'unlink_x', account: ADDRESS, txHash: 'th_unlink', meta: { username: 'untracenetwork' },
+    })]);
   });
 
   it('stays on its way while the backend still lists the handle, then settles when it drops it', async () => {

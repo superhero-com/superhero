@@ -257,7 +257,6 @@
       "xCallbackDoneTitle": "X account linked",
       "xCallbackGoBack": "Go back",
       "xCallbackConfirmingTitle": "Confirming on the blockchain",
-      "xCallbackConfirmingDesc": "Your X account is being linked on-chain. This usually takes 2–6 minutes. You can keep browsing; the banner at the top will tell you when it is done.",
       "xUnlinkConfirmTitle": "Unlink your X account?",
       "xUnlinkConfirmDesc": "{{username}} will be removed from your SuperheroID, and you'll stop earning X posting rewards until you link an account again. This is recorded on the blockchain, so it takes a moment to confirm.",
       "chainNameClaimLengthHint": "{{length}}/13 characters before .chain",
@@ -1280,10 +1279,18 @@
       "signToUnlinkX": "Sign the message to unlink your X account",
       "unlinkingXAccount": "Unlinking your X account…",
       "xAccountUnlinked": "X account unlinked",
-      "unlinkingXHandle": "Unlinking {{username}}…",
-      "xLinkChangeWait": "Waiting for the blockchain. This usually takes 2–6 minutes.",
-      "xLinkChangeSlow": "Taking longer than usual. Still waiting for the blockchain…",
-      "xLinkChangeProgressLabel": "Blockchain confirmation progress"
+      "unlinkingXHandle": "Unlinking {{username}}…"
+    },
+    "pendingTransaction": {
+      "stepSent": "Sent",
+      "stepConfirmed": "Confirmed",
+      "stepLive": "Live",
+      "statusSent": "Waiting for the blockchain…",
+      "statusConfirmed": "Confirmed on the blockchain. Updating Superhero…",
+      "statusLive": "Done!",
+      "takesAWhile": "This takes a while. You can leave and come back, then refresh later.",
+      "progressLabel": "Transaction progress",
+      "dismiss": "Dismiss"
     },
     "postLanguageFilter": {
       "shortLabel": "Language",
@@ -2414,18 +2421,6 @@
       "collectRewards": "Collect rewards",
       "notEligibleError": "Not eligible yet: you need {{invitees}} direct invitees who each spent at least {{spent}} AE in token sales.",
       "collectError": "An error occurred while collecting rewards."
-    },
-    "creationBanner": {
-      "statusInProgress": "Token creation in progress",
-      "statusConfirmed": "Transaction confirmed!",
-      "statusWaiting": "Waiting for confirmation…",
-      "stepBroadcast": "Broadcast",
-      "stepConfirm": "Confirm",
-      "stepLive": "Live!",
-      "loadingData": "Loading <token>#{{tokenName}}</token> data from the chain…",
-      "waitingConfirmation": "Your <token>#{{tokenName}}</token> transaction is waiting for confirmation. Usually takes 10–60 s.",
-      "beingConfirmed": "Your token <token>#{{tokenName}}</token> is being confirmed on the blockchain.",
-      "dismissAria": "Dismiss notification"
     },
     "ranking": {
       "title": "Ranking Race",

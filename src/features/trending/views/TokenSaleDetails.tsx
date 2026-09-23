@@ -37,7 +37,6 @@ import {
 import ShareModal from '../../../components/ui/ShareModal';
 
 // Feature components
-import { CONFIG } from '../../../config';
 import { TokenSummary } from '../../bcl/components';
 import TokenCandlestickChartSkeleton from '../components/Skeletons/TokenCandlestickChartSkeleton';
 import TokenSaleSidebarSkeleton from '../components/Skeletons/TokenSaleSidebarSkeleton';
@@ -48,10 +47,17 @@ import {
   TokenTradeTab,
   TokenTransactionsTab,
 } from '../components/tabs';
-import TokenCreationBanner from '../components/TokenCreationBanner';
+import {
+  PendingTransaction,
+  type PendingTransactionStage,
+} from '../../pending-transactions/PendingTransaction';
+import { bannerShowsTransaction } from '../../pending-transactions/payload';
+import { pendingTransactionTitle } from '../../pending-transactions/titles';
+import { useTransactionNotification } from '../../transaction-notification';
 import TokenRanking from '../components/TokenRanking/TokenRanking';
 import TokenTradeCard from '../components/TokenTradeCard';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
+import { usePendingTokenCreation } from '../utils/pendingTokenCreation';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
 
 // Tab constants
@@ -86,6 +92,7 @@ function mobileTabBtnClass(tokenDoesNotExist: boolean, isActive: boolean): strin
 
 const TokenSaleDetails = () => {
   const { t } = useTranslation();
+  const { t: tCommon } = useTranslation('common');
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -97,11 +104,7 @@ const TokenSaleDetails = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
 
-  const [showCreatedOverlay, setShowCreatedOverlay] = useState(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get('created') === 'true';
-  });
-  const [txConfirmed, setTxConfirmed] = useState(false);
+  const [creationDismissed, setCreationDismissed] = useState(false);
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
@@ -184,16 +187,23 @@ const TokenSaleDetails = () => {
     }
   }, [location.search, showTradePanels, isMobile]);
 
-  // Post-deploy flow: CreateTokenView navigates here with ?created=true (see also txHash).
-  const isTokenNewlyCreated = useMemo(() => {
+  // Post-deploy flow: CreateTokenView navigates here with ?created=true.
+  const createdParam = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get('created') === 'true';
   }, [location.search]);
 
-  const txHash = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get('txHash');
-  }, [location.search]);
+  // A creation of this token still on its way, from this visit or an earlier
+  // one: coming back to the page, or reloading it, keeps showing the wait
+  // instead of "token not found".
+  const pendingCreation = usePendingTokenCreation(tokenName);
+  const isTokenNewlyCreated = createdParam || Boolean(pendingCreation);
+  // Shown in one place at a time: the top banner when it has it, this page
+  // when it does not (dismissed, or taken by another transaction).
+  const { notificationState } = useTransactionNotification();
+  const bannerShowsCreation = Boolean(
+    pendingCreation && bannerShowsTransaction(notificationState, pendingCreation),
+  );
 
   // Token data query
   const {
@@ -231,59 +241,37 @@ const TokenSaleDetails = () => {
     ...(tokenData || {}),
   }), [tokenData, _token]);
 
-  // Poll AE node every 5 seconds until transaction is mined (block_height !== -1)
+  // Where the creation is. The pending-transactions store watches the chain
+  // and the backend for it (and refetches this token everywhere once live).
+  let creationStage: PendingTransactionStage = 'sent';
+  if (token?.sale_address) creationStage = 'live';
+  else if (pendingCreation?.step === 'confirmed') creationStage = 'confirmed';
+
+  // Poll every 5 seconds until the token is available. While the store still
+  // has it waiting on the chain there is nothing to find yet; without an entry
+  // (a link opened elsewhere) keep asking regardless.
+  const waitingOnChain = pendingCreation?.step === 'sent';
   useEffect(() => {
-    if (!txHash || txConfirmed) return () => { };
-
-    const pollTx = async () => {
-      try {
-        const res = await fetch(
-          `${CONFIG.NODE_URL}/v3/transactions/${txHash}?int-as-string=false`,
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.block_height !== undefined && data.block_height !== -1) {
-          setTxConfirmed(true);
-        }
-      } catch { /* ignore network errors, keep polling */ }
-    };
-
-    pollTx();
-    const interval = setInterval(pollTx, 5000);
-    return () => clearInterval(interval);
-  }, [txHash, txConfirmed]);
-
-  // Poll every 5 seconds when the token was just created until it is available.
-  // When txHash is present, wait for the transaction to be mined first.
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('created') !== 'true') return () => { };
-    if (token?.sale_address) return () => { };
-    if (txHash && !txConfirmed) return () => { };
+    if (!isTokenNewlyCreated || token?.sale_address || waitingOnChain) return () => { };
 
     const intervalId = setInterval(() => {
       refetch();
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [location.search, token?.sale_address, refetch, txHash, txConfirmed]);
+  }, [isTokenNewlyCreated, token?.sale_address, refetch, waitingOnChain]);
 
-  // Handle successful token load after creation
+  // Once the token is live, drop the post-deploy query params.
   useEffect(() => {
-    if (showCreatedOverlay && token?.sale_address && !isLoading) {
-      // Token successfully loaded, hide overlay and remove query param
-      setShowCreatedOverlay(false);
-      const params = new URLSearchParams(location.search);
-      if (params.get('created') === 'true') {
-        params.delete('created');
-        params.delete('txHash');
-        navigate(
-          { pathname: location.pathname, search: params.toString() },
-          { replace: true },
-        );
-      }
-    }
-  }, [showCreatedOverlay, token?.sale_address, isLoading, location.pathname, location.search, navigate]);
+    if (!createdParam || !token?.sale_address || isLoading) return;
+    const params = new URLSearchParams(location.search);
+    params.delete('created');
+    params.delete('txHash');
+    navigate(
+      { pathname: location.pathname, search: params.toString() },
+      { replace: true },
+    );
+  }, [createdParam, token?.sale_address, isLoading, location.pathname, location.search, navigate]);
 
   const openTradePanel = () => {
     const params = new URLSearchParams(location.search);
@@ -886,14 +874,17 @@ const TokenSaleDetails = () => {
         </button>
       )}
 
-      {/* Token Creation Banner */}
-      {showCreatedOverlay && (
-        <TokenCreationBanner
-          txHash={txHash}
-          txConfirmed={txConfirmed}
-          tokenName={tokenName}
-          hasSaleAddress={!!token?.sale_address}
-          onDismiss={() => setShowCreatedOverlay(false)}
+      {/* Token creation on its way */}
+      {isTokenPending && !creationDismissed && !bannerShowsCreation && (
+        <PendingTransaction
+          variant="floating"
+          title={pendingTransactionTitle(tCommon, {
+            kind: 'create_token',
+            meta: { tokenName: pendingCreation?.meta.tokenName ?? tokenName ?? '' },
+          })}
+          stage={creationStage}
+          startedAt={pendingCreation?.startedAt}
+          onDismiss={() => setCreationDismissed(true)}
         />
       )}
     </div>

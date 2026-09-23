@@ -24,6 +24,7 @@ import {
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import BondingCurveGraph from '../components/BondingCurveGraph';
 import { createCommunity } from '../libs/createCommunity';
+import { trackTokenCreation } from '../utils/pendingTokenCreation';
 import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
@@ -55,7 +56,9 @@ const CreateTokenView = () => {
   const { activeAccount, sdk } = useAeSdk();
   const [, setTransactionType] = useAtom(transactionTypeAtom);
   const [, setCreateTokenDetails] = useAtom(createTokenDetailsAtom);
-  const { notifySubmitted, notifyPendingTx, notifyError } = useTransactionNotification();
+  const {
+    notifySubmitted, notifyPending, notifyPendingTx, notifyError,
+  } = useTransactionNotification();
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
@@ -457,7 +460,14 @@ const CreateTokenView = () => {
         factory.address,
       );
 
-      notifyPendingTx(notificationPayload, txHash);
+      if (activeAccount) {
+        // Followed until the token is live, across pages and reloads; the
+        // app-level sync says "created" then, not merely when it is mined.
+        const tracked = trackTokenCreation(activeAccount, txHash, tokenName);
+        notifyPending({ ...notificationPayload, startedAt: tracked.startedAt });
+      } else {
+        notifyPendingTx(notificationPayload, txHash);
+      }
       navigate(`/trends/tokens/${tokenName}?created=true&txHash=${txHash}`);
     } catch (error: any) {
       console.error('Error creating token:', error);

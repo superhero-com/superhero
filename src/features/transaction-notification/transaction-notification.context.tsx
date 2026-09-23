@@ -27,7 +27,9 @@ export type TxPayload =
   | { type: typeof TxPayloadType.BuyToken; tokenName: string; tokenSymbol: string; coinAmount: string; estimatedTokens: string; saleAddress?: string }
   | { type: typeof TxPayloadType.SellToken; tokenName: string; tokenSymbol: string; tokenAmount: string; estimatedCoin: string; saleAddress?: string }
   | { type: typeof TxPayloadType.ApproveAllowance; tokenName: string; tokenSymbol: string; amount: string; stepNumber: number; totalSteps: number }
-  | { type: typeof TxPayloadType.CreateToken; tokenName: string }
+  // `startedAt`: when the creation was broadcast, for the pending card; the
+  // token is live once the backend has it, which can take minutes.
+  | { type: typeof TxPayloadType.CreateToken; tokenName: string; startedAt?: number }
   | { type: typeof TxPayloadType.CreatePost; content: string }
   | { type: typeof TxPayloadType.CreateComment; postId: string }
   | { type: typeof TxPayloadType.ClaimChainName; name: string; step?: 'wallet' | 'queued' | 'preclaim' | 'claim' | 'update' | 'transfer' }

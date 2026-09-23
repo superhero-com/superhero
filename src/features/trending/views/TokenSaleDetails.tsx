@@ -57,7 +57,7 @@ import { useTransactionNotification } from '../../transaction-notification';
 import TokenRanking from '../components/TokenRanking/TokenRanking';
 import TokenTradeCard from '../components/TokenTradeCard';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
-import { usePendingTokenCreation } from '../utils/pendingTokenCreation';
+import { usePendingTokenCreation, useTokenJustCreated } from '../utils/pendingTokenCreation';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
 
 // Tab constants
@@ -197,7 +197,9 @@ const TokenSaleDetails = () => {
   // one: coming back to the page, or reloading it, keeps showing the wait
   // instead of "token not found".
   const pendingCreation = usePendingTokenCreation(tokenName);
-  const isTokenNewlyCreated = createdParam || Boolean(pendingCreation);
+  // Live in the backend already, but this page may not have refetched it yet.
+  const justCreated = useTokenJustCreated(tokenName);
+  const isTokenNewlyCreated = createdParam || Boolean(pendingCreation) || justCreated;
   // Shown in one place at a time: the top banner when it has it, this page
   // when it does not (dismissed, or taken by another transaction).
   const { notificationState } = useTransactionNotification();
@@ -244,7 +246,7 @@ const TokenSaleDetails = () => {
   // Where the creation is. The pending-transactions store watches the chain
   // and the backend for it (and refetches this token everywhere once live).
   let creationStage: PendingTransactionStage = 'sent';
-  if (token?.sale_address) creationStage = 'live';
+  if (token?.sale_address || justCreated) creationStage = 'live';
   else if (pendingCreation?.step === 'confirmed') creationStage = 'confirmed';
 
   // Poll every 5 seconds until the token is available. While the store still
@@ -875,7 +877,8 @@ const TokenSaleDetails = () => {
       )}
 
       {/* Token creation on its way */}
-      {isTokenPending && !creationDismissed && !bannerShowsCreation && (
+      {/* Once live, the top banner says so; nothing left to wait for here. */}
+      {isTokenPending && !creationDismissed && !bannerShowsCreation && !justCreated && (
         <PendingTransaction
           variant="floating"
           title={pendingTransactionTitle(tCommon, {

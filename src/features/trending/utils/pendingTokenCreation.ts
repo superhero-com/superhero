@@ -2,6 +2,7 @@ import { TokensService } from '@/api/generated';
 import { usePendingTransactionsVersion } from '@/features/pending-transactions/usePendingTransactions';
 import {
   findPendingTransaction,
+  onPendingTransactionSettled,
   registerPendingTransactionResolver,
   trackPendingTransaction,
   type PendingTransaction,
@@ -16,6 +17,25 @@ registerPendingTransactionResolver('create_token', async (transaction) => {
   if (!tokenName) return undefined;
   const token: any = await TokensService.findByAddress({ address: toTokenLookupParam(tokenName) });
   return token?.sale_address ? { saleAddress: String(token.sale_address) } : undefined;
+});
+
+/**
+ * How long a token that just went live still counts as "just created". The
+ * store drops the entry the moment the backend has the token, before a page
+ * that shows it has refetched; this bridges that gap, so the page neither
+ * shows the wait again nor flashes "not found".
+ */
+export const JUST_CREATED_TTL_MS = 5 * 60_000;
+
+const justCreated = new Map<string, number>();
+
+const tokenKey = (tokenName: string) => tokenName.toLowerCase();
+
+// Recorded before the store re-renders anything (settled listeners run first).
+onPendingTransactionSettled(({ transaction, outcome }) => {
+  if (transaction.kind !== 'create_token' || outcome !== 'settled') return;
+  const { tokenName } = transaction.meta;
+  if (tokenName) justCreated.set(tokenKey(tokenName), Date.now());
 });
 
 /** Follow a broadcast token creation until the token is live. */
@@ -56,4 +76,22 @@ export function usePendingTokenCreation(
 ): PendingTransaction | null {
   usePendingTransactionsVersion();
   return pendingTokenCreation(tokenName);
+}
+
+/** Whether `tokenName` went live moments ago, as followed by this app. */
+export function tokenJustCreated(tokenName: string | null | undefined): boolean {
+  if (!tokenName) return false;
+  const at = justCreated.get(tokenKey(tokenName));
+  if (at === undefined) return false;
+  if (Date.now() - at > JUST_CREATED_TTL_MS) {
+    justCreated.delete(tokenKey(tokenName));
+    return false;
+  }
+  return true;
+}
+
+/** `tokenJustCreated`, kept current as creations settle. */
+export function useTokenJustCreated(tokenName: string | null | undefined): boolean {
+  usePendingTransactionsVersion();
+  return tokenJustCreated(tokenName);
 }

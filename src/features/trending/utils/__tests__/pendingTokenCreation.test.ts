@@ -4,10 +4,16 @@ import {
 import {
   PENDING_TRANSACTIONS_STORAGE_KEY,
   PENDING_TRANSACTION_POLL_MS,
+  PENDING_TRANSACTION_TIMEOUT_MS,
   clearPendingTransactions,
   onPendingTransactionSettled,
 } from '@/features/pending-transactions/store';
-import { pendingTokenCreation, trackTokenCreation } from '../pendingTokenCreation';
+import {
+  JUST_CREATED_TTL_MS,
+  pendingTokenCreation,
+  tokenJustCreated,
+  trackTokenCreation,
+} from '../pendingTokenCreation';
 
 const mockFindToken = vi.fn();
 const mockIsMined = vi.fn();
@@ -83,5 +89,28 @@ describe('a token creation on its way', () => {
     }));
     expect(mockFindToken).toHaveBeenCalledWith({ address: 'SUPERHERO' });
     unsubscribe();
+  });
+
+  it('counts as just created for a while after it goes live, so the page does not show the wait again', async () => {
+    expect(tokenJustCreated('LIVENOW')).toBe(false);
+    trackTokenCreation('ak_owner', 'th_live', 'LIVENOW');
+    mockIsMined.mockResolvedValue(true);
+    mockFindToken.mockResolvedValue({ name: 'LIVENOW', sale_address: 'ct_live' });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(pendingTokenCreation('LIVENOW')).toBeNull();
+    expect(tokenJustCreated('livenow')).toBe(true);
+    expect(tokenJustCreated('OTHER')).toBe(false);
+
+    vi.advanceTimersByTime(JUST_CREATED_TTL_MS + 1);
+    expect(tokenJustCreated('LIVENOW')).toBe(false);
+  });
+
+  it('does not count one that was given up on', async () => {
+    trackTokenCreation('ak_owner', 'th_dropped', 'DROPPED');
+    await vi.advanceTimersByTimeAsync(PENDING_TRANSACTION_TIMEOUT_MS + PENDING_TRANSACTION_POLL_MS);
+
+    expect(pendingTokenCreation('DROPPED')).toBeNull();
+    expect(tokenJustCreated('DROPPED')).toBe(false);
   });
 });

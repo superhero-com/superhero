@@ -55,8 +55,8 @@ describe('ProfileSocialStats', () => {
     expect(screen.queryByRole('status')).toBeNull();
     expect(screen.queryByText('Counts unavailable')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
-    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent(/^\-$/);
-    expect(screen.getByTestId('profile-following-count')).toHaveTextContent(/^\-$/);
+    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent(/^-$/);
+    expect(screen.getByTestId('profile-following-count')).toHaveTextContent(/^-$/);
     expect(screen.getByRole('button', { name: '- Followers' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '- Following' })).toBeDisabled();
     expect(screen.getByText('Followers')).toBeInTheDocument();

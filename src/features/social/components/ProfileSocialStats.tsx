@@ -8,14 +8,13 @@ interface ProfileSocialStatsProps {
   followersCount?: number | null;
   followingCount?: number | null;
   countsStatus?: 'loading' | 'ready' | 'error';
-  onRetryCounts?: () => void;
   postsCount?: number | null;
   onPostsClick?: () => void;
   className?: string;
 }
 
 const ProfileSocialStats = ({
-  address, followersCount, followingCount, countsStatus, onRetryCounts,
+  address, followersCount, followingCount, countsStatus,
   postsCount, onPostsClick, className = '',
 }: ProfileSocialStatsProps) => {
   const { t } = useTranslation('common');
@@ -42,7 +41,7 @@ const ProfileSocialStats = ({
     graph = false,
   ) => {
     let value = typeof count === 'number' ? count.toLocaleString() : null;
-    if (graph && failed) value = '—';
+    if (graph && failed) value = '-';
     return (
       <button
         type="button"
@@ -108,16 +107,6 @@ const ProfileSocialStats = ({
           {seg}
         </span>
       ))}
-      {failed && (
-        <span className="inline-flex items-center gap-2 text-xs text-white/55">
-          <span role="status">{t('socialGraph.counts.error')}</span>
-          {onRetryCounts && (
-            <button type="button" onClick={onRetryCounts} className="text-white underline underline-offset-4">
-              {t('buttons.retry')}
-            </button>
-          )}
-        </span>
-      )}
     </div>
   );
 };

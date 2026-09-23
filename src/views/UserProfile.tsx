@@ -67,7 +67,7 @@ export default function UserProfile({
     isChainName ? address : undefined,
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
-  const { data: graphCounts, countsStatus, retryCounts } = useSocialGraphCounts(effectiveAddress);
+  const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
   const { aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
@@ -353,7 +353,6 @@ export default function UserProfile({
         followersCount={graphCounts?.followers}
         followingCount={graphCounts?.following}
         countsStatus={countsStatus}
-        onRetryCounts={retryCounts}
         postsCount={postsTotal}
         onBack={() => {
           const state = (window.history?.state as any) || {};

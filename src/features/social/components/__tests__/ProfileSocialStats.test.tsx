@@ -42,8 +42,7 @@ describe('ProfileSocialStats', () => {
     expect(screen.getByRole('status', { name: 'Loading Following' })).toBeInTheDocument();
   });
 
-  it('replaces spinners with real counts, retains them during refresh, and offers retry on failure', () => {
-    const retry = vi.fn();
+  it('replaces spinners with real counts, retains them during refresh, and shows only dashes on failure', () => {
     const { rerender } = render(<ProfileSocialStats address={ADDR} countsStatus="loading" />);
     rerender(<ProfileSocialStats address={ADDR} countsStatus="ready" followersCount={1} followingCount={0} />);
     expect(screen.queryByRole('status')).toBeNull();
@@ -52,14 +51,16 @@ describe('ProfileSocialStats', () => {
     rerender(<ProfileSocialStats address={ADDR} countsStatus="loading" followersCount={1} followingCount={0} />);
     expect(screen.getByTestId('profile-followers-count')).toHaveTextContent('1');
     expect(screen.getByRole('status', { name: 'Loading Followers' })).toBeInTheDocument();
-    rerender(<ProfileSocialStats address={ADDR} countsStatus="error" followersCount={1} followingCount={0} onRetryCounts={retry} />);
-    expect(screen.queryByRole('status', { name: 'Loading Followers' })).toBeNull();
-    expect(screen.getByRole('status')).toHaveTextContent('Counts unavailable');
-    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent('—');
+    rerender(<ProfileSocialStats address={ADDR} countsStatus="error" followersCount={1} followingCount={0} />);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByText('Counts unavailable')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent(/^\-$/);
+    expect(screen.getByTestId('profile-following-count')).toHaveTextContent(/^\-$/);
+    expect(screen.getByRole('button', { name: '- Followers' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '- Following' })).toBeDisabled();
     expect(screen.getByText('Followers')).toBeInTheDocument();
     expect(screen.getByText('Following')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(retry).toHaveBeenCalledOnce();
   });
 
   it('opens the followers list and fires the posts callback', () => {

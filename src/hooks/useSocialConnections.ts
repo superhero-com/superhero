@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useSocialGraphConfig, socialGraphScope } from './useSocialGraph';
 import {
   SocialGraphConnectionsService,
   type SocialGraphAccount,
@@ -21,10 +22,11 @@ export function useSocialConnections(
   search?: string,
 ) {
   const trimmed = search?.trim() || undefined;
-  const enabled = !!address && address.startsWith('ak_');
+  const { data: config } = useSocialGraphConfig();
+  const enabled = !!address && address.startsWith('ak_') && !!config?.contract_address;
 
   const query = useInfiniteQuery<SocialGraphConnectionsPage>({
-    queryKey: ['SocialGraphConnections', direction, address, trimmed],
+    queryKey: ['SocialGraphConnections', ...socialGraphScope(), config?.contract_address, direction, address, trimmed],
     enabled,
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) => {

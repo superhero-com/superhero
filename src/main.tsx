@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { OpenAPI } from './api/generated';
-import { CONFIG } from './config';
+import { API_BASE_URL } from './config';
 import { evictLegacyAex9BalancesCache } from './utils/jotaiSafeLocalStorage';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -20,7 +20,7 @@ import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
 
-OpenAPI.BASE = (CONFIG.SUPERHERO_API_URL || 'https://api.superhero.com').replace(/\/$/, '');
+OpenAPI.BASE = API_BASE_URL;
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 

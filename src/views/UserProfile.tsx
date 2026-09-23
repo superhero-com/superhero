@@ -49,6 +49,7 @@ import { XLinkChangePending } from '../components/XLinkChangePending';
 import { useModal } from '../hooks';
 import { useProfile } from '../hooks/useProfile';
 import { useAeSdk } from '../hooks/useAeSdk';
+import { useSocialGraphCounts } from '../hooks/useSocialGraph';
 import { isMobileDevice, isStandalone } from '../utils/displayMode';
 
 type TabType = 'feed' | 'owned' | 'created' | 'transactions';
@@ -66,6 +67,7 @@ export default function UserProfile({
     isChainName ? address : undefined,
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
+  const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
   const { aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
@@ -348,8 +350,9 @@ export default function UserProfile({
         bio={bioText}
         site={linkedSite}
         ownProfile={canEdit}
-        followersCount={accountInfo?.profile?.followers_count}
-        followingCount={accountInfo?.profile?.following_count}
+        followersCount={graphCounts?.followers}
+        followingCount={graphCounts?.following}
+        countsStatus={countsStatus}
         postsCount={postsTotal}
         onBack={() => {
           const state = (window.history?.state as any) || {};

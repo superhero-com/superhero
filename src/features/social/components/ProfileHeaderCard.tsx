@@ -20,6 +20,7 @@ interface ProfileHeaderCardProps {
   ownProfile: boolean;
   followersCount?: number | null;
   followingCount?: number | null;
+  countsStatus?: 'loading' | 'ready' | 'error';
   postsCount?: number | null;
   onBack: () => void;
   onEdit: () => void;
@@ -62,6 +63,7 @@ const ProfileHeaderCard = ({
   ownProfile,
   followersCount,
   followingCount,
+  countsStatus,
   postsCount,
   onBack,
   onEdit,
@@ -121,6 +123,7 @@ const ProfileHeaderCard = ({
               address={address}
               followersCount={followersCount}
               followingCount={followingCount}
+              countsStatus={countsStatus}
               postsCount={postsCount}
               onPostsClick={onPostsClick}
               className="min-w-0 flex-wrap"

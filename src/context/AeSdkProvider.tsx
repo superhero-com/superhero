@@ -23,7 +23,6 @@ import {
   transactionsQueueAtom,
 } from '../atoms/txQueueAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
-import { CONFIG } from '../config';
 import { useModal } from '../hooks/useModal';
 import { CURRENT_NETWORK, IS_MOBILE } from '../utils/constants';
 import { safeLocalStringStorage } from '../utils/jotaiSafeLocalStorage';
@@ -659,14 +658,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Connect to WebSocket for real-time updates (empty URL would make socket.io use page origin)
     WebSocketClient.disconnect();
-    WebSocketClient.connect(
-      activeNetwork.websocketUrl || CONFIG.BACKEND_URL,
-    );
+    WebSocketClient.connect();
   }, [
     sdkInitialized,
     activeAccount,
     getCurrentGeneration,
-    activeNetwork.websocketUrl,
     setActiveAccount,
     setWalletInfo,
     addStaticAccount,

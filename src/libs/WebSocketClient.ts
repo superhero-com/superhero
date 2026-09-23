@@ -10,6 +10,7 @@ import type {
   WebSocketChannelName,
 } from '@/utils/types';
 import { io, Socket } from 'socket.io-client';
+import { API_BASE_URL } from '@/config';
 import { v4 as genUuid } from 'uuid';
 
 class WebSocketClient {
@@ -18,6 +19,8 @@ class WebSocketClient {
   socketClient?: Socket;
 
   isWsConnected = false;
+
+  private connectionSubscribers = new Set<() => void>();
 
   subscribersQueue: IWebSocketSubscriptionMessage[] = [];
 
@@ -29,6 +32,7 @@ class WebSocketClient {
       [WEB_SOCKET_CHANNELS.TokenUpdated]: {},
       [WEB_SOCKET_CHANNELS.TokenTransaction]: {},
       [WEB_SOCKET_CHANNELS.TokenHistory]: {},
+      [WEB_SOCKET_CHANNELS.SocialGraphUpdated]: {},
     };
 
   setUpSocketListeners() {
@@ -37,6 +41,9 @@ class WebSocketClient {
     }
     this.socketClient.on('connect', () => this.handleWebsocketOpen());
     this.socketClient.on('disconnect', () => this.handleWebsocketClose());
+    this.socketClient.on(WEB_SOCKET_CHANNELS.SocialGraphUpdated, (payload: any) => {
+      this.handleWebsocketMessage({ subscription: WEB_SOCKET_CHANNELS.SocialGraphUpdated, payload });
+    });
     this.socketClient.on(WEB_SOCKET_CHANNELS.TokenCreated, (message: any) => {
       this.handleWebsocketMessage({
         subscription: WEB_SOCKET_CHANNELS.TokenCreated,
@@ -73,6 +80,7 @@ class WebSocketClient {
 
   private handleWebsocketOpen() {
     this.isWsConnected = true;
+    this.connectionSubscribers.forEach((callback) => callback());
     try {
       this.subscribersQueue.forEach((message) => {
         if (!this.socketClient) {
@@ -105,6 +113,17 @@ class WebSocketClient {
     return () => {
       delete this.subscribers[location][uuid];
     };
+  }
+
+  subscribeForConnection(callback: () => void) {
+    this.connectionSubscribers.add(callback);
+    return () => { this.connectionSubscribers.delete(callback); };
+  }
+
+  subscribeForSocialGraphUpdates(callback: (payload: {
+    network: string; contract: string; generation?: string; accounts?: string[];
+  }) => void) {
+    return this.subscribeForChannel({ payload: WEB_SOCKET_CHANNELS.SocialGraphUpdated }, callback);
   }
 
   subscribeForTokenUpdates(sale_address: string, callback: (payload: ITransaction) => void) {
@@ -178,7 +197,7 @@ class WebSocketClient {
     this.socketClient = undefined;
   }
 
-  connect(url: string) {
+  connect(url = API_BASE_URL) {
     if (this.socketClient) {
       this.disconnect();
     }

@@ -1,5 +1,136 @@
 [
   {
+    "namespace": {
+      "name": "ListInternal",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "List",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "SocialGraph",
+      "typedefs": [
+        {
+          "name": "item",
+          "typedef": {
+            "variant": [
+              {
+                "Follow": [
+                  "address",
+                  "address"
+                ]
+              },
+              {
+                "Block": [
+                  "address",
+                  "address"
+                ]
+              },
+              {
+                "Rate": [
+                  "address",
+                  "int"
+                ]
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "page",
+          "typedef": {
+            "record": [
+              {
+                "name": "items",
+                "type": {
+                  "list": [
+                    "SocialGraph.item"
+                  ]
+                }
+              },
+              {
+                "name": "next_cursor",
+                "type": "int"
+              },
+              {
+                "name": "end_cursor",
+                "type": "int"
+              }
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
+  },
+  {
+    "contract": {
+      "functions": [
+        {
+          "arguments": [],
+          "name": "get_config",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "int",
+              "int",
+              "int"
+            ]
+          },
+          "stateful": false
+        }
+      ],
+      "kind": "contract_interface",
+      "name": "LegacySource",
+      "payable": false,
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "functions": [
+        {
+          "arguments": [],
+          "name": "migration_status",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "bool",
+              "int",
+              "int"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "_1",
+              "type": "int"
+            },
+            {
+              "name": "_2",
+              "type": "int"
+            }
+          ],
+          "name": "export_page",
+          "payable": false,
+          "returns": "SocialGraph.page",
+          "stateful": false
+        }
+      ],
+      "kind": "contract_interface",
+      "name": "GraphSource",
+      "payable": false,
+      "typedefs": []
+    }
+  },
+  {
     "contract": {
       "event": {
         "variant": [
@@ -26,6 +157,81 @@
               "address",
               "address"
             ]
+          },
+          {
+            "OwnerNominated": [
+              "address"
+            ]
+          },
+          {
+            "OwnerChanged": [
+              "address"
+            ]
+          },
+          {
+            "ConfigProposed": [
+              "int"
+            ]
+          },
+          {
+            "ConfigChanged": [
+              "int"
+            ]
+          },
+          {
+            "ConfigCancelled": [
+              "int"
+            ]
+          },
+          {
+            "SuccessorAnnounced": [
+              "address",
+              "int"
+            ]
+          },
+          {
+            "SuccessorCancelled": [
+              "address"
+            ]
+          },
+          {
+            "Frozen": [
+              "address"
+            ]
+          },
+          {
+            "ImportStarted": [
+              "address"
+            ]
+          },
+          {
+            "ImportProgress": [
+              "int",
+              "int"
+            ]
+          },
+          {
+            "ImportCompleted": [
+              "address"
+            ]
+          },
+          {
+            "LowBalanceObserved": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "ObservationCleared": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "LowBalanceRemoved": [
+              "address",
+              "address"
+            ]
           }
         ]
       },
@@ -43,6 +249,10 @@
             {
               "name": "follow_cooldown",
               "type": "int"
+            },
+            {
+              "name": "import_mode",
+              "type": "bool"
             }
           ],
           "name": "init",
@@ -53,13 +263,93 @@
         {
           "arguments": [
             {
+              "name": "a",
+              "type": "address"
+            }
+          ],
+          "name": "nominate_owner",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "accept_ownership",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "c",
+              "type": "SocialContract.config"
+            }
+          ],
+          "name": "propose_config",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "cancel_config",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "apply_config",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "next",
+              "type": "GraphSource"
+            }
+          ],
+          "name": "announce_successor",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "cancel_successor",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
               "name": "target",
               "type": "address"
             }
           ],
           "name": "follow",
           "payable": false,
-          "returns": "unit",
+          "returns": {
+            "tuple": []
+          },
           "stateful": true
         },
         {
@@ -71,7 +361,9 @@
           ],
           "name": "unfollow",
           "payable": false,
-          "returns": "unit",
+          "returns": {
+            "tuple": []
+          },
           "stateful": true
         },
         {
@@ -83,7 +375,9 @@
           ],
           "name": "block",
           "payable": false,
-          "returns": "unit",
+          "returns": {
+            "tuple": []
+          },
           "stateful": true
         },
         {
@@ -95,13 +389,137 @@
           ],
           "name": "unblock",
           "payable": false,
-          "returns": "unit",
+          "returns": {
+            "tuple": []
+          },
           "stateful": true
         },
         {
           "arguments": [
             {
-              "name": "addr",
+              "name": "follower",
+              "type": "address"
+            }
+          ],
+          "name": "observe_low_balance",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "follower",
+              "type": "address"
+            }
+          ],
+          "name": "clear_low_balance_observation",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "followers",
+              "type": {
+                "list": [
+                  "address"
+                ]
+              }
+            }
+          ],
+          "name": "cleanup_followers",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
+              "type": "address"
+            },
+            {
+              "name": "cursor",
+              "type": "int"
+            },
+            {
+              "name": "limit",
+              "type": "int"
+            }
+          ],
+          "name": "get_followers_page",
+          "payable": false,
+          "returns": "SocialContract.address_page",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
+              "type": "address"
+            },
+            {
+              "name": "cursor",
+              "type": "int"
+            },
+            {
+              "name": "limit",
+              "type": "int"
+            }
+          ],
+          "name": "get_following_page",
+          "payable": false,
+          "returns": "SocialContract.address_page",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
+              "type": "address"
+            },
+            {
+              "name": "cursor",
+              "type": "int"
+            },
+            {
+              "name": "limit",
+              "type": "int"
+            }
+          ],
+          "name": "get_blocked_page",
+          "payable": false,
+          "returns": "SocialContract.address_page",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "cursor",
+              "type": "int"
+            },
+            {
+              "name": "limit",
+              "type": "int"
+            }
+          ],
+          "name": "export_page",
+          "payable": false,
+          "returns": "SocialGraph.page",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
               "type": "address"
             }
           ],
@@ -113,7 +531,7 @@
         {
           "arguments": [
             {
-              "name": "addr",
+              "name": "a",
               "type": "address"
             }
           ],
@@ -125,11 +543,23 @@
         {
           "arguments": [
             {
-              "name": "follower",
+              "name": "a",
+              "type": "address"
+            }
+          ],
+          "name": "get_blocked_count",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "a",
               "type": "address"
             },
             {
-              "name": "target",
+              "name": "b",
               "type": "address"
             }
           ],
@@ -141,11 +571,11 @@
         {
           "arguments": [
             {
-              "name": "blocker",
+              "name": "a",
               "type": "address"
             },
             {
-              "name": "target",
+              "name": "b",
               "type": "address"
             }
           ],
@@ -182,6 +612,232 @@
             ]
           },
           "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_policy",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "SocialContract.config",
+              "int",
+              {
+                "option": [
+                  {
+                    "tuple": [
+                      "SocialContract.config",
+                      "int"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_owner",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "address",
+              {
+                "option": [
+                  "address"
+                ]
+              }
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_lifecycle",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              {
+                "option": [
+                  "address"
+                ]
+              },
+              "int",
+              "bool",
+              "bool"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "migration_status",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "bool",
+              "int",
+              "int"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "freeze_for_migration",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "source",
+              "type": "GraphSource"
+            }
+          ],
+          "name": "begin_import",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "legacy",
+              "type": "LegacySource"
+            },
+            {
+              "name": "records",
+              "type": "int"
+            },
+            {
+              "name": "commitment",
+              "type": {
+                "bytes": 32
+              }
+            }
+          ],
+          "name": "begin_legacy_import",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "previous",
+              "type": {
+                "bytes": 32
+              }
+            },
+            {
+              "name": "items",
+              "type": {
+                "list": [
+                  "SocialGraph.item"
+                ]
+              }
+            }
+          ],
+          "name": "hash_migration_batch",
+          "payable": false,
+          "returns": {
+            "bytes": 32
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "expected_cursor",
+              "type": "int"
+            },
+            {
+              "name": "items",
+              "type": {
+                "list": [
+                  "SocialGraph.item"
+                ]
+              }
+            }
+          ],
+          "name": "import_legacy_batch",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "expected_cursor",
+              "type": "int"
+            },
+            {
+              "name": "limit",
+              "type": "int"
+            }
+          ],
+          "name": "import_next",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "finish_import",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "get_import_progress",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              "int",
+              "int",
+              "int",
+              "int",
+              {
+                "bytes": 32
+              }
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "get_import_source",
+          "payable": false,
+          "returns": {
+            "tuple": [
+              {
+                "option": [
+                  "GraphSource"
+                ]
+              },
+              {
+                "option": [
+                  "address"
+                ]
+              }
+            ]
+          },
+          "stateful": false
         }
       ],
       "kind": "contract_main",
@@ -190,16 +846,131 @@
       "state": {
         "record": [
           {
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "name": "pending_owner",
+            "type": {
+              "option": [
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "config",
+            "type": "SocialContract.config"
+          },
+          {
+            "name": "config_version",
+            "type": "int"
+          },
+          {
+            "name": "pending_config",
+            "type": {
+              "option": [
+                {
+                  "tuple": [
+                    "SocialContract.config",
+                    "int"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "successor",
+            "type": {
+              "option": [
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "successor_at",
+            "type": "int"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "importing",
+            "type": "bool"
+          },
+          {
+            "name": "ever_active",
+            "type": "bool"
+          },
+          {
+            "name": "import_source",
+            "type": {
+              "option": [
+                "GraphSource"
+              ]
+            }
+          },
+          {
+            "name": "import_cursor",
+            "type": "int"
+          },
+          {
+            "name": "import_end",
+            "type": "int"
+          },
+          {
+            "name": "import_expected",
+            "type": "int"
+          },
+          {
+            "name": "import_count",
+            "type": "int"
+          },
+          {
+            "name": "legacy_source",
+            "type": {
+              "option": [
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "import_hash",
+            "type": {
+              "bytes": 32
+            }
+          },
+          {
+            "name": "expected_hash",
+            "type": {
+              "bytes": 32
+            }
+          },
+          {
             "name": "following",
             "type": {
               "map": [
-                "address",
                 {
-                  "map": [
+                  "tuple": [
                     "address",
-                    "bool"
+                    "address"
                   ]
-                }
+                },
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "blocked",
+            "type": {
+              "map": [
+                {
+                  "tuple": [
+                    "address",
+                    "address"
+                  ]
+                },
+                "int"
               ]
             }
           },
@@ -222,20 +993,6 @@
             }
           },
           {
-            "name": "blocked",
-            "type": {
-              "map": [
-                "address",
-                {
-                  "map": [
-                    "address",
-                    "bool"
-                  ]
-                }
-              ]
-            }
-          },
-          {
             "name": "blocked_count",
             "type": {
               "map": [
@@ -254,20 +1011,134 @@
             }
           },
           {
-            "name": "max_following",
+            "name": "rate_ids",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "records",
+            "type": {
+              "map": [
+                "int",
+                "SocialGraph.item"
+              ]
+            }
+          },
+          {
+            "name": "next_record",
             "type": "int"
           },
           {
-            "name": "max_blocked",
+            "name": "live_records",
             "type": "int"
           },
           {
-            "name": "follow_cooldown",
-            "type": "int"
+            "name": "slots",
+            "type": {
+              "map": [
+                {
+                  "tuple": [
+                    "int",
+                    "address",
+                    "int"
+                  ]
+                },
+                "address"
+              ]
+            }
+          },
+          {
+            "name": "ends",
+            "type": {
+              "map": [
+                {
+                  "tuple": [
+                    "int",
+                    "address"
+                  ]
+                },
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "positions",
+            "type": {
+              "map": [
+                {
+                  "tuple": [
+                    "int",
+                    "address",
+                    "address"
+                  ]
+                },
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "observations",
+            "type": {
+              "map": [
+                {
+                  "tuple": [
+                    "address",
+                    "address"
+                  ]
+                },
+                {
+                  "tuple": [
+                    "int",
+                    "int"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "name": "observation_count",
+            "type": {
+              "map": [
+                "address",
+                "int"
+              ]
+            }
           }
         ]
       },
       "typedefs": [
+        {
+          "name": "config",
+          "typedef": {
+            "record": [
+              {
+                "name": "max_following",
+                "type": "int"
+              },
+              {
+                "name": "max_blocked",
+                "type": "int"
+              },
+              {
+                "name": "follow_cooldown",
+                "type": "int"
+              },
+              {
+                "name": "minimum_balance",
+                "type": "int"
+              },
+              {
+                "name": "cleanup_grace",
+                "type": "int"
+              }
+            ]
+          },
+          "vars": []
+        },
         {
           "name": "relationship",
           "typedef": {
@@ -287,6 +1158,30 @@
               {
                 "name": "b_blocked_a",
                 "type": "bool"
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "address_page",
+          "typedef": {
+            "record": [
+              {
+                "name": "items",
+                "type": {
+                  "list": [
+                    "address"
+                  ]
+                }
+              },
+              {
+                "name": "next_cursor",
+                "type": "int"
+              },
+              {
+                "name": "end_cursor",
+                "type": "int"
               }
             ]
           },

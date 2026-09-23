@@ -10,8 +10,8 @@ vi.mock('../../../../hooks', () => ({ useModal: () => ({ openModal }) }));
 const ADDR = 'ak_alice0000000000000000000000000000000000000000000000';
 
 describe('ProfileSocialStats', () => {
-  it('renders nothing when every count is null', () => {
-    const { container } = render(
+  it('keeps both labels and accessible loading indicators visible before counts arrive', () => {
+    render(
       <ProfileSocialStats
         address={ADDR}
         followersCount={null}
@@ -19,7 +19,13 @@ describe('ProfileSocialStats', () => {
         postsCount={null}
       />,
     );
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText('Followers')).toBeInTheDocument();
+    expect(screen.getByText('Following')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Followers' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading Following' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Followers/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Following/ })).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByTestId('profile-followers-count')).not.toHaveTextContent('0');
   });
 
   it('renders the Posts segment from the passed total, not a page length', () => {
@@ -32,7 +38,28 @@ describe('ProfileSocialStats', () => {
   it('shows a zero count but never invents one for a null', () => {
     render(<ProfileSocialStats address={ADDR} followersCount={0} followingCount={null} />);
     expect(screen.getByTestId('profile-followers-count')).toHaveTextContent('0');
-    expect(screen.queryByTestId('profile-following-count')).toBeNull();
+    expect(screen.getByTestId('profile-following-count')).not.toHaveTextContent('0');
+    expect(screen.getByRole('status', { name: 'Loading Following' })).toBeInTheDocument();
+  });
+
+  it('replaces spinners with real counts, retains them during refresh, and offers retry on failure', () => {
+    const retry = vi.fn();
+    const { rerender } = render(<ProfileSocialStats address={ADDR} countsStatus="loading" />);
+    rerender(<ProfileSocialStats address={ADDR} countsStatus="ready" followersCount={1} followingCount={0} />);
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('button', { name: '1 Followers' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '0 Following' })).toBeEnabled();
+    rerender(<ProfileSocialStats address={ADDR} countsStatus="loading" followersCount={1} followingCount={0} />);
+    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent('1');
+    expect(screen.getByRole('status', { name: 'Loading Followers' })).toBeInTheDocument();
+    rerender(<ProfileSocialStats address={ADDR} countsStatus="error" followersCount={1} followingCount={0} onRetryCounts={retry} />);
+    expect(screen.queryByRole('status', { name: 'Loading Followers' })).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Counts unavailable');
+    expect(screen.getByTestId('profile-followers-count')).toHaveTextContent('—');
+    expect(screen.getByText('Followers')).toBeInTheDocument();
+    expect(screen.getByText('Following')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(retry).toHaveBeenCalledOnce();
   });
 
   it('opens the followers list and fires the posts callback', () => {

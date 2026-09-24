@@ -66,29 +66,6 @@
   background: linear-gradient(90deg, light-dark(#c8b3d7, #745778), transparent 95%);
 }
 
-.quick-actions-card__motion-toggle {
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--qa-edge);
-  border-radius: 9px;
-  background: transparent;
-  color: var(--qa-ink);
-  cursor: pointer;
-}
-
-.quick-actions-card__motion-toggle svg { width: 13px; height: 13px; }
-.quick-actions-card__motion-toggle::after { content: ''; position: absolute; inset: -8px; }
-
-.quick-actions-card__motion-toggle:focus-visible {
-  outline: 2px solid #5d88ff;
-  outline-offset: 3px;
-}
-
 .quick-actions-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -239,39 +216,7 @@
   to { opacity: 1; translate: 0 0; }
 }
 
-@keyframes quick-action-wave {
-  0%, 100% { translate: 0 1px; rotate: -2deg; }
-  50% { translate: 0 -3px; rotate: 3deg; }
-}
-
-@keyframes quick-action-breathe {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.95; }
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .quick-actions-card__action { --qa-phase: 0s; }
-  .quick-actions-card__action:nth-child(2) { --qa-phase: -0.7s; }
-  .quick-actions-card__action:nth-child(3) { --qa-phase: -1.4s; }
-  .quick-actions-card__action:nth-child(4) { --qa-phase: -2.1s; }
-  .quick-actions-card__action:nth-child(5) { --qa-phase: -2.8s; }
-  .quick-actions-card__action:nth-child(6) { --qa-phase: -3.5s; }
-
-  .quick-actions-card__icon {
-    animation: quick-action-wave 5.6s ease-in-out var(--qa-phase) infinite;
-    /* Keep the slow wave intact under the app's mobile animation-duration reset. */
-    animation-duration: 5.6s !important;
-  }
-
-  .quick-actions-card__action::before {
-    animation: quick-action-breathe 5.6s ease-in-out var(--qa-phase) infinite;
-  }
-
-  .quick-actions-card--paused .quick-actions-card__icon,
-  .quick-actions-card--paused .quick-actions-card__action::before {
-    animation-play-state: paused;
-  }
-
   .quick-actions-card--entered .quick-actions-card__action {
     animation: quick-action-enter 400ms var(--qa-ease) backwards;
   }
@@ -292,7 +237,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .quick-actions-card { --qa-motion: 0ms; }
-  .quick-actions-card__motion-toggle { display: none; }
   .quick-actions-card__action,
   .quick-actions-card__icon { transition: none; }
   .quick-actions-card__action:focus-visible .quick-actions-card__sheen::before,

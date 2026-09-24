@@ -4,7 +4,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeftRight, Box, Droplets, MessageCircle, Pause, Play, Rocket, Search, Zap,
+  ArrowLeftRight, Box, Droplets, MessageCircle, Rocket, Search, Zap,
 } from 'lucide-react';
 import './QuickActionsCard.css';
 
@@ -34,8 +34,6 @@ const QuickActionsCard = () => {
   const headingId = useId();
   const cardRef = useRef<HTMLElement>(null);
   const [hasEntered, setHasEntered] = useState(false);
-  const [motionPaused, setMotionPaused] = useState(false);
-  const motionLabel = t(motionPaused ? 'rightRail.resumeMotion' : 'rightRail.pauseMotion');
 
   useEffect(() => {
     const card = cardRef.current;
@@ -55,11 +53,7 @@ const QuickActionsCard = () => {
   return (
     <section
       ref={cardRef}
-      className={[
-        'quick-actions-card',
-        hasEntered ? 'quick-actions-card--entered' : '',
-        motionPaused ? 'quick-actions-card--paused' : '',
-      ].filter(Boolean).join(' ')}
+      className={`quick-actions-card${hasEntered ? ' quick-actions-card--entered' : ''}`}
       aria-labelledby={headingId}
     >
       <div className="quick-actions-card__heading">
@@ -68,15 +62,6 @@ const QuickActionsCard = () => {
         </span>
         <h4 id={headingId}>{t('rightRail.quickActions')}</h4>
         <span className="quick-actions-card__heading-line" aria-hidden="true" />
-        <button
-          type="button"
-          className="quick-actions-card__motion-toggle"
-          aria-label={motionLabel}
-          title={motionLabel}
-          onClick={() => setMotionPaused((paused) => !paused)}
-        >
-          {motionPaused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-        </button>
       </div>
       <div className="quick-actions-card__grid">
         {actions.map(({

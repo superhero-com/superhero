@@ -95,11 +95,15 @@ const WebAppHeader = () => {
         <LanguageSwitcher variant="bar" side="bottom" align="start" />
       </div>
 
-      <nav className="flex flex-col gap-1 px-3" aria-label={t('aria.main')}>
+      <nav className="flex flex-col gap-1 px-4" aria-label={t('aria.main')}>
         {sidebarItems
           .filter((item: any) => !!item && !!item.id)
           .map((item: any) => {
-            const commonClass = 'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium';
+            const commonClass = [
+              'flex min-h-12 items-center gap-3 rounded-[10px] p-3',
+              'text-base font-medium leading-6 transition-colors duration-200',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5d88ff]',
+            ].join(' ');
             const isActive = isActiveRoute(item.path);
             const isDisconnectedAccount = item.id === 'account' && !activeAccount;
             const activeStyles = {
@@ -135,7 +139,7 @@ const WebAppHeader = () => {
                   }
                 }}
               >
-                <span className="w-6 flex items-center justify-center">
+                <span className={`w-6 shrink-0 flex items-center justify-center ${isActive ? 'text-[#5d88ff]' : ''}`}>
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
                 <span className="truncate">{t(item.labelKey, { ns: 'common' })}</span>

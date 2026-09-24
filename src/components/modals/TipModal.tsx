@@ -13,6 +13,7 @@ import AeButton from '../AeButton';
 import { IconDiamond } from '../../icons';
 import { useChainName } from '../../hooks/useChainName';
 import { tipStatusAtom, makeTipKey } from '../../atoms/tipAtoms';
+import { trackPostTip } from '../../features/social/utils/pendingTips';
 
 const TipModal = ({
   toAddress,
@@ -141,89 +142,19 @@ const TipModal = ({
             },
           );
 
-          // Poll backend until tip is confirmed or max retries reached
-          // Backend needs time to process blockchain transaction and update database
-          const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
-          const retryInterval = 3000; // 3 seconds between retries
-
-          const pollForTip = (attempt: number = 0) => {
-            // Stop polling if component is unmounted
-            if (!isMountedRef.current) {
-              return;
-            }
-
-            if (attempt >= maxRetries) {
-              // Final attempt after max retries
-              if (isMountedRef.current) {
-                queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
-                queryClient.refetchQueries({
-                  queryKey: ['post-tip-summary', idV3],
-                  type: 'active',
-                });
-              }
-              return;
-            }
-
-            const timeoutId = setTimeout(() => {
-              // Remove timeout ID from tracking set
-              timeoutRefs.current.delete(timeoutId);
-
-              // Stop if component unmounted
-              if (!isMountedRef.current) {
-                return;
-              }
-
-              queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
-              queryClient.refetchQueries({
-                queryKey: ['post-tip-summary', idV3],
-                type: 'active',
-              }).then(() => {
-                // Stop if component unmounted
-                if (!isMountedRef.current) {
-                  return;
-                }
-
-                // Check if backend has processed the tip
-                const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
-                const currentTotal = current?.totalTips != null ? Number(current.totalTips) : 0;
-
-                // If backend total matches or exceeds expected, we're done
-                // Otherwise, keep polling
-                if (currentTotal >= expectedTotal) {
-                  // Backend has confirmed the tip
-                  return;
-                }
-
-                // Continue polling
-                pollForTip(attempt + 1);
-              }).catch(() => {
-                // Stop if component unmounted
-                if (!isMountedRef.current) {
-                  return;
-                }
-
-                // On error, continue polling
-                pollForTip(attempt + 1);
-              });
-            }, retryInterval);
-
-            // Track timeout ID for cleanup
-            timeoutRefs.current.add(timeoutId);
-          };
-
-          // Start polling after initial delay to give backend time to start processing
-          const initialTimeoutId = setTimeout(() => {
-            // Remove timeout ID from tracking set
-            timeoutRefs.current.delete(initialTimeoutId);
-
-            // Only start polling if component is still mounted
-            if (isMountedRef.current) {
-              pollForTip(0);
-            }
-          }, 5000); // 5 second initial delay before first poll
-
-          // Track initial timeout ID for cleanup
-          timeoutRefs.current.add(initialTimeoutId);
+          // Kept until the backend counts it, reloads included: a total
+          // loaded without it meanwhile is raised back to this one, and the
+          // real total is fetched once it lands. The backend never counts a
+          // tip to yourself, so there is nothing to wait for then.
+          if (hash && activeAccount && toAddress !== activeAccount) {
+            trackPostTip({
+              account: activeAccount,
+              txHash: hash,
+              postId: idV3,
+              amount: String(deltaNum),
+              expectedTotal,
+            });
+          }
         }
         // Auto-reset success state after 2.5s
         const successResetTimeoutId = setTimeout(() => {

@@ -18,6 +18,7 @@ import { PENDING_TRANSACTIONS_STORAGE_KEY, findPendingTransaction } from '../sto
 const OWNER = 'ak_owner';
 const mockGetAccount = vi.fn();
 const mockFindToken = vi.fn();
+const mockGetPost = vi.fn();
 const mockIsMined = vi.fn();
 const mockNotifyPending = vi.fn();
 const mockNotifyConfirmed = vi.fn();
@@ -42,6 +43,10 @@ vi.mock('@/api/generated', async (importOriginal) => {
     TokensService: {
       ...actual.TokensService,
       findByAddress: (...args: any[]) => mockFindToken(...args),
+    },
+    PostsService: {
+      ...actual.PostsService,
+      getById: (...args: any[]) => mockGetPost(...args),
     },
   };
 });
@@ -100,6 +105,7 @@ describe('PendingTransactionsSync', () => {
     mockGetAccount.mockResolvedValue({ address: OWNER, links: { x: 'untracenetwork' } });
     mockIsMined.mockResolvedValue(false);
     mockFindToken.mockRejectedValue(new Error('Token not found'));
+    mockGetPost.mockRejectedValue(new Error('Not found'));
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
@@ -470,6 +476,65 @@ describe('PendingTransactionsSync', () => {
       expect(findPendingTransaction({ kind: 'create_token' })).toBeNull();
       expect(invalidatedKeys(invalidate)).toContain('["TokensService.findByAddress"]');
       expect(mockFindToken).toHaveBeenCalledWith({ address: 'SUPERHERO' });
+    });
+  });
+
+  describe('a post the backend does not have yet', () => {
+    const leftPost = (startedAt: number) => {
+      window.localStorage.setItem(PENDING_TRANSACTIONS_STORAGE_KEY, JSON.stringify([{
+        kind: 'create_post',
+        account: OWNER,
+        txHash: 'th_post',
+        startedAt,
+        step: 'confirmed',
+        meta: { postId: '42_v3', post: JSON.stringify({ id: '42_v3', content: 'gm' }), topic: null },
+      }]));
+    };
+
+    it('never takes the banner: it already said "published"', () => {
+      leftPost(Date.now() - 30_000);
+      renderSync();
+
+      expect(mockNotifyPending).not.toHaveBeenCalled();
+    });
+
+    it('refetches the feeds once the backend has it, without announcing it again', async () => {
+      leftPost(Date.now() - 30_000);
+      const { invalidate } = renderSync();
+
+      mockGetPost.mockResolvedValue({ id: '42_v3' });
+      await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS); });
+
+      await waitFor(() => expect(findPendingTransaction({ kind: 'create_post' })).toBeNull());
+      expect(invalidatedKeys(invalidate)).toContain('["posts"]');
+      expect(mockNotifyConfirmed).not.toHaveBeenCalled();
+      expect(mockDismiss).not.toHaveBeenCalled();
+    });
+
+    it('does not keep a wallet from getting its own wait back in the banner', () => {
+      const unlinkStarted = Date.now() - 90_000;
+      window.localStorage.setItem(PENDING_TRANSACTIONS_STORAGE_KEY, JSON.stringify([
+        {
+          kind: 'unlink_x',
+          account: OWNER,
+          txHash: 'th_unlink',
+          startedAt: unlinkStarted,
+          step: 'sent',
+          meta: { username: 'untracenetwork' },
+        },
+        {
+          // Newer, but not one for the banner.
+          kind: 'create_post',
+          account: OWNER,
+          txHash: 'th_post',
+          startedAt: Date.now() - 10_000,
+          step: 'confirmed',
+          meta: { postId: '42_v3', post: '{}', topic: null },
+        },
+      ]));
+      renderSync();
+
+      expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'unlink_x', startedAt: unlinkStarted });
     });
   });
 });

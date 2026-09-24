@@ -14,6 +14,11 @@ const mockSetupContractInstance = vi.fn();
 const mockFetchUserTokenBalance = vi.fn();
 const mockGetTokenSymbolName = vi.fn();
 const mockGetContractInstances = vi.fn();
+const mockTrackTokenTrade = vi.fn();
+
+vi.mock('../../utils/pendingTrades', () => ({
+  trackTokenTrade: (...args: any[]) => mockTrackTokenTrade(...args),
+}));
 
 vi.mock('../../libs/tokenTradeContract', () => ({
   setupContractInstance: (...args: any[]) => mockSetupContractInstance(...args),
@@ -86,7 +91,7 @@ function createStore(overrides: Record<string, unknown> = {}) {
 describe('useTokenTrade', () => {
   const token = {
     address: 'ct_token',
-    sale_address: undefined,
+    sale_address: 'ct_sale',
     symbol: 'MOON',
     total_supply: '1000',
     decimals: 18,
@@ -140,6 +145,7 @@ describe('useTokenTrade', () => {
     mockUseTokenTradeStore.mockReturnValue(store);
 
     saleInstance.buy.mockResolvedValue({
+      hash: 'th_buy',
       decodedEvents: [
         { name: 'Buy', args: ['3000000000000000000'] },
         { name: 'Mint', args: ['ignored', '1000000000000000000'], contract: { address: 'ct_protocol' } },
@@ -164,6 +170,10 @@ describe('useTokenTrade', () => {
     expect(successArg.sourceAmount.toString()).toBe('3');
     expect(successArg.protocolReward.toString()).toBe('1');
     expect(successArg.userBalance.toString()).toBe('42');
+    // Followed until the backend has it, so the token and holdings refetch then.
+    expect(mockTrackTokenTrade).toHaveBeenCalledWith({
+      account: 'ak_wallet', txHash: 'th_buy', saleAddress: token.sale_address, side: 'buy',
+    });
   });
 
   it('creates allowance before selling and stores the resulting sell summary', async () => {
@@ -176,6 +186,7 @@ describe('useTokenTrade', () => {
 
     saleInstance.createSellAllowance.mockResolvedValue('12000000000000000000');
     saleInstance.sellWithExistingAllowance.mockResolvedValue({
+      hash: 'th_sell',
       decodedEvents: [
         { name: 'Sell', args: ['7000000000000000000'] },
         { name: 'Burn', args: ['ignored', '12000000000000000000'] },
@@ -202,5 +213,10 @@ describe('useTokenTrade', () => {
     expect(successArg.destAmount.toString()).toBe('12');
     expect(successArg.sourceAmount.toString()).toBe('7');
     expect(successArg.userBalance.toString()).toBe('42');
+    // Only the sell itself, not the allowance before it.
+    expect(mockTrackTokenTrade).toHaveBeenCalledTimes(1);
+    expect(mockTrackTokenTrade).toHaveBeenCalledWith({
+      account: 'ak_wallet', txHash: 'th_sell', saleAddress: token.sale_address, side: 'sell',
+    });
   });
 });

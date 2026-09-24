@@ -39,7 +39,11 @@ export const PENDING_TRANSACTION_TIMEOUT_MS = 20 * 60_000;
 export type PendingTransactionKind =
   | 'link_x'
   | 'unlink_x'
-  | 'create_token';
+  | 'create_token'
+  | 'create_post'
+  | 'create_comment'
+  | 'tip_post'
+  | 'trade';
 
 export type PendingTransactionStep = 'sent' | 'confirmed';
 
@@ -77,7 +81,15 @@ type WatchOptions = {
   isMined?: (txHash: string) => Promise<boolean>;
 };
 
-const KINDS: ReadonlySet<string> = new Set<PendingTransactionKind>(['link_x', 'unlink_x', 'create_token']);
+const KINDS: ReadonlySet<string> = new Set<PendingTransactionKind>([
+  'link_x',
+  'unlink_x',
+  'create_token',
+  'create_post',
+  'create_comment',
+  'tip_post',
+  'trade',
+]);
 
 const transactions = new Map<string, PendingTransaction>();
 const watchers = new Map<string, { token: object; timer: ReturnType<typeof setInterval> }>();
@@ -305,7 +317,8 @@ export function findPendingTransaction(
 
 /**
  * Record a broadcast transaction and watch it until it is live. Replaces an
- * entry with the same hash.
+ * entry with the same hash. `step: 'confirmed'` for one the wallet already
+ * waited to see mined: what is left is the backend catching up.
  */
 export function trackPendingTransaction(
   input: {
@@ -313,6 +326,7 @@ export function trackPendingTransaction(
     account: string;
     txHash: string;
     meta?: Record<string, string | null>;
+    step?: PendingTransactionStep;
   },
   options: WatchOptions = {},
 ): PendingTransaction {
@@ -322,7 +336,7 @@ export function trackPendingTransaction(
     account: input.account,
     txHash: input.txHash,
     startedAt: Date.now(),
-    step: 'sent',
+    step: input.step ?? 'sent',
     meta: input.meta ?? {},
   };
   transactions.set(transaction.txHash, transaction);

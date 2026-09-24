@@ -3,7 +3,23 @@ import {
   type NotificationState,
   type TxPayload,
 } from '@/features/transaction-notification/transaction-notification.context';
-import { findPendingTransaction, type PendingTransaction } from './store';
+import {
+  findPendingTransaction,
+  type PendingTransaction,
+  type PendingTransactionKind,
+} from './store';
+
+/**
+ * Kinds whose wait is shown in the top banner, from broadcast to live, and
+ * put back there after a reload. The others (posts, replies, tips, trades)
+ * already say "done" once mined and show the result in place; the store only
+ * keeps them until the backend has them, so a reload does not lose them.
+ */
+export const ANNOUNCED_KINDS: PendingTransactionKind[] = ['link_x', 'unlink_x', 'create_token'];
+
+export const isAnnouncedKind = (kind: PendingTransactionKind): boolean => (
+  ANNOUNCED_KINDS.includes(kind)
+);
 
 type TrackedType =
   | typeof TxPayloadType.LinkX
@@ -18,7 +34,7 @@ const TRACKED_TYPES: ReadonlySet<TxPayload['type']> = new Set([
   TxPayloadType.CreateToken,
 ]);
 
-/** The top-banner payload for a pending transaction. */
+/** The top-banner payload for a pending transaction of an announced kind. */
 export function pendingTransactionPayload(transaction: PendingTransaction): TrackedPayload {
   switch (transaction.kind) {
     case 'link_x':
@@ -55,6 +71,7 @@ export function isTrackedPayload(
 export function transactionForPayload(payload: TxPayload): PendingTransaction | null {
   if (!isTrackedPayload(payload)) return null;
   return findPendingTransaction({
+    kind: ANNOUNCED_KINDS,
     match: (transaction) => transaction.startedAt === payload.startedAt
       && pendingTransactionPayload(transaction).type === payload.type,
   });
@@ -69,7 +86,7 @@ export function bannerShowsTransaction(
   banner: NotificationState,
   transaction: Pick<PendingTransaction, 'kind' | 'startedAt' | 'meta'>,
 ): boolean {
-  if (banner.status !== 'pending') return false;
+  if (banner.status !== 'pending' || !isAnnouncedKind(transaction.kind)) return false;
   const { payload } = banner;
   return payload.type === pendingTransactionPayload(transaction as PendingTransaction).type
     && 'startedAt' in payload

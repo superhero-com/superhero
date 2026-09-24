@@ -220,19 +220,25 @@ const watch = (txHash: string, options: WatchOptions = {}) => {
   stopWatching(txHash);
   const token = {};
   let checking = false;
+  // A recheck asked for while a check was in flight: that check may have
+  // asked before what prompted the recheck, so ask once more after it.
+  let recheckQueued = false;
   // Undefined once it is finished, removed, or watched by a newer loop.
   const current = () => (
     watchers.get(txHash)?.token === token ? transactions.get(txHash) : undefined
   );
 
-  const check = async () => {
+  const check = async (recheck = false) => {
     const transaction = current();
     if (!transaction) return;
     if (Date.now() - transaction.startedAt > PENDING_TRANSACTION_TIMEOUT_MS) {
       finish(txHash, 'timed_out', {});
       return;
     }
-    if (checking) return;
+    if (checking) {
+      if (recheck) recheckQueued = true;
+      return;
+    }
     checking = true;
     try {
       if (transaction.step === 'sent') {
@@ -261,10 +267,19 @@ const watch = (txHash: string, options: WatchOptions = {}) => {
       if (result && current()) finish(txHash, 'settled', result);
     } finally {
       checking = false;
+      if (recheckQueued) {
+        recheckQueued = false;
+        check(true);
+      }
     }
   };
 
-  watchers.set(txHash, { token, timer: setInterval(check, PENDING_TRANSACTION_POLL_MS), check });
+  watchers.set(txHash, {
+    token,
+    // Polls skip while a check is in flight; only rechecks queue up.
+    timer: setInterval(() => { check(); }, PENDING_TRANSACTION_POLL_MS),
+    check: () => check(true),
+  });
   check();
 };
 

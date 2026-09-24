@@ -97,6 +97,27 @@ describe('pending tips', () => {
     expect(pendingTipAmount('7')).toBeNull();
   });
 
+  it('asks again after a check already in flight, which may have asked too early', async () => {
+    trackPostTip({
+      account: 'ak_sender', txHash: 'th_tip', postId: '7', amount: '3', expectedTotal: 5,
+    });
+    stop = watchPendingTips(queryClient);
+    await vi.advanceTimersByTimeAsync(0);
+
+    // A poll is in flight, and its answer predates the backend counting it.
+    let answerPoll: (page: unknown) => void = () => {};
+    mockListTips.mockImplementationOnce(() => new Promise((resolve) => { answerPoll = resolve; }));
+    await vi.advanceTimersByTimeAsync(PENDING_TRANSACTION_POLL_MS);
+    mockListTips.mockResolvedValue({ items: [{ tx_hash: 'th_tip' }] });
+
+    // The total loads meanwhile: the recheck waits for the poll, then asks again.
+    await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '5' }) });
+    answerPoll({ items: [] });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(pendingTipAmount('7')).toBeNull();
+  });
+
   it('is done once the sender\'s tips include it', async () => {
     trackPostTip({
       account: 'ak_sender', txHash: 'th_tip', postId: '7_v3', amount: '3', expectedTotal: 5,

@@ -92,7 +92,13 @@ const KINDS: ReadonlySet<string> = new Set<PendingTransactionKind>([
 ]);
 
 const transactions = new Map<string, PendingTransaction>();
-const watchers = new Map<string, { token: object; timer: ReturnType<typeof setInterval> }>();
+type Watcher = {
+  token: object;
+  timer: ReturnType<typeof setInterval>;
+  check: () => Promise<void>;
+};
+
+const watchers = new Map<string, Watcher>();
 const resolvers = new Map<PendingTransactionKind, PendingTransactionResolver>();
 const listeners = new Set<() => void>();
 const settledListeners = new Set<(event: PendingTransactionSettledEvent) => void>();
@@ -258,7 +264,7 @@ const watch = (txHash: string, options: WatchOptions = {}) => {
     }
   };
 
-  watchers.set(txHash, { token, timer: setInterval(check, PENDING_TRANSACTION_POLL_MS) });
+  watchers.set(txHash, { token, timer: setInterval(check, PENDING_TRANSACTION_POLL_MS), check });
   check();
 };
 
@@ -359,6 +365,16 @@ export function removePendingTransaction(txHash: string): void {
  * Pick up what a previous page load left pending. Safe to call more than
  * once: a transaction already being watched is left alone.
  */
+/**
+ * Ask now, rather than at the next poll, whether what matches is live yet:
+ * for when a screen has just loaded data that may already include it.
+ */
+export function recheckPendingTransactions(filter: PendingTransactionFilter = {}): void {
+  listPendingTransactions(filter).forEach(({ txHash }) => {
+    watchers.get(txHash)?.check();
+  });
+}
+
 export function resumePendingTransactions(
   options: WatchOptions & { kind?: PendingTransactionKind | PendingTransactionKind[] } = {},
 ): void {

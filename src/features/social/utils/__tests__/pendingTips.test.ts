@@ -7,7 +7,7 @@ import {
   clearPendingTransactions,
   listPendingTransactions,
 } from '@/features/pending-transactions/store';
-import { pendingTipFloor, trackPostTip, watchPendingTips } from '../pendingTips';
+import { pendingTipAmount, trackPostTip, watchPendingTips } from '../pendingTips';
 
 const mockListTips = vi.fn();
 
@@ -38,45 +38,63 @@ describe('pending tips', () => {
     vi.useRealTimers();
   });
 
-  it('keeps the total a tip made, even when it loads from the backend without it', async () => {
+  it('adds a tip the backend does not count yet to the total it loads', async () => {
     trackPostTip({
       account: 'ak_sender', txHash: 'th_tip', postId: '7', amount: '3', expectedTotal: 5,
     });
     stop = watchPendingTips(queryClient);
-    expect(pendingTipFloor('7_v3')).toBe(5);
+    expect(pendingTipAmount('7_v3')).toBe(3);
 
     await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '2' }) });
     expect(queryClient.getQueryData(SUMMARY)).toEqual({ totalTips: '5' });
 
-    // Already higher (others tipped too): left as it is.
+    // Others tipped meanwhile: still counted on top.
     await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '9' }), staleTime: 0 });
-    expect(queryClient.getQueryData(SUMMARY)).toEqual({ totalTips: '9' });
+    expect(queryClient.getQueryData(SUMMARY)).toEqual({ totalTips: '12' });
 
     // Other posts are left alone.
     await queryClient.fetchQuery({ queryKey: ['post-tip-summary', '8_v3'], queryFn: async () => ({ totalTips: '1' }) });
     expect(queryClient.getQueryData(['post-tip-summary', '8_v3'])).toEqual({ totalTips: '1' });
   });
 
-  it('counts every pending tip, even ones sent close together that saw the same total', () => {
-    // Both saw 2 before them.
+  it('counts every pending tip, including after one of them is counted', async () => {
+    // Sent close together: both saw 2 before them.
     trackPostTip({
       account: 'ak_sender', txHash: 'th_a', postId: '7', amount: '3', expectedTotal: 5,
     });
     trackPostTip({
       account: 'ak_sender', txHash: 'th_b', postId: '7', amount: '2', expectedTotal: 4,
     });
-    expect(pendingTipFloor('7')).toBe(7);
+    stop = watchPendingTips(queryClient);
+    await vi.advanceTimersByTimeAsync(0);
+
+    await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '2' }) });
+    expect(queryClient.getQueryData(SUMMARY)).toEqual({ totalTips: '7' });
+
+    // The backend counts the first one.
+    mockListTips.mockResolvedValue({ items: [{ tx_hash: 'th_a' }] });
+    await vi.advanceTimersByTimeAsync(PENDING_TRANSACTION_POLL_MS);
+    expect(pendingTipAmount('7')).toBe(2);
+
+    await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '5' }), staleTime: 0 });
+    expect(queryClient.getQueryData(SUMMARY)).toEqual({ totalTips: '7' });
   });
 
-  it('does not count a tip twice when the next one already saw it', () => {
+  it('asks again at once when a total loads, so a tip just counted is not added twice for long', async () => {
     trackPostTip({
-      account: 'ak_sender', txHash: 'th_a', postId: '7', amount: '3', expectedTotal: 5,
+      account: 'ak_sender', txHash: 'th_tip', postId: '7', amount: '3', expectedTotal: 5,
     });
-    // Sent after the first one showed: it saw 5.
-    trackPostTip({
-      account: 'ak_sender', txHash: 'th_b', postId: '7', amount: '2', expectedTotal: 7,
-    });
-    expect(pendingTipFloor('7')).toBe(7);
+    stop = watchPendingTips(queryClient);
+    await vi.advanceTimersByTimeAsync(0);
+    mockListTips.mockClear();
+
+    // The backend has just counted it; the next poll is 10 s away.
+    mockListTips.mockResolvedValue({ items: [{ tx_hash: 'th_tip' }] });
+    await queryClient.fetchQuery({ queryKey: SUMMARY, queryFn: async () => ({ totalTips: '5' }) });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mockListTips).toHaveBeenCalledTimes(1);
+    expect(pendingTipAmount('7')).toBeNull();
   });
 
   it('is done once the sender\'s tips include it', async () => {
@@ -93,6 +111,6 @@ describe('pending tips', () => {
     await vi.advanceTimersByTimeAsync(PENDING_TRANSACTION_POLL_MS);
 
     expect(listPendingTransactions({ kind: 'tip_post' })).toEqual([]);
-    expect(pendingTipFloor('7_v3')).toBeNull();
+    expect(pendingTipAmount('7_v3')).toBeNull();
   });
 });

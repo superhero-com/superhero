@@ -322,6 +322,7 @@
       "proTips": "专业提示"
     },
     "buyAeRail": {
+      "buttonSubtitle": "购买或赚取 æternity",
       "title": "购买 AE",
       "description": "需要 AE 来支付手续费、打赏和趋势代币？从 Gate.io 开始，或比较更多方式。",
       "gateButton": "在 Gate.io 上购买 AE",
@@ -1118,6 +1119,9 @@
       "mcap": "市值"
     },
     "rightRail": {
+      "allTimePnl": "累计盈亏 · USD",
+      "viewLeaderboard": "查看排行榜",
+      "loadingTraders": "正在加载顶级交易者",
       "aePrice": "AE 价格",
       "volume24h": "24 小时成交量",
       "topTraders": "顶级交易者",

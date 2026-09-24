@@ -439,6 +439,7 @@
       "proTips": "Pro Tips"
     },
     "buyAeRail": {
+      "buttonSubtitle": "Buy or earn æternity",
       "title": "Get AE",
       "description": "Need AE for fees, tips, and trend tokens? Explore many options to earn or buy AE.",
       "gateButton": "Buy AE on Gate.io",
@@ -1201,6 +1202,9 @@
       "removeButton": "Remove {{pct}} Liquidity"
     },
     "rightRail": {
+      "allTimePnl": "All-time PnL · USD",
+      "viewLeaderboard": "View leaderboard",
+      "loadingTraders": "Loading top traders",
       "aePrice": "AE Price",
       "volume24h": "24h Volume",
       "topTraders": "Top Traders",

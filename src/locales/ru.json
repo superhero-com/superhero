@@ -1,5 +1,15 @@
 {
   "common": {
+    "buyAeRail": {
+      "title": "Получить AE",
+      "buttonSubtitle": "Купить или заработать æternity"
+    },
+    "rightRail": {
+      "topTraders": "Лучшие трейдеры",
+      "allTimePnl": "Прибыль за всё время · USD",
+      "viewLeaderboard": "Открыть рейтинг",
+      "loadingTraders": "Загрузка лучших трейдеров"
+    },
     "wallet": {
       "online": "В сети"
     },

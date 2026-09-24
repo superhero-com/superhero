@@ -1,0 +1,183 @@
+.rail-card,
+.get-ae-button {
+  --rail-text: light-dark(#252330, #f5f3fb);
+  --rail-muted: light-dark(#6a6179, #aaa2b8);
+  --rail-base: light-dark(#fcfaff, #111015);
+  --rail-raised: light-dark(#f5effa, #1b1723);
+  --rail-line: light-dark(#d9cfe4, #39313f);
+  --rail-shadow: light-dark(#6e487a20, #00000050);
+  min-width: 0;
+}
+
+.rail-card {
+  --rail-haze: light-dark(#dba2f21e, #b673d81c);
+  --rail-rim: light-dark(#c5a5d2, #755479);
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  padding: 16px;
+  color: var(--rail-text);
+  background:
+    radial-gradient(ellipse at 4% 0%, var(--rail-haze), transparent 75%) padding-box,
+    linear-gradient(145deg, var(--rail-raised), var(--rail-base) 68%) padding-box,
+    linear-gradient(135deg, var(--rail-rim), var(--rail-line) 32%, var(--rail-line) 78%, light-dark(#c4b7d9, #4d4263)) border-box;
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff20), 0 12px 26px -22px var(--rail-shadow);
+}
+
+.rail-badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 34px;
+  border-radius: 11px;
+  color: light-dark(#7f4018, #fff0c9);
+  transform: rotate(-7deg);
+  background: radial-gradient(ellipse at 17% 4%, #ffffff65, transparent 60%), linear-gradient(145deg, #edb24c, #9e5b24);
+  box-shadow: inset 0 1px #ffffffa0, inset 1px 0 #ffffff30, inset 0 -2px #00000022, 1px 3px 0 light-dark(#bd8b53, #6e4529), 0 7px 14px -7px #edb24c;
+}
+
+.rail-badge::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 3px;
+  border: 1px solid #ffffff27;
+  border-radius: 8px;
+}
+
+.rail-badge svg { width: 18px; height: 18px; stroke-width: 1.8; transform: rotate(7deg); }
+.rail-badge img { width: 24px; height: 14px; transform: rotate(7deg); }
+.rail-badge--ae {
+  background: radial-gradient(ellipse at 17% 4%, light-dark(#ffffffa0, #ed92bc42), transparent 70%), linear-gradient(145deg, light-dark(#fde8f0, #48283f), light-dark(#efd7e3, #231c2a));
+  box-shadow: inset 0 1px light-dark(#ffffff, #edb3d166), inset 1px 0 #ffffff20, inset 0 -2px #00000022, 1px 3px 0 light-dark(#d6aebe, #241626), 0 7px 14px -7px #ed619380;
+}
+
+.ae-price-card { padding: 14px 16px; --rail-haze: light-dark(#efacc11f, #dc688f16); }
+.ae-price-card__top { display: flex; align-items: center; gap: 11px; }
+.ae-price-card .rail-badge--ae { width: 38px; height: 40px; border-radius: 12px; }
+.ae-price-card .rail-badge img { width: 28px; height: 16px; }
+.ae-price-card__copy { flex: 1; min-width: 0; }
+.ae-price-card__label { font-size: 11px; line-height: 14px; font-weight: 500; color: var(--rail-muted); margin-bottom: 2px; }
+.ae-price-card__value {
+  display: block;
+  font-size: 24px;
+  line-height: 28px;
+  letter-spacing: -0.65px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.ae-price-card__currency { align-self: flex-start; margin-top: 2px; font-size: 11px; line-height: 18px; color: var(--rail-muted); letter-spacing: 0.5px; }
+.ae-price-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid light-dark(#e7dfe9, #ffffff0d);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--rail-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ae-price-card__status { display: inline-flex; align-items: center; gap: 6px; color: light-dark(#237966, #72d7b4); }
+.ae-price-card__status--offline { color: light-dark(#a0375d, #ef94b0); }
+.ae-price-card__dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: currentColor; }
+.ae-price-card__block { display: flex; flex-wrap: wrap; gap: 5px; }
+.ae-price-card__block strong { font-weight: 500; color: var(--rail-text); }
+
+.get-ae-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px 16px;
+  border: 1px solid light-dark(#279e9380, #78e5d580);
+  border-radius: 20px;
+  color: #092b29;
+  text-align: start;
+  text-decoration: none;
+  background: radial-gradient(ellipse at 15% 0%, #ffffff3d, transparent 70%), linear-gradient(110deg, #34d399, #06b6d4);
+  box-shadow: inset 0 1px #ffffff65, inset 0 -2px #00000012, 0 9px 23px -18px #35cfbc;
+  transition: filter 180ms, transform 180ms;
+}
+.get-ae-button__copy { display: grid; gap: 1px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.get-ae-button__copy strong { font-size: 15px; line-height: 20px; font-weight: 700; }
+.get-ae-button__copy > span { color: #174744; font-size: 11px; line-height: 16px; }
+.get-ae-button > svg { width: 18px; height: 18px; flex: none; }
+
+.top-traders-card { --rail-haze: light-dark(#e9c1791c, #edb24c14); --rail-rim: light-dark(#cfb899, #796349); }
+.rail-card__header { display: flex; align-items: center; gap: 11px; }
+.rail-card__header h4 { margin: 0; color: var(--rail-text); font-size: 16px; line-height: 24px; font-weight: 650; letter-spacing: -0.3px; }
+.rail-card__title { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.rail-card__title > span { color: var(--rail-muted); font-size: 11px; line-height: 14px; }
+.rail-card__header-line { flex: 1; height: 1px; margin-inline-start: 3px; background: linear-gradient(90deg, var(--rail-rim), transparent); opacity: 0.65; }
+.top-traders-card__list { display: grid; margin: 10px 0; padding: 0; list-style: none; }
+.rail-trader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 7px 0;
+  border-bottom: 1px solid light-dark(#e7dfe9, #ffffff0b);
+  color: var(--rail-text);
+  text-decoration: none;
+  transition: background 180ms;
+}
+.top-traders-card__list li:last-child .rail-trader { border-bottom: 0; }
+.rail-trader__rank { flex: none; width: 13px; text-align: center; color: var(--rail-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.top-traders-card__list li:first-child .rail-trader__rank { color: light-dark(#916a25, #e2bb74); }
+.rail-trader__name { flex: 1; min-width: 0; font-size: 12px; line-height: 18px; font-weight: 550; overflow-wrap: anywhere; }
+.rail-trader__pnl { flex: none; max-width: 44%; font-size: 12px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rail-trader__pnl--positive { color: light-dark(#187760, #78ddbb); }
+.rail-trader__pnl--negative { color: light-dark(#b13b56, #f099ab); }
+.rail-trader__pnl--neutral { color: var(--rail-muted); }
+.rail-card__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid light-dark(#d6be91, #82603899);
+  border-radius: 12px;
+  color: light-dark(#765317, #f4d191);
+  background: radial-gradient(ellipse at 10% 0%, light-dark(#f5dcad88, #edb24c25), transparent 95%), linear-gradient(110deg, light-dark(#f8edda, #30271e), light-dark(#f6f0e6, #1b1817));
+  box-shadow: inset 0 1px light-dark(#ffffff, #efd3a525);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: filter 180ms;
+}
+.rail-card__cta > span { min-width: 0; overflow-wrap: anywhere; }
+.rail-card__cta svg { flex: none; width: 16px; height: 16px; stroke-width: 1.8; transition: transform 180ms; }
+.top-traders-card__loading { margin: 10px 0; }
+.rail-trader-skeleton { display: flex; align-items: center; gap: 10px; height: 46px; }
+.rail-trader-skeleton span { border-radius: 5px; width: 35%; height: 10px; background: light-dark(#e3dce9, #ffffff0b); }
+.rail-trader-skeleton span:first-child { margin-inline-start: 23px; width: 28px; height: 28px; border-radius: 50%; }
+.rail-trader-skeleton span:last-child { margin-inline-start: auto; width: 23%; }
+.top-traders-card__message { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; color: var(--rail-muted); font-size: 12px; line-height: 18px; }
+.top-traders-card__message button { min-height: 44px; padding: 8px; border-radius: 8px; color: var(--rail-text); background: light-dark(#eee7f4, #ffffff0b); }
+.top-traders-card__message button:disabled { opacity: 0.6; }
+.get-ae-button:focus-visible,
+.rail-trader:focus-visible,
+.rail-card__cta:focus-visible,
+.top-traders-card__message button:focus-visible { outline: 2px solid #5d88ff; outline-offset: 3px; }
+
+@media (hover: hover) {
+  .get-ae-button:hover { color: #092b29; filter: brightness(1.06); transform: translateY(-1px); }
+  .rail-trader:hover { color: var(--rail-text); background: light-dark(#bba1cf14, #ffffff06); }
+  .rail-card__cta:hover { color: light-dark(#765317, #f4d191); filter: brightness(1.08); }
+  .rail-card__cta:hover svg { transform: translateX(2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .get-ae-button, .rail-trader, .rail-card__cta, .rail-card__cta svg { transition: none; }
+  .get-ae-button:hover, .rail-card__cta:hover svg { transform: none; }
+}

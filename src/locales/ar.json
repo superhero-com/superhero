@@ -322,6 +322,7 @@
       "proTips": "نصائح احترافية"
     },
     "buyAeRail": {
+      "buttonSubtitle": "اشترِ أو اكسب æternity",
       "title": "شراء AE",
       "description": "تحتاج AE للرسوم والإكراميات ورموز الترند؟ ابدأ من Gate.io أو قارن المزيد من الطرق.",
       "gateButton": "شراء AE على Gate.io",
@@ -1118,6 +1119,9 @@
       "mcap": "القيمة السوقية"
     },
     "rightRail": {
+      "allTimePnl": "الأرباح والخسائر الكلية · USD",
+      "viewLeaderboard": "عرض لوحة الصدارة",
+      "loadingTraders": "جارٍ تحميل أفضل المتداولين",
       "aePrice": "سعر AE",
       "volume24h": "حجم 24 ساعة",
       "topTraders": "أفضل المتداولين",

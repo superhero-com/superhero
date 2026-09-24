@@ -14,6 +14,7 @@ import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { useChainName } from '@/hooks/useChainName';
 import { AccountTokensService } from '@/api/generated/services/AccountTokensService';
 import { Decimal } from '@/libs/decimal';
+import AePriceCard from './AePriceCard';
 
 type Currency = 'usd' | 'eur' | 'cny';
 
@@ -128,49 +129,15 @@ const WalletOverviewCard = ({
   ]);
 
   if (!activeAccount) {
+    const price = prices?.[selectedCurrency];
     return (
-      <div
-        className={
-          `grid gap-2 ${
-            className || ''}`
-        }
-      >
-        <div className="py-1">
-          <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">
-            {t('common.wallet.aePrice')}
-          </div>
-          <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
-            {prices?.[selectedCurrency]
-              ? formatPrice(prices[selectedCurrency], selectedCurrency)
-              : '-'}
-          </div>
-        </div>
-        <div className="flex justify-between items-center py-2 border-t border-white/5">
-          <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-            {t('common.wallet.nodeConnection')}
-          </span>
-          <span
-            className={`text-[12px] font-semibold ${
-              isOnline
-                ? 'text-[var(--neon-green)]'
-                : 'text-[var(--neon-pink)]'
-            }`}
-          >
-            {isOnline ? t('common.layout.connected') : t('common.layout.offline')}
-          </span>
-        </div>
-        {currentBlockHeight != null && (
-          <div className="flex justify-between items-center py-2">
-            <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-              {t('common.wallet.block')}
-            </span>
-            <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-              #
-              {Number(currentBlockHeight).toLocaleString()}
-            </span>
-          </div>
-        )}
-      </div>
+      <AePriceCard
+        price={price != null && Number.isFinite(price) ? formatPrice(price, selectedCurrency) : '—'}
+        currency={selectedCurrency}
+        isOnline={isOnline}
+        blockHeight={currentBlockHeight}
+        className={className}
+      />
     );
   }
 

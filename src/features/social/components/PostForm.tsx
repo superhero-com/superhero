@@ -26,6 +26,13 @@ import { DetectedLinkPreview } from './DetectedLinkPreview';
 import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { MentionSuggestionList } from './MentionSuggestionList';
 import { useLinkDetection } from '../hooks/useLinkDetection';
+import {
+  insertPostIntoFeeds,
+  insertReplyIntoThreads,
+  normalizePostId,
+  trackPublishedPost,
+  trackPublishedReply,
+} from '../utils/pendingPosts';
 import { useMentionSearch, type MentionItem } from '../hooks/useMentionSearch';
 import {
   detectActiveMention,
@@ -43,7 +50,8 @@ type TippingV3ContractApi = ContractMethodsBase & {
   post_without_tip: (
     content: string,
     media: string[],
-  ) => Promise<{ decodedResult: string }>;
+  // `hash`: the call's transaction, once mined (the SDK waits for it).
+  ) => Promise<{ decodedResult: string; hash?: string }>;
 };
 
 interface PostFormProps {
@@ -140,9 +148,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
-  // Refs to track polling timers and component mount status
-  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
-  const isMountedRef = useRef(true);
 
   useImperativeHandle(ref, () => ({
     focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
@@ -194,8 +199,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     detectedLink && !linkPreviewDismissedForCurrent,
   );
 
-  // Shared ID normalization function - ensures consistent ID format across the component
-  const normalizeId = (id: string): string => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
   const [overlayComputed, setOverlayComputed] = useState<{
     paddingTop: number;
     paddingRight: number;
@@ -217,18 +220,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
-  }, []);
-
-  // Cleanup effect to clear all timers on unmount
-  useEffect(() => {
-    isMountedRef.current = true;
-    const timeoutSet = timeoutRefs.current;
-    return () => {
-      isMountedRef.current = false;
-      // Clear all pending timeouts
-      timeoutSet.forEach((timeoutId) => clearTimeout(timeoutId));
-      timeoutSet.clear();
-    };
   }, []);
 
   // Do not auto-fill from initialText anymore; keep user input empty by default
@@ -500,7 +491,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         postMedia = [`comment:${postId}`, ...mediaUrls];
       }
 
-      const { decodedResult } = await contract.post_without_tip(
+      const { decodedResult, hash } = await contract.post_without_tip(
         serialized,
         postMedia,
       );
@@ -510,9 +501,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       let newPostId: string;
       if (isPost) {
         newPostId = `${decodedResult}_v3`;
+        const topic = requiredHashtag && !requiredMissing ? requiredHashtag.toLowerCase() : null;
 
-        // Create optimistic post object immediately (even before API call)
-        // This ensures the post appears instantly even if backend isn't ready yet
+        // Built here so the post shows at once; the backend indexes it later.
         const optimisticPost: any = {
           id: newPostId,
           content: serialized,
@@ -520,194 +511,32 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           media: mediaUrls,
           total_comments: 0,
           created_at: new Date().toISOString(),
-          tx_hash: decodedResult,
+          tx_hash: hash ?? decodedResult,
           type: 'post_without_tip',
           topics: requiredHashtag ? [requiredHashtag.toLowerCase()] : [],
         };
 
         let created: any = optimisticPost;
-
         try {
-          // Try to fetch the actual post from backend, but use optimistic one if it fails
-          const fetchedPost = await PostsService.getById({ id: newPostId });
-          created = fetchedPost;
+          // The backend's copy, if it already has it.
+          created = await PostsService.getById({ id: newPostId });
         } catch {
-          // Backend might not have processed it yet (404), use optimistic post
-          // Continue with optimisticPost
+          // Not indexed yet (404): keep the one built here, and keep it
+          // across reloads until the backend has it. The pending-transactions
+          // store refreshes the feeds then.
+          if (hash) {
+            trackPublishedPost({
+              account: activeAccount, txHash: hash, post: optimisticPost, topic,
+            });
+          }
         }
 
-        // Optimistically prepend the new post to the latest feed cache so it appears immediately
-        // Update all relevant query keys for the latest feed
-        const updatedKeys = new Set<string>();
-        const updateLatestFeedCache = (queryKey: any[]) => {
-          // Only the API's detected language can qualify a post for a filtered
-          // cache. Untagged optimistic posts wait for the indexed refetch.
-          const language = queryKey[1]?.language;
-          if (language && created?.language !== language) return;
-          const keyStr = JSON.stringify(queryKey);
-          // Skip if we've already updated this key to avoid duplicates
-          if (updatedKeys.has(keyStr)) {
-            return;
-          }
-          updatedKeys.add(keyStr);
-
-          queryClient.setQueryData(queryKey, (old: any) => {
-            if (!old || !old.pages || !Array.isArray(old.pages)) {
-              return {
-                pages: [{ items: [created as any], meta: { currentPage: 1, totalPages: 1 } }],
-                pageParams: [1],
-              };
-            }
-            const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
-            const existingItems = firstPage.items || [];
-            // Check if post already exists to prevent duplicates
-            const postAlreadyExists = existingItems.some((item: any) => item?.id === created?.id || item?.tx_hash === created?.tx_hash);
-            if (postAlreadyExists) {
-              return old;
-            }
-            const updatedFirstPage = {
-              ...firstPage,
-              items: [created as any, ...existingItems],
-            };
-            return {
-              ...old,
-              pages: [updatedFirstPage, ...old.pages.slice(1)],
-            };
-          });
-        };
-
-        // First, collect all active latest feed queries to avoid duplicate updates
-        const activeLatestQueries = queryClient.getQueryCache()
-          .findAll({ queryKey: ['posts'], exact: false })
-          .filter((query) => {
-            const key = query.queryKey as any[];
-            return key.length >= 2 && key[1]?.sortBy === 'latest';
-          })
-          .map((query) => query.queryKey as any[]);
-
-        // Update all active latest feed queries found in cache
-        activeLatestQueries.forEach((key) => {
-          updateLatestFeedCache(key);
-        });
-
-        // Also update the default latest feed query if it wasn't already updated
-        // This ensures the query is updated even if it doesn't exist in cache yet
-        const defaultKey: any[] = ['posts', {
-          limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
-        }];
-        const defaultKeyStr = JSON.stringify(defaultKey);
-        if (!updatedKeys.has(defaultKeyStr)) {
-          updateLatestFeedCache(defaultKey);
-        }
-
-        // Optimistically prepend the new post to the topic feed cache so it appears immediately
-        if (requiredHashtag && !requiredMissing) {
-          const topicKey = ['topic-by-name', (requiredHashtag || '').toLowerCase()];
-          queryClient.setQueryData(topicKey, (old: any) => {
-            const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
-            // Check if post already exists to prevent duplicates
-            const exists = prevPosts.some((p: any) => p?.id === created?.id || p?.tx_hash === created?.tx_hash);
-            if (exists) {
-              return old;
-            }
-            return {
-              ...(old || {}),
-              posts: [created as any, ...prevPosts],
-              post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
-            };
-          });
-        }
-
-        // Poll backend until post is confirmed or max retries reached
-        // Backend needs time to process blockchain transaction and update database
-        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
-        const retryInterval = 3000; // 3 seconds between retries
-
-        const pollForPost = (attempt: number = 0) => {
-          // Stop polling if component is unmounted
-          if (!isMountedRef.current) {
-            return;
-          }
-
-          if (attempt >= maxRetries) {
-            // Final attempt after max retries - invalidate and refetch latest feed queries
-            if (isMountedRef.current) {
-              queryClient.invalidateQueries({ queryKey: ['posts'], exact: false });
-              queryClient.refetchQueries({
-                queryKey: ['posts'],
-                type: 'active',
-              });
-              // Also invalidate topic feed if applicable
-              if (requiredHashtag && !requiredMissing) {
-                queryClient.invalidateQueries({ queryKey: ['topic-by-name', (requiredHashtag || '').toLowerCase()] });
-              }
-            }
-            return;
-          }
-
-          const timeoutId = setTimeout(() => {
-            // Remove timeout ID from tracking set
-            timeoutRefs.current.delete(timeoutId);
-
-            // Stop if component unmounted
-            if (!isMountedRef.current) {
-              return;
-            }
-
-            // Try to fetch the post from backend
-            PostsService.getById({ id: newPostId })
-              .then(() => {
-                // Post found - invalidate and refetch queries to get fresh data
-                if (isMountedRef.current) {
-                  queryClient.invalidateQueries({ queryKey: ['posts'], exact: false });
-                  queryClient.refetchQueries({
-                    queryKey: ['posts'],
-                    type: 'active',
-                  });
-                  // Also invalidate topic feed if applicable
-                  if (requiredHashtag && !requiredMissing) {
-                    queryClient.invalidateQueries({ queryKey: ['topic-by-name', (requiredHashtag || '').toLowerCase()] });
-                    queryClient.refetchQueries({
-                      queryKey: ['topic-by-name', (requiredHashtag || '').toLowerCase()],
-                      type: 'active',
-                    });
-                  }
-                }
-                // Post found, stop polling
-              })
-              .catch(() => {
-                // Post not found yet, continue polling
-                if (isMountedRef.current) {
-                  pollForPost(attempt + 1);
-                }
-              });
-          }, retryInterval);
-
-          // Track timeout ID for cleanup
-          timeoutRefs.current.add(timeoutId);
-        };
-
-        // Start polling after initial delay to give backend time to start processing
-        const initialTimeoutId = setTimeout(() => {
-          // Remove timeout ID from tracking set
-          timeoutRefs.current.delete(initialTimeoutId);
-
-          // Only start polling if component is still mounted
-          if (isMountedRef.current) {
-            pollForPost(0);
-          }
-        }, 5000); // 5 second initial delay before first poll
-
-        // Track initial timeout ID for cleanup
-        timeoutRefs.current.add(initialTimeoutId);
+        insertPostIntoFeeds(queryClient, created, topic);
       } else if (postId) {
-        // For replies: optimistically show the new reply immediately
-        // Normalize postId the same way CommentItem does to ensure cache key matches
-        const normalizedPostId = normalizeId(postId);
+        const normalizedPostId = normalizePostId(postId);
         const newReplyId = `${String(decodedResult).replace(/_v3$/, '')}_v3`;
 
-        // Create optimistic reply object immediately (even before API call)
-        // This ensures the reply appears instantly even if backend isn't ready yet
+        // Built here so the reply shows at once; the backend indexes it later.
         const optimisticReply: any = {
           id: newReplyId,
           content: serialized,
@@ -715,281 +544,51 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           media: mediaUrls,
           total_comments: 0,
           created_at: new Date().toISOString(),
-          tx_hash: decodedResult,
+          tx_hash: hash ?? decodedResult,
           type: 'post_without_tip',
           topics: [],
         };
 
         let newReply: any = optimisticReply;
-
         try {
-          // Try to fetch the actual reply from backend, but use optimistic one if it fails
-          const fetchedReply = await PostsService.getById({ id: newReplyId });
-          newReply = fetchedReply;
+          newReply = await PostsService.getById({ id: newReplyId });
         } catch {
-          // Backend might not have processed it yet (404), use optimistic reply
-          // Continue with optimisticReply
+          // Not indexed yet: keep the one built here until the backend has it.
+          if (hash) {
+            trackPublishedReply({
+              account: activeAccount, txHash: hash, parentId: postId, reply: optimisticReply,
+            });
+          }
         }
 
-        // Helper function to update infinite query format
-        // Replies are ordered ASC (oldest first), so new replies go at the bottom (last page)
-        const updateInfiniteQuery = (queryKey: any[]) => {
-          queryClient.setQueryData(queryKey, (old: any) => {
-            if (!old || !old.pages || !Array.isArray(old.pages)) {
-              return {
-                pageParams: [1],
-                pages: [{ items: [newReply], meta: { currentPage: 1, totalPages: 1 } }],
-              };
-            }
-            // Check if reply already exists in any page to avoid duplicates
-            const exists = old.pages
-              .some((page: any) => page?.items?.some((item: any) => item?.id === newReplyId));
-            if (exists) return old;
+        insertReplyIntoThreads(queryClient, postId, newReply);
 
-            // Append to the last page (newest items) since replies are ordered ASC
-            const lastPageIndex = old.pages.length - 1;
-            const lastPage = old.pages[lastPageIndex] || { items: [], meta: {} };
-            const updatedLastPage = {
-              ...lastPage,
-              items: [...(lastPage.items || []), newReply],
-            };
-
+        // One more reply on the parent, wherever it is shown.
+        const isParent = (id: string | undefined): boolean => (
+          Boolean(id) && normalizePostId(id!) === normalizedPostId
+        );
+        queryClient.getQueryCache().findAll({ queryKey: ['posts'], exact: false }).forEach((query) => {
+          queryClient.setQueryData(query.queryKey, (old: any) => {
+            if (!old || !old.pages) return old;
             return {
               ...old,
-              pages: [
-                ...old.pages.slice(0, lastPageIndex),
-                updatedLastPage,
-              ],
+              pages: old.pages.map((p: any) => ({
+                ...p,
+                items: p.items?.map((i: any) => (isParent(i?.id)
+                  ? { ...i, total_comments: (i.total_comments || 0) + 1 }
+                  : i)) || [],
+              })),
             };
           });
-        };
-
-        // Helper function to update array query format
-        // Replies are ordered ASC (oldest first), so new replies go at the bottom
-        const updateArrayQuery = (queryKey: any[]) => {
-          queryClient.setQueryData(queryKey, (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            // Check if reply already exists to avoid duplicates
-            const exists = old.some((item: any) => item?.id === newReplyId);
-            if (exists) return old;
-            // Append to the end (bottom) since replies are ordered ASC
-            return [...old, newReply];
-          });
-        };
-
-        // Helper to check if two IDs match (handles both normalized and non-normalized)
-        const idsMatch = (id1: string, id2: string): boolean => (
-          normalizeId(id1) === normalizeId(id2) || id1 === id2
-        );
-
-        // CRITICAL: Update ALL active query keys FIRST, using their exact key format
-        // This ensures we catch DirectReplies and other components that use the raw ID
-        const updatedKeys = new Set<string>();
-        const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ['post-comments'], exact: false });
-
-        allPostCommentQueries.forEach((query) => {
-          const key = query.queryKey as any[];
-          const queryPostId = key[1];
-          // Match using normalized comparison
-          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-            const keyStr = JSON.stringify(key);
-            if (!updatedKeys.has(keyStr)) {
-              updatedKeys.add(keyStr);
-              if (key[2] === 'infinite') {
-                updateInfiniteQuery(key);
-              } else {
-                updateArrayQuery(key);
-              }
-            }
-          }
         });
+        const bumpParent = (old: any) => (old && isParent(old.id)
+          ? { ...old, total_comments: (old.total_comments || 0) + 1 }
+          : old);
+        queryClient.setQueryData(['post', normalizedPostId], bumpParent);
+        if (postId !== normalizedPostId) queryClient.setQueryData(['post', postId], bumpParent);
 
-        // Update ALL active comment-replies query keys
-        queryClient.getQueryCache().findAll({ queryKey: ['comment-replies'], exact: false }).forEach((query) => {
-          const key = query.queryKey as any[];
-          const queryPostId = key[1];
-          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-            const keyStr = JSON.stringify(key);
-            if (!updatedKeys.has(keyStr)) {
-              updatedKeys.add(keyStr);
-              updateArrayQuery(key);
-            }
-          }
-        });
-
-        // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
-        // This ensures the reply appears immediately when the component mounts
-        const fallbackKeys = [
-          ['post-comments', normalizedPostId, 'infinite'],
-          ['post-comments', normalizedPostId],
-          ['comment-replies', normalizedPostId],
-          ['post-comments', postId, 'infinite'],
-          ['post-comments', postId],
-          ['comment-replies', postId],
-        ];
-
-        fallbackKeys.forEach((key) => {
-          const keyStr = JSON.stringify(key);
-          if (!updatedKeys.has(keyStr)) {
-            updatedKeys.add(keyStr);
-            if (key[2] === 'infinite') {
-              updateInfiniteQuery(key);
-            } else {
-              updateArrayQuery(key);
-            }
-          }
-        });
-
-        // Optimistically update parent post's comment count
-        // Update parent post in cache if it exists (for both normalized and original formats)
-        // Normalize parent ID once to use consistently
-        // (both normalizedPostId and postId should normalize to the same value)
-        const normalizedParentId = normalizeId(normalizedPostId);
-
-        // Helper to check if an ID matches the parent (handles both normalized and non-normalized)
-        const matchesParentId = (id: string | undefined): boolean => {
-          if (!id) return false;
-          return normalizeId(id) === normalizedParentId;
-        };
-
-        const updateParentPostCommentCount = () => {
-          // Update all post queries that might contain the parent post
-          queryClient.getQueryCache().findAll({ queryKey: ['posts'], exact: false }).forEach((query) => {
-            const key = query.queryKey as any[];
-            queryClient.setQueryData(key, (old: any) => {
-              if (!old || !old.pages) return old;
-              return {
-                ...old,
-                pages: old.pages.map((p: any) => ({
-                  ...p,
-                  items: p.items?.map((i: any) => (matchesParentId(i?.id)
-                    ? { ...i, total_comments: (i.total_comments || 0) + 1 }
-                    : i)) || [],
-                })),
-              };
-            });
-          });
-
-          // Also check single post queries for both formats
-          queryClient.setQueryData(['post', normalizedPostId], (old: any) => {
-            if (old && matchesParentId(old.id)) {
-              return { ...old, total_comments: (old.total_comments || 0) + 1 };
-            }
-            return old;
-          });
-
-          // Only update postId query if it's different from normalizedPostId (as strings)
-          // Compare original strings, not normalized versions, since normalization is idempotent
-          if (postId !== normalizedPostId) {
-            queryClient.setQueryData(['post', postId], (old: any) => {
-              if (old && matchesParentId(old.id)) {
-                return { ...old, total_comments: (old.total_comments || 0) + 1 };
-              }
-              return old;
-            });
-          }
-        };
-
-        // Update parent post comment count optimistically (only once to avoid double increment)
-        updateParentPostCommentCount();
-
-        // Invalidate descendant count queries so they refetch with the new reply
+        // Descendant counts refetch with the new reply.
         queryClient.invalidateQueries({ queryKey: ['post-desc-count'], exact: false });
-
-        // Poll backend until comment is confirmed or max retries reached
-        // Backend needs time to process blockchain transaction and update database
-        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
-        const retryInterval = 3000; // 3 seconds between retries
-
-        const pollForComment = (attempt: number = 0) => {
-          // Stop polling if component is unmounted
-          if (!isMountedRef.current) {
-            return;
-          }
-
-          if (attempt >= maxRetries) {
-            // Final attempt after max retries
-            if (isMountedRef.current) {
-              queryClient.invalidateQueries({ queryKey: ['post-comments', normalizedPostId] });
-              queryClient.invalidateQueries({ queryKey: ['comment-replies', normalizedPostId] });
-              queryClient.refetchQueries({
-                queryKey: ['post-comments', normalizedPostId],
-                type: 'active',
-              });
-              queryClient.refetchQueries({
-                queryKey: ['comment-replies', normalizedPostId],
-                type: 'active',
-              });
-            }
-            return;
-          }
-
-          const timeoutId = setTimeout(() => {
-            // Remove timeout ID from tracking set
-            timeoutRefs.current.delete(timeoutId);
-
-            // Stop if component unmounted
-            if (!isMountedRef.current) {
-              return;
-            }
-
-            queryClient.invalidateQueries({ queryKey: ['post-comments', normalizedPostId] });
-            queryClient.invalidateQueries({ queryKey: ['comment-replies', normalizedPostId] });
-            Promise.all([
-              queryClient.refetchQueries({
-                queryKey: ['post-comments', normalizedPostId],
-                type: 'active',
-              }),
-              queryClient.refetchQueries({
-                queryKey: ['comment-replies', normalizedPostId],
-                type: 'active',
-              }),
-            ]).then(() => {
-              // Stop if component unmounted
-              if (!isMountedRef.current) {
-                return;
-              }
-
-              // Check if backend has processed the comment by verifying it exists in the refetched list
-              const cachedComments = queryClient.getQueryData<any[]>(['comment-replies', normalizedPostId]);
-              const commentExists = cachedComments?.some((c: any) => c?.id === newReplyId);
-
-              // If comment exists in backend response, we're done
-              // Otherwise, keep polling
-              if (commentExists) {
-                return;
-              }
-
-              // Continue polling
-              pollForComment(attempt + 1);
-            }).catch(() => {
-              // Stop if component unmounted
-              if (!isMountedRef.current) {
-                return;
-              }
-
-              // On error, continue polling
-              pollForComment(attempt + 1);
-            });
-          }, retryInterval);
-
-          // Track timeout ID for cleanup
-          timeoutRefs.current.add(timeoutId);
-        };
-
-        // Start polling after initial delay to give backend time to start processing
-        const initialTimeoutId = setTimeout(() => {
-          // Remove timeout ID from tracking set
-          timeoutRefs.current.delete(initialTimeoutId);
-
-          // Only start polling if component is still mounted
-          if (isMountedRef.current) {
-            pollForComment(0);
-          }
-        }, 5000); // 5 second initial delay before first poll
-
-        // Track initial timeout ID for cleanup
-        timeoutRefs.current.add(initialTimeoutId);
 
         onCommentAdded?.();
       }

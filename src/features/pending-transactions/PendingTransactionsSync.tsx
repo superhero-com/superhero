@@ -8,13 +8,18 @@ import { useTransactionNotification } from '@/features/transaction-notification'
 // loaded before anything is resumed.
 import '@/utils/confirmedXLink';
 import '@/features/trending/utils/pendingTokenCreation';
+import { refreshAfterPostSettled, watchPendingPosts } from '@/features/social/utils/pendingPosts';
+import { refreshAfterTipSettled, watchPendingTips } from '@/features/social/utils/pendingTips';
+import { refreshAfterTradeSettled } from '@/features/trending/utils/pendingTrades';
 import {
   findPendingTransaction,
   onPendingTransactionSettled,
   resumePendingTransactions,
 } from './store';
 import {
+  ANNOUNCED_KINDS,
   bannerShowsTransaction,
+  isAnnouncedKind,
   isTrackedBanner,
   pendingTransactionPayload,
 } from './payload';
@@ -24,10 +29,14 @@ import {
  *
  * - Picks up what a previous page load left pending, so a reload keeps
  *   waiting on it instead of showing the old state as current.
+ * - Keeps posts, replies and tips that are not in the backend yet in the
+ *   feeds, threads and totals that load without them.
  * - When one is live, refetches what shows it, whichever page is open, and
  *   turns the banner into "done" (X account linked, token created…).
  * - Puts the connected wallet's pending transaction back in the banner after
  *   a reload or a wallet switch, and never shows one wallet's to another.
+ *   Posts, replies, tips and trades already said "done" once mined, so they
+ *   never take the banner.
  */
 export const PendingTransactionsSync = () => {
   const queryClient = useQueryClient();
@@ -42,14 +51,40 @@ export const PendingTransactionsSync = () => {
   const accountRef = useRef(activeAccount);
   accountRef.current = activeAccount;
 
+  useEffect(() => {
+    const stopPosts = watchPendingPosts(queryClient);
+    const stopTips = watchPendingTips(queryClient);
+    return () => {
+      stopPosts();
+      stopTips();
+    };
+  }, [queryClient]);
+
   useEffect(() => { resumePendingTransactions(); }, []);
 
   useEffect(() => onPendingTransactionSettled(({ transaction, outcome }) => {
-    if (transaction.kind === 'create_token') {
-      queryClient.invalidateQueries({ queryKey: ['TokensService.findByAddress'] });
-    } else {
-      refreshXLinkState(transaction.account);
+    switch (transaction.kind) {
+      case 'create_token':
+        queryClient.invalidateQueries({ queryKey: ['TokensService.findByAddress'] });
+        break;
+      case 'link_x':
+      case 'unlink_x':
+        refreshXLinkState(transaction.account);
+        break;
+      case 'create_post':
+      case 'create_comment':
+        refreshAfterPostSettled(queryClient, transaction);
+        break;
+      case 'tip_post':
+        refreshAfterTipSettled(queryClient, transaction);
+        break;
+      case 'trade':
+        refreshAfterTradeSettled(queryClient, transaction);
+        break;
+      default:
+        break;
     }
+    if (!isAnnouncedKind(transaction.kind)) return;
     const banner = bannerRef.current;
     const bannerShowsIt = bannerShowsTransaction(banner, transaction);
     if (outcome === 'timed_out') {
@@ -82,7 +117,7 @@ export const PendingTransactionsSync = () => {
   const bannerStatus = notificationState.status;
   useEffect(() => {
     const account = activeAccount || null;
-    const own = account ? findPendingTransaction({ account }) : null;
+    const own = account ? findPendingTransaction({ account, kind: ANNOUNCED_KINDS }) : null;
     let banner = bannerRef.current;
     if (switchedTo.current !== account) {
       // The first wallet seen is not a switch away from anything.

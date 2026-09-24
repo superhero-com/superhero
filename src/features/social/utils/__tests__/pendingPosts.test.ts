@@ -139,6 +139,35 @@ describe('pending posts', () => {
     expect(queryClient.getQueryData<any>(['comment-replies', '8_v3'])).toEqual([]);
   });
 
+  it('shows the copy from the browser on the post\'s own page while the backend 404s it', async () => {
+    trackPublishedPost({ account: 'ak_author', txHash: 'th_mined', post: mine });
+    stop = watchPendingPosts(queryClient);
+
+    // The page links to the id without the suffix.
+    await queryClient.fetchQuery({
+      queryKey: ['post', '42'],
+      queryFn: async () => { throw new Error('Post not found'); },
+    }).catch(() => undefined);
+    const detail = queryClient.getQueryState(['post', '42']);
+    expect(detail?.status).toBe('success');
+    expect(detail?.data).toEqual(expect.objectContaining({ id: '42_v3', content: '#nancy gm' }));
+
+    // Its replies 404 too until then: none yet, rather than an error.
+    await queryClient.fetchQuery({
+      queryKey: ['post-comments', '42_v3', 'infinite'],
+      queryFn: async () => { throw new Error('Post with ID 42_v3 not found'); },
+    }).catch(() => undefined);
+    expect(queryClient.getQueryState(['post-comments', '42_v3', 'infinite'])?.status).toBe('success');
+    expect(queryClient.getQueryData<any>(['post-comments', '42_v3', 'infinite']).pages[0].items).toEqual([]);
+
+    // Any other missing post still fails.
+    await queryClient.fetchQuery({
+      queryKey: ['post', '99'],
+      queryFn: async () => { throw new Error('Post not found'); },
+    }).catch(() => undefined);
+    expect(queryClient.getQueryState(['post', '99'])?.status).toBe('error');
+  });
+
   it('is done once the backend serves it', async () => {
     const settled = vi.fn();
     const unsubscribe = onPendingTransactionSettled(settled);
@@ -157,12 +186,15 @@ describe('pending posts', () => {
 
   it('then refetches the feeds, or the thread and its parent for a reply', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    // Its own page, open on the copy from the browser.
+    queryClient.setQueryData(['post', '42'], mine);
     const post = trackPublishedPost({
       account: 'ak_author', txHash: 'th_mined', post: mine, topic: '#Nancy',
     });
     refreshAfterPostSettled(queryClient, post);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['posts'], exact: false });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['topic-by-name', '#nancy'] });
+    expect(queryClient.getQueryState(['post', '42'])?.isInvalidated).toBe(true);
 
     queryClient.setQueryData(['comment-replies', '7'], []);
     queryClient.setQueryData(['comment-replies', '8_v3'], []);

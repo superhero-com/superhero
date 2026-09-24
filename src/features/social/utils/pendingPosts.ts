@@ -264,10 +264,26 @@ function restoreInto(queryClient: QueryClient, queryKey: QueryKey): void {
   }
 }
 
+/** The post or reply `id` as built in the browser, while the backend lacks it. */
+export function pendingPostById(id: string): Post | null {
+  const [transaction] = listPendingTransactions({
+    kind: ['create_post', 'create_comment'],
+    match: (entry) => sameId(entry.meta.postId, id),
+  });
+  return transaction ? parsePost(transaction) : null;
+}
+
+const isPostDetailKey = (key: readonly unknown[]): key is readonly ['post', string, ...unknown[]] => (
+  key[0] === 'post' && typeof key[1] === 'string'
+);
+
 /**
  * Keep pending posts and replies in view: whenever a feed or thread loads from
  * the backend without them (after a reload, or a refetch before the indexer
- * caught up), put them back. Returns the unsubscribe.
+ * caught up), put them back; and when a pending post's own page or its replies
+ * fail to load (the backend 404s both until it has the post), show the copy
+ * built in the browser and its pending replies instead. Returns the
+ * unsubscribe.
  */
 export function watchPendingPosts(queryClient: QueryClient): () => void {
   const cache = queryClient.getQueryCache();
@@ -275,8 +291,27 @@ export function watchPendingPosts(queryClient: QueryClient): () => void {
     .filter((query) => query.state.data !== undefined)
     .forEach((query) => restoreInto(queryClient, query.queryKey));
   return cache.subscribe((event) => {
+    if (event.type !== 'updated') return;
+    const key = event.query.queryKey as readonly unknown[];
+    if (event.action.type === 'error') {
+      const id = typeof key[1] === 'string' ? key[1] : null;
+      if (!id || !pendingPostById(id)) return;
+      if (isPostDetailKey(key)) {
+        queryClient.setQueryData(event.query.queryKey, pendingPostById(id));
+      } else if (isThreadKey(key)) {
+        // Its replies 404 too until the backend has it: none yet, but
+        // the pending ones.
+        const replies = pendingReplies(id);
+        const page = { items: replies, meta: { currentPage: 1, totalPages: 1 } };
+        queryClient.setQueryData(
+          event.query.queryKey,
+          key[2] === 'infinite' ? { pages: [page], pageParams: [1] } : replies,
+        );
+      }
+      return;
+    }
     // Only fetches: `setQueryData` (ours included) is marked manual.
-    if (event.type !== 'updated' || event.action.type !== 'success' || event.action.manual) return;
+    if (event.action.type !== 'success' || event.action.manual) return;
     restoreInto(queryClient, event.query.queryKey);
   });
 }
@@ -287,6 +322,11 @@ export function refreshAfterPostSettled(
   transaction: PendingTransaction,
 ): void {
   queryClient.invalidateQueries({ queryKey: ['posts'], exact: false });
+  // Its own page, if it is open on the copy from the browser.
+  const { postId } = transaction.meta;
+  queryClient.invalidateQueries({
+    predicate: (query) => isPostDetailKey(query.queryKey) && sameId(query.queryKey[1], postId),
+  });
   if (transaction.kind === 'create_post') {
     if (transaction.meta.topic) {
       queryClient.invalidateQueries({ queryKey: ['topic-by-name', transaction.meta.topic] });

@@ -80,7 +80,8 @@ const RightRail = ({
     'hover:scrollbar-thumb-to-pink-500/80',
   ].join(' ');
   const walletRailCardClassName = [
-    'bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4',
+    'bg-white/[0.03] border border-white/10 rounded-[20px] py-4',
+    activeAccount ? 'px-4' : 'px-5',
     'shadow-none transition-all duration-300 ease-in-out',
     'relative overflow-hidden',
   ].join(' ');

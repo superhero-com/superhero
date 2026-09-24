@@ -1,13 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useEffect, useId, useMemo, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 
-import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import AddressAvatar from '@/components/AddressAvatar';
 import { Separator } from '@/components/ui/separator';
 
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
+import { useChainName } from '@/hooks/useChainName';
 import { AccountTokensService } from '@/api/generated/services/AccountTokensService';
 import { Decimal } from '@/libs/decimal';
 
@@ -19,12 +23,12 @@ type WalletOverviewCardProps = {
   className?: string;
 };
 
-const formatPrice = (value: number, currency: string): string => {
+const formatPrice = (value: number, currency: string, maximumFractionDigits = 6): string => {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency.toUpperCase(),
     minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
+    maximumFractionDigits,
   });
   try {
     return formatter.format(value);
@@ -72,6 +76,9 @@ const WalletOverviewCard = ({
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
   const { decimalBalance } = useAccountBalances(activeAccount);
+  const { chainName } = useChainName(activeAccount || '');
+  const preferredName = (chainName || '').trim();
+  const detailsId = useId();
 
   // Immediately reload balance when account changes
   // Note: loadAccountData is already called by useAccountBalances when selectedAccount changes
@@ -168,19 +175,19 @@ const WalletOverviewCard = ({
   }
 
   return (
-    <div className={`grid gap-2 ${className || ''}`}>
+    <div className={`min-w-0 ${className || ''}`}>
       {/* Summary Row */}
-      <div className="py-1">
-        <div className="flex items-center justify-between mb-1">
-          <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="text-xs text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
             <span className="text-base" aria-hidden="true">👛</span>
             <span>{t('common.wallet.yourWallet')}</span>
           </div>
-          <div className="flex gap-1">
+          <div className="ms-auto flex max-w-full items-center gap-1">
             <button
               type="button"
               onClick={() => navigate(`/users/${activeAccount}`)}
-              className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
+              className="min-h-[30px] [@media(pointer:coarse)]:min-h-11 bg-white/5 border border-transparent rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {t('common.wallet.viewProfile')}
             </button>
@@ -188,77 +195,78 @@ const WalletOverviewCard = ({
               type="button"
               aria-label={open ? t('common.wallet.collapseWallet') : t('common.wallet.expandWallet')}
               aria-expanded={open}
-              className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
+              aria-controls={detailsId}
+              className="flex shrink-0 items-center justify-center size-[30px] [@media(pointer:coarse)]:size-11 bg-white/5 border border-transparent rounded-lg cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen((v) => !v);
               }}
             >
-              {open ? '▲' : '▼'}
+              <ChevronDown className={`size-4 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <AddressAvatarWithChainName
-            isHoverEnabled={false}
-            address={activeAccount}
-            size={36}
-            showBalance={false}
-            showAddressAndChainName={false}
-            showPrimaryOnly
-            contentClassName="px-2 pb-0"
-            secondary={(
-              <div className="text-[11px] text-[var(--light-font-color)]">
+        <Link
+          to={`/users/${activeAccount}`}
+          className="flex min-w-0 items-start gap-2.5 rounded-sm no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <AddressAvatar address={activeAccount} size={36} className="mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <div className={`[overflow-wrap:anywhere] font-semibold leading-snug text-[var(--standard-font-color)] ${preferredName ? 'text-[15px]' : 'text-[13px]'}`} dir="auto">
+              {preferredName || activeAccount}
+            </div>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] font-medium tabular-nums text-[var(--standard-font-color)]">
+              <span className="[overflow-wrap:anywhere]" dir="ltr">
                 {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                 {' '}
                 AE
-                {aeFiat != null && (
-                <>
+              </span>
+              {aeFiat != null && (
+                <span className="text-xs font-normal text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
+                  ≈
                   {' '}
-                  <span className="opacity-70">·</span>
-                  {' '}
-                  <span>
-                    ≈
-                    {' '}
-                    {formatPrice(aeFiat, selectedCurrency)}
-                  </span>
-                </>
-                )}
-              </div>
-            )}
-          />
+                  {formatPrice(aeFiat, selectedCurrency, 2)}
+                </span>
+              )}
+            </div>
+          </div>
+        </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-[11px] tabular-nums text-[var(--light-font-color)]">
+          <span className="flex items-center gap-1.5" role="status" aria-live="polite">
             <span
-              className={`text-[12px] font-semibold ${
+              className={`size-1.5 shrink-0 rounded-full ${
                 isOnline
-                  ? 'text-[var(--neon-green)]'
-                  : 'text-[var(--neon-pink)]'
+                  ? 'bg-[var(--neon-green)]'
+                  : 'bg-[var(--neon-pink)]'
               }`}
-              title={isOnline ? t('common.wallet.connected') : t('common.wallet.offline')}
-              role="status"
-              aria-live="polite"
-            >
-              {isOnline ? '●' : '○'}
-            </span>
-            {currentBlockHeight != null && (
-              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
+              aria-hidden="true"
+            />
+            {isOnline ? t('common.wallet.online') : t('common.wallet.offline')}
+          </span>
+          {currentBlockHeight != null && (
+            <span className="flex flex-wrap gap-x-1">
+              <span>{t('common.wallet.block')}</span>
+              <span dir="ltr">
                 #
                 {Number(currentBlockHeight).toLocaleString()}
               </span>
-            )}
-          </div>
+            </span>
+          )}
         </div>
       </div>
 
       {/* Expanded Details */}
       {open && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+        <div id={detailsId} className="mt-3 border-t border-white/10 pt-3">
+          <div className="mb-2.5 text-xs text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
+            {activeAccount}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(activeAccount);
@@ -267,44 +275,40 @@ const WalletOverviewCard = ({
                 }
               }}
             >
-              📋
-              {' '}
               {t('common.wallet.copyAddress')}
             </button>
             <button
               type="button"
-              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
             >
-              🔗
-              {' '}
               {t('common.wallet.openOnAescan')}
             </button>
           </div>
 
           <Separator className="my-3" />
 
-          <div className="grid gap-2">
+          <div className="grid min-w-0 gap-2">
             <div className="text-xs text-white/70 font-medium">{t('explore:ownedTrends')}</div>
             {topHoldings.length === 0 ? (
               <div className="text-xs text-white/60">
                 {t('common.wallet.noHoldings')}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex min-w-0 flex-col gap-2">
                 {topHoldings.map((it: any) => {
                   const label = getTokenLabelSafe(it);
                   const balanceLabel = getBalanceLabelSafe(it);
                   return (
-                    <div key={`${label}-${balanceLabel}`} className="flex items-center justify-between text-sm">
+                    <div key={`${label}-${balanceLabel}`} className="flex min-w-0 items-center justify-between gap-2 text-sm">
                       <div
-                        className="truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
+                        className="min-w-0 flex-1 truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
                         title={label}
                       >
                         <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
                         <span className="font-bold">{(label || '').toString()}</span>
                       </div>
-                      <div className="text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                      <div className="max-w-[50%] shrink-0 text-end [overflow-wrap:anywhere] text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         {balanceLabel}
                       </div>
                     </div>

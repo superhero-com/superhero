@@ -1,5 +1,8 @@
 {
   "common": {
+    "wallet": {
+      "online": "В сети"
+    },
     "account": {
       "firstBlockchainActivity": "Дата присоединения:"
     },

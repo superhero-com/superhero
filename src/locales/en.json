@@ -304,6 +304,7 @@
       "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time."
     },
     "account": {
+      "firstBlockchainActivity": "Joined at:",
       "token": "Token",
       "price": "Price",
       "totalValue": "Total Value",

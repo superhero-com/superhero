@@ -256,6 +256,7 @@
       "valueTooltipDescription": "投资组合价值显示此钱包中持有的 AE 余额和趋势代币的总价值。图表追踪该价值随时间的变化。"
     },
     "account": {
+      "firstBlockchainActivity": "加入时间：",
       "token": "代币",
       "price": "价格",
       "totalValue": "总价值",

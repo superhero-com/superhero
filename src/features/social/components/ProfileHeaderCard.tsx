@@ -7,6 +7,7 @@ import ProfileActionBar from './ProfileActionBar';
 import ProfileBand from './ProfileBand';
 import ProfileCoverActions from './ProfileCoverActions';
 import ProfileIdentity from './ProfileIdentity';
+import ProfileFirstActivity from './ProfileFirstActivity';
 import ProfileSocialStats from './ProfileSocialStats';
 
 interface ProfileHeaderCardProps {
@@ -125,6 +126,7 @@ const ProfileHeaderCard = ({
               onPostsClick={onPostsClick}
               className="min-w-0 flex-wrap"
             />
+            <ProfileFirstActivity address={address} />
             <div className="ml-auto max-w-full grow min-[480px]:grow-0">
               <ProfileActionBar
                 address={address}

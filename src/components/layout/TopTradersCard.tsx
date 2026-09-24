@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import AddressAvatar from '@/components/AddressAvatar';
 import { fetchLeaderboard, type LeaderboardItem } from '@/features/trending/api/leaderboard';
 import { useChainName } from '@/hooks/useChainName';
+import { formatAddress } from '@/utils/address';
 import './RailCards.css';
 
 const pnlFormatter = new Intl.NumberFormat('en-US', {
@@ -19,7 +20,8 @@ const pnlFormatter = new Intl.NumberFormat('en-US', {
 const TraderRow = ({ item, rank }: { item: LeaderboardItem; rank: number }) => {
   const apiName = item.chain_name?.trim();
   const { chainName } = useChainName(item.address, { lookup: !apiName });
-  const name = apiName || chainName || item.address;
+  const name = apiName || chainName?.trim();
+  const shortAddress = formatAddress(item.address, 4);
   const pnl = item.pnl_usd == null ? NaN : Number(item.pnl_usd);
   let pnlTone = 'neutral';
   if (Number.isFinite(pnl) && pnl > 0) pnlTone = 'positive';
@@ -28,9 +30,20 @@ const TraderRow = ({ item, rank }: { item: LeaderboardItem; rank: number }) => {
   return (
     <li>
       <Link to={`/users/${encodeURIComponent(item.address)}`} className="rail-trader">
-        <span className="rail-trader__rank">{rank}</span>
-        <AddressAvatar address={item.address} size={28} />
-        <span className="rail-trader__name" dir="auto">{name}</span>
+        <div className="rail-trader__avatar-wrap">
+          <AddressAvatar address={item.address} size={36} className="rail-trader__avatar" />
+          <span className="rail-trader__rank">{rank}</span>
+        </div>
+        <span className="rail-trader__identity">
+          <span className="rail-trader__name" dir="auto" title={name ? undefined : item.address}>
+            {name || shortAddress}
+          </span>
+          {name && (
+            <span className="rail-trader__address" dir="ltr" title={item.address}>
+              {shortAddress}
+            </span>
+          )}
+        </span>
         <span className={`rail-trader__pnl rail-trader__pnl--${pnlTone}`} dir="ltr">
           {Number.isFinite(pnl) ? pnlFormatter.format(pnl) : '—'}
         </span>

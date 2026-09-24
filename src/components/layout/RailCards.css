@@ -1,17 +1,17 @@
 .rail-card,
 .get-ae-button {
-  --rail-text: light-dark(#252330, #f5f3fb);
-  --rail-muted: light-dark(#6a6179, #aaa2b8);
-  --rail-base: light-dark(#fcfaff, #111015);
-  --rail-raised: light-dark(#f5effa, #1b1723);
-  --rail-line: light-dark(#d9cfe4, #39313f);
-  --rail-shadow: light-dark(#6e487a20, #00000050);
+  --rail-text: light-dark(#202632, #f5f7fb);
+  --rail-muted: light-dark(#5f6c80, #a5b0c2);
+  --rail-base: light-dark(#fbfcff, #0d1119);
+  --rail-raised: light-dark(#eff4fc, #171f2c);
+  --rail-line: light-dark(#d0dbea, #2d3b52);
+  --rail-shadow: light-dark(#244b8220, #00000050);
   min-width: 0;
 }
 
 .rail-card {
-  --rail-haze: light-dark(#dba2f21e, #b673d81c);
-  --rail-rim: light-dark(#c5a5d2, #755479);
+  --rail-haze: light-dark(#1161fe12, #1161fe1c);
+  --rail-rim: light-dark(#a4bde4, #456798);
   position: relative;
   isolation: isolate;
   border: 1px solid transparent;
@@ -21,7 +21,7 @@
   background:
     radial-gradient(ellipse at 4% 0%, var(--rail-haze), transparent 75%) padding-box,
     linear-gradient(145deg, var(--rail-raised), var(--rail-base) 68%) padding-box,
-    linear-gradient(135deg, var(--rail-rim), var(--rail-line) 32%, var(--rail-line) 78%, light-dark(#c4b7d9, #4d4263)) border-box;
+    linear-gradient(135deg, var(--rail-rim), var(--rail-line) 32%, var(--rail-line) 78%, light-dark(#b4c9e8, #344d71)) border-box;
   box-shadow: inset 0 1px light-dark(#ffffff, #ffffff20), 0 12px 26px -22px var(--rail-shadow);
 }
 
@@ -51,11 +51,11 @@
 .rail-badge svg { width: 18px; height: 18px; stroke-width: 1.8; transform: rotate(7deg); }
 .rail-badge img { width: 24px; height: 14px; transform: rotate(7deg); }
 .rail-badge--ae {
-  background: radial-gradient(ellipse at 17% 4%, light-dark(#ffffffa0, #ed92bc42), transparent 70%), linear-gradient(145deg, light-dark(#fde8f0, #48283f), light-dark(#efd7e3, #231c2a));
-  box-shadow: inset 0 1px light-dark(#ffffff, #edb3d166), inset 1px 0 #ffffff20, inset 0 -2px #00000022, 1px 3px 0 light-dark(#d6aebe, #241626), 0 7px 14px -7px #ed619380;
+  background: radial-gradient(ellipse at 17% 4%, light-dark(#ffffffa0, #86afff4d), transparent 70%), linear-gradient(145deg, light-dark(#e5eeff, #263a59), light-dark(#d7e4f7, #141e2f));
+  box-shadow: inset 0 1px light-dark(#ffffff, #b8d2ff66), inset 1px 0 #ffffff20, inset 0 -2px #00000022, 1px 3px 0 light-dark(#adc4e4, #12213a), 0 7px 14px -7px #1161fe50;
 }
 
-.ae-price-card { padding: 14px 16px; --rail-haze: light-dark(#efacc11f, #dc688f16); }
+.ae-price-card { padding: 14px 16px; }
 .ae-price-card__top { display: flex; align-items: center; gap: 11px; }
 .ae-price-card .rail-badge--ae { width: 38px; height: 40px; border-radius: 12px; }
 .ae-price-card .rail-badge img { width: 28px; height: 16px; }
@@ -79,7 +79,7 @@
   gap: 6px 12px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid light-dark(#e7dfe9, #ffffff0d);
+  border-top: 1px solid light-dark(#dce5f1, #ffffff0d);
   font-size: 11px;
   line-height: 16px;
   color: var(--rail-muted);
@@ -112,7 +112,6 @@
 .get-ae-button__copy > span { color: #174744; font-size: 11px; line-height: 16px; }
 .get-ae-button > svg { width: 18px; height: 18px; flex: none; }
 
-.top-traders-card { --rail-haze: light-dark(#e9c1791c, #edb24c14); --rail-rim: light-dark(#cfb899, #796349); }
 .rail-card__header { display: flex; align-items: center; gap: 11px; }
 .rail-card__header h4 { margin: 0; color: var(--rail-text); font-size: 16px; line-height: 24px; font-weight: 650; letter-spacing: -0.3px; }
 .rail-card__title { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
@@ -125,21 +124,21 @@
   gap: 10px;
   min-height: 62px;
   padding: 12px;
-  border: 1px solid light-dark(#ded5e8, #ffffff10);
+  border: 1px solid light-dark(#d7e1ef, #ffffff10);
   border-radius: 14px;
   color: var(--rail-text);
   text-decoration: none;
-  background: linear-gradient(135deg, light-dark(#fbf8fd, #201b25), light-dark(#f7f4fb, #15131a));
-  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff08), 0 4px 10px -8px light-dark(#6e487a33, #00000080);
+  background: linear-gradient(135deg, light-dark(#f8fbff, #1a2332), light-dark(#f1f6fd, #111823));
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff08), 0 4px 10px -8px light-dark(#244b8233, #00000080);
   transition: border-color 180ms, transform 180ms, box-shadow 180ms;
 }
 .top-traders-card__list li:first-child .rail-trader {
   border-color: light-dark(#ccb289, #80603988);
-  background: radial-gradient(ellipse at 0% 0%, light-dark(#edcb8838, #d3a65f19), transparent 85%), linear-gradient(135deg, light-dark(#fffaf1, #2a221e), light-dark(#faf6f3, #18151b));
-  box-shadow: inset 0 1px light-dark(#ffffff, #f5d59b22), 0 4px 10px -8px light-dark(#6e487a33, #00000080);
+  background: radial-gradient(ellipse at 0% 0%, light-dark(#edcb8838, #d3a65f19), transparent 85%), linear-gradient(135deg, light-dark(#fffaf1, #242627), light-dark(#f5f8fe, #121924));
+  box-shadow: inset 0 1px light-dark(#ffffff, #f5d59b22), 0 4px 10px -8px light-dark(#244b8233, #00000080);
 }
 .rail-trader__avatar-wrap { position: relative; width: 36px; height: 36px; flex: none; }
-.rail-trader__avatar { border-color: light-dark(#c6b9d6, #ffffff2a); }
+.rail-trader__avatar { border-color: light-dark(#b5c7df, #ffffff2a); }
 .top-traders-card__list li:first-child .rail-trader__avatar {
   border-color: light-dark(#86602a, #e0bc7c);
   box-shadow: 0 0 0 2px light-dark(#efd6a44d, #d4ae6a14);
@@ -153,10 +152,10 @@
   min-width: 18px;
   height: 18px;
   padding: 0 3px;
-  border: 2px solid light-dark(#faf7fc, #211b23);
+  border: 2px solid light-dark(#f8fbff, #192231);
   border-radius: 6px;
-  color: light-dark(#725882, #d1bfdc);
-  background: light-dark(#e9e0f2, #403445);
+  color: light-dark(#456184, #c1d3eb);
+  background: light-dark(#e1eaf7, #2e405b);
   font-size: 11px;
   line-height: 14px;
   font-weight: 700;
@@ -191,12 +190,12 @@
 .rail-card__cta > span { min-width: 0; overflow-wrap: anywhere; }
 .rail-card__cta svg { flex: none; width: 16px; height: 16px; stroke-width: 1.8; transition: transform 180ms; }
 .top-traders-card__loading { display: grid; gap: 8px; margin: 14px 0 12px; }
-.rail-trader-skeleton { display: flex; align-items: center; gap: 10px; height: 62px; padding: 12px; border: 1px solid light-dark(#ded5e8, #ffffff10); border-radius: 14px; }
-.rail-trader-skeleton span { border-radius: 5px; width: 35%; height: 10px; background: light-dark(#e3dce9, #ffffff0b); }
+.rail-trader-skeleton { display: flex; align-items: center; gap: 10px; height: 62px; padding: 12px; border: 1px solid light-dark(#d7e1ef, #ffffff10); border-radius: 14px; }
+.rail-trader-skeleton span { border-radius: 5px; width: 35%; height: 10px; background: light-dark(#dce5f2, #ffffff0b); }
 .rail-trader-skeleton span:first-child { flex: none; width: 36px; height: 36px; border-radius: 50%; }
 .rail-trader-skeleton span:last-child { margin-inline-start: auto; width: 23%; }
 .top-traders-card__message { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; color: var(--rail-muted); font-size: 12px; line-height: 18px; }
-.top-traders-card__message button { min-height: 44px; padding: 8px; border-radius: 8px; color: var(--rail-text); background: light-dark(#eee7f4, #ffffff0b); }
+.top-traders-card__message button { min-height: 44px; padding: 8px; border-radius: 8px; color: var(--rail-text); background: light-dark(#e8eff9, #ffffff0b); }
 .top-traders-card__message button:disabled { opacity: 0.6; }
 .get-ae-button:focus-visible,
 .rail-trader:focus-visible,
@@ -207,9 +206,9 @@
   .get-ae-button:hover { color: #092b29; filter: brightness(1.06); transform: translateY(-1px); }
   .rail-trader:hover {
     color: var(--rail-text);
-    border-color: light-dark(#bb9ccc, #9e7aad66);
+    border-color: light-dark(#86abe0, #6fa0ea88);
     transform: translateY(-1px);
-    box-shadow: inset 0 1px light-dark(#ffffff, #ffffff18), 0 6px 15px -10px #af7bcc44;
+    box-shadow: inset 0 1px light-dark(#ffffff, #ffffff18), 0 6px 15px -10px #1161fe44;
   }
   .top-traders-card__list li:first-child .rail-trader:hover { border-color: light-dark(#b99355, #b98b4d); }
   .rail-card__cta:hover { color: light-dark(#765317, #f4d191); filter: brightness(1.08); }

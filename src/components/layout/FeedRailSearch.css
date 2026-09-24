@@ -2,18 +2,18 @@
   padding: 8px 12px;
   overflow: visible;
   z-index: 2;
-  --rail-haze: light-dark(#be7af61c, #bf72ff1e);
+  --rail-haze: light-dark(#1161fe16, #1161fe24);
   transition: border-color 180ms, box-shadow 180ms;
 }
 
 .rail-search-card:focus-within {
-  border-color: light-dark(#986ab8, #9b70bb);
-  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff20), 0 0 0 2px light-dark(#bd90d528, #bf72ff1a);
+  border-color: light-dark(#3979de, #6499ef);
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff20), 0 0 0 2px light-dark(#1161fe20, #1161fe26);
 }
 
 .feed-rail-search {
-  --search-accent: light-dark(#70538c, #c6a7e0);
-  --search-hover: light-dark(#eee6f5, #ffffff07);
+  --search-accent: light-dark(#285faf, #9dc1ff);
+  --search-hover: light-dark(#e8f0fc, #1161fe12);
   position: relative;
   width: 100%;
   min-width: 0;
@@ -29,9 +29,9 @@
   height: 30px;
   border-radius: 9px;
   transform: rotate(-7deg);
-  color: light-dark(#755390, #e3c6ff);
-  background: radial-gradient(ellipse at 17% 4%, light-dark(#ffffffa0, #c3a2f24d), transparent 70%), linear-gradient(145deg, light-dark(#f2e3ff, #543b68), light-dark(#e5d8f3, #261e34));
-  box-shadow: inset 0 1px light-dark(#ffffff, #ead4ff66), inset 1px 0 #ffffff20, inset 0 -2px #00000015, 1px 2px 0 light-dark(#cfbadf, #281e32), 0 6px 12px -8px #bd8fe5;
+  color: light-dark(#1554bd, #edf4ff);
+  background: radial-gradient(ellipse at 17% 4%, light-dark(#ffffffa0, #bdd7ff70), transparent 70%), linear-gradient(145deg, light-dark(#e1edff, #3277eb), light-dark(#c8dcff, #173f83));
+  box-shadow: inset 0 1px light-dark(#ffffff, #d8e7ff88), inset 1px 0 #ffffff20, inset 0 -2px #00000015, 1px 2px 0 light-dark(#a4bfe7, #102c5d), 0 6px 12px -8px #1161fe;
 }
 .feed-rail-search__icon svg { width: 16px; height: 16px; stroke-width: 1.8; transform: rotate(7deg); }
 .feed-rail-search .feed-rail-search__input {
@@ -58,7 +58,7 @@
   border-radius: 16px;
   color: var(--rail-text);
   background: linear-gradient(145deg, var(--rail-raised), var(--rail-base) 70%);
-  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff15), 0 14px 32px -10px light-dark(#60457240, #000000b3);
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff15), 0 14px 32px -10px light-dark(#234b8040, #000000b3);
   max-height: min(70vh, 33rem);
   overflow-y: auto;
   overflow-x: hidden;

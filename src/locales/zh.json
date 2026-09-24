@@ -168,7 +168,6 @@
       "xCallbackDoneTitle": "X 账户已关联",
       "xCallbackGoBack": "返回",
       "xCallbackConfirmingTitle": "正在区块链上确认",
-      "xCallbackConfirmingDesc": "你的 X 账户正在链上关联，通常需要 2–6 分钟。你可以继续浏览，完成后顶部横幅会通知你。",
       "xUnlinkConfirmTitle": "取消关联你的 X 账户？",
       "xUnlinkConfirmDesc": "{{username}} 将从你的 SuperheroID 中移除，在你重新关联账户之前将无法获得 X 发帖奖励。此操作记录在区块链上，因此需要一点时间确认。",
       "missingAddressForXVerification": "缺少 X 验证地址",
@@ -1232,10 +1231,18 @@
       "signToUnlinkX": "签署消息以取消关联你的 X 账户",
       "unlinkingXAccount": "正在取消关联你的 X 账户…",
       "xAccountUnlinked": "X 账户已取消关联",
-      "unlinkingXHandle": "正在取消关联 {{username}}…",
-      "xLinkChangeWait": "正在等待区块链确认，通常需要 2–6 分钟。",
-      "xLinkChangeSlow": "比平时要久一些，仍在等待区块链确认…",
-      "xLinkChangeProgressLabel": "区块链确认进度"
+      "unlinkingXHandle": "正在取消关联 {{username}}…"
+    },
+    "pendingTransaction": {
+      "stepSent": "已发送",
+      "stepConfirmed": "已确认",
+      "stepLive": "已上线",
+      "statusSent": "正在等待区块链…",
+      "statusConfirmed": "已在区块链上确认，正在更新 Superhero…",
+      "statusLive": "完成！",
+      "takesAWhile": "这需要一些时间。你可以先离开，稍后回来刷新页面。",
+      "progressLabel": "交易进度",
+      "dismiss": "关闭"
     },
     "postLanguageFilter": {
       "shortLabel": "语言",
@@ -2313,18 +2320,6 @@
       "amountPerInvite": "每个邀请的金额（AE）",
       "amountHint": "此金额可由兑换链接的接收者领取。",
       "confirmCopiedHint": "请确认你已复制链接，以便关闭此对话框。"
-    },
-    "creationBanner": {
-      "statusInProgress": "代币创建进行中",
-      "statusConfirmed": "交易已确认！",
-      "statusWaiting": "等待确认…",
-      "stepBroadcast": "广播",
-      "stepConfirm": "确认",
-      "stepLive": "上线！",
-      "loadingData": "正在从链上加载 <token>#{{tokenName}}</token> 数据…",
-      "waitingConfirmation": "你的 <token>#{{tokenName}}</token> 交易正在等待确认。通常需要 10–60 秒。",
-      "beingConfirmed": "你的代币 <token>#{{tokenName}}</token> 正在区块链上确认。",
-      "dismissAria": "关闭通知"
     },
     "ranking": {
       "title": "排名竞赛",

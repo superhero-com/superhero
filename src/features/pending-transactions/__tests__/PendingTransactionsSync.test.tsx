@@ -12,10 +12,13 @@ import {
   clearConfirmedXLinks,
   pendingXLinkChange,
 } from '@/utils/confirmedXLink';
-import { XLinkChangeSync } from '../XLinkChangeSync';
+import { PendingTransactionsSync } from '../PendingTransactionsSync';
+import { PENDING_TRANSACTIONS_STORAGE_KEY, findPendingTransaction } from '../store';
 
 const OWNER = 'ak_owner';
 const mockGetAccount = vi.fn();
+const mockFindToken = vi.fn();
+const mockIsMined = vi.fn();
 const mockNotifyPending = vi.fn();
 const mockNotifyConfirmed = vi.fn();
 const mockDismiss = vi.fn();
@@ -32,6 +35,22 @@ vi.mock('@/api/backend', async (importOriginal) => {
   };
 });
 
+vi.mock('@/api/generated', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    TokensService: {
+      ...actual.TokensService,
+      findByAddress: (...args: any[]) => mockFindToken(...args),
+    },
+  };
+});
+
+vi.mock('@/utils/apiRead', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return { ...actual, isTransactionMined: (...args: any[]) => mockIsMined(...args) };
+});
+
 vi.mock('@/features/transaction-notification', async (importOriginal) => {
   const actual: any = await importOriginal();
   return {
@@ -45,7 +64,7 @@ vi.mock('@/features/transaction-notification', async (importOriginal) => {
   };
 });
 
-// What a previous page load left behind.
+// What the previous release left behind for an X link change.
 const leftPending = (address: string, change: Record<string, unknown>) => {
   window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({ [address]: change }));
 };
@@ -58,7 +77,7 @@ function renderSync(activeAccount: string | undefined = OWNER) {
   const tree = () => (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <XLinkChangeSync />
+        <PendingTransactionsSync />
       </Provider>
     </QueryClientProvider>
   );
@@ -73,12 +92,14 @@ function renderSync(activeAccount: string | undefined = OWNER) {
 const invalidatedKeys = (spy: ReturnType<typeof vi.spyOn>) => spy.mock.calls
   .map(([filters]: any[]) => JSON.stringify(filters?.queryKey));
 
-describe('XLinkChangeSync', () => {
+describe('PendingTransactionsSync', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearConfirmedXLinks();
     mockNotificationState = { status: 'idle' };
     mockGetAccount.mockResolvedValue({ address: OWNER, links: { x: 'untracenetwork' } });
+    mockIsMined.mockResolvedValue(false);
+    mockFindToken.mockRejectedValue(new Error('Token not found'));
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
@@ -385,5 +406,70 @@ describe('XLinkChangeSync', () => {
     await waitFor(() => expect(mockDismiss).toHaveBeenCalledTimes(1));
     expect(mockNotifyConfirmed).not.toHaveBeenCalled();
     expect(pendingXLinkChange(OWNER)).toBeNull();
+  });
+
+  it('keeps an X change pending across the update to the shared store', () => {
+    const startedAt = Date.now() - 60_000;
+    leftPending(OWNER, {
+      kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork', startedAt,
+    });
+    renderSync();
+
+    expect(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY)).toBeNull();
+    expect(JSON.parse(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY)!)).toEqual([{
+      kind: 'unlink_x',
+      account: OWNER,
+      txHash: 'th_unlink',
+      startedAt,
+      step: 'sent',
+      meta: { username: 'untracenetwork' },
+    }]);
+  });
+
+  describe('a token creation', () => {
+    const leftCreating = (startedAt: number, account = OWNER) => {
+      window.localStorage.setItem(PENDING_TRANSACTIONS_STORAGE_KEY, JSON.stringify([{
+        kind: 'create_token',
+        account,
+        txHash: 'th_create',
+        startedAt,
+        step: 'sent',
+        meta: { tokenName: 'SUPERHERO' },
+      }]));
+    };
+
+    it('after a reload, puts it back in the banner', () => {
+      const startedAt = Date.now() - 45_000;
+      leftCreating(startedAt);
+      renderSync();
+
+      expect(mockNotifyPending).toHaveBeenCalledWith({
+        type: 'create_token', tokenName: 'SUPERHERO', startedAt,
+      });
+    });
+
+    it('moves to confirmed once mined, and is done once the backend has the token', async () => {
+      const startedAt = Date.now() - 45_000;
+      leftCreating(startedAt);
+      mockNotificationState = {
+        status: 'pending', payload: { type: 'create_token', tokenName: 'SUPERHERO', startedAt }, txHash: '',
+      };
+      const { invalidate } = renderSync();
+
+      mockIsMined.mockResolvedValue(true);
+      await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS); });
+      await waitFor(() => expect(findPendingTransaction({ kind: 'create_token' })?.step).toBe('confirmed'));
+      expect(mockNotifyConfirmed).not.toHaveBeenCalled();
+
+      mockFindToken.mockResolvedValue({ name: 'SUPERHERO', sale_address: 'ct_sale' });
+      await act(async () => { await vi.advanceTimersByTimeAsync(X_LINK_CHANGE_POLL_MS); });
+
+      await waitFor(() => expect(mockNotifyConfirmed).toHaveBeenCalledWith({
+        type: 'create_token', tokenName: 'SUPERHERO', startedAt,
+      }));
+      expect(findPendingTransaction({ kind: 'create_token' })).toBeNull();
+      expect(invalidatedKeys(invalidate)).toContain('["TokensService.findByAddress"]');
+      expect(mockFindToken).toHaveBeenCalledWith({ address: 'SUPERHERO' });
+    });
   });
 });

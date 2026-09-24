@@ -7,6 +7,8 @@ import React, {
 import { useTranslation } from 'react-i18next';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import '@/components/layout/RailCards.css';
+import './PostComposer.css';
 
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -1061,9 +1063,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
   return (
     <div
-      className={`${isPost ? 'w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
+      className={`${isPost ? 'post-composer w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
     >
-      <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
+      <div className={isPost ? 'rail-card post-composer__surface' : 'bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl'}>
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
             {activeAccount && (
@@ -1077,14 +1079,14 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               </div>
             )}
             <div className={activeAccount ? 'md:col-start-2' : 'md:col-span-2'}>
-              <div ref={inputWrapRef} className="relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
+              <div ref={inputWrapRef} className="post-composer__input-wrap relative bg-white/7 border border-white/14 rounded-xl md:rounded-2xl transition-all duration-200 focus-within:border-[#1161FE] focus-within:bg-white/10 focus-within:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)]">
                 {/* Overlay mirror: same glyph runs as the textarea, mention runs pilled.
                     Sits behind the transparent-text textarea so caret/selection stay on top;
                     no horizontal padding on pills, so widths — and the caret — stay exact. */}
                 {showMirror && overlayComputed && (
                   <div
                     aria-hidden
-                    className="absolute inset-0 overflow-hidden pointer-events-none select-none text-white whitespace-pre-wrap break-words box-border"
+                    className="post-composer__mirror absolute inset-0 overflow-hidden pointer-events-none select-none text-white whitespace-pre-wrap break-words box-border"
                     style={{
                       zIndex: 0,
                       paddingTop: overlayComputed.paddingTop,
@@ -1116,6 +1118,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 <textarea
                   ref={textareaRef}
                   placeholder={currentPlaceholder}
+                  aria-label={isPost ? ts('post') : tf('writeReply')}
                   value={text}
                   onChange={(e) => acceptComposerText(e.target.value)}
                   onFocus={() => {
@@ -1173,7 +1176,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       });
                     }
                   }}
-                  className="bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
+                  className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{
                     minHeight: computedMinHeight,
                     // Text goes transparent so the mirror below shows the pills; caret
@@ -1210,7 +1213,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   />
                 )}
 
-                <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
+                <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
                   {/* Mobile-only GIF button inside textarea corner */}
                   {showGifInput && (
                     <button
@@ -1303,7 +1306,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   )}
                 </div>
                 {characterLimit && (
-                  <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
+                  <div className="post-composer__counter absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
                     {serializedText.length}
                     /
                     {characterLimit}
@@ -1331,12 +1334,12 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               />
 
               {(showEmojiPicker || showGifInput || showImageInput) && (
-                <div className="hidden md:flex items-center justify-between mt-3 gap-3">
-                  <div className="flex items-center gap-2.5 relative">
+                <div className="post-composer__toolbar hidden md:flex items-center justify-between mt-3 gap-3">
+                  <div className="post-composer__tools flex items-center gap-2.5 relative">
                     {showEmojiPicker && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('emoji')}
                         ref={emojiBtnRef}
                         onClick={() => {
@@ -1344,7 +1347,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           setShowGif(false);
                         }}
                       >
-                        <IconSmile className="w-4 h-4" />
+                        {isPost ? (
+                          <span className="post-composer__tool-icon post-composer__tool-icon--emoji" aria-hidden="true">
+                            <IconSmile className="w-4 h-4" />
+                          </span>
+                        ) : <IconSmile className="w-4 h-4" />}
                         <span>{ts('emoji')}</span>
                       </button>
                     )}
@@ -1352,7 +1359,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showGifInput && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('gif')}
                         ref={gifBtnRef}
                         onClick={() => {
@@ -1361,7 +1368,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           setShowImage(false);
                         }}
                       >
-                        <IconGif className="w-4 h-4" />
+                        {isPost ? (
+                          <span className="post-composer__tool-icon post-composer__tool-icon--gif" aria-hidden="true">
+                            <IconGif className="w-4 h-4" />
+                          </span>
+                        ) : <IconGif className="w-4 h-4" />}
                         <span>{ts('gif')}</span>
                       </button>
                     )}
@@ -1369,7 +1380,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showImageInput && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                         title={ts('image')}
                         onClick={() => {
                           setShowImage((s) => !s);
@@ -1377,7 +1388,11 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           setShowEmoji(false);
                         }}
                       >
-                        <IconImage className="w-4 h-4" />
+                        {isPost ? (
+                          <span className="post-composer__tool-icon post-composer__tool-icon--image" aria-hidden="true">
+                            <IconImage className="w-4 h-4" />
+                          </span>
+                        ) : <IconImage className="w-4 h-4" />}
                         <span>{ts('image')}</span>
                       </button>
                     )}
@@ -1385,7 +1400,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {detectedLink && (
                       <button
                         type="button"
-                        className={`border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
+                        className={`post-composer__tool border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
                           linkPreviewDismissedForCurrent
                             ? 'bg-primary-100 border-primary-300 text-primary-600'
                             : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
@@ -1399,13 +1414,17 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           }
                         }}
                       >
-                        <IconLink className="w-4 h-4" />
+                        {isPost ? (
+                          <span className="post-composer__tool-icon post-composer__tool-icon--link" aria-hidden="true">
+                            <IconLink className="w-4 h-4" />
+                          </span>
+                        ) : <IconLink className="w-4 h-4" />}
                         <span>{ts('link')}</span>
                       </button>
                     )}
 
                     {showEmojiPicker && showEmoji && (
-                      <div className="absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                      <div className="post-composer__emoji-panel absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
                         <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
                           {DEFAULT_EMOJIS.map((e) => (
                             <button
@@ -1443,7 +1462,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="post-composer__submit flex items-center gap-3">
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
                         <span>{ts('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
@@ -1474,7 +1493,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         type="submit"
                         loading={isSubmitting}
                         disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                        className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
+                        className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
                         {(() => {
                           if (isSubmitting) {
@@ -1487,7 +1506,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         })()}
                       </AeButton>
                     ) : (
-                      <ConnectWalletButton className="rounded-full" />
+                      <ConnectWalletButton className="post-composer__primary rounded-full" />
                     )}
                   </div>
                 </div>
@@ -1531,7 +1550,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             )}
           </div>
 
-          <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
+          <div className="post-composer__mobile-submit flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
             <div className="flex flex-col items-center justify-center w-full">
               {requiredHashtag && requiredMissing && (
                 <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
@@ -1563,7 +1582,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   type="submit"
                   loading={isSubmitting}
                   disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+                  className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {(() => {
                     if (isSubmitting) {
@@ -1576,7 +1595,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   })()}
                 </AeButton>
               ) : (
-                <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
+                <ConnectWalletButton block className="post-composer__primary w-full rounded-xl md:rounded-full" />
               )}
             </div>
           </div>

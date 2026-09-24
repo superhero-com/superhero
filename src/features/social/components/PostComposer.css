@@ -1,0 +1,156 @@
+.post-composer .post-composer__surface {
+  --composer-input: light-dark(#f8fbff, #0c1421);
+  --composer-accent: light-dark(#225fae, #a2c7ff);
+  padding: 16px;
+}
+
+.post-composer .post-composer__input-wrap {
+  border: 1px solid var(--rail-line);
+  border-radius: 16px;
+  background: linear-gradient(145deg, light-dark(#f4f8ff, #101b2b), var(--composer-input) 75%);
+  box-shadow: inset 0 2px 5px light-dark(#1b49700a, #00000030), 0 1px light-dark(#ffffff, #ffffff06);
+  transition: border-color 180ms, box-shadow 180ms;
+}
+
+.post-composer .post-composer__input-wrap:focus-within {
+  border-color: light-dark(#3979de, #6499ef);
+  box-shadow: 0 0 0 2px light-dark(#1161fe20, #1161fe26), inset 0 1px light-dark(#ffffff, #b8d2ff0d);
+}
+
+.post-composer .post-composer__textarea,
+.post-composer .post-composer__mirror { color: var(--rail-text); }
+.post-composer .post-composer__textarea::placeholder { color: var(--rail-muted); opacity: 1; }
+.post-composer .post-composer__textarea {
+  display: block;
+  padding: 16px 16px 38px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: none;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  caret-color: #5d88ff;
+}
+.post-composer .post-composer__textarea:focus { background: transparent; box-shadow: none; transform: none; }
+.post-composer .post-composer__counter {
+  padding: 2px 7px;
+  border: 1px solid light-dark(#d0dbea80, #819bc91a);
+  border-radius: 6px;
+  color: var(--rail-muted);
+  background: var(--composer-input);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-composer .post-composer__toolbar { flex-wrap: wrap; gap: 10px; }
+.post-composer .post-composer__tools { flex-wrap: wrap; gap: 8px; }
+.post-composer .post-composer__submit { flex-wrap: wrap; margin-inline-start: auto; }
+.post-composer .post-composer__tool {
+  min-height: 44px;
+  padding: 7px 11px 7px 8px;
+  gap: 8px;
+  border: 1px solid var(--rail-line);
+  border-radius: 12px;
+  color: var(--rail-muted);
+  background: linear-gradient(145deg, var(--rail-raised), var(--rail-base));
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff0b);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 180ms, color 180ms, transform 180ms;
+}
+.post-composer__tool-icon {
+  --tool-light: #72a7ff;
+  --tool-deep: #244f9c;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 28px;
+  border-radius: 8px;
+  color: #fff;
+  transform: rotate(-7deg);
+  background: radial-gradient(ellipse at 17% 4%, #ffffff60, transparent 65%), linear-gradient(145deg, var(--tool-light), var(--tool-deep));
+  box-shadow: inset 0 1px #ffffff80, inset 1px 0 #ffffff25, inset 0 -2px #00000020, 1px 2px 0 color-mix(in srgb, var(--tool-deep) 65%, var(--rail-base));
+}
+.post-composer__tool-icon svg { width: 15px; height: 15px; transform: rotate(7deg); }
+.post-composer__tool-icon--emoji { --tool-light: #edb24c; --tool-deep: #a17426; }
+.post-composer__tool-icon--gif { --tool-light: #a68aef; --tool-deep: #6850ac; }
+.post-composer__tool-icon--image { --tool-light: #4ecbbb; --tool-deep: #1f7a73; }
+
+.post-composer .post-composer__primary {
+  min-height: 44px;
+  height: auto;
+  padding: 11px 18px;
+  border: 1px solid #79a5ff66;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(150deg, #377eff, #1161fe 60%, #1254d2);
+  box-shadow: inset 0 1px #ffffff38, inset 0 -2px #00000012, 0 6px 14px -9px #1161fe;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 650;
+  white-space: normal;
+  transform: none;
+  transition: filter 180ms, transform 180ms;
+}
+.post-composer .post-composer__primary svg path { fill: currentColor; stroke: currentColor; }
+.post-composer .post-composer__primary:disabled {
+  color: var(--rail-muted);
+  background: light-dark(#e6eef9, #1b2a42);
+  border-color: var(--rail-line);
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff08);
+  opacity: 1;
+  cursor: not-allowed;
+}
+.post-composer .post-composer__emoji-panel {
+  color: var(--rail-text);
+  border-color: var(--rail-line);
+  background: linear-gradient(145deg, var(--rail-raised), var(--rail-base));
+}
+.post-composer .post-composer__emoji-panel > div { color: var(--rail-text); }
+.post-composer .post-composer__tool:focus-visible,
+.post-composer .post-composer__primary:focus-visible,
+.post-composer .post-composer__mobile-tools button:focus-visible {
+  outline: 2px solid #5d88ff;
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .post-composer .post-composer__tool:hover {
+    border-color: light-dark(#86abe0, #6fa0ea88);
+    color: var(--rail-text);
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px light-dark(#ffffff, #ffffff16);
+  }
+  .post-composer .post-composer__primary:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }
+}
+@media (max-width: 767px) {
+  .post-composer .post-composer__surface { padding: 12px; border-radius: 20px; }
+  .post-composer .post-composer__textarea { padding: 12px; font-size: 16px; }
+  .post-composer .post-composer__mobile-tools {
+    position: static;
+    flex-wrap: wrap;
+    padding: 0 72px 10px 10px;
+    gap: 8px;
+  }
+  .post-composer .post-composer__mobile-tools button {
+    min-height: 44px;
+    min-width: 44px;
+    border: 1px solid var(--rail-line);
+    border-radius: 9px;
+    outline: none;
+    color: var(--composer-accent);
+    background: light-dark(#e8f0fc, #1b2a42);
+    font-size: 11px;
+  }
+  .post-composer .post-composer__mobile-submit { margin-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-composer .post-composer__input-wrap,
+  .post-composer .post-composer__tool,
+  .post-composer .post-composer__primary { transition: none; }
+  .post-composer .post-composer__tool:hover,
+  .post-composer .post-composer__primary:not(:disabled):hover { transform: none; }
+}

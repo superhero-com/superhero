@@ -86,11 +86,6 @@ const RightRail = ({
     'shadow-none transition-all duration-300 ease-in-out',
     'relative overflow-hidden',
   ].join(' ');
-  const feedSearchCardClassName = [
-    'bg-white/[0.03] border border-white/10 rounded-[20px] p-3',
-    'shadow-none transition-all duration-300 ease-in-out',
-    'relative overflow-visible',
-  ].join(' ');
   const priceCardClassName = [
     'bg-white/[0.03] border border-white/10 rounded-[20px] p-4',
     'shadow-none transition-all duration-300 ease-in-out',
@@ -100,7 +95,7 @@ const RightRail = ({
   return (
     <div id="right-rail-root" className={railClassName}>
       {isSocialHomeFeed ? (
-        <div className={feedSearchCardClassName}>
+        <div className="rail-card rail-search-card">
           <FeedRailSearch />
         </div>
       ) : null}

@@ -168,7 +168,6 @@
       "xCallbackDoneTitle": "تم ربط حساب X",
       "xCallbackGoBack": "العودة",
       "xCallbackConfirmingTitle": "جارٍ التأكيد على البلوكتشين",
-      "xCallbackConfirmingDesc": "يجري ربط حسابك على X على البلوكتشين. يستغرق ذلك عادةً من 2 إلى 6 دقائق. يمكنك متابعة التصفح، وسيُعلمك الشريط في الأعلى عند الانتهاء.",
       "xUnlinkConfirmTitle": "إلغاء ربط حسابك على X؟",
       "xUnlinkConfirmDesc": "ستتم إزالة {{username}} من SuperheroID الخاص بك، وستتوقف عن كسب مكافآت النشر على X حتى تربط حسابًا مرة أخرى. يُسجَّل هذا التغيير على البلوكتشين، لذا يستغرق تأكيده بعض الوقت.",
       "missingAddressForXVerification": "عنوان X للتحقق مفقود",
@@ -262,6 +261,7 @@
       "valueTooltipDescription": "تُظهر قيمة المحفظة القيمة المجمّعة لرصيد AE ورموز الترند المحتفظ بها في هذه المحفظة. يتتبّع الرسم البياني كيف تتغيّر هذه القيمة مع الوقت."
     },
     "account": {
+      "firstBlockchainActivity": "تاريخ الانضمام:",
       "token": "الرمز",
       "price": "السعر",
       "totalValue": "القيمة الإجمالية",
@@ -1231,10 +1231,18 @@
       "signToUnlinkX": "وقّع الرسالة لإلغاء ربط حسابك على X",
       "unlinkingXAccount": "جارٍ إلغاء ربط حسابك على X…",
       "xAccountUnlinked": "تم إلغاء ربط حساب X",
-      "unlinkingXHandle": "جارٍ إلغاء ربط {{username}}…",
-      "xLinkChangeWait": "بانتظار تأكيد البلوكتشين. يستغرق ذلك عادةً من 2 إلى 6 دقائق.",
-      "xLinkChangeSlow": "يستغرق الأمر وقتًا أطول من المعتاد. ما زلنا بانتظار البلوكتشين…",
-      "xLinkChangeProgressLabel": "تقدّم التأكيد على البلوكتشين"
+      "unlinkingXHandle": "جارٍ إلغاء ربط {{username}}…"
+    },
+    "pendingTransaction": {
+      "stepSent": "أُرسلت",
+      "stepConfirmed": "تأكّدت",
+      "stepLive": "مباشر",
+      "statusSent": "بانتظار البلوكتشين…",
+      "statusConfirmed": "تم التأكيد على البلوكتشين. جارٍ تحديث Superhero…",
+      "statusLive": "تم!",
+      "takesAWhile": "يستغرق هذا بعض الوقت. يمكنك المغادرة والعودة لاحقًا ثم تحديث الصفحة.",
+      "progressLabel": "تقدّم المعاملة",
+      "dismiss": "إغلاق"
     },
     "postLanguageFilter": {
       "shortLabel": "اللغة",
@@ -2312,18 +2320,6 @@
       "amountPerInvite": "المبلغ لكل دعوة (AE)",
       "amountHint": "سيكون هذا المبلغ قابلًا للمطالبة من قبل المستلم الذي يستبدل الرابط.",
       "confirmCopiedHint": "يرجى تأكيد نسخك للروابط لتمكين إغلاق هذا الحوار."
-    },
-    "creationBanner": {
-      "statusInProgress": "إنشاء الرمز قيد التقدّم",
-      "statusConfirmed": "تم تأكيد المعاملة!",
-      "statusWaiting": "بانتظار التأكيد…",
-      "stepBroadcast": "بثّ",
-      "stepConfirm": "تأكيد",
-      "stepLive": "مباشر!",
-      "loadingData": "جارٍ تحميل بيانات <token>#{{tokenName}}</token> من السلسلة…",
-      "waitingConfirmation": "معاملة <token>#{{tokenName}}</token> الخاصة بك بانتظار التأكيد. تستغرق عادة 10–60 ثانية.",
-      "beingConfirmed": "يجري تأكيد رمزك <token>#{{tokenName}}</token> على البلوكتشين.",
-      "dismissAria": "إخفاء الإشعار"
     },
     "ranking": {
       "title": "سباق الترتيب",

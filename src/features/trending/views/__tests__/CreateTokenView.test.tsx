@@ -70,6 +70,7 @@ vi.mock('@/features/transaction-notification', () => ({
   TxPayloadType: { CreateToken: 'create-token' },
   useTransactionNotification: () => ({
     notifySubmitted: vi.fn(),
+    notifyPending: vi.fn(),
     notifyPendingTx: vi.fn(),
     notifyError: vi.fn(),
   }),

@@ -299,14 +299,18 @@ export function watchPendingPosts(queryClient: QueryClient): () => void {
       if (isPostDetailKey(key)) {
         queryClient.setQueryData(event.query.queryKey, pendingPostById(id));
       } else if (isThreadKey(key)) {
-        // Its replies 404 too until the backend has it: none yet, but
-        // the pending ones.
-        const replies = pendingReplies(id);
-        const page = { items: replies, meta: { currentPage: 1, totalPages: 1 } };
+        // Its replies 404 too until the backend has it. Keep what the thread
+        // already showed (a reply that has just gone live stays), or start
+        // from none, and add the pending ones.
+        const emptyPage = { items: [], meta: { currentPage: 1, totalPages: 1 } };
         queryClient.setQueryData(
           event.query.queryKey,
-          key[2] === 'infinite' ? { pages: [page], pageParams: [1] } : replies,
+          event.query.state.data
+            ?? (key[2] === 'infinite' ? { pages: [emptyPage], pageParams: [1] } : []),
         );
+        pendingReplies(id).forEach((reply) => {
+          appendToThread(queryClient, event.query.queryKey, reply);
+        });
       }
       return;
     }
@@ -331,6 +335,8 @@ export function refreshAfterPostSettled(
     if (transaction.meta.topic) {
       queryClient.invalidateQueries({ queryKey: ['topic-by-name', transaction.meta.topic] });
     }
+    // Its replies, shown from the browser while the backend 404ed them.
+    queryClient.invalidateQueries({ predicate: (query) => isInThread(query.queryKey, postId ?? '') });
     return;
   }
   const parentId = transaction.meta.parentId ?? '';

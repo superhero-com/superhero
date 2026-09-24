@@ -160,6 +160,17 @@ describe('pending posts', () => {
     expect(queryClient.getQueryState(['post-comments', '42_v3', 'infinite'])?.status).toBe('success');
     expect(queryClient.getQueryData<any>(['post-comments', '42_v3', 'infinite']).pages[0].items).toEqual([]);
 
+    // A reply that has gone live stays when the thread 404s again.
+    const settledReply = { id: '44_v3', content: 'live already' };
+    queryClient.setQueryData(['comment-replies', '42_v3'], [settledReply]);
+    await queryClient.fetchQuery({
+      queryKey: ['comment-replies', '42_v3'],
+      queryFn: async () => { throw new Error('Post with ID 42_v3 not found'); },
+      staleTime: 0,
+    }).catch(() => undefined);
+    expect(queryClient.getQueryState(['comment-replies', '42_v3'])?.status).toBe('success');
+    expect(queryClient.getQueryData(['comment-replies', '42_v3'])).toEqual([settledReply]);
+
     // Any other missing post still fails.
     await queryClient.fetchQuery({
       queryKey: ['post', '99'],
@@ -195,6 +206,10 @@ describe('pending posts', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['posts'], exact: false });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['topic-by-name', '#nancy'] });
     expect(queryClient.getQueryState(['post', '42'])?.isInvalidated).toBe(true);
+    // And its replies, shown from the browser meanwhile.
+    queryClient.setQueryData(['comment-replies', '42_v3'], []);
+    refreshAfterPostSettled(queryClient, post);
+    expect(queryClient.getQueryState(['comment-replies', '42_v3'])?.isInvalidated).toBe(true);
 
     queryClient.setQueryData(['comment-replies', '7'], []);
     queryClient.setQueryData(['comment-replies', '8_v3'], []);

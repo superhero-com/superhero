@@ -57,6 +57,28 @@ describe('pending tips', () => {
     expect(queryClient.getQueryData(['post-tip-summary', '8_v3'])).toEqual({ totalTips: '1' });
   });
 
+  it('counts every pending tip, even ones sent close together that saw the same total', () => {
+    // Both saw 2 before them.
+    trackPostTip({
+      account: 'ak_sender', txHash: 'th_a', postId: '7', amount: '3', expectedTotal: 5,
+    });
+    trackPostTip({
+      account: 'ak_sender', txHash: 'th_b', postId: '7', amount: '2', expectedTotal: 4,
+    });
+    expect(pendingTipFloor('7')).toBe(7);
+  });
+
+  it('does not count a tip twice when the next one already saw it', () => {
+    trackPostTip({
+      account: 'ak_sender', txHash: 'th_a', postId: '7', amount: '3', expectedTotal: 5,
+    });
+    // Sent after the first one showed: it saw 5.
+    trackPostTip({
+      account: 'ak_sender', txHash: 'th_b', postId: '7', amount: '2', expectedTotal: 7,
+    });
+    expect(pendingTipFloor('7')).toBe(7);
+  });
+
   it('is done once the sender\'s tips include it', async () => {
     trackPostTip({
       account: 'ak_sender', txHash: 'th_tip', postId: '7_v3', amount: '3', expectedTotal: 5,

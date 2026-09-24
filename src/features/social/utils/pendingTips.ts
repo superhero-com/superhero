@@ -66,16 +66,27 @@ export function trackPostTip({
 /**
  * The least the post's total can be while its tips are still on their way to
  * the backend, or null when none are.
+ *
+ * Each tip saw some total before it (its expected total less its amount).
+ * Tips sent close together can each have seen the same one, so their
+ * expected totals leave each other out: the floor is the lowest total any of
+ * them saw, plus all of them. Never below what one of them expected.
  */
 export function pendingTipFloor(postId: string): number | null {
   const id = normalizePostId(postId);
-  const totals = listPendingTransactions({
+  const tips = listPendingTransactions({
     kind: 'tip_post',
     match: (transaction) => transaction.meta.postId === id,
   })
-    .map((transaction) => Number(transaction.meta.expectedTotal))
-    .filter(Number.isFinite);
-  return totals.length ? Math.max(...totals) : null;
+    .map((transaction) => ({
+      expected: Number(transaction.meta.expectedTotal),
+      amount: Number(transaction.meta.amount),
+    }))
+    .filter(({ expected, amount }) => Number.isFinite(expected) && Number.isFinite(amount));
+  if (!tips.length) return null;
+  const lowestSeen = Math.min(...tips.map(({ expected, amount }) => expected - amount));
+  const allOfThem = tips.reduce((sum, { amount }) => sum + amount, 0);
+  return Math.max(lowestSeen + allOfThem, ...tips.map(({ expected }) => expected));
 }
 
 /**

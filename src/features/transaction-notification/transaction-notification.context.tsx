@@ -21,6 +21,7 @@ export const TxPayloadType = {
   UpdateProfile: 'update_profile',
   LinkX: 'link_x',
   UnlinkX: 'unlink_x',
+  SocialGraph: 'social_graph',
 } as const;
 
 export type TxPayload =
@@ -38,6 +39,7 @@ export type TxPayload =
   | { type: typeof TxPayloadType.UnwrapToken; amount: string }
   | { type: typeof TxPayloadType.AddLiquidity; tokenASymbol: string; tokenBSymbol: string; amountA: string; amountB: string; lpTokensEstimate?: string }
   | { type: typeof TxPayloadType.RemoveLiquidity; tokenASymbol: string; tokenBSymbol: string; liquidityPct: string; lpAmount: string }
+  | { type: typeof TxPayloadType.SocialGraph; action: 'follow' | 'unfollow' | 'block' | 'unblock'; targetAddress: string }
   | { type: typeof TxPayloadType.UpdateProfile; fields: Array<'bio' | 'website' | 'chain_name'> }
   // No handle carried: the claim's `value` may be the X user id rather than the
   // username, and "@1234567890" in a toast is worse than no handle at all.

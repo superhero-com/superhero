@@ -10,6 +10,10 @@
       "followers": "Followers",
       "followingCount": "Following",
       "posts": "Posts",
+      "counts": {
+        "loading": "Loading {{label}}",
+        "error": "Counts unavailable"
+      },
       "connectToFollow": "Connect wallet to follow",
       "blockDialog": {
         "title": "Block this account?",
@@ -23,7 +27,12 @@
         "maxFollowing": "You're following the maximum of {{max}} accounts. Unfollow someone to follow more.",
         "maxBlocked": "You've blocked the maximum of {{max}} accounts. Unblock someone to block more.",
         "cooldown": "You're following accounts too quickly. Try again in a moment.",
-        "generic": "Something went wrong. Please try again."
+        "generic": "Something went wrong. Please try again.",
+        "frozen": "This contract is frozen for migration. Please wait for the service to switch contracts.",
+        "importing": "This contract is still importing its social graph. Please try again later.",
+        "lowBalance": "Your balance is below the current minimum required to follow.",
+        "contractChanged": "The social contract changed. Please review the refreshed profile and try again.",
+        "wrongNetwork": "Your wallet network does not match the social contract."
       },
       "list": {
         "tab": {
@@ -39,7 +48,12 @@
         "emptySearch": "No accounts match your search",
         "error": "Couldn't load this list.",
         "retry": "Try again",
-        "close": "Close"
+        "close": "Close",
+        "loadMore": "Load more"
+      },
+      "transaction": {
+        "pending": "Updating connection…",
+        "confirmed": "Connection updated"
       }
     },
     "buttons": {
@@ -309,6 +323,7 @@
       "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time."
     },
     "account": {
+      "firstBlockchainActivity": "Joined at:",
       "token": "Token",
       "price": "Price",
       "totalValue": "Total Value",

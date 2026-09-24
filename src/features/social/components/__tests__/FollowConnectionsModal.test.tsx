@@ -21,6 +21,11 @@ vi.mock('../../../../api/socialGraphConnections', () => ({
   },
 }));
 
+vi.mock('../../../../hooks/useSocialGraph', () => ({
+  useSocialGraphConfig: () => ({ data: { contract_address: 'ct_current' } }),
+  socialGraphScope: () => ['ae_mainnet', 'test-api'],
+}));
+
 const OWNER = 'ak_owner00000000000000000000000000000000000000000000';
 const A1 = 'ak_alice0000000000000000000000000000000000000000000000';
 const A2 = 'ak_bob00000000000000000000000000000000000000000000000';
@@ -87,7 +92,7 @@ function renderModal(props: Partial<React.ComponentProps<typeof FollowConnection
 
 describe('FollowConnectionsModal', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     stubIntersectionObserver();
   });
 
@@ -155,5 +160,36 @@ describe('FollowConnectionsModal', () => {
     expect(await screen.findByText('boom')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Try again'));
     expect(await screen.findByText('Alice')).toBeInTheDocument();
+  });
+  it('continues through empty bounded search pages until later matches', async () => {
+    service.listSocialGraphFollowers
+      .mockResolvedValueOnce(page([], '20'))
+      .mockResolvedValueOnce(page([], '40'))
+      .mockResolvedValueOnce(page([row(A3, 'Carol')], null));
+    renderModal();
+    expect(await screen.findByText('Carol')).toBeInTheDocument();
+    expect(service.listSocialGraphFollowers.mock.calls.map(([params]) => params.cursor)).toEqual([undefined, '20', '40']);
+  });
+
+  it('offers manual continuation when IntersectionObserver is unavailable', async () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    service.listSocialGraphFollowers
+      .mockResolvedValueOnce(page([], '20'))
+      .mockResolvedValueOnce(page([row(A3, 'Carol')], null));
+    renderModal();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));
+    expect(await screen.findByText('Carol')).toBeInTheDocument();
+  });
+
+  it('bounds automatic scanning of sparse graphs and preserves manual progress', async () => {
+    service.listSocialGraphFollowers.mockImplementation(async ({ cursor }) => page([], String(Number(cursor ?? 0) + 20)));
+    renderModal();
+    await waitFor(() => expect(service.listSocialGraphFollowers).toHaveBeenCalledTimes(5));
+    const button = await screen.findByRole('button', { name: 'Load more' });
+    await waitFor(() => expect(button).toBeEnabled());
+    expect(screen.queryByText('No followers yet')).toBeNull();
+    fireEvent.click(button);
+    await waitFor(() => expect(service.listSocialGraphFollowers).toHaveBeenCalledTimes(6));
+    expect(service.listSocialGraphFollowers.mock.calls[5][0].cursor).toBe('100');
   });
 });

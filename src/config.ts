@@ -256,3 +256,6 @@ export const CONFIG: AppConfig = {
     ?? defaultConfig.POPULAR_FEED_ENABLED
     ?? true,
 };
+
+// REST and Socket.IO must use the same resolved API, including local/runtime overrides.
+export const API_BASE_URL = (CONFIG.SUPERHERO_API_URL || CONFIG.BACKEND_URL).replace(/\/$/, '');

@@ -140,6 +140,8 @@ function getSubmittedMeta(payload: TxPayload, t: TFunction): { title: string; su
         title: t('common.transactionNotification.confirmInWallet'),
         subtitle: t('common.transactionNotification.signToUnlinkX'),
       };
+    case TxPayloadType.SocialGraph:
+      return { title: t('common.transactionNotification.confirmInWallet'), subtitle: t(`common.socialGraph.${payload.action}`) };
     default:
       throw new Error(`Unhandled TxPayloadType in getSubmittedMeta: ${(payload as TxPayload).type}`);
   }
@@ -241,6 +243,8 @@ function getPendingMeta(payload: TxPayload, t: TFunction): { title: string; subt
         title: t('common.transactionNotification.unlinkingXAccount'),
         subtitle: t('common.transactionNotification.confirmingOnBlockchainEllipsis'),
       };
+    case TxPayloadType.SocialGraph:
+      return { title: t('common.socialGraph.transaction.pending'), subtitle: t(`common.socialGraph.${payload.action}`) };
     default:
       throw new Error(`Unhandled TxPayloadType in getPendingMeta: ${(payload as TxPayload).type}`);
   }
@@ -357,6 +361,8 @@ function getConfirmedMeta(payload: TxPayload, t: TFunction): {
       return { title: t('common.transactionNotification.xAccountLinked'), line: null };
     case TxPayloadType.UnlinkX:
       return { title: t('common.transactionNotification.xAccountUnlinked'), line: null };
+    case TxPayloadType.SocialGraph:
+      return { title: t('common.socialGraph.transaction.confirmed'), line: { leftLabel: t(`common.socialGraph.${payload.action}`), leftColor: '#4ade80' } };
     default:
       throw new Error(`Unhandled TxPayloadType in getConfirmedMeta: ${(payload as TxPayload).type}`);
   }
@@ -364,7 +370,6 @@ function getConfirmedMeta(payload: TxPayload, t: TFunction): {
 
 // ─── Notification content by type ────────────────────────────────────────────
 
-// eslint-disable-next-line max-len
 const cardBase = 'backdrop-blur-xl rounded-2xl px-3.5 py-3 flex items-center gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.06]';
 
 // Declared first — referenced by the components below.

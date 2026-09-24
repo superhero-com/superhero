@@ -7,6 +7,7 @@
   --qa-light: light-dark(#ffffffcc, #ffffff26);
   --qa-haze: light-dark(#be7af61c, #bf72ff1e);
   --qa-motion: 180ms;
+  --qa-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   position: relative;
   isolation: isolate;
@@ -65,6 +66,29 @@
   background: linear-gradient(90deg, light-dark(#c8b3d7, #745778), transparent 95%);
 }
 
+.quick-actions-card__motion-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--qa-edge);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--qa-ink);
+  cursor: pointer;
+}
+
+.quick-actions-card__motion-toggle svg { width: 13px; height: 13px; }
+.quick-actions-card__motion-toggle::after { content: ''; position: absolute; inset: -8px; }
+
+.quick-actions-card__motion-toggle:focus-visible {
+  outline: 2px solid #5d88ff;
+  outline-offset: 3px;
+}
+
 .quick-actions-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -94,7 +118,23 @@
   font-size: 12px;
   line-height: 17px;
   font-weight: 600;
-  transition: border-color var(--qa-motion), box-shadow var(--qa-motion), transform var(--qa-motion);
+  transition: border-color var(--qa-motion), box-shadow var(--qa-motion), transform 240ms var(--qa-ease);
+}
+
+.quick-actions-card__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.quick-actions-card__sheen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, light-dark(#ffffff99, #ffffff1f) 50%, transparent 75%);
+  transform: translateX(-120%);
 }
 
 .quick-actions-card__action::before {
@@ -138,7 +178,7 @@
     inset 0 -2px 0 #00000030,
     1px 3px 0 color-mix(in srgb, var(--qa-deep) 65%, var(--qa-base)),
     0 5px 12px -5px var(--qa-color);
-  transition: transform var(--qa-motion);
+  transition: transform 280ms var(--qa-ease);
 }
 
 .quick-actions-card__icon::after {
@@ -170,19 +210,78 @@
   outline-offset: 3px;
 }
 
+.quick-actions-card__action:focus-visible .quick-actions-card__sheen::before {
+  animation: quick-action-sheen 650ms var(--qa-ease) both;
+}
+
 @media (hover: hover) {
   .quick-actions-card__action:hover {
     color: var(--qa-ink);
     border-color: color-mix(in srgb, var(--qa-color) 65%, var(--qa-edge));
     box-shadow: inset 0 1px 0 light-dark(#ffffff, #ffffff16), 0 0 15px -8px var(--qa-color);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
   }
 
   .quick-actions-card__action:hover::before { opacity: 1; }
-  .quick-actions-card__action:hover .quick-actions-card__icon { transform: rotate(-2deg) translateY(-1px); }
+  .quick-actions-card__action:hover .quick-actions-card__icon { transform: rotate(-2deg) translateY(-2px) scale(1.04); }
+  .quick-actions-card__action:hover .quick-actions-card__sheen::before { animation: quick-action-sheen 650ms var(--qa-ease) both; }
 }
 
-.quick-actions-card__action:active { transform: translateY(1px); }
+.quick-actions-card__action:active { transform: translateY(1px) scale(0.98); }
+
+@keyframes quick-action-sheen {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
+@keyframes quick-action-enter {
+  from { opacity: 0.45; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes quick-action-wave {
+  0%, 100% { translate: 0 1px; rotate: -2deg; }
+  50% { translate: 0 -3px; rotate: 3deg; }
+}
+
+@keyframes quick-action-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.95; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quick-actions-card__action { --qa-phase: 0s; }
+  .quick-actions-card__action:nth-child(2) { --qa-phase: -0.7s; }
+  .quick-actions-card__action:nth-child(3) { --qa-phase: -1.4s; }
+  .quick-actions-card__action:nth-child(4) { --qa-phase: -2.1s; }
+  .quick-actions-card__action:nth-child(5) { --qa-phase: -2.8s; }
+  .quick-actions-card__action:nth-child(6) { --qa-phase: -3.5s; }
+
+  .quick-actions-card__icon {
+    animation: quick-action-wave 5.6s ease-in-out var(--qa-phase) infinite;
+    /* Keep the slow wave intact under the app's mobile animation-duration reset. */
+    animation-duration: 5.6s !important;
+  }
+
+  .quick-actions-card__action::before {
+    animation: quick-action-breathe 5.6s ease-in-out var(--qa-phase) infinite;
+  }
+
+  .quick-actions-card--paused .quick-actions-card__icon,
+  .quick-actions-card--paused .quick-actions-card__action::before {
+    animation-play-state: paused;
+  }
+
+  .quick-actions-card--entered .quick-actions-card__action {
+    animation: quick-action-enter 400ms var(--qa-ease) backwards;
+  }
+
+  .quick-actions-card--entered .quick-actions-card__action:nth-child(2) { animation-delay: 45ms; }
+  .quick-actions-card--entered .quick-actions-card__action:nth-child(3) { animation-delay: 90ms; }
+  .quick-actions-card--entered .quick-actions-card__action:nth-child(4) { animation-delay: 135ms; }
+  .quick-actions-card--entered .quick-actions-card__action:nth-child(5) { animation-delay: 180ms; }
+  .quick-actions-card--entered .quick-actions-card__action:nth-child(6) { animation-delay: 225ms; }
+}
 
 .quick-actions-card__action--explore { --qa-color: #d360e8; --qa-deep: #8a27bd; --qa-shine: #f4b6ff; }
 .quick-actions-card__action--create { --qa-color: #ff9968; --qa-deep: #cd4d60; --qa-shine: #ffd3aa; }
@@ -193,6 +292,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .quick-actions-card { --qa-motion: 0ms; }
+  .quick-actions-card__motion-toggle { display: none; }
+  .quick-actions-card__action,
+  .quick-actions-card__icon { transition: none; }
+  .quick-actions-card__action:focus-visible .quick-actions-card__sheen::before,
+  .quick-actions-card__action:hover .quick-actions-card__sheen::before { animation: none; }
   .quick-actions-card__action:hover,
   .quick-actions-card__action:active { transform: none; }
   .quick-actions-card__action:hover .quick-actions-card__icon { transform: rotate(-7deg); }

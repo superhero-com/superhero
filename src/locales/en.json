@@ -1207,6 +1207,8 @@
       "topTradersDescription": "See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.",
       "viewTradingLeaderboard": "View Trading Leaderboard",
       "quickActions": "Quick Actions",
+      "pauseMotion": "Pause motion",
+      "resumeMotion": "Resume motion",
       "exploreTrends": "Explore trends",
       "tokenizeATrend": "Tokenize a trend",
       "swapTokens": "Swap tokens",

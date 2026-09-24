@@ -1207,12 +1207,12 @@
       "topTradersDescription": "See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.",
       "viewTradingLeaderboard": "View Trading Leaderboard",
       "quickActions": "Quick Actions",
-      "exploreTrends": "🔍 Explore Trends",
-      "tokenizeATrend": "🚀 Tokenize a Trend",
-      "swapTokens": "🔄 Swap Tokens",
-      "wrapAe": "📦 Wrap AE",
-      "chat": "💬 Chat",
-      "provideLiquidity": "💧 Provide Liquidity"
+      "exploreTrends": "Explore trends",
+      "tokenizeATrend": "Tokenize a trend",
+      "swapTokens": "Swap tokens",
+      "wrapAe": "Wrap AE",
+      "chat": "Chat",
+      "provideLiquidity": "Provide liquidity"
     },
     "addressChip": {
       "clickToCopyAddress": "Click to copy address",

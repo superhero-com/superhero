@@ -1124,12 +1124,12 @@
       "topTradersDescription": "在交易排行榜上查看哪些钱包按盈亏、投资回报率和 AUM 引领市场。",
       "viewTradingLeaderboard": "查看交易排行榜",
       "quickActions": "快捷操作",
-      "exploreTrends": "🔍 探索趋势",
-      "tokenizeATrend": "🚀 代币化趋势",
-      "swapTokens": "🔄 兑换代币",
-      "wrapAe": "📦 封装 AE",
-      "chat": "💬 聊天",
-      "provideLiquidity": "💧 提供流动性"
+      "exploreTrends": "探索趋势",
+      "tokenizeATrend": "代币化趋势",
+      "swapTokens": "兑换代币",
+      "wrapAe": "封装 AE",
+      "chat": "聊天",
+      "provideLiquidity": "提供流动性"
     },
     "trendminer": {
       "latestTransactions": {

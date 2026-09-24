@@ -1,0 +1,199 @@
+.quick-actions-card {
+  --qa-ink: light-dark(#20202c, #f5f3fb);
+  --qa-base: light-dark(#fcfaff, #111015);
+  --qa-surface: light-dark(#f4f0fb, #1b1723);
+  --qa-edge: light-dark(#d5cfe1, #39313f);
+  --qa-shadow: light-dark(#77618f26, #00000060);
+  --qa-light: light-dark(#ffffffcc, #ffffff26);
+  --qa-haze: light-dark(#be7af61c, #bf72ff1e);
+  --qa-motion: 180ms;
+
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  color: var(--qa-ink);
+  background:
+    radial-gradient(ellipse at 5% 0%, var(--qa-haze), transparent 63%) padding-box,
+    linear-gradient(145deg, var(--qa-surface), var(--qa-base) 63%) padding-box,
+    linear-gradient(135deg, light-dark(#c798e5, #785285), var(--qa-edge) 27%, var(--qa-edge) 73%, light-dark(#aea0d2, #4d4263)) border-box;
+  box-shadow: 0 12px 26px -20px var(--qa-shadow), inset 0 1px var(--qa-light);
+}
+
+.quick-actions-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.quick-actions-card__heading h4 {
+  margin: 0;
+  color: var(--qa-ink);
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.3px;
+  font-weight: 650;
+}
+
+.quick-actions-card__heading-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 9px;
+  color: light-dark(#99601c, #f4c782);
+  background: linear-gradient(145deg, light-dark(#fff1d5, #473029), light-dark(#f2e5d1, #261c21));
+  box-shadow: inset 0 1px 0 light-dark(#ffffff, #f8d0aa40), inset 0 0 0 1px light-dark(#bb8a4433, #e1ad6540);
+}
+
+.quick-actions-card__heading-mark svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  fill: currentColor;
+  fill-opacity: 0.14;
+}
+
+.quick-actions-card__heading-line {
+  height: 1px;
+  flex: 1;
+  margin-inline-start: 5px;
+  background: linear-gradient(90deg, light-dark(#c8b3d7, #745778), transparent 95%);
+}
+
+.quick-actions-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-actions-card__action {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  margin: 0;
+  padding: 11px 10px;
+  color: var(--qa-ink);
+  text-align: start;
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--qa-color) 27%, var(--qa-edge));
+  border-radius: 13px;
+  background:
+    radial-gradient(ellipse at 2% 0%, color-mix(in srgb, var(--qa-color) 18%, transparent), transparent 100%),
+    linear-gradient(120deg, var(--qa-surface), var(--qa-base));
+  box-shadow: inset 0 1px 0 light-dark(#ffffff, #ffffff0a), 0 3px 7px -5px var(--qa-shadow);
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+  transition: border-color var(--qa-motion), box-shadow var(--qa-motion), transform var(--qa-motion);
+}
+
+.quick-actions-card__action::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 28px 32px, color-mix(in srgb, var(--qa-color) 18%, transparent), transparent 65%);
+  opacity: 0.7;
+  transition: opacity var(--qa-motion);
+}
+
+.quick-actions-card__action::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset-inline: 13px 21px;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--qa-shine) 65%, transparent), transparent);
+  opacity: 0.65;
+}
+
+.quick-actions-card__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 32px;
+  flex: none;
+  position: relative;
+  color: #fff;
+  border-radius: 10px;
+  transform: rotate(-7deg);
+  background:
+    radial-gradient(ellipse at 17% 4%, #ffffff80, transparent 54%),
+    linear-gradient(145deg, var(--qa-color), var(--qa-deep));
+  box-shadow:
+    inset 0 1px 0 #ffffff99,
+    inset 1px 0 0 #ffffff38,
+    inset 0 -2px 0 #00000030,
+    1px 3px 0 color-mix(in srgb, var(--qa-deep) 65%, var(--qa-base)),
+    0 5px 12px -5px var(--qa-color);
+  transition: transform var(--qa-motion);
+}
+
+.quick-actions-card__icon::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid #ffffff23;
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.quick-actions-card__icon svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.8;
+  transform: rotate(7deg);
+  filter: drop-shadow(0 1px 1px #00000030);
+}
+
+.quick-actions-card__label {
+  position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  letter-spacing: -0.08px;
+}
+
+.quick-actions-card__action:focus-visible {
+  outline: 2px solid #5d88ff;
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .quick-actions-card__action:hover {
+    color: var(--qa-ink);
+    border-color: color-mix(in srgb, var(--qa-color) 65%, var(--qa-edge));
+    box-shadow: inset 0 1px 0 light-dark(#ffffff, #ffffff16), 0 0 15px -8px var(--qa-color);
+    transform: translateY(-1px);
+  }
+
+  .quick-actions-card__action:hover::before { opacity: 1; }
+  .quick-actions-card__action:hover .quick-actions-card__icon { transform: rotate(-2deg) translateY(-1px); }
+}
+
+.quick-actions-card__action:active { transform: translateY(1px); }
+
+.quick-actions-card__action--explore { --qa-color: #d360e8; --qa-deep: #8a27bd; --qa-shine: #f4b6ff; }
+.quick-actions-card__action--create { --qa-color: #ff9968; --qa-deep: #cd4d60; --qa-shine: #ffd3aa; }
+.quick-actions-card__action--swap { --qa-color: #32ccbb; --qa-deep: #11776f; --qa-shine: #abfff0; }
+.quick-actions-card__action--wrap { --qa-color: #5eaaff; --qa-deep: #345fcf; --qa-shine: #bedcff; }
+.quick-actions-card__action--chat { --qa-color: #b08bff; --qa-deep: #763eca; --qa-shine: #e4d1ff; }
+.quick-actions-card__action--pool { --qa-color: #edb24c; --qa-deep: #b57828; --qa-shine: #ffe1a3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-actions-card { --qa-motion: 0ms; }
+  .quick-actions-card__action:hover,
+  .quick-actions-card__action:active { transform: none; }
+  .quick-actions-card__action:hover .quick-actions-card__icon { transform: rotate(-7deg); }
+}

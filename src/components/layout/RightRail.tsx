@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Gem } from 'lucide-react';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
 import FeedRailSearch from '@/components/layout/FeedRailSearch';
+import QuickActionsCard from '@/components/layout/QuickActionsCard';
 import RewardsOnboarding from '@/components/onboarding/RewardsOnboarding';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
@@ -234,77 +235,7 @@ const RightRail = ({
         </button>
       </div>
 
-      {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-in-out relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg">⚡</span>
-          <h4 className="m-0 text-white text-base font-bold">
-            {t('rightRail.quickActions')}
-          </h4>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/trends/tokens')}
-            title={t('titles.exploreTrends')}
-          >
-            {t('rightRail.exploreTrends')}
-          </button>
-          <button
-            type="button"
-            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/trends/create')}
-            title={t('titles.tokenizeATrend')}
-          >
-            {t('rightRail.tokenizeATrend')}
-          </button>
-          <button
-            type="button"
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/defi/swap')}
-            title={t('titles.swapTokensOnDex')}
-          >
-            {t('rightRail.swapTokens')}
-          </button>
-          <button
-            type="button"
-            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/defi/wrap')}
-            title={t('titles.wrapOrUnwrapAe')}
-          >
-            {t('rightRail.wrapAe')}
-          </button>
-          <a
-            href="https://quali.chat"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title={t('titles.openChat')}
-          >
-            {t('rightRail.chat')}
-          </a>
-          {/* Buy AE with ETH quick action (disabled)
-          <button
-            type="button"
-            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/defi/buy-ae-with-eth')}
-            title={t('titles.buyAeWithEth')}
-          >
-            🌉 Buy AE with ETH
-          </button>
-          */}
-          <button
-            type="button"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/defi/pool')}
-            title={t('titles.provideLiquidityToPools')}
-          >
-            {t('rightRail.provideLiquidity')}
-          </button>
-        </div>
-      </div>
+      <QuickActionsCard />
     </div>
   );
 };

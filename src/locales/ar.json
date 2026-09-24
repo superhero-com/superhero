@@ -1124,12 +1124,12 @@
       "topTradersDescription": "شاهد أي المحافظ تتصدّر الأسواق حسب الربح/الخسارة والعائد على الاستثمار والأصول المُدارة في لوحة صدارة التداول.",
       "viewTradingLeaderboard": "عرض لوحة صدارة التداول",
       "quickActions": "إجراءات سريعة",
-      "exploreTrends": "🔍 استكشاف الترندات",
-      "tokenizeATrend": "🚀 رمّز ترندًا",
-      "swapTokens": "🔄 تبديل الرموز",
-      "wrapAe": "📦 تغليف AE",
-      "chat": "💬 الدردشة",
-      "provideLiquidity": "💧 توفير السيولة"
+      "exploreTrends": "استكشاف الترندات",
+      "tokenizeATrend": "رمّز ترندًا",
+      "swapTokens": "تبديل الرموز",
+      "wrapAe": "تغليف AE",
+      "chat": "الدردشة",
+      "provideLiquidity": "توفير السيولة"
     },
     "trendminer": {
       "latestTransactions": {

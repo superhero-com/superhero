@@ -245,6 +245,19 @@ export function insertReplyIntoThreads(
   keys.forEach((key) => appendToThread(queryClient, key, reply));
 }
 
+/** The post or reply `id` as built in the browser, while the backend lacks it. */
+export function pendingPostById(id: string): Post | null {
+  const [transaction] = listPendingTransactions({
+    kind: ['create_post', 'create_comment'],
+    match: (entry) => sameId(entry.meta.postId, id),
+  });
+  return transaction ? parsePost(transaction) : null;
+}
+
+const isPostDetailKey = (key: readonly unknown[]): key is readonly ['post', string, ...unknown[]] => (
+  key[0] === 'post' && typeof key[1] === 'string'
+);
+
 /** Put what is still pending back into one query that just loaded without it. */
 function restoreInto(queryClient: QueryClient, queryKey: QueryKey): void {
   const key = queryKey as readonly unknown[];
@@ -261,21 +274,15 @@ function restoreInto(queryClient: QueryClient, queryKey: QueryKey): void {
       });
   } else if (isThreadKey(key) && typeof key[1] === 'string') {
     pendingReplies(key[1]).forEach((reply) => appendToThread(queryClient, queryKey, reply));
+  } else if (isPostDetailKey(key)) {
+    // A pending post's own page: the backend lookup falls back to a text
+    // search, which can answer with some other post. Only that exact post
+    // replaces the copy from the browser.
+    const pending = pendingPostById(key[1]);
+    const loaded = queryClient.getQueryData<Post>(queryKey);
+    if (pending && !sameId(loaded?.id, pending.id)) queryClient.setQueryData(queryKey, pending);
   }
 }
-
-/** The post or reply `id` as built in the browser, while the backend lacks it. */
-export function pendingPostById(id: string): Post | null {
-  const [transaction] = listPendingTransactions({
-    kind: ['create_post', 'create_comment'],
-    match: (entry) => sameId(entry.meta.postId, id),
-  });
-  return transaction ? parsePost(transaction) : null;
-}
-
-const isPostDetailKey = (key: readonly unknown[]): key is readonly ['post', string, ...unknown[]] => (
-  key[0] === 'post' && typeof key[1] === 'string'
-);
 
 /**
  * Keep pending posts and replies in view: whenever a feed or thread loads from

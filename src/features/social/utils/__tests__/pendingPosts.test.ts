@@ -171,6 +171,21 @@ describe('pending posts', () => {
     expect(queryClient.getQueryState(['comment-replies', '42_v3'])?.status).toBe('success');
     expect(queryClient.getQueryData(['comment-replies', '42_v3'])).toEqual([settledReply]);
 
+    // Its page never shows some other post a fallback search turned up.
+    await queryClient.fetchQuery({
+      queryKey: ['post', '42'],
+      queryFn: async () => ({ id: '77_v3', content: 'someone else' }),
+      staleTime: 0,
+    });
+    expect(queryClient.getQueryData(['post', '42'])).toEqual(expect.objectContaining({ id: '42_v3' }));
+    // The post itself, once served, is kept.
+    await queryClient.fetchQuery({
+      queryKey: ['post', '42'],
+      queryFn: async () => ({ ...mine, content: 'from the backend' }),
+      staleTime: 0,
+    });
+    expect(queryClient.getQueryData(['post', '42'])).toEqual(expect.objectContaining({ content: 'from the backend' }));
+
     // Any other missing post still fails.
     await queryClient.fetchQuery({
       queryKey: ['post', '99'],

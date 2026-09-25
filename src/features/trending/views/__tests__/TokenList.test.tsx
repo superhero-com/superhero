@@ -212,7 +212,7 @@ describe('TokenList search experience', () => {
     await waitFor(() => {
       expect(screen.getByText('alpha.chain')).toBeInTheDocument();
     });
-    expect(screen.getByText('Top Traders')).toBeInTheDocument();
+    expect(screen.getByText('Top traders')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Posts' }));
     await waitFor(() => {
@@ -237,6 +237,27 @@ describe('TokenList search experience', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Table' }));
     expect(screen.getByTestId('token-markets')).toHaveAttribute('data-layout', 'table');
     expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(queryCount);
+  });
+
+  it('defaults Users to List and preserves its ranking and layout across tab changes', async () => {
+    renderView();
+    fireEvent.click(screen.getByRole('button', { name: 'Users' }));
+    await screen.findByText('alpha.chain');
+    expect(screen.getByRole('button', { name: 'List', pressed: true })).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledWith(12);
+    const queryCount = searchApiMocks.fetchTopTraders.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    expect(screen.getByRole('button', { name: 'Cards', pressed: true })).toBeInTheDocument();
+    expect(screen.getByText('+$1,200.00')).toBeInTheDocument();
+    expect(screen.getByText('alpha.chain')).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledTimes(queryCount);
+    fireEvent.click(screen.getByRole('button', { name: 'Tokens' }));
+    await screen.findByTestId('token-markets');
+    expect(screen.getByRole('button', { name: 'Table', pressed: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Users' }));
+    expect(screen.getByRole('button', { name: 'Cards', pressed: true })).toBeInTheDocument();
+    expect(screen.getByText('alpha.chain')).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledTimes(queryCount);
   });
 
   it('renders search sections and expands tokens with view all', async () => {
@@ -355,7 +376,7 @@ describe('TokenList search experience', () => {
     fireEvent.click(viewAllButtons[1]);
 
     await waitFor(() => {
-      expect(screen.getByText('Top Traders')).toBeInTheDocument();
+      expect(screen.getByText('Top traders')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Users' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tokens' })).toBeInTheDocument();

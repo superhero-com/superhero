@@ -34,6 +34,7 @@ import {
 } from '../api/trendsSearch';
 import type { LeaderboardItem } from '../api/leaderboard';
 import ExploreTokenMarkets from '../components/ExploreTokenMarkets';
+import ExploreUsers, { type UserLayout } from '../components/ExploreUsers';
 import { type ExploreLayout } from '../components/ExploreViewSwitch';
 import ExploreSearch from '../components/ExploreSearch';
 import ExploreToolbar from '../components/ExploreToolbar';
@@ -113,6 +114,7 @@ const TokenList = () => {
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [marketLayout, setMarketLayout] = useState<ExploreLayout>('table');
+  const [usersLayout, setUsersLayout] = useState<UserLayout>('list');
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   // Content-language filter shared with home; only applies to the Posts tab.
@@ -657,18 +659,15 @@ const TokenList = () => {
           ) : null}
 
           {!hasSearch && activeTab === 'users' ? (
-            <SearchSectionShell
-              title={t('tokenList.topTradersTitle')}
-              subtitle={t('tokenList.topTradersSubtitle')}
-            >
-              {usersTabQuery.isLoading ? <InlineLoading label={t('tokenList.loading')} /> : null}
-              {!usersTabQuery.isLoading && usersTabQuery.data?.items.length ? (
-                <UserResultsList items={usersTabQuery.data.items} />
-              ) : null}
-              {!usersTabQuery.isLoading && !usersTabQuery.data?.items.length ? (
-                <div className="py-6 text-sm text-white/60">{t('tokenList.noLeaderboard')}</div>
-              ) : null}
-            </SearchSectionShell>
+            <ExploreUsers
+              items={usersTabQuery.data?.items ?? []}
+              layout={usersLayout}
+              onLayoutChange={setUsersLayout}
+              loading={usersTabQuery.isLoading}
+              error={usersTabQuery.isError}
+              fetching={usersTabQuery.isFetching}
+              onRetry={() => { usersTabQuery.refetch(); }}
+            />
           ) : null}
 
           {!hasSearch && activeTab === 'posts' ? (

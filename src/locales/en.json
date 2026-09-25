@@ -2623,6 +2623,27 @@
       "connectX": "Connect X",
       "postOnX": "Post & earn",
       "done": "All set!"
+    },
+    "users": {
+      "list": "List",
+      "cards": "Cards",
+      "layout": "User display mode",
+      "title": "Top traders",
+      "subtitle": "Ranked by 7-day P/L · USD",
+      "leaderboard": "View leaderboard",
+      "trader": "Trader",
+      "pnl": "P/L · 7d",
+      "roi": "ROI · 7d",
+      "aum": "AUM",
+      "rank": "Rank {{rank}}",
+      "profile": "View profile: {{name}}",
+      "empty": "No traders to show yet",
+      "emptyCopy": "Trading activity will appear here when the leaderboard is available.",
+      "error": "Couldn’t load traders",
+      "errorCopy": "Try again to see the latest rankings.",
+      "retry": "Try again",
+      "loading": "Loading traders",
+      "refreshError": "Couldn’t refresh traders"
     }
   },
   "errors": {

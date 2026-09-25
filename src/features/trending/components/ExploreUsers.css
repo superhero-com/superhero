@@ -1,0 +1,112 @@
+.explore-users { --explore-users-text:light-dark(#202632,#f5f7fb); --explore-users-muted:light-dark(#627086,#94a0b3); --explore-users-line:light-dark(#e0e5ec,#ffffff12); --explore-users-surface:light-dark(#fff,#11151b); color:var(--explore-users-text); container:explore-users / inline-size; }
+.explore-users-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.explore-users-heading h2 { margin:0; font-size:20px; font-weight:650; line-height:26px; letter-spacing:-.025em; }
+.explore-users-heading p { margin:5px 0 0; color:var(--explore-users-muted); font-size:12px; line-height:18px; }
+.explore-users-heading__actions > a { display:inline-flex; justify-content:center; align-items:center; flex:none; gap:8px; min-height:44px; padding:9px 12px; border:1px solid var(--explore-users-line); border-radius:11px; font-size:12px; font-weight:550; color:light-dark(#315f9e,#adc6e9); text-decoration:none; background:light-dark(#fff,#10161e); }
+.explore-users-heading__actions > a svg { width:15px; height:15px; }
+.explore-users-columns,.explore-users-trader { display:grid; grid-template-columns:minmax(0,1fr) 330px 18px; gap:16px; align-items:center; }
+.explore-users-columns { padding:0 16px; height:36px; color:var(--explore-users-muted); font-size:10px; }
+.explore-users-columns > div { display:grid; grid-template-columns:1.2fr 1fr 1.1fr; gap:16px; text-align:end; }
+.explore-users-list { list-style:none; margin:0; padding:0; border:1px solid var(--explore-users-line); border-radius:16px; overflow:hidden; background:var(--explore-users-surface); }
+.explore-users-list li+li { border-top:1px solid var(--explore-users-line); }
+a.explore-users-trader { min-height:100px; padding:18px 16px; color:var(--explore-users-text); background:var(--explore-users-surface); text-decoration:none; transition:box-shadow 180ms; }
+.explore-users-trader__identity { display:flex; gap:12px; align-items:center; min-width:0; }
+.explore-users-trader__avatar { position:relative; display:block; flex:none; width:44px; height:44px; }
+.explore-users-trader__rank { position:absolute; inset-inline-end:-3px; bottom:-3px; min-width:18px; height:18px; padding-inline:3px; display:grid; place-items:center; border:2px solid var(--explore-users-surface); border-radius:6px; background:light-dark(#e3eaf5,#25334a); color:light-dark(#3c5a86,#adc6e9); font-size:9px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+.explore-users-trader__rank.is-first { background:light-dark(#f4db9d,#665132); color:light-dark(#735021,#f3d69d); }
+.explore-users-trader__rank svg { width:10px; height:10px; }
+.explore-users-trader__copy { min-width:0; display:grid; gap:6px; }
+.explore-users-trader__copy strong { font-size:14px; line-height:20px; font-weight:650; overflow-wrap:anywhere; }
+.explore-users-trader__copy strong.is-address { font-size:12px; line-height:18px; text-align:start; }
+.explore-users-trader__address { display:block; width:fit-content; max-width:100%; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:11px; line-height:16px; color:var(--explore-users-muted); overflow-wrap:anywhere; padding:2px 5px; border:1px solid light-dark(#edf0f5,#ffffff09); border-radius:5px; background:light-dark(#f7f9fc,#ffffff03); text-align:start; }
+.explore-users-trader__stats { display:grid; grid-template-columns:1.2fr 1fr 1.1fr; gap:16px; margin:0; text-align:end; align-items:center; }
+.explore-users-trader__stats dt { display:none; color:var(--explore-users-muted); font-size:10px; line-height:15px; }
+.explore-users-trader__stats dd { margin:0; font-variant-numeric:tabular-nums; font-size:13px; font-weight:500; line-height:20px; overflow-wrap:anywhere; }
+.explore-users-trader__pnl dd { font-size:17px; font-weight:650; letter-spacing:-.02em; }
+.explore-users-trader .is-positive { color:light-dark(#087652,#72c9ab); }
+.explore-users-trader .is-negative { color:light-dark(#b54053,#df8b99); }
+.explore-users-trader__open { width:15px; height:15px; color:var(--explore-users-muted); opacity:.5; }
+.explore-users[dir=rtl] .explore-users-trader__open { transform:scaleX(-1); }
+.explore-users :is(a,button):focus-visible { outline:2px solid #5d88ff; outline-offset:3px; }
+.explore-users a.explore-users-trader:focus-visible { outline-offset:-2px; }
+@media(hover:hover) {
+ a.explore-users-trader:hover { color:var(--explore-users-text); background:radial-gradient(ellipse 400px 150px at var(--card-pointer-x,4%) var(--card-pointer-y,0%),light-dark(#1161fe0e,#337cff22),transparent),linear-gradient(135deg,light-dark(#f3f7fd,#162130),light-dark(#fff,#101720)); box-shadow:inset 0 1px light-dark(#a6c1e0,#365577),inset 0 -1px light-dark(#a6c1e0,#365577); }
+ .explore-users-trader:hover strong { color:light-dark(#1856ad,#c3d9fa); }
+ .explore-users-trader:hover .explore-users-trader__open { color:light-dark(#1856ad,#b9d4ff); opacity:1; }
+ .explore-users-heading__actions > a:hover { border-color:light-dark(#adc6e9,#3d5c88); color:light-dark(#1856ad,#d3e4ff); background:light-dark(#edf3fd,#1b2b43); }
+}
+.explore-users-loading { border:1px solid var(--explore-users-line); border-radius:16px; background:var(--explore-users-surface); overflow:hidden; }
+.explore-users-loading > div { display:flex; align-items:center; gap:16px; padding:24px 16px; min-height:100px; }
+.explore-users-loading > div+div { border-top:1px solid var(--explore-users-line); }
+.explore-users-loading span { height:12px; width:14%; border-radius:4px; background:light-dark(#e8edf4,#ffffff0b); }
+.explore-users-loading span:first-child { width:44px; height:44px; border-radius:50%; flex:none; }
+.explore-users-loading span:nth-child(2) { width:35%; margin-inline-end:auto; }
+.explore-users-empty { padding:40px 20px; border:1px solid var(--explore-users-line); border-radius:16px; background:var(--explore-users-surface); text-align:center; }
+.explore-users-empty > svg { width:26px; height:26px; color:var(--explore-users-muted); margin:0 auto 14px; }
+.explore-users-empty h3 { font-size:15px; margin:0 0 8px; font-weight:600; }
+.explore-users-empty p { font-size:12px; line-height:19px; color:var(--explore-users-muted); margin:0 auto; max-width:360px; }
+.explore-users-empty button { display:inline-flex; align-items:center; gap:8px; min-height:44px; margin-top:18px; padding:9px 16px; border-radius:10px; border:1px solid light-dark(#bcd0ed,#365781); background:light-dark(#eaf1fc,#1c2d47); color:light-dark(#1856ad,#d3e4ff); font-size:12px; }
+.explore-users-empty button svg { width:14px; height:14px; }
+@container explore-users (max-width:719px) {
+ .explore-users-columns { display:none; }
+ .explore-users-heading { align-items:flex-start; margin-bottom:18px; gap:10px; }
+ .explore-users-heading__actions > a { max-width:145px; text-align:center; flex-shrink:1; }
+ .explore-users-heading h2 { font-size:19px; }
+ .explore-users-heading p { font-size:11px; }
+ a.explore-users-trader { grid-template-columns:minmax(0,1fr) 16px; gap:14px 10px; padding:16px; }
+ .explore-users-trader__stats { grid-column:1/-1; grid-row:2; padding-top:12px; border-top:1px solid var(--explore-users-line); gap:12px; text-align:start; }
+ .explore-users-trader__stats dt { display:block; margin-bottom:4px; }
+ .explore-users-trader__pnl dd { font-size:16px; }
+ .explore-users-trader__stats dd { font-size:13px; }
+ .explore-users-trader__copy { gap:5px; }
+ .explore-users-trader__copy strong { font-size:14px; }
+ .explore-users-trader__copy strong.is-address { font-size:12px; }
+ .explore-users-trader__address { font-size:11px; line-height:16px; }
+ .explore-users-trader__open { align-self:start; margin-top:12px; }
+}
+@media(prefers-reduced-motion:reduce) { a.explore-users-trader { transition:none; } }
+
+.explore-users-heading__actions { display:flex; align-items:center; gap:10px; flex:none; }
+.explore-users-view-switch { display:flex; align-items:center; padding:3px; border:1px solid var(--explore-users-line); border-radius:12px; background:light-dark(#fff,#0e131a); gap:3px; }
+.explore-users-view-switch button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:44px; min-height:44px; border:1px solid transparent; border-radius:9px; padding:8px 12px; background:none; color:var(--explore-users-muted); font-size:12px; font-weight:550; }
+.explore-users-view-switch svg { width:16px; height:16px; flex:none; }
+.explore-users-view-switch button[aria-pressed=true] { color:light-dark(#1856ad,#c8dcfc); border-color:light-dark(#c6d6ee,#385171); background:light-dark(#eaf1fc,#1a2b43); }
+.explore-users-heading__actions > a { min-height:52px; }
+.explore-users-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; list-style:none; margin:0; padding:0; }
+.explore-users-cards > li { min-width:0; display:flex; }
+a.explore-users-trader--card { display:flex; flex-direction:column; align-items:stretch; gap:24px; position:relative; width:100%; height:100%; min-height:268px; padding:18px; border:1px solid var(--explore-users-line); border-radius:18px; }
+.explore-users-trader--card .explore-users-trader__identity { display:grid; grid-template-columns:48px minmax(0,1fr); gap:12px; }
+.explore-users-trader--card .explore-users-trader__avatar { width:48px; height:48px; grid-column:1; grid-row:1; }
+.explore-users-trader--card .explore-users-trader__rank { min-width:20px; height:20px; font-size:10px; }
+.explore-users-trader--card .explore-users-trader__copy { display:contents; }
+.explore-users-trader--card .explore-users-trader__copy strong { grid-column:2; grid-row:1; padding-inline-end:16px; font-size:15px; line-height:21px; }
+.explore-users[dir=rtl] .explore-users-trader--card .explore-users-trader__copy strong { padding-left:16px; padding-right:0; }
+.explore-users-trader--card .explore-users-trader__copy strong.is-address { font-size:11px; line-height:17px; }
+.explore-users-trader--card .explore-users-trader__address { grid-column:1/-1; width:100%; min-height:38px; padding:3px 6px; font-size:11px; line-height:16px; }
+.explore-users-trader--card .explore-users-trader__open { position:absolute; inset-inline-end:16px; top:20px; margin:0; }
+.explore-users-trader--card .explore-users-trader__stats { margin-top:auto; padding:0; border:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; text-align:start; }
+.explore-users-trader--card .explore-users-trader__stats dt { display:block; font-size:11px; line-height:16px; margin:0 0 5px; }
+.explore-users-trader--card .explore-users-trader__stats dd { font-size:14px; line-height:20px; }
+.explore-users-trader--card .explore-users-trader__pnl { grid-column:1/-1; padding-bottom:16px; border-bottom:1px solid var(--explore-users-line); }
+.explore-users-trader--card .explore-users-trader__pnl dd { font-size:26px; line-height:32px; letter-spacing:-.03em; }
+.explore-users-trader--card .explore-users-trader__stats > div:last-child { text-align:end; }
+.explore-users-loading--cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; background:none; border:0; border-radius:0; }
+.explore-users-loading--cards > div { min-height:292px; display:grid; align-content:start; grid-template-columns:48px minmax(0,1fr); gap:24px 12px; border:1px solid var(--explore-users-line); border-radius:18px; padding:18px; background:var(--explore-users-surface); }
+.explore-users-loading--cards span:first-child { width:48px; height:48px; }
+.explore-users-loading--cards span:nth-child(2) { width:80%; margin:16px 0 0; }
+.explore-users-loading--cards span:nth-child(n+3) { width:100%; grid-column:1/-1; }
+@media(hover:hover) {
+ .explore-users-view-switch button:not([aria-pressed=true]):hover { background:light-dark(#f2f6fc,#ffffff05); color:var(--explore-users-text); }
+ a.explore-users-trader--card:hover { border-color:light-dark(#a6c1e0,#365577); box-shadow:inset 0 1px light-dark(#ffffffa6,#ffffff09); }
+}
+@container explore-users (max-width:929px) { .explore-users-cards,.explore-users-loading--cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@container explore-users (max-width:619px) {
+ .explore-users-heading { flex-wrap:wrap; gap:14px; }
+ .explore-users-heading__actions { width:100%; justify-content:space-between; gap:8px; }
+ .explore-users-heading__actions > a { max-width:none; padding-inline:10px; }
+ .explore-users-view-switch button { padding-inline:10px; }
+ .explore-users-cards,.explore-users-loading--cards { grid-template-columns:minmax(0,1fr); }
+}
+@container explore-users (max-width:379px) { .explore-users-view-switch button { width:44px; padding:8px; } .explore-users-view-switch button span { display:none; } }
+.explore-users-error { margin-top:16px; }
+.explore-users-empty button:disabled { opacity:.6; cursor:wait; }

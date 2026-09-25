@@ -2554,6 +2554,27 @@
       "connectX": "连接 X",
       "postOnX": "发帖赚取",
       "done": "全部完成！"
+    },
+    "users": {
+      "list": "列表",
+      "cards": "卡片",
+      "layout": "用户显示方式",
+      "title": "顶尖交易者",
+      "subtitle": "按 7 天盈亏排名 · USD",
+      "leaderboard": "查看排行榜",
+      "trader": "交易者",
+      "pnl": "盈亏 · 7天",
+      "roi": "收益率 · 7天",
+      "aum": "资产规模",
+      "rank": "排名 {{rank}}",
+      "profile": "查看个人资料: {{name}}",
+      "empty": "暂无交易者",
+      "emptyCopy": "排行榜可用时，将显示交易活动。",
+      "error": "无法加载交易者",
+      "errorCopy": "请重试以查看最新排名。",
+      "retry": "重试",
+      "loading": "正在加载交易者",
+      "refreshError": "无法刷新交易者"
     }
   },
   "errors": {

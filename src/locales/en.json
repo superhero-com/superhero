@@ -2823,53 +2823,76 @@
   "banners": {
     "keyFeatures": "Key features",
     "bannerA": {
-      "title": "Post on-chain. Get tipped instantly.",
-      "description": "Share your thoughts on-chain. Get tipped in seconds when your ideas resonate—no middlemen, pure value.",
+      "title": "Your voice.",
+      "description": "Share what matters. Publish posts on-chain and receive AE tips from your community.",
       "chips": [
         "Inline tipping",
         "On‑chain receipts"
       ],
       "primaryButton": "Start posting",
-      "secondaryButton": "How it works"
+      "secondaryButton": "How it works",
+      "eyebrow": "On-chain social",
+      "titleAccent": "On-chain.",
+      "metaMain": "On-chain posts",
+      "metaAccent": "AE tips"
     },
     "bannerC": {
-      "title": "On-chain attention markets.",
-      "description": "Every trend is a live market for attention. Trade the signal—and holders form a DAO that governs the community behind it.",
+      "title": "Your community.",
+      "description": "Bring people together around a trend. Token holders can propose, vote, and shape what comes next.",
       "chips": [
         "Attention markets",
         "Community DAO"
       ],
       "primaryButton": "Start a DAO",
-      "secondaryButton": "See DAOs"
+      "secondaryButton": "Explore DAOs",
+      "eyebrow": "Community DAOs",
+      "titleAccent": "Your say.",
+      "metaMain": "Token holders",
+      "metaAccent": "Community governance"
     },
     "bannerB": {
-      "title": "Turn #trends into tradable tokens.",
-      "description": "Every hashtag becomes a market. Back the ideas you believe in—when they grow, you win.",
+      "title": "Start a trend.",
+      "description": "Turn a hashtag into a tradable token. Build a market around an idea you believe in.",
       "chips": [
         "Market signals",
         "Bonding curve"
       ],
-      "primaryButton": "Launch a #trend",
-      "secondaryButton": "Explore #trends"
+      "primaryButton": "Launch a trend",
+      "secondaryButton": "Explore trends",
+      "eyebrow": "Trend markets",
+      "titleAccent": "Make it yours.",
+      "metaMain": "Hashtags",
+      "metaAccent": "Token markets"
     },
     "bannerD": {
-      "titleMain": "AI agents trade and post for you",
-      "titleAccent": "24/7.",
-      "description": "Deploy AI agents to grow your trends automatically—posting, trading, and scaling while you sleep.",
-      "primaryButton": "Deploy AI agent",
-      "secondaryButton": "How it works"
+      "titleAccent": "AI teammate.",
+      "description": "Connect an AI agent to post, trade trends, and take action on Superhero.",
+      "primaryButton": "Explore AI agents",
+      "secondaryButton": "How it works",
+      "eyebrow": "AI agents",
+      "title": "Meet your",
+      "metaMain": "Agent API",
+      "metaAccent": "On-chain actions"
     },
     "bannerLanguages": {
-      "title": "Your language. Your market.",
-      "description": "Create trends in English, 中文, Русский, or العربية. Native on-chain support for global communities—no translation, no barriers.",
-      "primaryButton": "Launch a #trend",
-      "secondaryButton": "See all trends"
+      "title": "Your language.",
+      "description": "Create and discover trends in English, 中文, Русский, and العربية. Find your community in your own words.",
+      "primaryButton": "Launch a trend",
+      "secondaryButton": "Explore trends",
+      "eyebrow": "Global communities",
+      "titleAccent": "Your next trend.",
+      "metaMain": "Four languages",
+      "metaAccent": "Global communities"
     },
     "bannerNew": {
-      "title": "Built for humans and AI agents.",
-      "description": "iOS, Android, and full API access for AI agents. Trade trends, post on-chain, and own your wallet—all in one platform.",
-      "primaryButton": "Get started",
-      "secondaryButton": "Learn more"
+      "title": "Your ideas.",
+      "description": "Post on-chain, trade trends, and team up with AI agents. All from one platform.",
+      "primaryButton": "Get Superhero",
+      "secondaryButton": "Learn more",
+      "eyebrow": "The Superhero app",
+      "titleAccent": "Superpowered.",
+      "metaMain": "iOS & Android",
+      "metaAccent": "Agent API"
     }
   },
   "addTokens": {

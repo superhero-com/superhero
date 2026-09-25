@@ -1,8 +1,6 @@
 import { Encoding, isEncoded } from '@aeternity/aepp-sdk';
 import Spinner from '@/components/Spinner';
-import { Input } from '@/components/ui/input';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { Search as SearchIcon } from 'lucide-react';
 import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -43,6 +41,7 @@ import {
 } from '../api/trendsSearch';
 import type { LeaderboardItem } from '../api/leaderboard';
 import TokenListTable from '../components/TokenListTable';
+import ExploreSearch from '../components/ExploreSearch';
 import {
   PostResultsList,
   TokenResultsList,
@@ -153,6 +152,15 @@ const TokenList = () => {
   }, [uiLanguage, setSearchParams]);
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
+  const clearSearch = useCallback(() => {
+    setSearchInput('');
+    setSearchTerm('');
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete(EXPLORE_SEARCH_QUERY_KEY);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
   const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
     tokens: false,
     users: false,
@@ -509,45 +517,14 @@ const TokenList = () => {
 
       <div className="gap-4">
         <div className="w-full">
-          <div className="flex flex-col items-start gap-3 w-full mb-6">
-            <div className="w-full max-w-4xl">
-              <div className="relative">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45 pointer-events-none" />
-                <Input
-                  id="trend-search"
-                  aria-label={t('tokenList.inputAria')}
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder={t('tokenList.searchPlaceholder')}
-                  className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm text-white placeholder:text-white/45 focus-visible:ring-[#1161FE]"
-                />
-              </div>
-            </div>
-
-            {!hasSearch ? (
-              <div className="flex items-center gap-6 border-b border-white/10 w-full overflow-x-auto overflow-y-hidden pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {SEARCH_TABS.map((tab) => {
-                  const isActive = activeTab === tab;
-
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`normal-case tracking-normal relative pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm ${
-                        isActive ? 'text-white' : 'text-white/55 hover:text-white/80'
-                      }`}
-                    >
-                      {tabLabels[tab]}
-                      {isActive ? (
-                        <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#1161FE]" />
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
+          <ExploreSearch
+            value={searchInput}
+            onChange={setSearchInput}
+            onClear={clearSearch}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            hasSearch={hasSearch}
+          />
 
           {searchError ? <EmptyPanel message={searchError} /> : null}
 

@@ -2085,6 +2085,8 @@
       }
     },
     "tokenList": {
+      "clearSearch": "مسح البحث",
+      "exploreSections": "أقسام الاستكشاف",
       "tabTokens": "الرموز",
       "tabUsers": "المستخدمون",
       "tabPosts": "المنشورات",

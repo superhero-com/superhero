@@ -1,4 +1,15 @@
 {
+  "trending": {
+    "tokenList": {
+      "clearSearch": "Очистить поиск",
+      "exploreSections": "Разделы обзора",
+      "tabTokens": "Токены",
+      "tabUsers": "Люди",
+      "tabPosts": "Посты",
+      "inputAria": "Поиск токенов, пользователей и постов",
+      "searchPlaceholder": "Поиск трендов, пользователей и постов"
+    }
+  },
   "common": {
     "buyAeRail": {
       "title": "Получить AE",

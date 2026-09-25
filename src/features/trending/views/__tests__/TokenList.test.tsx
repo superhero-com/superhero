@@ -4,7 +4,7 @@ import {
   fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -76,7 +76,12 @@ vi.mock('../../../social/components/ReplyToFeedItem', () => ({
   ),
 }));
 
-function renderView() {
+const CurrentSearch = () => {
+  const { search } = useLocation();
+  return <output aria-label="URL search">{search}</output>;
+};
+
+function renderView(entry = '/trends/tokens') {
   const client = new QueryClient({
     defaultOptions: {
       queries: {
@@ -86,8 +91,9 @@ function renderView() {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[entry]}>
       <QueryClientProvider client={client}>
+        <CurrentSearch />
         <TokenList />
       </QueryClientProvider>
     </MemoryRouter>,
@@ -234,6 +240,53 @@ describe('TokenList search experience', () => {
       expect(screen.getByText('DELTA')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+  });
+
+  it('clears a linked search without discarding other URL filters, then restores the selected section', async () => {
+    renderView('/trends/tokens?q=hello&collection=WORDS&source=shared');
+    expect(await screen.findByText('ALPHA')).toBeInTheDocument();
+    const input = screen.getByRole('textbox', { name: 'Search tokens, users and posts' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(screen.getByLabelText('URL search')).toHaveTextContent('?collection=WORDS&source=shared');
+    fireEvent.click(screen.getByRole('button', { name: 'Users', pressed: false }));
+    expect(await screen.findByText('alpha.chain')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'hello again' } });
+    expect(await screen.findByText('ALPHA')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Users', pressed: true })).toBeInTheDocument();
+    expect(await screen.findByText('alpha.chain')).toBeInTheDocument();
+  });
+
+  it('focuses search with slash without stealing keys from an editor or dialog', async () => {
+    renderView();
+    await screen.findByTestId('token-list-table');
+    const input = screen.getByRole('textbox', { name: 'Search tokens, users and posts' });
+    fireEvent.keyDown(document.body, { key: '/' });
+    expect(input).toHaveFocus();
+
+    const editor = render(<textarea aria-label="Draft post" />);
+    const draft = screen.getByRole('textbox', { name: 'Draft post' });
+    draft.focus();
+    fireEvent.keyDown(draft, { key: '/' });
+    expect(draft).toHaveFocus();
+    editor.unmount();
+
+    const dialog = render(<div role="dialog" aria-modal="true" aria-label="Wallet dialog" />);
+    fireEvent.keyDown(document.body, { key: '/' });
+    expect(input).not.toHaveFocus();
+    dialog.unmount();
+    fireEvent.keyDown(document.body, { key: '/', ctrlKey: true });
+    expect(input).not.toHaveFocus();
+    fireEvent.keyDown(document.body, { key: '/', isComposing: true });
+    expect(input).not.toHaveFocus();
   });
 
   it('shows fallback view all buttons and opens the full topic when nothing is found', async () => {

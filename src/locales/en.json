@@ -2192,6 +2192,8 @@
       }
     },
     "tokenList": {
+      "clearSearch": "Clear search",
+      "exploreSections": "Explore sections",
       "tabTokens": "Tokens",
       "tabUsers": "Users",
       "tabPosts": "Posts",

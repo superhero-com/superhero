@@ -1,5 +1,80 @@
 {
+  "trending": {
+    "market": {
+      "layout": "Вид рынка",
+      "table": "Таблица",
+      "cards": "Карточки",
+      "history": "История цены",
+      "noHistory": "История цены недоступна",
+      "supply": "Предложение",
+      "rank": "Место",
+      "details": "О токене",
+      "capShort": "Кап.",
+      "markets": "Рынки токенов"
+    },
+    "tokenList": {
+      "sortBy": "Сортировка",
+      "clearSearch": "Очистить поиск",
+      "exploreSections": "Разделы обзора",
+      "tabTokens": "Токены",
+      "tabUsers": "Люди",
+      "tabPosts": "Посты",
+      "inputAria": "Поиск токенов, пользователей и постов",
+      "searchPlaceholder": "Поиск трендов, пользователей и постов"
+    },
+    "users": {
+      "list": "Список",
+      "cards": "Карточки",
+      "layout": "Вид пользователей",
+      "title": "Лучшие трейдеры",
+      "subtitle": "По прибыли за 7 дней · USD",
+      "leaderboard": "Рейтинг",
+      "trader": "Трейдер",
+      "pnl": "P/L · 7д",
+      "roi": "ROI · 7д",
+      "aum": "AUM",
+      "rank": "Место {{rank}}",
+      "profile": "Открыть профиль: {{name}}",
+      "empty": "Трейдеров пока нет",
+      "emptyCopy": "Активность появится, когда будет доступен рейтинг.",
+      "error": "Не удалось загрузить трейдеров",
+      "errorCopy": "Попробуйте загрузить рейтинг ещё раз.",
+      "retry": "Повторить",
+      "loading": "Загрузка трейдеров",
+      "refreshError": "Не удалось обновить трейдеров"
+    }
+  },
   "common": {
+    "trendminer": {
+      "latestTransactions": {
+        "title": "Последние сделки",
+        "newestFirst": "Сначала новые",
+        "newer": "Более новые сделки",
+        "older": "Более ранние сделки",
+        "bought": "Покупка",
+        "sold": "Продажа",
+        "created": "Создание",
+        "transaction": "Транзакция",
+        "tokens": "токенов",
+        "tokenQuantity": "{{amount}} токенов",
+        "unknownTrader": "Неизвестный трейдер",
+        "unknownToken": "Неизвестный токен",
+        "loading": "Загрузка сделок"
+      }
+    },
+    "buyAeRail": {
+      "title": "Получить AE",
+      "buttonSubtitle": "Купить или заработать æternity"
+    },
+    "rightRail": {
+      "topTraders": "Лучшие трейдеры",
+      "allTimePnl": "Прибыль за всё время · USD",
+      "viewLeaderboard": "Открыть рейтинг",
+      "loadingTraders": "Загрузка лучших трейдеров"
+    },
+    "wallet": {
+      "online": "В сети"
+    },
     "account": {
       "firstBlockchainActivity": "Дата присоединения:"
     },
@@ -137,6 +212,68 @@
       "linkAccount": "Привязать аккаунт",
       "send": "Отправить",
       "receive": "Получить"
+    }
+  },
+  "banners": {
+    "bannerB": {
+      "eyebrow": "Рынки трендов",
+      "title": "Создайте тренд.",
+      "titleAccent": "Сделайте его своим.",
+      "description": "Превратите хештег в торгуемый токен. Создайте рынок вокруг идеи, в которую верите.",
+      "primaryButton": "Создать тренд",
+      "secondaryButton": "Найти тренды",
+      "metaMain": "Хештеги",
+      "metaAccent": "Рынки токенов"
+    },
+    "bannerA": {
+      "eyebrow": "Общение в блокчейне",
+      "title": "Ваш голос.",
+      "titleAccent": "В блокчейне.",
+      "description": "Делитесь важным. Публикуйте посты в блокчейне и получайте чаевые в AE от сообщества.",
+      "primaryButton": "Написать пост",
+      "secondaryButton": "Как это работает",
+      "metaMain": "Посты в блокчейне",
+      "metaAccent": "Чаевые в AE"
+    },
+    "bannerC": {
+      "eyebrow": "ДАО сообществ",
+      "title": "Ваше сообщество.",
+      "titleAccent": "Ваше решение.",
+      "description": "Объединяйте людей вокруг тренда. Владельцы токенов могут вносить предложения, голосовать и определять будущее сообщества.",
+      "primaryButton": "Создать ДАО",
+      "secondaryButton": "Найти ДАО",
+      "metaMain": "Владельцы токенов",
+      "metaAccent": "Управление сообществом"
+    },
+    "bannerD": {
+      "eyebrow": "ИИ-агенты",
+      "title": "Ваш напарник —",
+      "titleAccent": "ИИ-агент.",
+      "description": "Подключите ИИ-агента, чтобы публиковать посты, торговать трендами и действовать в Superhero.",
+      "primaryButton": "Узнать об ИИ-агентах",
+      "secondaryButton": "Как это работает",
+      "metaMain": "API для агентов",
+      "metaAccent": "Действия в блокчейне"
+    },
+    "bannerLanguages": {
+      "eyebrow": "Сообщества без границ",
+      "title": "Ваш язык.",
+      "titleAccent": "Ваш новый тренд.",
+      "description": "Создавайте и находите тренды на английском, китайском, русском и арабском. Общайтесь со своим сообществом на родном языке.",
+      "primaryButton": "Создать тренд",
+      "secondaryButton": "Найти тренды",
+      "metaMain": "Четыре языка",
+      "metaAccent": "Сообщества без границ"
+    },
+    "bannerNew": {
+      "eyebrow": "Приложение Superhero",
+      "title": "Ваши идеи.",
+      "titleAccent": "Супервозможности.",
+      "description": "Публикуйте посты в блокчейне, торгуйте трендами и работайте с ИИ-агентами. Всё на одной платформе.",
+      "primaryButton": "Скачать Superhero",
+      "secondaryButton": "Подробнее",
+      "metaMain": "iOS и Android",
+      "metaAccent": "API для агентов"
     }
   }
 }

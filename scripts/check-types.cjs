@@ -11,7 +11,7 @@
 
 const { spawnSync } = require('child_process');
 
-const BASELINE = 95;
+const BASELINE = 94;
 
 // `--pretty false` because the count is parsed out of the output: pretty mode wraps `error TS…`
 // in ANSI colour, and tsc turns it on by itself the moment stdout looks like a terminal.

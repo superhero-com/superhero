@@ -321,6 +321,7 @@
       "proTips": "نصائح احترافية"
     },
     "buyAeRail": {
+      "buttonSubtitle": "اشترِ أو اكسب æternity",
       "title": "شراء AE",
       "description": "تحتاج AE للرسوم والإكراميات ورموز الترند؟ ابدأ من Gate.io أو قارن المزيد من الطرق.",
       "gateButton": "شراء AE على Gate.io",
@@ -1075,6 +1076,7 @@
       "viewProfile": "عرض الملف الشخصي",
       "collapseWallet": "طيّ المحفظة",
       "expandWallet": "توسيع المحفظة",
+      "online": "متصل بالإنترنت",
       "connected": "متصل",
       "offline": "غير متصل",
       "copyAddress": "نسخ العنوان",
@@ -1116,21 +1118,37 @@
       "mcap": "القيمة السوقية"
     },
     "rightRail": {
+      "allTimePnl": "الأرباح والخسائر الكلية · USD",
+      "viewLeaderboard": "عرض لوحة الصدارة",
+      "loadingTraders": "جارٍ تحميل أفضل المتداولين",
       "aePrice": "سعر AE",
       "volume24h": "حجم 24 ساعة",
       "topTraders": "أفضل المتداولين",
       "topTradersDescription": "شاهد أي المحافظ تتصدّر الأسواق حسب الربح/الخسارة والعائد على الاستثمار والأصول المُدارة في لوحة صدارة التداول.",
       "viewTradingLeaderboard": "عرض لوحة صدارة التداول",
       "quickActions": "إجراءات سريعة",
-      "exploreTrends": "🔍 استكشاف الترندات",
-      "tokenizeATrend": "🚀 رمّز ترندًا",
-      "swapTokens": "🔄 تبديل الرموز",
-      "wrapAe": "📦 تغليف AE",
-      "chat": "💬 الدردشة",
-      "provideLiquidity": "💧 توفير السيولة"
+      "exploreTrends": "استكشاف الترندات",
+      "tokenizeATrend": "رمّز ترندًا",
+      "swapTokens": "تبديل الرموز",
+      "wrapAe": "تغليف AE",
+      "chat": "الدردشة",
+      "provideLiquidity": "توفير السيولة"
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "أحدث النشاطات",
+        "newestFirst": "الأحدث أولاً",
+        "newer": "نشاطات أحدث",
+        "older": "نشاطات أقدم",
+        "bought": "اشترى",
+        "sold": "باع",
+        "created": "أنشأ",
+        "transaction": "معاملة",
+        "tokens": "رموز",
+        "tokenQuantity": "{{amount}} رموز",
+        "unknownTrader": "متداول غير معروف",
+        "unknownToken": "رمز غير معروف",
+        "loading": "جارٍ تحميل النشاطات",
         "loadingTokenName": "جارٍ تحميل اسم الرمز...",
         "loadingBadge": "جارٍ التحميل"
       }
@@ -1990,6 +2008,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "طريقة عرض السوق",
+      "table": "جدول",
+      "cards": "بطاقات",
+      "history": "سجل السعر",
+      "noHistory": "سجل السعر غير متاح",
+      "supply": "المعروض",
+      "rank": "الترتيب",
+      "details": "تفاصيل الرمز",
+      "capShort": "القيمة",
+      "markets": "أسواق الرموز"
+    },
     "noCreatedTokens": "لا توجد رموز منشأة",
     "noCreatedTokensDescription": "لم ينشئ هذا المستخدم أي رموز Trendminer بعد.",
     "success": "تم بنجاح",
@@ -2087,6 +2117,9 @@
       }
     },
     "tokenList": {
+      "sortBy": "ترتيب حسب",
+      "clearSearch": "مسح البحث",
+      "exploreSections": "أقسام الاستكشاف",
       "tabTokens": "الرموز",
       "tabUsers": "المستخدمون",
       "tabPosts": "المنشورات",
@@ -2516,6 +2549,27 @@
       "connectX": "توصيل X",
       "postOnX": "انشر واكسب",
       "done": "جاهز تماماً!"
+    },
+    "users": {
+      "list": "قائمة",
+      "cards": "بطاقات",
+      "layout": "طريقة عرض المستخدمين",
+      "title": "أفضل المتداولين",
+      "subtitle": "مرتّبون حسب الربح والخسارة خلال ٧ أيام · USD",
+      "leaderboard": "عرض الترتيب",
+      "trader": "المتداول",
+      "pnl": "الربح · ٧ أيام",
+      "roi": "العائد · ٧ أيام",
+      "aum": "الأصول المُدارة",
+      "rank": "الترتيب {{rank}}",
+      "profile": "عرض الملف الشخصي: {{name}}",
+      "empty": "لا يوجد متداولون بعد",
+      "emptyCopy": "سيظهر النشاط عند توفر لوحة الترتيب.",
+      "error": "تعذّر تحميل المتداولين",
+      "errorCopy": "حاول مجددًا لعرض أحدث ترتيب.",
+      "retry": "حاول مجددًا",
+      "loading": "جارٍ تحميل المتداولين",
+      "refreshError": "تعذّر تحديث المتداولين"
     }
   },
   "errors": {
@@ -2743,54 +2797,77 @@
   },
   "banners": {
     "bannerA": {
-      "title": "انشر على السلسلة. أكرِم فوراً.",
-      "description": "شارك منشورات تُسوّى على السلسلة. القرّاء يكرّمون مباشرة؛ والمبدعون يحصلون على إيصالات تلقائياً.",
+      "title": "صوتك.",
+      "description": "شارك ما يهمك. انشر على السلسلة وتلقَّ إكراميات AE من مجتمعك.",
       "chips": [
         "إكراميات مباشرة",
         "إيصالات على السلسلة"
       ],
       "primaryButton": "ابدأ النشر",
-      "secondaryButton": "كيف يعمل"
+      "secondaryButton": "كيف يعمل",
+      "eyebrow": "تواصل على السلسلة",
+      "titleAccent": "على السلسلة.",
+      "metaMain": "منشورات على السلسلة",
+      "metaAccent": "إكراميات AE"
     },
     "bannerC": {
-      "title": "من الإشارة → الخزينة: DAOs ذات الغرض.",
-      "description": "رسوم الشراء على #الترندات تُغذّي DAOs تلقائياً ليحصل أفضل الأفكار على ميزانيات ومراحل.",
+      "title": "مجتمعك.",
+      "description": "اجمع الناس حول ترند. يمكن لحاملي الرموز تقديم المقترحات والتصويت وتحديد الخطوة التالية.",
       "chips": [
         "الرسوم → الخزينة",
         "مدفوعات المبدعين"
       ],
-      "primaryButton": "ابدأ DAO ذات غرض",
-      "secondaryButton": "عرض DAOs"
+      "primaryButton": "أنشئ DAO",
+      "secondaryButton": "استكشف مجتمعات DAO",
+      "eyebrow": "مجتمعات DAO",
+      "titleAccent": "قرارك.",
+      "metaMain": "حاملو الرموز",
+      "metaAccent": "حوكمة المجتمع"
     },
     "keyFeatures": "المزايا الرئيسية",
     "bannerB": {
-      "title": "رمّز ‎#الترندات. تاجِر بالإشارة.",
-      "description": "‎#الترندات أسواق. راهن على الثقافة ودع الأسعار تكشف ما يهمّ.",
+      "title": "أطلق ترندًا.",
+      "description": "حوّل وسمًا إلى رمز قابل للتداول. أنشئ سوقًا حول فكرة تؤمن بها.",
       "chips": [
         "مؤشرات الشعبية",
         "منحنى الترابط"
       ],
-      "primaryButton": "أطلق ‎#ترندًا",
-      "secondaryButton": "استكشف ‎#الترندات"
+      "primaryButton": "أطلق ترندًا",
+      "secondaryButton": "استكشف الترندات",
+      "eyebrow": "أسواق الترندات",
+      "titleAccent": "واجعله لك.",
+      "metaMain": "وسوم",
+      "metaAccent": "أسواق الرموز"
     },
     "bannerD": {
-      "titleMain": "وكلاء الذكاء الاصطناعي يتاجرون وينشرون من أجلك",
-      "titleAccent": "على مدار الساعة.",
-      "description": "انشر وكلاء ذكاء اصطناعي لتنمية ترنداتك تلقائيًا—بالنشر والتداول والتوسّع أثناء نومك.",
-      "primaryButton": "انشر وكيل ذكاء اصطناعي",
-      "secondaryButton": "كيف يعمل"
+      "titleAccent": "زميلك الذكي.",
+      "description": "اربط وكيل ذكاء اصطناعي لينشر ويتداول الترندات وينفّذ الإجراءات على Superhero.",
+      "primaryButton": "استكشف الوكلاء",
+      "secondaryButton": "كيف يعمل",
+      "eyebrow": "وكلاء الذكاء الاصطناعي",
+      "title": "تعرّف على",
+      "metaMain": "واجهة API للوكلاء",
+      "metaAccent": "إجراءات على السلسلة"
     },
     "bannerLanguages": {
-      "title": "لغتك. سوقك.",
-      "description": "أنشئ ترندات بالإنجليزية أو 中文 أو Русский أو العربية. دعم أصلي على السلسلة للمجتمعات العالمية—بلا ترجمة وبلا حواجز.",
-      "primaryButton": "أطلق ‎#ترندًا",
-      "secondaryButton": "عرض كل الترندات"
+      "title": "لغتك.",
+      "description": "أنشئ واكتشف الترندات بالإنجليزية والصينية والروسية والعربية. اعثر على مجتمعك بلغتك.",
+      "primaryButton": "أطلق ترندًا",
+      "secondaryButton": "استكشف الترندات",
+      "eyebrow": "مجتمعات عالمية",
+      "titleAccent": "ترندك القادم.",
+      "metaMain": "أربع لغات",
+      "metaAccent": "مجتمعات عالمية"
     },
     "bannerNew": {
-      "title": "مصمم للبشر ووكلاء الذكاء الاصطناعي.",
-      "description": "iOS وAndroid ووصول كامل عبر API لوكلاء الذكاء الاصطناعي. تداول الترندات، انشر على السلسلة، واملك محفظتك—كل ذلك في منصة واحدة.",
-      "primaryButton": "ابدأ الآن",
-      "secondaryButton": "اعرف المزيد"
+      "title": "أفكارك.",
+      "description": "انشر على السلسلة، وتداول الترندات، وتعاون مع وكلاء الذكاء الاصطناعي. كل ذلك في منصة واحدة.",
+      "primaryButton": "احصل على Superhero",
+      "secondaryButton": "اعرف المزيد",
+      "eyebrow": "تطبيق Superhero",
+      "titleAccent": "بقوة خارقة.",
+      "metaMain": "iOS وAndroid",
+      "metaAccent": "واجهة API للوكلاء"
     }
   },
   "addTokens": {

@@ -398,9 +398,10 @@
       "nodeConnection": "Node Connection",
       "block": "Block",
       "yourWallet": "Your Wallet",
-      "viewProfile": "VIEW PROFILE",
+      "viewProfile": "View profile",
       "collapseWallet": "Collapse wallet",
       "expandWallet": "Expand wallet",
+      "online": "Online",
       "connected": "Connected",
       "offline": "Offline",
       "copyAddress": "Copy address",
@@ -437,6 +438,7 @@
       "proTips": "Pro Tips"
     },
     "buyAeRail": {
+      "buttonSubtitle": "Buy or earn æternity",
       "title": "Get AE",
       "description": "Need AE for fees, tips, and trend tokens? Explore many options to earn or buy AE.",
       "gateButton": "Buy AE on Gate.io",
@@ -601,6 +603,19 @@
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "Latest activity",
+        "newestFirst": "Newest first",
+        "newer": "Newer activity",
+        "older": "Older activity",
+        "bought": "Bought",
+        "sold": "Sold",
+        "created": "Created",
+        "transaction": "Transaction",
+        "tokens": "tokens",
+        "tokenQuantity": "{{amount}} tokens",
+        "unknownTrader": "Unknown trader",
+        "unknownToken": "Unknown token",
+        "loading": "Loading activity",
         "loadingTokenName": "Loading token name...",
         "loadingBadge": "LOADING"
       }
@@ -1199,18 +1214,21 @@
       "removeButton": "Remove {{pct}} Liquidity"
     },
     "rightRail": {
+      "allTimePnl": "All-time PnL · USD",
+      "viewLeaderboard": "View leaderboard",
+      "loadingTraders": "Loading top traders",
       "aePrice": "AE Price",
       "volume24h": "24h Volume",
       "topTraders": "Top Traders",
       "topTradersDescription": "See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.",
       "viewTradingLeaderboard": "View Trading Leaderboard",
       "quickActions": "Quick Actions",
-      "exploreTrends": "🔍 Explore Trends",
-      "tokenizeATrend": "🚀 Tokenize a Trend",
-      "swapTokens": "🔄 Swap Tokens",
-      "wrapAe": "📦 Wrap AE",
-      "chat": "💬 Chat",
-      "provideLiquidity": "💧 Provide Liquidity"
+      "exploreTrends": "Explore trends",
+      "tokenizeATrend": "Tokenize a trend",
+      "swapTokens": "Swap tokens",
+      "wrapAe": "Wrap AE",
+      "chat": "Chat",
+      "provideLiquidity": "Provide liquidity"
     },
     "addressChip": {
       "clickToCopyAddress": "Click to copy address",
@@ -2059,6 +2077,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "Market layout",
+      "table": "Table",
+      "cards": "Cards",
+      "history": "Price history",
+      "noHistory": "Price history unavailable",
+      "supply": "Supply",
+      "rank": "Rank",
+      "details": "Token details",
+      "capShort": "MC",
+      "markets": "Token markets"
+    },
     "newBadge": "NEW",
     "assetInput": {
       "balanceLabel": "Balance:",
@@ -2194,6 +2224,9 @@
       }
     },
     "tokenList": {
+      "sortBy": "Sort by",
+      "clearSearch": "Clear search",
+      "exploreSections": "Explore sections",
       "tabTokens": "Tokens",
       "tabUsers": "Users",
       "tabPosts": "Posts",
@@ -2585,6 +2618,27 @@
       "connectX": "Connect X",
       "postOnX": "Post & earn",
       "done": "All set!"
+    },
+    "users": {
+      "list": "List",
+      "cards": "Cards",
+      "layout": "User display mode",
+      "title": "Top traders",
+      "subtitle": "Ranked by 7-day P/L · USD",
+      "leaderboard": "View leaderboard",
+      "trader": "Trader",
+      "pnl": "P/L · 7d",
+      "roi": "ROI · 7d",
+      "aum": "AUM",
+      "rank": "Rank {{rank}}",
+      "profile": "View profile: {{name}}",
+      "empty": "No traders to show yet",
+      "emptyCopy": "Trading activity will appear here when the leaderboard is available.",
+      "error": "Couldn’t load traders",
+      "errorCopy": "Try again to see the latest rankings.",
+      "retry": "Try again",
+      "loading": "Loading traders",
+      "refreshError": "Couldn’t refresh traders"
     }
   },
   "errors": {
@@ -2813,53 +2867,76 @@
   "banners": {
     "keyFeatures": "Key features",
     "bannerA": {
-      "title": "Post on-chain. Get tipped instantly.",
-      "description": "Share your thoughts on-chain. Get tipped in seconds when your ideas resonate—no middlemen, pure value.",
+      "title": "Your voice.",
+      "description": "Share what matters. Publish posts on-chain and receive AE tips from your community.",
       "chips": [
         "Inline tipping",
         "On‑chain receipts"
       ],
       "primaryButton": "Start posting",
-      "secondaryButton": "How it works"
+      "secondaryButton": "How it works",
+      "eyebrow": "On-chain social",
+      "titleAccent": "On-chain.",
+      "metaMain": "On-chain posts",
+      "metaAccent": "AE tips"
     },
     "bannerC": {
-      "title": "On-chain attention markets.",
-      "description": "Every trend is a live market for attention. Trade the signal—and holders form a DAO that governs the community behind it.",
+      "title": "Your community.",
+      "description": "Bring people together around a trend. Token holders can propose, vote, and shape what comes next.",
       "chips": [
         "Attention markets",
         "Community DAO"
       ],
       "primaryButton": "Start a DAO",
-      "secondaryButton": "See DAOs"
+      "secondaryButton": "Explore DAOs",
+      "eyebrow": "Community DAOs",
+      "titleAccent": "Your say.",
+      "metaMain": "Token holders",
+      "metaAccent": "Community governance"
     },
     "bannerB": {
-      "title": "Turn #trends into tradable tokens.",
-      "description": "Every hashtag becomes a market. Back the ideas you believe in—when they grow, you win.",
+      "title": "Start a trend.",
+      "description": "Turn a hashtag into a tradable token. Build a market around an idea you believe in.",
       "chips": [
         "Market signals",
         "Bonding curve"
       ],
-      "primaryButton": "Launch a #trend",
-      "secondaryButton": "Explore #trends"
+      "primaryButton": "Launch a trend",
+      "secondaryButton": "Explore trends",
+      "eyebrow": "Trend markets",
+      "titleAccent": "Make it yours.",
+      "metaMain": "Hashtags",
+      "metaAccent": "Token markets"
     },
     "bannerD": {
-      "titleMain": "AI agents trade and post for you",
-      "titleAccent": "24/7.",
-      "description": "Deploy AI agents to grow your trends automatically—posting, trading, and scaling while you sleep.",
-      "primaryButton": "Deploy AI agent",
-      "secondaryButton": "How it works"
+      "titleAccent": "AI teammate.",
+      "description": "Connect an AI agent to post, trade trends, and take action on Superhero.",
+      "primaryButton": "Explore AI agents",
+      "secondaryButton": "How it works",
+      "eyebrow": "AI agents",
+      "title": "Meet your",
+      "metaMain": "Agent API",
+      "metaAccent": "On-chain actions"
     },
     "bannerLanguages": {
-      "title": "Your language. Your market.",
-      "description": "Create trends in English, 中文, Русский, or العربية. Native on-chain support for global communities—no translation, no barriers.",
-      "primaryButton": "Launch a #trend",
-      "secondaryButton": "See all trends"
+      "title": "Your language.",
+      "description": "Create and discover trends in English, 中文, Русский, and العربية. Find your community in your own words.",
+      "primaryButton": "Launch a trend",
+      "secondaryButton": "Explore trends",
+      "eyebrow": "Global communities",
+      "titleAccent": "Your next trend.",
+      "metaMain": "Four languages",
+      "metaAccent": "Global communities"
     },
     "bannerNew": {
-      "title": "Built for humans and AI agents.",
-      "description": "iOS, Android, and full API access for AI agents. Trade trends, post on-chain, and own your wallet—all in one platform.",
-      "primaryButton": "Get started",
-      "secondaryButton": "Learn more"
+      "title": "Your ideas.",
+      "description": "Post on-chain, trade trends, and team up with AI agents. All from one platform.",
+      "primaryButton": "Get Superhero",
+      "secondaryButton": "Learn more",
+      "eyebrow": "The Superhero app",
+      "titleAccent": "Superpowered.",
+      "metaMain": "iOS & Android",
+      "metaAccent": "Agent API"
     }
   },
   "addTokens": {

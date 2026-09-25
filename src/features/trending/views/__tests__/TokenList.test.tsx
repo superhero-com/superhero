@@ -4,7 +4,7 @@ import {
   fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -70,13 +70,28 @@ vi.mock('../../components/TokenListTable', () => ({
   ),
 }));
 
+vi.mock('../../components/ExploreTokenMarkets', () => ({
+  default: ({ pages, layout }: any) => (
+    <div data-testid="token-markets" data-layout={layout}>
+      {(pages?.flatMap((page: any) => page.items) ?? []).map((item: any) => (
+        <span key={item.address}>{item.name}</span>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock('../../../social/components/ReplyToFeedItem', () => ({
   default: ({ item }: any) => (
     <div data-testid="reply-to-feed-item">{item.content}</div>
   ),
 }));
 
-function renderView() {
+const CurrentSearch = () => {
+  const { search } = useLocation();
+  return <output aria-label="URL search">{search}</output>;
+};
+
+function renderView(entry = '/trends/tokens') {
   const client = new QueryClient({
     defaultOptions: {
       queries: {
@@ -86,8 +101,9 @@ function renderView() {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[entry]}>
       <QueryClientProvider client={client}>
+        <CurrentSearch />
         <TokenList />
       </QueryClientProvider>
     </MemoryRouter>,
@@ -187,7 +203,7 @@ describe('TokenList search experience', () => {
     renderView();
 
     await waitFor(() => {
-      expect(screen.getByTestId('token-list-table')).toBeInTheDocument();
+      expect(screen.getByTestId('token-markets')).toBeInTheDocument();
     });
     expect(screen.getByText('Tokenized Trends')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Tokenize Trend' })).toBeInTheDocument();
@@ -196,13 +212,52 @@ describe('TokenList search experience', () => {
     await waitFor(() => {
       expect(screen.getByText('alpha.chain')).toBeInTheDocument();
     });
-    expect(screen.getByText('Top Traders')).toBeInTheDocument();
+    expect(screen.getByText('Top traders')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Posts' }));
     await waitFor(() => {
       expect(screen.getByText('Popular post')).toBeInTheDocument();
     });
     expect(screen.getByText('Popular Posts')).toBeInTheDocument();
+  });
+
+  it('defaults to Table and switches layouts without changing filters or refetching tokens', async () => {
+    renderView('/trends/tokens?collection=CHINESE');
+    await screen.findByText('DEFAULT');
+    expect(screen.getByRole('button', { name: 'Table', pressed: true })).toBeInTheDocument();
+    const queryCount = tokenServiceMocks.listAll.mock.calls.length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    expect(screen.getByTestId('token-markets')).toHaveAttribute('data-layout', 'cards');
+    expect(screen.getByLabelText('URL search')).toHaveTextContent('collection=CHINESE');
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveTextContent('Trending');
+    expect(screen.getByText('DEFAULT')).toBeInTheDocument();
+    expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(queryCount);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Table' }));
+    expect(screen.getByTestId('token-markets')).toHaveAttribute('data-layout', 'table');
+    expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(queryCount);
+  });
+
+  it('defaults Users to List and preserves its ranking and layout across tab changes', async () => {
+    renderView();
+    fireEvent.click(screen.getByRole('button', { name: 'Users' }));
+    await screen.findByText('alpha.chain');
+    expect(screen.getByRole('button', { name: 'List', pressed: true })).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledWith(12);
+    const queryCount = searchApiMocks.fetchTopTraders.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    expect(screen.getByRole('button', { name: 'Cards', pressed: true })).toBeInTheDocument();
+    expect(screen.getByText('+$1,200.00')).toBeInTheDocument();
+    expect(screen.getByText('alpha.chain')).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledTimes(queryCount);
+    fireEvent.click(screen.getByRole('button', { name: 'Tokens' }));
+    await screen.findByTestId('token-markets');
+    expect(screen.getByRole('button', { name: 'Table', pressed: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Users' }));
+    expect(screen.getByRole('button', { name: 'Cards', pressed: true })).toBeInTheDocument();
+    expect(screen.getByText('alpha.chain')).toBeInTheDocument();
+    expect(searchApiMocks.fetchTopTraders).toHaveBeenCalledTimes(queryCount);
   });
 
   it('renders search sections and expands tokens with view all', async () => {
@@ -234,6 +289,53 @@ describe('TokenList search experience', () => {
       expect(screen.getByText('DELTA')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+  });
+
+  it('clears a linked search without discarding other URL filters, then restores the selected section', async () => {
+    renderView('/trends/tokens?q=hello&collection=WORDS&source=shared');
+    expect(await screen.findByText('ALPHA')).toBeInTheDocument();
+    const input = screen.getByRole('textbox', { name: 'Search tokens, users and posts' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(screen.getByLabelText('URL search')).toHaveTextContent('?collection=WORDS&source=shared');
+    fireEvent.click(screen.getByRole('button', { name: 'Users', pressed: false }));
+    expect(await screen.findByText('alpha.chain')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'hello again' } });
+    expect(await screen.findByText('ALPHA')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Users', pressed: true })).toBeInTheDocument();
+    expect(await screen.findByText('alpha.chain')).toBeInTheDocument();
+  });
+
+  it('focuses search with slash without stealing keys from an editor or dialog', async () => {
+    renderView();
+    await screen.findByTestId('token-markets');
+    const input = screen.getByRole('textbox', { name: 'Search tokens, users and posts' });
+    fireEvent.keyDown(document.body, { key: '/' });
+    expect(input).toHaveFocus();
+
+    const editor = render(<textarea aria-label="Draft post" />);
+    const draft = screen.getByRole('textbox', { name: 'Draft post' });
+    draft.focus();
+    fireEvent.keyDown(draft, { key: '/' });
+    expect(draft).toHaveFocus();
+    editor.unmount();
+
+    const dialog = render(<div role="dialog" aria-modal="true" aria-label="Wallet dialog" />);
+    fireEvent.keyDown(document.body, { key: '/' });
+    expect(input).not.toHaveFocus();
+    dialog.unmount();
+    fireEvent.keyDown(document.body, { key: '/', ctrlKey: true });
+    expect(input).not.toHaveFocus();
+    fireEvent.keyDown(document.body, { key: '/', isComposing: true });
+    expect(input).not.toHaveFocus();
   });
 
   it('shows fallback view all buttons and opens the full topic when nothing is found', async () => {
@@ -274,7 +376,7 @@ describe('TokenList search experience', () => {
     fireEvent.click(viewAllButtons[1]);
 
     await waitFor(() => {
-      expect(screen.getByText('Top Traders')).toBeInTheDocument();
+      expect(screen.getByText('Top traders')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Users' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tokens' })).toBeInTheDocument();

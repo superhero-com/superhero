@@ -321,6 +321,7 @@
       "proTips": "专业提示"
     },
     "buyAeRail": {
+      "buttonSubtitle": "购买或赚取 æternity",
       "title": "购买 AE",
       "description": "需要 AE 来支付手续费、打赏和趋势代币？从 Gate.io 开始，或比较更多方式。",
       "gateButton": "在 Gate.io 上购买 AE",
@@ -1075,6 +1076,7 @@
       "viewProfile": "查看资料",
       "collapseWallet": "收起钱包",
       "expandWallet": "展开钱包",
+      "online": "在线",
       "connected": "已连接",
       "offline": "离线",
       "copyAddress": "复制地址",
@@ -1116,21 +1118,37 @@
       "mcap": "市值"
     },
     "rightRail": {
+      "allTimePnl": "累计盈亏 · USD",
+      "viewLeaderboard": "查看排行榜",
+      "loadingTraders": "正在加载顶级交易者",
       "aePrice": "AE 价格",
       "volume24h": "24 小时成交量",
       "topTraders": "顶级交易者",
       "topTradersDescription": "在交易排行榜上查看哪些钱包按盈亏、投资回报率和 AUM 引领市场。",
       "viewTradingLeaderboard": "查看交易排行榜",
       "quickActions": "快捷操作",
-      "exploreTrends": "🔍 探索趋势",
-      "tokenizeATrend": "🚀 代币化趋势",
-      "swapTokens": "🔄 兑换代币",
-      "wrapAe": "📦 封装 AE",
-      "chat": "💬 聊天",
-      "provideLiquidity": "💧 提供流动性"
+      "exploreTrends": "探索趋势",
+      "tokenizeATrend": "代币化趋势",
+      "swapTokens": "兑换代币",
+      "wrapAe": "封装 AE",
+      "chat": "聊天",
+      "provideLiquidity": "提供流动性"
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "最新动态",
+        "newestFirst": "最新优先",
+        "newer": "较新动态",
+        "older": "较早动态",
+        "bought": "买入",
+        "sold": "卖出",
+        "created": "创建",
+        "transaction": "交易",
+        "tokens": "代币",
+        "tokenQuantity": "{{amount}} 代币",
+        "unknownTrader": "未知交易者",
+        "unknownToken": "未知代币",
+        "loading": "正在加载动态",
         "loadingTokenName": "正在加载代币名称…",
         "loadingBadge": "加载中"
       }
@@ -1990,6 +2008,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "市场布局",
+      "table": "表格",
+      "cards": "卡片",
+      "history": "价格走势",
+      "noHistory": "暂无价格历史",
+      "supply": "供应量",
+      "rank": "排名",
+      "details": "代币详情",
+      "capShort": "市值",
+      "markets": "代币市场"
+    },
     "noCreatedTokens": "无已创建代币",
     "noCreatedTokensDescription": "此用户尚未创建任何 Trendminer 代币。",
     "success": "成功",
@@ -2087,6 +2117,9 @@
       }
     },
     "tokenList": {
+      "sortBy": "排序方式",
+      "clearSearch": "清除搜索",
+      "exploreSections": "探索分类",
       "tabTokens": "代币",
       "tabUsers": "用户",
       "tabPosts": "帖子",
@@ -2516,6 +2549,27 @@
       "connectX": "连接 X",
       "postOnX": "发帖赚取",
       "done": "全部完成！"
+    },
+    "users": {
+      "list": "列表",
+      "cards": "卡片",
+      "layout": "用户显示方式",
+      "title": "顶尖交易者",
+      "subtitle": "按 7 天盈亏排名 · USD",
+      "leaderboard": "查看排行榜",
+      "trader": "交易者",
+      "pnl": "盈亏 · 7天",
+      "roi": "收益率 · 7天",
+      "aum": "资产规模",
+      "rank": "排名 {{rank}}",
+      "profile": "查看个人资料: {{name}}",
+      "empty": "暂无交易者",
+      "emptyCopy": "排行榜可用时，将显示交易活动。",
+      "error": "无法加载交易者",
+      "errorCopy": "请重试以查看最新排名。",
+      "retry": "重试",
+      "loading": "正在加载交易者",
+      "refreshError": "无法刷新交易者"
     }
   },
   "errors": {
@@ -2743,54 +2797,77 @@
   },
   "banners": {
     "bannerA": {
-      "title": "链上发帖。即时打赏。",
-      "description": "分享在链上结算的帖子。读者可内联打赏；创作者自动获得收据。",
+      "title": "你的声音，",
+      "description": "分享你在意的事。发布链上帖子，接收社区送来的 AE 打赏。",
       "chips": [
         "内联打赏",
         "链上收据"
       ],
       "primaryButton": "开始发帖",
-      "secondaryButton": "工作原理"
+      "secondaryButton": "了解运作方式",
+      "eyebrow": "链上社交",
+      "titleAccent": "记录在链上。",
+      "metaMain": "链上帖子",
+      "metaAccent": "AE 打赏"
     },
     "bannerC": {
-      "title": "从信号 → 金库：目的型 DAO。",
-      "description": "对 #trends 的买入手续费自动为 DAO 注入资金，让最优秀的想法获得预算和里程碑。",
+      "title": "你的社区，",
+      "description": "用趋势凝聚社区。代币持有者可以发起提案、参与投票，共同决定下一步。",
       "chips": [
         "手续费 → 金库",
         "创作者分成"
       ],
-      "primaryButton": "创建目的型 DAO",
-      "secondaryButton": "查看 DAO"
+      "primaryButton": "创建 DAO",
+      "secondaryButton": "探索 DAO",
+      "eyebrow": "社区 DAO",
+      "titleAccent": "你来做主。",
+      "metaMain": "代币持有者",
+      "metaAccent": "社区治理"
     },
     "keyFeatures": "主要功能",
     "bannerB": {
-      "title": "代币化 #trends。交易信号。",
-      "description": "#Trends 即市场。做多文化，让价格揭示真正重要的东西。",
+      "title": "发起趋势，",
+      "description": "将话题标签变成可交易的代币，围绕你相信的创意建立市场。",
       "chips": [
         "热度信号",
         "联合曲线"
       ],
-      "primaryButton": "发起 #trend",
-      "secondaryButton": "探索 #trends"
+      "primaryButton": "发起趋势",
+      "secondaryButton": "探索趋势",
+      "eyebrow": "趋势市场",
+      "titleAccent": "由你定义。",
+      "metaMain": "话题标签",
+      "metaAccent": "代币市场"
     },
     "bannerD": {
-      "titleMain": "AI 智能体为您全天候交易和发帖",
-      "titleAccent": "24/7。",
-      "description": "部署 AI 智能体自动增长您的 trend——在您休息时持续发帖、交易和扩展。",
-      "primaryButton": "部署 AI 智能体",
-      "secondaryButton": "工作原理"
+      "titleAccent": "AI 队友。",
+      "description": "连接 AI 智能体，在 Superhero 上发帖、交易趋势并执行操作。",
+      "primaryButton": "探索 AI 智能体",
+      "secondaryButton": "了解运作方式",
+      "eyebrow": "AI 智能体",
+      "title": "认识你的",
+      "metaMain": "智能体 API",
+      "metaAccent": "链上操作"
     },
     "bannerLanguages": {
-      "title": "您的语言。您的市场。",
-      "description": "用英语、中文、Русский 或 العربية 创建 trend。原生链上支持全球社区——无需翻译，没有障碍。",
-      "primaryButton": "发起 #trend",
-      "secondaryButton": "查看所有 trend"
+      "title": "你的语言，",
+      "description": "用英语、中文、俄语或阿拉伯语创建和发现趋势，用熟悉的语言找到你的社区。",
+      "primaryButton": "发起趋势",
+      "secondaryButton": "探索趋势",
+      "eyebrow": "全球社区",
+      "titleAccent": "你的新趋势。",
+      "metaMain": "四种语言",
+      "metaAccent": "全球社区"
     },
     "bannerNew": {
-      "title": "为人类和 AI 智能体而生。",
-      "description": "iOS、Android 以及面向 AI 智能体的完整 API 访问。交易 trend、链上发帖，并拥有自己的钱包——一站式平台。",
-      "primaryButton": "开始使用",
-      "secondaryButton": "了解更多"
+      "title": "你的创意，",
+      "description": "发布链上帖子、交易趋势，与 AI 智能体协作。尽在同一个平台。",
+      "primaryButton": "获取 Superhero",
+      "secondaryButton": "了解更多",
+      "eyebrow": "Superhero 应用",
+      "titleAccent": "超能加持。",
+      "metaMain": "iOS 与 Android",
+      "metaAccent": "智能体 API"
     }
   },
   "addTokens": {

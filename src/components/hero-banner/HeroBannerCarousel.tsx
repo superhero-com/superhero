@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import { Sparkles } from 'lucide-react';
-import SpaceEffects from './SpaceEffects';
+import {
+  Bot, ChevronLeft, ChevronRight, Globe2, Hash, MessageCircle, Smartphone, Sparkles, Users,
+} from 'lucide-react';
 import BannerNew from './BannerNew';
 import BannerA from './BannerA';
 import BannerB from './BannerB';
@@ -12,10 +13,18 @@ import BannerC from './BannerC';
 import BannerD from './BannerD';
 import BannerLanguages from './BannerLanguages';
 import './banner.styles.css';
-import './bannerLanguages.styles.css';
+import '../layout/RailCards.css';
+import './HeroCarousel.css';
 
 const DISMISS_KEY = 'hero_banner_dismissed_until';
-const SLIDE_COUNT = 6;
+const SLIDE_KEYS = ['bannerB', 'bannerA', 'bannerC', 'bannerD', 'bannerLanguages', 'bannerNew'];
+const SLIDE_ICONS = [Hash, MessageCircle, Users, Bot, Globe2, Smartphone];
+const LANGUAGE_COLLECTIONS = [
+  { label: 'English', collection: 'WORDS', lang: 'en' },
+  { label: '中文', collection: 'CHINESE', lang: 'zh' },
+  { label: 'Русский', collection: 'RUSSIAN', lang: 'ru' },
+  { label: 'العربية', collection: 'ARABIC', lang: 'ar' },
+];
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
@@ -64,14 +73,21 @@ const MarqueeText = ({ text }: { text: string }) => {
 };
 
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const direction = i18n.dir() as 'ltr' | 'rtl';
   const { t: tSocial } = useTranslation('social');
   const { t: tBanners } = useTranslation('banners');
   const [collapsed, setCollapsed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const isIOSWebKit = React.useMemo(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('ios-webkit');
+  const [reducedMotion, setReducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
   }, []);
 
   // Fresh Autoplay instance every time we toggle between expanded/collapsed.
@@ -79,10 +95,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   // destroyed Embla engine ("internalEngine undefined"), which is what made the
   // carousel mis-measure and peek after a few dismiss/expand cycles.
   const autoplayPlugin = React.useMemo(
-    () => Autoplay({ delay: 10000, stopOnInteraction: false, stopOnLastSnap: false }),
+    () => Autoplay({
+      delay: 10000, stopOnInteraction: false, stopOnLastSnap: false, playOnInit: !reducedMotion,
+    }),
     // `collapsed` is intentional: force a brand-new plugin each toggle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [collapsed],
+    [collapsed, reducedMotion],
   );
 
   const emblaPlugins = React.useMemo(() => [autoplayPlugin], [autoplayPlugin]);
@@ -95,7 +113,8 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     loop: true,
     duration: 20,
     align: 'start' as const,
-  }), []);
+    direction,
+  }), [direction]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     emblaOptions,
@@ -107,10 +126,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   // loops (stable with the centered peek layout) and dwells long enough on
   // each card to read the title before advancing.
   const collapsedAutoplay = React.useMemo(
-    () => Autoplay({ delay: 12000, stopOnInteraction: false, stopOnLastSnap: false }),
+    () => Autoplay({
+      delay: 12000, stopOnInteraction: false, stopOnLastSnap: false, playOnInit: !reducedMotion,
+    }),
     // `collapsed` is intentional: force a brand-new plugin each toggle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [collapsed],
+    [collapsed, reducedMotion],
   );
   const collapsedPlugins = React.useMemo(() => [collapsedAutoplay], [collapsedAutoplay]);
   const collapsedOptions = React.useMemo(() => ({
@@ -118,7 +139,8 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     duration: 20,
     align: 'center' as const,
     containScroll: false as const,
-  }), []);
+    direction,
+  }), [direction]);
   const [collapsedEmblaRef, collapsedEmblaApi] = useEmblaCarousel(
     collapsedOptions,
     collapsedPlugins,
@@ -130,42 +152,40 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   const collapsedSlides = [
     {
       key: 'b',
-      text: tBanners('bannerB.title'),
+      text: `${tBanners('bannerB.title')} ${tBanners('bannerB.titleAccent')}`,
       cta: tBanners('bannerB.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'a',
-      text: tBanners('bannerA.title'),
+      text: `${tBanners('bannerA.title')} ${tBanners('bannerA.titleAccent')}`,
       cta: tBanners('bannerA.primaryButton'),
       onClick: onStartPosting,
     },
     {
       key: 'c',
-      text: tBanners('bannerC.title'),
+      text: `${tBanners('bannerC.title')} ${tBanners('bannerC.titleAccent')}`,
       cta: tBanners('bannerC.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'd',
-      text: `${tBanners('bannerD.titleMain')} ${tBanners('bannerD.titleAccent')}`,
+      text: `${tBanners('bannerD.title')} ${tBanners('bannerD.titleAccent')}`,
       cta: tBanners('bannerD.primaryButton'),
       link: '/landing',
     },
     {
       key: 'languages',
       badge: tSocial('feedAnnouncement.new'),
-      text: tBanners('bannerLanguages.title'),
+      text: `${tBanners('bannerLanguages.title')} ${tBanners('bannerLanguages.titleAccent')}`,
       cta: tBanners('bannerLanguages.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'new',
       badge: tSocial('feedAnnouncement.new'),
-      text: tSocial('feedAnnouncement.text'),
-      // installNow already ends in "→" for standalone use; strip it here since
-      // .hero-collapsed__link::after appends its own arrow to every CTA.
-      cta: tSocial('feedAnnouncement.installNow').replace(/\s*→\s*$/, ''),
+      text: `${tBanners('bannerNew.title')} ${tBanners('bannerNew.titleAccent')}`,
+      cta: tBanners('bannerNew.primaryButton'),
       link: '/landing',
     },
   ];
@@ -219,12 +239,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     onSelect();
 
     // Start autoplay once emblaApi is ready
-    emblaApi.plugins()?.autoplay?.play();
+    if (!reducedMotion) emblaApi.plugins()?.autoplay?.play();
 
     return () => {
       emblaApi.off('select', onSelect);
     };
-  }, [emblaApi]);
+  }, [emblaApi, reducedMotion]);
 
   // Track the centered slide in the collapsed carousel (for the active/dim state)
   useEffect(() => {
@@ -236,12 +256,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     onSelect();
 
     // Start collapsed autoplay once emblaApi is ready
-    collapsedEmblaApi.plugins()?.autoplay?.play();
+    if (!reducedMotion) collapsedEmblaApi.plugins()?.autoplay?.play();
 
     return () => {
       collapsedEmblaApi.off('select', onSelect);
     };
-  }, [collapsedEmblaApi]);
+  }, [collapsedEmblaApi, reducedMotion]);
 
   // Carries the active slide index across a collapse/expand toggle (set by
   // handleDismiss/handleExpand just before switching). The expanded and
@@ -273,16 +293,16 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   }, [emblaApi]);
 
   const handleMouseLeave = useCallback(() => {
-    emblaApi?.plugins()?.autoplay?.play();
-  }, [emblaApi]);
+    if (!reducedMotion) emblaApi?.plugins()?.autoplay?.play();
+  }, [emblaApi, reducedMotion]);
 
   const handleCollapsedMouseEnter = useCallback(() => {
     collapsedEmblaApi?.plugins()?.autoplay?.stop();
   }, [collapsedEmblaApi]);
 
   const handleCollapsedMouseLeave = useCallback(() => {
-    collapsedEmblaApi?.plugins()?.autoplay?.play();
-  }, [collapsedEmblaApi]);
+    if (!reducedMotion) collapsedEmblaApi?.plugins()?.autoplay?.play();
+  }, [collapsedEmblaApi, reducedMotion]);
 
   const handleDismiss = () => {
     try {
@@ -323,26 +343,16 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     [emblaApi],
   );
 
-  // Marks the slides that are actually on screen (current + both neighbours,
-  // wrapping since the carousel loops). Expensive per-frame effects inside a
-  // slide — the graphic card's backdrop blur, the primary button's blended
-  // shine — are scoped to this class so the four clipped slides stop paying
-  // for them. Purely a cost cut: what the user sees is unchanged.
-  const isNearSlide = (index: number) => {
-    const last = SLIDE_COUNT - 1;
-    const prev = selectedIndex === 0 ? last : selectedIndex - 1;
-    const next = selectedIndex === last ? 0 : selectedIndex + 1;
-    return index === selectedIndex || index === prev || index === next;
-  };
-
   const slideClass = (index: number) => (
-    `hero-banner__slide${isNearSlide(index) ? ' hero-banner__slide--near' : ''}`
+    `hero-carousel__slide${selectedIndex === index ? ' is-active' : ''}`
   );
+  const MetadataIcon = SLIDE_ICONS[selectedIndex];
+  const metadataKey = SLIDE_KEYS[selectedIndex];
 
   if (collapsed) {
     return (
       <div
-        className="hero-collapsed"
+        className="hero-collapsed hero-collapsed--blue"
         onMouseEnter={handleCollapsedMouseEnter}
         onMouseLeave={handleCollapsedMouseLeave}
       >
@@ -402,110 +412,113 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   }
 
   return (
-    <div
-      className="hero-banner-carousel"
+    <section
+      className="hero-carousel rail-card"
+      aria-label={t('common.heroBanner.bannerAria')}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Backdrop gradients live in banner.styles.css as ::before/::after so the
-          drifting layer can animate on the compositor; an inline `background`
-          here would paint underneath them and double up. */}
-      <section
-        className={`hero-banner ${isIOSWebKit ? 'hero-banner--ios-safe' : ''}`}
-        aria-label={t('common.heroBanner.bannerAria')}
-      >
-        <SpaceEffects
-          supernovaColor="rgba(255,94,188,.55)"
-          reduced={isIOSWebKit}
-        />
-
-        <div className="hero-banner__viewport" ref={emblaRef}>
-          <div className="hero-banner__container">
-            <div className={slideClass(0)}>
-              <BannerB />
-            </div>
-            <div className={slideClass(1)}>
-              <BannerA onStartPosting={onStartPosting} />
-            </div>
-            <div className={slideClass(2)}>
-              <BannerC />
-            </div>
-            <div className={slideClass(3)}>
-              <BannerD />
-            </div>
-            <div className={slideClass(4)}>
-              <BannerLanguages />
-            </div>
-            <div className={slideClass(5)}>
-              <BannerNew />
-            </div>
+      <div className="hero-carousel__viewport" ref={emblaRef}>
+        <div className="hero-carousel__container">
+          <div
+            className={slideClass(0)}
+            inert={selectedIndex !== 0}
+            aria-hidden={selectedIndex !== 0}
+          >
+            <BannerB />
+          </div>
+          <div
+            className={slideClass(1)}
+            inert={selectedIndex !== 1}
+            aria-hidden={selectedIndex !== 1}
+          >
+            <BannerA onStartPosting={onStartPosting} />
+          </div>
+          <div
+            className={slideClass(2)}
+            inert={selectedIndex !== 2}
+            aria-hidden={selectedIndex !== 2}
+          >
+            <BannerC />
+          </div>
+          <div
+            className={slideClass(3)}
+            inert={selectedIndex !== 3}
+            aria-hidden={selectedIndex !== 3}
+          >
+            <BannerD />
+          </div>
+          <div
+            className={slideClass(4)}
+            inert={selectedIndex !== 4}
+            aria-hidden={selectedIndex !== 4}
+          >
+            <BannerLanguages />
+          </div>
+          <div
+            className={slideClass(5)}
+            inert={selectedIndex !== 5}
+            aria-hidden={selectedIndex !== 5}
+          >
+            <BannerNew />
           </div>
         </div>
-      </section>
-
-      {/* Dismiss — text link (collapses to a one-line announcement) */}
+      </div>
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t('common.heroBanner.dismissAria')}
-        className="banner-dismiss"
+        className="hero-carousel__dismiss"
       >
-        {t('common.heroBanner.dismiss', 'Dismiss')}
+        <span>{t('common.heroBanner.dismiss', 'Dismiss')}</span>
       </button>
-
-      {/* Navigation arrows */}
-      <button
-        type="button"
-        onClick={scrollPrev}
-        className="carousel-arrow carousel-arrow--prev"
-        aria-label={t('common.heroBanner.previousSlide')}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={scrollNext}
-        className="carousel-arrow carousel-arrow--next"
-        aria-label={t('common.heroBanner.nextSlide')}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-
-      {/* Dot indicators */}
-      <div className="carousel-controls">
-        {Array.from({ length: SLIDE_COUNT }, (_, i) => i).map((index) => (
+      <footer className="hero-carousel__footer">
+        <div className="hero-carousel__metadata">
+          {selectedIndex === 4 ? LANGUAGE_COLLECTIONS.map(({ label, collection, lang }) => (
+            <Link key={collection} to={`/trends/tokens?collection=${collection}`} lang={lang} dir="auto">
+              {label}
+            </Link>
+          )) : (
+            <>
+              <MetadataIcon aria-hidden="true" />
+              <span>{tBanners(`${metadataKey}.metaMain`)}</span>
+              <i aria-hidden="true" />
+              <span>{tBanners(`${metadataKey}.metaAccent`)}</span>
+            </>
+          )}
+        </div>
+        <div className="hero-carousel__navigation">
           <button
             type="button"
-            key={index}
-            onClick={() => scrollTo(index)}
-            className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
-            aria-label={t('common.heroBanner.goToSlide', { number: index + 1 })}
-          />
-        ))}
-      </div>
-    </div>
+            onClick={scrollPrev}
+            className="hero-carousel__arrow"
+            aria-label={t('common.heroBanner.previousSlide')}
+          >
+            <ChevronLeft aria-hidden="true" />
+          </button>
+          {SLIDE_KEYS.map((key, index) => (
+            <button
+              type="button"
+              key={key}
+              onClick={() => scrollTo(index)}
+              className="hero-carousel__dot"
+              aria-current={selectedIndex === index ? 'true' : undefined}
+              aria-label={t('common.heroBanner.goToSlide', { number: index + 1 })}
+            >
+              <span />
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={scrollNext}
+            className="hero-carousel__arrow"
+            aria-label={t('common.heroBanner.nextSlide')}
+          >
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      </footer>
+    </section>
   );
 };
 

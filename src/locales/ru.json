@@ -1,6 +1,7 @@
 {
   "trending": {
     "tokenList": {
+      "sortBy": "Сортировка",
       "clearSearch": "Очистить поиск",
       "exploreSections": "Разделы обзора",
       "tabTokens": "Токены",

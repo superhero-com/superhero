@@ -2098,6 +2098,7 @@
       }
     },
     "tokenList": {
+      "sortBy": "排序方式",
       "clearSearch": "清除搜索",
       "exploreSections": "探索分类",
       "tabTokens": "代币",

@@ -5,7 +5,7 @@ import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnsureFactorySchemaLoaded } from '@/hooks/useCommunityFactory';
 import { usePostLanguageFilter } from '@/hooks/usePostLanguageFilter';
 import { collectionLabel, LANGUAGE_COLLECTIONS } from '@/utils/collection';
@@ -15,13 +15,6 @@ import PostLanguageEmptyState from '../../social/components/PostLanguageEmptySta
 import PostLanguageErrorState from '../../social/components/PostLanguageErrorState';
 import EmptyState from '../../social/components/EmptyState';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select';
 import { Head } from '../../../seo/Head';
 import {
   DEFAULT_TAB_LIMIT,
@@ -42,6 +35,7 @@ import {
 import type { LeaderboardItem } from '../api/leaderboard';
 import TokenListTable from '../components/TokenListTable';
 import ExploreSearch from '../components/ExploreSearch';
+import ExploreToolbar from '../components/ExploreToolbar';
 import {
   PostResultsList,
   TokenResultsList,
@@ -108,7 +102,7 @@ const InlineLoading = ({ label }: { label: string }) => (
 );
 
 const TokenList = () => {
-  const { t, i18n } = useTranslation('trending');
+  const { t } = useTranslation('trending');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
@@ -610,49 +604,14 @@ const TokenList = () => {
                 <LatestTransactionsCarousel />
               </div>
 
-              <div className="mb-6 w-full">
-                <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
-                  <div className="w-full text-xl font-bold text-white sm:w-auto sm:text-2xl">
-                    {t('tokenList.tokenizedTrends')}
-                  </div>
-                  <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
-                    <Select value={orderBy} onValueChange={updateOrderBy}>
-                      <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-white/10">
-                        {orderByOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                            {option.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {activeFactoryCollections.length > 0 && (
-                    <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
-                      <Select dir={i18n.dir()} value={collection} onValueChange={setCollection}>
-                        <SelectTrigger aria-label={t('tokenListTable.collection')} className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 border-white/10">
-                          {collectionOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                              {option.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  <Link
-                    to="/trends/create"
-                    className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"
-                  >
-                    {t('tokenList.tokenizeTrend')}
-                  </Link>
-                </div>
-              </div>
+              <ExploreToolbar
+                orderBy={orderBy}
+                onOrderByChange={updateOrderBy}
+                orderByOptions={orderByOptions}
+                collection={collection}
+                onCollectionChange={setCollection}
+                collectionOptions={activeFactoryCollections.length > 0 ? collectionOptions : []}
+              />
 
               {(!tokenPages?.pages?.length || !tokenPages.pages[0].items.length)
               && !isFetchingTokens ? (

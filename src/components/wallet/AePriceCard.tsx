@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import AeternityBadge from '@/components/layout/AeternityBadge';
+import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import '@/components/layout/RailCards.css';
 
 interface AePriceCardProps {
@@ -14,8 +15,9 @@ const AePriceCard = ({
   price, currency, isOnline, blockHeight, className = '',
 }: AePriceCardProps) => {
   const { t } = useTranslation('common');
+  const highlight = usePointerHighlight();
   return (
-    <section className={`rail-card ae-price-card ${className}`} aria-label={t('wallet.aePrice')}>
+    <section className={`rail-card ae-price-card ${className}`} aria-label={t('wallet.aePrice')} {...highlight}>
       <div className="ae-price-card__top">
         <AeternityBadge />
         <div className="ae-price-card__copy">

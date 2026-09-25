@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import WalletOverviewCard from '@/components/wallet/WalletOverviewCard';
 import FeedRailSearch from '@/components/layout/FeedRailSearch';
 import QuickActionsCard from '@/components/layout/QuickActionsCard';
@@ -20,6 +21,7 @@ const RightRail = ({
   hidePriceSection?: boolean;
 }) => {
   const { t } = useTranslation('common');
+  const highlight = usePointerHighlight();
   const location = useLocation();
   const params = useParams();
   const isSocialHomeFeed = location.pathname === '/';
@@ -95,7 +97,7 @@ const RightRail = ({
   return (
     <div id="right-rail-root" className={railClassName}>
       {isSocialHomeFeed ? (
-        <div className="rail-card rail-search-card">
+        <div className="rail-card rail-search-card" {...highlight}>
           <FeedRailSearch />
         </div>
       ) : null}

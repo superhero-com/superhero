@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeftRight, Box, Droplets, MessageCircle, Rocket, Search, Zap,
 } from 'lucide-react';
+import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import './QuickActionsCard.css';
 
 const actions = [
@@ -31,6 +32,7 @@ const actions = [
 
 const QuickActionsCard = () => {
   const { t } = useTranslation('common');
+  const highlight = usePointerHighlight();
   const headingId = useId();
   const cardRef = useRef<HTMLElement>(null);
   const [hasEntered, setHasEntered] = useState(false);
@@ -53,6 +55,7 @@ const QuickActionsCard = () => {
   return (
     <section
       ref={cardRef}
+      {...highlight}
       className={`quick-actions-card${hasEntered ? ' quick-actions-card--entered' : ''}`}
       aria-labelledby={headingId}
     >

@@ -185,8 +185,9 @@
   .quick-actions-card:hover {
     border-color: transparent;
     background:
-      radial-gradient(ellipse at 5% 0%, light-dark(#1161fe12, #1161fe1c), transparent 63%) padding-box,
+      radial-gradient(circle 240px at var(--card-pointer-x, 4%) var(--card-pointer-y, 0%), light-dark(#1161fe12, #337cff24), transparent) padding-box,
       linear-gradient(145deg, light-dark(#eff4fc, #171f2c), light-dark(#fbfcff, #0d1119) 63%) padding-box,
+      radial-gradient(circle 160px at var(--card-pointer-x, 4%) var(--card-pointer-y, 0%), light-dark(#568cecb3, #8eb9ff99), transparent) border-box,
       linear-gradient(135deg, light-dark(#a4bde4, #456798), light-dark(#d0dbea, #2d3b52) 27%, light-dark(#d0dbea, #2d3b52) 73%, light-dark(#b4c9e8, #344d71)) border-box;
     box-shadow: 0 12px 26px -20px light-dark(#244b8226, #00000060), inset 0 1px light-dark(#ffffffcc, #ffffff26);
   }

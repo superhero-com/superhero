@@ -7,6 +7,7 @@ import AddressAvatar from '@/components/AddressAvatar';
 import { fetchLeaderboard, type LeaderboardItem } from '@/features/trending/api/leaderboard';
 import { useChainName } from '@/hooks/useChainName';
 import { formatAddress } from '@/utils/address';
+import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import './RailCards.css';
 
 const pnlFormatter = new Intl.NumberFormat('en-US', {
@@ -54,6 +55,7 @@ const TraderRow = ({ item, rank }: { item: LeaderboardItem; rank: number }) => {
 
 const TopTradersCard = () => {
   const { t } = useTranslation('common');
+  const highlight = usePointerHighlight();
   const headingId = useId();
   const {
     data, isPending, isError, isFetching, refetch,
@@ -69,7 +71,7 @@ const TopTradersCard = () => {
   const traders = data?.items.slice(0, 3) ?? [];
 
   return (
-    <section className="rail-card top-traders-card" aria-labelledby={headingId}>
+    <section className="rail-card top-traders-card" aria-labelledby={headingId} {...highlight}>
       <div className="rail-card__header">
         <span className="rail-badge" aria-hidden="true"><Trophy /></span>
         <div className="rail-card__title">

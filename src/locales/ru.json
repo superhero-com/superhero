@@ -1,5 +1,17 @@
 {
   "trending": {
+    "market": {
+      "layout": "Вид рынка",
+      "table": "Таблица",
+      "cards": "Карточки",
+      "history": "История цены",
+      "noHistory": "История цены недоступна",
+      "supply": "Предложение",
+      "rank": "Место",
+      "details": "О токене",
+      "capShort": "Кап.",
+      "markets": "Рынки токенов"
+    },
     "tokenList": {
       "sortBy": "Сортировка",
       "clearSearch": "Очистить поиск",

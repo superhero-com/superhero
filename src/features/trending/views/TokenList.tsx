@@ -33,7 +33,8 @@ import {
   type TrendUserItem,
 } from '../api/trendsSearch';
 import type { LeaderboardItem } from '../api/leaderboard';
-import TokenListTable from '../components/TokenListTable';
+import ExploreTokenMarkets from '../components/ExploreTokenMarkets';
+import { type ExploreLayout } from '../components/ExploreViewSwitch';
 import ExploreSearch from '../components/ExploreSearch';
 import ExploreToolbar from '../components/ExploreToolbar';
 import {
@@ -111,6 +112,7 @@ const TokenList = () => {
     ? 'all' : collectionParam?.toUpperCase();
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [marketLayout, setMarketLayout] = useState<ExploreLayout>('table');
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   // Content-language filter shared with home; only applies to the Posts tab.
@@ -611,6 +613,8 @@ const TokenList = () => {
                 collection={collection}
                 onCollectionChange={setCollection}
                 collectionOptions={activeFactoryCollections.length > 0 ? collectionOptions : []}
+                layout={marketLayout}
+                onLayoutChange={setMarketLayout}
               />
 
               {(!tokenPages?.pages?.length || !tokenPages.pages[0].items.length)
@@ -618,7 +622,8 @@ const TokenList = () => {
                 <EmptyPanel message={t('tokenList.noTokenSales')} />
                 ) : null}
 
-              <TokenListTable
+              <ExploreTokenMarkets
+                layout={marketLayout}
                 pages={tokenPages?.pages}
                 loading={isFetchingTokens}
                 orderBy={orderBy}

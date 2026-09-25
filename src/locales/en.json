@@ -2070,6 +2070,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "Market layout",
+      "table": "Table",
+      "cards": "Cards",
+      "history": "Price history",
+      "noHistory": "Price history unavailable",
+      "supply": "Supply",
+      "rank": "Rank",
+      "details": "Token details",
+      "capShort": "MC",
+      "markets": "Token markets"
+    },
     "newBadge": "NEW",
     "assetInput": {
       "balanceLabel": "Balance:",

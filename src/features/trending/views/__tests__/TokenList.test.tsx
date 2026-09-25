@@ -70,6 +70,16 @@ vi.mock('../../components/TokenListTable', () => ({
   ),
 }));
 
+vi.mock('../../components/ExploreTokenMarkets', () => ({
+  default: ({ pages, layout }: any) => (
+    <div data-testid="token-markets" data-layout={layout}>
+      {(pages?.flatMap((page: any) => page.items) ?? []).map((item: any) => (
+        <span key={item.address}>{item.name}</span>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock('../../../social/components/ReplyToFeedItem', () => ({
   default: ({ item }: any) => (
     <div data-testid="reply-to-feed-item">{item.content}</div>
@@ -193,7 +203,7 @@ describe('TokenList search experience', () => {
     renderView();
 
     await waitFor(() => {
-      expect(screen.getByTestId('token-list-table')).toBeInTheDocument();
+      expect(screen.getByTestId('token-markets')).toBeInTheDocument();
     });
     expect(screen.getByText('Tokenized Trends')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Tokenize Trend' })).toBeInTheDocument();
@@ -209,6 +219,24 @@ describe('TokenList search experience', () => {
       expect(screen.getByText('Popular post')).toBeInTheDocument();
     });
     expect(screen.getByText('Popular Posts')).toBeInTheDocument();
+  });
+
+  it('defaults to Table and switches layouts without changing filters or refetching tokens', async () => {
+    renderView('/trends/tokens?collection=CHINESE');
+    await screen.findByText('DEFAULT');
+    expect(screen.getByRole('button', { name: 'Table', pressed: true })).toBeInTheDocument();
+    const queryCount = tokenServiceMocks.listAll.mock.calls.length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cards' }));
+    expect(screen.getByTestId('token-markets')).toHaveAttribute('data-layout', 'cards');
+    expect(screen.getByLabelText('URL search')).toHaveTextContent('collection=CHINESE');
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveTextContent('Trending');
+    expect(screen.getByText('DEFAULT')).toBeInTheDocument();
+    expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(queryCount);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Table' }));
+    expect(screen.getByTestId('token-markets')).toHaveAttribute('data-layout', 'table');
+    expect(tokenServiceMocks.listAll).toHaveBeenCalledTimes(queryCount);
   });
 
   it('renders search sections and expands tokens with view all', async () => {
@@ -267,7 +295,7 @@ describe('TokenList search experience', () => {
 
   it('focuses search with slash without stealing keys from an editor or dialog', async () => {
     renderView();
-    await screen.findByTestId('token-list-table');
+    await screen.findByTestId('token-markets');
     const input = screen.getByRole('textbox', { name: 'Search tokens, users and posts' });
     fireEvent.keyDown(document.body, { key: '/' });
     expect(input).toHaveFocus();

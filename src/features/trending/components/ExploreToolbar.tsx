@@ -6,6 +6,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { usePointerHighlight } from '@/hooks/usePointerHighlight';
+import ExploreViewSwitch, { type ExploreLayout } from './ExploreViewSwitch';
 import './ExploreToolbar.css';
 
 interface Option<T extends string> {
@@ -65,11 +66,14 @@ interface ExploreToolbarProps<T extends string> {
   collection: string;
   onCollectionChange: (value: string) => void;
   collectionOptions: Option<string>[];
+  layout?: ExploreLayout;
+  onLayoutChange?: (value: ExploreLayout) => void;
 }
 
 const ExploreToolbar = <T extends string, >({
   orderBy, onOrderByChange, orderByOptions,
   collection, onCollectionChange, collectionOptions,
+  layout, onLayoutChange,
 }: ExploreToolbarProps<T>) => {
   const { t, i18n } = useTranslation('trending');
   const headingId = useId();
@@ -78,7 +82,7 @@ const ExploreToolbar = <T extends string, >({
 
   return (
     <div className="explore-toolbar-container">
-      <section className="explore-toolbar" dir={i18n.dir()} aria-labelledby={headingId}>
+      <section className={`explore-toolbar${layout ? ' explore-toolbar--with-layout' : ''}`} dir={i18n.dir()} aria-labelledby={headingId}>
         <h2 id={headingId}>{t('tokenList.tokenizedTrends')}</h2>
         <div className={`explore-toolbar__filters${hasCollections ? '' : ' explore-toolbar__filters--single'}`}>
           <ToolbarField
@@ -96,6 +100,9 @@ const ExploreToolbar = <T extends string, >({
               onChange={onCollectionChange}
               options={collectionOptions}
             />
+          )}
+          {layout && onLayoutChange && (
+            <ExploreViewSwitch value={layout} onChange={onLayoutChange} />
           )}
         </div>
         <Link to="/trends/create" className="explore-toolbar__create" {...highlight}>

@@ -2001,6 +2001,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "市场布局",
+      "table": "表格",
+      "cards": "卡片",
+      "history": "价格走势",
+      "noHistory": "暂无价格历史",
+      "supply": "供应量",
+      "rank": "排名",
+      "details": "代币详情",
+      "capShort": "市值",
+      "markets": "代币市场"
+    },
     "noCreatedTokens": "无已创建代币",
     "noCreatedTokensDescription": "此用户尚未创建任何 Trendminer 代币。",
     "success": "成功",

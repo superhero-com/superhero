@@ -2001,6 +2001,18 @@
     }
   },
   "trending": {
+    "market": {
+      "layout": "طريقة عرض السوق",
+      "table": "جدول",
+      "cards": "بطاقات",
+      "history": "سجل السعر",
+      "noHistory": "سجل السعر غير متاح",
+      "supply": "المعروض",
+      "rank": "الترتيب",
+      "details": "تفاصيل الرمز",
+      "capShort": "القيمة",
+      "markets": "أسواق الرموز"
+    },
     "noCreatedTokens": "لا توجد رموز منشأة",
     "noCreatedTokensDescription": "لم ينشئ هذا المستخدم أي رموز Trendminer بعد.",
     "success": "تم بنجاح",

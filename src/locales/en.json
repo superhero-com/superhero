@@ -604,6 +604,19 @@
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "Latest activity",
+        "newestFirst": "Newest first",
+        "newer": "Newer activity",
+        "older": "Older activity",
+        "bought": "Bought",
+        "sold": "Sold",
+        "created": "Created",
+        "transaction": "Transaction",
+        "tokens": "tokens",
+        "tokenQuantity": "{{amount}} tokens",
+        "unknownTrader": "Unknown trader",
+        "unknownToken": "Unknown token",
+        "loading": "Loading activity",
         "loadingTokenName": "Loading token name...",
         "loadingBadge": "LOADING"
       }

@@ -11,6 +11,23 @@
     }
   },
   "common": {
+    "trendminer": {
+      "latestTransactions": {
+        "title": "Последние сделки",
+        "newestFirst": "Сначала новые",
+        "newer": "Более новые сделки",
+        "older": "Более ранние сделки",
+        "bought": "Покупка",
+        "sold": "Продажа",
+        "created": "Создание",
+        "transaction": "Транзакция",
+        "tokens": "токенов",
+        "tokenQuantity": "{{amount}} токенов",
+        "unknownTrader": "Неизвестный трейдер",
+        "unknownToken": "Неизвестный токен",
+        "loading": "Загрузка сделок"
+      }
+    },
     "buyAeRail": {
       "title": "Получить AE",
       "buttonSubtitle": "Купить или заработать æternity"

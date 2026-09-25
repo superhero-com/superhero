@@ -1137,6 +1137,19 @@
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "أحدث النشاطات",
+        "newestFirst": "الأحدث أولاً",
+        "newer": "نشاطات أحدث",
+        "older": "نشاطات أقدم",
+        "bought": "اشترى",
+        "sold": "باع",
+        "created": "أنشأ",
+        "transaction": "معاملة",
+        "tokens": "رموز",
+        "tokenQuantity": "{{amount}} رموز",
+        "unknownTrader": "متداول غير معروف",
+        "unknownToken": "رمز غير معروف",
+        "loading": "جارٍ تحميل النشاطات",
         "loadingTokenName": "جارٍ تحميل اسم الرمز...",
         "loadingBadge": "جارٍ التحميل"
       }

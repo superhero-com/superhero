@@ -1137,6 +1137,19 @@
     },
     "trendminer": {
       "latestTransactions": {
+        "title": "最新动态",
+        "newestFirst": "最新优先",
+        "newer": "较新动态",
+        "older": "较早动态",
+        "bought": "买入",
+        "sold": "卖出",
+        "created": "创建",
+        "transaction": "交易",
+        "tokens": "代币",
+        "tokenQuantity": "{{amount}} 代币",
+        "unknownTrader": "未知交易者",
+        "unknownToken": "未知代币",
+        "loading": "正在加载动态",
         "loadingTokenName": "正在加载代币名称…",
         "loadingBadge": "加载中"
       }

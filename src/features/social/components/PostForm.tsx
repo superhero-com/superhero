@@ -1043,6 +1043,136 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       : tf('connectWalletToReply');
   }
 
+  const hasMediaTools = showEmojiPicker || showGifInput || showImageInput;
+  const desktopTools = (
+    <div className="post-composer__tools flex items-center gap-2.5 relative">
+      {showEmojiPicker && (
+        <button
+          type="button"
+          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+          title={ts('emoji')}
+          ref={emojiBtnRef}
+          onClick={() => {
+            setShowEmoji((s) => !s);
+            setShowGif(false);
+          }}
+        >
+          {isPost ? (
+            <span className="post-composer__tool-icon post-composer__tool-icon--emoji" aria-hidden="true">
+              <IconSmile className="w-4 h-4" />
+            </span>
+          ) : <IconSmile className="w-4 h-4" />}
+          <span>{ts('emoji')}</span>
+        </button>
+      )}
+
+      {showGifInput && (
+        <button
+          type="button"
+          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+          title={ts('gif')}
+          ref={gifBtnRef}
+          onClick={() => {
+            setShowGif((s) => !s);
+            setShowEmoji(false);
+            setShowImage(false);
+          }}
+        >
+          {isPost ? (
+            <span className="post-composer__tool-icon post-composer__tool-icon--gif" aria-hidden="true">
+              <IconGif className="w-4 h-4" />
+            </span>
+          ) : <IconGif className="w-4 h-4" />}
+          <span>{ts('gif')}</span>
+        </button>
+      )}
+
+      {showImageInput && (
+        <button
+          type="button"
+          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+          title={ts('image')}
+          onClick={() => {
+            setShowImage((s) => !s);
+            setShowGif(false);
+            setShowEmoji(false);
+          }}
+        >
+          {isPost ? (
+            <span className="post-composer__tool-icon post-composer__tool-icon--image" aria-hidden="true">
+              <IconImage className="w-4 h-4" />
+            </span>
+          ) : <IconImage className="w-4 h-4" />}
+          <span>{ts('image')}</span>
+        </button>
+      )}
+
+      {detectedLink && (
+        <button
+          type="button"
+          className={`post-composer__tool border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
+            linkPreviewDismissedForCurrent
+              ? 'bg-primary-100 border-primary-300 text-primary-600'
+              : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
+          }`}
+          title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
+          onClick={() => {
+            if (linkPreviewDismissedForCurrent) {
+              setDismissedLinkUrl(null);
+            } else {
+              setDismissedLinkUrl(detectedLink.url);
+            }
+          }}
+        >
+          {isPost ? (
+            <span className="post-composer__tool-icon post-composer__tool-icon--link" aria-hidden="true">
+              <IconLink className="w-4 h-4" />
+            </span>
+          ) : <IconLink className="w-4 h-4" />}
+          <span>{ts('link')}</span>
+        </button>
+      )}
+
+      {showEmojiPicker && showEmoji && (
+        <div className="post-composer__emoji-panel absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+          <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
+            {DEFAULT_EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                className="bg-none border-none text-xl p-1.5 cursor-pointer rounded-lg hover:bg-white/10 md:p-2 md:text-[22px] md:min-h-[44px] md:rounded-xl"
+                onClick={() => insertAtCursor(e)}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1.5 text-center text-sm text-white/90">
+            {ts('moreSoon')}
+          </div>
+        </div>
+      )}
+
+      {showGifInput && (
+        <GifSelectorDialog
+          open={showGif}
+          onOpenChange={setShowGif}
+          mediaUrls={mediaUrls}
+          onMediaUrlsChange={setMediaUrls}
+        />
+      )}
+
+      {showImageInput && (
+        <ImageSelectorDialog
+          open={showImage}
+          onOpenChange={setShowImage}
+          mediaUrls={mediaUrls}
+          onMediaUrlsChange={setMediaUrls}
+        />
+      )}
+    </div>
+  );
+
   // If not connected and it's a reply, show simple message
   if (!activeAccount && !isPost) {
     return (
@@ -1178,7 +1308,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   }}
                   className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{
-                    minHeight: computedMinHeight,
+                    minHeight: isPost ? '160px' : computedMinHeight,
                     // Text goes transparent so the mirror below shows the pills; caret
                     // (caret-color) and selection stay painted by the textarea on top.
                     ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
@@ -1213,105 +1343,108 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   />
                 )}
 
-                <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
-                  {/* Mobile-only GIF button inside textarea corner */}
-                  {showGifInput && (
-                    <button
-                      type="button"
-                      className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title={ts('gif')}
-                      ref={gifBtnRef}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowGif((s) => !s);
-                        setShowEmoji(false);
-                      }}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowGif((s) => !s);
-                        setShowEmoji(false);
-                      }}
-                    >
-                      <span className="uppercase tracking-wide">{ts('gif')}</span>
-                    </button>
-                  )}
-                  {/* Mobile-only Image button */}
-                  {showImageInput && (
-                    <button
-                      type="button"
-                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1"
-                      title={ts('image')}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowImage((s) => !s);
-                        setShowGif(false);
-                        setShowEmoji(false);
-                      }}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowImage((s) => !s);
-                        setShowGif(false);
-                        setShowEmoji(false);
-                      }}
-                    >
-                      <IconImage className="w-3 h-3" />
-                      <span className="uppercase tracking-wide">IMG</span>
-                    </button>
-                  )}
-                  {/* Mobile-only Link preview toggle */}
-                  {detectedLink && (
-                    <button
-                      type="button"
-                      className={`md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] border outline outline-1 text-[11px] leading-none transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1 ${
-                        linkPreviewDismissedForCurrent
-                          ? 'bg-primary-100/20 border-primary-400/50 outline-primary-400/50 text-primary-400'
-                          : 'bg-transparent border-white/10 outline-white/10 text-white/80 hover:border-white/20'
-                      }`}
-                      title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (linkPreviewDismissedForCurrent) {
-                          setDismissedLinkUrl(null);
-                        } else {
-                          setDismissedLinkUrl(detectedLink.url);
-                        }
-                      }}
-                      onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (linkPreviewDismissedForCurrent) {
-                          setDismissedLinkUrl(null);
-                        } else {
-                          setDismissedLinkUrl(detectedLink.url);
-                        }
-                      }}
-                    >
-                      <IconLink className="w-3 h-3" />
-                      <span className="uppercase tracking-wide">LINK</span>
-                    </button>
+                <div className={isPost ? 'post-composer__input-footer' : undefined}>
+                  {isPost && hasMediaTools && <div className="hidden md:block min-w-0">{desktopTools}</div>}
+                  <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
+                    {/* Mobile-only GIF button inside textarea corner */}
+                    {showGifInput && (
+                      <button
+                        type="button"
+                        className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                        title={ts('gif')}
+                        ref={gifBtnRef}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowGif((s) => !s);
+                          setShowEmoji(false);
+                        }}
+                        onTouchStart={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowGif((s) => !s);
+                          setShowEmoji(false);
+                        }}
+                      >
+                        <span className="uppercase tracking-wide">{ts('gif')}</span>
+                      </button>
+                    )}
+                    {/* Mobile-only Image button */}
+                    {showImageInput && (
+                      <button
+                        type="button"
+                        className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1"
+                        title={ts('image')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowImage((s) => !s);
+                          setShowGif(false);
+                          setShowEmoji(false);
+                        }}
+                        onTouchStart={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowImage((s) => !s);
+                          setShowGif(false);
+                          setShowEmoji(false);
+                        }}
+                      >
+                        <IconImage className="w-3 h-3" />
+                        <span className="uppercase tracking-wide">IMG</span>
+                      </button>
+                    )}
+                    {/* Mobile-only Link preview toggle */}
+                    {detectedLink && (
+                      <button
+                        type="button"
+                        className={`md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] border outline outline-1 text-[11px] leading-none transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1 ${
+                          linkPreviewDismissedForCurrent
+                            ? 'bg-primary-100/20 border-primary-400/50 outline-primary-400/50 text-primary-400'
+                            : 'bg-transparent border-white/10 outline-white/10 text-white/80 hover:border-white/20'
+                        }`}
+                        title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (linkPreviewDismissedForCurrent) {
+                            setDismissedLinkUrl(null);
+                          } else {
+                            setDismissedLinkUrl(detectedLink.url);
+                          }
+                        }}
+                        onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (linkPreviewDismissedForCurrent) {
+                            setDismissedLinkUrl(null);
+                          } else {
+                            setDismissedLinkUrl(detectedLink.url);
+                          }
+                        }}
+                      >
+                        <IconLink className="w-3 h-3" />
+                        <span className="uppercase tracking-wide">LINK</span>
+                      </button>
+                    )}
+                  </div>
+                  {characterLimit && (
+                    <div className="post-composer__counter absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
+                      {serializedText.length}
+                      /
+                      {characterLimit}
+                    </div>
                   )}
                 </div>
-                {characterLimit && (
-                  <div className="post-composer__counter absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
-                    {serializedText.length}
-                    /
-                    {characterLimit}
-                  </div>
-                )}
 
                 {showLinkPreview && detectedLink && (
                   <div className="px-2.5 pb-2.5 pt-1 md:px-4 md:pb-3 md:pt-0">
@@ -1333,134 +1466,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 className="mt-2.5"
               />
 
-              {(showEmojiPicker || showGifInput || showImageInput) && (
+              {(isPost || hasMediaTools) && (
                 <div className="post-composer__toolbar hidden md:flex items-center justify-between mt-3 gap-3">
-                  <div className="post-composer__tools flex items-center gap-2.5 relative">
-                    {showEmojiPicker && (
-                      <button
-                        type="button"
-                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title={ts('emoji')}
-                        ref={emojiBtnRef}
-                        onClick={() => {
-                          setShowEmoji((s) => !s);
-                          setShowGif(false);
-                        }}
-                      >
-                        {isPost ? (
-                          <span className="post-composer__tool-icon post-composer__tool-icon--emoji" aria-hidden="true">
-                            <IconSmile className="w-4 h-4" />
-                          </span>
-                        ) : <IconSmile className="w-4 h-4" />}
-                        <span>{ts('emoji')}</span>
-                      </button>
-                    )}
-
-                    {showGifInput && (
-                      <button
-                        type="button"
-                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title={ts('gif')}
-                        ref={gifBtnRef}
-                        onClick={() => {
-                          setShowGif((s) => !s);
-                          setShowEmoji(false);
-                          setShowImage(false);
-                        }}
-                      >
-                        {isPost ? (
-                          <span className="post-composer__tool-icon post-composer__tool-icon--gif" aria-hidden="true">
-                            <IconGif className="w-4 h-4" />
-                          </span>
-                        ) : <IconGif className="w-4 h-4" />}
-                        <span>{ts('gif')}</span>
-                      </button>
-                    )}
-
-                    {showImageInput && (
-                      <button
-                        type="button"
-                        className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title={ts('image')}
-                        onClick={() => {
-                          setShowImage((s) => !s);
-                          setShowGif(false);
-                          setShowEmoji(false);
-                        }}
-                      >
-                        {isPost ? (
-                          <span className="post-composer__tool-icon post-composer__tool-icon--image" aria-hidden="true">
-                            <IconImage className="w-4 h-4" />
-                          </span>
-                        ) : <IconImage className="w-4 h-4" />}
-                        <span>{ts('image')}</span>
-                      </button>
-                    )}
-
-                    {detectedLink && (
-                      <button
-                        type="button"
-                        className={`post-composer__tool border text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm ${
-                          linkPreviewDismissedForCurrent
-                            ? 'bg-primary-100 border-primary-300 text-primary-600'
-                            : 'bg-white/5 border-white/10 hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0'
-                        }`}
-                        title={linkPreviewDismissedForCurrent ? ts('restoreLinkPreview') : ts('dismissLinkPreview')}
-                        onClick={() => {
-                          if (linkPreviewDismissedForCurrent) {
-                            setDismissedLinkUrl(null);
-                          } else {
-                            setDismissedLinkUrl(detectedLink.url);
-                          }
-                        }}
-                      >
-                        {isPost ? (
-                          <span className="post-composer__tool-icon post-composer__tool-icon--link" aria-hidden="true">
-                            <IconLink className="w-4 h-4" />
-                          </span>
-                        ) : <IconLink className="w-4 h-4" />}
-                        <span>{ts('link')}</span>
-                      </button>
-                    )}
-
-                    {showEmojiPicker && showEmoji && (
-                      <div className="post-composer__emoji-panel absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
-                        <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
-                          {DEFAULT_EMOJIS.map((e) => (
-                            <button
-                              key={e}
-                              type="button"
-                              className="bg-none border-none text-xl p-1.5 cursor-pointer rounded-lg hover:bg-white/10 md:p-2 md:text-[22px] md:min-h-[44px] md:rounded-xl"
-                              onClick={() => insertAtCursor(e)}
-                            >
-                              {e}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="mt-1.5 text-center text-sm text-white/90">
-                          {ts('moreSoon')}
-                        </div>
-                      </div>
-                    )}
-
-                    {showGifInput && (
-                      <GifSelectorDialog
-                        open={showGif}
-                        onOpenChange={setShowGif}
-                        mediaUrls={mediaUrls}
-                        onMediaUrlsChange={setMediaUrls}
-                      />
-                    )}
-
-                    {showImageInput && (
-                      <ImageSelectorDialog
-                        open={showImage}
-                        onOpenChange={setShowImage}
-                        mediaUrls={mediaUrls}
-                        onMediaUrlsChange={setMediaUrls}
-                      />
-                    )}
-                  </div>
+                  {!isPost && desktopTools}
 
                   <div className="post-composer__submit flex items-center gap-3">
                     {requiredHashtag && requiredMissing && (

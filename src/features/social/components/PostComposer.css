@@ -1,14 +1,18 @@
 .post-composer .post-composer__surface {
-  --composer-input: light-dark(#f8fbff, #0c1421);
+  --composer-input: light-dark(#fafbfd, #0d1117);
   --composer-accent: light-dark(#225fae, #a2c7ff);
-  padding: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .post-composer .post-composer__input-wrap {
   border: 1px solid var(--rail-line);
   border-radius: 16px;
-  background: linear-gradient(145deg, light-dark(#f4f8ff, #101b2b), var(--composer-input) 75%);
-  box-shadow: inset 0 2px 5px light-dark(#1b49700a, #00000030), 0 1px light-dark(#ffffff, #ffffff06);
+  background: var(--composer-input);
+  box-shadow: none;
   transition: border-color 180ms, box-shadow 180ms;
 }
 
@@ -22,7 +26,7 @@
 .post-composer .post-composer__textarea::placeholder { color: var(--rail-muted); opacity: 1; }
 .post-composer .post-composer__textarea {
   display: block;
-  padding: 16px 16px 38px;
+  padding: 16px 16px 72px;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -33,7 +37,20 @@
   caret-color: #5d88ff;
 }
 .post-composer .post-composer__textarea:focus { background: transparent; box-shadow: none; transform: none; }
+.post-composer .post-composer__input-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: -56px;
+  padding: 0 10px 8px;
+}
 .post-composer .post-composer__counter {
+  position: static;
+  flex: none;
+  margin-inline-start: auto;
+  margin-bottom: 8px;
   padding: 2px 7px;
   border: 1px solid light-dark(#d0dbea80, #819bc91a);
   border-radius: 6px;
@@ -52,11 +69,11 @@
   min-height: 44px;
   padding: 7px 11px 7px 8px;
   gap: 8px;
-  border: 1px solid var(--rail-line);
+  border: 1px solid transparent;
   border-radius: 12px;
   color: var(--rail-muted);
-  background: linear-gradient(145deg, var(--rail-raised), var(--rail-base));
-  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff0b);
+  background: transparent;
+  box-shadow: none;
   font-size: 13px;
   font-weight: 600;
   transition: border-color 180ms, color 180ms, transform 180ms;
@@ -72,8 +89,8 @@
   border-radius: 8px;
   color: #fff;
   transform: rotate(-7deg);
-  background: radial-gradient(ellipse at 17% 4%, #ffffff60, transparent 65%), linear-gradient(145deg, var(--tool-light), var(--tool-deep));
-  box-shadow: inset 0 1px #ffffff80, inset 1px 0 #ffffff25, inset 0 -2px #00000020, 1px 2px 0 color-mix(in srgb, var(--tool-deep) 65%, var(--rail-base));
+  background: radial-gradient(ellipse at 17% 4%, #ffffff26, transparent 65%), linear-gradient(145deg, var(--tool-light), var(--tool-deep));
+  box-shadow: inset 0 1px #ffffff55, inset 0 -2px #00000020, 1px 2px 0 color-mix(in srgb, var(--tool-deep) 65%, var(--rail-base));
 }
 .post-composer__tool-icon svg { width: 15px; height: 15px; transform: rotate(7deg); }
 .post-composer__tool-icon--emoji { --tool-light: #edb24c; --tool-deep: #a17426; }
@@ -88,7 +105,7 @@
   border-radius: 12px;
   color: #fff;
   background: linear-gradient(150deg, #377eff, #1161fe 60%, #1254d2);
-  box-shadow: inset 0 1px #ffffff38, inset 0 -2px #00000012, 0 6px 14px -9px #1161fe;
+  box-shadow: inset 0 1px #ffffff38, inset 0 -2px #00000012;
   font-size: 13px;
   line-height: 20px;
   font-weight: 650;
@@ -108,7 +125,7 @@
 .post-composer .post-composer__emoji-panel {
   color: var(--rail-text);
   border-color: var(--rail-line);
-  background: linear-gradient(145deg, var(--rail-raised), var(--rail-base));
+  background: var(--rail-base);
 }
 .post-composer .post-composer__emoji-panel > div { color: var(--rail-text); }
 .post-composer .post-composer__tool:focus-visible,
@@ -122,17 +139,18 @@
     border-color: light-dark(#86abe0, #6fa0ea88);
     color: var(--rail-text);
     transform: translateY(-1px);
-    box-shadow: inset 0 1px light-dark(#ffffff, #ffffff16);
+    background: var(--rail-raised);
   }
   .post-composer .post-composer__primary:not(:disabled):hover { filter: brightness(1.08); transform: translateY(-1px); }
 }
 @media (max-width: 767px) {
-  .post-composer .post-composer__surface { padding: 12px; border-radius: 20px; }
-  .post-composer .post-composer__textarea { padding: 12px; font-size: 16px; }
+  .post-composer .post-composer__textarea { padding: 12px 12px 72px; font-size: 16px; }
   .post-composer .post-composer__mobile-tools {
     position: static;
+    flex: 1;
+    min-width: 0;
     flex-wrap: wrap;
-    padding: 0 72px 10px 10px;
+    padding: 0;
     gap: 8px;
   }
   .post-composer .post-composer__mobile-tools button {
@@ -142,7 +160,7 @@
     border-radius: 9px;
     outline: none;
     color: var(--composer-accent);
-    background: light-dark(#e8f0fc, #1b2a42);
+    background: var(--rail-raised);
     font-size: 11px;
   }
   .post-composer .post-composer__mobile-submit { margin-top: 12px; }

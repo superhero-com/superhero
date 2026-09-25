@@ -43,9 +43,9 @@
   display: grid;
   place-items: center;
   transform: rotate(-7deg);
-  color: #d9eaff;
-  background: radial-gradient(ellipse at 17% 4%, #ffffff55, transparent 70%), linear-gradient(145deg, #377eff, #174793);
-  box-shadow: inset 0 1px #ffffff70, inset 1px 0 #ffffff25, inset 0 -2px #00000020, 1px 2px 0 #102b5b, 0 5px 12px -6px #1161fe;
+  color: light-dark(#315f9d, #b9d1f4);
+  background: light-dark(#e8effa, #23334b);
+  box-shadow: inset 0 1px light-dark(#ffffff, #ffffff15), 1px 2px 0 light-dark(#c5d2e6, #0d1522);
 }
 .hero-slide__badge svg { width: 14px; height: 14px; transform: rotate(7deg); stroke-width: 1.8; }
 .hero-slide__copy h2 {
@@ -86,16 +86,16 @@
 }
 .hero-slide__actions svg { width: 16px; height: 16px; flex: none; }
 .hero-slide__primary {
-  border: 1px solid #79a5ff66;
-  color: #fff;
-  background: linear-gradient(150deg, #377eff, #1161fe 60%, #1254d2);
-  box-shadow: inset 0 1px #ffffff38, inset 0 -2px #00000012, 0 6px 14px -9px #1161fe;
+  border: 1px solid light-dark(#c7d8ef, #365078);
+  color: light-dark(#214e91, #dbe9ff);
+  background: light-dark(#eaf1fc, #1e3150);
+  box-shadow: none;
 }
 .hero-slide__secondary {
-  color: var(--rail-text);
-  border: 1px solid var(--rail-line);
-  background: linear-gradient(145deg, var(--rail-raised), var(--rail-base));
-  box-shadow: inset 0 1px light-dark(#fff, #ffffff0b);
+  color: var(--rail-muted);
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
 }
 .hero-slide__secondary svg { color: var(--rail-muted); }
 .hero-slide__art {
@@ -123,7 +123,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(var(--hero-art-fade), light-dark(#f4f8ff, #111a28), transparent 18%), linear-gradient(to top, light-dark(#f5f9ff, #0d1119), transparent 30%);
+  background: linear-gradient(var(--hero-art-fade), var(--rail-base), transparent 18%), linear-gradient(to top, var(--rail-base), transparent 30%);
   pointer-events: none;
 }
 .hero-carousel__dismiss {
@@ -151,8 +151,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border-top: 1px solid light-dark(#cad8ea80, #5f80b626);
-  background: linear-gradient(125deg, light-dark(#edf4ff, #121d2d), light-dark(#f7faff, #0d141f));
+  border-top: 1px solid var(--rail-line);
+  background: transparent;
 }
 .hero-carousel__metadata { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; gap: 4px 8px; color: light-dark(#556d8e, #93aaca); font-size: 10px; line-height: 15px; }
 .hero-carousel__metadata > svg { width: 13px; height: 13px; flex: none; }
@@ -175,7 +175,7 @@
 @keyframes heroArtEnter { from { opacity: 0; } to { opacity: 1; } }
 @media (hover: hover) {
   .hero-slide__actions > :is(a, button):hover { transform: translateY(-1px); filter: brightness(1.08); }
-  .hero-slide__secondary:hover { border-color: light-dark(#86abe0, #6fa0ea88); }
+  .hero-slide__secondary:hover { color: var(--rail-text); border-color: var(--rail-line); }
   .hero-carousel__dismiss:hover > span { border-color: #8cbaff80; color: #f1f6ff; }
   .hero-carousel__navigation button:hover { background: light-dark(#1161fe0d, #1161fe18); }
   .hero-carousel__metadata > a:hover { color: light-dark(#215fc2, #c4dcff); text-decoration: underline; }
@@ -198,7 +198,7 @@
   .hero-slide__art--trends img { object-position: center 26%; }
   .hero-slide__art--languages img { object-position: center 35%; }
   .hero-slide__art::after {
-    background: linear-gradient(to top, light-dark(#f5f9ff, #111924), transparent 35%), linear-gradient(to right, light-dark(#f3f7ff, #111b2a), transparent 10%, transparent 90%, light-dark(#f6f9ff, #101824));
+    background: linear-gradient(to top, var(--rail-base), transparent 35%), linear-gradient(to right, var(--rail-base), transparent 10%, transparent 90%, var(--rail-base));
   }
   .hero-slide__copy { width: 100%; min-height: 0; padding: 0 20px 19px; justify-content: flex-start; }
   .hero-slide__copy h2 { font-size: 31px; line-height: 1.1; margin-bottom: 11px; }
@@ -210,11 +210,11 @@
   .hero-carousel__dismiss { inset-block-start: 4px; inset-inline-end: 6px; }
 }
 /* The collapsed carousel retains its swipe, slide mapping and expiry behavior. */
-.hero-collapsed--blue .hero-collapsed__slide { background: linear-gradient(145deg, light-dark(#eff4fc, #171f2c), light-dark(#fbfcff, #0d1119)); border-color: light-dark(#d0dbea, #2d3b52); }
+.hero-collapsed--blue .hero-collapsed__slide { background: light-dark(#ffffff, #11151b); border-color: light-dark(#e0e5ec, #ffffff12); }
 .hero-collapsed--blue .hero-collapsed__text { color: light-dark(#202632, #f5f7fb); }
 .hero-collapsed--blue .hero-collapsed__link { color: light-dark(#215fc2, #a5c8ff); min-height: 44px; display: inline-flex; align-items: center; white-space: normal; }
 .hero-collapsed--blue .hero-collapsed__badge { color: light-dark(#215fc2, #a5c8ff); background: light-dark(#1161fe14, #1161fe26); }
-.hero-collapsed--blue .hero-collapsed__expand { width: 44px; height: 44px; color: light-dark(#215fc2, #a5c8ff); border-color: light-dark(#d0dbea, #2d3b52); background: light-dark(#eff4fc, #171f2c); }
+.hero-collapsed--blue .hero-collapsed__expand { width: 44px; height: 44px; color: light-dark(#215fc2, #a5c8ff); border-color: light-dark(#e0e5ec, #ffffff12); background: light-dark(#ffffff, #11151b); }
 .hero-collapsed--blue :is(a, button):focus-visible { outline: 2px solid #5d88ff; outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) {
   .hero-carousel__slide.is-active .hero-slide__copy,

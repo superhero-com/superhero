@@ -98,18 +98,18 @@
   width: 100%;
   min-height: 68px;
   padding: 12px 16px;
-  border: 1px solid light-dark(#279e9380, #78e5d580);
+  border: 1px solid #79a5ff80;
   border-radius: 20px;
-  color: #092b29;
+  color: #ffffff;
   text-align: start;
   text-decoration: none;
-  background: radial-gradient(ellipse at 15% 0%, #ffffff3d, transparent 70%), linear-gradient(110deg, #34d399, #06b6d4);
-  box-shadow: inset 0 1px #ffffff65, inset 0 -2px #00000012, 0 9px 23px -18px #35cfbc;
+  background: radial-gradient(ellipse at 15% 0%, #ffffff0d, transparent 70%), linear-gradient(110deg, #2466df, #1161fe 56%, #1254d2);
+  box-shadow: inset 0 1px #ffffff65, inset 0 -2px #00000012, 0 9px 23px -18px #1161fe;
   transition: filter 180ms, transform 180ms;
 }
 .get-ae-button__copy { display: grid; gap: 1px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .get-ae-button__copy strong { font-size: 15px; line-height: 20px; font-weight: 700; }
-.get-ae-button__copy > span { color: #174744; font-size: 11px; line-height: 16px; }
+.get-ae-button__copy > span { color: #ffffff; font-size: 11px; line-height: 16px; }
 .get-ae-button > svg { width: 18px; height: 18px; flex: none; }
 
 .rail-card__header { display: flex; align-items: center; gap: 11px; }
@@ -203,7 +203,7 @@
 .top-traders-card__message button:focus-visible { outline: 2px solid #5d88ff; outline-offset: 3px; }
 
 @media (hover: hover) {
-  .get-ae-button:hover { color: #092b29; filter: brightness(1.06); transform: translateY(-1px); }
+  .get-ae-button:hover { color: #ffffff; filter: brightness(1.02); transform: translateY(-1px); }
   .rail-trader:hover {
     color: var(--rail-text);
     border-color: light-dark(#86abe0, #6fa0ea88);

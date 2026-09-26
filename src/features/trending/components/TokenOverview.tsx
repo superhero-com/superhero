@@ -1,10 +1,9 @@
 import {
   useEffect, useId, useRef, useState,
 } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowDown, ArrowLeft, ArrowUp, Check, ChevronDown, Hash, Share2,
+  ArrowDown, ArrowUp, Check, ChevronDown, Hash, Share2,
 } from 'lucide-react';
 import { toAe } from '@aeternity/aepp-sdk';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
@@ -106,10 +105,6 @@ const TokenOverview = ({
 
   return (
     <div className="token-overview-container" dir={i18n.dir()}>
-      <Link className="token-overview-back" to="/trends/tokens">
-        <ArrowLeft aria-hidden="true" />
-        {t('overview.back')}
-      </Link>
       <section className="token-overview" aria-label={name} aria-busy={notice === 'loading'} {...highlight}>
         <header className="token-overview-heading">
           <span className="token-overview-mark" aria-hidden="true"><Hash /></span>

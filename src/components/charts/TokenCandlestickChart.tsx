@@ -14,7 +14,7 @@ interface TokenCandlestickChartProps {
 }
 
 const TokenCandlestickChart = ({
-  token, height = 318, className = '', noBackground = false,
+  token, height = 280, className = '', noBackground = false,
 }: TokenCandlestickChartProps) => {
   const [interval, setInterval] = useState(300);
   const [fiat, setFiat] = useState(false);

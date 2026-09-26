@@ -1,5 +1,6 @@
 import {
   useCallback, useEffect, useId, useLayoutEffect, useRef, useState,
+  type ReactNode,
 } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -99,7 +100,9 @@ const ActivityCard = ({ item }: { item: ActivityTransaction }) => {
   ) : <div className={className} title={title}>{content}</div>;
 };
 
-const LatestTransactionsStrip = ({ transactions }: { transactions: ActivityTransaction[] }) => {
+const LatestTransactionsStrip = ({ transactions, headerStart }: {
+  transactions: ActivityTransaction[]; headerStart?: ReactNode;
+}) => {
   const { t, i18n } = useTranslation('common', { keyPrefix: 'trendminer.latestTransactions' });
   const isRtl = i18n.dir() === 'rtl';
   const titleId = useId();
@@ -217,10 +220,13 @@ const LatestTransactionsStrip = ({ transactions }: { transactions: ActivityTrans
       }}
     >
       <div className="latest-activity__heading">
-        <h2 id={titleId}>
-          <span className="latest-activity__dot" aria-hidden="true" />
-          {t('title')}
-        </h2>
+        <div className="latest-activity__title">
+          {headerStart}
+          <h2 id={titleId}>
+            <span className="latest-activity__dot" aria-hidden="true" />
+            {t('title')}
+          </h2>
+        </div>
         <div className="latest-activity__navigation">
           <span className="latest-activity__order">{t('newestFirst')}</span>
           <button

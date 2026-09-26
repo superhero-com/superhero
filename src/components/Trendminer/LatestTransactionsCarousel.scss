@@ -9,11 +9,19 @@
 
 .latest-activity__heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   align-items: center;
   min-height: 44px;
   margin-bottom: 8px;
+}
+
+.latest-activity__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 24px;
 }
 
 .latest-activity__heading h2 {

@@ -47,6 +47,7 @@ import {
 } from '../components/tabs';
 import TokenCreationBanner from '../components/TokenCreationBanner';
 import TokenOverview from '../components/TokenOverview';
+import TokenExploreLink from '../components/TokenExploreLink';
 import TokenRanking from '../components/TokenRanking/TokenRanking';
 import TokenTradeCard from '../components/TokenTradeCard';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
@@ -379,7 +380,11 @@ const TokenSaleDetails = () => {
           identifier: token?.address || token?.sale_address,
         }}
       />
-      {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
+      {!isMobile && showTradePanels ? (
+        <LatestTransactionsCarousel headerStart={<TokenExploreLink />} />
+      ) : (
+        <div className="mb-2"><TokenExploreLink /></div>
+      )}
 
       {isMobile && (
         <div className="sticky top-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] z-[1000] -mx-4 mb-3 border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
@@ -466,10 +471,10 @@ const TokenSaleDetails = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={cn(isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1', 'flex flex-col gap-6')}
+          className={cn(isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1', 'flex flex-col gap-4')}
         >
           <TokenOverview
             token={token}
@@ -670,7 +675,7 @@ const TokenSaleDetails = () => {
 
         {/* Desktop Sidebar (Right Column) */}
         {!isMobile && (
-          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6 lg:sticky lg:top-6 self-start">
+          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-4 lg:sticky lg:top-6 self-start">
             {(() => {
               if (tokenDoesNotExist) {
                 return (

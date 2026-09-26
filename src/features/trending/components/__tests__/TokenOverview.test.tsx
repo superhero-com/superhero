@@ -60,7 +60,6 @@ describe('Token overview', () => {
     expect(document.querySelector('.token-overview-price__value')).toHaveTextContent('2040');
     fireEvent.click(screen.getByRole('button', { name: 'Share SUPERHERO' }));
     expect(onShare).toHaveBeenCalledOnce();
-    expect(screen.getByRole('link', { name: 'Back to Explore' })).toHaveAttribute('href', '/trends/tokens');
   });
 
   it('preserves real zeros without inventing missing prices or rates', () => {

@@ -2666,6 +2666,28 @@
       "invalid": "请输入 0 至 50 之间的百分比。",
       "buyToken": "买入 {{symbol}}",
       "sellToken": "卖出 {{symbol}}"
+    },
+    "information": {
+      "title": "代币信息",
+      "subtitle": "创建者、金库和合约",
+      "creator": "创建者",
+      "wallet": "创建者钱包",
+      "treasury": "DAO 金库",
+      "created": "创建日期",
+      "contracts": "合约",
+      "tokenContract": "代币合约",
+      "saleContract": "销售合约",
+      "how": "此代币如何运作",
+      "howCopy": "此代币使用联合曲线定价。买入会铸造新代币；卖出会销毁代币，并按曲线返还 AE。部分交易手续费将进入代币的 DAO 金库。",
+      "dao": "打开 DAO",
+      "daoHint": "提案与社区金库",
+      "invite": "邀请并赚取奖励",
+      "explorer": "在 æScan 查看",
+      "copy": "复制地址",
+      "copied": "已复制",
+      "copyFailed": "无法复制。请选择地址并手动复制。",
+      "unavailable": "不可用",
+      "missingCreator": "创建者信息尚未加载。"
     }
   },
   "errors": {

@@ -1,0 +1,5 @@
+.token-explore-link { display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:12px;color:light-dark(#627086,#94a0b3);text-decoration:none; }
+.token-explore-link svg { width:15px;height:15px;flex:none; }
+.token-explore-link[dir=rtl] svg { transform:scaleX(-1); }
+.token-explore-link:focus-visible { outline:2px solid #5d88ff;outline-offset:3px;border-radius:6px; }
+@media(hover:hover) { .token-explore-link:hover { color:light-dark(#1856ad,#adc6e9); } }

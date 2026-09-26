@@ -6,6 +6,7 @@ import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter'
 import { toAe } from '@aeternity/aepp-sdk';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import TokenInformation from './TokenInformation';
 import LivePriceFormatter from '../../shared/components/LivePriceFormatter';
 import { Decimal } from '../../../libs/decimal';
 
@@ -28,6 +29,8 @@ const TokenSummary = ({
     month: 'long',
     day: 'numeric',
   });
+
+  if (!showOverview) return <TokenInformation token={token} className={className} />;
 
   return (
     <div

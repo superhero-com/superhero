@@ -37,7 +37,7 @@ interface TokenChartViewProps {
 const TokenChartView = ({
   candles, symbol, interval, onIntervalChange, quote, fiatCode, fiat, onFiatChange,
   currentRateConversion = false, loading, error, fetching, hasOlder, onLoadOlder, onRetry,
-  height = 318, className = '', noBackground = false,
+  height = 280, className = '', noBackground = false,
 }: TokenChartViewProps) => {
   const { t, i18n } = useTranslation('trending');
   const [details, setDetails] = useState(false);
@@ -224,25 +224,7 @@ const TokenChartView = ({
   return (
     <div className={`token-chart ${className}`} dir={i18n.dir()}>
       <section className={`chart-card${noBackground ? ' chart-card--bare' : ''}`} aria-label={t('chart.title')}>
-        <header className="chart-heading">
-          <div>
-            <h2>{t('chart.title')}</h2>
-            <p>
-              {quote}
-              {' '}
-              ·
-              {' '}
-              {t('chart.per')}
-            </p>
-          </div>
-          <div className="chart-heading-actions">
-            <div className="chart-quote" role="group" aria-label={t('chart.quote')}>
-              <button type="button" aria-pressed={!fiat} onClick={() => onFiatChange(false)}>AE</button>
-              <button type="button" aria-pressed={fiat} onClick={() => onFiatChange(true)}>{fiatCode}</button>
-            </div>
-            <button className="chart-reset" type="button" onClick={reset} aria-label={t('chart.reset')} title={t('chart.reset')} disabled={!hasData}><RotateCcw aria-hidden="true" /></button>
-          </div>
-        </header>
+        <h2 className="sr-only">{t('chart.title')}</h2>
         <div className="chart-toolbar">
           <div className="chart-intervals" role="group" aria-label={t('chart.interval')} dir="ltr">
             {TOKEN_CHART_INTERVALS.map((item) => (
@@ -323,25 +305,34 @@ const TokenChartView = ({
         )}
         <footer className="chart-footer">
           <div className="chart-footer-top">
-            <label htmlFor={volumeId}>
-              <input
-                id={volumeId}
-                type="checkbox"
-                checked={volume}
-                onChange={(event) => setVolume(event.target.checked)}
-                aria-label={t('chart.volToggle')}
-              />
-              {t('chart.volume')}
-              {' '}
-              <span>
-                ·
-                {t('chart.tokens')}
-              </span>
-            </label>
-            <div className="chart-footer-inspect">
-              <button type="button" disabled={!hasData} onClick={() => inspect(-1)} aria-label={t('chart.previous')}>‹</button>
-              <button type="button" disabled={!hasData} onClick={() => inspect(1)} aria-label={t('chart.next')}>›</button>
-              <span>{t('chart.hint')}</span>
+            <div className="chart-footer-controls">
+              <div className="chart-quote" role="group" aria-label={t('chart.quote')}>
+                <button type="button" aria-pressed={!fiat} onClick={() => onFiatChange(false)}>AE</button>
+                <button type="button" aria-pressed={fiat} onClick={() => onFiatChange(true)}>{fiatCode}</button>
+              </div>
+              <button className="chart-reset" type="button" onClick={reset} aria-label={t('chart.reset')} title={t('chart.reset')} disabled={!hasData}><RotateCcw aria-hidden="true" /></button>
+            </div>
+            <div className="chart-footer-options">
+              <label htmlFor={volumeId}>
+                <input
+                  id={volumeId}
+                  type="checkbox"
+                  checked={volume}
+                  onChange={(event) => setVolume(event.target.checked)}
+                  aria-label={t('chart.volToggle')}
+                />
+                {t('chart.volume')}
+                {' '}
+                <span>
+                  ·
+                  {t('chart.tokens')}
+                </span>
+              </label>
+              <div className="chart-footer-inspect">
+                <button type="button" disabled={!hasData} onClick={() => inspect(-1)} aria-label={t('chart.previous')}>‹</button>
+                <button type="button" disabled={!hasData} onClick={() => inspect(1)} aria-label={t('chart.next')}>›</button>
+                <span>{t('chart.hint')}</span>
+              </div>
             </div>
           </div>
           <div className="chart-footer-bottom">

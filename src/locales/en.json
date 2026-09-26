@@ -2739,6 +2739,28 @@
       "invalid": "Enter a percentage from 0 to 50.",
       "buyToken": "Buy {{symbol}}",
       "sellToken": "Sell {{symbol}}"
+    },
+    "information": {
+      "title": "Token information",
+      "subtitle": "Creator, treasury & contracts",
+      "creator": "Created by",
+      "wallet": "Creator wallet",
+      "treasury": "DAO treasury",
+      "created": "Created",
+      "contracts": "Contracts",
+      "tokenContract": "Token contract",
+      "saleContract": "Sale contract",
+      "how": "How this token works",
+      "howCopy": "This token uses a bonding curve. Buying mints new tokens; selling burns tokens and returns AE along the curve. A portion of trading fees goes to the token’s DAO treasury.",
+      "dao": "Open DAO",
+      "daoHint": "Proposals & community treasury",
+      "invite": "Invite & earn",
+      "explorer": "View on æScan",
+      "copy": "Copy address",
+      "copied": "Copied",
+      "copyFailed": "Couldn’t copy. Select the address and copy it manually.",
+      "unavailable": "Unavailable",
+      "missingCreator": "Creator information hasn’t loaded yet."
     }
   },
   "errors": {

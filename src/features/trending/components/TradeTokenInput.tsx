@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
-import { ArrowUpDown } from 'lucide-react';
-import { TokenDto } from '@/api/generated/models/TokenDto';
-import { Button } from '../../../components/ui/button';
-import { cn } from '../../../lib/utils';
-import AssetInput from './AssetInput';
-import { Decimal } from '../../../libs/decimal';
+import { ArrowDownUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TokenDto } from '@/api/generated/models/TokenDto';
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { Decimal } from '@/libs/decimal';
+import TokenTradeAmount from './TokenTradeAmount';
 
 interface TradeTokenInputProps {
   token?: TokenDto;
@@ -20,136 +19,56 @@ interface TradeTokenInputProps {
   onToggleTradeView: () => void;
   readonly?: boolean;
   isInsufficientBalance?: boolean;
+  connected?: boolean;
 }
 
 const TradeTokenInput = ({
-  token,
-  tokenA,
-  tokenB,
-  isBuying,
-  userBalance,
-  spendableAeBalance,
-  onTokenAChange,
-  onTokenBChange,
-  onTokenAFocus,
-  onTokenBFocus,
-  onToggleTradeView,
-  readonly = false,
-  isInsufficientBalance = false,
+  token, tokenA, tokenB, isBuying, userBalance, spendableAeBalance,
+  onTokenAChange, onTokenBChange, onTokenAFocus, onTokenBFocus, onToggleTradeView,
+  readonly = false, isInsufficientBalance = false, connected = false,
 }: TradeTokenInputProps) => {
-  const handleTokenAUpdate = (value: string) => {
-    // Allow empty string, partial decimals like "0." or "."
-    if (value === '' || value === '.') {
-      onTokenAChange(undefined);
-      return;
-    }
-
-    const numValue = parseFloat(value);
-    // Only update if it's a valid number or allow partial input
-    if (!Number.isNaN(numValue) || value.endsWith('.')) {
-      onTokenAChange(Number.isNaN(numValue) ? undefined : numValue);
-    }
-  };
-
-  const handleTokenBUpdate = (value: string) => {
-    // Allow empty string, partial decimals like "0." or "."
-    if (value === '' || value === '.') {
-      onTokenBChange(undefined);
-      return;
-    }
-
-    const numValue = parseFloat(value);
-    // Only update if it's a valid number or allow partial input
-    if (!Number.isNaN(numValue) || value.endsWith('.')) {
-      onTokenBChange(Number.isNaN(numValue) ? undefined : numValue);
-    }
-  };
-
-  // Calculate AE value for tokenB (for USD display)
-  const tokenBAeValue = useMemo(() => {
-    if (!tokenB || !token) return Decimal.ZERO;
-    const tokenAmount = Decimal.from(tokenB);
-    // Use price_data.ae if available, otherwise fall back to token.price, else Decimal.ZERO
-    const priceData = token.price_data as any;
-    let perTokenAe = Decimal.ZERO;
-    if (priceData?.ae) {
-      perTokenAe = Decimal.from(priceData.ae);
-    } else if (token.price) {
-      perTokenAe = Decimal.from(token.price);
-    }
-    return tokenAmount.mul(perTokenAe);
-  }, [tokenB, token]);
-
-  // Calculate AE value for tokenA when selling (for USD display)
-  const tokenAAeValue = useMemo(() => {
-    if (!tokenA || !token || isBuying) return Decimal.ZERO;
-    // When selling, tokenA is the token amount, convert to AE
-    const tokenAmount = Decimal.from(tokenA);
-    const priceData = token.price_data as any;
-
-    let perTokenAe = Decimal.ZERO;
-    if (priceData?.ae) {
-      perTokenAe = Decimal.from(priceData.ae);
-    } else if (token.price) {
-      perTokenAe = Decimal.from(token.price);
-    }
-
-    return tokenAmount.mul(perTokenAe);
-  }, [tokenA, token, isBuying]);
-
-  if (!token?.sale_address) {
-    return null;
-  }
-
+  const { t } = useTranslation('trending');
+  const {
+    getFiat, currentCurrencyInfo, currentCurrencyCode, currentCurrencyRate,
+  } = useCurrencies();
+  if (!token?.sale_address) return null;
+  // Display-only fiat estimate; the existing trade hook owns bonding-curve quotes.
+  const aeValue = isBuying ? Decimal.from(tokenA || 0) : Decimal.from(tokenB || 0);
+  const fiat = aeValue.gt(0) && currentCurrencyRate > 0
+    ? `≈ ${currentCurrencyInfo.symbol}${getFiat(aeValue).prettifyWithMaxPrecision()} ${currentCurrencyCode.toUpperCase()}`
+    : undefined;
+  const symbol = token.symbol || token.name;
   return (
-    <div className="trade-token-input space-y-1">
-      {/* First Asset Input */}
-      <AssetInput
-        modelValue={tokenA?.toString() || ''}
-        onUpdateModelValue={handleTokenAUpdate}
-        tokenSymbol={token.symbol}
-        isCoin={isBuying}
-        tokenBalance={isBuying ? spendableAeBalance.toString() : userBalance}
-        maxBtnAllowed
-        showBalance
-        errorMessages={isInsufficientBalance ? ['Insufficient balance'] : undefined}
+    <div className="trade-amounts" key={`${token.sale_address}:${isBuying}`}>
+      <TokenTradeAmount
+        pay
+        value={tokenA}
+        onChange={onTokenAChange}
         onFocus={onTokenAFocus}
-        aeValue={tokenAAeValue}
-        className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
+        symbol={symbol}
+        ae={isBuying}
+        balance={isBuying ? spendableAeBalance.toStringWithoutPrecision() : userBalance}
+        connected={connected}
+        disabled={readonly}
+        insufficient={connected && isInsufficientBalance}
       />
-
-      {/* Middle Arrow Button */}
-      <div className="mid-arrow relative z-10 h-0 my-1">
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={readonly}
-          onClick={onToggleTradeView}
-          className={cn(
-            'absolute -top-5 left-1/2 transform',
-            'bg-card/90 backdrop-blur-sm border-border w-8 h-8 p-0 rounded-full',
-            'hover:bg-card/70 transition-colors duration-200',
-            'shadow-lg',
-          )}
-        >
-          <ArrowUpDown className="h-4 w-4" />
-        </Button>
+      <div className="trade-switch-wrap">
+        <button type="button" className="trade-switch" disabled={readonly} onClick={onToggleTradeView} aria-label={t('tradePanel.swap')}>
+          <ArrowDownUp aria-hidden="true" />
+        </button>
       </div>
-
-      {/* Second Asset Input */}
-      <AssetInput
-        modelValue={tokenB?.toString() || ''}
-        onUpdateModelValue={handleTokenBUpdate}
-        tokenSymbol={token.symbol}
-        isCoin={!isBuying}
-        tokenBalance={!isBuying ? spendableAeBalance.toString() : userBalance}
-        showBalance
+      <TokenTradeAmount
+        value={tokenB}
+        onChange={onTokenBChange}
         onFocus={onTokenBFocus}
-        aeValue={tokenBAeValue}
-        className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
+        symbol={symbol}
+        ae={!isBuying}
+        balance={isBuying ? userBalance : spendableAeBalance.toStringWithoutPrecision()}
+        connected={connected}
+        disabled={readonly}
+        fiat={fiat}
       />
     </div>
   );
 };
-
 export default TradeTokenInput;

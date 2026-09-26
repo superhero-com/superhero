@@ -10,6 +10,7 @@ export const TokenInfoTab = ({ token }: { token: TokenDto }) => {
   return (
     <div className="space-y-4 px-1">
       <TokenSummary
+        showOverview={false}
         token={{ ...token, decimals: String(token.decimals ?? '') as any }}
       />
       <TokenRanking token={token} />

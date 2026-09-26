@@ -15,7 +15,6 @@ import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { collectionLabel } from '@/utils/collection';
 import { toTokenLookupParam } from '@/utils/address';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -26,10 +25,8 @@ import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
 import { Head } from '../../../seo/Head';
 
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
-import TokenChange from '../../../components/Trendminer/TokenChange';
 import TokenChat from '../../../components/Trendminer/TokenChat';
 import TokenCommunityChatButton from '../../chat/components/TokenCommunityChatButton';
-import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import {
   Card,
@@ -49,6 +46,7 @@ import {
   TokenTransactionsTab,
 } from '../components/tabs';
 import TokenCreationBanner from '../components/TokenCreationBanner';
+import TokenOverview from '../components/TokenOverview';
 import TokenRanking from '../components/TokenRanking/TokenRanking';
 import TokenTradeCard from '../components/TokenTradeCard';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
@@ -94,7 +92,6 @@ const TokenSaleDetails = () => {
   const [activeTab, setActiveTab] = useState<TabType>(TAB_CHAT);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
 
   const [showCreatedOverlay, setShowCreatedOverlay] = useState(() => {
@@ -474,98 +471,15 @@ const TokenSaleDetails = () => {
         <div
           className={cn(isMobile ? 'col-span-1 mb-8' : 'lg:col-span-2 lg:col-start-1', 'flex flex-col gap-6')}
         >
-          {/* Token Header */}
-          {!isMobile && (
-            <Card className="bg-white/[0.02] border-white/10">
-              <div className="p-2">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-                      <span className="text-[.9em] mr-0.5 align-baseline">#</span>
-                      <span>{token?.symbol || token?.name || tokenName}</span>
-                    </h1>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {collectionLabel((token as any)?.collection) && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-white/10 text-white/70 text-xs font-medium px-2.5 py-1 rounded-full border-0"
-                        >
-                          {collectionLabel((token as any)?.collection)}
-                        </Badge>
-                      )}
-                      {tokenDoesNotExist ? (
-                        <Badge
-                          variant="secondary"
-                          className="bg-gradient-to-r from-orange-600/80 to-red-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
-                        >
-                          {t('trending.tokenSale.badgeNotCreated')}
-                        </Badge>
-                      ) : (
-                        <>
-                          {token?.rank && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
-                            >
-                              {t('trending.tokenSale.badgeRank', { rank: token.rank })}
-                            </Badge>
-                          )}
-                          {ownsThisToken && (
-                            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
-                              {t('trending.tokenSale.badgeOwned')}
-                            </Badge>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {!tokenDoesNotExist && token?.sale_address && (
-                      <TokenChange token={token} />
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowShareModal(true)}
-                      className="border-white/20 bg-white/5 text-white hover:bg-white/10 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
-                    >
-                      🔗
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Description */}
-                {!isLoading && !isTokenPending && !tokenDoesNotExist && token?.metaInfo?.description && (
-                  <div className="text-white/75 text-sm leading-relaxed mt-3 max-w-[720px]">
-                    <span>
-                      {descriptionExpanded
-                        || !isMobile
-                        || token.metaInfo.description.length <= 150
-                        ? token.metaInfo.description
-                        : `${token.metaInfo.description.substring(0, 150)}...`}
-                    </span>
-                    {isMobile && token.metaInfo.description.length > 150 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                        className="text-purple-400 hover:text-white ml-2 p-0 h-auto font-medium underline-offset-2 hover:underline"
-                      >
-                        {descriptionExpanded ? t('trending.tokenSale.showLess') : t('trending.tokenSale.showMore')}
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {tokenDoesNotExist && (
-                  <div className="text-white/50 text-sm leading-relaxed mt-3 max-w-[720px] italic">
-                    {t('trending.tokenSale.tokenNotCreatedHeaderHint')}
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
+          <TokenOverview
+            token={token}
+            tokenName={tokenName}
+            owned={ownsThisToken}
+            loading={isLoading}
+            pending={isTokenPending}
+            error={isError}
+            onShare={() => setShowShareModal(true)}
+          />
 
           {/* Chart */}
           {showTradePanels && !isMobile && !tokenDoesNotExist && (
@@ -813,6 +727,7 @@ const TokenSaleDetails = () => {
                 <>
                   {showTradePanels && <TokenTradeCard token={token} />}
                   <TokenSummary
+                    showOverview={false}
                     token={token}
                   />
                   <TokenRanking token={token} />

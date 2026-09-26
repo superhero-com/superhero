@@ -1,274 +1,166 @@
-import React, { useMemo } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { toAe } from '@aeternity/aepp-sdk';
-import { SuperheroApi } from '../../../../api/backend';
-import { Decimal } from '../../../../libs/decimal';
-import Spinner from '../../../../components/Spinner';
+import {
+  ArrowUpRight, ChevronDown, Hash, Info, Trophy,
+} from 'lucide-react';
+import { SuperheroApi } from '@/api/backend';
+import {
+  formatAmount, holderCount, marketCap, rankingContext, tokenPrice, totalSupply,
+  type RankingToken,
+} from './ranking';
+import './TokenRanking.css';
 
 interface TokenRankingProps {
-  token: {
-    sale_address?: string;
-    name?: string;
-    symbol?: string;
-    total_supply?: string;
-    rank?: number;
-  };
+  token: RankingToken;
 }
-
-interface RankingToken {
-  sale_address: string;
-  name: string;
-  symbol: string;
-  total_supply: string;
-  rank: number;
-}
-
 interface RankingData {
   items: RankingToken[];
-  meta?: {
-    currentPage: number;
-    totalPages: number;
-  };
 }
-
 const LIST_SIZE = 5;
 
-const TokenRanking = ({ token }: TokenRankingProps) => {
-  const { t } = useTranslation();
-  // Calculate ranking limit based on token rank (similar to Vue computed)
-  const tokenRankingLimit = useMemo(() => {
-    const rank = token.rank || 1;
-    if (rank === 1) return LIST_SIZE + 3;
-    if (rank === 2) return LIST_SIZE + 1;
-    return LIST_SIZE;
-  }, [token.rank]);
+const RankingRow = ({ token, current }: { token: RankingToken; current: boolean }) => {
+  const { t } = useTranslation('trending');
+  const cap = marketCap(token);
+  const supply = totalSupply(token);
+  return (
+    <li>
+      <Link
+        className={`token-ranking-row${current ? ' is-current' : ''}`}
+        to={`/trends/tokens/${encodeURIComponent(token.name!)}`}
+        aria-current={current ? 'page' : undefined}
+      >
+        <div className="token-ranking-row-heading">
+          <bdi className="token-ranking-position">
+            #
+            {token.rank}
+          </bdi>
+          <span className="token-ranking-token-mark"><Hash aria-hidden="true" /></span>
+          <span className="token-ranking-identity"><strong dir="auto">{token.symbol || token.name}</strong></span>
+          {current ? <span className="token-ranking-current">{t('ranking.current')}</span>
+            : <ArrowUpRight className="token-ranking-row-arrow" aria-hidden="true" />}
+        </div>
+        <dl className="token-ranking-metrics">
+          <div className="token-ranking-metric">
+            <dt>
+              {t('ranking.price')}
+              {' '}
+              <span>· AE</span>
+            </dt>
+            <dd dir="ltr">{formatAmount(tokenPrice(token))}</dd>
+          </div>
+          <div className="token-ranking-metric token-ranking-market">
+            <dt>
+              {t('ranking.marketCap')}
+              {' '}
+              <span>· AE</span>
+            </dt>
+            <dd dir="ltr" title={cap == null ? undefined : `${cap.toFormat()} AE`}>{formatAmount(cap, true)}</dd>
+          </div>
+          <div className="token-ranking-metric token-ranking-secondary">
+            <dt>{t('ranking.holders')}</dt>
+            <dd dir="ltr">{formatAmount(holderCount(token))}</dd>
+          </div>
+          <div className="token-ranking-metric token-ranking-secondary">
+            <dt>{t('ranking.totalSupply')}</dt>
+            <dd dir="ltr" title={supply?.toFormat()}>{formatAmount(supply, true)}</dd>
+          </div>
+        </dl>
+      </Link>
+    </li>
+  );
+};
 
-  // Fetch ranking data via react-query. Sharing the cache (and deduping
-  // in-flight requests by key) avoids the duplicate request that a raw
-  // useEffect fetch produced under StrictMode/remounts, and lets
-  // useLiveTokenData refetch this exact key on websocket updates.
-  const { data: rankingData, isLoading: loading } = useQuery<RankingData | null>({
-    queryKey: ['TokensService.listTokenRankings', token.sale_address, tokenRankingLimit],
-    queryFn: () => SuperheroApi.listTokenRankings(token.sale_address as string, {
-      limit: tokenRankingLimit,
-      page: 1,
+const TokenRanking = ({ token }: TokenRankingProps) => {
+  const { t, i18n } = useTranslation('trending');
+  const [help, setHelp] = useState(false);
+  const explanationId = useId();
+  // Keep the shared query prefix used by useLiveTokenData to refresh these metrics.
+  const {
+    data, isLoading, isError, isFetching, refetch,
+  } = useQuery<RankingData>({
+    queryKey: ['TokensService.listTokenRankings', token.sale_address, LIST_SIZE],
+    queryFn: () => SuperheroApi.listTokenRankings(token.sale_address!, {
+      limit: LIST_SIZE, page: 1,
     }) as Promise<RankingData>,
     enabled: !!token.sale_address,
   });
-
-  const rankingTokens = useMemo(() => rankingData?.items || [], [rankingData]);
-
-  function getDecimalValue(value: string): Decimal {
-    try {
-      // Convert from aettos to AE (assuming 18 decimals)
-      return Decimal.from(toAe(value));
-    } catch {
-      return Decimal.from(0);
-    }
-  }
-
-  // Find current token rank from ranking data or use prop
-  const tokenRank = useMemo(() => rankingTokens
-    .find(
-      (item) => item.sale_address === token.sale_address,
-    )?.rank
-      || token.rank
-      || 1, [rankingTokens, token.sale_address, token.rank]);
-
-  // Calculate tokens ahead to level up
-  const tokensAhead = useMemo(() => {
-    const nextRankToken = rankingTokens.find(({ rank }) => rank === tokenRank - 1);
-
-    if (!nextRankToken || !token.total_supply) return '0';
-
-    const nextTokenSupply = getDecimalValue(nextRankToken.total_supply);
-    const currentTokenSupply = getDecimalValue(token.total_supply);
-    const difference = nextTokenSupply.sub(currentTokenSupply);
-
-    return difference.gte(0) ? difference.shorten().replace('.00', '') : '0';
-  }, [rankingTokens, tokenRank, token.total_supply]);
-
-  // Find closest chaser (token behind current)
-  const closestChaser = useMemo(() => (tokenRank <= 1
-    ? undefined
-    : rankingTokens.find((item) => item.rank === tokenRank + 1)), [rankingTokens, tokenRank]);
-
-  // Calculate tokens behind
-  const tokensBehind = useMemo(() => {
-    if (!closestChaser || !token.total_supply) return '0';
-
-    const currentTokenSupply = getDecimalValue(token.total_supply);
-    const chaserTokenSupply = getDecimalValue(closestChaser.total_supply);
-    const difference = currentTokenSupply.sub(chaserTokenSupply);
-
-    return difference.gte(0) ? difference.shorten().replace('.00', '') : '0';
-  }, [closestChaser, token.total_supply]);
-
-  function getShortenValue(value: string): string {
-    return getDecimalValue(value).shorten();
-  }
-
-  function calculateDifference(
-    currentSupply: string,
-    compareSupply: string,
-  ): { value: string; isPositive: boolean } {
-    const current = getDecimalValue(currentSupply);
-    const compare = getDecimalValue(compareSupply);
-
-    // If current token supply is less than compare token supply, show positive (red)
-    // If current token supply is greater than compare token supply, show negative (green)
-    const isCurrentLess = current.lt(compare);
-    const difference = isCurrentLess ? compare.sub(current) : current.sub(compare);
-
-    return {
-      value: difference.shorten(),
-      isPositive: isCurrentLess, // Red when current token has less supply (behind)
-    };
-  }
-
-  if (loading) {
-    return (
-      <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-center py-8">
-          <Spinner className="w-6 h-6" />
-        </div>
-      </div>
-    );
-  }
-  const renderSupplyValue = (item: RankingToken, difference: { value: string; isPositive: boolean } | null) => {
-    if (item.sale_address === token.sale_address) {
-      return (
-        <span className="text-white">
-          {getShortenValue(item.total_supply)}
-        </span>
-      );
-    }
-    if (difference) {
-      return (
-        <span className={difference.isPositive ? 'text-red-400' : 'text-green-400'}>
-          {difference.isPositive ? '+' : '-'}
-          {difference.value}
-        </span>
-      );
-    }
-    return (
-      <span className="text-white/60">
-        {getShortenValue(item.total_supply)}
-      </span>
-    );
-  };
+  const {
+    rows, current, neighbor, leading, gap,
+  } = rankingContext(data?.items ?? [], token.sale_address);
+  const failed = isError && !current;
 
   return (
-    <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-      {/* Header */}
-      <h3 className="text-xl font-bold text-white m-0 mb-6 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-        {t('trending.ranking.title')}
-      </h3>
-
-      {/* Level Up Info */}
-      <div className="mb-6 text-sm font-medium text-white/70 leading-relaxed">
-        {tokenRank > 1 ? (
+    <div className="token-ranking" dir={i18n.dir()}>
+      <section className="token-ranking-card" aria-label={t('ranking.title')} aria-busy={isLoading}>
+        <header className="token-ranking-heading">
+          <span className="token-ranking-icon"><Trophy aria-hidden="true" /></span>
           <div>
-            <Trans
-              i18nKey="trending.ranking.levelUp"
-              values={{
-                amount: tokensAhead === '0' ? t('trending.ranking.anyAmount') : tokensAhead,
-                name: token.name,
-              }}
-              components={{
-                amount: <strong className="text-[#4ecdc4]" />,
-                name: <span className="font-bold text-white" />,
-              }}
-            />
+            <h2>{t('ranking.title')}</h2>
+            <p>{t('ranking.subtitle')}</p>
           </div>
-        ) : (
-          <div>
-            {t('trending.ranking.highestRanked')}
-            {closestChaser && (
-              <div className="mt-1">
-                <Trans
-                  i18nKey="trending.ranking.tokensAhead"
-                  values={{ amount: tokensBehind }}
-                  components={{ amount: <strong className="text-[#4ecdc4]" /> }}
-                />
-              </div>
+        </header>
+        {isLoading ? (
+          <div className="token-ranking-loading" role="status" aria-label={t('ranking.loading')}>
+            <span aria-hidden="true" />
+            {[0, 1, 2, 3, 4].map((index) => <div key={index} aria-hidden="true" />)}
+          </div>
+        ) : null}
+        {!isLoading && !current && (
+          <div className="token-ranking-state" role="status">
+            <Hash aria-hidden="true" />
+            <h3>{t(failed ? 'ranking.error' : 'ranking.empty')}</h3>
+            <p>{t(failed ? 'ranking.errorCopy' : 'ranking.emptyCopy')}</p>
+            {failed && (
+              <button type="button" disabled={isFetching} onClick={() => { refetch(); }}>{t('ranking.retry')}</button>
             )}
           </div>
         )}
-      </div>
-
-      {/* List Header */}
-      <div className="flex justify-between items-center mb-4 text-xs font-semibold text-white/60 uppercase tracking-wide">
-        <div className="flex items-center gap-1">
-          <span>{t('trending.ranking.mcRank')}</span>
-          <div className="relative group">
-            <button
-              type="button"
-              className="rounded-full bg-white/[0.05] border border-white/10 text-white cursor-pointer text-base"
-            >
-              !
-            </button>
-            <div className="absolute bottom-6 left-0 bg-white/10 border border-white/20 rounded-lg p-2 text-xs text-white/80 backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              {t('trending.ranking.mcRankInfo')}
+        {!isLoading && current && (
+          <>
+            <div className="token-ranking-summary">
+              <div>
+                <span>{t('ranking.currentRank')}</span>
+                <strong>
+                  <small>#</small>
+                  {current.rank}
+                </strong>
+              </div>
+              <div className="token-ranking-target">
+                <span>{gap == null ? t('ranking.unavailable') : t(leading ? 'ranking.lead' : 'ranking.gap', { rank: neighbor?.rank })}</span>
+                <strong dir="ltr">
+                  {formatAmount(gap)}
+                  {gap != null && <small> AE</small>}
+                </strong>
+              </div>
             </div>
-          </div>
-        </div>
-        <div>{t('trending.ranking.totalSupply')}</div>
-      </div>
-
-      {/* Ranking List */}
-      <div className="space-y-2">
-        {rankingTokens.map((item) => {
-          const isCurrentToken = item.sale_address === token.sale_address;
-          const difference = token.total_supply
-            ? calculateDifference(token.total_supply, item.total_supply)
-            : null;
-
-          return (
-
-            <Link
-              key={item.sale_address}
-              to={`/trending/tokens/${item.name}`}
-              className={`
-                flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ease-out text-decoration-none
-                ${isCurrentToken
-                ? 'bg-white/20 border-white/30 text-white'
-                : 'bg-white/[0.05] border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 hover:text-white'
-                }
-              `}
-            >
-              <div className="flex items-center gap-4 overflow-hidden">
-                <div className={`
-                  text-sm font-bold text-right min-w-[20px] tracking-tight
-                  
-                `}
-                >
-                  {item.rank}
-                </div>
-                <div className={`
-                  font-bold text-sm tracking-tight truncate transition-all duration-200 text-[#4ecdc4] opacity-100
-                  
-                `}
-                >
-                  {item.symbol}
-                </div>
-              </div>
-
-              <div className="text-right font-semibold">
-                {renderSupplyValue(item, difference)}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {rankingTokens.length === 0 && !loading && (
-        <div className="text-center py-8 text-white/60">
-          {t('trending.ranking.noData')}
-        </div>
-      )}
+            <ol className="token-ranking-list">
+              {rows.map((item) => (
+                <RankingRow
+                  key={item.sale_address}
+                  token={item}
+                  current={item.sale_address === token.sale_address}
+                />
+              ))}
+            </ol>
+            {isError && (
+              <p className="token-ranking-refresh" role="status">
+                {t('ranking.refreshError')}
+                <button type="button" disabled={isFetching} onClick={() => { refetch(); }}>{t('ranking.retry')}</button>
+              </p>
+            )}
+          </>
+        )}
+        <button type="button" className="token-ranking-help" aria-expanded={help} aria-controls={explanationId} onClick={() => setHelp(!help)}>
+          <span>
+            <Info aria-hidden="true" />
+            {t('ranking.how')}
+          </span>
+          <ChevronDown aria-hidden="true" />
+        </button>
+        {help && <p id={explanationId} className="token-ranking-explanation">{t('ranking.explanation')}</p>}
+      </section>
     </div>
   );
 };

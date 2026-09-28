@@ -53,7 +53,7 @@ const PostTipButton = ({ toAddress, postId }: { toAddress: string; postId: strin
       type="button"
       onClick={handleTip}
       className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors"
-      aria-label={t('aria.tipPost')}
+      aria-label={t('common:aria.tipPost')}
     >
       {isPending && (
         <Spinner className="w-[14px] h-[14px]" />

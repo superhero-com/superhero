@@ -1882,6 +1882,11 @@
       "close": "关闭",
       "done": "完成"
     },
+    "postLayout": {
+      "mentionedTrends": "提及的趋势",
+      "reply": "回复",
+      "replies": "{{count}} 条回复"
+    },
     "trendingAssetCards": {
       "price": "每枚代币价格",
       "period": "30 天表现",

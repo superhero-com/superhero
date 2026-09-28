@@ -423,6 +423,11 @@
     }
   },
   "social": {
+    "postLayout": {
+      "mentionedTrends": "Упомянутые тренды",
+      "reply": "Ответить",
+      "replies": "Ответов: {{count}}"
+    },
     "trendingAssetCards": {
       "price": "Цена токена",
       "period": "Динамика за 30 дней",

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { toTokenLookupParam } from '@/utils/address';
-import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
+import { DEFAULT_PAST_TIMEFRAME, PRICE_MOVEMENT_TIMEFRAME_DEFAULT } from '@/utils/constants';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import type { TokenTagDisplayOptions } from '@/utils/tokenTagEnvelope';
 import EntityPill from './EntityPill';
@@ -38,6 +38,7 @@ export interface TokenPillProps {
   offline?: boolean; // query paused on cached data → last-known, not live
   staleHours?: number; // age of the cached value, spoken label only
   preview?: boolean; // rendered in the composer ladder, not the post → tighter row sizing
+  compact?: boolean; // grouped market cards below feed text
 }
 
 function tokenTarget(normalized: string): string {
@@ -50,6 +51,7 @@ interface TokenRowProps {
   token: TokenDto | null | undefined;
   status: TokenPillStatus;
   preview?: boolean; // composer ladder → shorter candlestick, tighter spacing
+  compact?: boolean;
 }
 
 // The advanced full-row: name, price, market cap and a small candlestick, one link to the token.
@@ -57,7 +59,7 @@ interface TokenRowProps {
 // data-gated on its own — a missing part is dropped, the row is never blanked — and the
 // candlestick no longer depends on price, so `{mode=advanced;price=0}` is a row without a price.
 const TokenRow = ({
-  symbol, options, token, status, preview = false,
+  symbol, options, token, status, preview = false, compact = false,
 }: TokenRowProps) => {
   const { t } = useTranslation();
   const normalized = symbol.replace(/^#/, '');
@@ -79,14 +81,15 @@ const TokenRow = ({
   if (showMcap) spoken.push('market cap');
   if (showChange) {
     spoken.push(isFlatChange(changePct ?? 0)
-      ? 'unchanged over 24 hours'
+      ? `unchanged over ${PRICE_MOVEMENT_TIMEFRAME_DEFAULT}`
       : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
   }
   if (showChart) spoken.push('candlestick chart');
   spoken.push('link');
   const ariaLabel = spoken.join(', ').replace(/, link$/, ' — link');
 
-  const chartHeight = preview ? 44 : 72;
+  let chartHeight = preview ? 44 : 72;
+  if (compact) chartHeight = 36;
 
   return (
     <Link
@@ -96,8 +99,13 @@ const TokenRow = ({
       onClick={(e) => e.stopPropagation()}
     >
       <span className="sh-token-row__head" aria-hidden="true">
-        <span className="sh-token-row__symbol">{`#${normalized}`}</span>
-        {showChange && <PillChangeBadge changePercent={changePct ?? 0} />}
+        <span className="sh-token-row__symbol"><bdi>{`#${normalized}`}</bdi></span>
+        {showChange && (
+          <span className="sh-token-row__performance">
+            <PillChangeBadge changePercent={changePct ?? 0} />
+            {compact && <small>{PRICE_MOVEMENT_TIMEFRAME_DEFAULT}</small>}
+          </span>
+        )}
       </span>
 
       <span className="sh-token-row__stats" aria-hidden="true">
@@ -122,7 +130,12 @@ const TokenRow = ({
       </span>
 
       {showChart ? (
-        <TokenTagCandleChart token={token!} height={chartHeight} className="sh-token-row__chart" />
+        <TokenTagCandleChart
+          token={token!}
+          height={chartHeight}
+          className="sh-token-row__chart"
+          compact={compact}
+        />
       ) : (
         loading && <span className="sh-pill__skel sh-token-row__chart-skel" style={{ height: chartHeight }} />
       )}
@@ -132,7 +145,7 @@ const TokenRow = ({
 
 // Presentational token pill — pure in its inputs, so every state renders directly from props.
 export const TokenPill = ({
-  symbol, options, token, status, offline = false, staleHours, preview = false,
+  symbol, options, token, status, offline = false, staleHours, preview = false, compact = false,
 }: TokenPillProps) => {
   const normalized = symbol.replace(/^#/, '');
   const display = truncateSymbol(normalized);
@@ -155,6 +168,7 @@ export const TokenPill = ({
         token={token}
         status={status}
         preview={preview}
+        compact={compact}
       />
     );
   }
@@ -177,7 +191,7 @@ export const TokenPill = ({
   if (showPrice) spoken.push('with price');
   if (showChange) {
     spoken.push(isFlatChange(changePct ?? 0)
-      ? 'unchanged over 24 hours'
+      ? `unchanged over ${PRICE_MOVEMENT_TIMEFRAME_DEFAULT}`
       : `${isPositive ? 'up' : 'down'} ${Math.abs(changePct ?? 0).toFixed(1)} percent`);
   }
   if (offline && staleHours !== undefined) spoken.push(`last known ${staleHours}h ago`);
@@ -213,11 +227,12 @@ export const TokenPill = ({
 interface PostTokenTagProps {
   symbol: string;
   options: TokenTagDisplayOptions;
+  compact?: boolean;
 }
 
 // Resolves a token tag and renders the pill; the symbol is known from the string, so only the
 // data slots skeleton, and an unknown token degrades to plain text.
-const PostTokenTag = ({ symbol, options }: PostTokenTagProps) => {
+const PostTokenTag = ({ symbol, options, compact = false }: PostTokenTagProps) => {
   const normalized = symbol.replace(/^#/, '');
 
   const query = useQuery<TokenDto | null>({
@@ -247,6 +262,7 @@ const PostTokenTag = ({ symbol, options }: PostTokenTagProps) => {
       status={status}
       offline={offline}
       staleHours={staleHours}
+      compact={compact}
     />
   );
 };

@@ -1951,6 +1951,11 @@
       "close": "Close",
       "done": "Done"
     },
+    "postLayout": {
+      "mentionedTrends": "Mentioned trends",
+      "reply": "Reply",
+      "replies": "{{count}} replies"
+    },
     "trendingAssetCards": {
       "price": "Price per token",
       "period": "30-day performance",

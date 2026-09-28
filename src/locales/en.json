@@ -1950,6 +1950,19 @@
       "chars": "ch",
       "close": "Close",
       "done": "Done"
+    },
+    "trendingAssetCards": {
+      "price": "Price per token",
+      "period": "30-day performance",
+      "shortPeriod": "30d",
+      "marketCap": "Market cap",
+      "holders": "Holders",
+      "subtitle": "Price, momentum & community",
+      "marketLeaders": "Market leaders",
+      "noHistory": "No 30-day history",
+      "loading": "Loading trending assets",
+      "previous": "Previous assets",
+      "next": "Next assets"
     }
   },
   "governance": {

@@ -1881,6 +1881,19 @@
       "chars": "حرف",
       "close": "إغلاق",
       "done": "تم"
+    },
+    "trendingAssetCards": {
+      "price": "السعر لكل رمز",
+      "period": "الأداء خلال 30 يومًا",
+      "shortPeriod": "30 يومًا",
+      "marketCap": "القيمة السوقية",
+      "holders": "الحاملون",
+      "subtitle": "السعر والأداء والمجتمع",
+      "marketLeaders": "متصدرو السوق",
+      "noHistory": "لا يتوفر سجل لآخر 30 يومًا",
+      "loading": "جارٍ تحميل الأصول الرائجة",
+      "previous": "الأصول السابقة",
+      "next": "الأصول التالية"
     }
   },
   "governance": {

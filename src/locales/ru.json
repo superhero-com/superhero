@@ -421,5 +421,22 @@
       "metaMain": "iOS и Android",
       "metaAccent": "API для агентов"
     }
+  },
+  "social": {
+    "trendingAssetCards": {
+      "price": "Цена токена",
+      "period": "Динамика за 30 дней",
+      "shortPeriod": "30 дн.",
+      "marketCap": "Капитализация",
+      "holders": "Держатели",
+      "subtitle": "Цена, динамика и сообщество",
+      "marketLeaders": "Лидеры рынка",
+      "noHistory": "Нет истории за 30 дней",
+      "loading": "Загрузка популярных активов",
+      "previous": "Предыдущие активы",
+      "next": "Следующие активы"
+    },
+    "trendingAssets": "Популярные активы",
+    "viewAll": "Все активы"
   }
 }

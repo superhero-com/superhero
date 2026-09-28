@@ -1881,6 +1881,19 @@
       "chars": "字符",
       "close": "关闭",
       "done": "完成"
+    },
+    "trendingAssetCards": {
+      "price": "每枚代币价格",
+      "period": "30 天表现",
+      "shortPeriod": "30 天",
+      "marketCap": "市值",
+      "holders": "持有人",
+      "subtitle": "价格、走势与社区",
+      "marketLeaders": "市值领先",
+      "noHistory": "暂无 30 天历史",
+      "loading": "正在加载热门资产",
+      "previous": "上一组资产",
+      "next": "下一组资产"
     }
   },
   "governance": {

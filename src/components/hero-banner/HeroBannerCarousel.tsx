@@ -19,12 +19,6 @@ import './HeroCarousel.css';
 const DISMISS_KEY = 'hero_banner_dismissed_until';
 const SLIDE_KEYS = ['bannerB', 'bannerA', 'bannerC', 'bannerD', 'bannerLanguages', 'bannerNew'];
 const SLIDE_ICONS = [Hash, MessageCircle, Users, Bot, Globe2, Smartphone];
-const LANGUAGE_COLLECTIONS = [
-  { label: 'English', collection: 'WORDS', lang: 'en' },
-  { label: '中文', collection: 'CHINESE', lang: 'zh' },
-  { label: 'Русский', collection: 'RUSSIAN', lang: 'ru' },
-  { label: 'العربية', collection: 'ARABIC', lang: 'ar' },
-];
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
@@ -416,7 +410,14 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       className="hero-carousel rail-card"
       aria-label={t('common.heroBanner.bannerAria')}
       onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={(event) => {
+        if (!event.currentTarget.contains(document.activeElement)) handleMouseLeave();
+      }}
+      onFocusCapture={handleMouseEnter}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)
+          && !event.currentTarget.matches(':hover')) handleMouseLeave();
+      }}
     >
       <div className="hero-carousel__viewport" ref={emblaRef}>
         <div className="hero-carousel__container">
@@ -474,18 +475,10 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       </button>
       <footer className="hero-carousel__footer">
         <div className="hero-carousel__metadata">
-          {selectedIndex === 4 ? LANGUAGE_COLLECTIONS.map(({ label, collection, lang }) => (
-            <Link key={collection} to={`/trends/tokens?collection=${collection}`} lang={lang} dir="auto">
-              {label}
-            </Link>
-          )) : (
-            <>
-              <MetadataIcon aria-hidden="true" />
-              <span>{tBanners(`${metadataKey}.metaMain`)}</span>
-              <i aria-hidden="true" />
-              <span>{tBanners(`${metadataKey}.metaAccent`)}</span>
-            </>
-          )}
+          <MetadataIcon aria-hidden="true" />
+          <span>{tBanners(`${metadataKey}.metaMain`)}</span>
+          <i aria-hidden="true" />
+          <span>{tBanners(`${metadataKey}.metaAccent`)}</span>
         </div>
         <div className="hero-carousel__navigation">
           <button

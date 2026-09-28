@@ -74,20 +74,35 @@ describe('HeroBannerCarousel', () => {
   it('keeps only the selected slide accessible and preserves the posting callback', () => {
     const post = showCarousel();
     expect(screen.getAllByRole('heading')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: 'Launch a trend' })).toHaveAttribute('href', '/trends/create');
+    expect(screen.getByRole('link', { name: 'Launch a #trend' })).toHaveAttribute('href', '/trends/create');
     fireEvent.click(screen.getByRole('button', { name: 'Go to slide 2' }));
-    expect(screen.getByRole('heading', { name: 'Your voice. On-chain.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Post on-chain. Get tipped instantly.' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start posting' }));
     expect(post).toHaveBeenCalledOnce();
-    expect(screen.queryByRole('link', { name: 'Launch a trend' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Launch a #trend' })).not.toBeInTheDocument();
   });
 
   it('retains all language collection destinations', () => {
     showCarousel();
     fireEvent.click(screen.getByRole('button', { name: 'Go to slide 5' }));
     [['English', 'WORDS'], ['中文', 'CHINESE'], ['Русский', 'RUSSIAN'], ['العربية', 'ARABIC']].forEach(([name, collection]) => {
-      expect(screen.getByRole('link', { name })).toHaveAttribute('href', `/trends/tokens?collection=${collection}`);
+      expect(screen.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('href', `/trends/tokens?collection=${collection}`);
     });
+  });
+
+  it('keeps language destinations available while a keyboard user focuses them', () => {
+    showCarousel();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 5' }));
+    const collection = screen.getByRole('link', { name: /#Bitcoin English/ });
+    act(() => collection.focus());
+    expect(mocks.expanded.plugins().autoplay.stop).toHaveBeenCalled();
+    mocks.expanded.plugins().autoplay.play.mockClear();
+    fireEvent.mouseLeave(screen.getByRole('region', { name: 'Superhero banner' }));
+    expect(mocks.expanded.plugins().autoplay.play).not.toHaveBeenCalled();
+    act(() => collection.blur());
+    expect(mocks.expanded.plugins().autoplay.play).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 6' }));
+    expect(screen.queryByRole('link', { name: /#Bitcoin English/ })).not.toBeInTheDocument();
   });
 
   it('preserves the selected app slide across dismiss and expand', async () => {
@@ -99,8 +114,8 @@ describe('HeroBannerCarousel', () => {
     expect(mocks.collapsed.selectedScrollSnap()).toBe(5);
     fireEvent.click(screen.getByRole('button', { name: 'Show banner' }));
     await act(async () => { await new Promise((resolve) => { requestAnimationFrame(resolve); }); });
-    expect(screen.getByRole('heading', { name: 'Your ideas. Superpowered.' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Get Superhero' })).toHaveAttribute('href', '/landing');
+    expect(screen.getByRole('heading', { name: 'Built for humans and AI agents.' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/landing');
     expect(localStorage.getItem('hero_banner_dismissed_until')).toBeNull();
   });
 
@@ -108,7 +123,7 @@ describe('HeroBannerCarousel', () => {
     await changeLanguage('ar');
     showCarousel();
     expect(mocks.options.every((options) => options.direction === 'rtl')).toBe(true);
-    expect(screen.getByRole('heading', { name: 'أطلق ترندًا. واجعله لك.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'رمّز ‎#الترندات. تاجِر بالإشارة.' })).toBeInTheDocument();
   });
 
   it('does not restart autoplay for reduced motion', () => {
@@ -119,6 +134,6 @@ describe('HeroBannerCarousel', () => {
     fireEvent.mouseLeave(screen.getByRole('region', { name: 'Superhero banner' }));
     expect(mocks.expanded.plugins().autoplay.play).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
-    expect(screen.getByRole('heading', { name: 'Your voice. On-chain.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Post on-chain. Get tipped instantly.' })).toBeInTheDocument();
   });
 });

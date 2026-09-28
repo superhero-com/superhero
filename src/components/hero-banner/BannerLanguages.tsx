@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe2 } from 'lucide-react';
 import artwork from '../../assets/hero/languages.webp';
 import BannerContent from './BannerContent';
+import LanguageCollectionLinks from './LanguageCollectionLinks';
 
 const BannerLanguages = () => {
   const { t } = useTranslation('banners');
@@ -19,7 +20,9 @@ const BannerLanguages = () => {
       primaryButtonLink="/trends/create"
       secondaryButtonText={t('bannerLanguages.secondaryButton')}
       secondaryButtonLink="/trends/tokens"
-    />
+    >
+      <LanguageCollectionLinks />
+    </BannerContent>
   );
 };
 

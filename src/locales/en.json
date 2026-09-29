@@ -1697,15 +1697,15 @@
       "closeExploreMenu": "Close explore menu",
       "close": "Close",
       "swap": {
-        "label": "SWAP",
+        "label": "Swap",
         "description": "Trade any supported AEX-9 tokens"
       },
       "pool": {
-        "label": "POOL",
+        "label": "Pool",
         "description": "Manage liquidity positions"
       },
       "wrap": {
-        "label": "WRAP",
+        "label": "Wrap",
         "description": "Convert AE ↔ WAE"
       },
       "tokens": {
@@ -1723,7 +1723,8 @@
       "explore": {
         "label": "Explore",
         "description": "Explore tokens, pools, and transactions"
-      }
+      },
+      "navigation": "DeFi navigation"
     },
     "swapRouteInfo": {
       "route": "Route:",
@@ -1943,6 +1944,48 @@
       "add": "Add",
       "remove": "Remove",
       "lpTokens": "LP tokens"
+    },
+    "poolRemove": {
+      "title": "Remove liquidity",
+      "description": "Withdraw your share of both pool assets.",
+      "reviewTitle": "Review removal",
+      "reviewHint": "Check what you’ll receive before confirming.",
+      "settings": "Removal settings",
+      "backAmount": "Back to amount",
+      "backAdd": "Back to add liquidity",
+      "choosePosition": "Choose a position",
+      "chooseHint": "Select Remove from one of your liquidity positions to see what you’ll receive.",
+      "balance": "Your LP balance",
+      "amount": "Amount to remove",
+      "amountMode": "Amount mode",
+      "ofPosition": "of your position",
+      "lpRemove": "LP tokens to remove",
+      "max": "Max",
+      "percentage": "Percentage to remove",
+      "percentPosition": "{{value}}% of your position",
+      "amountHint": "Enter an amount within your LP balance.",
+      "edit": "Edit",
+      "exceeds": "Amount exceeds your LP balance.",
+      "receive": "You’ll receive",
+      "estimated": "Estimated",
+      "estimateError": "We couldn’t load the pool estimate. Your amount is saved.",
+      "nativeHint": "WAE is returned as native AE.",
+      "remaining": "Remaining LP balance",
+      "fullHint": "This removes your entire position in this pool.",
+      "details": "Removal details",
+      "slippage": "Slippage",
+      "minimum": "Minimum {{symbol}} received",
+      "estimateHint": "Final amounts depend on pool reserves when the transaction confirms. Network fees are separate.",
+      "slippageHint": "The maximum change in returned amounts before removal reverts.",
+      "confirm": "Confirm in wallet",
+      "review": "Review removal",
+      "confirming": "Confirming in wallet…",
+      "checking": "Checking pool reserves…",
+      "unavailable": "Estimate unavailable",
+      "checkAmount": "Check LP amount",
+      "tooSmall": "Amount too small",
+      "confirmHint": "Confirm in your wallet to submit the removal.",
+      "reviewNote": "Review first. Confirm in your wallet."
     }
   },
   "social": {

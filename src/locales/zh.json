@@ -1674,7 +1674,8 @@
       "explore": {
         "label": "探索",
         "description": "探索代币、资金池和交易"
-      }
+      },
+      "navigation": "DeFi 导航"
     },
     "minimumReceived": "最少收到",
     "swapRouteInfo": {
@@ -1878,6 +1879,48 @@
       "add": "添加",
       "remove": "移除",
       "lpTokens": "LP 代币"
+    },
+    "poolRemove": {
+      "title": "移除流动性",
+      "description": "提取您在池中两种资产的份额。",
+      "reviewTitle": "确认移除详情",
+      "reviewHint": "确认前请核对您将收到的资产。",
+      "settings": "移除设置",
+      "backAmount": "返回金额",
+      "backAdd": "返回添加流动性",
+      "choosePosition": "选择仓位",
+      "chooseHint": "在您的流动性仓位中选择“移除”，查看您将收到的资产。",
+      "balance": "您的 LP 余额",
+      "amount": "移除数量",
+      "amountMode": "数量模式",
+      "ofPosition": "仓位占比",
+      "lpRemove": "将移除的 LP 代币",
+      "max": "最大",
+      "percentage": "移除比例",
+      "percentPosition": "您仓位的 {{value}}%",
+      "amountHint": "输入不超过 LP 余额的数量。",
+      "edit": "编辑",
+      "exceeds": "数量超过您的 LP 余额。",
+      "receive": "您将收到",
+      "estimated": "预计",
+      "estimateError": "无法加载池估算。已保留您输入的数量。",
+      "nativeHint": "WAE 将以原生 AE 返回。",
+      "remaining": "剩余 LP 余额",
+      "fullHint": "这将移除您在此池中的全部仓位。",
+      "details": "移除详情",
+      "slippage": "滑点",
+      "minimum": "最低收到 {{symbol}}",
+      "estimateHint": "最终数量取决于交易确认时的池储备。网络费用另计。",
+      "slippageHint": "超过此幅度的返回数量变化将导致移除交易回滚。",
+      "confirm": "在钱包中确认",
+      "review": "查看移除详情",
+      "confirming": "正在钱包中确认…",
+      "checking": "正在检查池储备…",
+      "unavailable": "估算不可用",
+      "checkAmount": "检查 LP 数量",
+      "tooSmall": "数量过小",
+      "confirmHint": "在钱包中确认以提交移除交易。",
+      "reviewNote": "先核对，再在钱包中确认。"
     }
   },
   "social": {

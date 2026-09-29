@@ -7,6 +7,7 @@ import {
   Bot, ChevronLeft, ChevronRight, Globe2, Hash, MessageCircle, Smartphone, Sparkles, Users,
 } from 'lucide-react';
 import BannerNew from './BannerNew';
+import HeroBackdrop from './HeroBackdrop';
 import BannerA from './BannerA';
 import BannerB from './BannerB';
 import BannerC from './BannerC';
@@ -419,6 +420,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
           && !event.currentTarget.matches(':hover')) handleMouseLeave();
       }}
     >
+      <HeroBackdrop />
       <div className="hero-carousel__viewport" ref={emblaRef}>
         <div className="hero-carousel__container">
           <div

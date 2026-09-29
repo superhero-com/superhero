@@ -105,6 +105,32 @@ describe('HeroBannerCarousel', () => {
     expect(screen.queryByRole('link', { name: /#Bitcoin English/ })).not.toBeInTheDocument();
   });
 
+  it('links the platform cards to the published apps and agent integration', () => {
+    showCarousel();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 6' }));
+    const destinations = [
+      ['iOS · App Store', 'https://apps.apple.com/us/app/superhero-web3-communities/id6758045846'],
+      ['Android · Google Play', 'https://play.google.com/store/apps/details?id=com.superhero.apps'],
+      ['AI agents · Openclaw / Claude', 'https://github.com/superhero-com/superhero-agent-skill'],
+    ];
+    destinations.forEach(([name, href]) => {
+      const link = screen.getByRole('link', { name });
+      expect(link).toHaveAttribute('href', href);
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+  });
+
+  it('labels sample activity and does not present the illustrative tip as a transaction', () => {
+    showCarousel();
+    expect(screen.getByText('$1.24')).toBeVisible();
+    expect(screen.getAllByText('Example').filter((el) => !el.closest('[aria-hidden="true"]'))).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 2' }));
+    expect(screen.getByText('Tip 5 AE')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Tip 5 AE' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Tip 5 AE' })).not.toBeInTheDocument();
+  });
+
   it('preserves the selected app slide across dismiss and expand', async () => {
     showCarousel();
     fireEvent.click(screen.getByRole('button', { name: 'Go to slide 6' }));

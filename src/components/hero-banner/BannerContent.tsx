@@ -8,28 +8,22 @@ interface BannerContentProps {
   title: string;
   accent: string;
   description: string;
-  artwork: string;
-  artworkClass?: string;
+  graphic: React.ReactNode;
   icon?: LucideIcon;
-  priority?: boolean;
   primaryButtonText: string;
   primaryButtonLink?: string;
   primaryButtonOnClick?: () => void;
   secondaryButtonText: string;
   secondaryButtonLink: string;
-  children?: React.ReactNode;
 }
 
 const BannerContent = ({
-  eyebrow, title, accent, description, artwork, artworkClass = '', icon: Icon = Diamond,
-  priority = false, primaryButtonText, primaryButtonLink, primaryButtonOnClick,
-  secondaryButtonText, secondaryButtonLink, children,
+  eyebrow, title, accent, description, graphic, icon: Icon = Diamond,
+  primaryButtonText, primaryButtonLink, primaryButtonOnClick,
+  secondaryButtonText, secondaryButtonLink,
 }: BannerContentProps) => (
   <article className="hero-slide">
     <div className="hero-slide__body">
-      <div className={`hero-slide__art ${artworkClass}`} aria-hidden="true">
-        <img src={artwork} alt="" decoding="async" loading={priority ? 'eager' : 'lazy'} />
-      </div>
       <div className="hero-slide__copy">
         <div className="hero-slide__eyebrow">
           <span className="hero-slide__badge"><Icon aria-hidden="true" /></span>
@@ -59,8 +53,8 @@ const BannerContent = ({
           </Link>
         </div>
       </div>
+      {graphic}
     </div>
-    {children}
   </article>
 );
 

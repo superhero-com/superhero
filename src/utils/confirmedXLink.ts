@@ -3,34 +3,41 @@
  *
  * Linking or unlinking X is an on-chain transaction, and every screen that
  * shows whether X is linked reads the backend, which learns about the change
- * from its own indexer. That takes a few minutes (it waits on the chain), and
- * in that window the account record still shows the old state. Anything that
- * re-read it would offer "Unlink" for an unlink already sent, or "Link" for a
+ * from its own indexer, minutes later. Anything that re-read the account in
+ * that window would offer "Unlink" for an unlink already sent, or "Link" for a
  * link already sent.
  *
- * So a change is tracked from the moment it is broadcast until the account
- * record agrees with it, and every screen shows it as on its way until then.
- * It is kept in localStorage, so a reload picks the wait back up instead of
- * showing the stale state as if nothing had happened.
+ * The waiting itself lives in the shared pending-transactions store (kinds
+ * `link_x` / `unlink_x`), like every other transaction the app follows until
+ * it is live. This module adds what is particular to X: when a change counts
+ * as done (the account record agrees), and a short memory of changes that
+ * just settled, for reads that started before they did.
  */
 
 import { SuperheroApi, getLinkedXUsername } from '@/api/backend';
+import {
+  LEGACY_X_LINK_CHANGES_STORAGE_KEY,
+  PENDING_TRANSACTION_POLL_MS,
+  PENDING_TRANSACTION_TIMEOUT_MS,
+  clearPendingTransactions,
+  findPendingTransaction,
+  onPendingTransactionSettled,
+  pendingTransactionsVersion,
+  registerPendingTransactionResolver,
+  removePendingTransaction,
+  resumePendingTransactions,
+  subscribePendingTransactions,
+  trackPendingTransaction,
+  type PendingTransaction,
+  type PendingTransactionResolver,
+  type PendingTransactionStep,
+} from '@/features/pending-transactions/store';
 
-/** How often a pending change asks the API whether it has caught up. */
-export const X_LINK_CHANGE_POLL_MS = 10_000;
+/** How often a pending change is checked. */
+export const X_LINK_CHANGE_POLL_MS = PENDING_TRANSACTION_POLL_MS;
 
-/**
- * The top of the 2–6 minutes people are told to expect: the backend indexes
- * on the chain's key blocks. Past it, the wait is described as running long.
- */
-export const X_LINK_CHANGE_EXPECTED_MAX_MS = 6 * 60_000;
-
-/**
- * Past this, stop showing the change as on its way and let the API speak for
- * itself: the transaction was dropped, or the indexer is down, and a wait
- * that never ends helps nobody.
- */
-export const X_LINK_CHANGE_TIMEOUT_MS = 20 * 60_000;
+/** Past this, a change is no longer shown as on its way. */
+export const X_LINK_CHANGE_TIMEOUT_MS = PENDING_TRANSACTION_TIMEOUT_MS;
 
 /**
  * How long a settled change still overrides an older read. The editor's load
@@ -39,7 +46,12 @@ export const X_LINK_CHANGE_TIMEOUT_MS = 20 * 60_000;
  */
 export const CONFIRMED_X_LINK_TTL_MS = 10 * 60_000;
 
-export const X_LINK_CHANGES_STORAGE_KEY = 'superhero:x-link-changes:v1';
+/**
+ * Where the previous release kept pending X link changes. Still read (once,
+ * then folded into the shared store) so a change pending across the update
+ * is not lost.
+ */
+export const X_LINK_CHANGES_STORAGE_KEY = LEGACY_X_LINK_CHANGES_STORAGE_KEY;
 
 export type XLinkChangeKind = 'link' | 'unlink';
 
@@ -52,6 +64,8 @@ export type PendingXLinkChange = {
    */
   username: string | null;
   startedAt: number;
+  /** `sent`, or `confirmed` once it is in a block. */
+  step: PendingTransactionStep;
 };
 
 export type XLinkChangeOutcome = 'settled' | 'timed_out';
@@ -68,14 +82,11 @@ type ReadLinkedUsername = (address: string) => Promise<string | null>;
 
 type ConfirmedChange = { username: string | null; at: number };
 
-const confirmed = new Map<string, ConfirmedChange>();
-const pending = new Map<string, PendingXLinkChange>();
-const timers = new Map<string, ReturnType<typeof setInterval>>();
+const X_KINDS: PendingTransaction['kind'][] = ['link_x', 'unlink_x'];
 
+const confirmed = new Map<string, ConfirmedChange>();
 const listeners = new Set<() => void>();
-const settledListeners = new Set<(event: XLinkChangeSettledEvent) => void>();
 let version = 0;
-let loaded = false;
 
 const emit = () => {
   version += 1;
@@ -86,132 +97,63 @@ const normalize = (username: string | null | undefined) => (
   username ? username.replace(/^@/u, '').toLowerCase() : null
 );
 
+const isXKind = (transaction: PendingTransaction) => X_KINDS.includes(transaction.kind);
+
+const toChange = (transaction: PendingTransaction): PendingXLinkChange => ({
+  kind: transaction.kind === 'link_x' ? 'link' : 'unlink',
+  txHash: transaction.txHash,
+  username: transaction.kind === 'unlink_x' ? normalize(transaction.meta.username) : null,
+  startedAt: transaction.startedAt,
+  step: transaction.step,
+});
+
 // The account record, never a cached copy: this is the read that decides the
 // wait is over.
 const readLinkedUsernameFromApi: ReadLinkedUsername = async (address) => getLinkedXUsername(
   await SuperheroApi.getAccount(address, { cache: 'no-store' }),
 );
 
-const isPendingChange = (value: any): value is PendingXLinkChange => Boolean(
-  value
-  && (value.kind === 'link' || value.kind === 'unlink')
-  && typeof value.txHash === 'string' && value.txHash
-  && (value.username === null || typeof value.username === 'string')
-  && Number.isFinite(value.startedAt),
+// Live once the account record agrees: the handle gone for an unlink,
+// present for a link.
+const resolverFor = (read: ReadLinkedUsername): PendingTransactionResolver => (
+  async (transaction) => {
+    const linked = await read(transaction.account);
+    const done = transaction.kind === 'unlink_x' ? !linked : Boolean(linked);
+    return done ? { username: linked } : undefined;
+  }
 );
 
-// Storage can be missing, full, or blocked (private mode); the in-memory
-// state still works for this page load either way.
-const persist = () => {
-  try {
-    if (!pending.size) {
-      window.localStorage.removeItem(X_LINK_CHANGES_STORAGE_KEY);
-      return;
-    }
-    window.localStorage.setItem(
-      X_LINK_CHANGES_STORAGE_KEY,
-      JSON.stringify(Object.fromEntries(pending)),
-    );
-  } catch {
-    // ignore
+registerPendingTransactionResolver('link_x', resolverFor(readLinkedUsernameFromApi));
+registerPendingTransactionResolver('unlink_x', resolverFor(readLinkedUsernameFromApi));
+
+// Remembered as soon as it settles, before anything re-renders, so a read
+// that started before the change settled cannot bring the old state back.
+onPendingTransactionSettled(({ transaction, outcome, result }) => {
+  if (!isXKind(transaction) || outcome !== 'settled') return;
+  confirmed.set(transaction.account, { username: normalize(result.username), at: Date.now() });
+});
+
+const removeXChanges = (address: string) => {
+  let transaction = findPendingTransaction({ kind: X_KINDS, account: address });
+  while (transaction) {
+    removePendingTransaction(transaction.txHash);
+    transaction = findPendingTransaction({ kind: X_KINDS, account: address });
   }
-};
-
-const ensureLoaded = () => {
-  if (loaded) return;
-  loaded = true;
-  let stored: Record<string, unknown> = {};
-  try {
-    stored = JSON.parse(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY) || '{}') || {};
-  } catch {
-    stored = {};
-  }
-  const now = Date.now();
-  Object.entries(stored).forEach(([address, value]) => {
-    if (isPendingChange(value) && now - value.startedAt <= X_LINK_CHANGE_TIMEOUT_MS) {
-      pending.set(address, value);
-    }
-  });
-  // Drops anything malformed or expired from storage too.
-  persist();
-};
-
-const stopPolling = (address: string) => {
-  const timer = timers.get(address);
-  if (timer) clearInterval(timer);
-  timers.delete(address);
-};
-
-const finish = (
-  address: string,
-  change: PendingXLinkChange,
-  outcome: XLinkChangeOutcome,
-  username: string | null,
-) => {
-  stopPolling(address);
-  pending.delete(address);
-  persist();
-  if (outcome === 'settled') {
-    confirmed.set(address, { username: normalize(username), at: Date.now() });
-  }
-  emit();
-  const event = {
-    address, change, outcome, username,
-  };
-  settledListeners.forEach((listener) => {
-    try {
-      listener(event);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[x-link] settled listener failed', err);
-    }
-  });
-};
-
-const startPolling = (
-  address: string,
-  change: PendingXLinkChange,
-  readLinkedUsername: ReadLinkedUsername,
-) => {
-  stopPolling(address);
-  let checking = false;
-
-  const check = async () => {
-    // Settled, replaced by a newer change, or cleared.
-    if (pending.get(address) !== change) return;
-    if (Date.now() - change.startedAt > X_LINK_CHANGE_TIMEOUT_MS) {
-      finish(address, change, 'timed_out', null);
-      return;
-    }
-    if (checking) return;
-    checking = true;
-    let linked: string | null;
-    try {
-      linked = await readLinkedUsername(address);
-    } catch {
-      // A failed read is not an answer; the next tick asks again.
-      return;
-    } finally {
-      checking = false;
-    }
-    if (pending.get(address) !== change) return;
-    const done = change.kind === 'unlink' ? !linked : Boolean(linked);
-    if (done) finish(address, change, 'settled', linked);
-  };
-
-  timers.set(address, setInterval(check, X_LINK_CHANGE_POLL_MS));
-  check();
 };
 
 /** For useSyncExternalStore: re-render when a pending or settled change moves. */
 export function subscribeXLinkChanges(listener: () => void): () => void {
+  const unsubscribe = subscribePendingTransactions(listener);
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    unsubscribe();
+    listeners.delete(listener);
+  };
 }
 
 /** Changes whenever any pending or settled X link change does. */
 export function xLinkChangesVersion(): number {
-  return version;
+  return pendingTransactionsVersion() + version;
 }
 
 /**
@@ -221,15 +163,22 @@ export function xLinkChangesVersion(): number {
 export function onXLinkChangeSettled(
   listener: (event: XLinkChangeSettledEvent) => void,
 ): () => void {
-  settledListeners.add(listener);
-  return () => { settledListeners.delete(listener); };
+  return onPendingTransactionSettled(({ transaction, outcome, result }) => {
+    if (!isXKind(transaction)) return;
+    listener({
+      address: transaction.account,
+      change: toChange(transaction),
+      outcome,
+      username: result.username ?? null,
+    });
+  });
 }
 
 /** The X link change for `address` still on its way to the API, if any. */
 export function pendingXLinkChange(address: string | null | undefined): PendingXLinkChange | null {
   if (!address) return null;
-  ensureLoaded();
-  return pending.get(address) ?? null;
+  const transaction = findPendingTransaction({ kind: X_KINDS, account: address });
+  return transaction ? toChange(transaction) : null;
 }
 
 /**
@@ -239,35 +188,43 @@ export function pendingXLinkChange(address: string | null | undefined): PendingX
 export function trackXLinkChange(
   address: string,
   change: { kind: XLinkChangeKind; txHash: string; username?: string | null },
-  options: { readLinkedUsername?: ReadLinkedUsername } = {},
+  options: {
+    readLinkedUsername?: ReadLinkedUsername;
+    isMined?: (txHash: string) => Promise<boolean>;
+  } = {},
 ): PendingXLinkChange {
-  ensureLoaded();
-  const entry: PendingXLinkChange = {
-    kind: change.kind,
-    txHash: change.txHash,
-    username: change.kind === 'unlink' ? normalize(change.username) : null,
-    startedAt: Date.now(),
-  };
-  pending.set(address, entry);
+  removeXChanges(address);
   // A newer change makes any earlier settled state moot.
   confirmed.delete(address);
-  persist();
-  emit();
-  startPolling(address, entry, options.readLinkedUsername ?? readLinkedUsernameFromApi);
-  return entry;
+  const transaction = trackPendingTransaction(
+    {
+      kind: change.kind === 'link' ? 'link_x' : 'unlink_x',
+      account: address,
+      txHash: change.txHash,
+      meta: { username: change.kind === 'unlink' ? normalize(change.username) : null },
+    },
+    {
+      resolve: options.readLinkedUsername ? resolverFor(options.readLinkedUsername) : undefined,
+      isMined: options.isMined,
+    },
+  );
+  return toChange(transaction);
 }
 
 /**
  * Pick up the changes a previous page load left pending. Safe to call more
- * than once: a change already being polled is left alone.
+ * than once: a change already being watched is left alone.
  */
 export function resumeXLinkChanges(
-  options: { readLinkedUsername?: ReadLinkedUsername } = {},
+  options: {
+    readLinkedUsername?: ReadLinkedUsername;
+    isMined?: (txHash: string) => Promise<boolean>;
+  } = {},
 ): void {
-  ensureLoaded();
-  Array.from(pending.entries()).forEach(([address, change]) => {
-    if (timers.has(address)) return;
-    startPolling(address, change, options.readLinkedUsername ?? readLinkedUsernameFromApi);
+  resumePendingTransactions({
+    kind: X_KINDS,
+    resolve: options.readLinkedUsername ? resolverFor(options.readLinkedUsername) : undefined,
+    isMined: options.isMined,
   });
 }
 
@@ -276,9 +233,7 @@ export function resumeXLinkChanges(
  * or null for unlinked. Ends any pending change for the address.
  */
 export function rememberConfirmedXLink(address: string, username: string | null): void {
-  ensureLoaded();
-  stopPolling(address);
-  if (pending.delete(address)) persist();
+  removeXChanges(address);
   confirmed.set(address, { username: normalize(username), at: Date.now() });
   emit();
 }
@@ -321,14 +276,7 @@ export function effectiveXLink(address: string, loadedState: LinkState): LinkSta
 
 /** Test helper: forget everything, in memory and in storage. */
 export function clearConfirmedXLinks(): void {
-  Array.from(timers.keys()).forEach(stopPolling);
-  pending.clear();
+  clearPendingTransactions();
   confirmed.clear();
-  loaded = false;
-  try {
-    window.localStorage.removeItem(X_LINK_CHANGES_STORAGE_KEY);
-  } catch {
-    // ignore
-  }
   emit();
 }

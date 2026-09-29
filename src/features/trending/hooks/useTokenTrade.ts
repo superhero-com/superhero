@@ -25,6 +25,7 @@ import {
 } from '../libs/tokenTradeContract';
 import { useTokenTradeStore } from './useTokenTradeStore';
 import { OWNED_TOKENS_QUERY_KEY } from '../../../hooks/useOwnedTokens';
+import { trackTokenTrade } from '../utils/pendingTrades';
 
 interface UseTokenTradeProps {
   token: TokenDto;
@@ -290,6 +291,16 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     return '0';
   }, [queryClient, getTokenSaleInstance, activeAccount, token, store]);
 
+  // The backend indexes a trade a while after it is mined: follow it until
+  // then, so the token and the holdings refetch once they have it.
+  const trackTrade = useCallback((txHash: unknown, side: 'buy' | 'sell') => {
+    const saleAddress = tokenRef.current.sale_address;
+    if (typeof txHash !== 'string' || !txHash || !activeAccount || !saleAddress) return;
+    trackTokenTrade({
+      account: activeAccount, txHash, saleAddress, side,
+    });
+  }, [activeAccount]);
+
   // Buy tokens: call saleInstance.buy, parse decodedEvents, and update success state directly.
   const buy = useCallback(async () => {
     errorMessage.current = undefined;
@@ -318,6 +329,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     notifySubmitted(buyPayload);
     try {
       const result = await saleInstance.buy(store.tokenB, undefined, store.slippage) as any;
+      trackTrade(result?.hash, 'buy');
       const events: any[] = result?.decodedEvents || [];
       const buyEvent = events.find((e: any) => e.name === 'Buy');
       const tokenMintEvent = events.find(
@@ -352,7 +364,10 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       notifyError(error?.message || 'Buy transaction failed');
     }
     store.updateLoadingTransaction(false);
-  }, [getTokenSaleInstance, onTransactionComplete, store, notifySubmitted, notifyConfirmed, notifyError]);
+  }, [
+    getTokenSaleInstance, onTransactionComplete, store, trackTrade,
+    notifySubmitted, notifyConfirmed, notifyError,
+  ]);
 
   // Sell tokens
   const sell = useCallback(async () => {
@@ -403,6 +418,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         countTokenDecimals,
         store.slippage,
       ) as any;
+      trackTrade(sellResult?.hash, 'sell');
 
       const userBalanceValue = await onTransactionComplete();
       store.updateSuccessTxData({
@@ -424,7 +440,10 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       notifyError(error?.message || 'Sell transaction failed');
     }
     store.updateLoadingTransaction(false);
-  }, [getTokenSaleInstance, store, token.symbol, onTransactionComplete, notifySubmitted, notifyConfirmed, notifyError]);
+  }, [
+    getTokenSaleInstance, store, token.symbol, onTransactionComplete, trackTrade,
+    notifySubmitted, notifyConfirmed, notifyError,
+  ]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
     setTransactionType('trade');

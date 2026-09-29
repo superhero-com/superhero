@@ -9,9 +9,10 @@ import {
 } from 'vitest';
 import ProfileXCallback from '@/views/ProfileXCallback';
 import {
-  X_LINK_CHANGES_STORAGE_KEY, X_LINK_CHANGE_POLL_MS, X_LINK_CHANGE_TIMEOUT_MS,
+  X_LINK_CHANGE_POLL_MS, X_LINK_CHANGE_TIMEOUT_MS,
   clearConfirmedXLinks, pendingXLinkChange,
 } from '@/utils/confirmedXLink';
+import { PENDING_TRANSACTIONS_STORAGE_KEY } from '@/features/pending-transactions/store';
 
 const mockClaimXAddressLinkFromCode = vi.fn();
 const mockGetAndClearXOAuthPKCE = vi.fn();
@@ -24,6 +25,12 @@ const mockNotifyConfirmed = vi.fn();
 const mockNotifyError = vi.fn();
 
 let mockActiveAccount = 'ak_other';
+
+// The chain is asked before the API; these tests are about the API.
+vi.mock('@/utils/apiRead', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return { ...actual, isTransactionMined: vi.fn().mockResolvedValue(false) };
+});
 
 vi.mock('@/features/transaction-notification', () => ({
   TxPayloadType: { LinkX: 'link_x', UnlinkX: 'unlink_x' },
@@ -241,7 +248,8 @@ describe('ProfileXCallback', () => {
       // before the chain had seen anything — the profile then showed nothing.
       await screen.findByText(/confirming on the blockchain/i);
       expect(screen.queryByRole('heading', { name: 'X account linked' })).not.toBeInTheDocument();
-      expect(screen.getByText(/usually takes 2–6 minutes/i)).toBeInTheDocument();
+      expect(screen.getByText(/takes a while/i)).toBeInTheDocument();
+      expect(screen.queryByText(/minutes/i)).not.toBeInTheDocument();
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
       expect(mockNotifySubmitted).toHaveBeenCalledWith({ type: 'link_x' });
@@ -250,8 +258,8 @@ describe('ProfileXCallback', () => {
       expect(mockNotifyPending).toHaveBeenCalledWith({ type: 'link_x', startedAt: change!.startedAt });
       expect(mockNotifyConfirmed).not.toHaveBeenCalled();
       // Kept for a reload of any page, not just this one.
-      const stored = JSON.parse(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY) || '{}');
-      expect(stored.ak_test_1).toMatchObject({ kind: 'link', txHash: 'th_x' });
+      const stored = JSON.parse(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY) || '[]');
+      expect(stored).toEqual([expect.objectContaining({ kind: 'link_x', account: 'ak_test_1', txHash: 'th_x' })]);
       // Reaching the profile doesn't require waiting here.
       expect(screen.getByRole('button', { name: /go to profile/i })).toBeInTheDocument();
     });

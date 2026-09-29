@@ -1,6 +1,7 @@
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import { PENDING_TRANSACTIONS_STORAGE_KEY } from '@/features/pending-transactions/store';
 import {
   CONFIRMED_X_LINK_TTL_MS,
   X_LINK_CHANGES_STORAGE_KEY,
@@ -17,6 +18,21 @@ import {
 } from '../confirmedXLink';
 
 const ADDRESS = 'ak_owner';
+
+// Whether the chain has it is asked first; these tests are about the API.
+vi.mock('@/utils/apiRead', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return { ...actual, isTransactionMined: vi.fn().mockResolvedValue(false) };
+});
+
+// Lets the tracker's async checks finish inside fake time.
+const tick = async (ms: number) => {
+  await vi.advanceTimersByTimeAsync(ms);
+  for (let i = 0; i < 10; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.resolve();
+  }
+};
 
 describe('confirmed X link changes', () => {
   beforeEach(() => {
@@ -103,14 +119,6 @@ describe('confirmed X link changes', () => {
   });
 
   describe('tracking a change until the API has it', () => {
-    // Lets the tracker's async check finish inside fake time.
-    const tick = async (ms: number) => {
-      vi.advanceTimersByTime(ms);
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    };
-
     it('keeps an unlink pending while the API still shows the handle, mined or not', async () => {
       // The chain has the unlink within seconds; the backend's account record,
       // which every screen reads, only minutes later. Pending means the latter.
@@ -222,7 +230,7 @@ describe('confirmed X link changes', () => {
       rememberConfirmedXLink(ADDRESS, null);
 
       expect(pendingXLinkChange(ADDRESS)).toBeNull();
-      expect(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY)).toBeNull();
+      expect(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY)).toBeNull();
     });
 
     it('tells subscribers when it starts and when it settles', async () => {
@@ -241,13 +249,6 @@ describe('confirmed X link changes', () => {
   });
 
   describe('across a reload', () => {
-    const tick = async (ms: number) => {
-      vi.advanceTimersByTime(ms);
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    };
-
     // A fresh copy of the module: what the next page load starts from, with
     // only localStorage carried over.
     const reload = async () => {
@@ -268,7 +269,7 @@ describe('confirmed X link changes', () => {
 
       const next = await reload();
       expect(next.pendingXLinkChange(ADDRESS)).toEqual({
-        kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork', startedAt,
+        kind: 'unlink', txHash: 'th_unlink', username: 'untracenetwork', startedAt, step: 'sent',
       });
 
       const readLinkedUsername = vi.fn().mockResolvedValue(null);
@@ -276,7 +277,7 @@ describe('confirmed X link changes', () => {
       await tick(0);
       expect(readLinkedUsername).toHaveBeenCalledWith(ADDRESS);
       expect(next.pendingXLinkChange(ADDRESS)).toBeNull();
-      expect(window.localStorage.getItem(next.X_LINK_CHANGES_STORAGE_KEY)).toBeNull();
+      expect(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY)).toBeNull();
     });
 
     it('does not start a second poll for a change already being watched', async () => {
@@ -290,6 +291,23 @@ describe('confirmed X link changes', () => {
       readLinkedUsername.mockClear();
       await tick(X_LINK_CHANGE_POLL_MS);
       expect(readLinkedUsername).toHaveBeenCalledTimes(1);
+    });
+
+    it('picks up a change the previous release left pending', async () => {
+      const startedAt = Date.now() - 60_000;
+      window.localStorage.setItem(X_LINK_CHANGES_STORAGE_KEY, JSON.stringify({
+        [ADDRESS]: {
+          kind: 'unlink', txHash: 'th_before', username: 'untracenetwork', startedAt,
+        },
+      }));
+      const next = await reload();
+
+      expect(next.pendingXLinkChange(ADDRESS)).toEqual({
+        kind: 'unlink', txHash: 'th_before', username: 'untracenetwork', startedAt, step: 'sent',
+      });
+      // Moved over once, not read again.
+      expect(window.localStorage.getItem(X_LINK_CHANGES_STORAGE_KEY)).toBeNull();
+      expect(window.localStorage.getItem(PENDING_TRANSACTIONS_STORAGE_KEY)).toContain('th_before');
     });
 
     it('drops a change older than the give-up point instead of resuming it', async () => {

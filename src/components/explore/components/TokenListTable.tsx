@@ -11,6 +11,8 @@ import Spinner from '@/components/Spinner';
 import { DexTokenDto } from '../../../api/generated';
 import { Token } from '../types/explore';
 
+import './DexMarketResults.scss';
+
 interface TokenListTableProps {
   tokens: DexTokenDto[];
   sort: {
@@ -120,7 +122,7 @@ export const TokenListTable = ({
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div className="dex-market-results" style={{ overflowX: 'auto' }}>
       {/* Compact Filter Controls */}
       {!hideControls && (
       <div
@@ -508,7 +510,7 @@ export const TokenListTable = ({
           backdropFilter: 'blur(10px)',
         }}
       >
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className="dex-market-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr
               style={{

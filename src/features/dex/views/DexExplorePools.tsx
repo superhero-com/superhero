@@ -14,6 +14,7 @@ import DexPoolExplorerToolbar, { PoolSort } from '../components/DexPoolExplorerT
 import type { TokenPeriod } from '../components/DexTokenExplorerToolbar';
 import './DexExploreTokens.scss';
 import './DexExplorePools.scss';
+import '@/components/explore/components/DexMarketResults.scss';
 
 // The explorer endpoint includes summaries that the generated PairDto omits.
 type ExplorerPair = PairDto & { summary?: DexTokenSummaryDto | null };
@@ -73,7 +74,7 @@ const DexExplorePools = () => {
   else if (data) resultMessage = t('dex.poolExplorer.count', { count: total });
 
   return (
-    <div className="dex-token-explorer dex-pool-explorer">
+    <div className="dex-token-explorer dex-pool-explorer dex-market-results">
       <section aria-labelledby="dex-pool-title">
         <header className="dex-token-explorer__heading">
           <div>
@@ -137,7 +138,7 @@ const DexExplorePools = () => {
             {data?.items.map((pair) => (
               <div
                 key={pair.address}
-                className="bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 active:scale-[0.98] active:bg-white/[0.05]"
+                className="dex-market-card"
                 onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
                 role="button"
                 tabIndex={0}
@@ -149,7 +150,7 @@ const DexExplorePools = () => {
                 }}
               >
                 {/* Pool Pair Header */}
-                <div className="flex flex-col items-center justify-between mb-3 pb-3 border-b border-white/5">
+                <div className="dex-market-card-header">
                   <div className="flex flex-wrap items-center gap-1">
                     <button
                       type="button"
@@ -177,7 +178,7 @@ const DexExplorePools = () => {
                   </div>
 
                   {/* Transaction Count Badge */}
-                  <div className="bg-[var(--accent-color)]/10 px-2 py-1 rounded-xl border border-[var(--accent-color)]/20 mt-2">
+                  <div className="dex-market-count">
                     <span className="text-xs text-[var(--accent-color)] font-semibold">
                       {pair.transactions_count || 0}
                       {' '}
@@ -187,8 +188,8 @@ const DexExplorePools = () => {
                 </div>
 
                 {/* Pool Statistics Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                <div className="dex-market-card-metrics">
+                  <div className="dex-market-metric">
                     <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
                       {t('explore.totalVolume')}
                     </div>
@@ -196,7 +197,7 @@ const DexExplorePools = () => {
                       <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
                     </div>
                   </div>
-                  <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
+                  <div className="dex-market-metric">
                     <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
                       {t('explore.volume')}
                       {' '}
@@ -221,7 +222,7 @@ const DexExplorePools = () => {
                         `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
                       );
                     }}
-                    className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
+                    className="dex-market-action flex-1"
                   >
                     🔄
                     {' '}
@@ -235,7 +236,7 @@ const DexExplorePools = () => {
                         `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
                       );
                     }}
-                    className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
+                    className="dex-market-action flex-1"
                   >
                     ➕
                     {' '}
@@ -248,7 +249,7 @@ const DexExplorePools = () => {
 
           {/* Desktop Table Layout */}
           <div className="hidden md:block bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl overflow-hidden backdrop-blur-[10px] overflow-x-auto">
-            <table className="w-full border-collapse min-w-[700px]">
+            <table className="dex-market-table w-full border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-white/5 border-b border-[var(--glass-border)]">
                   <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">

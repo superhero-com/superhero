@@ -196,6 +196,7 @@ export function useSwapQuote() {
   const quoteTimerRef = useRef<number | null>(null);
   useEffect(() => () => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+    quoteSeqRef.current += 1;
   }, []);
 
   const buildBestPath = useCallback(async (
@@ -264,28 +265,19 @@ export function useSwapQuote() {
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void,
   ): Promise<QuoteResult> => {
+    const seq = ++quoteSeqRef.current;
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
-    // Validation
-    if (!drivingAmount || !params.tokenIn || !params.tokenOut) {
-      return { path: [] };
-    }
-
-    if (Number(drivingAmount) === 0) {
-      const result: QuoteResult = {
-        amountOut: '', amountIn: '', path: [], priceImpact: 0,
-      };
-      setRouteInfo({ path: [], priceImpact: 0 });
+    // Empty input also invalidates any in-flight estimate.
+    if (!params.tokenIn || !params.tokenOut || !Number.isFinite(Number(drivingAmount)) || Number(drivingAmount) <= 0) {
+      const result: QuoteResult = { amountOut: '', amountIn: '', path: [] };
+      setRouteInfo({ path: [] });
+      setQuoteLoading(false);
       onQuoteResult?.(result);
       return result;
     }
 
-    if (Number(drivingAmount) < 0) {
-      return { path: [] };
-    }
-
-    const seq = ++quoteSeqRef.current;
     setQuoteLoading(true);
 
     try {
@@ -443,12 +435,25 @@ export function useSwapQuote() {
     delay = 300,
   ) => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
+    // Invalidate immediately, including the debounce window before the next request starts.
+    quoteSeqRef.current += 1;
+    setRouteInfo({ path: [] });
+    setError(null);
+    const amount = params.isExactIn ? params.amountIn : params.amountOut;
+    const valid = !!params.tokenIn && !!params.tokenOut && Number.isFinite(Number(amount)) && Number(amount) > 0;
+    setQuoteLoading(valid);
+    if (!valid) {
+      onQuoteResult?.({ amountOut: '', amountIn: '', path: [] });
+      return;
+    }
     quoteTimerRef.current = window.setTimeout(() => {
       void refreshQuote(params, onQuoteResult);
     }, delay);
   }, [refreshQuote]);
 
   const cancelDebouncedQuote = useCallback(() => {
+    quoteSeqRef.current += 1;
+    setQuoteLoading(false);
     if (quoteTimerRef.current) {
       window.clearTimeout(quoteTimerRef.current);
       quoteTimerRef.current = null;

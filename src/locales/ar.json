@@ -1702,6 +1702,37 @@
     "poolTransactions": {
       "recentTransactions": "المعاملات الأخيرة",
       "emptyMessage": "لم يُعثر على معاملات لهذا التجمّع. سيظهر نشاط التداول هنا."
+    },
+    "swapCard": {
+      "title": "مبادلة الرموز",
+      "description": "بادل الرموز على æternity.",
+      "pay": "تدفع",
+      "receive": "تستلم",
+      "estimated": "تقديري",
+      "selectPay": "اختر رمز الدفع",
+      "selectReceive": "اختر رمز الاستلام",
+      "available": "المتاح",
+      "connectBalance": "اربط المحفظة لعرض رصيدك",
+      "balance": "الرصيد {{amount}}",
+      "max": "الحد الأقصى",
+      "closeSettings": "إغلاق الإعدادات",
+      "customSlippage": "انزلاق مخصص",
+      "slippageHint": "أقصى تغير في السعر تقبله قبل إلغاء المبادلة.",
+      "deadlineMinutes": "مهلة المعاملة بالدقائق",
+      "minutes": "دقيقة",
+      "details": "التفاصيل",
+      "reserves": "احتياطيات المجمع",
+      "gettingQuote": "جارٍ جلب عرض السعر…",
+      "quoteUnavailable": "عرض السعر غير متاح",
+      "noRoute": "لا يوجد مسار متاح",
+      "insufficient": "الرصيد غير كافٍ",
+      "enterAmount": "أدخل مبلغًا",
+      "review": "مراجعة المبادلة",
+      "reverse": "عكس الرموز",
+      "noLiquidityHint": "لا توجد سيولة لهذا المبلغ. جرّب مبلغًا أصغر أو زوجًا آخر.",
+      "reviewHint": "راجع التفاصيل ثم أكّد في محفظتك.",
+      "walletHint": "اربط محفظتك لمراجعة المبادلة وتأكيدها.",
+      "connectWallet": "ربط المحفظة"
     }
   },
   "social": {

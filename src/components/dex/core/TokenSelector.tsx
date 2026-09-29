@@ -8,8 +8,12 @@ import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { CONFIG } from '../../../config';
 import Spinner from '../../Spinner';
+import { ChevronDown } from 'lucide-react';
+import aeMark from '../../../svg/aeternity-mark.svg';
 
 interface TokenSelectorProps {
+  variant?: 'default' | 'swap';
+  labelForTrigger?: string;
   label?: string;
   selected?: DexTokenDto | null;
   skipToken?: DexTokenDto | null;
@@ -24,6 +28,8 @@ interface TokenSelectorProps {
 
 export default function TokenSelector({
   label,
+  variant = 'default',
+  labelForTrigger,
   selected,
   skipToken,
   onSelect,
@@ -104,6 +110,8 @@ export default function TokenSelector({
         <div className="flex gap-2">
           <Dialog.Trigger asChild>
             <button
+              type="button"
+              aria-label={labelForTrigger ? `${labelForTrigger}: ${selected?.symbol || t('dex.bridge.selectToken')}` : undefined}
               disabled={disabled || loading}
               onClick={() => {
               // Clear search when opening dialog
@@ -112,7 +120,7 @@ export default function TokenSelector({
                 }
                 setCustomAddress('');
               }}
-              className={`min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
+              className={variant === 'swap' ? 'swap-asset-select' : `min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
                 disabled || loading
                   ? 'cursor-not-allowed opacity-50'
                   : 'cursor-pointer hover:-translate-y-0.5'
@@ -126,8 +134,13 @@ export default function TokenSelector({
                 <Spinner className="w-3.5 h-3.5" />
               ) : (
                 <>
-                  {selected ? `${selected.symbol}` : t('dex.bridge.selectToken')}
-                  <span className="opacity-70">▼</span>
+                  {variant === 'swap' && selected && (
+                    <span className={`swap-asset-badge${selected.is_ae || selected.address === CONFIG.DEX_WAE ? ' is-ae' : ''}`} aria-hidden="true">
+                      {selected.is_ae || selected.address === CONFIG.DEX_WAE ? <img src={aeMark} alt="" /> : selected.symbol.slice(0, 1)}
+                    </span>
+                  )}
+                  <bdi>{selected ? `${selected.symbol}` : t('dex.bridge.selectToken')}</bdi>
+                  {variant === 'swap' ? <ChevronDown aria-hidden="true" /> : <span className="opacity-70">▼</span>}
                 </>
               )}
             </button>

@@ -1702,6 +1702,37 @@
     "poolTransactions": {
       "recentTransactions": "近期交易",
       "emptyMessage": "未找到此资金池的交易。交易活动将显示在此处。"
+    },
+    "swapCard": {
+      "title": "兑换代币",
+      "description": "在 æternity 上兑换代币。",
+      "pay": "您支付",
+      "receive": "您收到",
+      "estimated": "预估",
+      "selectPay": "选择支付代币",
+      "selectReceive": "选择接收代币",
+      "available": "可用",
+      "connectBalance": "连接钱包以查看余额",
+      "balance": "余额 {{amount}}",
+      "max": "最大",
+      "closeSettings": "关闭设置",
+      "customSlippage": "自定义滑点",
+      "slippageHint": "兑换撤销前您愿意接受的最大价格变动。",
+      "deadlineMinutes": "交易截止时间（分钟）",
+      "minutes": "分钟",
+      "details": "详情",
+      "reserves": "池储备",
+      "gettingQuote": "获取报价中…",
+      "quoteUnavailable": "报价不可用",
+      "noRoute": "无可用路径",
+      "insufficient": "余额不足",
+      "enterAmount": "输入金额",
+      "review": "查看兑换",
+      "reverse": "反转代币",
+      "noLiquidityHint": "该金额的流动性不足。请尝试较小金额或其他交易对。",
+      "reviewHint": "查看详情，然后在钱包中确认。",
+      "walletHint": "连接钱包以查看并确认兑换。",
+      "connectWallet": "连接钱包"
     }
   },
   "social": {

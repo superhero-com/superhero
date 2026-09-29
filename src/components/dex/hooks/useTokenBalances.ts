@@ -26,7 +26,7 @@ export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexToken
     wae: fromAettos(aex9Balances.find(
       (t) => t.contract_id === CONFIG.DEX_WAE,
     )?.amount || 0),
-  }), [aex9Balances]);
+  }), [balance, aex9Balances]);
 
   return { balances, wrapBalances };
 }

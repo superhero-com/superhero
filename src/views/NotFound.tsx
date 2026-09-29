@@ -9,7 +9,7 @@ const NotFound = () => {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    <div className="ui-page not-found-page min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden">
       <Head
         title={t('common.views.notFound.pageTitle')}
         description={t('common.views.notFound.pageDescription')}
@@ -17,11 +17,11 @@ const NotFound = () => {
       />
 
       {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="hidden absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
           style={{
-            background: 'radial-gradient(circle, var(--neon-pink) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, #75aaff 0%, transparent 70%)',
             top: '-10%',
             left: '-10%',
             animation: 'float 8s ease-in-out infinite',
@@ -30,7 +30,7 @@ const NotFound = () => {
         <div
           className="absolute w-[400px] h-[400px] rounded-full opacity-15 blur-3xl"
           style={{
-            background: 'radial-gradient(circle, var(--neon-teal) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, #528df5 0%, transparent 70%)',
             bottom: '-5%',
             right: '-5%',
             animation: 'float 10s ease-in-out infinite reverse',
@@ -52,23 +52,23 @@ const NotFound = () => {
         {/* Glitch-style 404 number */}
         <div className="relative mb-6">
           <h1
-            className="text-[120px] sm:text-[180px] font-black leading-none select-none"
+            className="not-found-number text-[96px] sm:text-[140px] font-black leading-none select-none"
             style={{
-              background: 'linear-gradient(135deg, var(--neon-pink) 0%, var(--neon-teal) 50%, var(--neon-blue) 100%)',
+              background: 'linear-gradient(135deg, #75aaff 0%, #528df5 50%, var(--neon-blue) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               textShadow: 'none',
-              filter: 'drop-shadow(0 0 30px rgba(255, 107, 107, 0.3))',
+              filter: 'none',
             }}
           >
             404
           </h1>
           {/* Glitch layers */}
           <span
-            className="absolute inset-0 text-[120px] sm:text-[180px] font-black leading-none select-none opacity-50"
+            className="hidden absolute inset-0 text-[120px] sm:text-[180px] font-black leading-none select-none opacity-50"
             style={{
-              background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-pink) 100%)',
+              background: 'linear-gradient(135deg, #528df5 0%, #75aaff 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -85,7 +85,7 @@ const NotFound = () => {
         <div
           className="w-24 h-1 mx-auto mb-8 rounded-full"
           style={{
-            background: 'linear-gradient(90deg, var(--neon-pink), var(--neon-teal), var(--neon-blue))',
+            background: 'linear-gradient(90deg, #75aaff, #528df5, var(--neon-blue))',
           }}
         />
 
@@ -95,7 +95,7 @@ const NotFound = () => {
           {' '}
           <span
             style={{
-              background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
+              background: 'linear-gradient(135deg, #528df5 0%, var(--neon-blue) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -114,10 +114,10 @@ const NotFound = () => {
           <Button
             size="lg"
             onClick={() => navigate('/')}
-            className="w-full sm:w-auto px-8 py-6 text-base font-bold rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,255,157,0.4)]"
+            className="ui-primary w-full sm:w-auto px-6 py-5 text-sm font-semibold"
             style={{
-              background: 'linear-gradient(135deg, var(--neon-teal) 0%, var(--neon-blue) 100%)',
-              color: '#0a0a0f',
+              background: 'linear-gradient(135deg, #528df5 0%, var(--neon-blue) 100%)',
+              color: '#ffffff',
               border: 'none',
             }}
           >
@@ -141,7 +141,7 @@ const NotFound = () => {
             variant="outline"
             size="lg"
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto px-8 py-6 text-base font-semibold rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
+            className="ui-secondary w-full sm:w-auto px-6 py-5 text-sm font-semibold"
           >
             <svg
               className="w-5 h-5 mr-2"

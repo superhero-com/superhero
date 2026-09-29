@@ -71,13 +71,13 @@ export default function GovernanceVote({
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-500/20 to-blue-500/20 rounded-3xl blur-xl" />
+          <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full" />
-                  <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-400 rounded-full" />
+                  <h1 className="ui-page-title text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent">
                     {poll?.pollState.metadata.title || t('vote.defaultPollTitle')}
                   </h1>
                 </div>
@@ -103,7 +103,7 @@ export default function GovernanceVote({
               </div>
               <AeButton
                 onClick={() => setActiveTab('polls')}
-                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
+                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:shadow-xl hover:shadow-blue-500/20"
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,11 +119,11 @@ export default function GovernanceVote({
         {/* Enhanced Voting Section */}
         <div className="mb-8">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-            <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+            <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-xl" />
+            <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-purple-400 rounded-xl flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-400 rounded-xl flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -145,10 +145,10 @@ export default function GovernanceVote({
                         onClick={() => handleVote(idx)}
                         disabled={votingFor != null}
                         className={cn(
-                          'group relative p-6 text-left bg-[var(--glass-bg)] backdrop-blur-2xl border-2 border-[var(--glass-border)] rounded-2xl transition-all cursor-pointer touch-manipulation vote-button',
-                          'hover:bg-white/5 hover:border-white/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20',
-                          'focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50',
-                          isSelected && 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-1 animate-vote-pulse',
+                          'group relative p-4 text-left bg-[#11161d] border border-white/15 rounded-xl transition-colors cursor-pointer touch-manipulation vote-button',
+                          'hover:bg-white/5 hover:border-blue-400/40',
+                          'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50',
+                          isSelected && 'bg-blue-500/20 text-white border-blue-400/50',
                           isVotingThis && 'bg-gradient-to-r from-cyan-400 to-blue-400 text-white border-transparent animate-pulse',
                           votingFor && !isVotingThis && 'opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none',
                         )}
@@ -193,7 +193,7 @@ export default function GovernanceVote({
                 <div className="mt-6">
                   <AeButton
                     onClick={handleRevokeVote}
-                    className="w-full md:w-auto bg-transparent text-white border border-white/20 rounded-xl px-6 py-3 transition-all hover:bg-white/5 hover:border-white/30 hover:-translate-y-1 hover:shadow-lg"
+                    className="w-full md:w-auto bg-transparent text-white border border-white/20 rounded-xl px-6 py-3 transition-all hover:bg-white/5 hover:border-white/30 hover:shadow-lg"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,8 +212,8 @@ export default function GovernanceVote({
         {results && (
           <div className="mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-xl" />
-              <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+              <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-xl" />
+              <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-xl flex items-center justify-center">
@@ -302,13 +302,13 @@ export default function GovernanceVote({
                               )}
                               style={{ width: `${percentage}%` }}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
                             </div>
                           </div>
                           {percentage > 0 && (
                             <div className="absolute top-0 left-0 h-full w-full">
                               <div
-                                className="h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+                                className="h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
@@ -327,8 +327,8 @@ export default function GovernanceVote({
         {activeAccount && (
           <div className="mb-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl" />
-              <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+              <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl" />
+              <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +340,7 @@ export default function GovernanceVote({
 
                 {decimalBalance && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
                           <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,7 +360,7 @@ export default function GovernanceVote({
                     </div>
 
                     {delegators.length > 0 && (
-                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

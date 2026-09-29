@@ -110,13 +110,13 @@ const RelaySettingsView = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="ui-page chat-page mx-auto w-full max-w-2xl px-4 py-6">
       <header className="mb-4 flex items-center gap-2">
         <Link to="/chat" aria-label="Back to chat" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <Radio className="h-5 w-5 text-primary" aria-hidden />
-        <h1 className="text-xl font-semibold text-foreground">Nostr relays</h1>
+        <h1 className="ui-page-title">Nostr relays</h1>
       </header>
 
       <p className="mb-4 rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
@@ -124,7 +124,7 @@ const RelaySettingsView = () => {
       </p>
 
       {relayList.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-6 text-center">
+        <div className="ui-panel p-6 text-center">
           <Radio className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden />
           <p className="text-sm text-muted-foreground">
             No relays configured. Add one below to start reading and writing.
@@ -133,7 +133,7 @@ const RelaySettingsView = () => {
       ) : (
         <ul className="flex flex-col gap-2">
           {relayList.map((relay) => (
-            <li key={relay.url} className="rounded-xl border border-border bg-card p-3">
+            <li key={relay.url} className="ui-panel p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">

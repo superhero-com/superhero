@@ -63,7 +63,7 @@ const TokenHolderCard = React.memo(({ holder, token }: TokenHolderCardProps) => 
   );
 
   return (
-    <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#222222] md:border-0 bg-[#141414]/50 md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
+    <div className="my-2 md:my-0 mx-2 md:mx-0 border border-[#29313b] md:border-0 bg-[#11161d] md:bg-transparent rounded-lg md:rounded-none px-3 md:px-6 py-2 md:py-4 md:grid md:[grid-template-columns:2fr_1fr_1fr] md:gap-4 space-y-2 md:space-y-0 hover:bg-white/[0.02] transition-colors">
       {/* Account */}
       <div className="flex items-center gap-2">
         <div className="text-[10px] text-white/60 md:hidden">{t('trending.tokenHolders.accountLabel')}</div>
@@ -110,7 +110,7 @@ const TokenHolderCard = React.memo(({ holder, token }: TokenHolderCardProps) => 
           </div>
           <div className="w-20 md:min-w-[100px] md:max-w-[120px] bg-white/10 rounded-full h-1.5 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-full rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-[#2871ed] to-[#1252d5] h-full rounded-full transition-all duration-500"
               style={{
                 width: `${Math.min(
                   Number(percentage.toString()),
@@ -211,12 +211,12 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   const totalPages = data?.meta?.totalPages || 0;
 
   return (
-    <div className="space-y-4">
+    <div className="ui-page token-data-panel space-y-4">
       {/* Data Table */}
-      <div className="bg-transparent md:bg-white/[0.02] border-0 md:border md:border-white/10 rounded-2xl overflow-visible md:overflow-hidden">
+      <div className="bg-transparent md:bg-[#11161d] border-0 md:border md:border-white/10 rounded-2xl overflow-visible md:overflow-hidden">
         {/* Table Header */}
         <div
-          className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide"
+          className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-[11px] font-medium text-white/60"
           style={{ gridTemplateColumns: '2fr 1fr 1fr' }}
         >
           {headers.map((header) => (
@@ -338,7 +338,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                     onClick={() => updatePage(pageNum)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 ${
                       currentPage === pageNum
-                        ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                        ? 'bg-gradient-to-r from-[#2871ed] to-[#1252d5] text-white'
                         : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
                     }`}
                   >

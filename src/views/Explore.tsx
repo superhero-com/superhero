@@ -26,12 +26,12 @@ export default function ExploreRefactored() {
   const transactionList = useTransactionList();
 
   return (
-    <div className="max-w-[1400px] mx-auto p-5">
+    <div className="ui-page max-w-[1400px] mx-auto p-4 md:p-5">
       <DexTabs />
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[32px] font-bold text-white m-0 mb-2">
+        <h1 className="ui-page-title mb-2">
           {t('exploreTitle')}
         </h1>
         <p className="text-base text-white/80 m-0 leading-relaxed">
@@ -40,12 +40,12 @@ export default function ExploreRefactored() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-0.5 mb-6 border-b border-gray-600">
+      <div className="flex flex-wrap gap-0.5 mb-6 border-b border-gray-600">
         <button
           onClick={() => setActive('Tokens')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
             active === 'Tokens'
-              ? 'bg-gray-800 text-white border-b-2 border-green-500'
+              ? 'bg-gray-800 text-white border-b-2 border-blue-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -55,7 +55,7 @@ export default function ExploreRefactored() {
           onClick={() => setActive('Pairs')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
             active === 'Pairs'
-              ? 'bg-gray-800 text-white border-b-2 border-green-500'
+              ? 'bg-gray-800 text-white border-b-2 border-blue-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -65,7 +65,7 @@ export default function ExploreRefactored() {
           onClick={() => setActive('Transactions')}
           className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
             active === 'Transactions'
-              ? 'bg-gray-800 text-white border-b-2 border-green-500'
+              ? 'bg-gray-800 text-white border-b-2 border-blue-500'
               : 'bg-transparent text-gray-400 hover:text-white'
           }`}
         >
@@ -109,12 +109,12 @@ export default function ExploreRefactored() {
 
           <div className="overflow-x-auto">
             {/* Controls */}
-            <div className="flex gap-2 items-center mb-4">
+            <div className="flex flex-wrap gap-2 items-center mb-4">
               <label className="text-xs opacity-85 text-white/80">{t('sortBy')}</label>
               <AppSelect
                 value={pairList.sort.key as string}
                 onValueChange={(v) => pairList.toggleSort(v as any)}
-                triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-green-500"
+                triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-blue-500"
                 contentClassName="bg-[#1a1a23] border-gray-600"
               >
                 <AppSelectItem value="transactions">{t('txCount')}</AppSelectItem>
@@ -131,7 +131,7 @@ export default function ExploreRefactored() {
                 placeholder={t('filterPools')}
                 value={pairList.search}
                 onChange={(e) => pairList.setSearch(e.target.value)}
-                className="ml-auto px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 min-w-[200px] text-sm placeholder-white/50 focus:outline-none focus:border-green-500"
+                className="ml-auto px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 min-w-[200px] text-sm placeholder-white/50 focus:outline-none focus:border-blue-500"
               />
             </div>
 

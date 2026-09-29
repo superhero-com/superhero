@@ -19,6 +19,7 @@ import './utils/trustedTypes';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
+import './styles/ui-surfaces.scss';
 
 OpenAPI.BASE = API_BASE_URL;
 

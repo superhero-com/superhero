@@ -124,15 +124,15 @@ const Daos = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 text-white">
+    <div className="ui-page dao-page max-w-6xl mx-auto p-4 text-white">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
-        <div className="text-3xl font-extrabold text-white">{translate('daosTitle')}</div>
-        <div className="flex items-center gap-2">
+        <div className="ui-page-title">{translate('daosTitle')}</div>
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <input
             placeholder={translate('search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-10 min-h-10 box-border px-4 text-sm rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+            className="h-10 min-h-10 min-w-0 w-full sm:w-auto box-border px-3 text-sm rounded-xl border border-white/15 bg-[#11161d] text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
           />
           <AppSelect
             value={orderBy}
@@ -162,26 +162,26 @@ const Daos = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
         {allItems.map((t) => (
           <div
-            className={`border rounded-2xl p-4 bg-gradient-to-b from-gray-800/85 to-gray-900/70 text-white shadow-lg transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl ${
+            className={`ui-panel p-4 text-white transition-colors duration-150 ${
               activeAccount === t.owner_address
-                ? 'border-purple-500/50 shadow-purple-500/25 relative'
+                ? 'border-blue-500/50 relative'
                 : 'border-black/20'
             }`}
             key={t.address}
           >
             <div className="flex justify-between items-start gap-2 mb-2">
               <div className="flex flex-col gap-1.5">
-                <div className="font-black text-white text-lg tracking-wide">
+                <div className="font-semibold text-white text-base tracking-tight">
                   {`#${t.symbol}`}
                 </div>
                 {activeAccount === t.owner_address && (
-                <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
+                <div className="text-xs px-2 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-white w-fit">
                   {translate('owned')}
                 </div>
                 )}
               </div>
               <a
-                className="px-4 py-2.5 rounded-xl text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45"
+                className="ui-secondary px-3 py-2 text-xs whitespace-nowrap no-underline"
                 href={`/trends/dao/${encodeURIComponent(
                   t.sale_address || '',
                 )}`}

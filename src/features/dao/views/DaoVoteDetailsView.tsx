@@ -142,7 +142,7 @@ const DaoVoteDetailsContent = ({
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+    <div className="ui-page dao-page max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left sidebar - Token info (hidden on mobile) */}
         <div className="hidden lg:block lg:col-span-1 space-y-4">
@@ -172,7 +172,7 @@ const DaoVoteDetailsContent = ({
               {/* Enhanced Vote Card */}
               <div className="space-y-6">
                 {/* Vote Header */}
-                <Card className="bg-white/[0.02] border-white/10">
+                <Card className="ui-panel">
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xl font-semibold text-white">
@@ -368,7 +368,7 @@ const DaoVoteDetailsContent = ({
                           variant="outline"
                           size="sm"
                           disabled={actionLoading}
-                          className="border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
+                          className="border-purple-500/30 bg-purple-500/10 text-blue-300 hover:bg-purple-500/20"
                         >
                           {t('apply')}
                         </Button>
@@ -387,7 +387,7 @@ const DaoVoteDetailsContent = ({
 
                 {/* Voters Table */}
 
-                <Card className="bg-white/[0.02] border-white/10">
+                <Card className="ui-panel">
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold text-white">{t('voters.title')}</CardTitle>
                   </CardHeader>

@@ -136,7 +136,7 @@ export const LeaderboardFilters = ({
 }: LeaderboardFiltersProps) => {
   const { t } = useTranslation('trending');
   return (
-    <div className="flex flex-col md:flex-row w-full gap-3 md:items-center">
+    <div className="leaderboard-filters flex flex-wrap w-full gap-3 items-end">
       {/* Timeframe segmented control */}
       <div className="w-full md:w-auto flex-1">
         <div className="flex items-center justify-between gap-2 mb-1">
@@ -154,7 +154,7 @@ export const LeaderboardFilters = ({
                 onClick={() => onTimeframeChange(option.value)}
                 className={`px-2 py-2 h-10 text-xs rounded-lg border transition-all duration-300 focus:outline-none ${
                   isActive
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-lg'
+                    ? 'bg-[#1c304f] text-[#b6d0ff] border-[#3e5f8e]'
                     : 'bg-white/[0.02] text-white border-white/10 hover:bg-white/[0.05]'
                 }`}
               >
@@ -166,7 +166,7 @@ export const LeaderboardFilters = ({
       </div>
 
       {/* Custom date range */}
-      <div className="w-full md:w-auto md:min-w-[460px]">
+      <div className="w-full md:w-auto md:min-w-[400px] flex-1">
         <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[11px] uppercase tracking-wide text-white/40">
             {t('leaderboardFilters.customRange')}

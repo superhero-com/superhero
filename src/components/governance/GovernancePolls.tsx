@@ -21,17 +21,17 @@ export default function GovernancePolls() {
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="flex items-center justify-between mb-8 py-8 px-6 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
+          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
+          <div className="ui-panel flex items-center justify-between mb-2 py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                   <span className="text-2xl">🗳️</span>
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full animate-pulse" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full" />
               </div>
               <div className="header-text">
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
+                <h1 className="ui-page-title text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
                   {t('polls.title')}
                 </h1>
                 <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
@@ -62,10 +62,10 @@ export default function GovernancePolls() {
         </div>
 
         {/* Enhanced Search and Filter Controls */}
-        <div className="sticky top-4 z-20 mb-8">
+        <div className="sticky top-4 z-20 mb-2">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-2xl -z-10" />
-            <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 shadow-2xl">
+            <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/5 via-blue-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10" />
+            <div className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 shadow-2xl">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
                   <MobileInput
@@ -143,18 +143,18 @@ export default function GovernancePolls() {
         <div className="space-y-6">
           {polls.length === 0 ? (
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-2xl -z-10" />
+              <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/5 via-blue-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10" />
               <MobileCard
                 variant="outlined"
                 padding="large"
-                className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl"
+                className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl"
               >
-                <div className="text-center py-20 px-8">
+                <div className="text-center py-10 px-5">
                   <div className="relative mb-8">
                     <div className="w-24 h-24 mx-auto bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-3xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                       <span className="text-4xl">🗳️</span>
                     </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full animate-pulse" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full" />
                   </div>
                   <h3 className="m-0 mb-4 text-white text-2xl font-bold">
                     {t('polls.noPollsFound')}
@@ -174,27 +174,27 @@ export default function GovernancePolls() {
                   className="text-inherit no-underline block group"
                 >
                   <div className="flex flex-col gap-4">
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/5 via-blue-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
+                    <div className="ui-panel p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl transition-all duration-500 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
                       {/* Animated gradient border */}
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
 
                       {/* Status indicator with glow */}
                       <div className="absolute top-4 right-4 z-10">
                         <div
                           className={`relative px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
                             p.status?.toLowerCase() === 'open'
-                              ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
+                              ? 'bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40'
                               : p.status?.toLowerCase() === 'closed'
-                                ? 'bg-gradient-to-br from-red-500/30 to-rose-500/20 text-red-300 border border-red-400/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+                                ? 'bg-gradient-to-br from-red-500/30 to-rose-500/20 text-red-300 border border-red-400/40'
                                 : 'bg-gradient-to-br from-gray-500/30 to-slate-500/20 text-gray-300 border border-gray-400/40'
                           }`}
                         >
                           {p.status || t('polls.unknown')}
 
                           {p.status?.toLowerCase() === 'open' && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl animate-pulse" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl" />
                           )}
                         </div>
                       </div>
@@ -202,7 +202,7 @@ export default function GovernancePolls() {
                       <div className="flex flex-col gap-4 pt-2">
                         {/* Title with enhanced typography */}
                         <div className="pr-20">
-                          <h3 className="font-bold text-xl leading-tight text-white group-hover/card:text-transparent group-hover/card:bg-gradient-to-r group-hover/card:from-pink-400 group-hover/card:via-purple-400 group-hover/card:to-blue-400 group-hover/card:bg-clip-text transition-all duration-300">
+                          <h3 className="font-bold text-xl leading-tight text-white group-hover/card:text-blue-300 transition-all duration-300">
                             {p.title}
                           </h3>
                         </div>
@@ -233,9 +233,9 @@ export default function GovernancePolls() {
                           </div>
 
                           <div className="flex items-center gap-2 text-slate-300">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-purple-500/30">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-blue-500/30">
                               <svg
-                                className="w-4 h-4 text-purple-400"
+                                className="w-4 h-4 text-blue-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -255,7 +255,7 @@ export default function GovernancePolls() {
                         </div>
 
                         {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl" />
                       </div>
                     </div>
                   </div>

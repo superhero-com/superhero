@@ -30,7 +30,7 @@ const Section = ({
         ·
         {members.length}
       </h2>
-      <div className="divide-y divide-border rounded-xl border border-border bg-card px-3">
+      <div className="ui-panel divide-y divide-border px-3">
         {members.map((member) => (
           <MemberRow key={member.pubkey ?? member.address} member={member} />
         ))}
@@ -49,7 +49,7 @@ const RoomInfoView = () => {
   const heading = room ? `#${room.symbol}` : name;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="ui-page chat-page mx-auto w-full max-w-2xl px-4 py-6">
       <header className="mb-4 flex items-center gap-2">
         <Link
           to={`/chat/${saleAddress}`}

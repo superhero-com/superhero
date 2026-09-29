@@ -131,13 +131,13 @@ const Dao = () => {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="ui-page dao-page max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
       {/* Header Section */}
       <div className="mb-6">
         {token && (
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
+              <h1 className="ui-page-title break-words">
                 {token.name || token.symbol}
                 {' '}
                 [
@@ -192,7 +192,7 @@ const Dao = () => {
       </div>
 
       {isLoading && (
-        <Card className="bg-white/[0.02] border-white/10">
+        <Card className="ui-panel">
           <CardContent className="p-6">
             <div className="text-white/80">{t('loading')}</div>
           </CardContent>
@@ -210,7 +210,7 @@ const Dao = () => {
       {!isLoading && !error && (
         <div className="grid grid-cols-1 gap-6">
           {/* Stats Card */}
-          <Card className="bg-white/[0.02] border-white/10">
+          <Card className="ui-panel">
             <CardContent className="p-6">
               <div className="flex flex-wrap gap-6 text-sm mb-4">
                 <div>
@@ -260,9 +260,9 @@ const Dao = () => {
           {/* Create Vote and Votes in a row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Create Vote Card */}
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="ui-panel">
               <CardHeader>
-                <CardTitle className="text-white">{t('createVote')}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-white">{t('createVote')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
@@ -359,7 +359,7 @@ const Dao = () => {
                   <Button
                     onClick={createVote}
                     disabled={creating}
-                    className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
+                    className="ui-primary w-full"
                   >
                     {creating ? t('creating') : t('createVoteButton')}
                   </Button>
@@ -368,15 +368,15 @@ const Dao = () => {
             </Card>
 
             {/* Votes Card */}
-            <Card className="bg-white/[0.02] border-white/10">
+            <Card className="ui-panel">
               <CardHeader>
-                <CardTitle className="text-white">{t('votes')}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-white">{t('votes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {!state || !state?.votes || Array.from(state?.votes).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-500/5 flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>

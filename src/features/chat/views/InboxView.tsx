@@ -53,10 +53,10 @@ const InboxView = () => {
   if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="ui-page chat-page mx-auto w-full max-w-2xl px-4 py-6">
       <WebChatSafetyNotice />
-      <header className="mb-4 flex items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold text-foreground">Chat</h1>
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="ui-page-title">Chat</h1>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"

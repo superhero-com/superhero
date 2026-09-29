@@ -1161,7 +1161,8 @@
       "expandAria": "显示横幅",
       "previousSlide": "上一张幻灯片",
       "nextSlide": "下一张幻灯片",
-      "goToSlide": "转到第 {{number}} 张幻灯片"
+      "goToSlide": "转到第 {{number}} 张幻灯片",
+      "expand": "展开"
     },
     "errorBoundary": {
       "title": "出了点问题。",

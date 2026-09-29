@@ -357,6 +357,16 @@
       "linkAccount": "Привязать аккаунт",
       "send": "Отправить",
       "receive": "Получить"
+    },
+    "heroBanner": {
+      "expand": "Развернуть",
+      "bannerAria": "Баннер Superhero",
+      "dismiss": "Скрыть",
+      "dismissAria": "Скрыть баннер",
+      "expandAria": "Показать баннер",
+      "previousSlide": "Предыдущий слайд",
+      "nextSlide": "Следующий слайд",
+      "goToSlide": "Перейти к слайду {{number}}"
     }
   },
   "banners": {

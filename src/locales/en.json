@@ -500,7 +500,8 @@
       "expandAria": "Show banner",
       "previousSlide": "Previous slide",
       "nextSlide": "Next slide",
-      "goToSlide": "Go to slide {{number}}"
+      "goToSlide": "Go to slide {{number}}",
+      "expand": "Expand"
     },
     "modals": {
       "titleSuffix": "{{name}} Modal",

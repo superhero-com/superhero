@@ -145,6 +145,42 @@ describe('HeroBannerCarousel', () => {
     expect(localStorage.getItem('hero_banner_dismissed_until')).toBeNull();
   });
 
+  it('exposes only the active compact action and pauses autoplay during keyboard focus', async () => {
+    const post = showCarousel();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss banner' }));
+    await act(async () => { await new Promise((resolve) => { requestAnimationFrame(resolve); }); });
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Launch a #trend' })).toHaveAttribute('href', '/trends/create');
+    const next = screen.getByRole('button', { name: 'Next slide' });
+    act(() => next.focus());
+    expect(mocks.collapsed.plugins().autoplay.stop).toHaveBeenCalled();
+    mocks.collapsed.plugins().autoplay.play.mockClear();
+    fireEvent.mouseLeave(screen.getByRole('region', { name: 'Superhero banner' }));
+    expect(mocks.collapsed.plugins().autoplay.play).not.toHaveBeenCalled();
+    fireEvent.click(next);
+    expect(screen.queryByRole('link', { name: 'Launch a #trend' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start posting' }));
+    expect(post).toHaveBeenCalledOnce();
+    // JSDOM has no pointer hit testing; the pointer has left the region.
+    vi.spyOn(screen.getByRole('region', { name: 'Superhero banner' }), 'matches').mockReturnValue(false);
+    act(() => next.blur());
+    expect(mocks.collapsed.plugins().autoplay.play).toHaveBeenCalled();
+  });
+
+  it('restores a saved dismissal and keeps compact autoplay disabled for reduced motion', async () => {
+    localStorage.setItem('hero_banner_dismissed_until', new Date(Date.now() + 86400000).toISOString());
+    vi.stubGlobal('matchMedia', vi.fn(() => ({
+      matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    })));
+    showCarousel();
+    await act(async () => { await new Promise((resolve) => { requestAnimationFrame(resolve); }); });
+    expect(screen.getByRole('button', { name: 'Show banner' })).toBeInTheDocument();
+    fireEvent.mouseLeave(screen.getByRole('region', { name: 'Superhero banner' }));
+    expect(mocks.collapsed.plugins().autoplay.play).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+    expect(screen.getByRole('button', { name: 'Start posting' })).toBeInTheDocument();
+  });
+
   it('uses the Arabic layout direction and translated content', async () => {
     await changeLanguage('ar');
     showCarousel();

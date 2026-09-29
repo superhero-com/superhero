@@ -1161,7 +1161,8 @@
       "expandAria": "إظهار اللافتة",
       "previousSlide": "الشريحة السابقة",
       "nextSlide": "الشريحة التالية",
-      "goToSlide": "الانتقال إلى الشريحة {{number}}"
+      "goToSlide": "الانتقال إلى الشريحة {{number}}",
+      "expand": "توسيع"
     },
     "errorBoundary": {
       "title": "حدث خطأ ما.",

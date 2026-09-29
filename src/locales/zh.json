@@ -1716,7 +1716,22 @@
       "priceChange": "价格变动",
       "last24Hours": "过去 24 小时",
       "last7Days": "过去 7 天",
-      "last30Days": "过去 30 天"
+      "last30Days": "过去 30 天",
+      "title": "资金池活动",
+      "subtitle": "交易量与价格变动",
+      "period": "活动周期",
+      "tradingVolume": "交易量",
+      "totalTradingVolume": "总交易量",
+      "allTime": "全部时间",
+      "balances": "资金池余额",
+      "currentReserves": "当前储备",
+      "exchangeRate": "兑换汇率",
+      "rateHint": "当前储备比例，未计入兑换手续费和价格影响。",
+      "rateUnavailable": "储备为空或未知时无法计算汇率",
+      "pricedIn": "{{token}} 以 {{quote}} 计价",
+      "ratioMovement": "资金池汇率变动",
+      "loading": "正在加载资金池活动…",
+      "failed": "无法加载资金池活动。余额仍然可用。"
     },
     "poolTransactions": {
       "recentTransactions": "近期交易",

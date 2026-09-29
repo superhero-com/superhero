@@ -1716,7 +1716,22 @@
       "priceChange": "تغيّر السعر",
       "last24Hours": "آخر 24 ساعة",
       "last7Days": "آخر 7 أيام",
-      "last30Days": "آخر 30 يومًا"
+      "last30Days": "آخر 30 يومًا",
+      "title": "نشاط المجمّع",
+      "subtitle": "حجم التداول وحركة السعر",
+      "period": "فترة النشاط",
+      "tradingVolume": "حجم التداول",
+      "totalTradingVolume": "إجمالي حجم التداول",
+      "allTime": "كل الفترات",
+      "balances": "أرصدة المجمّع",
+      "currentReserves": "الاحتياطيات الحالية",
+      "exchangeRate": "سعر الصرف",
+      "rateHint": "نسبة الاحتياطيات الحالية، قبل رسوم المبادلة وتأثير السعر.",
+      "rateUnavailable": "سعر الصرف غير متاح للاحتياطيات الفارغة أو غير المعروفة",
+      "pricedIn": "سعر {{token}} بوحدة {{quote}}",
+      "ratioMovement": "حركة سعر صرف المجمّع",
+      "loading": "جارٍ تحميل نشاط المجمّع…",
+      "failed": "تعذّر تحميل نشاط المجمّع. لا تزال الأرصدة متاحة."
     },
     "poolTransactions": {
       "recentTransactions": "المعاملات الأخيرة",

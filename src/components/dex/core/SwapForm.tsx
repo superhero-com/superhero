@@ -27,7 +27,7 @@ import { useAccount, useDex } from '../../../hooks';
 import Spinner from '../../Spinner';
 
 export interface SwapFormProps {
-  onPairSelected?: (pair: PairDto) => void;
+  onPairSelected?: (pair: PairDto | null) => void;
   onFromTokenSelected?: (token: DexTokenDto) => void;
 }
 
@@ -57,9 +57,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   });
 
   useEffect(() => {
-    if (pair) {
-      onPairSelected?.(pair);
-    }
+    onPairSelected?.(pair ?? null);
   }, [pair, onPairSelected]);
 
   useEffect(() => {

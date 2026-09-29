@@ -4,10 +4,13 @@ import {
   useNavigate, useParams, Link, useLocation,
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  ArrowLeft, ArrowUpRight, ChevronDown, MessageCircle,
+} from 'lucide-react';
 import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWallet } from '@/hooks';
-import { formatAddress } from '@/utils/address';
+import AddressAvatar from '@/components/AddressAvatar';
 import { Head } from '../../../seo/Head';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
@@ -22,6 +25,7 @@ import CommentForm from '../components/CommentForm';
 import { resolvePostByKey } from '../utils/resolvePost';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
+import './PostDetail.css';
 
 const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
   const { t } = useTranslation('social');
@@ -30,8 +34,9 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
   const receiver = String(post?.sender_address || post?.senderAddress || '');
 
   const { data: summary } = usePostTipSummary(postId);
-  const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
-  const totalAe = Number.isFinite(total) ? total : 0;
+  const total = summary?.totalTips;
+  const totalAe = total != null && Number.isFinite(Number(total))
+    ? Decimal.from(total).prettify() : '—';
 
   const { data: tips = [] } = usePostTips(postId, receiver);
   const top = tips.slice(0, 10);
@@ -41,60 +46,47 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
     return null;
   }
   return (
-    <section className="mt-2">
-      <h3 className="text-white/90 font-semibold mb-2">{t('social:tips')}</h3>
-      <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-sm text-white/70">
-            {t('totalTipped')}
-            {' '}
-            <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
-            {' '}
-            AE
+    <details className="post-detail__tips">
+      <summary>
+        <span>{t('tips')}</span>
+        <span className="post-detail__tips-total" dir="ltr">
+          {totalAe}
+          {' '}
+          AE
+        </span>
+        <span className="post-detail__muted">{t('tipsCount', { count: tips.length })}</span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </summary>
+      <div className="post-detail__tip-list">
+        {top.map((tip) => (
+          <div key={tip.hash} className="post-detail__tip">
+            <AddressAvatar address={tip.sender} size={32} />
+            <div className="post-detail__tip-identity">
+              <Link to={`/users/${tip.sender}`}><bdi>{chainNames?.[tip.sender] || tip.sender}</bdi></Link>
+              {chainNames?.[tip.sender] && <span dir="ltr">{tip.sender}</span>}
+              <small>{tip.date}</small>
+            </div>
+            <strong dir="ltr">
+              {Decimal.from(tip.amountAe).prettify()}
+              {' '}
+              AE
+            </strong>
+            {explorerBase && (
+              <a
+                href={`${explorerBase}/transactions/${tip.hash}`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t('viewTip')}
+                title={t('viewTip')}
+              >
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            )}
           </div>
-          <div className="text-xs text-white/50">{tips.length ? t('tipsCount', { count: tips.length }) : ''}</div>
-        </div>
-
-        <div className="grid gap-2">
-          {top.map((tip) => (
-            <div key={tip.hash} className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <Link
-                  to={`/users/${tip.sender}`}
-                  className="text-sm text-white truncate hover:underline"
-                  title={tip.sender}
-                >
-                  {chainNames?.[tip.sender] || formatAddress(tip.sender, 3, true)}
-                </Link>
-                <div className="text-xs text-white/50 truncate">{tip.date}</div>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="text-sm text-white font-semibold">
-                  {Decimal.from(tip.amountAe).prettify()}
-                  {' '}
-                  AE
-                </div>
-                {explorerBase && (
-                  <a
-                    className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
-                    href={`${explorerBase}/transactions/${tip.hash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('viewTip')}
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-          {tips.length > top.length && (
-            <div className="text-xs text-white/50 pt-1">
-              {t('showingLatestTips', { count: top.length })}
-            </div>
-          )}
-        </div>
+        ))}
+        {tips.length > top.length && <p className="post-detail__muted">{t('showingLatestTips', { count: top.length })}</p>}
       </div>
-    </section>
+    </details>
   );
 };
 
@@ -135,7 +127,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
 
   // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
-  const { data: ancestors = [] } = useQuery<PostDto[]>({
+  const { data: ancestors = [], isLoading: isAncestorsLoading } = useQuery<PostDto[]>({
     queryKey: ['post-ancestors', (postData as any)?.id, parentId],
     enabled: !!postData,
     refetchInterval: 120 * 1000,
@@ -160,16 +152,26 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
     },
   });
 
-  // Center the current post in the viewport once it's rendered
   const currentPostRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
+  const focusedPostId = useRef<string | null>(null);
+  // Only position a newly opened thread. Background refresh must not move the reader.
   useEffect(() => {
-    if (!postData) return () => { };
-    // Defer to the end of the frame to ensure layout is ready
+    if (!postData?.id || isAncestorsLoading || focusedPostId.current === postData.id) {
+      return () => {};
+    }
     const id = window.requestAnimationFrame(() => {
-      currentPostRef.current?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+      focusedPostId.current = postData.id;
+      if (ancestors.length) currentPostRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      else window.scrollTo(0, 0);
     });
     return () => window.cancelAnimationFrame(id);
-  }, [postData, ancestors.length]);
+  }, [postData?.id, ancestors.length, isAncestorsLoading]);
+
+  const focusReply = () => {
+    composerRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    composerRef.current?.querySelector<HTMLElement>('textarea, button')?.focus({ preventScroll: true });
+  };
 
   // Compute total descendant comments (all levels) for current post
   // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
@@ -231,11 +233,11 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
 
   // Render helpers
   const renderLoadingState = () => (
-    <div className="text-center py-8 text-light-font-color">{t('social:loading')}</div>
+    <div className="post-detail__state" role="status">{t('social:loading')}</div>
   );
 
   const renderErrorState = () => (
-    <div className="text-center py-8 text-light-font-color">
+    <div className="post-detail__state" role="alert">
       {t('social:errorLoadingPost')}
       <AeButton
         variant="ghost"
@@ -250,7 +252,8 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
   );
 
   const renderStack = () => (
-    <div className="grid gap-0 md:gap-2">
+    <div className="post-detail__thread">
+      {ancestors.length > 0 && <p className="post-detail__context-label">{t('social:postDetail.earlier')}</p>}
       {ancestors.map((anc) => (
         <ReplyToFeedItem
           key={anc.id}
@@ -263,15 +266,15 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
         />
       ))}
       {postData && (
-        <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
+        <div ref={currentPostRef} className="post-detail__current">
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} onReply={focusReply} presentation="detail" isActive />
         </div>
       )}
     </div>
   );
 
   const content = (
-    <div className="w-full p-0">
+    <div className="post-detail">
       {postData ? (
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
@@ -300,44 +303,45 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           }}
         />
       ) : null}
-      <div className="mb-4">
-        <AeButton
+      <header className="post-detail__navigation">
+        <button
+          type="button"
+          className="post-detail__back"
           onClick={() => {
             const fromFeedUrl = (location.state as { fromFeedUrl?: string })?.fromFeedUrl;
-            if (fromFeedUrl) {
-              navigate(fromFeedUrl);
-              return;
-            }
-            navigate('/');
+            navigate(fromFeedUrl || '/');
           }}
-          variant="ghost"
-          size="sm"
-          outlined
-          className="!border !border-solid !border-white/15 hover:!border-white/35"
         >
-          ←
-          {' '}
+          <ArrowLeft size={17} aria-hidden="true" />
           {t('common:labels.back')}
-        </AeButton>
-      </div>
+        </button>
+        <h1>{t('social:postDetail.title')}</h1>
+        {postData && (
+          <button type="button" className="post-detail__join" onClick={focusReply}>
+            <MessageCircle size={16} aria-hidden="true" />
+            {t('social:postLayout.reply')}
+          </button>
+        )}
+      </header>
 
       {isLoading && renderLoadingState()}
       {error && renderErrorState()}
 
       {postData && (
-        <article className="grid gap-4">
+        <div className="post-detail__body">
           {renderStack()}
-
-          <PostTipOverview post={postData as any} explorerUrl={activeNetwork?.explorerUrl} />
-
-          <section className="mt-2">
-            <h3 className="text-white/90 font-semibold mb-2">{t('social:replies')}</h3>
-            <DirectReplies id={String((postData as any)?.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
-            <div className="mt-6">
-              <CommentForm postId={String((postData as any)?.id)} onCommentAdded={handleCommentAdded} placeholder={t('forms:writeReply')} />
+          <PostTipOverview post={postData} explorerUrl={activeNetwork?.explorerUrl} />
+          <section className="post-detail__conversation" aria-labelledby="post-conversation-heading">
+            <div className="post-detail__section-heading">
+              <h2 id="post-conversation-heading">{t('social:postDetail.conversation')}</h2>
+              <span>{t('social:postLayout.replies', { count: descendantCount ?? postData.total_comments ?? 0 })}</span>
             </div>
+            <div ref={composerRef} id="post-reply-composer" className="post-detail__composer">
+              <CommentForm postId={String(postData.id)} onCommentAdded={handleCommentAdded} placeholder={t('forms:writeReply')} appearance="integrated" />
+            </div>
+            <DirectReplies id={String(postData.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
           </section>
-        </article>
+        </div>
       )}
 
     </div>

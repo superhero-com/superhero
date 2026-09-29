@@ -1951,6 +1951,13 @@
       "close": "Close",
       "done": "Done"
     },
+    "postDetail": {
+      "title": "Post",
+      "conversation": "Conversation",
+      "earlier": "Earlier in this conversation",
+      "join": "Join the conversation",
+      "empty": "No replies yet. Be the first to share your thoughts."
+    },
     "postLayout": {
       "mentionedTrends": "Mentioned trends",
       "reply": "Reply",

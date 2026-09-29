@@ -37,6 +37,8 @@ interface ReplyToFeedItemProps {
   commentCount?: number;
   hideParentContext?: boolean; // when true, do not render parent context header
   allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
+  onReply?: () => void;
+  presentation?: 'feed' | 'detail';
   isActive?: boolean; // when true, visually highlight as the focused post
   /**
    * Optional label used on Trend token pages to indicate that the author
@@ -87,10 +89,13 @@ const ReplyToFeedItem = memo(({
   hideParentContext = false,
   allowInlineRepliesToggle = true,
   isActive = false,
+  onReply,
+  presentation = 'feed',
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
-  const { t } = useTranslation('social');
+  const { t, i18n } = useTranslation('social');
   const postId = item.id;
+  const replyControls = allowInlineRepliesToggle ? `replies-${postId}` : undefined;
   const authorAddress = item.sender_address;
   const { chainNames, profileDisplayNames } = useWallet();
   const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
@@ -206,6 +211,7 @@ const ReplyToFeedItem = memo(({
       ref={containerRef}
       className={cn(
         'feed-post',
+        presentation === 'detail' && 'feed-post--detail',
         isCompact && 'feed-post--compact',
         !isActive && 'feed-post--clickable',
         isActive && 'feed-post--active',
@@ -310,7 +316,7 @@ const ReplyToFeedItem = memo(({
         {media.length > 0 && (
         <div
           className={cn(
-            'mt-3 grid gap-2 rounded-xl overflow-hidden',
+            'feed-post__media mt-3 grid gap-2 rounded-xl overflow-hidden',
             media.length === 1 && 'grid-cols-1',
             media.length === 2 && 'grid-cols-2',
             media.length >= 3 && 'grid-cols-2',
@@ -318,12 +324,20 @@ const ReplyToFeedItem = memo(({
         >
           {media.slice(0, 4).map((m: string) => (
             media.length === 1 ? (
-              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} />
+              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={presentation === 'detail' ? 320 : '50vh'} />
             ) : (
               <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={200} />
             )
           ))}
         </div>
+        )}
+
+        {presentation === 'detail' && (
+          <time className="feed-post__published" dateTime={item.created_at}>
+            {new Date(item.created_at).toLocaleString(i18n.resolvedLanguage, {
+              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            })}
+          </time>
         )}
 
         {/* Actions */}
@@ -332,7 +346,10 @@ const ReplyToFeedItem = memo(({
             <button
               type="button"
               onClick={(e) => {
-                if (allowInlineRepliesToggle) {
+                if (onReply) {
+                  e.stopPropagation();
+                  onReply();
+                } else if (allowInlineRepliesToggle) {
                   e.stopPropagation();
                   toggleReplies();
                   if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
@@ -342,9 +359,9 @@ const ReplyToFeedItem = memo(({
                 }
               }}
               className="feed-post__reply"
-              aria-label={t('social:postLayout.replies', { count: typeof descendantCount === 'number' ? descendantCount : commentCount })}
+              aria-label={onReply ? t('social:postLayout.reply') : t('social:postLayout.replies', { count: typeof descendantCount === 'number' ? descendantCount : commentCount })}
               aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
-              aria-controls={`replies-${postId}`}
+              aria-controls={onReply ? 'post-reply-composer' : replyControls}
             >
               <MessageCircle className="w-[15px] h-[15px]" strokeWidth={2} />
               <span>{typeof descendantCount === 'number' ? descendantCount : commentCount}</span>

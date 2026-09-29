@@ -52,6 +52,7 @@ interface PostFormProps {
   // Common props
   onSuccess?: (postId?: string) => void;
   className?: string;
+  appearance?: 'default' | 'integrated';
   onTextChange?: (text: string) => void;
 
   // Post-specific props
@@ -120,6 +121,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const {
     onSuccess,
     className = '',
+    appearance = 'default',
     onTextChange,
     isPost = true,
     postId,
@@ -135,6 +137,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     characterLimit = 280,
     autoFocus = false,
   } = props;
+  const usesComposerSurface = isPost || appearance === 'integrated';
   const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
   const queryClient = useQueryClient();
@@ -1044,6 +1047,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   }
 
   const hasMediaTools = showEmojiPicker || showGifInput || showImageInput;
+  const replyMinHeight = appearance === 'integrated' ? '132px' : computedMinHeight;
+
   const desktopTools = (
     <div className="post-composer__tools flex items-center gap-2.5 relative">
       {showEmojiPicker && (
@@ -1057,7 +1062,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             setShowGif(false);
           }}
         >
-          {isPost ? (
+          {usesComposerSurface ? (
             <span className="post-composer__tool-icon post-composer__tool-icon--emoji" aria-hidden="true">
               <IconSmile className="w-4 h-4" />
             </span>
@@ -1078,7 +1083,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             setShowImage(false);
           }}
         >
-          {isPost ? (
+          {usesComposerSurface ? (
             <span className="post-composer__tool-icon post-composer__tool-icon--gif" aria-hidden="true">
               <IconGif className="w-4 h-4" />
             </span>
@@ -1098,7 +1103,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             setShowEmoji(false);
           }}
         >
-          {isPost ? (
+          {usesComposerSurface ? (
             <span className="post-composer__tool-icon post-composer__tool-icon--image" aria-hidden="true">
               <IconImage className="w-4 h-4" />
             </span>
@@ -1124,7 +1129,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             }
           }}
         >
-          {isPost ? (
+          {usesComposerSurface ? (
             <span className="post-composer__tool-icon post-composer__tool-icon--link" aria-hidden="true">
               <IconLink className="w-4 h-4" />
             </span>
@@ -1174,6 +1179,17 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   );
 
   // If not connected and it's a reply, show simple message
+  if (!activeAccount && !isPost && appearance === 'integrated') {
+    return (
+      <div className="post-composer reply-connect">
+        <div>
+          <strong>{ts('postDetail.join')}</strong>
+          <p>{tf('pleaseConnectWalletToReply')}</p>
+        </div>
+        <ConnectWalletButton className="post-composer__primary" />
+      </div>
+    );
+  }
   if (!activeAccount && !isPost) {
     return (
       <div
@@ -1193,9 +1209,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
   return (
     <div
-      className={`${isPost ? 'post-composer w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
+      className={`${usesComposerSurface ? 'post-composer w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
     >
-      <div className={isPost ? 'rail-card post-composer__surface' : 'bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl'}>
+      <div className={usesComposerSurface ? 'rail-card post-composer__surface' : 'bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl'}>
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
             {activeAccount && (
@@ -1308,7 +1324,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   }}
                   className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{
-                    minHeight: isPost ? '160px' : computedMinHeight,
+                    minHeight: isPost ? '160px' : replyMinHeight,
                     // Text goes transparent so the mirror below shows the pills; caret
                     // (caret-color) and selection stay painted by the textarea on top.
                     ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
@@ -1343,8 +1359,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   />
                 )}
 
-                <div className={isPost ? 'post-composer__input-footer' : undefined}>
-                  {isPost && hasMediaTools && <div className="hidden md:block min-w-0">{desktopTools}</div>}
+                <div className={usesComposerSurface ? 'post-composer__input-footer' : undefined}>
+                  {usesComposerSurface && hasMediaTools && <div className="hidden md:block min-w-0">{desktopTools}</div>}
                   <div className="post-composer__mobile-tools md:hidden absolute bottom-5 left-2 flex items-center gap-1.5">
                     {/* Mobile-only GIF button inside textarea corner */}
                     {showGifInput && (
@@ -1468,7 +1484,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
               {(isPost || hasMediaTools) && (
                 <div className="post-composer__toolbar hidden md:flex items-center justify-between mt-3 gap-3">
-                  {!isPost && desktopTools}
+                  {!usesComposerSurface && desktopTools}
 
                   <div className="post-composer__submit flex items-center gap-3">
                     {requiredHashtag && requiredMissing && (

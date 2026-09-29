@@ -3,7 +3,9 @@ import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDex } from '../../../hooks';
 
-const SwapInlineSettings = ({ id, onClose }: { id: string; onClose: () => void }) => {
+const SwapInlineSettings = ({
+  id, onClose, title, hint,
+}: { id: string; onClose: () => void; title?: string; hint?: string }) => {
   const { t } = useTranslation('dex');
   const {
     slippagePct, deadlineMins, setSlippage, setDeadline,
@@ -15,9 +17,9 @@ const SwapInlineSettings = ({ id, onClose }: { id: string; onClose: () => void }
     && deadline.trim() !== '' && Number.isInteger(Number(deadline))
     && Number(deadline) >= 1 && Number(deadline) <= 60;
   return (
-    <section className="swap-settings" id={id} aria-label={t('swap.swapSettings')}>
+    <section className="swap-settings" id={id} aria-label={title || t('swap.swapSettings')}>
       <div className="swap-settings__heading">
-        <h3>{t('swap.swapSettings')}</h3>
+        <h3>{title || t('swap.swapSettings')}</h3>
         <button type="button" aria-label={t('swapCard.closeSettings')} onClick={onClose}><X aria-hidden="true" /></button>
       </div>
       <span className="swap-setting-label">{t('settings.slippageTolerance')}</span>
@@ -34,7 +36,7 @@ const SwapInlineSettings = ({ id, onClose }: { id: string; onClose: () => void }
           <span>%</span>
         </label>
       </div>
-      <p>{t('swapCard.slippageHint')}</p>
+      <p>{hint || t('swapCard.slippageHint')}</p>
       <label className="swap-deadline" htmlFor={`${id}-deadline`}>
         {t('settings.transactionDeadline')}
         <span>

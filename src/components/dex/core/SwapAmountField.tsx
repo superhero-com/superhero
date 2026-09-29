@@ -12,6 +12,9 @@ interface Props {
   balance?: string;
   connected: boolean;
   pay?: boolean;
+  label?: string;
+  hint?: string;
+  selectorLabel?: string;
   loading?: boolean;
   disabled: boolean;
   insufficient?: boolean;
@@ -25,6 +28,7 @@ interface Props {
 const SwapAmountField = ({
   token, otherToken, amount, balance, connected, pay = false, loading = false,
   disabled, insufficient = false, tokens, search, onSearch, onTokenChange, onAmountChange,
+  label, hint, selectorLabel,
 }: Props) => {
   const { t } = useTranslation('dex');
   const id = useId();
@@ -38,7 +42,8 @@ const SwapAmountField = ({
   return (
     <div className={`swap-field${pay ? '' : ' swap-field--receive'}${insufficient ? ' has-error' : ''}`}>
       <label htmlFor={id}>
-        {t(pay ? 'swapCard.pay' : 'swapCard.receive')}
+        {label || t(pay ? 'swapCard.pay' : 'swapCard.receive')}
+        {hint && <span>{hint}</span>}
         {!pay && <span>{t('swapCard.estimated')}</span>}
       </label>
       <div className="swap-field__main">
@@ -54,12 +59,13 @@ const SwapAmountField = ({
           readOnly={!pay}
           disabled={disabled}
           aria-invalid={insufficient || undefined}
+          aria-label={label}
           onChange={(event) => updateAmount(event.target.value)}
-          style={!pay && amount ? { fontSize: `clamp(15px, ${Math.min(8.3, 85 / shownAmount.length)}cqw, 27px)` } : undefined}
+          style={(!pay || label) && amount ? { fontSize: `clamp(15px, ${Math.min(8.3, 85 / shownAmount.length)}cqw, 27px)` } : undefined}
         />
         <TokenSelector
           variant="swap"
-          labelForTrigger={t(pay ? 'swapCard.selectPay' : 'swapCard.selectReceive')}
+          labelForTrigger={selectorLabel || t(pay ? 'swapCard.selectPay' : 'swapCard.selectReceive')}
           selected={token}
           skipToken={otherToken}
           onSelect={onTokenChange}

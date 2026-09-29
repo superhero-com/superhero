@@ -1,18 +1,15 @@
 /* eslint-disable
-  @typescript-eslint/no-unused-vars,
   react/function-component-definition,
-  react-hooks/exhaustive-deps,
-  no-unsafe-optional-chaining,
   no-nested-ternary
 */
-import { DexPairService, DexService } from '@/api/generated';
+import { DexService } from '@/api/generated';
 import { PriceDataFormatter } from '@/features/shared/components';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
-import AeButton from '../components/AeButton';
+import { useParams } from 'react-router-dom';
+import DexTokenHeader from '../features/dex/components/DexTokenHeader';
 import { TokenPricePerformance } from '../features/dex/components';
 import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
@@ -47,14 +44,16 @@ interface TokenData {
 export default function TokenDetail() {
   const { t } = useTranslation();
   const { activeNetwork } = useAeSdk();
-  const { tokenAddress } = useParams();
-  const navigate = useNavigate();
+  const params = useParams();
+  const tokenAddress = params.tokenAddress || params.id || '';
   const [selectedPeriod, setSelectedPeriod] = useState<'24h' | '7d' | '30d'>(
     '24h',
   );
 
-  const { data: tokenDetails } = useQuery({
-    queryKey: ['DexService.getDexTokenSummary', tokenAddress],
+  const {
+    data: tokenDetails, isPending: detailsLoading, isError: detailsFailed, refetch: retryDetails,
+  } = useQuery({
+    queryKey: ['DexService.getDexTokenByAddress', tokenAddress],
     queryFn: () => DexService.getDexTokenByAddress({ address: tokenAddress }),
     enabled: !!tokenAddress,
   });
@@ -82,9 +81,6 @@ export default function TokenDetail() {
     enabled: !!tokenAddress,
   });
 
-  const isPositive = useMemo(() => Number(tokenDetails?.summary?.change?.[selectedPeriod]
-    ?.percentage) >= 0, [selectedPeriod, tokenDetails?.summary?.change]);
-
   // Circulating supply comes from the separate middleware aex9 query, which can
   // still be pending after the page leaves its loading state. Until both
   // event_supply and decimals are present, the division would produce a bogus
@@ -100,145 +96,24 @@ export default function TokenDetail() {
     }
   }, [aex9Data]);
 
-  if (loading) {
-    return (
-      <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
-        <div className="text-center text-white/60 flex flex-col items-center gap-4">
-          <Spinner className="w-8 h-8" />
-          {t('common.views.tokenDetail.loadingTokenDetails')}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
-        <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20 backdrop-blur-xl">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto mb-10 md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <DexTokenHeader
+        address={tokenAddress}
+        token={tokenDetails}
+        loading={detailsLoading}
+        failed={detailsFailed}
+        onRetry={() => { retryDetails(); }}
+      />
+      {loading && <div className="flex justify-center p-5"><Spinner className="w-6 h-6" /></div>}
+      {error && <div className="text-sm text-red-400" role="alert">{error}</div>}
+      {!loading && !error && tokenDetails && (
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         <div className="flex flex-col gap-6">
           {/* Token Detail Card */}
           <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
-            {/* Header */}
-            <div className="mb-6">
-              {
-                !tokenDetails ? (
-                  <div className="text-center text-white/60 flex flex-col items-center gap-4">
-                    <Spinner className="w-8 h-8" />
-                    {t('common.views.tokenDetail.loadingTokenDetails')}
-                  </div>
-                ) : (
-                  <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
-                    {tokenDetails?.symbol}
-                    {
-                      tokenDetails?.name && tokenDetails?.name !== tokenDetails?.symbol && (
-                        <span className="text-white/60">
-                          {' '}
-                          /
-                          {tokenDetails?.name}
-                        </span>
-                      )
-                    }
-                  </h1>
-                )
-              }
-              <p className="text-sm text-white/60 m-0 leading-relaxed">
-                {t('common.views.tokenDetail.detailsAndStatistics')}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 mb-6 flex-wrap">
-              <AeButton
-                onClick={() => navigate(`/defi/swap?from=AE&to=${tokenAddress}`)}
-                variant="secondary-dark"
-                size="medium"
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {t('dex.swapButton')}
-              </AeButton>
-              <AeButton
-                onClick={() => navigate(`/defi/pool?from=AE&to=${tokenAddress}`)}
-                variant="secondary-dark"
-                size="medium"
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {t('dex.addLiquidityForm.addLiquidityButton')}
-              </AeButton>
-              <AeButton
-                onClick={() => navigate(`/defi/explore/pools?tokenAddress=${tokenAddress}`)}
-                variant="secondary-dark"
-                size="medium"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {t('common.views.tokenDetail.pools', { count: tokenDetails?.pairs_count || 0 })}
-              </AeButton>
-              <AeButton
-                onClick={() => navigate(`/defi/explore/transactions?tokenAddress=${tokenAddress}`)}
-                variant="secondary-dark"
-                size="medium"
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {t('explore.transactions')}
-              </AeButton>
-            </div>
-
             {/* Token Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {/* Price Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
-                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  💰
-                  {' '}
-                  {t('explore.price')}
-                </div>
-                <div className="text-2xl font-extrabold text-white mb-1 font-mono">
-                  {tokenDetails && tokenDetails.price?.ae == null ? (
-                    <span
-                      className="text-base font-semibold text-white/50"
-                      title="This token has no liquidity pool against AE, so an AE price can't be determined."
-                    >
-                      No AE price
-                    </span>
-                  ) : (
-                    <PriceDataFormatter priceData={tokenDetails?.price} />
-                  )}
-                </div>
-                {tokenDetails?.summary?.change?.[selectedPeriod]
-                  ?.percentage && (
-                    <div
-                      className={`text-xs font-semibold flex items-center gap-1 ${isPositive
-                        ? 'text-green-400'
-                        : 'text-red-400'
-                      }`}
-                    >
-                      {isPositive
-                        ? '📈'
-                        : '📉'}
-                      {isPositive
-                        ? '+'
-                        : ''}
-                      {
-                        Decimal.from(
-                          tokenDetails?.summary?.change?.[selectedPeriod]
-                            ?.percentage,
-                        ).prettify(2)
-                      }
-                      % (
-                      {selectedPeriod}
-                      )
-                    </div>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* TVL Card */}
               <div
                 style={{
@@ -558,6 +433,7 @@ export default function TokenDetail() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

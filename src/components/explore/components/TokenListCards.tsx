@@ -48,6 +48,8 @@ interface TokenListCardsProps {
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
+  hideControls?: boolean;
+  timeframe?: '24h' | '7d' | '30d';
 }
 export const TokenListCards = ({
   tokens,
@@ -56,6 +58,8 @@ export const TokenListCards = ({
   search,
   onSearchChange,
   loading,
+  hideControls = false,
+  timeframe,
 }: TokenListCardsProps) => {
   const { t } = useTranslation('explore');
   const navigate = useNavigate();
@@ -63,12 +67,13 @@ export const TokenListCards = ({
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const timeBase = useMemo(() => {
+    if (timeframe) return timeframe;
     if (performanceChartTimeframe === '1d') {
       return '24h';
     }
 
     return performanceChartTimeframe;
-  }, [performanceChartTimeframe]);
+  }, [performanceChartTimeframe, timeframe]);
 
   const handleSort = (
     key:
@@ -114,9 +119,10 @@ export const TokenListCards = ({
   return (
     <div className="overflow-x-auto">
       {/* Responsive Filter Controls */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-3 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      <div className={hideControls ? undefined : 'bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-3 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]'}>
         {/* Responsive Filter Layout */}
 
+        {!hideControls && (
         <div className="flex items-stretch justify-between gap-3 flex-wrap flex-col sm:flex-row mb-[10px]">
           {/* Top Row: Filter & Sort Label + Controls */}
           <div className="flex items-center gap-[5px] w-auto justify-between flex-wrap">
@@ -208,6 +214,8 @@ export const TokenListCards = ({
           </div>
         </div>
 
+        )}
+
         <div className="flex flex-col gap-3 mt-3">
           {tokens.map((token) => (
             <div
@@ -248,10 +256,10 @@ export const TokenListCards = ({
                   </div>
                 </div>
 
-                {/* TVL */}
+                {/* Total trading volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {t('tokenListCards.sort.tvl')}
+                    {t('totalVolume')}
                   </div>
                   <div className="text-sm text-white font-semibold">
                     <PriceDataFormatter priceData={token.summary?.total_volume} />

@@ -1,0 +1,286 @@
+.dex-tx-toolbar {
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) 172px 176px;
+  gap:10px;
+}
+.dex-tx-toolbar__toggle {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border:1px solid var(--token-explorer-border);
+  background:var(--token-explorer-surface);
+  border-radius:12px;
+  min-height:50px;
+  padding:0 12px;
+  color:var(--token-explorer-muted);
+  font-size:12px;
+  font-weight:500;
+}
+.dex-tx-toolbar__toggle[aria-expanded=true],.dex-tx-toolbar__toggle:hover {
+  background:var(--token-explorer-selected);
+  color:var(--token-explorer-blue);
+  border-color:#6498e14d;
+}
+.dex-tx-toolbar__toggle>svg:first-child {
+  width:16px;
+  height:16px;
+}
+.dex-tx-toolbar__toggle>svg:last-child {
+  width:13px;
+  height:13px;
+}
+.dex-tx-toolbar__toggle .is-open {
+  transform:rotate(180deg);
+}
+.dex-tx-toolbar__toggle b {
+  display:grid;
+  place-items:center;
+  min-width:20px;
+  height:20px;
+  border-radius:6px;
+  background:var(--token-explorer-selected);
+  color:var(--token-explorer-blue);
+  font-size:10px;
+}
+.dex-tx-addresses {
+  margin-top:10px;
+  border:1px solid var(--token-explorer-border);
+  background:var(--token-explorer-surface);
+  border-radius:12px;
+  padding:16px;
+}
+.dex-tx-addresses__fields {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.dex-tx-addresses__fields label {
+  min-width:0;
+}
+.dex-tx-addresses__fields label>span {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:11px;
+  color:var(--token-explorer-muted);
+  margin-bottom:9px;
+}
+.dex-tx-addresses__fields label svg {
+  width:13px;
+  height:13px;
+}
+.dex-tx-addresses__fields input {
+  width:100%;
+  height:44px;
+  border:1px solid var(--token-explorer-border);
+  background:var(--glass-bg);
+  border-radius:9px;
+  color:var(--token-explorer-text);
+  padding:0 12px;
+  font:12px ui-monospace,SFMono-Regular,monospace;
+  min-width:0;
+}
+.dex-tx-addresses__fields input::placeholder {
+  color:var(--token-explorer-muted);
+}
+.dex-tx-addresses__footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:13px;
+}
+.dex-tx-addresses__footer p {
+  font-size:11px;
+  color:var(--token-explorer-muted);
+  line-height:1.6;
+  margin:0;
+}
+.dex-tx-addresses__footer button {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-shrink:0;
+  min-height:44px;
+  padding:0 14px;
+  border-radius:9px;
+  border:1px solid #689be040;
+  background:var(--token-explorer-selected);
+  color:var(--token-explorer-blue);
+  font-size:12px;
+  font-weight:600;
+}
+.dex-tx-addresses__footer button:hover {
+  border-color:#80acdf;
+}
+.dex-tx-addresses__footer button svg {
+  width:14px;
+  height:14px;
+}
+.dex-tx-filters {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.dex-tx-filters__chip {
+  display:flex;
+  align-items:center;
+  max-width:100%;
+  gap:8px;
+  border:1px solid var(--token-explorer-border);
+  border-radius:9px;
+  padding-inline-start:11px;
+  background:var(--token-explorer-surface);
+  font-size:11px;
+  color:var(--token-explorer-muted);
+  min-height:44px;
+}
+.dex-tx-filters__chip>svg {
+  width:13px;
+  height:13px;
+}
+.dex-tx-filters__chip>span {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.dex-tx-filters__chip b {
+  font-weight:600;
+  color:var(--token-explorer-blue);
+  margin-inline-start:4px;
+}
+.dex-tx-filters__chip bdi {
+  font:10px ui-monospace,monospace;
+  color:var(--token-explorer-blue);
+  margin-inline-start:4px;
+}
+.dex-tx-filters__chip button {
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  background:none;
+  border:0;
+  flex-shrink:0;
+  color:var(--token-explorer-muted);
+  border-radius:9px;
+}
+.dex-tx-filters__chip button:hover {
+  color:var(--token-explorer-text);
+  background:var(--token-explorer-selected);
+}
+.dex-tx-filters__chip button svg {
+  width:14px;
+  height:14px;
+}
+.dex-tx-filters__clear {
+  height:44px;
+  padding:0 10px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--token-explorer-muted);
+  font-size:11px;
+}
+.dex-tx-filters__clear:hover {
+  background:var(--token-explorer-selected);
+  color:var(--token-explorer-blue);
+}
+.dex-tx-explorer__results {
+  display: grid;
+  gap: 16px;
+}
+.dex-tx-toolbar optgroup {
+  background: var(--token-explorer-surface);
+  color: var(--token-explorer-text);
+}
+.dex-tx-addresses[hidden] {
+  display: none;
+}
+.dex-tx-addresses input {
+  background: light-dark(#fff, #0a0d11);
+}
+.dex-tx-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0;
+  font-size: 12px;
+  color: var(--token-explorer-muted);
+}
+.dex-tx-pagination button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--token-explorer-border);
+  border-radius: 9px;
+  background: var(--token-explorer-surface);
+  color: inherit;
+  display: grid;
+  place-items: center;
+}
+.dex-tx-pagination svg {
+  width: 16px;
+  height: 16px;
+}
+[dir='rtl'] .dex-tx-pagination svg, [dir='rtl'] .dex-tx-addresses__footer button svg {
+  transform: rotate(180deg);
+}
+@container token-explorer (max-width: 820px) {
+  .dex-tx-toolbar {
+    grid-template-columns: minmax(0,1fr) 164px;
+  }
+  .dex-tx-toolbar__type {
+    grid-column: 1 / -1;
+  }
+  .dex-tx-addresses__footer p {
+    max-width: 230px;
+  }
+}
+@container token-explorer (max-width: 560px) {
+  .dex-tx-toolbar {
+    grid-template-columns: minmax(0,1fr) 148px;
+    gap: 8px;
+  }
+  .dex-tx-toolbar__toggle {
+    font-size: 11px;
+    gap: 7px;
+    padding: 0 8px;
+  }
+  .dex-tx-toolbar__type select {
+    font-size: 12px;
+  }
+  .dex-tx-addresses {
+    padding: 12px;
+  }
+  .dex-tx-addresses__fields {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .dex-tx-addresses__footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dex-tx-addresses__footer p {
+    max-width: none;
+  }
+  .dex-tx-filters__chip bdi {
+    display: block;
+    margin: 3px 0;
+  }
+  .dex-tx-filters {
+    gap: 5px;
+  }
+  .dex-tx-filters__clear {
+    padding-inline: 8px;
+  }
+}
+@container token-explorer (max-width: 560px) {
+  .dex-tx-pagination__edge {
+    display: none !important;
+  }
+}

@@ -1,0 +1,32 @@
+.dex-pool-toolbar { grid-template-columns: minmax(220px, 1fr) 270px 156px; }
+.dex-pool-filter {
+  display: inline-flex; gap: 8px; align-items: center; max-width: 100%; border: 1px solid var(--token-explorer-border); border-radius: 9px; background: var(--token-explorer-surface); font-size: 11px; color: var(--token-explorer-muted); margin: 0 0 12px; padding-inline-start: 10px;
+  > span { min-width: 0; overflow-wrap: anywhere; }
+  bdi { color: var(--token-explorer-blue); font-weight: 600; }
+  button { width: 44px; min-height: 44px; display: grid; place-items: center; flex-shrink: 0; border: 0; background: none; color: var(--token-explorer-muted); border-radius: 9px; }
+  button:hover { background: var(--token-explorer-selected); color: var(--token-explorer-blue); }
+  svg { width: 14px; height: 14px; }
+}
+.dex-pool-pagination {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0; color: var(--token-explorer-muted); font-size: 11px; flex-wrap: wrap;
+  label { display: flex; align-items: center; gap: 8px; }
+  select { min-height: 44px; border-radius: 8px; border: 1px solid var(--token-explorer-border); background: var(--token-explorer-surface); color: var(--token-explorer-text); padding: 0 8px; }
+  button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--token-explorer-border); border-radius: 8px; background: none; color: var(--token-explorer-muted); }
+  button:not(:disabled):hover { background: var(--token-explorer-selected); color: var(--token-explorer-blue); }
+  button svg { width: 15px; height: 15px; }
+  button:disabled { opacity: .4; }
+  &__pages { display: flex; align-items: center; gap: 8px; }
+  &__pages > span { text-align: center; min-width: 32px; }
+}
+[dir='rtl'] .dex-pool-pagination button svg { transform: rotate(180deg); }
+@container token-explorer (max-width: 820px) {
+  .dex-pool-toolbar { grid-template-columns: minmax(0, 1fr) 156px; }
+  .dex-pool-pagination__range { width: 100%; order: 3; text-align: center; }
+}
+@container token-explorer (max-width: 560px) {
+  .dex-pool-toolbar { grid-template-columns: minmax(0, 1fr) 88px; }
+  .dex-pool-toolbar .dex-token-toolbar__select select { font-size: 10px; }
+  .dex-pool-toolbar .dex-token-toolbar__period-select > span { font-size: 8px; inset-inline-start: 7px; }
+  .dex-pool-pagination { gap: 8px; }
+  .dex-pool-pagination .dex-pool-pagination__edge { display: none; }
+}

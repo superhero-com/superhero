@@ -172,3 +172,13 @@
   .post-composer .post-composer__tool:hover,
   .post-composer .post-composer__primary:not(:disabled):hover { transform: none; }
 }
+
+@media (max-width:767px) {
+  .post-composer--compact-mobile { --composer-min-height:112px; }
+  .post-composer--compact-mobile .post-composer__textarea { padding:8px 12px 56px; line-height:1.375; }
+  .post-composer--compact-mobile .post-composer__input-footer { gap:6px; flex-wrap:wrap; align-items:center; }
+  .post-composer--compact-mobile .post-composer__mobile-tools { flex:0 1 auto; gap:4px; }
+  .post-composer--compact-mobile .post-composer__mobile-submit { flex:1; min-width:90px; width:auto; margin:0; order:3; }
+  .post-composer--compact-mobile .post-composer__mobile-submit .post-composer__primary { padding:7px 8px; font-size:10px; line-height:14px; border-radius:9px; }
+  .post-composer--compact-mobile .post-composer__counter { margin:0; padding-inline:4px; font-size:10px; }
+}

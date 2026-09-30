@@ -61,6 +61,7 @@ interface PostFormProps {
   onSuccess?: (postId?: string) => void;
   className?: string;
   appearance?: 'default' | 'integrated';
+  compactMobile?: boolean;
   onTextChange?: (text: string) => void;
 
   // Post-specific props
@@ -130,6 +131,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     onSuccess,
     className = '',
     appearance = 'default',
+    compactMobile = false,
     onTextChange,
     isPost = true,
     postId,
@@ -777,6 +779,58 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     </div>
   );
 
+  const mobileSubmit = (
+    <div className="post-composer__mobile-submit flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
+      <div className="flex flex-col items-center justify-center w-full">
+        {requiredHashtag && requiredMissing && (
+          <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
+            <span>{ts('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
+            <button
+              type="button"
+              className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+              onClick={() => {
+                const tag = (requiredHashtag || '').toUpperCase();
+                const needsSpace = text.length > 0 && !/\s$/.test(text);
+                const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                setText(next);
+                requestAnimationFrame(() => {
+                  if (textareaRef.current) {
+                    const pos = next.length;
+                    textareaRef.current.focus();
+                    textareaRef.current.setSelectionRange(pos, pos);
+                  }
+                });
+              }}
+              title={ts('addRequiredHashtag')}
+            >
+              {ts('add')}
+            </button>
+          </div>
+        )}
+        {activeAccount ? (
+          <AeButton
+            type="submit"
+            loading={isSubmitting}
+            disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+            className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+          >
+            {(() => {
+              if (isSubmitting) {
+                return ts('posting');
+              }
+              if (isPost) {
+                return ts('post');
+              }
+              return ts('postReply');
+            })()}
+          </AeButton>
+        ) : (
+          <ConnectWalletButton block className="post-composer__primary w-full rounded-xl md:rounded-full" />
+        )}
+      </div>
+    </div>
+  );
+
   // If not connected and it's a reply, show simple message
   if (!activeAccount && !isPost && appearance === 'integrated') {
     return (
@@ -808,7 +862,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
   return (
     <div
-      className={`${usesComposerSurface ? 'post-composer w-full max-w-none' : 'mx-auto'} mb-2 md:mb-4 ${className}`}
+      className={`${usesComposerSurface ? 'post-composer w-full max-w-none' : 'mx-auto'} ${compactMobile ? 'post-composer--compact-mobile' : ''} mb-2 md:mb-4 ${className}`}
     >
       <div className={usesComposerSurface ? 'rail-card post-composer__surface' : 'bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl'}>
         <form onSubmit={handleSubmit} className="relative">
@@ -923,7 +977,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   }}
                   className="post-composer__textarea bg-transparent border-none outline-none pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium md:p-4 md:pr-14 md:pb-8 md:text-base focus:!shadow-none focus:!translate-y-0 focus:!bg-transparent caret-[#1161FE]"
                   style={{
-                    minHeight: isPost ? '160px' : replyMinHeight,
+                    minHeight: isPost ? 'var(--composer-min-height, 160px)' : replyMinHeight,
                     // Text goes transparent so the mirror below shows the pills; caret
                     // (caret-color) and selection stay painted by the textarea on top.
                     ...(showMirror ? { color: 'transparent', position: 'relative', zIndex: 1 } : null),
@@ -1052,6 +1106,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       </button>
                     )}
                   </div>
+                  {compactMobile && mobileSubmit}
                   {characterLimit && (
                     <div className="post-composer__counter absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none z-10">
                       {serializedText.length}
@@ -1173,55 +1228,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             )}
           </div>
 
-          <div className="post-composer__mobile-submit flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
-            <div className="flex flex-col items-center justify-center w-full">
-              {requiredHashtag && requiredMissing && (
-                <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
-                  <span>{ts('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
-                  <button
-                    type="button"
-                    className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
-                    onClick={() => {
-                      const tag = (requiredHashtag || '').toUpperCase();
-                      const needsSpace = text.length > 0 && !/\s$/.test(text);
-                      const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
-                      setText(next);
-                      requestAnimationFrame(() => {
-                        if (textareaRef.current) {
-                          const pos = next.length;
-                          textareaRef.current.focus();
-                          textareaRef.current.setSelectionRange(pos, pos);
-                        }
-                      });
-                    }}
-                    title={ts('addRequiredHashtag')}
-                  >
-                    {ts('add')}
-                  </button>
-                </div>
-              )}
-              {activeAccount ? (
-                <AeButton
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                  className="post-composer__primary relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
-                >
-                  {(() => {
-                    if (isSubmitting) {
-                      return ts('posting');
-                    }
-                    if (isPost) {
-                      return ts('post');
-                    }
-                    return ts('postReply');
-                  })()}
-                </AeButton>
-              ) : (
-                <ConnectWalletButton block className="post-composer__primary w-full rounded-xl md:rounded-full" />
-              )}
-            </div>
-          </div>
+          {!compactMobile && mobileSubmit}
         </form>
       </div>
     </div>

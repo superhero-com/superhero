@@ -281,10 +281,14 @@ describe('PostForm', () => {
       fireEvent.submit(screen.getByRole('textbox').closest('form')!);
     };
 
-    it('shows the post it built and keeps it for a reload', async () => {
+    it.each([false, true])('submits once and retains the pending post with compactMobile=%s', async (compactMobile) => {
       const onSuccess = vi.fn();
-      renderForm({ onSuccess, requiredHashtag: '#nancy' });
-      submit('#NANCY gm');
+      const { container } = renderForm({ onSuccess, requiredHashtag: '#nancy', compactMobile });
+      const mobilePost = container.querySelector<HTMLButtonElement>('.post-composer__mobile-submit button[type="submit"]')!;
+      expect(mobilePost).toBeDisabled();
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: '#NANCY gm' } });
+      expect(mobilePost).toBeEnabled();
+      fireEvent.click(mobilePost);
       await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
 
       const latestKey = ['posts', {

@@ -84,3 +84,21 @@
  .hero-slide__primary,.hero-slide__secondary { transition:border-color 180ms,background 180ms; }
 }
 @keyframes heroCopyEnter { from { opacity:0; translate:0 5px; } to { opacity:1; translate:none; } }
+
+/* The mobile hero shares the first screen with the composer and feed. */
+@media (max-width:767px) {
+ .hero-carousel.rail-card { border-radius:16px; }
+ .hero-slide__body { display:flex; flex-direction:column; gap:6px; padding:44px 14px 10px; min-height:0; }
+ .hero-slide__copy { width:100%; flex:1; }
+ .hero-slide__eyebrow { display:none; }
+ .hero-slide__copy h2 { font-size:22px; line-height:1.12; letter-spacing:-.65px; margin-bottom:6px; }
+ .hero-slide__copy h2>span { display:inline; }
+ .hero-slide__copy>p { font-size:12px; line-height:17px; margin-bottom:8px; max-width:none; }
+ .hero-slide__actions { gap:4px; }
+ .hero-slide__actions>:is(a,button) { font-size:10px; line-height:15px; padding:7px 9px; gap:6px; border-radius:9px; }
+ .hero-carousel__footer { position:absolute; inset-block:0 auto; inset-inline:8px 76px; min-height:44px; padding:0; flex-direction:row; border:0; background:none; }
+ .hero-carousel__metadata { display:none; }
+ .hero-carousel__navigation { margin-inline:0 auto; }
+ .hero-carousel__dismiss { top:0; inset-inline-end:4px; min-width:68px; }
+ .hero-carousel__dismiss>span { padding:3px 7px; }
+}

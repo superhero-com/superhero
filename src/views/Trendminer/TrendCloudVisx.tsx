@@ -42,7 +42,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   const words = useMemo(() => tags.map((tag) => ({ text: tag.tag, value: tag.score })), [tags]);
 
   const cloud = (
-    <div className={`border border-dashed border-white/20 rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'} bg-black/10 backdrop-blur-sm`}>
+    <div className={`trend-cloud-surface border border-solid border-white/10 rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'} bg-black/10 backdrop-blur-sm`}>
       <Wordcloud
         words={words}
         width={width}
@@ -78,15 +78,15 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   if (embedded) return cloud;
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="ui-page trend-cloud-page max-w-6xl mx-auto p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <div className="text-3xl font-extrabold text-white">{t('trendCloudVisxTitle')}</div>
+          <div className="ui-page-title">{t('trendCloudVisxTitle')}</div>
           <div className="text-xs opacity-75 text-white/75">{t('alternativeLayoutVisx')}</div>
         </div>
         <a
           href="/trends"
-          className="px-3 py-2 rounded-full border border-white/20 bg-white text-black no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
+          className="ui-secondary px-3 py-2 no-underline text-sm font-medium"
         >
           {t('switchToDefault')}
         </a>

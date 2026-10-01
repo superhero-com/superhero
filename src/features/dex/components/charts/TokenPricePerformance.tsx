@@ -453,7 +453,7 @@ const TokenPricePerformance = ({
   const showNoData = !loading && !hasPlottedData;
 
   return (
-    <div className={`${className}`}>
+    <div className={`dex-price-performance ${className}`}>
       {/* Denomination — make the price chart's unit explicit, and clearly warn
           when the series is NOT in AE (the token has no AE pool, so 0.25 here
           means 0.25 of another token, not 0.25 AE). */}
@@ -510,7 +510,7 @@ const TokenPricePerformance = ({
       )}
 
       {/* Chart Container */}
-      <AeCard className="relative p-4" style={{ height: '400px' }}>
+      <AeCard className="performance-canvas relative p-0" style={{ height: '400px' }}>
         <div
           ref={chartContainerRef}
           className="w-full h-full"
@@ -518,14 +518,14 @@ const TokenPricePerformance = ({
 
         {/* Loading Overlay */}
         {loading && (
-          <div className="absolute inset-0 flex justify-center items-center text-3xl bg-background/20 rounded-xl">
+          <div className="absolute inset-0 flex justify-center items-center text-sm bg-background/20 rounded-xl">
             <div className="text-foreground">{t('tokenPricePerformance.loading')}</div>
           </div>
         )}
 
         {/* No Data Overlay */}
         {showNoData && (
-          <div className="absolute inset-0 flex justify-center items-center text-3xl text-muted-foreground">
+          <div className="absolute inset-0 flex justify-center items-center text-sm text-muted-foreground">
             {t('tokenPricePerformance.noData')}
           </div>
         )}
@@ -534,7 +534,7 @@ const TokenPricePerformance = ({
       <TradingViewAttribution className="text-right" />
 
       {/* Time Frame Selector */}
-      <div className="flex gap-2 mt-3 justify-center">
+      <div className="performance-timeframes flex flex-wrap gap-2 mt-3 justify-center">
         {Object.keys(TIME_FRAMES).map((timeFrame) => (
           <AeButton
             key={timeFrame}

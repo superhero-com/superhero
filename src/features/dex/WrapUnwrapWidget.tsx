@@ -1,322 +1,305 @@
-import React, { useEffect, useState } from 'react';
+import {
+  useCallback, useEffect, useId, useRef, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
+import {
+  ArrowDownUp, ArrowRight, ChevronDown, Info, Package, PackageOpen, ShieldCheck, ArrowLeft,
+} from 'lucide-react';
 import { ConnectWalletButton } from '../../components/ConnectWalletButton';
 import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
-import { useAccount } from '../../hooks';
-import { Decimal } from '../../libs/decimal';
+import { useAccount, useAeSdk } from '../../hooks';
 import { CONFIG } from '../../config';
-import { cn } from '../../lib/utils';
 import Spinner from '../../components/Spinner';
+import aeMark from '../../svg/aeternity-mark.svg';
+import { wrapAmounts, WRAP_MAX_FEE_RESERVE_AE } from './utils/wrapAmounts';
+import '../../components/dex/core/SwapForm.css';
+import './WrapUnwrapWidget.css';
 
-interface WrapUnwrapWidgetProps {
-  className?: string;
-}
+interface WrapUnwrapWidgetProps { className?: string }
+type Mode = 'wrap' | 'unwrap';
+const aeToken = {
+  address: 'AE', name: 'Aeternity', symbol: 'AE', decimals: 18, is_ae: true,
+};
+const waeToken = {
+  address: CONFIG.DEX_WAE, name: 'Wrapped AE', symbol: 'WAE', decimals: 18, is_ae: false,
+};
 
-export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
-  const { t } = useTranslation(['common', 'dex']);
-  const { activeAccount, loadAccountData } = useAccount();
+const Asset = ({ wrapped }: { wrapped: boolean }) => {
+  const { t } = useTranslation('dex');
+  return (
+    <span className="wrap-asset">
+      <span className={`wrap-badge ${wrapped ? 'is-wrapped' : ''}`} aria-hidden="true">
+        <img src={aeMark} alt="" />
+        {wrapped && <span>W</span>}
+      </span>
+      <span>
+        <strong>{wrapped ? 'WAE' : 'AE'}</strong>
+        <small>{t(wrapped ? 'wrapCard.wrapped' : 'wrapCard.native')}</small>
+      </span>
+    </span>
+  );
+};
+
+const WrapCard = ({ className, account }: WrapUnwrapWidgetProps & { account?: string }) => {
+  const { t } = useTranslation('dex');
+  const { loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
   const { executeSwap, loading } = useSwapExecution();
+  const [mode, setMode] = useState<Mode>('wrap');
+  const [input, setInput] = useState('');
+  const [details, setDetails] = useState(false);
+  const [review, setReview] = useState(false);
+  const [maxUsed, setMaxUsed] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [balanceStatus, setBalanceStatus] = useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  );
+  const pending = useRef(false);
+  const mounted = useRef(true);
+  const inputId = useId();
+  const detailsId = useId();
+  const wrap = mode === 'wrap';
+  const from = wrap ? 'AE' : 'WAE';
+  const to = wrap ? 'WAE' : 'AE';
+  const amounts = wrapAmounts(
+    input,
+    wrap ? wrapBalances.ae : wrapBalances.wae,
+    wrapBalances.ae,
+    wrap,
+  );
+  const busy = submitting || loading;
+  const balancesReady = balanceStatus === 'ready' && amounts.known;
+  const ready = !!account && balancesReady && amounts.ready && !busy;
 
-  const [wrapAmount, setWrapAmount] = useState<string>('');
-  const [unwrapAmount, setUnwrapAmount] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<'wrap' | 'unwrap'>('wrap');
-
-  const isLoading = loading;
-  const currentAmount = mode === 'wrap' ? wrapAmount : unwrapAmount;
-  const setCurrentAmount = mode === 'wrap' ? setWrapAmount : setUnwrapAmount;
-  const currentBalance = mode === 'wrap' ? wrapBalances.ae : wrapBalances.wae;
-
-  // Reset error when switching modes or changing amounts
-  useEffect(() => {
-    setError(null);
-  }, [mode, currentAmount]);
-
-  // Check for insufficient balance
-  useEffect(() => {
-    if (currentAmount && currentBalance) {
-      try {
-        const amount = Decimal.from(currentAmount);
-        const balance = Decimal.from(currentBalance);
-        if (amount.gt(balance)) {
-          setError(t('dex:swap.insufficientBalance', {
-            symbol: mode === 'wrap' ? 'AE' : 'WAE',
-            needed: amount.prettify(),
-            have: balance.prettify(),
-          }));
-        }
-      } catch {
-        // Invalid amount format, ignore
-      }
-    }
-  }, [currentAmount, currentBalance, mode, t]);
-
-  const handleAmountChange = (value: string) => {
-    const raw = value.replace(/,/g, '.');
-    const match = raw.match(/^\d*(?:\.(\d*)?)?$/);
-    if (!match) return; // block invalid chars
-    const frac = match[1] || '';
-    const trimmed = frac.length > 18 ? `${raw.split('.')[0]}.${frac.slice(0, 18)}` : raw;
-    if (trimmed.startsWith('.')) return; // disallow leading dot
-    setCurrentAmount(trimmed);
-  };
-
-  const handleMaxClick = () => {
-    if (currentBalance && !isLoading) {
-      setCurrentAmount(currentBalance);
-    }
-  };
-
-  const handleHalfClick = () => {
-    if (currentBalance && !isLoading) {
-      const halfBalance = Decimal.from(currentBalance).div(2).toString();
-      setCurrentAmount(halfBalance);
-    }
-  };
-
-  const handleExecute = async () => {
-    if (!currentAmount || Number(currentAmount) <= 0) return;
-
+  const refreshBalances = useCallback(async (force = false) => {
+    if (!account) return;
+    setBalanceStatus('loading');
     try {
-      setError(null);
+      await loadAccountData({ force });
+      if (mounted.current) setBalanceStatus('ready');
+    } catch {
+      if (mounted.current) setBalanceStatus('error');
+    }
+  }, [account, loadAccountData]);
 
-      // Create token objects for AE and WAE
-      const aeToken = {
-        address: 'AE',
-        name: 'Aeternity',
-        symbol: 'AE',
-        decimals: 18,
-        pairs_count: 0,
-        created_at: new Date().toISOString(),
-        is_ae: true,
-      };
+  useEffect(() => {
+    mounted.current = true;
+    refreshBalances();
+    return () => { mounted.current = false; };
+  }, [refreshBalances]);
 
-      const waeToken = {
-        address: CONFIG.DEX_WAE,
-        name: 'Wrapped AE',
-        symbol: 'WAE',
-        decimals: 18,
-        pairs_count: 0,
-        created_at: new Date().toISOString(),
-        is_ae: false,
-      };
-
-      // Determine tokenIn and tokenOut based on mode
-      const tokenIn = mode === 'wrap' ? aeToken : waeToken;
-      const tokenOut = mode === 'wrap' ? waeToken : aeToken;
-
-      // Execute the swap (which will use wrap/unwrap internally)
-      await executeSwap({
-        tokenIn: tokenIn as any, // TODO: define types
-        tokenOut: tokenOut as any,
-        amountIn: currentAmount,
-        amountOut: currentAmount, // 1:1 ratio
-        path: [], // Will be handled by executeSwap
-        slippagePct: 0.5, // Minimal slippage for wrap/unwrap
+  const changeMode = (next: Mode) => {
+    setMode(next);
+    setReview(false);
+    setError('');
+    setMaxUsed(false);
+  };
+  const updateAmount = (raw: string) => {
+    const value = raw.replace(/,/g, '.');
+    if (!/^\d*(?:\.\d{0,18})?$/.test(value)) return;
+    setInput(value.startsWith('.') ? `0${value}` : value);
+    setMaxUsed(false);
+    setError('');
+  };
+  const confirm = async () => {
+    if (!review || !ready || pending.current) return;
+    pending.current = true;
+    setSubmitting(true);
+    setError('');
+    try {
+      const hash = await executeSwap({
+        tokenIn: wrap ? aeToken : waeToken,
+        tokenOut: wrap ? waeToken : aeToken,
+        amountIn: amounts.amount!,
+        amountOut: amounts.amount!,
+        path: [],
+        // Direct WAE deposit/withdraw ignores router slippage and deadline.
+        slippagePct: 0,
         deadlineMins: 20,
         isExactIn: true,
       });
-
-      // Clear the input and reload account data on success
-      setCurrentAmount('');
-      loadAccountData({ force: true });
-    } catch (e: any) {
-      setError(e.message || (mode === 'wrap' ? t('dex:wrapFailedShort') : t('dex:unwrapFailedShort')));
+      if (hash && mounted.current) {
+        setInput('');
+        setReview(false);
+        setMaxUsed(false);
+        await refreshBalances(true);
+      }
+    } catch (cause) {
+      if (mounted.current) setError(cause instanceof Error ? cause.message : t('wrapCard.failed'));
+    } finally {
+      pending.current = false;
+      if (mounted.current) setSubmitting(false);
     }
   };
-
-  const isExecuteDisabled = isLoading || !currentAmount || Number(currentAmount) <= 0 || !!error;
+  let action = t(review ? 'wrapCard.confirm' : `wrapCard.review.${mode}`);
+  if (busy) action = t('wrapCard.confirming');
+  else if (balanceStatus === 'error') action = t('wrapCard.balanceUnavailable');
+  else if (!balancesReady) action = t('wrapCard.loading');
+  else if (amounts.exceeds) action = t('wrapCard.insufficientAction', { symbol: from });
+  else if (!amounts.hasFeeFunds) action = t('wrapCard.feeAction');
+  else if (!amounts.valid) action = t('wrapCard.enterAmount');
 
   return (
-    <div
-      className={cn(
-        'max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
-        className,
+    <section className={`dex-swap wrap-card ${className || ''}`} aria-label={t('wrapCard.title')}>
+      <header className="wrap-heading">
+        <div>
+          <h2>{t(review ? `wrapCard.review.${mode}` : 'wrapCard.title')}</h2>
+          <p>{t(review ? 'wrapCard.reviewHint' : 'wrapCard.description')}</p>
+        </div>
+        {review ? <button type="button" disabled={busy} aria-label={t('wrapCard.back')} onClick={() => setReview(false)}><ArrowLeft aria-hidden="true" /></button> : <span className="wrap-heading-icon"><Package aria-hidden="true" /></span>}
+      </header>
+      {!review ? (
+        <div className="wrap-mode" aria-label={t('wrapCard.direction')}>
+          <button type="button" disabled={busy} aria-pressed={wrap} onClick={() => changeMode('wrap')}>
+            <Package aria-hidden="true" />
+            {t('wrapCard.wrap')}
+          </button>
+          <button type="button" disabled={busy} aria-pressed={!wrap} onClick={() => changeMode('unwrap')}>
+            <PackageOpen aria-hidden="true" />
+            {t('wrapCard.unwrap')}
+          </button>
+        </div>
+      ) : (
+        <div className="wrap-review-label">
+          <ShieldCheck aria-hidden="true" />
+          <span>
+            {t('wrapCard.convert', { amount: amounts.output, from, to })}
+            <small>{t('wrapCard.exactConversion')}</small>
+          </span>
+          <button type="button" disabled={busy} onClick={() => setReview(false)}>{t('wrapCard.edit')}</button>
+        </div>
       )}
-    >
-      {/* Header */}
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold m-0">
-          {t('dex:wrapUnwrap.title')}
-        </h2>
-
-        {/* Mode Toggle */}
-        <div className="flex bg-white/[0.05] border border-white/10 rounded-xl p-1 backdrop-blur-[10px]">
-          <Button
-            onClick={() => setMode('wrap')}
-            disabled={isLoading}
-            variant={mode === 'wrap' ? 'default' : 'ghost'}
-            size="sm"
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
-              mode === 'wrap'
-                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
-                : 'text-white/60 hover:text-white hover:bg-white/10',
+      <div className={`wrap-input ${account && balancesReady && amounts.exceeds ? 'has-error' : ''}`}>
+        <label htmlFor={inputId}>{t(review ? 'wrapCard.send' : `wrapCard.amount.${mode}`)}</label>
+        <div className="wrap-value">
+          <input id={inputId} type="text" inputMode="decimal" autoComplete="off" dir="ltr" placeholder="0.00" value={input} onChange={(event) => updateAmount(event.target.value)} disabled={busy} readOnly={review} aria-invalid={(!!account && balancesReady && amounts.exceeds) || undefined} />
+          <Asset wrapped={!wrap} />
+        </div>
+        <div className="wrap-balance">
+          <span>
+            {!account && t('swapCard.connectBalance')}
+            {account && !balancesReady && t(balanceStatus === 'error' ? 'wrapCard.balanceUnavailable' : 'wrapCard.loading')}
+            {account && balancesReady && (
+            <>
+              {t('swapCard.available')}
+              {' '}
+              <bdi>
+                {amounts.balance}
+                {' '}
+                {from}
+              </bdi>
+            </>
             )}
-          >
-            {t('dex:wrapUnwrap.wrap')}
-          </Button>
-          <Button
-            onClick={() => setMode('unwrap')}
-            disabled={isLoading}
-            variant={mode === 'unwrap' ? 'default' : 'ghost'}
-            size="sm"
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300',
-              mode === 'unwrap'
-                ? 'bg-[#1161FE] text-white active:bg-[#1161FE]'
-                : 'text-white/60 hover:text-white hover:bg-white/10',
-            )}
-          >
-            {t('dex:wrapUnwrap.unwrap')}
-          </Button>
+          </span>
+          {account && balancesReady && !review && (
+            <span className="wrap-quick">
+              <button type="button" disabled={busy || amounts.half === '0'} onClick={() => updateAmount(amounts.half)}>50%</button>
+              <button type="button" disabled={busy || amounts.max === '0'} onClick={() => { updateAmount(amounts.max); setMaxUsed(wrap); }}>{t('swapCard.max')}</button>
+            </span>
+          )}
         </div>
       </div>
-
-      {/* Description */}
-      <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
-        {t('dex:wrapUnwrap.description')}
-      </p>
-
-      {/* Balance Display */}
-      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center gap-4">
-            <div className="text-center flex-1">
-              <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
-                {t('dex:wrapUnwrap.aeBalance')}
-              </div>
-              <div className="text-base font-bold text-white font-mono">
-                {wrapBalances.ae ? Decimal.from(wrapBalances.ae).prettify() : '…'}
-              </div>
-            </div>
-
-            <div className="w-0.5 h-10 bg-white/10 rounded-full" />
-
-            <div className="text-center flex-1">
-              <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
-                {t('dex:wrapUnwrap.waeBalance')}
-              </div>
-              <div className="text-base font-bold text-white font-mono">
-                {wrapBalances.wae ? Decimal.from(wrapBalances.wae).prettify() : '…'}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Amount Input */}
-      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
-        <CardContent className="p-4">
-          {/* Label and Balance Row */}
-          <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
-            <div className="text-sm font-semibold text-white/60 uppercase tracking-wider">
-              {t('dex:wrapUnwrap.amountTo', {
-                action: mode === 'wrap' ? t('dex:wrapUnwrap.wrap') : t('dex:wrapUnwrap.unwrap'),
-              })}
-            </div>
-
-            {currentBalance && (
-              <div className="flex items-center gap-2 text-xs text-white/60">
-                <div>
-                  {t('dex:wrapUnwrap.balanceLabel')}
-                  <span className="font-semibold text-white text-xs ml-2">
-                    {Decimal.from(currentBalance).prettify()}
-                  </span>
-                </div>
-
-                {/* Balance buttons */}
-                <div className="flex gap-1.5">
-                  <Button
-                    onClick={handleHalfClick}
-                    disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
-                    variant="outline"
-                    size="sm"
-                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
-                  >
-                    50%
-                  </Button>
-
-                  <Button
-                    onClick={handleMaxClick}
-                    disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
-                    variant="outline"
-                    size="sm"
-                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
-                  >
-                    MAX
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Input Field */}
-          <div className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl border border-white/10">
-            <div className="text-lg font-bold text-white min-w-[60px]">
-              {mode === 'wrap' ? 'AE →' : 'WAE →'}
-            </div>
-
-            <Input
-              type="text"
-              inputMode="decimal"
-              placeholder={t('placeholders.amount')}
-              value={currentAmount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              disabled={isLoading}
-              className="flex-1 bg-transparent border-none text-white text-2xl font-bold font-mono text-right h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-white/30"
-              aria-label={`${mode}-amount`}
-            />
-
-            <div className="text-lg font-bold text-white min-w-[60px] text-right">
-              {mode === 'wrap' ? 'WAE' : 'AE'}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Error Display */}
+      <div className="wrap-connector"><button type="button" disabled={review || busy} aria-label={t('wrapCard.reverse')} onClick={() => changeMode(wrap ? 'unwrap' : 'wrap')}><ArrowDownUp aria-hidden="true" /></button></div>
+      <div className="wrap-output">
+        <div className="wrap-output-copy">
+          <span>
+            {t('wrapCard.receive')}
+            {' '}
+            <small>1:1</small>
+          </span>
+          <strong><bdi>{amounts.output}</bdi></strong>
+        </div>
+        <Asset wrapped={wrap} />
+      </div>
+      {account && balanceStatus === 'error' && (
+      <div className="swap-inline-state" role="status">
+        <Info aria-hidden="true" />
+        <div>
+          <p>{t('wrapCard.balanceError')}</p>
+          <button className="wrap-retry" type="button" disabled={busy} onClick={() => refreshBalances(true)}>{t('poolAdd.retry')}</button>
+        </div>
+      </div>
+      )}
+      {account && balancesReady && amounts.exceeds && (
+      <div className="swap-inline-state is-error" role="status">
+        <Info aria-hidden="true" />
+        <p>
+          {t('wrapCard.insufficient', { balance: amounts.balance, symbol: from })}
+          <span>{t('wrapCard.smallerAmount')}</span>
+        </p>
+      </div>
+      )}
+      {account && balancesReady && !amounts.exceeds && !amounts.hasFeeFunds && (
+      <div className="swap-inline-state is-error" role="status">
+        <Info aria-hidden="true" />
+        <p>
+          {t('wrapCard.feeNeeded')}
+          <span>{t('wrapCard.feeHint')}</span>
+        </p>
+      </div>
+      )}
       {error && (
-        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {error}
+      <div className="swap-inline-state is-error" role="status">
+        <Info aria-hidden="true" />
+        <p>{error}</p>
+      </div>
+      )}
+      <div className="wrap-rate">
+        <span>
+          <span className="wrap-rate-dot" />
+          <bdi>1 AE = 1 WAE</bdi>
+        </span>
+        <button type="button" aria-expanded={details} aria-controls={detailsId} onClick={() => setDetails(!details)}>
+          {t('wrapCard.details')}
+          <ChevronDown aria-hidden="true" className={details ? 'rotated' : ''} />
+        </button>
+      </div>
+      {details && (
+        <div id={detailsId} className="wrap-details">
+          <dl>
+            <div>
+              <dt>{t('wrapCard.conversion')}</dt>
+              <dd>{t('wrapCard.exact')}</dd>
+            </div>
+            <div>
+              <dt>{t('wrapCard.fee')}</dt>
+              <dd>{t('wrapCard.walletFee')}</dd>
+            </div>
+            {account && balancesReady && amounts.remaining !== undefined && (
+            <div>
+              <dt>{t('wrapCard.remaining', { symbol: from })}</dt>
+              <dd>
+                <bdi>
+                  {amounts.remaining}
+                  {' '}
+                  {from}
+                </bdi>
+              </dd>
+            </div>
+            )}
+          </dl>
+          <p>{t(wrap ? 'wrapCard.wrapHelp' : 'wrapCard.unwrapHelp')}</p>
         </div>
       )}
-
-      {/* Execute Button */}
-      {activeAccount ? (
-        <Button
-          onClick={handleExecute}
-          disabled={isExecuteDisabled}
-          className={cn(
-            'w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-in-out',
-            isExecuteDisabled
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0',
-          )}
-        >
-          {/* eslint-disable-next-line no-nested-ternary */}
-          {isLoading ? (
-            <div className="flex items-center justify-center gap-2">
-              <Spinner className="w-4 h-4" />
-              {mode === 'wrap' ? t('dex:wrapping') : t('dex:unwrapping')}
-            </div>
-          ) : (
-            mode === 'wrap' ? t('dex:wrapAeToWae') : t('dex:unwrapWaeToAe')
-          )}
-        </Button>
-      ) : (
-        <ConnectWalletButton
-          label={t('buttons.connectWalletDex', { ns: 'common' })}
-          variant="dex"
-          className="text-sm"
-          block
-        />
-      )}
-    </div>
+      <div className="wrap-fee-note">
+        <Info aria-hidden="true" />
+        <span>{maxUsed ? t('wrapCard.maxReserve', { amount: WRAP_MAX_FEE_RESERVE_AE }) : t('wrapCard.separateFee')}</span>
+      </div>
+      {account ? (
+        <button type="button" className="swap-primary" disabled={!ready} onClick={() => { if (review) confirm(); else setReview(true); }}>
+          {busy && <span aria-hidden="true"><Spinner className="w-4 h-4" /></span>}
+          {action}
+          {ready && <ArrowRight aria-hidden="true" />}
+        </button>
+      ) : <ConnectWalletButton label={t('swapCard.connectWallet')} variant="swap" block />}
+      <p className="swap-bottom-note">{t(review ? 'wrapCard.confirmHint' : 'wrapCard.reviewNote')}</p>
+    </section>
   );
+};
+
+export const WrapUnwrapWidget = (props: WrapUnwrapWidgetProps) => {
+  const { activeAccount } = useAeSdk();
+  return <WrapCard key={activeAccount || 'disconnected'} account={activeAccount || undefined} {...props} />;
 };

@@ -68,7 +68,7 @@ export function useTokenTradeStore() {
   // Computed: isInsufficientBalance
   const isInsufficientBalance = (() => (isBuying
     ? Decimal.from(tokenA || 0).gt(spendableAeBalance)
-    : Decimal.from(tokenB || 0).gt(Decimal.from(userBalance || 0))))();
+    : Decimal.from(tokenA || 0).gt(Decimal.from(userBalance || 0))))();
 
   // Actions (similar to Pinia store methods) - using direct setters
   const switchTradeView = (state: boolean) => setIsBuying(state);

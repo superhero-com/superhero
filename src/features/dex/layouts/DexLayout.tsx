@@ -1,90 +1,24 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, {
+  useEffect, useId, useRef, useState,
+} from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeftRight,
-  Droplet,
-  Package,
-  // Network,
-  // Gem,
-  Coins,
-  Waves,
-  ClipboardList,
-  Search,
-  X,
-  LucideIcon,
+  ArrowLeftRight, Droplets, Package, Coins, Waves, ClipboardList, Compass, ChevronDown,
 } from 'lucide-react';
 import './DexLayout.scss';
 
-interface NavigationItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  path: string;
-  description: string;
-}
-
-const navigationItems: NavigationItem[] = [
-  {
-    id: 'swap',
-    label: 'dexLayout.swap.label',
-    icon: ArrowLeftRight,
-    path: '/defi/swap',
-    description: 'dexLayout.swap.description',
-  },
-  {
-    id: 'pool',
-    label: 'dexLayout.pool.label',
-    icon: Droplet,
-    path: '/defi/pool',
-    description: 'dexLayout.pool.description',
-  },
-  {
-    id: 'wrap',
-    label: 'dexLayout.wrap.label',
-    icon: Package,
-    path: '/defi/wrap',
-    description: 'dexLayout.wrap.description',
-  },
-  // {
-  //   id: 'bridge',
-  //   label: 'BRIDGE',
-  //   icon: Network,
-  //   path: '/defi/bridge',
-  //   description: 'Bridge tokens between Ethereum and æternity',
-  // },
-  // {
-  //   id: 'buy-ae',
-  //   label: 'BUY AE',
-  //   icon: Gem,
-  //   path: '/defi/buy-ae-with-eth',
-  //   description: 'Buy AE with ETH',
-  // },
+const navigationItems = [
+  { id: 'swap', icon: ArrowLeftRight, path: '/defi/swap' },
+  { id: 'pool', icon: Droplets, path: '/defi/pool' },
+  { id: 'wrap', icon: Package, path: '/defi/wrap' },
 ];
-
-const exploreItems: NavigationItem[] = [
-  {
-    id: 'tokens',
-    label: 'dexLayout.tokens.label',
-    icon: Coins,
-    path: '/defi/explore/tokens',
-    description: 'dexLayout.tokens.description',
-  },
-  {
-    id: 'pools',
-    label: 'dexLayout.pools.label',
-    icon: Waves,
-    path: '/defi/explore/pools',
-    description: 'dexLayout.pools.description',
-  },
-  {
-    id: 'transactions',
-    label: 'dexLayout.transactions.label',
-    icon: ClipboardList,
-    path: '/defi/explore/transactions',
-    description: 'dexLayout.transactions.description',
-  },
+const exploreItems = [
+  { id: 'tokens', icon: Coins, path: '/defi/explore/tokens' },
+  { id: 'pools', icon: Waves, path: '/defi/explore/pools' },
+  { id: 'transactions', icon: ClipboardList, path: '/defi/explore/transactions' },
 ];
+const pairRoutes = ['/defi/swap', '/defi/pool'];
 
 interface DexLayoutProps {
   children: React.ReactNode;
@@ -92,197 +26,80 @@ interface DexLayoutProps {
 
 const DexLayout = ({ children }: DexLayoutProps) => {
   const { t } = useTranslation('dex');
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isExploreExpanded, setIsExploreExpanded] = useState(false);
+  const { pathname, search } = useLocation();
+  const isExploreActive = pathname.startsWith('/defi/explore/');
+  const [isExploreExpanded, setIsExploreExpanded] = useState(isExploreActive);
+  const exploreButton = useRef<HTMLButtonElement>(null);
+  const exploreId = useId();
 
-  const isActiveRoute = (path: string) => (
-    location.pathname === path || location.pathname.startsWith(`${path}/`)
+  useEffect(() => {
+    setIsExploreExpanded(isExploreActive);
+  }, [pathname, isExploreActive]);
+
+  // Carry only the selected assets between the two pair-based forms.
+  const pairQuery = new URLSearchParams();
+  if (pairRoutes.includes(pathname)) {
+    const currentQuery = new URLSearchParams(search);
+    ['from', 'to'].forEach((key) => {
+      const value = currentQuery.get(key);
+      if (value) pairQuery.set(key, value);
+    });
+  }
+  const pairSearch = pairQuery.size ? `?${pairQuery}` : '';
+
+  const handleEscape = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape' && isExploreExpanded) {
+      setIsExploreExpanded(false);
+      exploreButton.current?.focus();
+    }
+  };
+
+  const renderLink = (item: typeof navigationItems[number]) => (
+    <NavLink
+      key={item.id}
+      to={{ pathname: item.path, search: pairRoutes.includes(item.path) ? pairSearch : '' }}
+      className="dex-navigation__link"
+      title={t(`dexLayout.${item.id}.description`)}
+      onKeyDown={handleEscape}
+    >
+      <item.icon aria-hidden="true" />
+      <span>{t(`dexLayout.${item.id}.label`)}</span>
+    </NavLink>
   );
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setIsExploreExpanded(false);
-  };
-
-  // Check if any explore route is active
-  const isExploreActive = () => exploreItems.some((item) => isActiveRoute(item.path));
-
-  const handleExploreToggle = () => {
-    setIsExploreExpanded(!isExploreExpanded);
-  };
-
-  const handleCloseExplore = () => {
-    setIsExploreExpanded(false);
-  };
-
-  // Mobile navigation items with Explore button instead of individual explore items
-  const mobileNavigationItems = [
-    ...navigationItems,
-    {
-      id: 'explore',
-      label: 'dexLayout.explore.label',
-      icon: Search,
-      path: '/defi/explore',
-      description: 'dexLayout.explore.description',
-    },
-  ];
-
-  const renderMobileNavigationButton = (item: NavigationItem) => {
-    const isActive = isActiveRoute(item.path);
-    const Icon = item.icon;
-    return (
-      <button
-        key={item.id}
-        type="button"
-        onClick={() => handleNavigation(item.path)}
-        className={`pb-1 transition-colors flex-1 ${
-          isActive
-            ? 'border-b-2 border-[#4ecdc4]'
-            : 'border-b-2 border-transparent'
-        }`}
-        title={t(item.description)}
-      >
-        <span className="flex flex-col items-center gap-1">
-          <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
-          <span className={`text-[11px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
-            {t(item.label)}
-          </span>
-        </span>
-      </button>
-    );
-  };
-
   return (
-    <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pt-14 lg:pt-0">
-        {/* Top pill navigation for tablet/desktop */}
-        <div className="hidden lg:block top-0 z-30 lg:mb-2">
-          <div className="w-full overflow-x-auto px-2 py-2 lg:px-3 lg:py-0">
-            <div className="flex min-w-max items-center gap-3 lg:gap-4 whitespace-nowrap">
-              <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = isActiveRoute(item.path);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleNavigation(item.path)}
-                      aria-label={t(item.label)}
-                      title={t(item.description)}
-                      className={`
-                      flex items-center gap-2 px-3.5 py-2.5 rounded-full
-                      border-[1.5px] text-[13px] font-semibold backdrop-blur-[10px]
-                      transition-all duration-200
-                      ${isActive
-                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
-                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
-                      }
-                    `}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{t(item.label)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Explore group */}
-              <div className="flex items-center gap-2 shrink-0 ml-6">
-                <span className="text-xs opacity-70 pl-1.5 pr-1">
-                  {t('dexLayout.exploreHeading')}
-                </span>
-                {exploreItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = isActiveRoute(item.path);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleNavigation(item.path)}
-                      aria-label={t(item.label)}
-                      title={t(item.description)}
-                      className={`
-                          flex items-center gap-1.5 px-3 py-2 rounded-full
-                          border-[1.5px] text-xs font-semibold
-                          transition-all duration-200
-                          ${isActive
-                        ? 'border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-white'
-                        : 'border-white/[0.08] bg-white/[0.06] text-[#9aa] hover:bg-white/[0.1]'
-                          }
-                        `}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      {t(item.label)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+    <div className={`dex-workspace ${isExploreExpanded ? 'dex-workspace--explore' : ''}`}>
+      <nav
+        className="dex-navigation"
+        aria-label={t('dexLayout.navigation')}
+      >
+        <div className="dex-navigation__main">
+          {navigationItems.map(renderLink)}
+          <button
+            ref={exploreButton}
+            type="button"
+            className="dex-navigation__explore-toggle"
+            aria-expanded={isExploreExpanded}
+            aria-controls={exploreId}
+            data-active={isExploreActive || undefined}
+            onClick={() => setIsExploreExpanded((expanded) => !expanded)}
+            onKeyDown={handleEscape}
+          >
+            <Compass aria-hidden="true" />
+            <span>{t('dexLayout.explore.label')}</span>
+            <ChevronDown aria-hidden="true" className="dex-navigation__chevron" />
+          </button>
         </div>
-
-        {/* Content */}
-        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 lg:gap-0 lg:p-1 lg:px-4">
-          <main className="min-w-0 overflow-hidden pt-1">{children}</main>
+        <div id={exploreId} className={`dex-navigation__explore ${isExploreExpanded ? 'is-expanded' : ''}`}>
+          <span className="dex-navigation__group-label">{t('dexLayout.exploreHeading')}</span>
+          {exploreItems.map(renderLink)}
         </div>
+        <span className="dex-navigation__network">æternity</span>
+      </nav>
+      <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 lg:gap-0 lg:p-1 lg:px-4">
+        <main className="min-w-0 overflow-hidden pt-1">{children}</main>
       </div>
-
-      {/* Mobile: Horizontal top navigation tabs (positioned after header) */}
-      <div className="block lg:hidden w-full fixed top-16 left-0 right-0 z-[900] border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-        <div className="pt-4 pb-2">
-          <div className="px-2">
-            <div className="flex items-center justify-between w-full">
-              {!isExploreExpanded ? (
-                mobileNavigationItems.map((item) => {
-                  if (item.id === 'explore') {
-                    const isActive = isExploreActive();
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={handleExploreToggle}
-                        className={`pb-1 transition-colors flex-1 ${
-                          isActive
-                            ? 'border-b-2 border-[#4ecdc4]'
-                            : 'border-b-2 border-transparent'
-                        }`}
-                        title={t(item.description)}
-                      >
-                        <span className="flex flex-col items-center gap-1">
-                          <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/60'}`} />
-                          <span className={`text-[14px] leading-tight ${isActive ? 'font-semibold text-white' : 'text-white/60'}`}>
-                            {t(item.label)}
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  }
-                  return renderMobileNavigationButton(item);
-                })
-              ) : (
-                <>
-                  {exploreItems.map((item) => renderMobileNavigationButton(item))}
-                  <button
-                    type="button"
-                    onClick={handleCloseExplore}
-                    className="pb-1 transition-colors border-b-2 border-transparent flex-1"
-                    title={t('dexLayout.closeExploreMenu')}
-                  >
-                    <span className="flex flex-col items-center gap-1">
-                      <X className="h-5 w-5 text-destructive" />
-                      <span className="text-[11px] leading-tight text-destructive">{t('dexLayout.close')}</span>
-                    </span>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 

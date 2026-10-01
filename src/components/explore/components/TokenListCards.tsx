@@ -12,6 +12,8 @@ import { Decimal } from '@/libs/decimal';
 import { DexTokenDto } from '../../../api/generated';
 import { Token } from '../types/explore';
 
+import './DexMarketResults.scss';
+
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
@@ -48,6 +50,8 @@ interface TokenListCardsProps {
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
+  hideControls?: boolean;
+  timeframe?: '24h' | '7d' | '30d';
 }
 export const TokenListCards = ({
   tokens,
@@ -56,6 +60,8 @@ export const TokenListCards = ({
   search,
   onSearchChange,
   loading,
+  hideControls = false,
+  timeframe,
 }: TokenListCardsProps) => {
   const { t } = useTranslation('explore');
   const navigate = useNavigate();
@@ -63,12 +69,13 @@ export const TokenListCards = ({
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const timeBase = useMemo(() => {
+    if (timeframe) return timeframe;
     if (performanceChartTimeframe === '1d') {
       return '24h';
     }
 
     return performanceChartTimeframe;
-  }, [performanceChartTimeframe]);
+  }, [performanceChartTimeframe, timeframe]);
 
   const handleSort = (
     key:
@@ -112,11 +119,12 @@ export const TokenListCards = ({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="dex-market-results overflow-x-auto">
       {/* Responsive Filter Controls */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-3 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      <div className={hideControls ? undefined : 'bg-white/[0.03] border border-white/10 rounded-xl p-4 mb-3 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]'}>
         {/* Responsive Filter Layout */}
 
+        {!hideControls && (
         <div className="flex items-stretch justify-between gap-3 flex-wrap flex-col sm:flex-row mb-[10px]">
           {/* Top Row: Filter & Sort Label + Controls */}
           <div className="flex items-center gap-[5px] w-auto justify-between flex-wrap">
@@ -208,27 +216,29 @@ export const TokenListCards = ({
           </div>
         </div>
 
+        )}
+
         <div className="flex flex-col gap-3 mt-3">
           {tokens.map((token) => (
             <div
               key={token.address}
-              className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 hover:bg-white/[0.05] active:scale-[0.98]"
+              className="dex-market-card"
               onClick={() => handleTokenClick(token)}
             >
               {/* Token Header */}
-              <div className="flex flex-col items-center justify-between mb-3 pb-3 border-b border-white/5">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-green-500 text-lg font-semibold text-center">
+              <div className="dex-market-card-header">
+                <div className="dex-market-card-name">
+                  <div className="dex-market-symbol">
                     {token.symbol}
                   </div>
-                  <div className="text-gray-300 text-xs font-medium text-center opacity-80">
+                  <div className="dex-market-name">
                     {token.name}
                   </div>
                 </div>
 
                 {/* Pools Count Badge */}
-                <div className="bg-green-500/10 px-2 py-1 rounded-xl border border-green-500/20 mt-2">
-                  <span className="text-xs text-green-500 font-semibold">
+                <div className="dex-market-count">
+                  <span className="text-xs font-medium">
                     {token.pairs_count || 0}
                     {' '}
                     {t('pools')}
@@ -237,30 +247,30 @@ export const TokenListCards = ({
               </div>
 
               {/* Token Statistics Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div className="dex-market-card-metrics">
                 {/* Price */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                  <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
+                <div className="dex-market-metric">
+                  <div className="dex-market-metric-label">
                     {t('price')}
                   </div>
-                  <div className="text-sm text-white font-semibold">
+                  <div className="dex-market-metric-value">
                     <PriceDataFormatter priceData={token.price} />
                   </div>
                 </div>
 
-                {/* TVL */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                  <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    {t('tokenListCards.sort.tvl')}
+                {/* Total trading volume */}
+                <div className="dex-market-metric">
+                  <div className="dex-market-metric-label">
+                    {t('totalVolume')}
                   </div>
-                  <div className="text-sm text-white font-semibold">
+                  <div className="dex-market-metric-value">
                     <PriceDataFormatter priceData={token.summary?.total_volume} />
                   </div>
                 </div>
 
                 {/* 24h Change */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                  <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
+                <div className="dex-market-metric">
+                  <div className="dex-market-metric-label">
                     {t('tokenListCards.changeWithTimeframe', { timeframe: timeBase })}
                   </div>
                   <div className={`text-sm font-semibold ${
@@ -283,24 +293,24 @@ export const TokenListCards = ({
                 </div>
 
                 {/* 24h Volume */}
-                <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                  <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
+                <div className="dex-market-metric">
+                  <div className="dex-market-metric-label">
                     {t('tokenListCards.volumeWithTimeframe', { timeframe: timeBase })}
                   </div>
-                  <div className="text-sm text-white font-semibold">
+                  <div className="dex-market-metric-value">
                     <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <div className="dex-market-card-actions">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSwapClick(token);
                   }}
-                  className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
+                  className="dex-market-action"
                 >
                   🔄 {t('tokenListCards.swap')}
                 </button>
@@ -309,7 +319,7 @@ export const TokenListCards = ({
                     e.stopPropagation();
                     handleAddClick(token);
                   }}
-                  className="flex-1 p-3 rounded-xl border border-white/10 bg-white/10 text-white cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none hover:bg-green-500 hover:text-white active:scale-95"
+                  className="dex-market-action"
                 >
                   ➕ {t('tokenListCards.addLiquidity')}
                 </button>

@@ -123,7 +123,7 @@ const InviteAndEarnCard = ({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className={`bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden ${className || ''}`}>
+    <div className={`ui-panel p-5 md:p-6 relative overflow-hidden ${className || ''}`}>
       <div className="flex items-start justify-between gap-3 mb-5">
         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -133,7 +133,7 @@ const InviteAndEarnCard = ({
         </div>
       </div>
 
-      <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2">
+      <h3 className="m-0 text-lg md:text-xl font-semibold text-white mb-2">
         {t('inviteAndEarn.generateInvites', { ns: 'trending' })}
       </h3>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -220,7 +220,7 @@ const InviteAndEarnCard = ({
                 className={`w-full p-3 md:p-4 text-sm font-semibold flex items-center justify-center gap-2 uppercase tracking-wider rounded-lg transition-all duration-200 ${
                   !activeAccount
                     ? 'opacity-50 cursor-not-allowed bg-white/5 text-white/30'
-                    : 'bg-cyan-500 hover:bg-cyan-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25'
+                    : 'ui-primary'
                 }`}
               >
                 {generatingInviteLink ? (

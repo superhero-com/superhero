@@ -52,7 +52,7 @@ const isSignatureContext = (
 
 // Matches WalletOnboarding's design-system anchoring: AeCard `glass` tokens,
 // shadcn Input tokens, 44px minimum tap targets.
-const card = 'relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
+const card = 'ui-panel relative overflow-hidden w-full max-w-md mx-auto rounded-2xl border bg-glass-bg '
   + 'border-glass-border shadow-glass backdrop-blur-card p-6';
 const primaryBtn = 'w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 text-white font-medium '
   + 'text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-blue-500/25 '
@@ -250,7 +250,7 @@ const WalletSignPrompt = () => {
           // Above every other surface, because a signature can be requested from
           // any of them: app chrome is z-[1100], the onboarding overlay z-[1200],
           // and ModalProvider's dialogs z-[2001]/z-[2002].
-          className="fixed inset-0 z-[2100] text-white overflow-y-auto touch-manipulation outline-none"
+          className="ui-page fixed inset-0 z-[2100] text-white overflow-y-auto touch-manipulation outline-none"
           style={{
             paddingTop: 'env(safe-area-inset-top, 0px)',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',

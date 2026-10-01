@@ -6,17 +6,20 @@ import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter'
 import { toAe } from '@aeternity/aepp-sdk';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import TokenInformation from './TokenInformation';
 import LivePriceFormatter from '../../shared/components/LivePriceFormatter';
 import { Decimal } from '../../../libs/decimal';
 
 interface TokenSummaryProps {
   token: TokenDto;
   className?: string;
+  showOverview?: boolean;
 }
 
 const TokenSummary = ({
   token,
   className = '',
+  showOverview = true,
 }: TokenSummaryProps) => {
   const { t } = useTranslation();
   const getShortenValue = (value: string | number): string => Decimal.from(toAe(value)).shorten();
@@ -26,6 +29,8 @@ const TokenSummary = ({
     month: 'long',
     day: 'numeric',
   });
+
+  if (!showOverview) return <TokenInformation token={token} className={className} />;
 
   return (
     <div
@@ -38,43 +43,48 @@ const TokenSummary = ({
         </h3>
       </div>
 
-      {/* Token Name */}
-      <div className="mb-6">
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
-          <div className="text-xs text-white/60 font-medium mb-2">
-            {t('common.views.tokenSummary.tokenName')}
+      {showOverview && (
+        <>
+          {/* Token Name */}
+          <div className="mb-6">
+            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
+              <div className="text-xs text-white/60 font-medium mb-2">
+                {t('common.views.tokenSummary.tokenName')}
+              </div>
+              <div className="text-lg font-bold text-white font-mono tracking-tight">
+                {token.symbol || token.name || t('common.views.tokenSummary.unknown')}
+              </div>
+            </div>
           </div>
-          <div className="text-lg font-bold text-white font-mono tracking-tight">
-            {token.symbol || token.name || t('common.views.tokenSummary.unknown')}
-          </div>
-        </div>
-      </div>
 
-      {/* Price and Market Cap */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
-          <div className="text-xs text-white/60 font-medium mb-2">{t('common.account.price')}</div>
-          <PriceDataFormatter
-            className="text-xs sm:text-base"
-            watchPrice={!!token.sale_address}
-            priceData={token.price_data as PriceDto}
-          />
-        </div>
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
-          <div className="text-xs text-white/60 font-medium mb-2">
-            {t('explore.marketCapLabel')}
+          {/* Price and Market Cap */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+              <div className="text-xs text-white/60 font-medium mb-2">{t('common.account.price')}</div>
+              <PriceDataFormatter
+                className="text-xs sm:text-base"
+                watchPrice={!!token.sale_address}
+                priceData={token.price_data as PriceDto}
+              />
+            </div>
+            <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
+              <div className="text-xs text-white/60 font-medium mb-2">
+                {t('explore.marketCapLabel')}
+              </div>
+              <PriceDataFormatter
+                watchKey={token.sale_address}
+                bignumber
+                priceData={token.market_cap_data}
+                className="text-xs sm:text-base"
+              />
+            </div>
           </div>
-          <PriceDataFormatter
-            watchKey={token.sale_address}
-            bignumber
-            priceData={token.market_cap_data}
-            className="text-xs sm:text-base"
-          />
-        </div>
-      </div>
+
+        </>
+      )}
 
       {/* DAO Balance and Total Supply */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className={`grid ${showOverview ? 'grid-cols-2' : 'grid-cols-1'} gap-4 mb-6`}>
         {token.dao_balance && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
@@ -87,7 +97,7 @@ const TokenSummary = ({
             />
           </div>
         )}
-        {token.total_supply && (
+        {showOverview && token.total_supply && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
               {t('common.views.tokenSummary.totalSupply')}

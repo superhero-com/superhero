@@ -195,9 +195,9 @@ export default function GovernanceCreate() {
     <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl" />
-          <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
+          <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-500/20 to-blue-500/20 rounded-3xl blur-xl" />
+          <div className="ui-panel relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
+            <h1 className="ui-page-title text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
             <p className="text-slate-300 mt-2">{t('description')}</p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function GovernanceCreate() {
         <MobileInput label={t('form.description')} value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
 
         {showForumHint && (
-          <MobileCard variant="outlined" padding="small" className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-slate-200 backdrop-blur-2xl">
+          <MobileCard variant="outlined" padding="small" className="ui-panel bg-[var(--glass-bg)] border-[var(--glass-border)] text-slate-200 backdrop-blur-2xl">
             {t('messages.forumHint')}
           </MobileCard>
         )}
@@ -225,8 +225,8 @@ export default function GovernanceCreate() {
         <MobileInput label={t('form.link')} value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
 
         <div className="flex gap-2">
-          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.publiclyListed')}</AeButton>
-          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.notListed')}</AeButton>
+          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-[#1c304f] text-blue-200' : 'bg-white/10'}>{t('buttons.publiclyListed')}</AeButton>
+          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-[#1c304f] text-blue-200' : 'bg-white/10'}>{t('buttons.notListed')}</AeButton>
         </div>
 
         <div className="space-y-2">
@@ -272,7 +272,7 @@ export default function GovernanceCreate() {
         </div>
 
         <div className="sticky bottom-4">
-          <AeButton onClick={onSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+          <AeButton onClick={onSubmit} disabled={submitting} className="w-full ui-primary">
             {submitting ? t('buttons.creating') : t('buttons.createPoll')}
           </AeButton>
         </div>

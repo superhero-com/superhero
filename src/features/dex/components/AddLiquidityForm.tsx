@@ -1,9 +1,11 @@
 import {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useEffect, useId, useMemo, useRef, useState,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { TokenChip } from '@/components/TokenChip';
+import {
+  ArrowRight, Link2, Plus, Settings2,
+} from 'lucide-react';
 import Spinner from '@/components/Spinner';
 import { CONFIG } from '../../../config';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -11,14 +13,17 @@ import { useAddLiquidity } from '../hooks';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
 import { DexTokenDto, DexService } from '../../../api/generated';
-import TokenInput from '../../../components/dex/core/TokenInput';
-import DexSettings from './DexSettings';
+import SwapAmountField from '../../../components/dex/core/SwapAmountField';
+import SwapInlineSettings from '../../../components/dex/core/SwapInlineSettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
 import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
 import { usePool } from '../context/PoolProvider';
+import { linkedDeposit } from '../utils/liquidityEstimate';
+import '../../../components/dex/core/SwapForm.css';
+import './AddLiquidityForm.css';
 
 const AddLiquidityForm = () => {
   const { t } = useTranslation('common');
@@ -49,7 +54,14 @@ const AddLiquidityForm = () => {
   const [lastEdited, setLastEdited] = useState<'A' | 'B' | null>(null);
 
   // Liquidity hook
-  const { state, setState, executeAddLiquidity } = useAddLiquidity();
+  const {
+    state, setState, executeAddLiquidity, quoteStatus, computePairPreview,
+  } = useAddLiquidity();
+
+  const settingsId = useId();
+  const settingsTrigger = useRef<HTMLButtonElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const closeSettings = () => { setShowSettings(false); settingsTrigger.current?.focus(); };
 
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
@@ -84,7 +96,7 @@ const AddLiquidityForm = () => {
     async (tokenAddress: string): Promise<DexTokenDto | null> => {
       try {
         const tokenResult = DexService.getDexTokenByAddress({ address: tokenAddress });
-        return tokenResult;
+        return await tokenResult;
       } catch {
         return null;
       }
@@ -233,13 +245,20 @@ const AddLiquidityForm = () => {
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
     // Skip URL updates during initial load or when tokens are being set from URL params
-    if (!tokens.length || (!tokenA && !tokenB)) return;
+    if (!tokens.length || !tokenA || !tokenB) return;
 
     // Only update URL if we have at least one token selected and tokens are loaded
     if (tokenA || tokenB) {
       updateUrlParams(tokenA, tokenB);
     }
   }, [tokenA, tokenB, tokens.length, updateUrlParams]);
+
+  useEffect(() => {
+    setAmountA('');
+    setAmountB('');
+    setLastEdited(null);
+    setState((prev) => ({ ...prev, error: null }));
+  }, [tokenA?.address, tokenB?.address, setState]);
 
   // Update hook state when tokens change
   useEffect(() => {
@@ -253,8 +272,8 @@ const AddLiquidityForm = () => {
       tokenB: tokenBAddress,
       symbolA: tokenA?.symbol || '',
       symbolB: tokenB?.symbol || '',
-      decA: tokenA?.decimals || 18,
-      decB: tokenB?.decimals || 18,
+      decA: tokenA?.decimals ?? 18,
+      decB: tokenB?.decimals ?? 18,
     }));
   }, [tokenA, tokenB, setState]);
 
@@ -267,74 +286,40 @@ const AddLiquidityForm = () => {
     }));
   }, [amountA, amountB, setState]);
 
+  const pairMatches = state.tokenA === (tokenA?.is_ae ? 'AE' : tokenA?.address)
+    && state.tokenB === (tokenB?.is_ae ? 'AE' : tokenB?.address);
+  const poolReady = pairMatches && quoteStatus === 'ready';
+  const poolRatio = poolReady && state.pairExists ? state.pairPreview?.ratioAinB : undefined;
+
   useEffect(() => {
-    if (!state.pairPreview?.ratioAinB) return;
-    try {
-      const ratio = Decimal.from(state.pairPreview.ratioAinB);
-      if (lastEdited === 'A') {
-        if (amountA) {
-          const amountANum = Decimal.from(amountA);
-          const calculatedAmountB = amountANum.eq(0)
-            ? '0'
-            : amountANum.div(ratio).toString();
-          setAmountB(calculatedAmountB);
-        }
-      } else if (lastEdited === 'B') {
-        if (amountB) {
-          const amountBNum = Decimal.from(amountB);
-          const calculatedAmountA = amountBNum.eq(0)
-            ? '0'
-            : amountBNum.mul(ratio).toString();
-          setAmountA(calculatedAmountA);
-        }
-      }
-    } catch {
-      // Ignore invalid ratio values
+    if (!poolRatio) return;
+    if (lastEdited === 'A') {
+      const next = linkedDeposit(amountA, poolRatio, tokenB?.decimals ?? 18, 'A');
+      if (next !== null) setAmountB(next);
+    } else if (lastEdited === 'B') {
+      const next = linkedDeposit(amountB, poolRatio, tokenA?.decimals ?? 18, 'B');
+      if (next !== null) setAmountA(next);
     }
-  }, [state.pairPreview, lastEdited, amountA, amountB]);
+  }, [poolRatio, lastEdited, amountA, amountB, tokenA?.decimals, tokenB?.decimals]);
 
-  // Handle Token A amount change and auto-calculate Token B
-  const handleAmountAChange = (newAmountA: string) => {
+  const handleAmountAChange = (value: string) => {
     setLastEdited('A');
-    setAmountA(newAmountA);
-    // Auto-calculate Token B based on ratio using Decimal to avoid float drift
-    if (state.pairPreview?.ratioAinB && newAmountA) {
-      try {
-        const ratio = Decimal.from(state.pairPreview.ratioAinB);
-        const amountANum = Decimal.from(newAmountA);
-        const calculatedAmountB = amountANum.eq(0)
-          ? '0'
-          : amountANum.div(ratio).toString();
-        setAmountB(calculatedAmountB);
-      } catch {
-        // Ignore invalid ratio values
-      }
-    } else if (!newAmountA) {
-      // Clear Token B when Token A is cleared
-      setAmountB('');
-    }
+    setAmountA(value);
+    if (poolRatio) setAmountB(linkedDeposit(value, poolRatio, tokenB?.decimals ?? 18, 'A') ?? '');
+    setState((prev) => ({ ...prev, error: null }));
   };
-
-  // Handle Token B amount change and auto-calculate Token A
-  const handleAmountBChange = (newAmountB: string) => {
+  const handleAmountBChange = (value: string) => {
     setLastEdited('B');
-    setAmountB(newAmountB);
-    // Auto-calculate Token A based on ratio using Decimal to avoid float drift
-    if (state.pairPreview?.ratioAinB && newAmountB) {
-      try {
-        const ratio = Decimal.from(state.pairPreview.ratioAinB);
-        const amountBNum = Decimal.from(newAmountB);
-        const calculatedAmountA = amountBNum.eq(0)
-          ? '0'
-          : amountBNum.mul(ratio).toString();
-        setAmountA(calculatedAmountA);
-      } catch {
-        // Ignore invalid ratio values
-      }
-    } else if (!newAmountB) {
-      // Clear Token A when Token B is cleared
-      setAmountA('');
-    }
+    setAmountB(value);
+    if (poolRatio) setAmountA(linkedDeposit(value, poolRatio, tokenA?.decimals ?? 18, 'B') ?? '');
+    setState((prev) => ({ ...prev, error: null }));
+  };
+  const selectToken = (side: 'A' | 'B', token: DexTokenDto) => {
+    if (side === 'A') setTokenA(token); else setTokenB(token);
+    setAmountA('');
+    setAmountB('');
+    setLastEdited(null);
+    setState((prev) => ({ ...prev, error: null }));
   };
 
   const filteredTokensA = useMemo(() => {
@@ -367,8 +352,41 @@ const AddLiquidityForm = () => {
     return out;
   }, [tokens, searchB]);
 
+  // Balance validation
+  const hasInsufficientBalanceA = useMemo(() => {
+    if (!amountA || !balances.in || Number(amountA) <= 0) return false;
+    try {
+      return Decimal.from(amountA).gt(Decimal.from(balances.in));
+    } catch {
+      return false;
+    }
+  }, [amountA, balances.in]);
+
+  const hasInsufficientBalanceB = useMemo(() => {
+    if (!amountB || !balances.out || Number(amountB) <= 0) return false;
+    try {
+      return Decimal.from(amountB).gt(Decimal.from(balances.out));
+    } catch {
+      return false;
+    }
+  }, [amountB, balances.out]);
+
+  const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
+
+  const isAddDisabled = state.loading
+    || !poolReady
+    || state.amountA !== amountA || state.amountB !== amountB
+    || !amountA
+    || Number(amountA) <= 0
+    || !amountB
+    || Number(amountB) <= 0
+    || !tokenA
+    || !tokenB
+    || !!state.error
+    || hasInsufficientBalance;
+
   const handleAddLiquidity = async () => {
-    if (!tokenA || !tokenB || !amountA || !amountB) return;
+    if (!tokenA || !tokenB || isAddDisabled) return;
 
     // Close the confirmation dialog immediately; the banner handles ongoing state.
     setShowConfirm(false);
@@ -401,204 +419,99 @@ const AddLiquidityForm = () => {
     }
   };
 
-  // Balance validation
-  const hasInsufficientBalanceA = useMemo(() => {
-    if (!amountA || !balances.in || Number(amountA) <= 0) return false;
-    try {
-      return Decimal.from(amountA).gt(Decimal.from(balances.in));
-    } catch {
-      return false;
-    }
-  }, [amountA, balances.in]);
+  let actionLabel = tDex('poolAdd.review');
+  if (state.loading) actionLabel = t('buttons.confirmInWallet');
+  else if (!tokenA || !tokenB) actionLabel = tDex('poolAdd.selectTokens');
+  else if ((tokenA.is_ae ? CONFIG.DEX_WAE : tokenA.address) === (tokenB.is_ae ? CONFIG.DEX_WAE : tokenB.address)) actionLabel = tDex('poolAdd.differentTokens');
+  else if (!pairMatches || quoteStatus === 'loading') actionLabel = tDex('poolAdd.checking');
+  else if (quoteStatus === 'error') actionLabel = tDex('poolAdd.unavailable');
+  else if (hasInsufficientBalance) actionLabel = tDex('poolAdd.notEnough', { symbol: hasInsufficientBalanceA ? tokenA.symbol : tokenB.symbol });
+  else if (!amountA || !amountB || Number(amountA) <= 0 || Number(amountB) <= 0) actionLabel = tDex('poolAdd.enterAmounts');
 
-  const hasInsufficientBalanceB = useMemo(() => {
-    if (!amountB || !balances.out || Number(amountB) <= 0) return false;
-    try {
-      return Decimal.from(amountB).gt(Decimal.from(balances.out));
-    } catch {
-      return false;
-    }
-  }, [amountB, balances.out]);
-
-  const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
-
-  const isAddDisabled = state.loading
-    || !amountA
-    || Number(amountA) <= 0
-    || !amountB
-    || Number(amountB) <= 0
-    || !tokenA
-    || !tokenB
-    || !!state.error
-    || hasInsufficientBalance;
+  useEffect(() => { setShowConfirm(false); }, [address, tokenA, tokenB]);
 
   return (
-    <div className="max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+    <section className="dex-swap pool-add" aria-label={tDex('poolAdd.title')}>
+      <header className="dex-swap__header">
         <div>
-          <h2 className="text-xl font-bold m-0">{tDex('addLiquidityForm.title')}</h2>
+          <h2>{tDex('poolAdd.title')}</h2>
+          <p>{tDex('poolAdd.description')}</p>
         </div>
-
-        <div className="flex gap-2 items-center">
-          {currentAction === 'add' && (
-            <button
-              type="button"
-              onClick={clearSelection}
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
-            >
-              {tDex('addLiquidityForm.cancel')}
-            </button>
-          )}
-
-          <DexSettings title={t('titles.liquiditySettings')}>
-            <button
-              type="button"
-              aria-label="open-settings"
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
-            >
-              {tDex('addLiquidityForm.settings')}
-            </button>
-          </DexSettings>
+        <div className="pool-add__header-actions">
+          {currentAction === 'add' && <button type="button" className="pool-add__cancel" onClick={clearSelection}>{tDex('poolAdd.cancel')}</button>}
+          <button ref={settingsTrigger} type="button" className={`swap-settings-trigger${showSettings ? ' is-open' : ''}`} disabled={state.loading} aria-label={t('titles.liquiditySettings')} aria-expanded={showSettings} aria-controls={settingsId} onClick={() => setShowSettings(!showSettings)}>
+            <Settings2 aria-hidden="true" />
+            <span>{tDex('poolAdd.settings')}</span>
+          </button>
         </div>
-      </div>
-      <div className="flex-wrap text-sm text-white/60 text-left mb-6 opacity-90">
-        {currentAction === 'add' && selectedTokenA && selectedTokenB && (
-          <p className="text-xs text-white/60 mt-1">
-            {tDex('addLiquidityForm.addingTo')}
-            {' '}
-            <TokenChip address={selectedTokenA} />
-            <span className="text-lg text-light-font-color">/</span>
-            <TokenChip address={selectedTokenB} />
-            {' '}
-            {tDex('addLiquidityForm.position')}
-          </p>
-        )}
-      </div>
-      <div className="text-sm text-white/60 text-center mb-6 opacity-90">
-        {tDex('addLiquidityForm.provideLiquidityHint')}
-      </div>
-
-      {/* Token A Input */}
-      <div className="mb-2">
-        <TokenInput
-          label={tDex('addLiquidityForm.tokenA')}
-          token={tokenA}
-          skipToken={tokenB}
-          amount={amountA}
-          balance={balances.in}
-          onTokenChange={setTokenA}
-          onAmountChange={(newAmountA) => handleAmountAChange(newAmountA)}
-          tokens={filteredTokensA}
-          excludeTokens={tokenB ? [tokenB] : []}
-          disabled={state.loading}
-          loading={tokensLoading}
-          searchValue={searchA}
-          onSearchChange={setSearchA}
-          hasInsufficientBalance={hasInsufficientBalanceA}
-        />
-      </div>
-
-      {/* Plus Icon */}
-      <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-[#1161FE] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-in-out shadow-[0_4px_12px_rgba(17,97,254,0.3)] z-[2] relative hover:-translate-y-0.5">
-          +
-        </div>
-      </div>
-
-      {/* Token B Input */}
-      <div className="mb-5">
-        <TokenInput
-          label={tDex('addLiquidityForm.tokenB')}
-          token={tokenB}
-          skipToken={tokenA}
-          amount={amountB}
-          balance={balances.out}
-          onTokenChange={setTokenB}
-          onAmountChange={(newAmountB) => handleAmountBChange(newAmountB)}
-          tokens={filteredTokensB}
-          excludeTokens={tokenA ? [tokenA] : []}
-          disabled={state.loading}
-          loading={tokensLoading}
-          searchValue={searchB}
-          onSearchChange={setSearchB}
-          hasInsufficientBalance={hasInsufficientBalanceB}
-        />
-      </div>
-
-      {/* Liquidity Preview */}
-      {state.pairPreview && (
-        <LiquidityPreview
-          preview={state.pairPreview}
-          tokenA={tokenA}
-          tokenB={tokenB}
-          pairExists={state.pairExists}
-          hasError={!!state.error}
-          onSuggestedAmountA={setAmountA}
-          onSuggestedAmountB={setAmountB}
-        />
-      )}
-
-      {/* Error Display */}
-      {state.error && (
-        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {state.error}
-        </div>
-      )}
-
-      {/* Insufficient Balance Warning */}
-      {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
-        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {/* eslint-disable-next-line no-nested-ternary */}
-          {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
-            tDex('addLiquidityForm.insufficientBalanceBoth', { symbolA: tokenA?.symbol ?? '', symbolB: tokenB?.symbol ?? '' })
-          ) : hasInsufficientBalanceA ? (
-            tDex('addLiquidityForm.insufficientBalanceNeed', {
-              symbol: tokenA?.symbol ?? '',
-              needed: Decimal.from(amountA || '0').prettify(),
-              have: balances.in ? Decimal.from(balances.in).prettify() : '0',
-            })
-          ) : (
-            tDex('addLiquidityForm.insufficientBalanceNeed', {
-              symbol: tokenB?.symbol ?? '',
-              needed: Decimal.from(amountB || '0').prettify(),
-              have: balances.out ? Decimal.from(balances.out).prettify() : '0',
-            })
-          )}
-        </div>
-      )}
-
-      {/* Add Liquidity Button */}
+      </header>
+      {showSettings && <SwapInlineSettings id={settingsId} title={t('titles.liquiditySettings')} hint={tDex('poolAdd.slippageHint')} onClose={closeSettings} />}
+      <SwapAmountField
+        pay
+        label={tDex('poolAdd.deposit', { symbol: tokenA?.symbol || '' })}
+        hint={lastEdited === 'B' && poolRatio && amountA ? tDex('poolAdd.linked') : tokenA?.name}
+        selectorLabel={tDex('poolAdd.selectFirst')}
+        token={tokenA}
+        otherToken={tokenB}
+        amount={amountA}
+        balance={balances.in}
+        connected={!!address}
+        onTokenChange={(token) => selectToken('A', token)}
+        onAmountChange={handleAmountAChange}
+        tokens={filteredTokensA}
+        disabled={state.loading}
+        loading={tokensLoading}
+        search={searchA}
+        onSearch={setSearchA}
+        insufficient={!!address && hasInsufficientBalanceA}
+      />
+      <div className="pool-link"><span><Plus aria-hidden="true" /></span></div>
+      <SwapAmountField
+        pay
+        label={tDex('poolAdd.deposit', { symbol: tokenB?.symbol || '' })}
+        hint={lastEdited === 'A' && poolRatio && amountB ? tDex('poolAdd.linked') : tokenB?.name}
+        selectorLabel={tDex('poolAdd.selectSecond')}
+        token={tokenB}
+        otherToken={tokenA}
+        amount={amountB}
+        balance={balances.out}
+        connected={!!address}
+        onTokenChange={(token) => selectToken('B', token)}
+        onAmountChange={handleAmountBChange}
+        tokens={filteredTokensB}
+        disabled={state.loading}
+        loading={tokensLoading}
+        search={searchB}
+        onSearch={setSearchB}
+        insufficient={!!address && hasInsufficientBalanceB}
+      />
+      <p className="pool-link-hint">
+        <Link2 aria-hidden="true" />
+        {tDex(poolReady && !state.pairExists ? 'poolAdd.startingHint' : 'poolAdd.ratioHint')}
+      </p>
+      <LiquidityPreview
+        preview={poolReady ? state.pairPreview : null}
+        tokenA={tokenA}
+        tokenB={tokenB}
+        pairExists={state.pairExists}
+        status={pairMatches ? quoteStatus : 'loading'}
+        amountA={amountA}
+        amountB={amountB}
+        slippagePct={slippagePct}
+        deadlineMins={deadlineMins}
+        onRetry={() => { computePairPreview(); }}
+        onSettings={() => setShowSettings(true)}
+      />
+      {state.error && <div className="swap-inline-state is-error" role="alert">{state.error}</div>}
+      {address && hasInsufficientBalance && <div className="swap-inline-state is-error" role="status">{tDex('poolAdd.notEnough', { symbol: hasInsufficientBalanceA ? tokenA?.symbol : tokenB?.symbol })}</div>}
       {address ? (
-        <button
-          type="button"
-          onClick={() => setShowConfirm(true)}
-          disabled={isAddDisabled}
-          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-in-out ${
-            isAddDisabled
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
-          }`}
-        >
-          {state.loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <Spinner className="w-4 h-4" />
-              {t('buttons.confirmInWallet')}
-            </div>
-          ) : (
-            tDex('addLiquidityForm.addLiquidityButton')
-          )}
+        <button type="button" onClick={() => setShowConfirm(true)} disabled={isAddDisabled} className="swap-primary">
+          {state.loading && <Spinner className="w-4 h-4" />}
+          {actionLabel}
+          {!isAddDisabled && <ArrowRight aria-hidden="true" />}
         </button>
-      ) : (
-        <ConnectWalletButton
-          label={t('buttons.connectWalletDex', { ns: 'common' })}
-          variant="dex"
-          className="text-sm"
-          block
-        />
-      )}
-
-      {/* Confirmation Modal */}
+      ) : <ConnectWalletButton label={t('buttons.connectWalletDex')} variant="swap" className="swap-primary" block />}
+      <p className="swap-bottom-note">{tDex(address ? 'poolAdd.confirmHint' : 'poolAdd.connectHint')}</p>
       <LiquidityConfirmation
         show={showConfirm}
         onClose={() => setShowConfirm(false)}
@@ -611,9 +524,9 @@ const AddLiquidityForm = () => {
         deadlineMins={deadlineMins}
         pairPreview={state.pairPreview}
         loading={state.loading}
+        disabled={isAddDisabled}
       />
-
-    </div>
+    </section>
   );
 };
 

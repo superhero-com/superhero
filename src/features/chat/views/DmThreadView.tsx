@@ -126,7 +126,7 @@ const DmThreadView = () => {
   if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
+    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
       <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
       {!isConnected && session.isUnlocked && (

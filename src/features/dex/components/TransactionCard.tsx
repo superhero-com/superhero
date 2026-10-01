@@ -1,13 +1,15 @@
 import { PairTransactionDto } from '@/api/generated/models/PairTransactionDto';
-import { AeCard, AeCardContent } from '@/components/ui/ae-card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAeSdk } from '@/hooks';
 import { Decimal } from '@/libs/decimal';
-import { Clock, Copy, ExternalLink } from 'lucide-react';
+import {
+  ArrowLeftRight, ArrowRight, ChevronDown, Clock, Copy, ExternalLink, Minus, Plus,
+} from 'lucide-react';
 import moment from 'moment';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import './TransactionCard.scss';
 
 interface TransactionCardProps {
   transaction: PairTransactionDto;
@@ -194,191 +196,124 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
   const formatTokenAmount = (amount: string, decimals: number) => Decimal
     .from(amount).div(10 ** decimals).prettify();
 
-  let dividerAccent = 'from-gray-500/20';
-  if (isLiquidityTransaction) {
-    dividerAccent = 'from-teal-500/20';
-  } else if (hasSwapInfo) {
-    dividerAccent = 'from-blue-500/20';
-  }
-
-  let ringColor = 'ring-foreground/10';
-  if (isLiquidityTransaction) {
-    ringColor = 'ring-teal-500/20';
-  } else if (hasSwapInfo) {
-    ringColor = 'ring-blue-500/20';
-  }
+  const ActionIcon = isLiquidityTransaction ? Plus : ArrowLeftRight;
 
   return (
-    <AeCard
-      variant="glass"
-      className={[
-        'group relative overflow-hidden',
-        'transition-all duration-300 hover:-translate-y-0.5',
-        'border border-border/60 bg-gradient-to-br from-background/60 to-background/30',
-        'backdrop-blur-xl',
-        `ring-1 ${ringColor}`,
-      ].join(' ')}
-    >
-      {/* top accent line */}
-      <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${dividerAccent} via-transparent to-transparent`} />
-
-      <AeCardContent className="p-4 md:p-5">
-        {/* Header */}
-        <div className="mb-3 flex flex-col gap-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl border bg-muted/30 text-xl shadow-sm">
-                {txConfig.icon}
-              </div>
-              <div>
-                <div className="text-base md:text-lg font-semibold leading-tight text-foreground">
-                  {txConfig.label}
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground">{txConfig.description}</div>
-              </div>
-            </div>
-
-            <Badge
-              className={[
-                'border px-2.5 py-1 rounded-full hidden md:block',
-                'shadow-sm',
-                txConfig.color,
-                txConfig.chip,
-              ].join(' ')}
-            >
-              {transaction.tx_type}
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground" title={formattedExactTime}>
-            <Clock className="h-3.5 w-3.5" />
-            <span>{formatTimestamp(transaction.created_at)}</span>
+    <article className={`dex-transaction-card ${isLiquidityTransaction ? 'is-liquidity' : ''}`}>
+      <div className="transaction-overview">
+        <div className="transaction-identity">
+          <span className="transaction-mark" aria-hidden="true">
+            {transaction.tx_type.includes('remove') ? <Minus /> : <ActionIcon />}
+          </span>
+          <div>
+            <h4>{txConfig.label}</h4>
+            <p>{txConfig.description}</p>
           </div>
         </div>
-
-        {/* Swap section */}
         {hasSwapInfo && (
-          <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 md:p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-lg">🔄</span>
-              <span className="text-sm font-semibold text-blue-600">{t('transactions.swapDetails')}</span>
+          <div className="transaction-amounts" aria-label={t('transactions.swapDetails')}>
+            <div>
+              <span>{t('transactions.input')}</span>
+              {transaction.swap_info.amount0In !== '0' && (
+                <strong>
+                  {formatTokenAmount(transaction.swap_info.amount0In, transaction.pair.token0.decimals)}
+                  <small>{transaction.pair.token0.symbol}</small>
+                </strong>
+              )}
+              {transaction.swap_info.amount1In !== '0' && (
+                <strong>
+                  {formatTokenAmount(transaction.swap_info.amount1In, transaction.pair.token1.decimals)}
+                  <small>{transaction.pair.token1.symbol}</small>
+                </strong>
+              )}
             </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t('transactions.input')}</div>
-                {transaction.swap_info.amount0In !== '0' && (
-                  <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
-                    <span className="font-medium text-emerald-700">
-                      {formatTokenAmount(transaction.swap_info.amount0In, transaction.pair.token0.decimals)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{transaction.pair.token0.symbol}</span>
-                  </div>
-                )}
-                {transaction.swap_info.amount1In !== '0' && (
-                  <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
-                    <span className="font-medium text-emerald-700">
-                      {formatTokenAmount(transaction.swap_info.amount1In, transaction.pair.token1.decimals)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{transaction.pair.token1.symbol}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t('transactions.output')}</div>
-                {transaction.swap_info.amount0Out !== '0' && (
-                  <div className="flex items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2">
-                    <span className="font-medium text-blue-700">
-                      {formatTokenAmount(transaction.swap_info.amount0Out, transaction.pair.token0.decimals)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{transaction.pair.token0.symbol}</span>
-                  </div>
-                )}
-                {transaction.swap_info.amount1Out !== '0' && (
-                  <div className="flex items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2">
-                    <span className="font-medium text-blue-700">
-                      {formatTokenAmount(transaction.swap_info.amount1Out, transaction.pair.token1.decimals)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{transaction.pair.token1.symbol}</span>
-                  </div>
-                )}
-              </div>
+            <ArrowRight className="transaction-amount-divider" aria-hidden="true" />
+            <div>
+              <span>{t('transactions.output')}</span>
+              {transaction.swap_info.amount0Out !== '0' && (
+                <strong>
+                  {formatTokenAmount(transaction.swap_info.amount0Out, transaction.pair.token0.decimals)}
+                  <small>{transaction.pair.token0.symbol}</small>
+                </strong>
+              )}
+              {transaction.swap_info.amount1Out !== '0' && (
+                <strong>
+                  {formatTokenAmount(transaction.swap_info.amount1Out, transaction.pair.token1.decimals)}
+                  <small>{transaction.pair.token1.symbol}</small>
+                </strong>
+              )}
             </div>
           </div>
         )}
-
-        {/* Mint section */}
         {transaction.pair_mint_info && (
-          <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
-            <div className="flex items-center gap-2 px-4 pt-4">
-              <span className="text-lg">🪙</span>
-              <span className="text-sm font-semibold text-amber-600">{t('transactions.pairMint')}</span>
+          <div className="transaction-amounts" aria-label={t('transactions.pairMint')}>
+            <div>
+              <span>
+                {transaction.pair.token0.symbol}
+                {' '}
+                {t('transactions.amount')}
+              </span>
+              <strong>
+                {formatTokenAmount(transaction.pair_mint_info.amount0, transaction.pair.token0.decimals)}
+                <small>{transaction.pair.token0.symbol}</small>
+              </strong>
             </div>
-            <div className="space-y-3 p-4 pt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{t('transactions.type')}</span>
-                <Badge className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-700">
-                  {transaction.pair_mint_info.type}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-background/40 p-3 text-center">
-                  <div className="font-mono text-lg font-semibold text-foreground">
-                    {formatTokenAmount(transaction.pair_mint_info.amount0, transaction.pair.token0.decimals)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {transaction.pair.token0.symbol}
-                    {' '}
-                    {t('transactions.amount')}
-                  </div>
-                </div>
-                <div className="rounded-lg bg-background/40 p-3 text-center">
-                  <div className="font-mono text-lg font-semibold text-foreground">
-                    {formatTokenAmount(transaction.pair_mint_info.amount1, transaction.pair.token1.decimals)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {transaction.pair.token1.symbol}
-                    {' '}
-                    {t('transactions.amount')}
-                  </div>
-                </div>
-              </div>
+            <Plus className="transaction-amount-divider" aria-hidden="true" />
+            <div>
+              <span>
+                {transaction.pair.token1.symbol}
+                {' '}
+                {t('transactions.amount')}
+              </span>
+              <strong>
+                {formatTokenAmount(transaction.pair_mint_info.amount1, transaction.pair.token1.decimals)}
+                <small>{transaction.pair.token1.symbol}</small>
+              </strong>
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div className="mt-4 rounded-xl border border-border/60 bg-gradient-to-r from-slate-500/5 to-gray-500/5 p-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <CopyPill
-                text={transaction.tx_hash}
-                label={`📋 ${transaction.tx_hash.slice(0, 6)}...${transaction.tx_hash.slice(-4)}`}
-              />
-              <CopyPill
-                text={transaction.pair.address}
-                label={`🏊 ${transaction.pair.address.slice(0, 6)}...${transaction.pair.address.slice(-4)}`}
-              />
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (activeNetwork?.explorerUrl) {
-                  window.open(`${activeNetwork.explorerUrl}/transactions/${transaction.tx_hash}`, '_blank');
-                }
-              }}
-              className="h-4 gap-1 px-4 text-xs transition-colors hover:border-black/40 hover:bg-black/10"
-              aria-label={t('transactions.openInExplorer')}
-            >
-              <ExternalLink className="h-2.5 w-3.5" />
-              aescan
-            </Button>
+        <time className="transaction-time" dateTime={transaction.created_at} title={formattedExactTime}>
+          <Clock aria-hidden="true" />
+          {formatTimestamp(transaction.created_at)}
+        </time>
+      </div>
+      <details className="transaction-details">
+        <summary>
+          <span>
+            {t('transactions.type')}
+            <small>{transaction.tx_type}</small>
+          </span>
+          <ChevronDown aria-hidden="true" />
+        </summary>
+        <div className="transaction-detail-content">
+          {transaction.pair_mint_info && <span className="transaction-method">{transaction.pair_mint_info.type}</span>}
+          <time dateTime={transaction.created_at}>{formattedExactTime}</time>
+          <div className="transaction-copy-actions">
+            <CopyPill
+              text={transaction.tx_hash}
+              label={`${transaction.tx_hash.slice(0, 6)}...${transaction.tx_hash.slice(-4)}`}
+            />
+            <CopyPill
+              text={transaction.pair.address}
+              label={`${transaction.pair.address.slice(0, 6)}...${transaction.pair.address.slice(-4)}`}
+            />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (activeNetwork?.explorerUrl) {
+                window.open(`${activeNetwork.explorerUrl}/transactions/${transaction.tx_hash}`, '_blank');
+              }
+            }}
+            className="transaction-explorer"
+            aria-label={t('transactions.openInExplorer')}
+          >
+            <ExternalLink aria-hidden="true" />
+            aescan
+          </Button>
         </div>
-      </AeCardContent>
-    </AeCard>
+      </details>
+    </article>
   );
 };

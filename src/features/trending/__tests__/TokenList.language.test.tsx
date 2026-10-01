@@ -27,6 +27,7 @@ vi.mock('@/components/Trendminer/LatestTransactionsCarousel', () => ({
   default: () => null,
 }));
 vi.mock('../components/TokenListTable', () => ({ default: () => null }));
+vi.mock('../components/ExploreTokenMarkets', () => ({ default: () => null }));
 vi.mock('../components/TrendSearchExploreResultLists', () => ({
   PostResultsList: ({ items }: any) => (
     <>{items.map((item: any) => <p key={item.id}>{item.content}</p>)}</>

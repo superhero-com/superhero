@@ -83,8 +83,8 @@ export interface SwapQuoteParams {
 export interface SwapExecutionParams {
   amountIn: string;
   amountOut: string;
-  tokenIn: DexTokenDto | null;
-  tokenOut: DexTokenDto | null;
+  tokenIn: Pick<DexTokenDto, 'address' | 'name' | 'symbol' | 'decimals' | 'is_ae'> | null;
+  tokenOut: Pick<DexTokenDto, 'address' | 'name' | 'symbol' | 'decimals' | 'is_ae'> | null;
   path: string[];
   slippagePct: number;
   deadlineMins: number;

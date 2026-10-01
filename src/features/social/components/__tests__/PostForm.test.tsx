@@ -148,6 +148,29 @@ describe('PostForm', () => {
     });
   });
 
+  it('keeps the parent comment payload when using the integrated reply appearance', async () => {
+    const publish = vi.fn().mockResolvedValue({ decodedResult: 'th_reply' });
+    mockInitializeContractTyped.mockResolvedValue({ post_without_tip: publish });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TransactionNotificationProvider>
+          <PostForm
+            isPost={false}
+            postId="42_v3"
+            appearance="integrated"
+            showEmojiPicker={false}
+            showGifInput={false}
+            showImageInput={false}
+            showMediaFeatures={false}
+          />
+        </TransactionNotificationProvider>
+      </QueryClientProvider>,
+    );
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'A reply to the original post.' } });
+    fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+    await waitFor(() => expect(publish).toHaveBeenCalledWith('A reply to the original post.', ['comment:42_v3']));
+  });
+
   it.each(['en', null])('updates only eligible feed caches when the indexed language is %s', async (language) => {
     mockGetById.mockResolvedValue({
       ...(await mockGetById()), language,
@@ -258,10 +281,14 @@ describe('PostForm', () => {
       fireEvent.submit(screen.getByRole('textbox').closest('form')!);
     };
 
-    it('shows the post it built and keeps it for a reload', async () => {
+    it.each([false, true])('submits once and retains the pending post with compactMobile=%s', async (compactMobile) => {
       const onSuccess = vi.fn();
-      renderForm({ onSuccess, requiredHashtag: '#nancy' });
-      submit('#NANCY gm');
+      const { container } = renderForm({ onSuccess, requiredHashtag: '#nancy', compactMobile });
+      const mobilePost = container.querySelector<HTMLButtonElement>('.post-composer__mobile-submit button[type="submit"]')!;
+      expect(mobilePost).toBeDisabled();
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: '#NANCY gm' } });
+      expect(mobilePost).toBeEnabled();
+      fireEvent.click(mobilePost);
       await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
 
       const latestKey = ['posts', {

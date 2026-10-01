@@ -1,19 +1,19 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { MessageCircle } from 'lucide-react';
 import BannerContent from './BannerContent';
-import { PostTipGraphic } from './BannerGraphics';
+import { PostFeatureCard } from './HeroFeatureCards';
 
-interface BannerAProps {
-  onStartPosting?: () => void;
-}
-
-const BannerA = ({ onStartPosting }: BannerAProps) => {
+const BannerA = ({ onStartPosting }: { onStartPosting?: () => void }) => {
   const { t } = useTranslation('banners');
   return (
     <BannerContent
+      graphic={<PostFeatureCard />}
+      eyebrow={t('bannerA.eyebrow')}
       title={t('bannerA.title')}
+      accent={t('bannerA.titleAccent')}
       description={t('bannerA.description')}
-      graphic={<PostTipGraphic />}
+      icon={MessageCircle}
       primaryButtonText={t('bannerA.primaryButton')}
       primaryButtonOnClick={onStartPosting}
       secondaryButtonText={t('bannerA.secondaryButton')}

@@ -1,319 +1,310 @@
-/* eslint-disable */
-import React, { useEffect, useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { TokenChip } from '@/components/TokenChip';
-import { RecentActivity as RecentActivityType } from '../types/dex';
-import { CONFIG } from '../../../config';
 import {
-  useAccount,
-  useRecentActivities,
-  useTransactionStatus,
-} from '../../../hooks';
+  useEffect, useId, useRef, useState,
+} from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import {
+  ArrowRight, ArrowUpRight, ArrowDownUp, ChevronDown, ChevronUp, Check, Clock3,
+  X, History, MoreHorizontal, Trash2, Wallet, Box, Layers, Globe2, Copy,
+} from 'lucide-react';
+import { DexService } from '@/api/generated';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CONFIG } from '@/config';
+import { copyToClipboard } from '@/utils/address';
+import { useAccount } from '@/hooks/useAccount';
+import { useRecentActivities } from '@/hooks/useRecentActivities';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import type { RecentActivity as Activity, TransactionStatus } from '../types/dex';
+import {
+  activityAmount, activityKey, activityStatus, sameActivityStatus,
+} from './recentActivityData';
+import './RecentActivity.css';
 
-interface RecentActivityProps {
-  recent?: RecentActivityType[]; // Optional prop for backwards compatibility
-}
-
-const activityTypeLabelKeys: Record<RecentActivityType['type'], string> = {
-  swap: 'activity.swap',
-  wrap: 'activity.wrap',
-  unwrap: 'activity.unwrap',
-  bridge: 'activity.bridge',
-  add_liquidity: 'activity.addLiquidity',
-  remove_liquidity: 'activity.removeLiquidity',
+const typeKeys: Record<Activity['type'], string> = {
+  swap: 'swap',
+  wrap: 'wrap',
+  unwrap: 'unwrap',
+  bridge: 'bridge',
+  add_liquidity: 'addLiquidity',
+  remove_liquidity: 'removeLiquidity',
+};
+const icons = {
+  swap: ArrowDownUp,
+  wrap: Box,
+  unwrap: Box,
+  bridge: Globe2,
+  add_liquidity: Layers,
+  remove_liquidity: Layers,
 };
 
-const activityTypeIcons: Record<RecentActivityType['type'], string> = {
-  swap: '🔄',
-  wrap: '📦',
-  unwrap: '📤',
-  bridge: '🌉',
-  add_liquidity: '💧',
-  remove_liquidity: '💧',
-};
-
-function formatTimeAgo(timestamp: number, t: (key: string, opts?: { count?: number }) => string): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return t('activity.justNow');
-  if (minutes < 60) return t('activity.minutesAgo', { count: minutes });
-  if (hours < 24) return t('activity.hoursAgo', { count: hours });
-  if (days < 7) return t('activity.daysAgo', { count: days });
-  return new Date(timestamp).toLocaleDateString();
-}
-
-function formatAmount(amount?: string): string {
-  if (!amount) return '';
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '';
-  if (num < 0.01) return '< 0.01';
-  if (num < 1) return num.toFixed(3);
-  if (num < 1000) return num.toFixed(2);
-  if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
-  return `${(num / 1000000).toFixed(1)}M`;
-}
-
-const TransactionStatus = ({
-  hash,
-  status,
-}: {
-  hash?: string;
-  status?: RecentActivityType['status'];
-}) => {
-  const { t } = useTranslation('dex');
-  if (!hash || !status) {
-    return (
-      <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-        <span className="text-white/60">{t('activity.pending')}</span>
-      </div>
-    );
-  }
-
-  if (status.failed) {
-    return (
-      <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-        <span className="text-red-400">{t('activity.failed')}</span>
-      </div>
-    );
-  }
-
-  if (status.pending) {
-    return (
-      <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-        <span className="text-orange-400">{t('activity.pending')}</span>
-      </div>
-    );
-  }
-
-  if (status.confirmed) {
-    return (
-      <div className="flex items-center gap-1 text-[10px] font-medium">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_rgba(76,175,80,0.4)]" />
-        <span className="text-green-400">
-          {status.confirmations && status.confirmations > 0
-            ? t('activity.confirmations', { count: status.confirmations }) + (status.confirmations === 1 ? '' : 's')
-            : t('activity.confirmed')}
-        </span>
-        {status.blockNumber && (
-          <span className="text-white/60 opacity-80 ml-1 text-[9px]">
-            #
-            {status.blockNumber}
-          </span>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-1 text-[10px] font-medium">
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-      <span className="text-gray-400">{t('activity.unknown')}</span>
-    </div>
-  );
-};
-
-const hasStatusChanged = (
-  previous?: RecentActivityType['status'],
-  next?: RecentActivityType['status'],
-) => (
-  !previous
-  || !next
-  || previous.confirmed !== next.confirmed
-  || previous.pending !== next.pending
-  || previous.failed !== next.failed
-  || previous.blockNumber !== next.blockNumber
-  || previous.confirmations !== next.confirmations
-);
-
-const RecentActivityItem = ({
-  activity,
-  t,
-  activeAccount,
-  updateActivityStatus,
-}: {
-  activity: RecentActivityType;
-  t: (key: string, opts?: { count?: number }) => string;
-  activeAccount?: string;
-  updateActivityStatus: (
-    account: string,
-    txHash: string,
-    status: RecentActivityType['status'],
-  ) => void;
-}) => {
-  const { status: fetchedStatus } = useTransactionStatus(activity.hash, {
-    enabled: Boolean(activeAccount && activity.hash),
+const ActivityToken = ({ value }: { value?: string }) => {
+  const contract = !!value?.startsWith('ct_') && value !== CONFIG.DEX_WAE;
+  const { data } = useQuery({
+    queryKey: ['DexService.getDexTokenByAddress', value],
+    queryFn: async ({ signal }) => {
+      const request = DexService.getDexTokenByAddress({ address: value! });
+      const cancel = () => request.cancel();
+      signal.addEventListener('abort', cancel, { once: true });
+      try { return await request; } finally { signal.removeEventListener('abort', cancel); }
+    },
+    enabled: contract,
+    staleTime: 300000,
   });
-  const txStatus = fetchedStatus ?? activity.status;
-  const lastProcessedStatusRef = useRef<RecentActivityType['status']>(undefined);
-
-  useEffect(() => {
-    if (!activeAccount || !activity.hash || !txStatus) return;
-    if (!hasStatusChanged(lastProcessedStatusRef.current, txStatus)) return;
-
-    updateActivityStatus(activeAccount, activity.hash, txStatus);
-    lastProcessedStatusRef.current = { ...txStatus };
-  }, [activeAccount, activity.hash, txStatus, updateActivityStatus]);
-
-  return (
-    <div
-      className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <span className="text-base flex-shrink-0 w-6 text-center">
-            {activityTypeIcons[activity.type]}
-          </span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-white mb-0.5">
-              {t(activityTypeLabelKeys[activity.type])}
-            </div>
-            <div className="flex flex-row flex-wrap items-center text-[11px] text-white/60  gap-1.5 mb-1">
-              {activity.tokenIn && activity.tokenOut && (
-                <span>
-                  <TokenChip address={activity.tokenIn} />
-                  →
-                  {' '}
-                  <TokenChip address={activity.tokenOut} />
-                </span>
-              )}
-
-              <div className="flex-1 flex justify-between items-center gap-2 ">
-                {activity.amountIn && (
-                  <span className="font-semibold text-[#4caf50]">
-                    {formatAmount(activity.amountIn)}
-                  </span>
-                )}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="text-[10px] text-white/60 font-medium whitespace-nowrap">
-                    {formatTimeAgo(activity.timestamp, t)}
-                  </div>
-                  {activity.hash && CONFIG.EXPLORER_URL && (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(
-                        /\/$/,
-                        '',
-                      )}/transactions/${activity.hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center w-4 h-4 rounded-md bg-blue-400/10 border border-blue-400/20 no-underline transition-all duration-200 ease-out hover:bg-blue-400/20 hover:border-blue-400/40 hover:scale-110"
-                      title={t('activity.viewOnExplorer')}
-                    >
-                      <span className="text-[10px] text-[#8bc9ff]">
-                        🔗
-                      </span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-0.5">
-              <TransactionStatus
-                hash={activity.hash}
-                status={txStatus}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  let symbol = value || '—';
+  if (value === CONFIG.DEX_WAE) symbol = 'WAE';
+  else if (contract) symbol = data?.symbol || `${value!.slice(0, 7)}…${value!.slice(-4)}`;
+  return <bdi title={value}>{symbol}</bdi>;
 };
 
-export default function RecentActivity({
-  recent: propRecent,
-}: RecentActivityProps) {
-  const { t } = useTranslation('dex');
-  const { activeAccount } = useAccount();
-  const {
-    getActivitiesForAccount,
-    updateActivityStatus,
-    clearActivitiesForAccount,
-  } = useRecentActivities();
-
-  // Use prop activities if provided, otherwise get from hook for current account
-  const activities = propRecent || (activeAccount ? getActivitiesForAccount(activeAccount) : []);
-
-  const handleClearClick = () => {
-    if (!activeAccount) return;
-
-    clearActivitiesForAccount(activeAccount);
+const ActivityRow = ({
+  activity, expanded, onToggle, account, onStatus, now,
+}: {
+  activity: Activity;
+  expanded: boolean;
+  onToggle: () => void;
+  account: string;
+  onStatus: (account: string, hash: string, status: Activity['status']) => void;
+  now: number;
+}) => {
+  const { t, i18n } = useTranslation('dex');
+  const id = useId();
+  const [copied, setCopied] = useState<boolean | null>(null);
+  const terminal = activity.status?.confirmed || activity.status?.failed;
+  const queryable = !!activity.hash?.startsWith('th_');
+  const { status: fetched } = useTransactionStatus(activity.hash, {
+    enabled: account === activity.account && queryable && !terminal,
+  });
+  const status = terminal ? activity.status : fetched || activity.status;
+  const lastSaved = useRef<TransactionStatus | null>(null);
+  useEffect(() => {
+    if (account !== activity.account || !activity.hash || !fetched || terminal
+      || sameActivityStatus(activity.status, fetched)
+      || sameActivityStatus(lastSaved.current, fetched)) return;
+    lastSaved.current = fetched;
+    onStatus(account, activity.hash, fetched);
+  }, [account, activity.account, activity.hash, activity.status, fetched, terminal, onStatus]);
+  const statusKey = activityStatus(status);
+  const Icon = icons[activity.type];
+  let StatusIcon = Clock3;
+  if (statusKey === 'confirmed') StatusIcon = Check;
+  if (statusKey === 'failed') StatusIcon = X;
+  const validTime = Number.isFinite(activity.timestamp) && Math.abs(activity.timestamp) < 8.64e15;
+  const date = validTime ? new Date(activity.timestamp) : null;
+  const relative = new Intl.RelativeTimeFormat(i18n.language, { style: 'short' });
+  const minutes = Math.max(0, Math.floor((now - activity.timestamp) / 60000));
+  let time = date?.toLocaleDateString(i18n.language) || '—';
+  if (minutes < 1) time = t('recent.justNow');
+  else if (minutes < 60) time = relative.format(-minutes, 'minute');
+  else if (minutes < 1440) time = relative.format(-Math.floor(minutes / 60), 'hour');
+  else if (minutes < 10080) time = relative.format(-Math.floor(minutes / 1440), 'day');
+  const isSwap = activity.type === 'swap';
+  const isDeposit = activity.type === 'add_liquidity';
+  const isWithdrawal = activity.type === 'remove_liquidity';
+  const format = (amount?: string) => activityAmount(amount, i18n.language);
+  const explorer = queryable && CONFIG.EXPLORER_URL
+    ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${encodeURIComponent(activity.hash!)}` : null;
+  const copy = async () => {
+    if (activity.hash) setCopied(await copyToClipboard(activity.hash));
   };
-
-  if (!activities.length) {
-    return (
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
-          <span className="text-base">📊</span>
-          <span className="text-base font-bold text-white flex-1">
-            {t('activity.recentActivity')}
-          </span>
-        </div>
-        <div className="text-center py-8 px-4 text-white/60">
-          <div className="text-[32px] mb-3 opacity-60">🔍</div>
-          <div className="text-sm font-semibold mb-1 text-white">
-            {t('activity.noRecentActivities')}
-          </div>
-          <div className="text-xs opacity-80">
-            {t('activity.defiTransactionsAppearHere')}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
-        <span className="text-base">📊</span>
-        <span className="text-base font-bold text-white flex-1">
-          {t('activity.recentActivity')}
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-white/60 bg-white/[0.05] py-0.5 px-2 rounded-xl border border-white/10">
-            {activities.length}
+    <article className={`recent-item ${expanded ? 'is-open' : ''}`}>
+      <button type="button" className="recent-row" aria-expanded={expanded} aria-controls={expanded ? id : undefined} onClick={onToggle}>
+        <span className="recent-type-icon"><Icon aria-hidden="true" /></span>
+        <span className="recent-main">
+          <span className="recent-label">
+            <b>{t(`recent.${typeKeys[activity.type]}`)}</b>
+            <span aria-hidden="true">·</span>
+            <time dateTime={date?.toISOString()}>{time}</time>
           </span>
-          {activities.length > 0 && (
-            <button
-              onClick={handleClearClick}
-              className="flex items-center justify-center w-6 h-6 border-none bg-red-400/10 border border-red-400/20 rounded-md cursor-pointer text-xs transition-all duration-200 ease-out hover:bg-red-400/20 hover:border-red-400/40 hover:scale-105 active:scale-95"
-              title={t('activity.clearAll')}
-            >
-              🗑️
-            </button>
+          <span className="recent-flow" dir="ltr">
+            <strong title={activity.amountIn}>
+              {isSwap && activity.amountIn ? '≈ ' : ''}
+              {format(activity.amountIn)}
+              {' '}
+              {isWithdrawal ? t('recent.lpTokens') : <ActivityToken value={activity.tokenIn} />}
+            </strong>
+            {isWithdrawal ? (
+              <span className="recent-pair">
+                <ActivityToken value={activity.tokenIn} />
+                {' / '}
+                <ActivityToken value={activity.tokenOut} />
+              </span>
+            ) : activity.tokenOut && (
+              <>
+                {isDeposit ? <span className="recent-join">+</span> : <ArrowRight aria-hidden="true" />}
+                <strong title={activity.amountOut}>
+                  {isSwap && activity.amountOut ? '≈ ' : ''}
+                  {format(activity.amountOut)}
+                  {' '}
+                  <ActivityToken value={activity.tokenOut} />
+                </strong>
+              </>
+            )}
+          </span>
+        </span>
+        <span className={`recent-status status-${statusKey}`}>
+          <StatusIcon aria-hidden="true" />
+          {t(`recent.${statusKey}`)}
+        </span>
+        <ChevronDown className="recent-chevron" aria-hidden="true" />
+      </button>
+      {expanded && (
+        <div id={id} className="recent-details">
+          <dl>
+            <div>
+              <dt>{t('recent.submitted')}</dt>
+              <dd>{date ? `${date.toLocaleString(i18n.language, { timeZone: 'UTC' })} UTC` : '—'}</dd>
+            </div>
+            {status?.blockNumber != null && status.blockNumber > 0 && (
+              <div>
+                <dt>{t('recent.block')}</dt>
+                <dd>
+                  <bdi>{`#${status.blockNumber.toLocaleString(i18n.language)}`}</bdi>
+                  {status.confirmations != null && status.confirmations > 0 && (
+                    <span>{t('recent.confirmationCount', { count: status.confirmations })}</span>
+                  )}
+                </dd>
+              </div>
+            )}
+            {activity.hash && (
+              <div>
+                <dt>{t('recent.transaction')}</dt>
+                <dd className="recent-hash">
+                  <code dir="ltr">{activity.hash}</code>
+                  <button type="button" className="recent-icon" aria-label={t('recent.copy')} onClick={copy}>{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}</button>
+                </dd>
+              </div>
+            )}
+          </dl>
+          {isSwap && <p className="recent-note">{t('recent.quoteNote')}</p>}
+          {isDeposit && <p className="recent-note">{t('recent.depositNote')}</p>}
+          {statusKey !== 'confirmed' && <p className="recent-note">{t(`recent.${statusKey}Note`)}</p>}
+          {copied !== null && <p className="recent-note" role="status">{t(copied ? 'recent.copied' : 'recent.copyFailed')}</p>}
+          {explorer && (
+          <a className="recent-explorer" href={explorer} target="_blank" rel="noopener noreferrer">
+            {t('recent.viewTransaction')}
+            <ArrowUpRight aria-hidden="true" />
+          </a>
           )}
         </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {activities.slice(0, 10).map((activity, i) => (
-          <RecentActivityItem
-            key={`${activity.hash || i}-${activity.timestamp}`}
-            activity={activity}
-            t={t}
-            activeAccount={activeAccount}
-            updateActivityStatus={updateActivityStatus}
-          />
-        ))}
-
-        {activities.length > 10 && (
-          <div className="text-center py-2 mt-1">
-            <div className="text-[11px] text-white/60 font-medium opacity-80">
-              +
-              {activities.length - 10}
-              {' '}
-              {t('activity.moreActivities')}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </article>
   );
-}
+};
+
+const ActivityList = ({ account, recent }: { account?: string; recent?: Activity[] }) => {
+  const { t } = useTranslation('dex');
+  const heading = useId();
+  const {
+    getActivitiesForAccount, updateActivityStatus, clearActivitiesForAccount,
+  } = useRecentActivities();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [now, setNow] = useState(Date.now);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
+  const activities = account ? (recent || getActivitiesForAccount(account))
+    .filter((item) => item.account === account)
+    .slice().sort((a, b) => b.timestamp - a.timestamp) : [];
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+  useEffect(() => { if (confirm) cancelRef.current?.focus(); }, [confirm]);
+  const closeConfirm = () => { setConfirm(false); menuRef.current?.focus(); };
+  const clear = () => {
+    if (!account) return;
+    clearActivitiesForAccount(account);
+    setConfirm(false); setExpanded(null); setAll(false);
+  };
+  return (
+    <section className="recent-activity" aria-labelledby={heading}>
+      <header className="recent-header">
+        <div>
+          <h2 id={heading}>
+            <History aria-hidden="true" />
+            {t('recent.title')}
+            {activities.length > 0 && <span>{activities.length}</span>}
+          </h2>
+          <p>{t(account ? 'recent.scope' : 'recent.disconnectedSubtitle')}</p>
+        </div>
+        {activities.length > 0 && !recent && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" ref={menuRef} className="recent-icon" aria-label={t('recent.options')}><MoreHorizontal aria-hidden="true" /></button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="recent-activity-menu"
+              onCloseAutoFocus={(event) => {
+                if (confirm) { event.preventDefault(); cancelRef.current?.focus(); }
+              }}
+            >
+              <DropdownMenuItem onSelect={() => setConfirm(true)}>
+                <Trash2 aria-hidden="true" />
+                {t('recent.clearLocal')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </header>
+      {activities.length > 0 ? (
+        <>
+          <div className="recent-rows">
+            {activities.slice(0, all ? activities.length : 3).map((activity) => {
+              const key = activityKey(activity);
+              return (
+                <ActivityRow
+                  key={key}
+                  activity={activity}
+                  expanded={expanded === key}
+                  onToggle={() => setExpanded(expanded === key ? null : key)}
+                  account={account!}
+                  onStatus={updateActivityStatus}
+                  now={now}
+                />
+              );
+            })}
+          </div>
+          <footer className="recent-footer">
+            <span>{t('recent.saved')}</span>
+            {activities.length > 3 && (
+              <button type="button" onClick={() => { setAll(!all); setExpanded(null); }}>
+                {all ? t('recent.less') : t('recent.viewAll', { count: activities.length })}
+                {all ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+              </button>
+            )}
+          </footer>
+        </>
+      ) : (
+        <div className="recent-empty">
+          <span>{account ? <History aria-hidden="true" /> : <Wallet aria-hidden="true" />}</span>
+          <div>
+            <h3>{t(account ? 'recent.emptyTitle' : 'recent.disconnectedTitle')}</h3>
+            <p>{t(account ? 'recent.emptyHint' : 'recent.disconnectedHint')}</p>
+          </div>
+        </div>
+      )}
+      {confirm && (
+        <div className="recent-confirm" role="region" aria-label={t('recent.clearLocal')}>
+          <h3>{t('recent.clearTitle')}</h3>
+          <p>{t('recent.clearHint')}</p>
+          <div>
+            <button type="button" ref={cancelRef} onClick={closeConfirm}>{t('recent.cancel')}</button>
+            <button type="button" onClick={clear}>{t('recent.clear')}</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+const RecentActivity = ({ recent }: { recent?: Activity[] }) => {
+  const { activeAccount } = useAccount();
+  // Remount disclosures, confirmation and polling when the wallet changes.
+  return <ActivityList key={activeAccount || 'disconnected'} account={activeAccount} recent={recent} />;
+};
+export default RecentActivity;

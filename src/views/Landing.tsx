@@ -37,12 +37,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-1">
+    <div className="ui-panel group relative bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:-translate-y-1">
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/20">
-            <Icon className="w-5 h-5 text-pink-400" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-blue-500/20">
+            <Icon className="w-5 h-5 text-blue-400" />
           </div>
           <span className="text-xs font-mono text-white/30 tracking-wider">{number}</span>
         </div>
@@ -56,7 +56,7 @@ function FeatureCard({
 export default function Landing() {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-pink-500/30">
+    <div className="ui-page landing-page min-h-screen bg-[#06060b] text-white overflow-x-hidden selection:bg-blue-500/30">
 
       {/* ============================================================ */}
       {/*  HERO                                                        */}
@@ -64,8 +64,8 @@ export default function Landing() {
       <section className="relative min-h-screen flex items-center justify-center">
         {/* Background effects */}
         <div className="absolute inset-0">
-          <FloatingOrb className="w-[600px] h-[600px] bg-pink-600 -top-40 -left-40" />
-          <FloatingOrb className="w-[500px] h-[500px] bg-purple-600 top-1/3 -right-32" />
+          <FloatingOrb className="w-[600px] h-[600px] bg-blue-600 -top-40 -left-40" />
+          <FloatingOrb className="w-[500px] h-[500px] bg-blue-600 top-1/3 -right-32" />
           <FloatingOrb className="w-[400px] h-[400px] bg-blue-600 bottom-0 left-1/3" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#06060b_70%)]" />
           {/* Grid pattern */}
@@ -83,7 +83,7 @@ export default function Landing() {
           <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-8"
           >
-            <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-[12px] font-medium tracking-wide text-white/60 uppercase">
               {t('common.views.landing.heroBadge')}
             </span>
@@ -94,14 +94,14 @@ export default function Landing() {
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.95] tracking-tight mb-6"
           >
             <span className="block text-white/95">{t('common.views.landing.heroTitleLine1')}</span>
-            <span className="block bg-gradient-to-r from-blue-700 via-blue-500 to-purple-600 bg-clip-text text-transparent pb-4">
+            <span className="block bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500 bg-clip-text text-transparent pb-4">
               {t('common.views.landing.heroTitleLine2')}
             </span>
           </h1>
 
           {/* Sub */}
           <p
-            className="max-w-2xl mx-auto text-lg md:text-xl text-white/40 leading-relaxed mb-10"
+            className="max-w-2xl mx-auto text-lg md:text-xl text-white/60 leading-relaxed mb-10"
           >
             {t('common.views.landing.heroSubtitle')}
           </p>
@@ -136,7 +136,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
+              className="ui-primary group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-500/25 min-w-64 justify-center"
             >
               {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -148,7 +148,7 @@ export default function Landing() {
           <div
             className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
           >
-            <div className="aspect-video bg-gradient-to-br from-pink-600/10 via-purple-600/10 to-blue-600/10">
+            <div className="aspect-video bg-gradient-to-br from-blue-600/10 via-blue-600/10 to-blue-600/10">
               <video
                 className="w-full h-full object-cover"
                 src="/superhero-video.mp4"
@@ -174,7 +174,7 @@ export default function Landing() {
         <div className="max-w-[1180px] mx-auto px-6">
           {/* Section header */}
           <div className="max-w-2xl mb-16">
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
+            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
               {t('common.views.landing.whatIsEyebrow')}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-4">
@@ -182,7 +182,7 @@ export default function Landing() {
               <br />
               <span className="text-white/40">{t('common.views.landing.whatIsTitleLine2')}</span>
             </h2>
-            <p className="text-[15px] text-white/40 leading-relaxed">
+            <p className="text-[15px] text-white/60 leading-relaxed">
               {t('common.views.landing.whatIsDescription')}
             </p>
           </div>
@@ -245,7 +245,7 @@ export default function Landing() {
                 <br />
                 <span className="text-white/40">{t('common.views.landing.id.titleLine2')}</span>
               </h2>
-              <p className="text-[15px] text-white/40 leading-relaxed">
+              <p className="text-[15px] text-white/60 leading-relaxed">
                 {t('common.views.landing.id.description')}
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-5 mt-3">
@@ -283,7 +283,7 @@ export default function Landing() {
                 className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm hue-rotate-60"
               />
               {/* Decorative glow */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 -z-10 blur-2xl" />
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-blue-500/5 -z-10 blur-2xl" />
             </div>
           </div>
         </div>
@@ -293,10 +293,10 @@ export default function Landing() {
       {/*  MOBILE APP                                                  */}
       {/* ============================================================ */}
       <section id="mobile" className="relative py-20 border-t border-white/[0.04]">
-        <FloatingOrb className="w-[400px] h-[400px] bg-pink-700 bottom-0 left-0" />
+        <FloatingOrb className="w-[400px] h-[400px] bg-blue-700 bottom-0 left-0" />
 
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
-          <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-pink-400/80 mb-3 block">
+          <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-blue-400/80 mb-3 block">
             {t('common.views.landing.mobile.eyebrow')}
           </span>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white/95 mb-12">
@@ -312,7 +312,7 @@ export default function Landing() {
               className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm"
             />
           </div>
-          <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed my-12">
+          <p className="max-w-xl mx-auto text-[15px] text-white/60 leading-relaxed my-12">
             {t('common.views.landing.mobile.description')}
           </p>
 
@@ -350,12 +350,12 @@ export default function Landing() {
       {/*  BOTTOM CTA                                                  */}
       {/* ============================================================ */}
       <section className="relative py-20 border-t border-white/[0.04]">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-600/[0.03] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/[0.03] to-transparent" />
         <div className="max-w-[1180px] mx-auto px-6 relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white/95 mb-4">
             {t('common.views.landing.bottomCta.title')}
           </h2>
-          <p className="max-w-xl mx-auto text-[15px] text-white/40 leading-relaxed mb-10">
+          <p className="max-w-xl mx-auto text-[15px] text-white/60 leading-relaxed mb-10">
             {t('common.views.landing.bottomCta.subtitle')}
           </p>
           {/* CTAs */}
@@ -388,7 +388,7 @@ export default function Landing() {
           >
             <Link
               to="/"
-              className="group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/25 min-w-64 justify-center"
+              className="ui-primary group inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-500 text-white font-semibold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-blue-500/25 min-w-64 justify-center"
             >
               {t('common.views.landing.continueOnWeb')}
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />

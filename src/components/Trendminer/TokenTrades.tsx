@@ -98,7 +98,7 @@ function MobileTransactionCard({ transaction, txStyling }: TransactionCardProps)
       onClick={handleOpenTx}
       className="w-full text-left active:opacity-80 transition-opacity"
     >
-      <div className="my-2 border border-[#222222] bg-[#141414]/50 overflow-hidden rounded-lg px-3 py-2 space-y-2">
+      <div className="my-2 border border-[#29313b] bg-[#11161d] overflow-hidden rounded-lg px-3 py-2 space-y-2">
         {/* Compact Header: Account, Badge & Time */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -351,11 +351,11 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   }, [currentPage, transactions.length, isFetching, error, refetch]);
 
   return (
-    <div className="md:space-y-4">
+    <div className="ui-page token-data-panel md:space-y-4">
       {/* Data Table */}
-      <div className="md:bg-white/[0.02] md:border md:border-white/10 md:rounded-2xl overflow-hidden">
+      <div className="md:bg-[#11161d] md:border md:border-white/10 md:rounded-2xl overflow-hidden">
         {/* Table Header */}
-        <div className="hidden lg:grid gap-4 px-2 xl:px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px]">
+        <div className="token-trades-heading border-b border-white/10 text-[11px] font-medium text-white/60">
           {headers.map((header) => (
             <div key={header.key} className="truncate">
               {header.title}
@@ -371,7 +371,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
             return (
               <React.Fragment key={transaction.id}>
                 {/* Mobile Card View */}
-                <div className="lg:hidden">
+                <div className="token-trades-mobile">
                   <MobileTransactionCard
                     transaction={transaction}
                     txStyling={txStyling}
@@ -380,7 +380,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
                 {/* Desktop Table Row */}
                 <div
-                  className="hidden lg:grid lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px] gap-4 px-2 xl:px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                  className="token-trades-row hover:bg-white/[0.02] transition-colors"
                 >
                   {/* Account */}
                   {transaction.address ? (
@@ -521,7 +521,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
           </div>
 
           {/* Page navigation */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               onClick={() => updatePage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
@@ -549,7 +549,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                     key={pageNum}
                     onClick={() => updatePage(pageNum)}
                     className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${currentPage === pageNum
-                      ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                      ? 'bg-gradient-to-r from-[#2871ed] to-[#1252d5] text-white'
                       : 'border border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:border-white/20'
                     }`}
                   >

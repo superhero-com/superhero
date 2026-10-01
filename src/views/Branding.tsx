@@ -106,7 +106,7 @@ const Branding = () => {
 
   return (
     <>
-      <div className="max-w-[1200px] mx-auto p-4 md:p-6 text-white">
+      <div className="ui-page branding-page max-w-[1200px] mx-auto p-4 md:p-6 text-white">
         {/* Navigation & Header */}
         <div className="mb-6">
           <AeButton
@@ -128,7 +128,7 @@ const Branding = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 backdrop-blur-md text-white mb-8 shadow-glass animate-fadeInUp">
+        <div className="ui-hero relative overflow-hidden mb-8">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles className="w-32 h-32 text-neon-teal" />
           </div>

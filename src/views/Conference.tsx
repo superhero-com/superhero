@@ -12,12 +12,12 @@ const Conference = () => {
     return `https://${CONFIG.JITSI_DOMAIN}/${name}#${opts}`;
   }, [room]);
   return (
-    <div className="max-w-[980px] mx-auto p-4">
+    <div className="ui-page max-w-[980px] mx-auto p-4">
       <iframe
         id="jitsiConferenceFrame0"
         title={t('titles.conference')}
         src={src}
-        className="w-full h-[80vh] border-0 rounded-lg shadow-lg"
+        className="ui-panel w-full h-[80vh]"
         // embed sandboxing: cross-origin embed, previously unsandboxed. Jitsi Meet
         // is a full SPA (not just a media player) so its allowlist is necessarily broader than
         // YouTube/Spotify's: allow-scripts + allow-same-origin for the app itself and WebRTC/

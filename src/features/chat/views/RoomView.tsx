@@ -146,7 +146,7 @@ const RoomView = () => {
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
+    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
       <header className="flex items-center gap-2 border-b border-border px-3 py-3">
         <Link
           to="/chat"

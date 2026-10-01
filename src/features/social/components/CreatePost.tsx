@@ -8,6 +8,7 @@ interface CreatePostProps {
   className?: string;
   onTextChange?: (text: string) => void;
   autoFocus?: boolean;
+  compactMobile?: boolean;
   // Callback when a new post is created (for tab switching, etc.)
   onPostCreated?: (postId?: string) => void;
 }
@@ -18,7 +19,7 @@ export interface CreatePostRef {
 
 const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
   ({
-    onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated,
+    onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated, compactMobile,
   }, ref) => {
     const postFormRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +66,7 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
         <PostForm
           ref={postFormRef}
           isPost
+          compactMobile={compactMobile}
           onClose={onClose}
           onSuccess={onSuccess}
           className={className}

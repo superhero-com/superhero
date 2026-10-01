@@ -1,0 +1,33 @@
+.dex-token-detail {
+  --detail-surface:light-dark(#f6f8fb,#11161d);
+  --detail-text:light-dark(#1d2b3e,#edf1f7);
+  --detail-muted:light-dark(#5f6e82,#95a3b7);
+  --detail-border:light-dark(#dce2e9,#29313b);
+  color:var(--detail-text);
+  .token-detail-metrics,.token-detail-performance{border:1px solid var(--detail-border);border-radius:17px;background:var(--detail-surface);padding:20px 22px;min-width:0}
+  .token-detail-metrics h3{font-size:11px;font-weight:500;color:var(--detail-muted);margin:0 0 10px}
+  .token-detail-metrics-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;padding-bottom:20px}
+  .token-detail-metrics-main>div+div{border-inline-start:1px solid var(--detail-border);padding-inline-start:22px}
+  .token-detail-value{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.4px;overflow-wrap:anywhere}
+  .token-detail-metrics p{font-size:10px;line-height:1.6;color:var(--detail-muted);margin:6px 0 0}
+  .token-detail-volume-label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;min-height:24px}
+  .token-detail-volume-label h3{margin:0}
+  .token-detail-period{height:32px;padding:0 8px;background:transparent;border:1px solid var(--detail-border);border-radius:7px;color:var(--detail-text);font-size:10px}
+  .token-detail-metrics-main>div:first-child>h3{min-height:32px;margin-bottom:8px;display:flex;align-items:center}
+  .token-detail-metrics-secondary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;border-top:1px solid var(--detail-border);padding-top:18px}
+  .token-detail-metrics-secondary strong{font-size:17px;font-weight:550;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .token-detail-performance>h3{font-size:15px;font-weight:600;margin:0 0 16px}
+  .performance-canvas{background:transparent;box-shadow:none;border:0;border-radius:0}
+  .performance-timeframes button{min-width:38px;width:auto;padding-inline:10px;font-size:11px}
+  @media(max-width:600px){
+    .token-detail-metrics,.token-detail-performance{padding:16px 14px;border-radius:14px}
+    .token-detail-metrics-main{gap:12px;padding-bottom:16px}
+    .token-detail-metrics-main>div+div{padding-inline-start:12px}
+    .token-detail-value{font-size:20px}
+    .token-detail-metrics-secondary{gap:12px;grid-template-columns:1fr 1fr}
+    .token-detail-metrics-secondary>div:last-child{grid-column:1/-1;border-top:1px solid var(--detail-border);padding-top:12px}
+    .performance-timeframes{gap:3px}
+  }
+}
+.dex-token-detail .token-detail-value .fiat{font-size:12px;color:var(--detail-muted);letter-spacing:0;margin-top:5px}
+.dex-token-detail .token-detail-period{width:auto;min-width:64px;flex-shrink:0}

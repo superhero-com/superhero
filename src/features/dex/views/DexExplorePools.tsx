@@ -1,565 +1,397 @@
 import { PriceDataFormatter } from '@/features/shared/components';
-import { performanceChartTimeframeAtom } from '@/features/trending/atoms';
-import PerformanceTimeframeSelector from '@/features/trending/components/PerformanceTimeframeSelector';
 import { useQuery } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
-import { DexPairService, PairDto } from '../../../api/generated';
+import {
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Inbox,
+  LoaderCircle, RotateCcw, TriangleAlert, X,
+} from 'lucide-react';
+import { DexPairService, DexTokenSummaryDto, PairDto } from '../../../api/generated';
 import { TokenChip } from '../../../components/TokenChip';
 import { PairLineChart } from '../components/charts/PairLineChart';
+import DexPoolExplorerToolbar, { PoolSort } from '../components/DexPoolExplorerToolbar';
+import type { TokenPeriod } from '../components/DexTokenExplorerToolbar';
+import './DexExploreTokens.scss';
+import './DexExplorePools.scss';
+import '@/components/explore/components/DexMarketResults.scss';
 
-// Define the actual API response structure
-interface PaginatedResponse<T> {
-  items: T[];
-  meta: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-  };
+// The explorer endpoint includes summaries that the generated PairDto omits.
+type ExplorerPair = PairDto & { summary?: DexTokenSummaryDto | null };
+interface PaginatedPairs {
+  items: ExplorerPair[];
+  meta: { totalItems: number; totalPages: number; currentPage: number };
 }
 
 const DexExplorePools = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const pageSizeId = useId();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tokenAddress = searchParams.get('tokenAddress');
-  const [sort, setSort] = useState<'transactions_count' | 'created_at'>(
-    'transactions_count',
-  );
-  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
-  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<PoolSort>('transactions_count');
+  const [ascending, setAscending] = useState(false);
+  const [pagination, setPagination] = useState({ tokenAddress, page: 1 });
+  // A URL filter change cannot issue a request using the previous filter's page.
+  const page = pagination.tokenAddress === tokenAddress ? pagination.page : 1;
+  const setPage = (value: number) => setPagination({ tokenAddress, page: value });
+  useEffect(() => { setPagination({ tokenAddress, page: 1 }); }, [tokenAddress]);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
-  const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
-
-  const timeBase = useMemo(() => {
-    if (performanceChartTimeframe === '1d') {
-      return '24h';
-    }
-
-    return performanceChartTimeframe;
-  }, [performanceChartTimeframe]);
-
-  const { data, isLoading } = useQuery({
+  const [timeBase, setTimeBase] = useState<TokenPeriod>('30d');
+  const updateSearch = (value: string) => { setSearch(value); setPage(1); };
+  const updateSort = (value: PoolSort) => { setSort(value); setAscending(false); setPage(1); };
+  const reverse = () => { setAscending((value) => !value); setPage(1); };
+  const removeTokenFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('tokenAddress');
+    setPage(1);
+    setSearchParams(next);
+  };
+  const {
+    data, isPending, isError, isFetching, refetch,
+  } = useQuery({
     queryFn: async () => {
       const result = await DexPairService.listAllPairs({
         page,
         limit,
         orderBy: sort,
-        orderDirection: sortDirection,
+        orderDirection: ascending ? 'ASC' : 'DESC',
         search,
         tokenAddress: tokenAddress || undefined,
       });
-      return result as unknown as PaginatedResponse<PairDto>;
+      return result as unknown as PaginatedPairs;
     },
-    queryKey: [
-      'DexPairService.listAllPairs',
-      sort,
-      sortDirection,
-      search,
-      page,
-      limit,
-      tokenAddress,
-    ],
+    queryKey: ['DexPairService.listAllPairs', sort, ascending ? 'ASC' : 'DESC', search, page, limit, tokenAddress],
   });
+  const token = data?.items.flatMap((pair) => [pair.token0, pair.token1])
+    .find((item) => item.address === tokenAddress);
+  const tokenLabel = token?.symbol || token?.name || tokenAddress;
+  const total = data?.meta.totalItems ?? 0;
+  const pages = Math.max(1, Math.ceil(total / limit));
+  let resultMessage = t('dex.poolExplorer.loading');
+  if (isError) resultMessage = t('dex.poolExplorer.unavailable');
+  else if (data) resultMessage = t('dex.poolExplorer.count', { count: total });
 
   return (
-    <div className="p-0 mx-auto md:pt-0 md:px-2 ">
-      {/* Main Content Card */}
-      <div className="grid grid-cols-1 items-start">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3">
-            {t('explore.explorePools')}
-          </h1>
-          <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
-            {t('explore.explorePoolsDescription')}
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          {/* Responsive Filter Controls */}
-          <div className="bg-white/[0.03] border border-[var(--glass-border)] rounded-xl p-4 md:px-4 md:py-3 mb-3 md:mb-5 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-            {/* Filter Layout - Mobile: Column, Desktop: Row */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-2.5">
-              {/* Left Section: Sort Controls */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-3">
-                {/* Desktop Filter Label - Hidden on Mobile */}
-                <div className="hidden md:flex items-center gap-1.5">
-                  <div className="w-0.5 h-4 bg-gradient-to-b from-[var(--primary-color)] to-[var(--accent-color)] rounded-sm" />
-                  <span className="text-sm font-semibold text-[var(--standard-font-color)] bg-gradient-to-r from-[var(--primary-color)] to-[var(--accent-color)] bg-clip-text text-transparent">
-                    {t('explore.tokenListTable.filterAndSort')}
-                  </span>
-                </div>
-
-                {/* Sort Controls */}
-                <div className="flex items-center justify-between md:justify-start gap-1.5">
-                  {/* Sort Dropdown */}
-                  <div className="relative">
-                    <AppSelect
-                      value={sort}
-                      onValueChange={(v) => setSort(v as any)}
-                      triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
-                    >
-                      <AppSelectItem value="transactions_count">{t('explore.txCount')}</AppSelectItem>
-                      <AppSelectItem value="created_at">{t('explore.createdAt')}</AppSelectItem>
-                    </AppSelect>
-                  </div>
-
-                  {/* Sort Direction Button */}
-                  <button
-                    type="button"
-                    onClick={() => setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC')}
-                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === 'ASC'
-                      ? 'bg-[var(--accent-color)] text-white'
-                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] hover:bg-[var(--accent-color)] hover:text-white'
-                    }`}
-                    title={
-                      sortDirection === 'ASC'
-                        ? t('explore.tokenListTable.sortAscending')
-                        : t('explore.tokenListTable.sortDescending')
-                    }
-                  >
-                    {sortDirection === 'ASC' ? '↑' : '↓'}
-                  </button>
-
-                  {/* Items per page - Mobile */}
-                  <div className="flex md:hidden items-center gap-1.5">
-                    <span className="text-[13px] text-[var(--light-font-color)] font-medium">
-                      {t('explore.show')}
-                    </span>
-                    <div className="relative">
-                      <AppSelect
-                        value={String(limit)}
-                        onValueChange={(v) => {
-                          setLimit(Number(v));
-                          setPage(1);
-                        }}
-                        triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
-                      >
-                        <AppSelectItem value="10">10</AppSelectItem>
-                        <AppSelectItem value="50">50</AppSelectItem>
-                        <AppSelectItem value="100">100</AppSelectItem>
-                      </AppSelect>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex md:hidden items-center justify-center md:justify-start w-auto flex-shrink-0">
-                  <PerformanceTimeframeSelector />
-                </div>
-              </div>
-
-              {/* Right Section: Search + Desktop Items per page */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                {/* Search Input */}
-                <div className="relative flex-1 md:max-w-[400px] min-w-[200px]">
-                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--light-font-color)] text-sm pointer-events-none opacity-60 z-10">
-                    🔍
-                  </div>
-                  <input
-                    placeholder={t('explore.searchPoolsPlaceholder')}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full py-2 pl-8 pr-3 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-normal transition-all duration-300 outline-none focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)] focus:bg-white/[0.08]"
-                  />
-                  {search && (
+    <div className="dex-token-explorer dex-pool-explorer dex-market-results">
+      <section aria-labelledby="dex-pool-title">
+        <header className="dex-token-explorer__heading">
+          <div>
+            <h1 id="dex-pool-title">{t('explore.explorePools')}</h1>
+            <p>{t('dex.poolExplorer.description')}</p>
+          </div>
+          <span className="dex-token-explorer__network">æternity</span>
+        </header>
+        {tokenAddress && (
+          <div className="dex-pool-filter">
+            <span>
+              {t('dex.poolExplorer.containing')}
+              {' '}
+              <bdi>{tokenLabel}</bdi>
+            </span>
+            <button type="button" aria-label={t('dex.poolExplorer.removeFilter')} onClick={removeTokenFilter}><X aria-hidden="true" /></button>
+          </div>
+        )}
+        <DexPoolExplorerToolbar
+          search={search}
+          sort={sort}
+          ascending={ascending}
+          period={timeBase}
+          onSearch={updateSearch}
+          onSort={updateSort}
+          onReverse={reverse}
+          onPeriod={setTimeBase}
+        />
+      </section>
+      <div className="dex-token-explorer__meta" role="status" aria-live="polite">{resultMessage}</div>
+      <div aria-busy={isFetching}>
+        {isError && (
+          <div className="dex-token-explorer__state" role="alert">
+            <TriangleAlert aria-hidden="true" />
+            <strong>{t('dex.poolExplorer.error')}</strong>
+            <p>{t('dex.poolExplorer.retryHint')}</p>
+            <button type="button" disabled={isFetching} onClick={() => refetch()}>
+              <RotateCcw aria-hidden="true" />
+              {t(isFetching ? 'dex.poolExplorer.retrying' : 'dex.poolExplorer.retry')}
+            </button>
+          </div>
+        )}
+        {!isError && isPending && (
+          <div className="dex-token-explorer__state">
+            <LoaderCircle aria-hidden="true" />
+            <strong>{t('dex.poolExplorer.loading')}</strong>
+          </div>
+        )}
+        {!isError && data?.items.length === 0 && (
+          <div className="dex-token-explorer__state">
+            <Inbox aria-hidden="true" />
+            <strong>{t(search || tokenAddress ? 'dex.poolExplorer.noMatches' : 'explore.noPoolsFound')}</strong>
+            <p>{t('dex.poolExplorer.searchHint')}</p>
+            {search && <button type="button" onClick={() => updateSearch('')}>{t('dex.poolExplorer.clear')}</button>}
+          </div>
+        )}
+        {!isError && data && data.items.length > 0 && (
+        <div className="mt-3">
+          {/* Mobile Card Layout */}
+          <div className="md:hidden flex flex-col gap-3">
+            {data?.items.map((pair) => (
+              <div
+                key={pair.address}
+                className="dex-market-card"
+                onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    navigate(`/defi/explore/pools/${pair.address}`);
+                  }
+                }}
+              >
+                {/* Pool Pair Header */}
+                <div className="dex-market-card-header">
+                  <div className="flex flex-wrap items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => setSearch('')}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-white/10 border-0 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-[var(--light-font-color)] text-[10px] transition-all duration-300 outline-none hover:bg-red-500/20 hover:text-red-400 hover:scale-110 active:scale-95"
-                      title={t('explore.tokenListTable.clearSearch')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/defi/explore/tokens/${pair.token0.address}`);
+                      }}
+                      className="bg-transparent border-0 cursor-pointer p-0"
                     >
-                      ✕
+                      <TokenChip token={pair.token0} />
                     </button>
-                  )}
+                    <span className="text-[var(--light-font-color)] mx-1 text-sm font-medium">
+                      /
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/defi/explore/tokens/${pair.token1.address}`);
+                      }}
+                      className="bg-transparent border-0 cursor-pointer p-0"
+                    >
+                      <TokenChip token={pair.token1} />
+                    </button>
+                  </div>
+
+                  {/* Transaction Count Badge */}
+                  <div className="dex-market-count">
+                    <span className="text-xs text-[var(--accent-color)] font-semibold">
+                      {pair.transactions_count || 0}
+                      {' '}
+                      {t('explore.txShort')}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Items per page + Results Counter - Desktop */}
-                <div className="hidden md:flex items-center gap-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-[13px] text-[var(--light-font-color)] font-medium">
-                      {t('explore.show')}
-                    </span>
-                    <div className="relative">
-                      <AppSelect
-                        value={String(limit)}
-                        onValueChange={(v) => {
-                          setLimit(Number(v));
-                          setPage(1);
-                        }}
-                        triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
-                      >
-                        <AppSelectItem value="10">10</AppSelectItem>
-                        <AppSelectItem value="50">50</AppSelectItem>
-                        <AppSelectItem value="100">100</AppSelectItem>
-                      </AppSelect>
+                {/* Pool Statistics Grid */}
+                <div className="dex-market-card-metrics">
+                  <div className="dex-market-metric">
+                    <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
+                      {t('explore.totalVolume')}
+                    </div>
+                    <div className="text-sm text-[var(--standard-font-color)] font-semibold">
+                      <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
                     </div>
                   </div>
-
-                  {/* Results Counter */}
-                  <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
-                    <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                      {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
-                    </span>
+                  <div className="dex-market-metric">
+                    <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
+                      {t('explore.volume')}
+                      {' '}
+                      <span className="text-xs font-normal">{timeBase}</span>
+                    </div>
+                    <div className="text-sm text-[var(--standard-font-color)] font-semibold">
+                      <PriceDataFormatter
+                        priceData={pair.summary?.change?.[timeBase]?.volume}
+                        bignumber
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Mobile Results Counter */}
-            <div className="md:hidden flex justify-end">
-              <div className="flex items-center gap-1.5 bg-[var(--accent-color)]/10 px-2.5 py-1.5 rounded-2xl border border-[var(--accent-color)]/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] animate-pulse" />
-                <span className="text-[11px] text-[var(--accent-color)] font-semibold">
-                  {t('explore.poolsCount', { count: data?.meta.totalItems ?? 0 })}
-                </span>
+                {/* Action Buttons */}
+                <div className="flex gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(
+                        `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
+                      );
+                    }}
+                    className="dex-market-action flex-1"
+                  >
+                    🔄
+                    {' '}
+                    {t('explore.swap')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(
+                        `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
+                      );
+                    }}
+                    className="dex-market-action flex-1"
+                  >
+                    ➕
+                    {' '}
+                    {t('dex.activity.addLiquidity')}
+                  </button>
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Content: Mobile Cards or Desktop Table */}
-            <div className="mt-3">
-              {/* Mobile Card Layout */}
-              <div className="md:hidden flex flex-col gap-3">
-                {data?.items.map((pair: PairDto) => (
-                  <div
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl overflow-hidden backdrop-blur-[10px] overflow-x-auto">
+            <table className="dex-market-table w-full border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-white/5 border-b border-[var(--glass-border)]">
+                  <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    {t('explore.pair')}
+                  </th>
+                  <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    {t('explore.txShort')}
+                  </th>
+
+                  <th className="text-right py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    <div className="flex items-center gap-1.5">
+                      {t('explore.volume')}
+                      {' '}
+                      <span className="text-xs font-normal">{timeBase}</span>
+                    </div>
+                  </th>
+                  <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    {t('explore.totalVolume')}
+                  </th>
+                  <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    {t('explore.chart')}
+                  </th>
+                  <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                    {t('explore.actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.items.map((pair) => (
+                  <tr
                     key={pair.address}
-                    className="bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 active:scale-[0.98] active:bg-white/[0.05]"
+                    className="border-b border-white/5 transition-all duration-300 hover:bg-white/[0.03] cursor-pointer"
                     onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
+                      if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
                         event.preventDefault();
                         navigate(`/defi/explore/pools/${pair.address}`);
                       }
                     }}
                   >
-                    {/* Pool Pair Header */}
-                    <div className="flex flex-col items-center justify-between mb-3 pb-3 border-b border-white/5">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/defi/explore/tokens/${pair.token0}`);
-                          }}
-                          className="bg-transparent border-0 cursor-pointer p-0"
-                        >
-                          <TokenChip token={pair.token0} />
-                        </button>
-                        <span className="text-[var(--light-font-color)] mx-1 text-sm font-medium">
-                          /
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/defi/explore/tokens/${pair.token1}`);
-                          }}
-                          className="bg-transparent border-0 cursor-pointer p-0"
-                        >
-                          <TokenChip token={pair.token1} />
-                        </button>
-                      </div>
-
-                      {/* Transaction Count Badge */}
-                      <div className="bg-[var(--accent-color)]/10 px-2 py-1 rounded-xl border border-[var(--accent-color)]/20 mt-2">
-                        <span className="text-xs text-[var(--accent-color)] font-semibold">
-                          {pair.transactions_count || 0}
-                          {' '}
-                          {t('explore.txShort')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Pool Statistics Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                        <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
-                          {t('explore.tvlUsd')}
-                        </div>
-                        <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
-                        </div>
-                      </div>
-                      <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
-                        <div className="text-[11px] text-[var(--light-font-color)] font-medium mb-1 uppercase tracking-wider">
-                          {t('explore.volume')}
-                          {' '}
-                        </div>
-                        <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} bignumber />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 w-full">
+                    <td className="py-4 px-3 flex items-center gap-0.5">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(
-                            `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
-                          );
+                          navigate(`/defi/explore/tokens/${pair.token0.address}`);
                         }}
-                        className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
+                        className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
                       >
-                        🔄
-                        {' '}
-                        {t('explore.swap')}
+                        <TokenChip token={pair.token0} />
                       </button>
+                      <span className="text-[var(--light-font-color)] mx-1 text-sm">
+                        /
+                      </span>
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(
-                            `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
-                          );
+                          navigate(`/defi/explore/tokens/${pair.token1.address}`);
                         }}
-                        className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
+                        className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
                       >
-                        ➕
-                        {' '}
-                        {t('dex.activity.addLiquidity')}
+                        <TokenChip token={pair.token1} />
                       </button>
-                    </div>
-                  </div>
+                    </td>
+                    <td className="text-center py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
+                      {pair.transactions_count || 0}
+                    </td>
+                    <td className="text-right py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
+                      <PriceDataFormatter
+                        priceData={pair.summary?.change?.[timeBase]?.volume}
+                        bignumber
+                      />
+                    </td>
+                    <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
+                      <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
+                    </td>
+                    <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium w-[150px]">
+                      <PairLineChart
+                        pairAddres={pair.address}
+                        height={48}
+                      />
+                    </td>
+
+                    <td className="text-center py-4 px-3">
+                      <div className="flex gap-1.5 justify-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(
+                              `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
+                            );
+                          }}
+                          className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
+                        >
+                          {t('explore.swap')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(
+                              `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
+                            );
+                          }}
+                          className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
+                        >
+                          {t('explore.add')}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-
-              {/* Desktop Table Layout */}
-              <div className="hidden md:block bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl overflow-hidden backdrop-blur-[10px] overflow-x-auto">
-                <table className="w-full border-collapse min-w-[700px]">
-                  <thead>
-                    <tr className="bg-white/5 border-b border-[var(--glass-border)]">
-                      <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        {t('explore.pair')}
-                      </th>
-                      <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        {t('explore.txShort')}
-                      </th>
-
-                      <th className="text-right py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        <div className="flex items-center gap-1.5">
-                          {t('explore.volume')}
-                          {' '}
-                          <PerformanceTimeframeSelector />
-                        </div>
-                      </th>
-                      <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        {t('explore.tvlShort')}
-                      </th>
-                      <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        {t('explore.chart')}
-                      </th>
-                      <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
-                        {t('explore.actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data?.items.map((pair: PairDto) => (
-                      <tr
-                        key={pair.address}
-                        className="border-b border-white/5 transition-all duration-300 hover:bg-white/[0.03] cursor-pointer"
-                        onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            navigate(`/defi/explore/pools/${pair.address}`);
-                          }
-                        }}
-                      >
-                        <td className="py-4 px-3 flex items-center gap-0.5">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/defi/explore/tokens/${pair.token0}`);
-                            }}
-                            className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
-                          >
-                            <TokenChip token={pair.token0} />
-                          </button>
-                          <span className="text-[var(--light-font-color)] mx-1 text-sm">
-                            /
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/defi/explore/tokens/${pair.token1}`);
-                            }}
-                            className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
-                          >
-                            <TokenChip token={pair.token1} />
-                          </button>
-                        </td>
-                        <td className="text-center py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
-                          {pair.transactions_count || 0}
-                        </td>
-                        <td className="text-right py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
-                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} bignumber />
-                        </td>
-                        <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
-                          <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
-                        </td>
-                        <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium w-[150px]">
-                          <PairLineChart
-                            pairAddres={pair.address}
-                            height={48}
-                            hideTimeframe
-                          />
-                        </td>
-
-                        <td className="text-center py-4 px-3">
-                          <div className="flex gap-1.5 justify-center">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`,
-                                );
-                              }}
-                              className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
-                            >
-                              {t('explore.swap')}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`,
-                                );
-                              }}
-                              className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
-                            >
-                              {t('explore.add')}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Responsive Pagination Controls */}
-            {data && data.meta.totalItems > 0 && (
-              <div className="flex flex-col md:flex-row justify-between items-center mt-5 p-3 md:py-4 md:px-5 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] gap-3 md:gap-0">
-                {/* Pagination Info */}
-                <div className="flex items-center gap-2 order-2 md:order-1">
-                  <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                    {t('explore.showingPoolsRange', {
-                      from: (page - 1) * limit + 1,
-                      to: Math.min(page * limit, data.meta.totalItems),
-                      total: data.meta.totalItems,
-                    })}
-                  </span>
-                </div>
-
-                {/* Pagination Buttons */}
-                <div className="flex items-center gap-1.5 md:gap-2 order-1 md:order-2 flex-wrap justify-center md:justify-start">
-                  {/* First Page Button - Desktop Only */}
-                  <button
-                    type="button"
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page === 1
-                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
-                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
-                    }`}
-                    title={t('explore.firstPage')}
-                  >
-                    ⇤
-                    {' '}
-                    {t('explore.first')}
-                  </button>
-
-                  {/* Previous Page Button */}
-                  <button
-                    type="button"
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[80px] md:min-w-auto ${page === 1
-                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
-                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
-                    }`}
-                    title={t('explore.previousPage')}
-                  >
-                    ←
-                    {' '}
-                    {t('explore.prev')}
-                  </button>
-
-                  {/* Page Number Display */}
-                  <div className="flex items-center gap-2 px-3">
-                    <span className="text-sm text-[var(--standard-font-color)] font-semibold bg-[var(--accent-color)]/10 py-1 px-2 rounded-md border border-[var(--accent-color)]/20">
-                      {page}
-                    </span>
-                    <span className="text-sm text-[var(--light-font-color)]">
-                      {t('explore.ofPages', { total: Math.ceil(data.meta.totalItems / limit) })}
-                    </span>
-                  </div>
-
-                  {/* Next Page Button */}
-                  <button
-                    type="button"
-                    onClick={() => setPage(page + 1)}
-                    disabled={page >= Math.ceil(data.meta.totalItems / limit)}
-                    className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
-                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
-                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px active:scale-95'
-                    }`}
-                    title={t('explore.nextPage')}
-                  >
-                    {t('explore.next')}
-                    {' '}
-                    →
-                  </button>
-
-                  {/* Last Page Button - Desktop Only */}
-                  <button
-                    type="button"
-                    onClick={() => setPage(Math.ceil(data.meta.totalItems / limit))}
-                    disabled={page >= Math.ceil(data.meta.totalItems / limit)}
-                    className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page >= Math.ceil(data.meta.totalItems / limit)
-                      ? 'bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50'
-                      : 'bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px'
-                    }`}
-                    title={t('explore.lastPage')}
-                  >
-                    {t('explore.last')}
-                    {' '}
-                    ⇥
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* No Results Message */}
-            {data?.items.length === 0 && !isLoading && (
-              <div className="text-center py-15 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] mt-5">
-                <div className="text-[var(--light-font-color)] text-base font-medium mb-2">
-                  {t('explore.noPoolsFound')}
-                </div>
-                <div className="text-[var(--light-font-color)] text-sm opacity-70">
-                  {t('explore.tokenListTable.tryAdjustingSearch')}
-                </div>
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
         </div>
+
+        )}
+      </div>
+      <div className="dex-pool-pagination">
+        <label htmlFor={pageSizeId}>
+          <span>{t('dex.poolExplorer.perPage')}</span>
+          <select id={pageSizeId} aria-label={t('dex.poolExplorer.perPageLabel')} value={limit} onChange={(event) => { setLimit(Number(event.target.value)); setPage(1); }}>
+            {[10, 50, 100].map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+        </label>
+        {!isError && data && total > 0 && (
+          <>
+            <span className="dex-pool-pagination__range">{t('explore.showingPoolsRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}</span>
+            <div className="dex-pool-pagination__pages">
+              <button className="dex-pool-pagination__edge" type="button" aria-label={t('explore.firstPage')} disabled={page === 1 || isFetching} onClick={() => setPage(1)}><ChevronsLeft aria-hidden="true" /></button>
+              <button type="button" aria-label={t('explore.previousPage')} disabled={page === 1 || isFetching} onClick={() => setPage(page - 1)}><ChevronLeft aria-hidden="true" /></button>
+              <span>{t('dex.poolExplorer.pageOf', { page, pages })}</span>
+              <button type="button" aria-label={t('explore.nextPage')} disabled={page >= pages || isFetching} onClick={() => setPage(page + 1)}><ChevronRight aria-hidden="true" /></button>
+              <button className="dex-pool-pagination__edge" type="button" aria-label={t('explore.lastPage')} disabled={page >= pages || isFetching} onClick={() => setPage(pages)}><ChevronsRight aria-hidden="true" /></button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

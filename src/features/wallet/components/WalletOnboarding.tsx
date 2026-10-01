@@ -761,12 +761,12 @@ const WalletOnboarding = ({
       onOpenChange={() => {}}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[2050] bg-background" />
+        <Dialog.Overlay className="ui-page fixed inset-0 z-[2050] bg-background" />
         <Dialog.Content
           // Above ModalProvider's dialogs (z-[2001]/z-[2002]) because it is
           // launched from inside one, and below WalletSignPrompt (z-[2100]),
           // which must stay the topmost surface whenever a signature is pending.
-          className="fixed inset-0 z-[2050] bg-background text-foreground overflow-y-auto touch-manipulation outline-none"
+          className="ui-page fixed inset-0 z-[2050] bg-background text-foreground overflow-y-auto touch-manipulation outline-none"
           // Each step supplies its own visible copy; the layer's description is
           // not a separate element.
           aria-describedby={undefined}
@@ -832,7 +832,7 @@ const WalletOnboarding = ({
             the app's own motion primitives (animate-in/fade/slide, matching dialog.tsx). */}
               <div key={step} className="animate-in fade-in-0 slide-in-from-bottom-3 duration-200 ease-out">
                 {step === 'exists' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={Wallet} />
                   <h2 className={heading}>
                     {needsRecoveryCode ? 'Finish setting up your wallet' : 'Your wallet is ready'}
@@ -971,7 +971,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'choose' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={ShieldCheck} />
                   <h2 className={heading}>Set up your wallet</h2>
                   <p className={description}>
@@ -1022,7 +1022,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'recover-confirm' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={recovered ? KeyRound : CircleAlert} />
                   <h2 className={heading}>
                     {recovered ? 'Is this your wallet?' : 'Almost there — one step left'}
@@ -1075,7 +1075,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'create-show' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={KeyRound} />
                   <h2 className={heading}>Write down your recovery phrase</h2>
                   <p className="text-sm text-amber-300/90 mb-4">
@@ -1095,7 +1095,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'create-verify' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={CircleCheck} />
                   <h2 className={heading}>Confirm your backup</h2>
                   <p className={description}>Type the requested words to confirm you saved them.</p>
@@ -1137,7 +1137,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'import-enter' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={Download} />
                   <h2 className={heading}>Import your wallet</h2>
                   <p className={description}>
@@ -1162,7 +1162,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'passphrase' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={Lock} />
                   <h2 className={heading}>Set a passphrase</h2>
                   <p className={description}>
@@ -1225,7 +1225,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'creating' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={error ? CircleAlert : Loader2} spin={!error} />
                   <h2 className={heading}>
                     {error ? 'Almost there — one step left' : 'Encrypting your wallet…'}
@@ -1249,7 +1249,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'protect' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={Fingerprint} />
                   <h2 className={heading}>Unlock with this device</h2>
                   <p className={description}>
@@ -1279,7 +1279,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'recovery' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={LifeBuoy} />
                   <h2 className={heading}>Save your recovery code</h2>
                   <p className="text-sm text-amber-300/90 mb-4">
@@ -1319,7 +1319,7 @@ const WalletOnboarding = ({
                 )}
 
                 {step === 'done' && (
-                <AeCard variant="glass" hover={false} className="w-full p-6">
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={CircleCheck} tone="success" />
                   <h2 className={heading}>Wallet ready 🎉</h2>
                   <p className="text-sm text-muted-foreground mb-1">Your first account:</p>

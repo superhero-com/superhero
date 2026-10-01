@@ -113,10 +113,10 @@ export default function FAQ() {
   );
 
   return (
-    <div className="max-w-[1000px] mx-auto p-6 text-white">
-      <div className="rounded-2xl p-7 bg-gradient-to-b from-white/6 to-white/3 text-white mb-4 border border-white/10 backdrop-blur-md">
+    <div className="ui-page help-page max-w-[1000px] mx-auto p-4 md:p-6 text-white">
+      <div className="ui-hero mb-5">
         <div className="text-sm opacity-90">{t('welcome')}</div>
-        <div className="text-[32px] font-extrabold leading-tight">{t('heroTitle')}</div>
+        <div className="ui-page-title mt-2">{t('heroTitle')}</div>
         <div className="text-[15px] opacity-90 mt-2">{t('heroDescription')}</div>
         <div className="flex gap-2.5 mt-3.5 flex-wrap">
           <Badge label={t('badgeCreate')} />
@@ -191,7 +191,7 @@ const Badge = ({ label }: { label: string }) => (
 const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <section
     id={id}
-    className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    className="ui-panel p-4"
   >
     {children}
   </section>
@@ -202,11 +202,11 @@ const QAItem = ({
 }: { title: string; answer: React.ReactNode; expandLabel: string; collapseLabel: string }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
+    <div className="ui-panel">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full text-left bg-transparent border-0 p-3 cursor-pointer font-bold text-white hover:bg-white/10 transition-colors"
+        className="w-full text-left bg-transparent border-0 p-3 cursor-pointer font-medium text-white hover:bg-white/10 transition-colors"
       >
         {title}
         <span className="float-right opacity-60">{open ? collapseLabel : expandLabel}</span>

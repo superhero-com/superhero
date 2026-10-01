@@ -482,7 +482,7 @@ const Whitepaper = () => {
 
   return (
     <>
-      <div className="max-w-[980px] mx-auto p-4">
+      <div className="ui-page document-page max-w-[820px] mx-auto p-4 md:p-6">
         <div className="mb-4">
           <AeButton
             onClick={() => {

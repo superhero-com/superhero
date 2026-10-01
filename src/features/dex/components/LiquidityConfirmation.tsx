@@ -21,6 +21,7 @@ interface LiquidityConfirmationProps {
     lpMintEstimate?: string;
   } | null;
   loading: boolean;
+  disabled?: boolean;
 }
 
 const LiquidityConfirmation = ({
@@ -35,6 +36,7 @@ const LiquidityConfirmation = ({
   deadlineMins,
   pairPreview,
   loading,
+  disabled = false,
 }: LiquidityConfirmationProps) => {
   const { t } = useTranslation();
   if (!tokenA || !tokenB) return null;
@@ -183,7 +185,7 @@ const LiquidityConfirmation = ({
             <button
               type="button"
               onClick={onConfirm}
-              disabled={loading}
+              disabled={loading || disabled}
               className={`flex-[2] px-5 py-3 rounded-full border-none text-white text-sm font-semibold cursor-pointer transition-all duration-300 ease-in-out flex items-center justify-center gap-2 ${
                 loading
                   ? 'bg-white/10 cursor-not-allowed opacity-60'

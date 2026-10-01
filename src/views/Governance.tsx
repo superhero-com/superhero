@@ -31,15 +31,15 @@ const Governance = () => {
   }, [pollId, location.pathname]);
 
   return (
-    <Shell>
+    <Shell containerClassName="ui-page governance-page">
       {/* Enhanced Tab Navigation */}
-      <div className="flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
+      <div className="governance-tabs flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
         <AeButton
           onClick={() => setActiveTab('polls')}
-          className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'polls'
-              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
-              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+              ? 'bg-[#1c304f] text-[#b6d0ff] border-[#3e5f8e]'
+              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:shadow-none'
           }`}
         >
           {t('tabs.polls')}
@@ -47,10 +47,10 @@ const Governance = () => {
         {pollId && (
           <AeButton
             onClick={() => setActiveTab('vote')}
-            className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
               activeTab === 'vote'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
-                : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+                ? 'bg-[#1c304f] text-[#b6d0ff] border-[#3e5f8e]'
+                : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:shadow-none'
             }`}
           >
             {t('tabs.vote')}
@@ -58,20 +58,20 @@ const Governance = () => {
         )}
         <AeButton
           onClick={() => setActiveTab('account')}
-          className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'account'
-              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
-              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+              ? 'bg-[#1c304f] text-[#b6d0ff] border-[#3e5f8e]'
+              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:shadow-none'
           }`}
         >
           {t('tabs.myAccount')}
         </AeButton>
         <AeButton
           onClick={() => setActiveTab('create')}
-          className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'create'
-              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
-              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+              ? 'bg-[#1c304f] text-[#b6d0ff] border-[#3e5f8e]'
+              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:shadow-none'
           }`}
         >
           {t('tabs.createPoll')}

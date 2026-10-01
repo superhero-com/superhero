@@ -35,7 +35,13 @@ const HeaderWalletButton = () => {
       <ConnectWalletButton
         variant="dex"
         label={t('buttons.connectWalletDex')}
-        className="gap-2 rounded-xl sm:rounded-full text-sm"
+        className={[
+          'min-h-11 w-full gap-2 rounded-xl text-sm sm:rounded-full',
+          'sm:border-solid sm:border-white/[0.16] sm:bg-white/[0.035]',
+          'sm:shadow-none hover:sm:shadow-none sm:hover:bg-white/[0.07]',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5d88ff]',
+          'focus-visible:ring-0 focus-visible:ring-offset-0',
+        ].join(' ')}
       />
     );
   }

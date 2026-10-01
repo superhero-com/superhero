@@ -122,7 +122,7 @@ export const LeaderboardCard = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-white/10 bg-[#050712] backdrop-blur-[18px] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <div className="ui-panel leaderboard-card flex flex-col gap-4 p-4">
       {/* Header: rank + trader identity */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -288,7 +288,7 @@ export const LeaderboardCard = ({
       <div className="pt-1">
         <AeButton
           variant="primary"
-          className="w-full h-10 text-sm font-semibold bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:from-yellow-300 hover:to-yellow-400"
+          className="ui-secondary w-full h-10 text-sm font-semibold"
           onClick={() => navigate(`/users/${item.address}`)}
         >
           {t('trending.leaderboardCard.viewProfile')}

@@ -1,7 +1,5 @@
-import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
-import BigNumber from 'bignumber.js';
 import { useAtom } from 'jotai';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { providedLiquidityAtom } from '../../../atoms/dexAtoms';
 import { useAccount } from '../../../hooks/useAccount';
 import { useAeSdk } from '../../../hooks/useAeSdk';
@@ -9,24 +7,19 @@ import { useDex } from '../../../hooks/useDex';
 import { useRecentActivities } from '../../../hooks/useRecentActivities';
 import { CONFIG } from '../../../config';
 import {
-  ACI,
   MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
-  fromAettos, getPairInfo, initDexContracts,
+  getPairInfo, initDexContracts,
   subSlippage,
   toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { initializeContractTyped } from '../../../libs/initializeContractTyped';
+import { useLiquidityPreview } from './useLiquidityPreview';
 import { TxPayloadType, useTransactionNotification } from '../../transaction-notification/transaction-notification.context';
 import type {
   AddLiquidityState,
   LiquidityExecutionParams,
   RemoveLiquidityExecutionParams,
 } from '../types/pool';
-
-type Aex9ContractApi = ContractMethodsBase & {
-  meta_info: () => Promise<{ decodedResult: { decimals?: number | string; symbol?: string; name?: string } }>;
-};
 
 export function useAddLiquidity() {
   useAtom(providedLiquidityAtom);
@@ -62,178 +55,7 @@ export function useAddLiquidity() {
     return value < 1n ? 1n : value;
   }
 
-  const fetchTokenMeta = useCallback(async (addr: string): Promise<{ decimals: number; symbol: string }> => {
-    if (addr === 'AE') {
-      return { decimals: 18, symbol: 'AE' };
-    }
-    const t = await initializeContractTyped<Aex9ContractApi>(
-      sdk,
-      { aci: ACI.AEX9, address: addr },
-    );
-    const { decodedResult } = await t.meta_info();
-    return {
-      decimals: Number(decodedResult.decimals ?? 18),
-      symbol: decodedResult.symbol || decodedResult.name || 'TKN',
-    };
-  }, [sdk]);
-
-  // Update token metadata when tokens change
-  useEffect(() => {
-    if (!state.tokenA || state.tokenA === 'AE') return;
-
-    fetchTokenMeta(state.tokenA)
-      .then(({ decimals, symbol }) => {
-        setState((prev) => ({ ...prev, decA: decimals, symbolA: symbol }));
-      })
-      .catch(() => {
-        setState((prev) => ({
-          ...prev,
-          decA: 18,
-          symbolA: state.tokenA === 'AE' ? 'AE' : '',
-        }));
-      });
-  }, [state.tokenA, fetchTokenMeta]);
-
-  useEffect(() => {
-    if (!state.tokenB || state.tokenB === 'AE') return;
-
-    fetchTokenMeta(state.tokenB)
-      .then(({ decimals, symbol }) => {
-        setState((prev) => ({ ...prev, decB: decimals, symbolB: symbol }));
-      })
-      .catch(() => {
-        setState((prev) => ({
-          ...prev,
-          decB: 18,
-          symbolB: state.tokenB === 'AE' ? 'AE' : '',
-        }));
-      });
-  }, [state.tokenB, fetchTokenMeta]);
-
-  const computePairPreview = useCallback(async () => {
-    try {
-      if (!state.tokenA || !state.tokenB) {
-        setState((prev) => ({
-          ...prev, pairPreview: null, reserves: null, pairExists: false,
-        }));
-        return;
-      }
-
-      const { factory } = await initDexContracts(sdk);
-      const aAddr = state.tokenA === 'AE' ? CONFIG.DEX_WAE : state.tokenA;
-      const bAddr = state.tokenB === 'AE' ? CONFIG.DEX_WAE : state.tokenB;
-
-      const info = await getPairInfo(sdk, factory, aAddr, bAddr);
-
-      if (!info) {
-        setState((prev) => ({
-          ...prev,
-          pairPreview: null,
-          reserves: null,
-          pairExists: false,
-        }));
-        return;
-      }
-
-      setState((prev) => ({
-        ...prev,
-        reserves: { reserveA: info.reserveA, reserveB: info.reserveB },
-        pairExists: true,
-      }));
-
-      const rA = new BigNumber(fromAettos(info.reserveA, state.decA));
-      const rB = new BigNumber(fromAettos(info.reserveB, state.decB));
-
-      // Compute ratios using raw reserves with decimal scaling to avoid precision loss
-      const reserveARaw = new BigNumber(info.reserveA.toString());
-      const reserveBRaw = new BigNumber(info.reserveB.toString());
-
-      let ratioAinB = '-'; // 1 B = ? A
-      let ratioBinA = '-'; // 1 A = ? B
-
-      if (!reserveARaw.isZero() && !reserveBRaw.isZero()) {
-        const powA = new BigNumber(10).pow(state.decA);
-        const powB = new BigNumber(10).pow(state.decB);
-        // ratioBinA = (reserveB / 10^decB) / (reserveA / 10^decA) = reserveB*10^decA / (reserveA*10^decB)
-        const ratioBperA = reserveBRaw.multipliedBy(powA).dividedBy(reserveARaw.multipliedBy(powB));
-        const ratioAperB = reserveARaw.multipliedBy(powB).dividedBy(reserveBRaw.multipliedBy(powA));
-        // Use higher precision to avoid rounding to zero for tiny ratios
-        ratioBinA = ratioBperA.toFixed(18).replace(/\.0+$/, '');
-        ratioAinB = ratioAperB.toFixed(18).replace(/\.0+$/, '');
-      }
-
-      let sharePct = '0.00000000';
-      let lpMintEstimate: string | undefined;
-      let error: string | null = null;
-      let suggestedAmountB: string | undefined;
-      let suggestedAmountA: string | undefined;
-
-      const ain = state.amountA ? new BigNumber(toAettos(state.amountA, state.decA).toString()) : null;
-      const bin = state.amountB ? new BigNumber(toAettos(state.amountB, state.decB).toString()) : null;
-
-      // Validate ratio for existing pools (only if both amounts are non-zero)
-      if (ain && bin && !rA.isZero() && !rB.isZero() && !ain.isZero() && !bin.isZero()) {
-        const currentRatio = rA.div(rB);
-        const inputRatio = ain.div(bin);
-        const ratioDifference = currentRatio.minus(inputRatio).abs().div(currentRatio).times(100);
-
-        // If ratio difference is > 1%, suggest optimal amounts
-        if (ratioDifference.gt(1)) {
-          // Calculate optimal amount B based on amount A
-          const optimalB = ain.div(currentRatio);
-          suggestedAmountB = fromAettos(optimalB.toString(), state.decB);
-
-          // Calculate optimal amount A based on amount B
-          const optimalA = bin.times(currentRatio);
-          suggestedAmountA = fromAettos(optimalA.toString(), state.decA);
-
-          error = `Ratio mismatch. Current pool ratio: 1 ${state.symbolA} = ${rB.div(rA).toFixed(6)} ${state.symbolB}`;
-        }
-      }
-
-      if (ain && bin && info.totalSupply && info.totalSupply > 0n && !reserveARaw.isZero() && !reserveBRaw.isZero()) {
-        const totalSupply = new BigNumber(info.totalSupply.toString());
-        // For constant product AMM, LP tokens = totalSupply * min(amountA/reserveA, amountB/reserveB)
-        // Since we're adding proportional amounts, we can use either ratio
-        const lpMintFromA = totalSupply.multipliedBy(ain).dividedBy(reserveARaw);
-        const lpMintFromB = totalSupply.multipliedBy(bin).dividedBy(reserveBRaw);
-        // Use the minimum to ensure we don't overestimate (matches on-chain calculation)
-        const lpMint = BigNumber.min(lpMintFromA, lpMintFromB);
-        sharePct = lpMint.div(totalSupply).times(100).toFixed(8);
-        lpMintEstimate = fromAettos(lpMint.toString(), 18);
-      }
-
-      setState((prev) => ({
-        ...prev,
-        error,
-        pairPreview: {
-          ratioAinB,
-          ratioBinA,
-          sharePct,
-          lpMintEstimate,
-          suggestedAmountA,
-          suggestedAmountB,
-        },
-      }));
-    } catch {
-      setState((prev) => ({ ...prev, pairPreview: null }));
-    }
-  }, [
-    sdk,
-    state.tokenA,
-    state.tokenB,
-    state.amountA,
-    state.amountB,
-    state.decA,
-    state.decB,
-    state.symbolA,
-    state.symbolB,
-  ]);
-
-  // Compute pair preview when amounts or tokens change
-  useEffect(() => {
-    computePairPreview();
-  }, [computePairPreview]);
+  const quote = useLiquidityPreview(state);
 
   async function executeAddLiquidity(params: LiquidityExecutionParams) {
     if (!address) {
@@ -567,10 +389,11 @@ export function useAddLiquidity() {
   }
 
   return {
-    state,
+    state: { ...state, pairPreview: quote.preview, pairExists: quote.pairExists },
+    quoteStatus: quote.status,
     setState,
     executeAddLiquidity,
     executeRemoveLiquidity,
-    computePairPreview,
+    computePairPreview: quote.refetch,
   };
 }

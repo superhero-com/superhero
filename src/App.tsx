@@ -233,17 +233,19 @@ const App = () => {
           </Suspense>
           {/* TODO: Disable feedback button on mobile for now */}
           {!isMobile && <FeedbackButton />}
-          {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
-          {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
-          {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
+          <div className="app-install-affordances">
+            {/* PWA install prompt — hidden on mobile iOS where the FAB takes over */}
+            {!(isMobileDevice() && isIOS) && <PwaInstallPrompt />}
+            {/* Mobile FAB — shown on iOS (no native prompt) or when native prompt unavailable.
               Uses isMobileDevice() (UA-based) instead of useIsMobile() (viewport-based)
               so landscape phones don't lose the install affordance. */}
-          {isMobileDevice() && (isIOS || !canPrompt) && (
+            {isMobileDevice() && (isIOS || !canPrompt) && (
             <PwaInstallFab
               onOpen={() => setMobileAppDialogOpen(true)}
               isInstalled={isInstalled}
             />
-          )}
+            )}
+          </div>
           {/* What both floating install affordances open: the store builds
               first, the PWA as the secondary line. */}
           <MobileAppInstallDialog

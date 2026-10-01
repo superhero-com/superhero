@@ -28,7 +28,8 @@
     "check:csp-origins": "node ./scripts/check-csp-origins.cjs",
     "check:types": "node ./scripts/check-types.cjs",
     "release": "standard-version",
-    "postinstall": "node ./scripts/update-package-type.cjs"
+    "postinstall": "node ./scripts/update-package-type.cjs",
+    "start:shorts:testnet": "VITE_NETWORK=ae_uat VITE_SHORTS_TESTNET_MVP=1 vite --host 127.0.0.1 --port 5180 --strictPort"
   },
   "dependencies": {
     "@aeternity/aepp-calldata": "^1.9.1",

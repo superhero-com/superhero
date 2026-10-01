@@ -1,0 +1,73 @@
+.dex-transaction-card, .dex-pool-transactions {
+  --tx-surface: light-dark(#f6f8fb, #11161d);
+  --tx-recessed: light-dark(#fff, #0d1219);
+  --tx-text: light-dark(#1d2b3e, #edf1f7);
+  --tx-muted: light-dark(#5f6e82, #95a3b7);
+  --tx-border: light-dark(#dce2e9, #29313b);
+  --tx-blue: light-dark(#2357a7, #a8caff);
+  --tx-selected: light-dark(#e4edfb, #1c304f);
+  color: var(--tx-text);
+}
+.dex-pool-transactions {
+  background:var(--tx-surface);border:1px solid var(--tx-border);border-radius:17px;
+  padding:20px 22px; min-width:0;
+  .dex-pool-transactions-title{font-size:17px;font-weight:600;margin:0 0 18px;letter-spacing:-.3px}
+  .dex-transaction-card{border-width:0 0 1px;border-radius:0;padding-inline:0}
+  .dex-pool-transactions-list > div{min-width:0}
+}
+.dex-transaction-card {
+  container: transaction-card / inline-size;
+  background:var(--tx-surface);border:1px solid var(--tx-border);border-radius:13px;
+  padding:15px 18px;min-width:0;font-variant-numeric:tabular-nums;
+  .transaction-overview{display:grid;grid-template-columns:minmax(140px,1fr) minmax(210px,1.5fr) auto;align-items:center;gap:20px}
+  .transaction-identity{display:flex;align-items:center;gap:10px;min-width:0}
+  .transaction-identity>div{min-width:0}
+  .transaction-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--tx-selected);color:var(--tx-blue);flex-shrink:0}
+  .transaction-mark svg{width:16px;height:16px}
+  &.is-liquidity .transaction-mark{background:light-dark(#e4f1ed,#172b2b);color:light-dark(#287c68,#86cdb9)}
+  h4{font-size:12px;font-weight:600;line-height:1.5;margin:0;overflow-wrap:anywhere}
+  .transaction-identity p{font-size:10px;color:var(--tx-muted);margin:4px 0 0;line-height:1.5}
+  .transaction-amounts{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr);gap:12px;align-items:center;min-width:0}
+  .transaction-amounts>div{min-width:0}
+  .transaction-amounts>div>span{display:block;font-size:9px;color:var(--tx-muted);margin-bottom:5px}
+  .transaction-amounts strong{font-size:15px;font-weight:550;line-height:1.5;display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;overflow-wrap:anywhere}
+  .transaction-amounts small{font-size:10px;font-weight:400;color:var(--tx-muted)}
+  .transaction-amount-divider{width:14px;height:14px;color:var(--tx-muted);margin-top:14px}
+  .transaction-time{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--tx-muted);white-space:nowrap}
+  .transaction-time svg{width:12px;height:12px}
+  .transaction-details{margin-top:12px}
+  summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;color:var(--tx-muted);font-size:9px;min-height:30px;border-radius:6px}
+  summary::-webkit-details-marker{display:none}
+  summary>span{display:flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap}
+  summary small{font:9px ui-monospace,monospace;overflow-wrap:anywhere}
+  summary>svg{width:13px;height:13px;flex-shrink:0;transition:transform .15s}
+  details[open] summary>svg{transform:rotate(180deg)}
+  summary:hover{color:var(--tx-blue)}
+  summary:focus-visible{outline:2px solid #6199ff;outline-offset:3px}
+  .transaction-detail-content{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:8px;padding:12px;background:var(--tx-recessed);border:1px solid var(--tx-border);border-radius:9px;font-size:10px;color:var(--tx-muted)}
+  .transaction-method{overflow-wrap:anywhere}
+  .transaction-copy-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .transaction-copy-actions button{font-size:10px;min-height:34px;color:var(--tx-muted);border-color:var(--tx-border)}
+  .transaction-copy-actions svg{width:12px;height:12px}
+  .transaction-explorer{margin-inline-start:auto;min-height:34px;font-size:10px;color:var(--tx-blue);border-color:var(--tx-border);background:transparent;gap:7px}
+  .transaction-explorer svg{width:13px;height:13px}
+  @container transaction-card (max-width:600px){
+    .transaction-overview{grid-template-columns:1fr auto;gap:15px}
+    .transaction-identity{grid-column:1;grid-row:1}
+    .transaction-time{grid-column:2;grid-row:1;font-size:9px}
+    .transaction-time svg{display:none}
+    .transaction-amounts{grid-column:1/-1;gap:14px}
+    .transaction-identity p{font-size:9px}
+    .transaction-amounts strong{font-size:16px}
+  }
+  @container transaction-card (max-width:340px){
+    .transaction-overview{gap:14px 8px}
+    .transaction-identity{gap:7px}
+    .transaction-mark{width:27px;height:27px;border-radius:8px}
+    .transaction-identity h4{font-size:11px}
+    .transaction-time{white-space:normal;max-width:62px;text-align:end}
+    .transaction-detail-content{gap:9px}
+  }
+}
+@media(max-width:600px){.dex-pool-transactions{padding:17px 14px}.dex-transaction-card{padding:13px 14px}}
+@media(prefers-reduced-motion:reduce){.dex-transaction-card summary>svg{transition:none}}

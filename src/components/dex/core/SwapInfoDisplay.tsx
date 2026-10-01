@@ -1,134 +1,114 @@
-/* eslint-disable */
-import { useMemo } from 'react';
+import { useId, useState } from 'react';
+import { ChevronDown, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DexTokenDto } from '../../../api/generated';
 import { useDex } from '../../../hooks';
 import { CONFIG } from '../../../config';
-import {
-  fromAettos, subSlippage, toAettos,
-} from '../../../libs/dex';
+import { fromAettos, subSlippage, toAettos } from '../../../libs/dex';
 import { Decimal } from '../../../libs/decimal';
 import { RouteInfo } from '../types/dex';
-import SwapRouteInfo from './SwapRouteInfo';
 
-interface SwapInfoDisplayProps {
-    tokenIn: DexTokenDto | null;
-    tokenOut: DexTokenDto | null;
-    amountIn: string;
-    amountOut: string;
-    routeInfo: RouteInfo;
-    tokens: DexTokenDto[];
-    isExactIn: boolean;
+interface Props {
+  tokenIn: DexTokenDto | null;
+  tokenOut: DexTokenDto | null;
+  amountIn: string;
+  amountOut: string;
+  routeInfo: RouteInfo;
+  tokens: DexTokenDto[];
+  onSettings: () => void;
 }
 
-export default function SwapInfoDisplay({
-  tokenIn,
-  tokenOut,
-  amountIn,
-  amountOut,
-  routeInfo,
-  tokens,
-  isExactIn,
-}: SwapInfoDisplayProps) {
+const SwapInfoDisplay = ({
+  tokenIn, tokenOut, amountIn, amountOut, routeInfo, tokens, onSettings,
+}: Props) => {
   const { t } = useTranslation('dex');
-  const { slippagePct } = useDex();
-
-  // Calculate minimum received amount
-  const minimumReceived = useMemo(() => {
-    if (!isExactIn || !amountOut || !tokenOut || Number(amountOut) <= 0) return null;
-
-    try {
-      const amountOutAettos = toAettos(amountOut, tokenOut.decimals);
-      const minReceivedAettos = subSlippage(amountOutAettos, slippagePct);
-      const minReceived = fromAettos(minReceivedAettos, tokenOut.decimals);
-      return Decimal.from(minReceived).prettify(6);
-    } catch {
-      return null;
-    }
-  }, [amountOut, tokenOut, slippagePct, isExactIn]);
-
-  // Format price impact
-  const formattedPriceImpact = useMemo(() => {
-    if (routeInfo.priceImpact == null) return null;
-
-    if (routeInfo.priceImpact < 0.01) {
-      return '<0.01%';
-    }
-
-    return `${routeInfo.priceImpact.toFixed(2)}%`;
-  }, [routeInfo.priceImpact]);
-
-  // Get token label for display
-  const getTokenLabel = (address: string): string => {
+  const { slippagePct, deadlineMins } = useDex();
+  const [expanded, setExpanded] = useState(false);
+  const detailsId = useId();
+  if (!tokenIn || !tokenOut || !Number(amountIn) || !Number(amountOut)) return null;
+  const minimum = fromAettos(
+    subSlippage(toAettos(routeInfo.routerAmountOut || amountOut, tokenOut.decimals), slippagePct),
+    tokenOut.decimals,
+  );
+  const rate = Decimal.from(amountOut).div(amountIn).prettify(6);
+  const routeLabel = (address: string) => {
     if (address === 'AE') return 'AE';
     if (address === CONFIG.DEX_WAE) return 'WAE';
-
-    const token = tokens.find((t) => t.address === address);
-    return token?.symbol || `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return [tokenIn, tokenOut, ...tokens].find((token) => token.address === address)?.symbol
+      || `${address.slice(0, 6)}…${address.slice(-4)}`;
   };
-
-  // Don't show if we don't have the basic required data or if there's no meaningful output
-  if (!tokenIn || !tokenOut || !amountIn || Number(amountIn) <= 0 || !amountOut || Number(amountOut) <= 0) {
-    return null;
-  }
-
+  const labels = routeInfo.path.map(routeLabel);
+  if (tokenIn.is_ae && labels[0] !== 'AE') labels.unshift('AE');
+  if (tokenOut.is_ae && labels[labels.length - 1] !== 'AE') labels.push('AE');
+  const reserveAmount = (amount: string, address: string) => {
+    const decimals = [tokenIn, tokenOut, ...tokens]
+      .find((token) => token.address === address)?.decimals;
+    if (decimals === undefined && address !== CONFIG.DEX_WAE) return '—';
+    return Decimal.from(fromAettos(amount, decimals ?? 18)).prettify(4);
+  };
+  const impact = routeInfo.priceImpact;
+  const shownImpact = impact == null ? '—' : `${Math.abs(impact) < 0.01 ? '<0.01' : impact.toFixed(2)}%`;
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px] space-y-3">
-      {/* Exchange Rate Display */}
-      <div className="flex items-center justify-center gap-2 text-center py-2">
-        <span className="text-xl font-bold text-white">
-          {Decimal.from(amountIn).prettify(6)}
-        </span>
-        <span className="text-sm text-white/80 font-semibold">
-          {tokenIn.symbol}
-        </span>
-        <span className="text-white/60 mx-2">≈</span>
-        <span className="text-xl font-bold text-white">
-          {Decimal.from(amountOut).prettify(6)}
-        </span>
-        <span className="text-sm text-white/80 font-semibold">
-          {tokenOut.symbol}
-        </span>
+    <div className="swap-quote">
+      <div className="swap-quote__rate">
+        <span><bdi>{`1 ${tokenIn.symbol} ≈ ${rate} ${tokenOut.symbol}`}</bdi></span>
+        <button type="button" aria-expanded={expanded} aria-controls={detailsId} onClick={() => setExpanded(!expanded)}>
+          {t('swapCard.details')}
+          <ChevronDown aria-hidden="true" />
+        </button>
       </div>
-
-      {/* Info Grid */}
-      <div className="space-y-3">
-        {/* Minimum Received */}
-        {minimumReceived && (
-        <div className="flex justify-between items-center py-1">
-          <span className="text-sm text-white/70 font-medium">
-            {t('minimumReceived')}
-          </span>
-          <div className="text-right">
-            <div className="text-sm font-semibold text-white">
-              {minimumReceived}
-            </div>
-            <div className="text-xs text-white/60">
-              {tokenOut.symbol}
-            </div>
+      <div className="swap-quote__essentials">
+        <div>
+          <span>{t('minimumReceived')}</span>
+          <strong>
+            <bdi>
+              {Decimal.from(minimum).prettify(6)}
+              {' '}
+              <small>{tokenOut.symbol}</small>
+            </bdi>
+          </strong>
+        </div>
+        <div>
+          <span>{t('settings.slippageTolerance')}</span>
+          <button type="button" onClick={onSettings}>
+            {slippagePct}
+            %
+            <Settings2 aria-hidden="true" />
+            <span className="sr-only">{t('swap.swapSettings')}</span>
+          </button>
+        </div>
+      </div>
+      {expanded && (
+        <dl className="swap-quote__details" id={detailsId}>
+          <div>
+            <dt>{t('priceImpact')}</dt>
+            <dd className={impact != null && Math.abs(impact) > 5 ? 'is-warning' : ''}>{shownImpact}</dd>
           </div>
-        </div>
-        )}
-
-        {/* Price Impact */}
-        {formattedPriceImpact && (
-        <div className="flex justify-between items-center py-1">
-          <span className="text-sm text-white/70 font-medium">
-            {t('priceImpact')}
-          </span>
-          <span className={`text-sm font-semibold ${routeInfo.priceImpact && routeInfo.priceImpact > 10 ? 'text-red-400'
-            : routeInfo.priceImpact && routeInfo.priceImpact > 5 ? 'text-yellow-400'
-              : 'text-green-400'
-          }`}
-          >
-            {formattedPriceImpact}
-          </span>
-        </div>
-        )}
-
-        <SwapRouteInfo routeInfo={routeInfo} tokens={tokens} tokenIn={tokenIn} tokenOut={tokenOut} />
-
-      </div>
+          <div>
+            <dt>{t('swapRouteInfo.route')}</dt>
+            <dd><bdi>{labels.join(' → ')}</bdi></dd>
+          </div>
+          <div>
+            <dt>{t('settings.transactionDeadline')}</dt>
+            <dd>
+              {deadlineMins}
+              {' '}
+              {t('swapCard.minutes')}
+            </dd>
+          </div>
+          {routeInfo.reserves?.map((reserve) => (
+            <div key={`${reserve.token0}-${reserve.token1}`}>
+              <dt>{t('swapCard.reserves')}</dt>
+              <dd>
+                <bdi>{`${reserveAmount(reserve.reserve0, reserve.token0)} ${routeLabel(reserve.token0)}`}</bdi>
+                <br />
+                <bdi>{`${reserveAmount(reserve.reserve1, reserve.token1)} ${routeLabel(reserve.token1)}`}</bdi>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </div>
   );
-}
+};
+export default SwapInfoDisplay;

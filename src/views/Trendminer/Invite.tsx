@@ -28,14 +28,14 @@ export default function Invite() {
 
   return (
     <Shell>
-      <div className="mx-auto px-4 py-2">
+      <div className="ui-page rewards-page mx-auto px-4 py-2">
         {/* Hero */}
         <PageSpaceHero
-          className="mb-8 px-6 py-10 md:px-10 md:py-14"
+          className="ui-hero mb-6"
           supernovaColor="rgba(0,229,255,.5)"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold m-0 leading-tight">
-            <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-[#a8caff]">
               {t('inviteView.heroBrand')}
               {' '}
             </span>
@@ -45,13 +45,13 @@ export default function Invite() {
         {/* ========== NEW: Superhero Rewards Program ========== */}
         <RewardsProgram />
 
-        <div className="bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
-          <h3 className="mb-5 m-1 text-2xl md:text-2xl font-bold text-white">
+        <div className="ui-panel relative overflow-hidden p-5 md:p-6 mb-5">
+          <h3 className="mb-5 m-1 text-lg md:text-xl font-bold text-white">
             {t('inviteView.referAndEarn')}
           </h3>
           {/* Info Card (existing, dismissible) */}
           {showInfo && (
-          <div className="bg-[#0d1117]/50 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 border-cyan-500/20 mb-5">
+          <div className="ui-panel relative overflow-hidden p-5 md:p-6 mb-5">
             <button
               onClick={() => {
                 try {
@@ -74,7 +74,7 @@ export default function Invite() {
                     <path d="M12 8h.01" />
                   </svg>
                 </div>
-                <h3 className="m-0 text-xl md:text-2xl font-bold text-white">
+                <h3 className="m-0 text-lg md:text-xl font-bold text-white">
                   {t('inviteView.howItWorks')}
                 </h3>
               </div>
@@ -108,7 +108,7 @@ export default function Invite() {
         {/* User Invitations */}
         {activeAccount && (
           <div className="mb-12">
-            <h3 className="text-xl md:text-2xl font-bold m-0 mb-6 text-white">
+            <h3 className="text-lg md:text-xl font-bold m-0 mb-6 text-white">
               {t('inviteView.yourInvitations')}
             </h3>
             <InvitationList />

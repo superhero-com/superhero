@@ -1,14 +1,13 @@
 /* eslint-disable */
 import {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useEffect, useId, useMemo, useState,
 } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   DexPairService, DexService, DexTokenDto, PairDto,
 } from '../../../api/generated';
-import DexSettings from '../../../features/dex/components/DexSettings';
 import { CONFIG } from '../../../config';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import { useSwapExecution } from '../hooks/useSwapExecution';
@@ -17,18 +16,18 @@ import { useTokenBalances } from '../hooks/useTokenBalances';
 import { useTokenList } from '../hooks/useTokenList';
 import { SwapQuoteParams } from '../types/dex';
 import SwapConfirmation from './SwapConfirmation';
-import SwapRouteInfo from './SwapRouteInfo';
 import SwapInfoDisplay from './SwapInfoDisplay';
-import NoLiquidityWarning from './NoLiquidityWarning';
-import TokenInput from './TokenInput';
+import SwapAmountField from './SwapAmountField';
+import SwapInlineSettings from './SwapInlineSettings';
+import './SwapForm.css';
 import { Decimal } from '../../../libs/decimal';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDownUp, ArrowRight, Info, Settings2 } from 'lucide-react';
 
 import { useAccount, useDex } from '../../../hooks';
 import Spinner from '../../Spinner';
 
 export interface SwapFormProps {
-  onPairSelected?: (pair: PairDto) => void;
+  onPairSelected?: (pair: PairDto | null) => void;
   onFromTokenSelected?: (token: DexTokenDto) => void;
 }
 
@@ -58,9 +57,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   });
 
   useEffect(() => {
-    if (pair) {
-      onPairSelected?.(pair);
-    }
+    onPairSelected?.(pair ?? null);
   }, [pair, onPairSelected]);
 
   useEffect(() => {
@@ -78,7 +75,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   // Quote and execution
   const {
-    quoteLoading, error, routeInfo, debouncedQuote,
+    quoteLoading, error, routeInfo, debouncedQuote, cancelDebouncedQuote,
   } = useSwapQuote();
   const { loading: swapLoading, swapStep, executeSwap } = useSwapExecution();
 
@@ -93,11 +90,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsId = useId();
 
   // Function to fetch token metadata from middleware
   const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
     try {
-      const _token = DexService.getDexTokenByAddress({ address });
+      const _token = await DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
       return null;
@@ -199,7 +198,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
     // Skip URL updates during initial load or when tokens are being set from URL params
-    if (!tokens.length || (!tokenIn && !tokenOut)) return;
+    if (!tokens.length || !tokenIn || !tokenOut) return;
 
     // Only update URL if we have at least one token selected and tokens are loaded
     if (tokenIn || tokenOut) {
@@ -218,6 +217,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       isExactIn,
     };
     debouncedQuote(params, handleQuoteResult);
+    return cancelDebouncedQuote;
   }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
 
   // Quote for exact-out mode when amountOut or tokens change
@@ -231,11 +231,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       isExactIn,
     };
     debouncedQuote(params, handleQuoteResult);
+    return cancelDebouncedQuote;
   }, [isExactIn, amountOut, tokenIn, tokenOut, debouncedQuote]);
 
   // Handle quote results
   const handleSwap = async () => {
-    if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
+    if (!tokenIn || !tokenOut || !amountIn || !amountOut || isSwapDisabled) return;
 
     // Additional validation before executing swap
     if (routeInfo.path.length === 0) {
@@ -299,27 +300,15 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     return out;
   }, [tokens, searchOut]);
 
-  const handleTokenSwap = () => {
-    const tempToken = tokenIn;
-    const tempAmount = amountIn;
-    setTokenIn(tokenOut);
-    setTokenOut(tempToken);
-    setAmountIn(amountOut);
-    setAmountOut(tempAmount);
-
-    // Update URL parameters to reflect the swapped tokens
-    updateUrlParams(tokenOut, tempToken);
-  };
-
   // Balance validation
   const hasInsufficientBalance = useMemo(() => {
-    if (!amountIn || !balances.in || Number(amountIn) <= 0) return false;
+    if (!address || !amountIn || !balances.in || Number(amountIn) <= 0) return false;
     try {
       return Decimal.from(amountIn).gt(Decimal.from(balances.in));
     } catch {
       return false;
     }
-  }, [amountIn, balances.in]);
+  }, [address, amountIn, balances.in]);
 
   // No liquidity detection
   const hasNoLiquidity = useMemo(() => {
@@ -349,151 +338,94 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
   const isSwapDisabled = useMemo(() => {
     const liquidityExceeded = routeInfo.liquidityStatus?.exceedsLiquidity === true;
-    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
-  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
+    return swapLoading || quoteLoading || !!error || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
+  }, [swapLoading, quoteLoading, error, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
+
+  const updateInput = (value: string) => {
+    setIsExactIn(true);
+    setAmountIn(value);
+    setAmountOut('');
+  };
+  const changeInputToken = (token: DexTokenDto) => { setTokenIn(token); setAmountOut(''); };
+  const changeOutputToken = (token: DexTokenDto) => { setTokenOut(token); setAmountOut(''); };
+  const hasQuote = !quoteLoading && !error && !hasNoLiquidity && Number(amountOut) > 0;
+
+  const handleTokenSwap = () => {
+    const tempToken = tokenIn;
+    setTokenIn(tokenOut);
+    setTokenOut(tempToken);
+    // Carry the receive amount over only when it is a quote the trader can see.
+    // While a quote is pending or failed it is empty or stale, so keep what they typed.
+    if (hasQuote) setAmountIn(amountOut);
+    setAmountOut('');
+    setIsExactIn(true);
+
+    // Update URL parameters to reflect the swapped tokens
+    updateUrlParams(tokenOut, tempToken);
+  };
+
+  const actionLabel = swapLoading ? t('swap.confirmInWallet')
+    : quoteLoading ? t('swapCard.gettingQuote')
+      : error ? t('swapCard.quoteUnavailable')
+        : hasNoLiquidity ? t('swapCard.noRoute')
+          : hasInsufficientBalance ? t('swapCard.insufficient')
+            : !Number(amountIn) ? t('swapCard.enterAmount') : t('swapCard.review');
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold m-0">
-          {t('swap.title')}
-        </h2>
-
-        <DexSettings title={t('swap.swapSettings')}>
-          <button
-            aria-label={t('labels.openSettings', { ns: 'common' })}
-            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
-          >
-            ⚙️
-            {' '}
-            {t('swap.settings')}
-          </button>
-        </DexSettings>
-      </div>
-      <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
-        {t('swap.description')}
-      </p>
-
-      {/* Token Input From */}
-      <div className="mb-2">
-        <TokenInput
-          label={t('swap.from')}
-          token={tokenIn}
-          skipToken={tokenOut}
-          amount={amountIn}
-          balance={balances.in}
-          onTokenChange={setTokenIn}
-          onAmountChange={setAmountIn}
-          tokens={filteredInTokens}
-          excludeTokens={tokenOut ? [tokenOut] : []}
-          disabled={swapLoading}
-          loading={tokensLoading}
-          searchValue={searchIn}
-          onSearchChange={setSearchIn}
-          hasInsufficientBalance={hasInsufficientBalance}
-        />
-      </div>
-
-      {/* Swap Arrow Button */}
-      <div className="flex justify-center my-4 relative">
-        <button
-          onClick={handleTokenSwap}
-          disabled={swapLoading || !tokenIn || !tokenOut}
-          className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-in-out shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
-        >
-          <ArrowDown className="w-5 h-5" />
+    <section className="dex-swap" aria-label={t('swapCard.title')}>
+      <header className="dex-swap__header">
+        <div><h2>{t('swapCard.title')}</h2><p>{t('swapCard.description')}</p></div>
+        <button type="button" className={`swap-settings-trigger${settingsOpen ? ' is-open' : ''}`} disabled={swapLoading} aria-expanded={settingsOpen} aria-controls={settingsId} aria-label={t('swap.swapSettings')} onClick={() => setSettingsOpen(!settingsOpen)}>
+          <Settings2 aria-hidden="true" /><span>{t('swap.settings')}</span>
+        </button>
+      </header>
+      {settingsOpen && <SwapInlineSettings id={settingsId} onClose={() => setSettingsOpen(false)} />}
+      <SwapAmountField
+        pay token={tokenIn} otherToken={tokenOut} amount={amountIn} balance={balances.in}
+        connected={!!address} onTokenChange={changeInputToken} onAmountChange={updateInput}
+        tokens={filteredInTokens} disabled={swapLoading} loading={tokensLoading}
+        search={searchIn} onSearch={setSearchIn} insufficient={hasInsufficientBalance}
+      />
+      <div className="swap-direction-wrap">
+        <button type="button" className="swap-direction" aria-label={t('swapCard.reverse')} onClick={handleTokenSwap} disabled={swapLoading || !tokenIn || !tokenOut}>
+          <ArrowDownUp aria-hidden="true" />
         </button>
       </div>
-
-      {/* Token Input To */}
-      <div className="mb-5">
-        <TokenInput
-          label={t('swap.to')}
-          token={tokenOut}
-          skipToken={tokenIn}
-          amount={quoteLoading ? t('swap.quoting') : amountOut}
-          balance={balances.out}
-          onTokenChange={setTokenOut}
-          onAmountChange={(amount) => {
-            setIsExactIn(false);
-            setAmountOut(amount);
-          }}
-          tokens={filteredOutTokens}
-          excludeTokens={tokenIn ? [tokenIn] : []}
-          disabled={swapLoading}
-          loading={tokensLoading}
-          readOnly={isExactIn}
-          searchValue={searchOut}
-          onSearchChange={setSearchOut}
-        />
-      </div>
-
-      {/* No Liquidity Warning */}
-      <NoLiquidityWarning
-        tokenIn={tokenIn}
-        tokenOut={tokenOut}
-        show={hasNoLiquidity}
-        exceedsLiquidity={routeInfo.liquidityStatus?.exceedsLiquidity}
-        maxAvailable={routeInfo.liquidityStatus?.maxAvailable}
-        pairAddress={routeInfo.liquidityStatus?.pairAddress}
+      <SwapAmountField
+        token={tokenOut} otherToken={tokenIn} amount={hasQuote ? amountOut : ''} balance={balances.out}
+        connected={!!address} onTokenChange={changeOutputToken}
+        tokens={filteredOutTokens} disabled={swapLoading} loading={tokensLoading}
+        search={searchOut} onSearch={setSearchOut}
       />
-
-      {/* Swap Info Display */}
-      <SwapInfoDisplay
-        tokenIn={tokenIn}
-        tokenOut={tokenOut}
-        amountIn={amountIn}
-        amountOut={amountOut}
-        routeInfo={routeInfo}
-        tokens={tokens}
-        isExactIn={isExactIn}
-      />
-
-      {/* Error Display */}
-      {error && (
-        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {error}
-        </div>
-      )}
-
-      {/* Insufficient Balance Warning */}
-      {hasInsufficientBalance && (
-        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          {t('swap.insufficientBalance', {
-            symbol: tokenIn?.symbol || '',
-            needed: Decimal.from(amountIn || '0').prettify(),
-            have: balances.in ? Decimal.from(balances.in).prettify() : '0',
-          })}
-        </div>
-      )}
-
-      {/* Swap Button */}
-      {address ? (
-        <button
-          onClick={() => setShowConfirm(true)}
-          disabled={isSwapDisabled}
-          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-in-out ${
-            isSwapDisabled
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
-          }`}
-        >
-          {swapLoading ? (
-            <div className="flex items-center justify-center gap-2">
-              <Spinner className="w-4 h-4" />
-              {t('swap.confirmInWallet')}
-            </div>
-          ) : t('swap.swapTokens')}
-        </button>
+      {hasQuote ? (
+        <SwapInfoDisplay tokenIn={tokenIn} tokenOut={tokenOut} amountIn={amountIn} amountOut={amountOut} routeInfo={routeInfo} tokens={tokens} onSettings={() => setSettingsOpen(true)} />
       ) : (
-        <ConnectWalletButton
-          label={t('swap.connectWallet')}
-          variant="dex"
-          className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
-          block
-        />
+        <div className="swap-idle-settings">
+          <span role="status">{quoteLoading ? t('swapCard.gettingQuote') : t('settings.slippageTolerance')}</span>
+          <button type="button" disabled={swapLoading} onClick={() => setSettingsOpen(true)}>{slippagePct}%<Settings2 aria-hidden="true" /><span className="sr-only">{t('swap.swapSettings')}</span></button>
+        </div>
       )}
+      {(error || hasNoLiquidity || hasInsufficientBalance) && (
+        <div className="swap-inline-state is-error" role="status">
+          <Info aria-hidden="true" />
+          <p>{error || (hasNoLiquidity ? t('swapCard.noLiquidityHint') : t('swap.insufficientBalance', {
+            symbol: tokenIn?.symbol || '', needed: Decimal.from(amountIn || '0').prettify(), have: Decimal.from(balances.in || '0').prettify(),
+          }))}
+            {hasNoLiquidity && routeInfo.liquidityStatus?.maxAvailable && (
+              <span>{t('noLiquidity.reduceAmount', { amount: Decimal.from(routeInfo.liquidityStatus.maxAvailable).prettify(), symbol: tokenIn?.symbol })}</span>
+            )}
+            {hasNoLiquidity && tokenIn && tokenOut && (
+              <span><Link to={`/defi/pool?from=${tokenIn.is_ae ? 'AE' : tokenIn.address}&to=${tokenOut.is_ae ? 'AE' : tokenOut.address}`}>{t('noLiquidity.addLiquidity')}</Link></span>
+            )}
+          </p>
+        </div>
+      )}
+      {address ? (
+        <button type="button" className="swap-primary" onClick={() => setShowConfirm(true)} disabled={isSwapDisabled}>
+          {swapLoading && <Spinner className="w-4 h-4" />}{actionLabel}{!isSwapDisabled && <ArrowRight aria-hidden="true" />}
+        </button>
+      ) : <ConnectWalletButton label={t('swapCard.connectWallet')} variant="swap" block />}
+      <p className="swap-bottom-note">{t(address ? 'swapCard.reviewHint' : 'swapCard.walletHint')}</p>
 
       {/* Confirmation Modal */}
       <SwapConfirmation
@@ -514,6 +446,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         swapStep={swapStep}
       />
 
-    </div>
+    </section>
   );
 }

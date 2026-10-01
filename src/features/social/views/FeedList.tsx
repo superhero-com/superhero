@@ -1236,6 +1236,7 @@ const FeedList = ({
       <div>
         <CreatePost
           ref={createPostRef}
+          compactMobile={isHomepage}
           onSuccess={() => {
             // Use ref to get current sortBy value instead of closure value
             // This ensures we refetch the correct feed even if onPostCreated changed sortBy first

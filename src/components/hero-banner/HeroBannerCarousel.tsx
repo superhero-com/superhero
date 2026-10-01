@@ -3,75 +3,45 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import { Sparkles } from 'lucide-react';
-import SpaceEffects from './SpaceEffects';
+import {
+  ArrowUpRight, Bot, ChevronDown, ChevronLeft, ChevronRight,
+  Globe2, Hash, MessageCircle, Smartphone, Users,
+} from 'lucide-react';
 import BannerNew from './BannerNew';
+import HeroBackdrop from './HeroBackdrop';
 import BannerA from './BannerA';
 import BannerB from './BannerB';
 import BannerC from './BannerC';
 import BannerD from './BannerD';
 import BannerLanguages from './BannerLanguages';
 import './banner.styles.css';
-import './bannerLanguages.styles.css';
+import '../layout/RailCards.css';
+import './HeroCarousel.css';
+import './HeroCompactBanner.css';
 
 const DISMISS_KEY = 'hero_banner_dismissed_until';
-const SLIDE_COUNT = 6;
+const SLIDE_KEYS = ['bannerB', 'bannerA', 'bannerC', 'bannerD', 'bannerLanguages', 'bannerNew'];
+const SLIDE_ICONS = [Hash, MessageCircle, Users, Bot, Globe2, Smartphone];
 
 interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
 }
 
-/**
- * One line of collapsed text. When the text is too long to fit it slowly
- * scrolls to the end and back (ping-pong), with both edges faded so it reads
- * as "…text…". Short text that fits shows statically.
- */
-const MarqueeText = ({ text }: { text: string }) => {
-  const outerRef = React.useRef<HTMLSpanElement>(null);
-  const innerRef = React.useRef<HTMLSpanElement>(null);
-  const [distance, setDistance] = useState(0);
-
-  useEffect(() => {
-    const outer = outerRef.current;
-    const inner = innerRef.current;
-    if (!outer || !inner) return undefined;
-    const measure = () => {
-      const overflow = inner.scrollWidth - outer.clientWidth;
-      setDistance(overflow > 6 ? overflow : 0);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(outer);
-    return () => ro.disconnect();
-  }, [text]);
-
-  // Constant, readable scroll speed (~45px/s). The travel occupies ~41% of the
-  // cycle each way, so scale the whole cycle with the overflow distance.
-  const duration = Math.min(80, Math.max(16, Math.round(distance / 18)));
-
-  return (
-    <span
-      ref={outerRef}
-      className={`hero-collapsed__text ${distance ? 'is-marquee' : ''}`}
-      style={distance ? ({
-        '--marquee-x': `-${distance}px`,
-        '--marquee-duration': `${duration}s`,
-      } as React.CSSProperties) : undefined}
-    >
-      <span ref={innerRef} className="hero-collapsed__text-inner">{text}</span>
-    </span>
-  );
-};
-
 const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
-  const { t } = useTranslation();
-  const { t: tSocial } = useTranslation('social');
+  const { t, i18n } = useTranslation();
+  const direction = i18n.dir() as 'ltr' | 'rtl';
   const { t: tBanners } = useTranslation('banners');
   const [collapsed, setCollapsed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const isIOSWebKit = React.useMemo(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('ios-webkit');
+  const [reducedMotion, setReducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
   }, []);
 
   // Fresh Autoplay instance every time we toggle between expanded/collapsed.
@@ -79,10 +49,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   // destroyed Embla engine ("internalEngine undefined"), which is what made the
   // carousel mis-measure and peek after a few dismiss/expand cycles.
   const autoplayPlugin = React.useMemo(
-    () => Autoplay({ delay: 10000, stopOnInteraction: false, stopOnLastSnap: false }),
+    () => Autoplay({
+      delay: 10000, stopOnInteraction: false, stopOnLastSnap: false, playOnInit: !reducedMotion,
+    }),
     // `collapsed` is intentional: force a brand-new plugin each toggle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [collapsed],
+    [collapsed, reducedMotion],
   );
 
   const emblaPlugins = React.useMemo(() => [autoplayPlugin], [autoplayPlugin]);
@@ -95,7 +67,8 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     loop: true,
     duration: 20,
     align: 'start' as const,
-  }), []);
+    direction,
+  }), [direction]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     emblaOptions,
@@ -104,21 +77,24 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
 
   // Separate carousel instance for the dismissed / collapsed one-line state,
   // so it keeps its own autoplay + swipe just like the expanded version. It
-  // loops (stable with the centered peek layout) and dwells long enough on
+  // loops and dwells long enough on
   // each card to read the title before advancing.
   const collapsedAutoplay = React.useMemo(
-    () => Autoplay({ delay: 12000, stopOnInteraction: false, stopOnLastSnap: false }),
+    () => Autoplay({
+      delay: 12000, stopOnInteraction: false, stopOnLastSnap: false, playOnInit: !reducedMotion,
+    }),
     // `collapsed` is intentional: force a brand-new plugin each toggle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [collapsed],
+    [collapsed, reducedMotion],
   );
   const collapsedPlugins = React.useMemo(() => [collapsedAutoplay], [collapsedAutoplay]);
   const collapsedOptions = React.useMemo(() => ({
     loop: true,
     duration: 20,
-    align: 'center' as const,
+    align: 'start' as const,
     containScroll: false as const,
-  }), []);
+    direction,
+  }), [direction]);
   const [collapsedEmblaRef, collapsedEmblaApi] = useEmblaCarousel(
     collapsedOptions,
     collapsedPlugins,
@@ -126,46 +102,43 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   const [collapsedIndex, setCollapsedIndex] = useState(0);
 
   // One-line version of every slide: title + its primary action as a text link.
-  // Order mirrors the expanded carousel (last three slides moved to the front).
+  // Order mirrors the expanded carousel.
   const collapsedSlides = [
     {
       key: 'b',
-      text: tBanners('bannerB.title'),
+      text: `${tBanners('bannerB.title')} ${tBanners('bannerB.titleAccent')}`,
       cta: tBanners('bannerB.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'a',
-      text: tBanners('bannerA.title'),
+      text: `${tBanners('bannerA.title')} ${tBanners('bannerA.titleAccent')}`,
       cta: tBanners('bannerA.primaryButton'),
       onClick: onStartPosting,
+      link: '/',
     },
     {
       key: 'c',
-      text: tBanners('bannerC.title'),
+      text: `${tBanners('bannerC.title')} ${tBanners('bannerC.titleAccent')}`,
       cta: tBanners('bannerC.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'd',
-      text: `${tBanners('bannerD.titleMain')} ${tBanners('bannerD.titleAccent')}`,
+      text: `${tBanners('bannerD.title')} ${tBanners('bannerD.titleAccent')}`,
       cta: tBanners('bannerD.primaryButton'),
       link: '/landing',
     },
     {
       key: 'languages',
-      badge: tSocial('feedAnnouncement.new'),
-      text: tBanners('bannerLanguages.title'),
+      text: `${tBanners('bannerLanguages.title')} ${tBanners('bannerLanguages.titleAccent')}`,
       cta: tBanners('bannerLanguages.primaryButton'),
       link: '/trends/create',
     },
     {
       key: 'new',
-      badge: tSocial('feedAnnouncement.new'),
-      text: tSocial('feedAnnouncement.text'),
-      // installNow already ends in "→" for standalone use; strip it here since
-      // .hero-collapsed__link::after appends its own arrow to every CTA.
-      cta: tSocial('feedAnnouncement.installNow').replace(/\s*→\s*$/, ''),
+      text: `${tBanners('bannerNew.title')} ${tBanners('bannerNew.titleAccent')}`,
+      cta: tBanners('bannerNew.primaryButton'),
       link: '/landing',
     },
   ];
@@ -219,14 +192,14 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     onSelect();
 
     // Start autoplay once emblaApi is ready
-    emblaApi.plugins()?.autoplay?.play();
+    if (!reducedMotion) emblaApi.plugins()?.autoplay?.play();
 
     return () => {
       emblaApi.off('select', onSelect);
     };
-  }, [emblaApi]);
+  }, [emblaApi, reducedMotion]);
 
-  // Track the centered slide in the collapsed carousel (for the active/dim state)
+  // Track the active slide in the compact carousel.
   useEffect(() => {
     if (!collapsedEmblaApi) {
       return () => {};
@@ -236,12 +209,12 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     onSelect();
 
     // Start collapsed autoplay once emblaApi is ready
-    collapsedEmblaApi.plugins()?.autoplay?.play();
+    if (!reducedMotion) collapsedEmblaApi.plugins()?.autoplay?.play();
 
     return () => {
       collapsedEmblaApi.off('select', onSelect);
     };
-  }, [collapsedEmblaApi]);
+  }, [collapsedEmblaApi, reducedMotion]);
 
   // Carries the active slide index across a collapse/expand toggle (set by
   // handleDismiss/handleExpand just before switching). The expanded and
@@ -273,16 +246,16 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
   }, [emblaApi]);
 
   const handleMouseLeave = useCallback(() => {
-    emblaApi?.plugins()?.autoplay?.play();
-  }, [emblaApi]);
+    if (!reducedMotion) emblaApi?.plugins()?.autoplay?.play();
+  }, [emblaApi, reducedMotion]);
 
   const handleCollapsedMouseEnter = useCallback(() => {
     collapsedEmblaApi?.plugins()?.autoplay?.stop();
   }, [collapsedEmblaApi]);
 
   const handleCollapsedMouseLeave = useCallback(() => {
-    collapsedEmblaApi?.plugins()?.autoplay?.play();
-  }, [collapsedEmblaApi]);
+    if (!reducedMotion) collapsedEmblaApi?.plugins()?.autoplay?.play();
+  }, [collapsedEmblaApi, reducedMotion]);
 
   const handleDismiss = () => {
     try {
@@ -323,189 +296,188 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
     [emblaApi],
   );
 
-  // Marks the slides that are actually on screen (current + both neighbours,
-  // wrapping since the carousel loops). Expensive per-frame effects inside a
-  // slide — the graphic card's backdrop blur, the primary button's blended
-  // shine — are scoped to this class so the four clipped slides stop paying
-  // for them. Purely a cost cut: what the user sees is unchanged.
-  const isNearSlide = (index: number) => {
-    const last = SLIDE_COUNT - 1;
-    const prev = selectedIndex === 0 ? last : selectedIndex - 1;
-    const next = selectedIndex === last ? 0 : selectedIndex + 1;
-    return index === selectedIndex || index === prev || index === next;
-  };
-
   const slideClass = (index: number) => (
-    `hero-banner__slide${isNearSlide(index) ? ' hero-banner__slide--near' : ''}`
+    `hero-carousel__slide${selectedIndex === index ? ' is-active' : ''}`
   );
+  const MetadataIcon = SLIDE_ICONS[selectedIndex];
+  const metadataKey = SLIDE_KEYS[selectedIndex];
 
   if (collapsed) {
     return (
-      <div
-        className="hero-collapsed"
+      <section
+        className="hero-compact"
+        aria-label={t('common.heroBanner.bannerAria')}
+        dir={direction}
         onMouseEnter={handleCollapsedMouseEnter}
-        onMouseLeave={handleCollapsedMouseLeave}
+        onMouseLeave={(event) => {
+          if (!event.currentTarget.contains(document.activeElement)) handleCollapsedMouseLeave();
+        }}
+        onFocusCapture={handleCollapsedMouseEnter}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)
+            && !event.currentTarget.matches(':hover')) handleCollapsedMouseLeave();
+        }}
       >
-        <div className="hero-collapsed__viewport" ref={collapsedEmblaRef}>
-          <div className="hero-collapsed__container">
-            {collapsedSlides.map((slide, index) => (
-              <div
-                className={`hero-collapsed__slide ${index === collapsedIndex ? 'is-active' : ''}`}
-                key={slide.key}
-              >
-                {slide.badge && (
-                  <span className="hero-collapsed__badge">
-                    <Sparkles aria-hidden="true" />
-                    {slide.badge}
-                  </span>
-                )}
-                <MarqueeText text={slide.text} />
-                {slide.onClick ? (
-                  <button
-                    type="button"
-                    onClick={slide.onClick}
-                    className="hero-collapsed__link"
-                  >
-                    {slide.cta}
-                  </button>
-                ) : (
-                  <Link to={slide.link} className="hero-collapsed__link">
-                    {slide.cta}
-                  </Link>
-                )}
-              </div>
-            ))}
+        <div className="hero-compact__atmosphere" aria-hidden="true" />
+        <div className="hero-compact__viewport" ref={collapsedEmblaRef}>
+          <div className="hero-compact__track">
+            {collapsedSlides.map((slide, index) => {
+              const Icon = SLIDE_ICONS[index];
+              return (
+                <div key={slide.key} className="hero-compact__slide" inert={index !== collapsedIndex} aria-hidden={index !== collapsedIndex}>
+                  <span className="hero-compact__icon"><Icon aria-hidden="true" /></span>
+                  <div className="hero-compact__copy">
+                    <span>
+                      {tBanners(`${SLIDE_KEYS[index]}.eyebrow`)}
+                      <i aria-hidden="true" />
+                      {' '}
+                      <bdi>
+                        {String(index + 1).padStart(2, '0')}
+                        {' '}
+                        /
+                        {' '}
+                        {String(SLIDE_KEYS.length).padStart(2, '0')}
+                      </bdi>
+                    </span>
+                    <strong>{slide.text}</strong>
+                  </div>
+                  {slide.onClick ? (
+                    <button type="button" className="hero-compact__action" onClick={slide.onClick}>
+                      {slide.cta}
+                      <ArrowUpRight aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <Link className="hero-compact__action" to={slide.link || '/'}>
+                      {slide.cta}
+                      <ArrowUpRight aria-hidden="true" />
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleExpand}
-          className="hero-collapsed__expand"
-          aria-label={t('common.heroBanner.expandAria', 'Show banner')}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-      </div>
+        <div className="hero-compact__controls">
+          <button type="button" className="hero-compact__next" aria-label={t('common.heroBanner.nextSlide')} onClick={() => collapsedEmblaApi?.scrollNext()}><ChevronRight aria-hidden="true" /></button>
+          <span className="hero-compact__divider" />
+          <button type="button" className="hero-compact__expand" onClick={handleExpand} aria-label={t('common.heroBanner.expandAria')}>
+            <span>{t('common.heroBanner.expand')}</span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+        </div>
+        <div className="hero-compact__position" aria-hidden="true">{SLIDE_KEYS.map((key, index) => <i key={key} className={index === collapsedIndex ? 'is-active' : ''} />)}</div>
+      </section>
     );
   }
 
   return (
-    <div
-      className="hero-banner-carousel"
+    <section
+      className="hero-carousel rail-card"
+      aria-label={t('common.heroBanner.bannerAria')}
       onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={(event) => {
+        if (!event.currentTarget.contains(document.activeElement)) handleMouseLeave();
+      }}
+      onFocusCapture={handleMouseEnter}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)
+          && !event.currentTarget.matches(':hover')) handleMouseLeave();
+      }}
     >
-      {/* Backdrop gradients live in banner.styles.css as ::before/::after so the
-          drifting layer can animate on the compositor; an inline `background`
-          here would paint underneath them and double up. */}
-      <section
-        className={`hero-banner ${isIOSWebKit ? 'hero-banner--ios-safe' : ''}`}
-        aria-label={t('common.heroBanner.bannerAria')}
-      >
-        <SpaceEffects
-          supernovaColor="rgba(255,94,188,.55)"
-          reduced={isIOSWebKit}
-        />
-
-        <div className="hero-banner__viewport" ref={emblaRef}>
-          <div className="hero-banner__container">
-            <div className={slideClass(0)}>
-              <BannerB />
-            </div>
-            <div className={slideClass(1)}>
-              <BannerA onStartPosting={onStartPosting} />
-            </div>
-            <div className={slideClass(2)}>
-              <BannerC />
-            </div>
-            <div className={slideClass(3)}>
-              <BannerD />
-            </div>
-            <div className={slideClass(4)}>
-              <BannerLanguages />
-            </div>
-            <div className={slideClass(5)}>
-              <BannerNew />
-            </div>
+      <HeroBackdrop />
+      <div className="hero-carousel__viewport" ref={emblaRef}>
+        <div className="hero-carousel__container">
+          <div
+            className={slideClass(0)}
+            inert={selectedIndex !== 0}
+            aria-hidden={selectedIndex !== 0}
+          >
+            <BannerB />
+          </div>
+          <div
+            className={slideClass(1)}
+            inert={selectedIndex !== 1}
+            aria-hidden={selectedIndex !== 1}
+          >
+            <BannerA onStartPosting={onStartPosting} />
+          </div>
+          <div
+            className={slideClass(2)}
+            inert={selectedIndex !== 2}
+            aria-hidden={selectedIndex !== 2}
+          >
+            <BannerC />
+          </div>
+          <div
+            className={slideClass(3)}
+            inert={selectedIndex !== 3}
+            aria-hidden={selectedIndex !== 3}
+          >
+            <BannerD />
+          </div>
+          <div
+            className={slideClass(4)}
+            inert={selectedIndex !== 4}
+            aria-hidden={selectedIndex !== 4}
+          >
+            <BannerLanguages />
+          </div>
+          <div
+            className={slideClass(5)}
+            inert={selectedIndex !== 5}
+            aria-hidden={selectedIndex !== 5}
+          >
+            <BannerNew />
           </div>
         </div>
-      </section>
-
-      {/* Dismiss — text link (collapses to a one-line announcement) */}
+      </div>
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t('common.heroBanner.dismissAria')}
-        className="banner-dismiss"
+        className="hero-carousel__dismiss"
       >
-        {t('common.heroBanner.dismiss', 'Dismiss')}
+        <span>{t('common.heroBanner.dismiss', 'Dismiss')}</span>
       </button>
-
-      {/* Navigation arrows */}
-      <button
-        type="button"
-        onClick={scrollPrev}
-        className="carousel-arrow carousel-arrow--prev"
-        aria-label={t('common.heroBanner.previousSlide')}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={scrollNext}
-        className="carousel-arrow carousel-arrow--next"
-        aria-label={t('common.heroBanner.nextSlide')}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-
-      {/* Dot indicators */}
-      <div className="carousel-controls">
-        {Array.from({ length: SLIDE_COUNT }, (_, i) => i).map((index) => (
+      <footer className="hero-carousel__footer">
+        <div className="hero-carousel__metadata">
+          <MetadataIcon aria-hidden="true" />
+          <span>{tBanners(`${metadataKey}.metaMain`)}</span>
+          <i aria-hidden="true" />
+          <span>{tBanners(`${metadataKey}.metaAccent`)}</span>
+        </div>
+        <div className="hero-carousel__navigation">
           <button
             type="button"
-            key={index}
-            onClick={() => scrollTo(index)}
-            className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
-            aria-label={t('common.heroBanner.goToSlide', { number: index + 1 })}
-          />
-        ))}
-      </div>
-    </div>
+            onClick={scrollPrev}
+            className="hero-carousel__arrow"
+            aria-label={t('common.heroBanner.previousSlide')}
+          >
+            <ChevronLeft aria-hidden="true" />
+          </button>
+          {SLIDE_KEYS.map((key, index) => (
+            <button
+              type="button"
+              key={key}
+              onClick={() => scrollTo(index)}
+              className="hero-carousel__dot"
+              aria-current={selectedIndex === index ? 'true' : undefined}
+              aria-label={t('common.heroBanner.goToSlide', { number: index + 1 })}
+            >
+              <span />
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={scrollNext}
+            className="hero-carousel__arrow"
+            aria-label={t('common.heroBanner.nextSlide')}
+          >
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      </footer>
+    </section>
   );
 };
 

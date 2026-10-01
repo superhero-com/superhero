@@ -11,7 +11,7 @@ const DirectReplies = ({
   id: string;
   onOpenPost: (postId: string) => void;
 }) => {
-  const { t } = useTranslation(['common', 'social']);
+  const { t } = useTranslation('social');
   const {
     data,
     isLoading,
@@ -67,20 +67,20 @@ const DirectReplies = ({
     return () => { cancelled = true; };
   }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) return <div className="text-center py-6 text-white/70">{t('social:loadingReplies')}</div>;
+  if (isLoading) return <div className="post-detail__state" role="status">{t('social:loadingReplies')}</div>;
   if (error) {
     return (
-      <div className="text-center py-6">
-        <div className="text-white/70 mb-2">{t('social:errorLoadingReplies')}</div>
+      <div className="post-detail__state" role="alert">
+        <div className="post-detail__muted">{t('social:errorLoadingReplies')}</div>
         <button type="button" className="text-sm underline" onClick={() => refetch()}>{t('common:buttons.retry')}</button>
       </div>
     );
   }
 
-  // If empty, do not render placeholder; the comment form below will be shown by the page
+  if (!list.length) return <p className="post-detail__empty">{t('postDetail.empty')}</p>;
 
   return (
-    <div className="grid gap-0 md:gap-3">
+    <div className="post-detail__replies">
       {list.map((reply) => (
         <ReplyToFeedItem
           key={reply.id}

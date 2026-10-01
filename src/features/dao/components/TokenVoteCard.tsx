@@ -38,7 +38,7 @@ const TokenVoteCard = ({
   // Loading state
   if (!voteState) {
     return (
-      <Card className="bg-white/[0.02] border-white/10">
+      <Card className="ui-panel bg-white/[0.02] border-white/10">
         <CardContent className="p-4">
           <div className="flex items-center justify-center py-4">
             <Spinner className="w-6 h-6" />
@@ -78,7 +78,7 @@ const TokenVoteCard = ({
   };
 
   return (
-    <Card className="bg-white/[0.02] border-white/10 hover:bg-white/[0.04] transition-all duration-200">
+    <Card className="ui-panel bg-white/[0.02] border-white/10 transition-colors duration-200">
       <CardContent className="p-4">
         <div className="flex flex-col items-start justify-between mb-3 gap-4">
           <Badge variant="secondary" className={getVoteStatusColor()}>
@@ -108,7 +108,7 @@ const TokenVoteCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="border-white/20 bg-white/5 text-white hover:bg-white/10"
+            className="ui-secondary border-white/20 bg-white/5 text-white hover:bg-white/10"
             onClick={() => {
               navigate(
                 `/trends/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`,

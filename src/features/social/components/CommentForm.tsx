@@ -6,17 +6,20 @@ interface CommentFormProps {
   postId: string;
   onCommentAdded?: () => void;
   placeholder?: string;
+  appearance?: 'default' | 'integrated';
 }
 
 const CommentForm: React.FC<CommentFormProps> = ({
   postId,
   onCommentAdded,
   placeholder,
+  appearance,
 }) => {
   const { t } = useTranslation('forms');
   return (
     <PostForm
       isPost={false}
+      appearance={appearance}
       postId={postId}
       onCommentAdded={onCommentAdded}
       placeholder={placeholder ?? t('writeReply')}
@@ -24,8 +27,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
       showEmojiPicker
       showGifInput
       characterLimit={280}
-      minHeight="60px"
-      className="mt-4"
+      className={appearance === 'integrated' ? '' : 'mt-4'}
     />
   );
 };

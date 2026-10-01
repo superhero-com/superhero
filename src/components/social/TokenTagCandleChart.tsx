@@ -23,6 +23,7 @@ interface TokenTagCandleChartProps {
   token: TokenDto;
   height?: number;
   className?: string;
+  compact?: boolean;
 }
 
 interface Candle {
@@ -33,7 +34,9 @@ interface Candle {
   close: number;
 }
 
-const TokenTagCandleChart = ({ token, height = 72, className = '' }: TokenTagCandleChartProps) => {
+const TokenTagCandleChart = ({
+  token, height = 72, className = '', compact = false,
+}: TokenTagCandleChartProps) => {
   const saleAddress = token?.sale_address;
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
 
@@ -80,17 +83,17 @@ const TokenTagCandleChart = ({ token, height = 72, className = '' }: TokenTagCan
       handleScale: false,
       leftPriceScale: { visible: false },
       rightPriceScale: { visible: false },
-      timeScale: { visible: false },
+      timeScale: { visible: false, maxBarSpacing: compact ? 10 : 0 },
       crosshair: { horzLine: { visible: false }, vertLine: { visible: false } },
       grid: { horzLines: { visible: false }, vertLines: { visible: false } },
       layout: { background: { color: 'transparent', type: ColorType.Solid } },
     },
     onChartReady: (instance) => {
       const series = instance.addSeries(CandlestickSeries, {
-        upColor: UP,
-        downColor: DOWN,
-        wickUpColor: UP,
-        wickDownColor: DOWN,
+        upColor: compact ? '#78cdb3' : UP,
+        downColor: compact ? '#df8d9b' : DOWN,
+        wickUpColor: compact ? '#78cdb3' : UP,
+        wickDownColor: compact ? '#df8d9b' : DOWN,
         borderVisible: false,
         priceLineVisible: false,
         lastValueVisible: false,

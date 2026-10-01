@@ -156,7 +156,7 @@ const InvitationList = () => {
   if (!activeAccount) return null;
 
   return (
-    <div className="border border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-sm">
+    <div className="ui-panel">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <h3 className="text-lg font-semibold text-white">{t('invitations.yourInvitations')}</h3>
       </div>

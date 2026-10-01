@@ -11,6 +11,8 @@ import Spinner from '@/components/Spinner';
 import { DexTokenDto } from '../../../api/generated';
 import { Token } from '../types/explore';
 
+import './DexMarketResults.scss';
+
 interface TokenListTableProps {
   tokens: DexTokenDto[];
   sort: {
@@ -47,6 +49,8 @@ interface TokenListTableProps {
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
+  hideControls?: boolean;
+  timeframe?: '24h' | '7d' | '30d';
 }
 
 export const TokenListTable = ({
@@ -56,18 +60,21 @@ export const TokenListTable = ({
   search,
   onSearchChange,
   loading,
+  hideControls = false,
+  timeframe,
 }: TokenListTableProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const timeBase = useMemo(() => {
+    if (timeframe) return timeframe;
     if (performanceChartTimeframe === '1d') {
       return '24h';
     }
 
     return performanceChartTimeframe;
-  }, [performanceChartTimeframe]);
+  }, [performanceChartTimeframe, timeframe]);
 
   const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume') => {
     onSortChange(key);
@@ -115,8 +122,9 @@ export const TokenListTable = ({
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div className="dex-market-results" style={{ overflowX: 'auto' }}>
       {/* Compact Filter Controls */}
+      {!hideControls && (
       <div
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
@@ -470,6 +478,8 @@ export const TokenListTable = ({
         )}
       </div>
 
+      )}
+
       {/* Add keyframes for pulse animation */}
       <style>
         {`
@@ -500,7 +510,7 @@ export const TokenListTable = ({
           backdropFilter: 'blur(10px)',
         }}
       >
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table className="dex-market-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr
               style={{
@@ -557,7 +567,7 @@ export const TokenListTable = ({
                 <div className="flex items-center gap-2">
                   {t('explore.volume')}
                   <div className="flex items-center justify-center w-auto flex-shrink-0">
-                    <PerformanceTimeframeSelector />
+                    {hideControls ? <span className="text-xs font-normal">{timeBase}</span> : <PerformanceTimeframeSelector />}
                   </div>
                 </div>
               </th>

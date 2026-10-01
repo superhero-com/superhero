@@ -1,5 +1,5 @@
 import React, {
-  createContext, useCallback, useContext, useMemo, useState, ReactNode,
+  createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode,
 } from 'react';
 import { useSetAtom } from 'jotai';
 import { LiquidityPosition } from '../types/pool';
@@ -72,6 +72,9 @@ export const PoolProvider = ({ children }: PoolProviderProps) => {
     setSelectedPosition(null);
     setSelectedTokens('', '');
   }, [setSelectedTokens]);
+
+  // A position belongs to the wallet that selected it.
+  useEffect(() => { clearSelection(); }, [activeAccount, clearSelection]);
 
   const onPositionUpdated = useCallback(async () => {
     // Invalidate cached positions; the positions hook effect will reload

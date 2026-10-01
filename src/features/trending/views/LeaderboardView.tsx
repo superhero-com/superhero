@@ -147,7 +147,7 @@ const LeaderboardView = () => {
   };
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4 py-4">
+    <div className="ui-page leaderboard-page max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4 py-4">
       <Head
         title={t('leaderboardPageTitle')}
         description={t('explore:leaderboardDescription')}
@@ -155,12 +155,12 @@ const LeaderboardView = () => {
       />
 
       <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+        <div className="flex flex-col gap-5">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            <h1 className="ui-page-title">
               {t('leaderboardHeading')}
             </h1>
-            <p className="mt-2 text-sm md:text-base leading-relaxed text-white/70 max-w-2xl">
+            <p className="ui-page-description mt-2 max-w-2xl">
               {t('leaderboardHeadingDescription')}
             </p>
           </div>
@@ -217,7 +217,7 @@ const LeaderboardView = () => {
         )}
 
         {!isError && (
-          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
+          <div className="leaderboard-results">
             {/* Loading */}
             {isLoading && (
               <>

@@ -263,7 +263,7 @@ const BondingCurveGraph: React.FC = () => {
   const showCurve = displaySupplyM > 0.5;
 
   return (
-    <div className="rounded-2xl border border-purple-500/20 bg-[#0a0a0f] overflow-hidden">
+    <div className="ui-panel rounded-2xl border border-white/10 bg-[#11161d] overflow-hidden">
 
       {/* Header */}
       <div className="px-5 pt-5 pb-2">
@@ -495,9 +495,9 @@ const BondingCurveGraph: React.FC = () => {
       </div>
 
       {/* Live stats row */}
-      <div className="flex gap-3 px-5 pb-3">
+      <div className="bonding-curve-stats grid grid-cols-3 gap-2 px-3 pb-3">
         <div
-          className="flex-1 rounded-xl px-3 py-2 text-center"
+          className="min-w-0 rounded-lg px-1.5 py-2 text-center break-all"
           style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}
         >
           <p className="text-[9px] text-white/40 uppercase tracking-wider">Supply</p>
@@ -508,7 +508,7 @@ const BondingCurveGraph: React.FC = () => {
           </p>
         </div>
         <div
-          className="flex-1 rounded-xl px-3 py-2 text-center"
+          className="min-w-0 rounded-lg px-1.5 py-2 text-center break-all"
           style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}
         >
           <p className="text-[9px] text-white/40 uppercase tracking-wider">Buy price</p>
@@ -519,7 +519,7 @@ const BondingCurveGraph: React.FC = () => {
           </p>
         </div>
         <div
-          className="flex-1 rounded-xl px-3 py-2 text-center"
+          className="min-w-0 rounded-lg px-1.5 py-2 text-center break-all"
           style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)' }}
         >
           <p className="text-[9px] text-white/40 uppercase tracking-wider">Sell price</p>

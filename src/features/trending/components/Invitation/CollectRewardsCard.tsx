@@ -255,13 +255,13 @@ const CollectRewardsCard = () => {
   }, [collectingReward, thresholdReached, accumulatedRewardsAe, t]);
 
   return (
-    <div className="bg-[#0d1117]/10 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden animate-scaleIn hover-lift">
+    <div className="ui-panel p-5 md:p-6 relative overflow-hidden animate-scaleIn">
       {/* Animated background glow */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl" />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5">
-        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 animate-pulseGlow">
+        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
           <TrophyIcon className="w-5 h-5 text-cyan-400" />
         </div>
         {isEligibleForRewards && (
@@ -271,7 +271,7 @@ const CollectRewardsCard = () => {
         )}
       </div>
 
-      <h3 className="m-0 text-xl md:text-2xl font-bold text-white mb-2 animate-slideDown">
+      <h3 className="m-0 text-lg md:text-xl font-semibold text-white mb-2 animate-slideDown">
         {t('collectRewards.title')}
       </h3>
 
@@ -395,12 +395,12 @@ const CollectRewardsCard = () => {
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
               className={`w-full p-3 md:p-4 text-sm font-semibold uppercase tracking-wider rounded-lg transition-all duration-200 relative overflow-hidden group ${isEligibleForRewards
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25 animate-pulseGlow'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/25'
                 : 'opacity-50 cursor-not-allowed bg-white/5 text-white/30'
               }`}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {isEligibleForRewards && <CelebrationIcon className="w-5 h-5 animate-sparkle" />}
+                {isEligibleForRewards && <CelebrationIcon className="w-5 h-5" />}
                 {collectButtonContent}
                 {isEligibleForRewards && <TrophyIcon className="w-5 h-5 group-hover:animate-bounce" />}
               </span>

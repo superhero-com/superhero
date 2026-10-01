@@ -59,28 +59,31 @@ export default function AccountDetails() {
   }, [address, t]);
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-16 h-16 rounded-lg bg-black/20 border border-white/10" />
+    <div className="ui-page account-details-page max-w-5xl mx-auto p-4">
+      <div className="ui-panel account-details-identity flex flex-wrap items-center gap-3 mb-4 p-4">
+        <div className="w-12 h-12 shrink-0 rounded-xl bg-blue-500/10 border border-white/10" />
         <div>
-          <div className="text-2xl font-extrabold text-white">{address}</div>
+          <div className="break-all text-base sm:text-lg font-semibold text-white">{address}</div>
           <div className="text-xs opacity-70 text-white/70">{t('accountDetails')}</div>
         </div>
-        <div className="ml-auto">
+        <div className="w-full min-w-0">
           <AeButton
             onClick={() => { navigator.clipboard.writeText(address || ''); }}
             variant="utility"
+            className="ui-secondary ui-wrap-action max-w-full flex-wrap gap-x-2 text-left text-xs"
           >
             {t('copyAddress')}
+            <span className="min-w-0 break-all font-mono text-[11px] font-normal">{address}</span>
           </AeButton>
         </div>
       </div>
 
-      <div className="flex gap-3 border-b border-white/10 mb-3">
+      <div className="flex flex-wrap gap-2 border-b border-white/10 mb-4 pb-2">
         <AeButton
           onClick={() => setTab('owned')}
           variant="tab"
           active={tab === 'owned'}
+          className={tab === 'owned' ? 'ui-tab-selected' : 'ui-secondary'}
         >
           {t('tokensOwned')}
         </AeButton>
@@ -88,6 +91,7 @@ export default function AccountDetails() {
           onClick={() => setTab('created')}
           variant="tab"
           active={tab === 'created'}
+          className={tab === 'created' ? 'ui-tab-selected' : 'ui-secondary'}
         >
           {t('tokensCreated')}
         </AeButton>
@@ -95,6 +99,7 @@ export default function AccountDetails() {
           onClick={() => setTab('transactions')}
           variant="tab"
           active={tab === 'transactions'}
+          className={tab === 'transactions' ? 'ui-tab-selected' : 'ui-secondary'}
         >
           {t('transactions')}
         </AeButton>
@@ -128,7 +133,7 @@ const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: 
           to={`/trending/tokens/${encodeURIComponent(it.name || it.address)}`}
           className="no-underline text-inherit"
         >
-          <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
+          <div className="ui-panel p-4 transition-colors duration-200">
             <div className="font-bold text-white">
               {it.name}
               {' '}
@@ -138,7 +143,7 @@ const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: 
                 )
               </span>
             </div>
-            <div className="flex justify-between mt-2 text-sm opacity-85 text-white/85">
+            <div className="grid gap-2 mt-3 text-xs text-white/70 [overflow-wrap:anywhere]">
               <div>
                 {t('mcLabel')}
                 {Number(it.market_cap ?? 0).toLocaleString()}

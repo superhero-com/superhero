@@ -10,8 +10,6 @@ import { AspectMedia } from '@/components/AspectMedia';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
 import { formatAddress } from '../../../utils/address';
-import { BlockchainInfoPopover } from './BlockchainInfoPopover';
-import InlineCopyButton from './InlineCopyButton';
 import SharePopover from './SharePopover';
 import PostTipButton from './PostTipButton';
 import { useWallet } from '../../../hooks';
@@ -21,6 +19,9 @@ import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
+import PostAuthorHeader from './PostAuthorHeader';
+import PostContent from './PostContent';
+import './FeedPost.css';
 
 // Small component so the hook is always called unconditionally
 const PostLinkPreview = memo(({ content }: { content: string }) => {
@@ -36,6 +37,8 @@ interface ReplyToFeedItemProps {
   commentCount?: number;
   hideParentContext?: boolean; // when true, do not render parent context header
   allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
+  onReply?: () => void;
+  presentation?: 'feed' | 'detail';
   isActive?: boolean; // when true, visually highlight as the focused post
   /**
    * Optional label used on Trend token pages to indicate that the author
@@ -86,14 +89,16 @@ const ReplyToFeedItem = memo(({
   hideParentContext = false,
   allowInlineRepliesToggle = true,
   isActive = false,
+  onReply,
+  presentation = 'feed',
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
-  const { t } = useTranslation(['common', 'social']);
+  const { t, i18n } = useTranslation('social');
   const postId = item.id;
+  const replyControls = allowInlineRepliesToggle ? `replies-${postId}` : undefined;
   const authorAddress = item.sender_address;
   const { chainNames, profileDisplayNames } = useWallet();
   const displayName = (profileDisplayNames?.[authorAddress] ?? chainNames?.[authorAddress] ?? '').trim();
-  const hasDisplayName = Boolean(displayName);
   const { containerRef, isCompact } = useCompactFeedItemLayout(item.tx_hash ? 700 : 620);
 
   // Token collections (WORDS/Chinese/Arabic/Russian/...) drive which characters a hashtag's
@@ -153,67 +158,6 @@ const ReplyToFeedItem = memo(({
   const media = Array.isArray(item.media)
     ? item.media.filter((m) => (typeof m === 'string' ? !m.startsWith('comment:') : true))
     : [];
-  const unnamedHeader = isCompact ? (
-    <>
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
-          {formatAddress(authorAddress, 6, true)}
-        </div>
-        <span className="text-white/50 shrink-0">·</span>
-        {item.tx_hash ? (
-          <BlockchainInfoPopover
-            txHash={(item as any).tx_hash}
-            createdAt={item.created_at as unknown as string}
-            sender={(item as any).sender_address}
-            contract={(item as any).contract_address}
-            postId={String(item.id)}
-            triggerContent={(
-              <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                {compactTime(item.created_at as unknown as string)}
-              </span>
-            )}
-          />
-        ) : (
-          <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-        )}
-      </div>
-      <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
-        <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
-        <InlineCopyButton value={authorAddress} className="shrink-0" />
-      </div>
-    </>
-  ) : (
-    <>
-      <div className="text-[15px] font-semibold text-white truncate" title={authorAddress}>
-        {authorAddress}
-      </div>
-      <div>
-        {item.tx_hash ? (
-          <BlockchainInfoPopover
-            txHash={(item as any).tx_hash}
-            createdAt={item.created_at as unknown as string}
-            sender={(item as any).sender_address}
-            contract={(item as any).contract_address}
-            postId={String(item.id)}
-            triggerContent={(
-              <span className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
-                {compactTime(item.created_at as unknown as string)}
-                {' '}
-                ago
-              </span>
-            )}
-          />
-        ) : (
-          <div className="text-[10px] text-white/60 truncate" title={fullTimestamp(item.created_at as unknown as string)}>
-            {compactTime(item.created_at as unknown as string)}
-            {' '}
-            ago
-          </div>
-        )}
-      </div>
-    </>
-  );
-
   // Compute total descendant comments (all levels) for this item
   const { data: descendantCount } = useQuery<number>({
     queryKey: ['post-desc-count', postId],
@@ -266,13 +210,16 @@ const ReplyToFeedItem = memo(({
       id={`post-${postId}`}
       ref={containerRef}
       className={cn(
-        'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
-        !isActive && 'cursor-pointer hover:bg-white/[0.04]',
-        isActive && 'bg-white/[0.06] border-white/25',
-        isContextMuted && 'bg-white/[0.02] border-white/10',
+        'feed-post',
+        presentation === 'detail' && 'feed-post--detail',
+        isCompact && 'feed-post--compact',
+        !isActive && 'feed-post--clickable',
+        isActive && 'feed-post--active',
+        isContextMuted && 'feed-post--context',
       )}
       onClick={isActive ? undefined : handleOpen}
       onKeyDown={isActive ? undefined : (event) => {
+        if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           handleOpen();
@@ -282,234 +229,183 @@ const ReplyToFeedItem = memo(({
       tabIndex={isActive ? undefined : 0}
       aria-label={isActive ? undefined : t('common:aria.openPost')}
     >
-      {/* Top-right on-chain button */}
-      {item.tx_hash && (
-        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
-          <BlockchainInfoPopover
-            txHash={item.tx_hash}
-            createdAt={item.created_at as unknown as string}
-            sender={item.sender_address}
-            contract={(item as any).contract_address}
-            postId={String(item.id)}
-            className={cn('px-2', isCompact && 'px-0')}
-            showLabel={!isCompact}
-          />
+      <PostAuthorHeader item={item} displayName={displayName} compact={isCompact} />
+      <div className="feed-post__content">
+        {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
+        {tokenHolderLabel && (
+        <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
+          <span className="text-[13px]" aria-hidden="true">🏅</span>
+          <span className="uppercase tracking-wide">{t('social:holder')}</span>
+          <span className="text-emerald-100/80">
+            ·
+            {tokenHolderLabel}
+          </span>
         </div>
-      )}
-      <div className="absolute bottom-4 right-2 md:bottom-5 md:right-5 z-10">
-        <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
-      </div>
-      {/* Main row: avatar left, content right */}
-      <div className="flex gap-3 items-start">
-        <div className="flex-shrink-0 pt-0.5">
-          {isCompact ? (
-            <AddressAvatarWithChainName address={authorAddress} size={36} showAddressAndChainName={false} variant="feed" />
-          ) : (
-            <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
-          )}
-        </div>
+        )}
 
-        <div className={cn('flex-1 min-w-0', item.tx_hash && (isCompact ? 'pr-9' : 'pr-24'))}>
-          {/* Header: keep named-user layout; show address-first layout for unnamed users */}
-          <div className="min-w-0">
-            {hasDisplayName ? (
-              <>
-                <div className={cn('flex items-center min-w-0', isCompact ? 'gap-1.5' : 'gap-2')}>
-                  <div className={cn('font-semibold text-white truncate min-w-0', isCompact ? 'text-[14px]' : 'text-[15px]')}>
-                    {displayName}
-                  </div>
-                  <span className="text-white/50 shrink-0">·</span>
-                  {item.tx_hash ? (
-                    <BlockchainInfoPopover
-                      txHash={(item as any).tx_hash}
-                      createdAt={item.created_at as unknown as string}
-                      sender={(item as any).sender_address}
-                      contract={(item as any).contract_address}
-                      postId={String(item.id)}
-                      triggerContent={(
-                        <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                          {compactTime(item.created_at as unknown as string)}
-                        </span>
-                      )}
-                    />
-                  ) : (
-                    <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-white/60 font-mono min-w-0">
-                  <span className="truncate">{formatAddress(authorAddress, 10, false)}</span>
-                  <InlineCopyButton value={authorAddress} className="shrink-0" />
-                </div>
-              </>
-            ) : (
-              unnamedHeader
-            )}
-          </div>
-
-          {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
-          {tokenHolderLabel && (
-            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
-              <span className="text-[13px]" aria-hidden="true">🏅</span>
-              <span className="uppercase tracking-wide">{t('social:holder')}</span>
-              <span className="text-emerald-100/80">
-                ·
-                {tokenHolderLabel}
-              </span>
+        {/* Parent context header placed under author row, before reply text */}
+        {parentId && !hideParentContext && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, '');
+            onOpenPost(slugOrId);
+          }}
+          className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
+          title={t('openParent')}
+        >
+          <div className="flex items-end mb-1 min-w-0">
+            <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('replyingTo')}</span>
+            <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
+              <div className="translate-y-[2px]">
+                <AddressAvatarWithChainName
+                  address={parent?.sender_address || authorAddress}
+                  size={16}
+                  showAddressAndChainName={false}
+                  variant="feed"
+                />
+              </div>
+              <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
+                {parent ? ((profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? '').trim() || formatAddress(parent.sender_address, 6, true)) : t('parent')}
+              </div>
             </div>
-          )}
+            <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
+            <div className="text-[11px] text-white/60 whitespace-nowrap shrink-0">
+              {parent?.created_at ? (
+                <span title={fullTimestamp(parent.created_at as unknown as string)}>
+                  {compactTime(parent.created_at as unknown as string)}
+                </span>
+              ) : '—'}
+            </div>
+          </div>
+          <div className="text-[12px] text-white line-clamp-2">
+            {parentError || !parent
+              ? t('parentUnavailable')
+              : linkify(parent.content, {
+                knownChainNames: new Set(
+                  Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
+                ),
+                hashtagVariant: 'post-inline',
+                // Clamped preview inside a <button>: inline pill only, never the block row.
+                tokenTagInline: true,
+                trendMentions: (parent as any)?.trend_mentions,
+                hashtagAllowedChars,
+              })}
+          </div>
+          <div className="mt-1 text-[11px] text-white/70">{t('showPost')}</div>
+        </button>
+        )}
 
-          {/* Parent context header placed under author row, before reply text */}
-          {parentId && !hideParentContext && (
+        <PostContent
+          content={item.content}
+          options={{
+            knownChainNames: new Set(
+              Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
+            ),
+            hashtagVariant: 'post-inline',
+            trendMentions: item.trend_mentions,
+            hashtagAllowedChars,
+          }}
+        />
+
+        {/* Link preview (YouTube embed or OG card) */}
+        <PostLinkPreview content={item.content || ''} />
+
+        {/* Media */}
+        {media.length > 0 && (
+        <div
+          className={cn(
+            'feed-post__media mt-3 grid gap-2 rounded-xl overflow-hidden',
+            media.length === 1 && 'grid-cols-1',
+            media.length === 2 && 'grid-cols-2',
+            media.length >= 3 && 'grid-cols-2',
+          )}
+        >
+          {media.slice(0, 4).map((m: string) => (
+            media.length === 1 ? (
+              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={presentation === 'detail' ? 320 : '50vh'} />
+            ) : (
+              <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={200} />
+            )
+          ))}
+        </div>
+        )}
+
+        {presentation === 'detail' && (
+          <time className="feed-post__published" dateTime={item.created_at}>
+            {new Date(item.created_at).toLocaleString(i18n.resolvedLanguage, {
+              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            })}
+          </time>
+        )}
+
+        {/* Actions */}
+        <div className="feed-post__actions">
+          <div className="feed-post__engagement">
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation();
-                const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, '');
-                onOpenPost(slugOrId);
+                if (onReply) {
+                  e.stopPropagation();
+                  onReply();
+                } else if (allowInlineRepliesToggle) {
+                  e.stopPropagation();
+                  toggleReplies();
+                  if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
+                } else {
+                  e.stopPropagation();
+                  handleOpen();
+                }
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
-              title={t('openParent')}
+              className="feed-post__reply"
+              aria-label={onReply ? t('social:postLayout.reply') : t('social:postLayout.replies', { count: typeof descendantCount === 'number' ? descendantCount : commentCount })}
+              aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
+              aria-controls={onReply ? 'post-reply-composer' : replyControls}
             >
-              <div className="flex items-end mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('replyingTo')}</span>
-                <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
-                  <div className="translate-y-[2px]">
-                    <AddressAvatarWithChainName
-                      address={parent?.sender_address || authorAddress}
-                      size={16}
-                      showAddressAndChainName={false}
-                      variant="feed"
-                    />
-                  </div>
-                  <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? ((profileDisplayNames?.[parent.sender_address] ?? chainNames?.[parent.sender_address] ?? '').trim() || formatAddress(parent.sender_address, 6, true)) : t('parent')}
-                  </div>
-                </div>
-                <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
-                <div className="text-[11px] text-white/60 whitespace-nowrap shrink-0">
-                  {parent?.created_at ? (
-                    <span title={fullTimestamp(parent.created_at as unknown as string)}>
-                      {compactTime(parent.created_at as unknown as string)}
-                    </span>
-                  ) : '—'}
-                </div>
-              </div>
-              <div className="text-[12px] text-white line-clamp-2">
-                {parentError || !parent
-                  ? t('parentUnavailable')
-                  : linkify(parent.content, {
-                    knownChainNames: new Set(
-                      Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
-                    ),
-                    hashtagVariant: 'post-inline',
-                    // Clamped preview inside a <button>: inline pill only, never the block row.
-                    tokenTagInline: true,
-                    trendMentions: (parent as any)?.trend_mentions,
-                    hashtagAllowedChars,
-                  })}
-              </div>
-              <div className="mt-1 text-[11px] text-white/70">{t('showPost')}</div>
+              <MessageCircle className="w-[15px] h-[15px]" strokeWidth={2} />
+              <span>{typeof descendantCount === 'number' ? descendantCount : commentCount}</span>
+              <span>{t('social:postLayout.reply')}</span>
             </button>
-          )}
-
-          {/* Body — sh-pill-container scopes the container query that promotes a wide
-              token pill to its own block on a narrow column. container-type lives here, on
-              the body wrapper, never on the card root (which carries popovers and menus). */}
-          <div className="mt-2 text-[15px] text-foreground leading-snug sh-pill-container">
-            {linkify(item.content, {
-              knownChainNames: new Set(
-                Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
-              ),
-              hashtagVariant: 'post-inline',
-              trendMentions: (item as any)?.trend_mentions,
-              hashtagAllowedChars,
-            })}
+            <PostTipButton toAddress={authorAddress} postId={String(postId)} />
           </div>
-
-          {/* Link preview (YouTube embed or OG card) */}
-          <PostLinkPreview content={item.content || ''} />
-
-          {/* Media */}
-          {media.length > 0 && (
-            <div
-              className={cn(
-                'mt-3 grid gap-2 rounded-xl overflow-hidden',
-                media.length === 1 && 'grid-cols-1',
-                media.length === 2 && 'grid-cols-2',
-                media.length >= 3 && 'grid-cols-2',
-              )}
-            >
-              {media.slice(0, 4).map((m: string) => (
-                media.length === 1 ? (
-                  <AspectMedia key={`${postId}-${m}`} src={m} alt={t('aria.media')} />
-                ) : (
-                  <AspectMedia key={`${postId}-${m}`} src={m} alt={t('aria.media')} maxHeight={200} />
-                )
-              ))}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="mt-3 flex items-center pr-10 md:pr-12">
-            <div className="inline-flex items-center gap-5 text-[13px] text-white/70">
-              <button
-                type="button"
-                onClick={(e) => {
-                  if (allowInlineRepliesToggle) {
-                    e.stopPropagation();
-                    toggleReplies();
-                    if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
-                  } else {
-                    e.stopPropagation();
-                    handleOpen();
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 hover:text-white"
-                aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
-                aria-controls={`replies-${postId}`}
-              >
-                <MessageCircle className="w-[15px] h-[15px]" strokeWidth={2} />
-                {typeof descendantCount === 'number' ? descendantCount : commentCount}
-              </button>
-              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
-            </div>
-          </div>
-
-          {/* Nested replies for this item */}
-          {showReplies && (
-            <div id={`replies-${postId}`} className="mt-3 grid gap-2 pl-3 md:pl-5 border-l border-white/10">
-              {childLoading && (
-                <div className="text-[13px] text-white/70">{t('loadingReplies')}</div>
-              )}
-              {childError && (
-                <div className="text-[13px] text-white/70">
-                  {t('social:errorLoadingReplies')}
-                  {' '}
-                  <button
-                    type="button"
-                    className="underline"
-                    onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}
-                  >
-                    {t('buttons.retry')}
-                  </button>
-                </div>
-              )}
-              {!childLoading && !childError && childReplies.length === 0 && (
-                <div className="text-[13px] text-white/60">{t('noRepliesYet')}</div>
-              )}
-              {childReplies.map((reply: PostDto) => (
-                <ReplyToFeedItem
-                  key={reply.id}
-                  item={reply}
-                  commentCount={reply.total_comments ?? 0}
-                  hideParentContext
-                  allowInlineRepliesToggle={false}
-                  onOpenPost={() => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
-                />
-              ))}
-            </div>
-          )}
+          <SharePopover postId={item.id} postSlug={(item as any)?.slug} className="feed-post__share" />
         </div>
+
+        {/* Nested replies for this item */}
+        {showReplies && (
+        <div id={`replies-${postId}`} className="mt-3 grid gap-2 pl-3 md:pl-5 border-l border-white/10">
+          {childLoading && (
+          <div className="text-[13px] text-white/70">{t('loadingReplies')}</div>
+          )}
+          {childError && (
+          <div className="text-[13px] text-white/70">
+            {t('social:errorLoadingReplies')}
+            {' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}
+            >
+              {t('common:buttons.retry')}
+            </button>
+          </div>
+          )}
+          {!childLoading && !childError && childReplies.length === 0 && (
+          <div className="text-[13px] text-white/60">{t('noRepliesYet')}</div>
+          )}
+          {childReplies.map((reply: PostDto) => (
+            <ReplyToFeedItem
+              key={reply.id}
+              item={reply}
+              commentCount={reply.total_comments ?? 0}
+              hideParentContext
+              allowInlineRepliesToggle={false}
+              onOpenPost={() => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
+            />
+          ))}
+        </div>
+        )}
       </div>
     </article>
   );

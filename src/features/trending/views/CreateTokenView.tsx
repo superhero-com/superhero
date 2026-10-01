@@ -508,7 +508,7 @@ const CreateTokenView = () => {
           <div className="stagger-children">
             <div className="h-8 bg-gradient-to-r from-gray-700 to-gray-600 rounded w-1/3 mb-4 animate-shimmer" />
             <div className="h-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded w-2/3 mb-8 animate-shimmer" />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
               <div className="space-y-4">
                 {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey, idx) => (
                   <div
@@ -533,7 +533,7 @@ const CreateTokenView = () => {
           <ConnectWalletButton
             block
             label={t('trending.createToken.submit.connectWalletToCreate')}
-            className="w-full"
+            className="ui-wrap-action w-full"
             muted
           />
           <p className="text-sm text-white/70 text-center">
@@ -545,7 +545,7 @@ const CreateTokenView = () => {
             size="md"
             outlined
             onClick={() => { window.open('https://wallet.superhero.com', '_blank'); }}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+            className="ui-secondary ui-wrap-action w-full"
           >
             {t('trending.createToken.submit.getSuperheroWallet')}
           </AeButton>
@@ -570,43 +570,43 @@ const CreateTokenView = () => {
         size="lg"
         type="submit"
         disabled={isCreating || !canSubmitName}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-14 py-3 relative overflow-hidden group hover-lift"
+        className="ui-primary w-full h-12 py-3 relative overflow-hidden group"
       >
         <span className="relative z-10 flex items-center justify-center gap-2">
           {!isCreating && <RocketIcon className="w-5 h-5 group-hover:animate-bounce" />}
           <span>{t('trending.createToken.submit.createToken')}</span>
-          {!isCreating && <SparkleIcon className="w-4 h-4 animate-sparkle" />}
+          {!isCreating && <SparkleIcon className="w-4 h-4" />}
         </span>
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </AeButton>
     );
   };
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
+    <div className="ui-page create-token-page max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-2 mb-6 mx-0 md:mx-4">
         <div className="max-w-[1400px] mx-auto p-0 md:px-6 md:pb-6 md:pt-3">
           <PageSpaceHero
-            className="mb-6 px-6 py-10 md:px-10 md:py-14 text-center xl:text-left"
+            className="ui-hero mb-6 text-left"
             supernovaColor="rgba(255,94,188,.5)"
           >
-            <h3 className="text-3xl md:text-5xl font-bold leading-tight text-white mb-3 animate-slideDown">
+            <h3 className="ui-page-title mb-3">
               {t('trending.createToken.hero.line1')}
               <br />
               {t('trending.createToken.hero.line2')}
               <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift inline-block">
+              <span className="text-[#a8caff] inline-block">
                 {t('trending.createToken.hero.line3')}
               </span>
             </h3>
-            <p className="text-white/75 text-base md:text-lg leading-relaxed animate-slideUp animate-delay-200 max-w-2xl mx-auto xl:mx-0">
+            <p className="text-white/75 text-base md:text-lg leading-relaxed animate-slideUp animate-delay-200 max-w-2xl mx-0">
               {t('trending.createToken.hero.subtitle')}
             </p>
           </PageSpaceHero>
 
-          <div className="flex flex-col xl:flex-row gap-6 xl:items-start xl:justify-between">
-            <div className="w-full xl:w-[620px] xl:flex-shrink-0 xl:order-2 animate-scaleIn animate-delay-200">
-              <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative transition-all duration-300 p-5 md:p-8 shadow-2xl hover-lift">
+          <div className="flex flex-col 2xl:flex-row gap-6 2xl:items-start 2xl:justify-between">
+            <div className="w-full 2xl:w-[620px] 2xl:flex-shrink-0 2xl:order-2 animate-scaleIn animate-delay-200">
+              <div className="ui-panel p-5 md:p-6">
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -662,7 +662,7 @@ const CreateTokenView = () => {
                                   && setShowLanguageDropdown(!showLanguageDropdown)}
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                                   hasCollectionChoice
-                                    ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30 hover:bg-purple-500/30 cursor-pointer'
+                                    ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 cursor-pointer'
                                     : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 cursor-default'
                                 }`}
                                 disabled={!hasCollectionChoice}
@@ -697,7 +697,7 @@ const CreateTokenView = () => {
                                       }}
                                       className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                                         collection.id === selectedCollection?.id
-                                          ? 'bg-purple-500/20 text-white font-medium'
+                                          ? 'bg-blue-500/20 text-white font-medium'
                                           : 'text-white/80 hover:bg-white/5'
                                       }`}
                                     >
@@ -808,7 +808,7 @@ const CreateTokenView = () => {
                         <button
                           type="button"
                           onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
-                          className="text-xs underline text-purple-300 hover:text-purple-200"
+                          className="text-xs underline text-blue-300 hover:text-blue-200"
                         >
                           {t('trending.createToken.switchTo', { target: inputMode === 'AE' ? t('trending.createToken.tokensUnit') : 'AE' })}
                         </button>
@@ -829,7 +829,7 @@ const CreateTokenView = () => {
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
-                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#6199ff] focus:outline-none shadow-none"
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">AE</div>
                           </div>
@@ -863,7 +863,7 @@ const CreateTokenView = () => {
                               value={formatThousands(initialBuyVolume)}
                               onChange={(e) => setInitialBuyVolume(sanitizeNumeric(e.target.value))}
                               placeholder="0.0"
-                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#6199ff] focus:outline-none shadow-none"
                             />
                             <div className="text-white font-extrabold text-2xl leading-none">{t('trending.createToken.tokensUnitUpper')}</div>
                           </div>
@@ -913,23 +913,23 @@ const CreateTokenView = () => {
             </div>
 
             {/* Explainer guide */}
-            <div className="min-w-0 flex-1 xl:order-1">
-              <div className="xl:text-left">
+            <div className="min-w-0 flex-1 2xl:order-1">
+              <div className="2xl:text-left">
 
                 {/* Interactive bonding curve graph */}
-                <div className="mt-8 md:mt-12 xl:mt-0 mb-6">
+                <div className="mt-8 md:mt-12 2xl:mt-0 mb-6">
                   <BondingCurveGraph />
                 </div>
 
-                <div className="bg-[#0d1117]/10 backdrop-blur-xl border border-cyan-500/20 rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 hover-lift animate-scaleIn animate-delay-300">
-                  <h3 className="text-xl font-bold text-white mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent animate-gradientShift">
+                <div className="ui-panel p-5 md:p-6">
+                  <h3 className="text-lg font-semibold text-white mb-5">
                     {t('trending.createToken.explainer.title')}
                   </h3>
 
                   {/* Explainer flow */}
                   <div className="space-y-4">
                     {/*  1: Price Discovery */}
-                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-white/[0.02] border border-white/10">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
                         <TrendingUp className="w-5 h-5 text-cyan-400" />
                       </div>
@@ -943,9 +943,9 @@ const CreateTokenView = () => {
                     </div>
 
                     {/*  2: Bonding Curve Math */}
-                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/5 border border-purple-500/20">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-                        <Sigma className="w-5 h-5 text-purple-400" />
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-white/[0.02] border border-white/10">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                        <Sigma className="w-5 h-5 text-blue-300" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -970,21 +970,21 @@ const CreateTokenView = () => {
                             {t('trending.createToken.explainer.supplyDescription')}
                           </p>
                           <p className="font-medium text-white/80">{t('trending.createToken.explainer.thisMeans')}</p>
-                          <div className="space-y-2 pl-4 border-l-2 border-purple-500/30">
+                          <div className="space-y-2 pl-4 border-l-2 border-blue-500/30">
                             <p className="flex items-start gap-2">
-                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span className="text-blue-300 flex-shrink-0 mt-0.5">•</span>
                               <span>{t('trending.createToken.explainer.bullet1')}</span>
                             </p>
                             <p className="flex items-start gap-2">
-                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span className="text-blue-300 flex-shrink-0 mt-0.5">•</span>
                               <span>{t('trending.createToken.explainer.bullet2')}</span>
                             </p>
                             <p className="flex items-start gap-2">
-                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span className="text-blue-300 flex-shrink-0 mt-0.5">•</span>
                               <span>{t('trending.createToken.explainer.bullet3')}</span>
                             </p>
                             <p className="flex items-start gap-2">
-                              <span className="text-purple-400 flex-shrink-0 mt-0.5">•</span>
+                              <span className="text-blue-300 flex-shrink-0 mt-0.5">•</span>
                               <span>{t('trending.createToken.explainer.bullet4')}</span>
                             </p>
                           </div>
@@ -993,7 +993,7 @@ const CreateTokenView = () => {
                     </div>
 
                     {/*  3: DAO Treasury */}
-                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20">
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-white/[0.02] border border-white/10">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
                         <Landmark className="w-5 h-5 text-orange-400" />
                       </div>
@@ -1007,7 +1007,7 @@ const CreateTokenView = () => {
                     </div>
 
                     {/*  4: Fees */}
-                    <div className="flex gap-4 items-start p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                    <div className="flex gap-4 items-start p-4 rounded-xl bg-white/[0.02] border border-white/10">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
                         <Coins className="w-5 h-5 text-emerald-400" />
                       </div>

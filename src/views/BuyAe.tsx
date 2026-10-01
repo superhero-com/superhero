@@ -89,18 +89,18 @@ export default function BuyAe() {
   const { t } = useTranslation('buyAe');
 
   return (
-    <div className="max-w-[1100px] mx-auto p-6 text-white">
+    <div className="ui-page get-ae-page max-w-[1100px] mx-auto p-4 md:p-6 text-white">
       <Head
         title={t('pageTitle')}
         description={t('pageDescription')}
         canonicalPath="/get-ae"
       />
 
-      <div className="overflow-hidden rounded-3xl p-7 bg-gradient-to-br from-cyan-500/20 via-white/8 to-purple-500/15 text-white mb-5 border border-white/10 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+      <div className="ui-hero mb-5">
         <div className="flex flex-col">
           <div className="max-w-2xl">
             <div className="text-sm opacity-90">{t('eyebrow')}</div>
-            <div className="text-[34px] font-extrabold leading-tight">{t('heroTitle')}</div>
+            <div className="ui-page-title mt-2">{t('heroTitle')}</div>
             <div className="text-[15px] opacity-90 mt-2 leading-relaxed">
               {t('heroDescription')}
             </div>
@@ -146,7 +146,7 @@ export default function BuyAe() {
 
           <Card id="before-you-buy">
             <div className="flex items-center gap-2 font-extrabold mb-2">
-              <ShieldCheck className="w-5 h-5 text-cyan-300" />
+              <ShieldCheck className="w-5 h-5 text-blue-300" />
               {t('safetyTitle')}
             </div>
             <ul className="m-0 pl-4.5 leading-relaxed text-[15px] opacity-90">
@@ -170,7 +170,7 @@ const Badge = ({ label }: { label: string }) => (
 const Card = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <section
     id={id}
-    className="p-4 border border-cyan-200/20 rounded-xl backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    className="ui-panel p-5"
   >
     {children}
   </section>
@@ -193,8 +193,8 @@ const MethodSectionCard = ({
     <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <div className="flex items-center gap-2 font-extrabold text-xl">
-          <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-cyan-300/15 border border-cyan-300/25">
-            <Icon className="w-5 h-5 text-cyan-300" />
+          <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-300/10 border border-blue-300/20">
+            <Icon className="w-5 h-5 text-blue-300" />
           </span>
           {title}
         </div>
@@ -207,7 +207,7 @@ const MethodSectionCard = ({
 
 const MethodIconBox = ({ Icon }: { Icon: MethodIcon }) => (
   <div className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-white/10 border border-white/15">
-    <Icon className="w-4 h-4 text-cyan-300" />
+    <Icon className="w-4 h-4 text-blue-300" />
   </div>
 );
 
@@ -216,7 +216,7 @@ const MethodCard = ({ method }: { method: MethodDef }) => {
   const action = method.actionKey ? t(method.actionKey) : undefined;
 
   return (
-    <div className="h-full border border-white/10 rounded-2xl bg-gradient-to-b from-white/8 to-white/4 p-4 transition-transform hover:-translate-y-0.5 hover:border-cyan-300/35">
+    <div className="h-full border border-white/10 rounded-xl bg-white/[0.02] p-4 transition-colors hover:border-blue-300/35">
       <div className="flex items-start gap-3 h-full">
         <MethodIconBox Icon={method.Icon} />
         <div className="min-w-0 flex-1 flex flex-col h-full">
@@ -241,7 +241,7 @@ const MethodAction = ({ method, label }: { method: MethodDef; label: string }) =
     'font-semibold no-underline transition-colors gap-1.5 no-underline text-center',
     method.disabled
       ? 'bg-white/10 text-white/45 cursor-not-allowed'
-      : 'bg-gradient-to-r from-emerald-400 to-cyan-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5',
+      : 'ui-secondary py-2.5 px-3 text-xs font-semibold cursor-pointer',
   ].join(' ');
 
   if (method.disabled) {

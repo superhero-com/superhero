@@ -1,0 +1,44 @@
+.dex-pool-header {
+  .pool-summary-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .pool-marks { display: flex; flex-shrink: 0; padding-inline-end: 5px; }
+  .pool-marks span {
+    width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px;
+    background: linear-gradient(135deg, #2b4e82, #1c2c46); border: 1px solid #7094c14a;
+    font-size: 22px; font-weight: 600; color: #c7dcff; box-shadow: 0 0 0 3px var(--surface);
+  }
+  .pool-marks span + span { margin-inline-start: -9px; background: linear-gradient(135deg, #304e50, #1c3036); color: #b4dbda; }
+  .pool-marks img { width: 28px; height: 28px; }
+  .token-identity h1 i { font-style: normal; color: var(--muted); font-weight: 400; }
+  .token-identity h1 { font-weight: 650; }
+  .pool-network { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .pool-network i { width: 5px; height: 5px; border-radius: 50%; background: #70a4ef; }
+  .pool-token-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 21px; }
+  .pool-token-links a {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: 8px; text-decoration: none; color: var(--text); font-size: 11px; min-height: 44px; min-width: 0;
+  }
+  .pool-token-links bdi { overflow-wrap: anywhere; }
+  .pool-token-links a span { color: var(--muted); font-size: 10px; }
+  .pool-token-links svg { width: 12px; height: 12px; color: var(--muted); flex-shrink: 0; }
+  .pool-token-links a:hover { background: var(--selected); border-color: #5e8bc370; }
+  .token-contract { margin: 14px 0 18px; }
+  .token-actions .token-primary { min-width: 164px; }
+  @container dex-token-header (max-width: 560px) {
+    .pool-summary-top { align-items: flex-start; }
+    .pool-network { display: none; }
+    .pool-marks span { width: 36px; height: 40px; border-radius: 12px; font-size: 19px; }
+    .pool-marks img { width: 24px; height: 24px; }
+    .token-identity { gap: 9px; }
+    .token-identity-title { gap: 6px; }
+    .token-identity h1 { font-size: 21px; }
+    .token-identity-title > span { font-size: 8px; }
+    .token-identity p { font-size: 11px; }
+    .token-actions .token-primary { min-width: 0; }
+    .token-actions .token-tertiary { grid-column: 1 / -1; }
+    .pool-token-links { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 16px; }
+    .pool-token-links a { padding: 8px; gap: 5px; }
+    .pool-token-links bdi { min-width: 0; max-width: 40%; }
+    .pool-token-links a span { min-width: 0; overflow-wrap: anywhere; }
+    .token-contract { margin-bottom: 13px; }
+  }
+}

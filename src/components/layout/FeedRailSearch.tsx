@@ -27,11 +27,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, type NavigateFunction } from 'react-router-dom';
 import { formatAddress } from '@/utils/address';
+import './RailCards.css';
+import './FeedRailSearch.css';
 
-const FEED_RAIL_DROPDOWN_PANEL_CLASS = [
-  'absolute z-[60] left-0 right-0 mt-2 rounded-xl border border-white/10',
-  'bg-[#0f1118] shadow-lg max-h-[min(70vh,33rem)] overflow-y-auto overflow-x-hidden',
-].join(' ');
+const FEED_RAIL_DROPDOWN_PANEL_CLASS = 'feed-rail-search__panel';
 
 function feedNavTrendToken(navigate: NavigateFunction, nameOrAddress: string) {
   navigate(`/trends/tokens/${encodeURIComponent(nameOrAddress)}`);
@@ -105,12 +104,12 @@ const FeedRailRecentRow = ({
     case 'query':
       main = (
         <>
-          <SearchIcon className="w-4 h-4 text-[#8bc9ff] flex-shrink-0 mt-0.5" aria-hidden />
-          <div className="min-w-0 flex-1 text-left">
-            <div className="text-[13px] font-semibold text-white truncate">
+          <SearchIcon className="w-4 h-4 feed-search-accent flex-shrink-0 mt-0.5" aria-hidden />
+          <div className="min-w-0 flex-1 text-start">
+            <div className="text-[13px] font-semibold feed-search-text truncate">
               {entry.query}
             </div>
-            <div className="text-[10px] text-white/45 mt-0.5">
+            <div className="text-[11px] feed-search-muted mt-0.5">
               {t('feedRailSearch.searchOnExplore')}
             </div>
           </div>
@@ -120,14 +119,14 @@ const FeedRailRecentRow = ({
     case 'token': {
       const addr = entry.address ? formatAddress(entry.address, 12, false) : '—';
       main = (
-        <div className="min-w-0 flex-1 text-left w-full">
-          <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+        <div className="min-w-0 flex-1 text-start w-full">
+          <div className="text-[11px] font-medium feed-search-accent mb-1">
             {t('feedRailSearch.trend')}
           </div>
-          <div className="text-[15px] font-semibold text-white leading-tight">
+          <div className="text-[15px] font-semibold feed-search-text leading-tight">
             {trendHashtag({ symbol: entry.symbol, name: entry.name })}
           </div>
-          <div className="text-[11px] text-white/45 font-mono tracking-tight mt-0.5 truncate">
+          <div className="text-[11px] feed-search-muted font-mono tracking-tight mt-0.5 truncate">
             {addr}
           </div>
         </div>
@@ -144,14 +143,14 @@ const FeedRailRecentRow = ({
             borderRadius="50%"
             className="flex-shrink-0 mt-0.5"
           />
-          <div className="min-w-0 flex-1 text-left">
-            <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+          <div className="min-w-0 flex-1 text-start">
+            <div className="text-[11px] font-medium feed-search-accent mb-1">
               {t('feedRailSearch.people')}
             </div>
-            <div className="text-[15px] font-semibold text-white truncate leading-tight">
+            <div className="text-[15px] font-semibold feed-search-text truncate leading-tight">
               {title}
             </div>
-            <div className="text-[11px] text-white/45 font-mono truncate mt-0.5">
+            <div className="text-[11px] feed-search-muted font-mono truncate mt-0.5">
               {formatAddress(entry.address, 14, false)}
             </div>
           </div>
@@ -161,11 +160,11 @@ const FeedRailRecentRow = ({
     }
     case 'post':
       main = (
-        <div className="min-w-0 flex-1 text-left w-full">
-          <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+        <div className="min-w-0 flex-1 text-start w-full">
+          <div className="text-[11px] font-medium feed-search-accent mb-1">
             {t('feedRailSearch.post')}
           </div>
-          <p className="text-[13px] text-white/90 leading-snug line-clamp-4 m-0">
+          <p className="text-[13px] feed-search-text leading-snug line-clamp-4 m-0">
             {entry.preview}
           </p>
         </div>
@@ -176,19 +175,19 @@ const FeedRailRecentRow = ({
   }
 
   const rowFlex = entry.kind === 'user'
-    ? 'flex flex-1 min-w-0 items-start gap-2.5 px-3 py-2.5 text-left bg-transparent border-none cursor-pointer text-white w-full'
-    : 'flex flex-1 min-w-0 items-center gap-2.5 px-3 py-2.5 text-left bg-transparent border-none cursor-pointer text-white w-full';
+    ? 'flex flex-1 min-w-0 items-start gap-2.5 px-3 py-2.5 text-start bg-transparent border-none cursor-pointer feed-search-text w-full'
+    : 'flex flex-1 min-w-0 items-center gap-2.5 px-3 py-2.5 text-start bg-transparent border-none cursor-pointer feed-search-text w-full';
 
   return (
     <div
-      className="flex items-stretch border-b border-white/5 last:border-b-0 hover:bg-white/[0.06] transition-colors"
+      className="flex items-stretch border-b feed-search-divider last:border-b-0 feed-search-hover transition-colors"
     >
       <button type="button" className={rowFlex} onClick={onActivate}>
         {main}
       </button>
       <button
         type="button"
-        className="flex items-center justify-center w-10 shrink-0 text-white/45 hover:text-white hover:bg-white/[0.08] border-none bg-transparent cursor-pointer"
+        className="feed-rail-search__remove flex items-center justify-center w-10 shrink-0 feed-search-muted feed-search-text-hover feed-search-hover border-none bg-transparent cursor-pointer"
         aria-label={recentRemoveAriaLabel(entry, t)}
         onClick={onRemoveClick}
       >
@@ -368,9 +367,9 @@ const FeedRailSearch = () => {
   );
 
   return (
-    <div ref={rootRef} className="relative w-full overflow-visible">
-      <div className="relative">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/45 pointer-events-none" />
+    <div ref={rootRef} className="feed-rail-search">
+      <div className="feed-rail-search__field">
+        <span className="feed-rail-search__icon" aria-hidden="true"><SearchIcon /></span>
         <Input
           type="search"
           aria-label={t('feedRailSearch.inputAria')}
@@ -379,7 +378,7 @@ const FeedRailSearch = () => {
           onKeyDown={onSearchKeyDown}
           onFocus={() => setOpen(true)}
           placeholder={t('feedRailSearch.inputPlaceholder')}
-          className="h-9 rounded-xl border-white/10 bg-white/[0.04] pl-9 pr-2.5 text-xs text-white placeholder:text-white/40 focus-visible:ring-[#1161FE]"
+          className="feed-rail-search__input focus-visible:ring-0"
           autoComplete="off"
         />
       </div>
@@ -391,11 +390,11 @@ const FeedRailSearch = () => {
           aria-label={t('feedRailSearch.recentRegionAria')}
         >
           {recentItems.length > 0 ? (
-            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10">
-              <span className="text-[15px] font-bold text-white">{t('feedRailSearch.recent')}</span>
+            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b feed-search-divider">
+              <span className="text-[15px] font-bold feed-search-text">{t('feedRailSearch.recent')}</span>
               <button
                 type="button"
-                className="text-[13px] font-semibold text-[#1161FE] hover:text-[#3d7efe] bg-transparent border-none p-0 cursor-pointer shrink-0"
+                className="feed-rail-search__clear text-[13px] font-semibold text-[#1161FE] hover:text-[#3d7efe] bg-transparent border-none p-0 cursor-pointer shrink-0"
                 onClick={() => clearAll()}
               >
                 {t('feedRailSearch.clearAll')}
@@ -403,7 +402,7 @@ const FeedRailSearch = () => {
             </div>
           ) : null}
           {recentItems.length === 0 ? (
-            <div className="px-3 py-6 text-[13px] text-white/50 text-center leading-snug">
+            <div className="px-3 py-6 text-[13px] feed-search-muted text-center leading-snug">
               {t('feedRailSearch.recentsEmpty')}
             </div>
           ) : (
@@ -435,35 +434,35 @@ const FeedRailSearch = () => {
               e.preventDefault();
               submitSearchToExplore();
             }}
-            className="flex items-center gap-2.5 px-3 py-2.5 border-b border-white/10 hover:bg-white/[0.06] transition-colors text-left no-underline w-full box-border"
+            className="flex items-center gap-2.5 px-3 py-2.5 border-b feed-search-divider feed-search-hover transition-colors text-start no-underline w-full box-border"
             aria-label={t('feedRailSearch.exploreSearchAria', { query: activeSearchLabel })}
           >
-            <SearchIcon className="w-4 h-4 text-[#8bc9ff] flex-shrink-0" aria-hidden />
+            <SearchIcon className="w-4 h-4 feed-search-accent flex-shrink-0" aria-hidden />
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-white truncate">
+              <div className="text-[13px] font-semibold feed-search-text truncate">
                 {activeSearchLabel}
               </div>
-              <div className="text-[10px] text-white/45 mt-0.5">
+              <div className="text-[11px] feed-search-muted mt-0.5">
                 {t('feedRailSearch.searchOnExplore')}
               </div>
             </div>
           </Link>
 
           {hasQuery && isFetching ? (
-            <div className="flex items-center justify-center gap-2 py-6 text-xs text-white/60">
+            <div className="flex items-center justify-center gap-2 py-6 text-xs feed-search-muted">
               <Spinner className="w-4 h-4" />
               <span>{t('feedRailSearch.searching')}</span>
             </div>
           ) : null}
 
           {hasQuery && !isFetching && isError ? (
-            <div className="px-3 py-4 text-xs text-white/60 text-center">
+            <div className="px-3 py-4 text-xs feed-search-muted text-center">
               {t('feedRailSearch.searchFailed')}
             </div>
           ) : null}
 
           {hitsAreForActiveQuery && !isFetching && !isError && items.length === 0 ? (
-            <div className="px-3 py-4 text-xs text-white/60 text-center">
+            <div className="px-3 py-4 text-xs feed-search-muted text-center">
               {t('feedRailSearch.noResults')}
             </div>
           ) : null}
@@ -477,17 +476,17 @@ const FeedRailSearch = () => {
                   <button
                     key={feedRailRowKey(row, index)}
                     type="button"
-                    className="w-full text-left px-3 py-2.5 border-b border-white/5 last:border-b-0 hover:bg-white/[0.06] transition-colors"
+                    className="w-full text-start px-3 py-2.5 border-b feed-search-divider last:border-b-0 feed-search-hover transition-colors"
                     onPointerDownCapture={capturePickSearchTerm}
                     onClick={() => go(row)}
                   >
-                    <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+                    <div className="text-[11px] font-medium feed-search-accent mb-1">
                       {t('feedRailSearch.trend')}
                     </div>
-                    <div className="text-[15px] font-semibold text-white leading-tight">
+                    <div className="text-[15px] font-semibold feed-search-text leading-tight">
                       {trendHashtag(token)}
                     </div>
-                    <div className="text-[11px] text-white/45 font-mono tracking-tight mt-0.5 truncate">
+                    <div className="text-[11px] feed-search-muted font-mono tracking-tight mt-0.5 truncate">
                       {addr}
                     </div>
                   </button>
@@ -501,7 +500,7 @@ const FeedRailSearch = () => {
                   <button
                     key={feedRailRowKey(row, index)}
                     type="button"
-                    className="w-full flex items-start gap-2.5 px-3 py-2.5 border-b border-white/5 last:border-b-0 hover:bg-white/[0.06] transition-colors text-left"
+                    className="w-full flex items-start gap-2.5 px-3 py-2.5 border-b feed-search-divider last:border-b-0 feed-search-hover transition-colors text-start"
                     onPointerDownCapture={capturePickSearchTerm}
                     onClick={() => go(row)}
                   >
@@ -512,13 +511,13 @@ const FeedRailSearch = () => {
                       className="flex-shrink-0 mt-0.5"
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+                      <div className="text-[11px] font-medium feed-search-accent mb-1">
                         {t('feedRailSearch.people')}
                       </div>
-                      <div className="text-[15px] font-semibold text-white truncate leading-tight">
+                      <div className="text-[15px] font-semibold feed-search-text truncate leading-tight">
                         {title}
                       </div>
-                      <div className="text-[11px] text-white/45 font-mono truncate mt-0.5">
+                      <div className="text-[11px] feed-search-muted font-mono truncate mt-0.5">
                         {formatAddress(u.address, 14, false)}
                       </div>
                     </div>
@@ -531,14 +530,14 @@ const FeedRailSearch = () => {
                 <button
                   key={feedRailRowKey(row, index)}
                   type="button"
-                  className="w-full text-left px-3 py-2.5 border-b border-white/5 last:border-b-0 hover:bg-white/[0.06] transition-colors"
+                  className="w-full text-start px-3 py-2.5 border-b feed-search-divider last:border-b-0 feed-search-hover transition-colors"
                   onPointerDownCapture={capturePickSearchTerm}
                   onClick={() => go(row)}
                 >
-                  <div className="text-[11px] font-medium text-[#8bc9ff]/90 mb-1">
+                  <div className="text-[11px] font-medium feed-search-accent mb-1">
                     {t('feedRailSearch.post')}
                   </div>
-                  <p className="text-[13px] text-white/90 leading-snug line-clamp-4 m-0">
+                  <p className="text-[13px] feed-search-text leading-snug line-clamp-4 m-0">
                     {postPreview(p.content, t('feedRailSearch.postPreviewFallback'))}
                   </p>
                 </button>

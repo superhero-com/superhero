@@ -10,7 +10,7 @@ type Props = {
   block?: boolean;
   style?: React.CSSProperties;
   className?: string;
-  variant?: 'default' | 'dex';
+  variant?: 'default' | 'dex' | 'swap';
   muted?: boolean; // greyed-out appearance while still clickable
 };
 
@@ -26,6 +26,20 @@ export const ConnectWalletButton = ({
   const connectingText = t('buttons.connecting');
 
   if (activeAccount) return null;
+
+  if (variant === 'swap') {
+    return (
+      <button
+        type="button"
+        className={cn('swap-primary', className)}
+        onClick={() => openModal({ name: 'connect-wallet' })}
+        disabled={connectingWallet}
+      >
+        <Favicon aria-hidden="true" />
+        {connectingWallet ? connectingText : displayLabel}
+      </button>
+    );
+  }
 
   const dexClasses = cn(
     // Mobile (default): superhero blue with card-like radius

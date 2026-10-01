@@ -167,21 +167,21 @@ const RewardsProgram = () => {
 
       {/* Earnings Summary Banner */}
       {totalEarned > 0 && (
-        <div className="mb-8 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 md:p-8 relative overflow-hidden animate-celebrationPop animate-glowPulse">
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl animate-float" />
+        <div className="mb-8 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 md:p-8 relative overflow-hidden animate-celebrationPop">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
           <div className="absolute top-4 right-4">
-            <TrophyIcon className="w-12 h-12 text-emerald-400 animate-bounce" />
+            <TrophyIcon className="w-12 h-12 text-emerald-400" />
           </div>
           <div className="relative">
             <span className="inline-block text-xs font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-4 animate-shimmer">
-              <CelebrationIcon className="inline w-4 h-4 mr-1 animate-sparkle" />
+              <CelebrationIcon className="inline w-4 h-4 mr-1" />
               {t('rewardsProgram.rewardsEarnedBadge')}
             </span>
             <div className="flex items-center gap-4 mb-3 animate-slideUp">
               <h2 className="text-2xl md:text-3xl font-bold text-white m-0">
                 {t('rewardsProgram.aeEarned', { amount: totalEarned })}
               </h2>
-              <PartyPopper className="w-8 h-8 text-emerald-400 animate-bounce" />
+              <PartyPopper className="w-8 h-8 text-emerald-400" />
             </div>
             <p className="text-sm text-white/50 m-0 max-w-lg animate-fadeIn animate-delay-200">
               {t('rewardsProgram.rewardsSentAutomatically')}
@@ -211,8 +211,8 @@ const RewardsProgram = () => {
         {/* Milestone 1: Link X Account & Post */}
         <div
           className={cn(
-            'bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 animate-scaleIn hover-lift',
-            verifyStatus === 'completed' && 'border-emerald-500/30 animate-glowPulse',
+            'ui-panel relative overflow-hidden p-5 md:p-6 animate-scaleIn',
+            verifyStatus === 'completed' && 'border-emerald-500/30',
             verifyStatus === 'in_progress' && 'border-cyan-500/20',
           )}
         >
@@ -251,7 +251,7 @@ const RewardsProgram = () => {
           </div>
           <div className="flex gap-10 flex-col lg:flex-row">
             <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">{t('rewardsProgram.milestone1.title')}</h3>
+              <h3 className="text-lg md:text-xl font-semibold text-white m-0 mb-2">{t('rewardsProgram.milestone1.title')}</h3>
               <p className="text-sm text-white/70 m-0 mb-5 leading-relaxed max-w-xl">
                 {t('rewardsProgram.milestone1.descIdentity')}
                 <br />
@@ -272,7 +272,7 @@ const RewardsProgram = () => {
                 {t('rewardsProgram.milestone1.descEarn')}
               </p>
             </div>
-            <div className="flex-1 mt-10">
+            <div className="flex-1 mt-4 lg:mt-0">
               {pendingXChange && <XLinkChangePending change={pendingXChange} className="mb-4" />}
               <div className="grid gap-2 mb-8">
                 {verifySteps.map((step, i) => (
@@ -327,7 +327,7 @@ const RewardsProgram = () => {
                   <button
                     type="button"
                     onClick={handleVerifyAction}
-                    className="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25"
+                    className="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ui-primary"
                   >
                     {verifyActionLabel}
                     <ArrowRight className="w-4 h-4" />
@@ -353,9 +353,9 @@ const RewardsProgram = () => {
               </div>
               {verifyStatus === 'completed' && (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium animate-celebrationPop">
-                  <TrophyIcon className="w-5 h-5 animate-bounce" />
+                  <TrophyIcon className="w-5 h-5" />
                   {t('rewardsProgram.milestone1.complete')}
-                  <CelebrationIcon className="w-4 h-4 animate-sparkle" />
+                  <CelebrationIcon className="w-4 h-4" />
                 </div>
               )}
               {statusLoading && !rewardData && (
@@ -368,8 +368,8 @@ const RewardsProgram = () => {
         {/* Milestone 2: Post on X & Earn */}
         <div
           className={cn(
-            'bg-[#0d1117]/10 backdrop-blur-xl border rounded-2xl relative overflow-hidden transition-all duration-300 p-6 md:p-8 animate-scaleIn animate-delay-100 hover-lift',
-            postStatus === 'completed' && 'border-emerald-500/30 animate-glowPulse',
+            'ui-panel relative overflow-hidden p-5 md:p-6 animate-scaleIn animate-delay-100',
+            postStatus === 'completed' && 'border-emerald-500/30',
             postStatus === 'in_progress' && 'border-cyan-500/20',
             postStatus === 'locked' && 'border-white/10 opacity-80',
           )}
@@ -410,7 +410,7 @@ const RewardsProgram = () => {
           </div>
           <div className="flex gap-10 flex-col lg:flex-row">
             <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-bold text-white m-0 mb-2 pr-28">{t('rewardsProgram.milestone2.title')}</h3>
+              <h3 className="text-lg md:text-xl font-semibold text-white m-0 mb-2">{t('rewardsProgram.milestone2.title')}</h3>
               <p className="text-sm text-white/70 m-0 mb-5 leading-relaxed max-w-xl">
                 {t('rewardsProgram.milestone2.desc')}
                 <br />
@@ -453,7 +453,7 @@ const RewardsProgram = () => {
 
               {streakDays > 0 && (
                 <p className="text-xs text-cyan-300/70 text-right mb-2 flex items-center gap-1 justify-end animate-slideDown">
-                  <FlameIcon className="w-4 h-4 text-orange-400 animate-float" />
+                  <FlameIcon className="w-4 h-4 text-orange-400" />
                   {t('rewardsProgram.milestone2.currentStreak', { days: streakDays, total: STREAK_TOTAL })}
                 </p>
               )}
@@ -493,7 +493,7 @@ const RewardsProgram = () => {
                         'ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5',
                         postStatus === 'locked'
                           ? 'bg-white/10 cursor-not-allowed opacity-50'
-                          : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0',
+                          : 'ui-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0',
                       )}
                     >
                       {linkLoading ? t('rewardsProgram.milestone2.openingWallet') : t('rewardsProgram.milestone2.postOnX')}
@@ -523,9 +523,9 @@ const RewardsProgram = () => {
               </p>
               {postStatus === 'completed' && (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium animate-celebrationPop success-celebration">
-                  <TrophyIcon className="w-5 h-5 animate-bounce" />
+                  <TrophyIcon className="w-5 h-5" />
                   {t('rewardsProgram.milestone2.complete', { amount: rewardedPostCount * tierAe })}
-                  <CelebrationIcon className="w-4 h-4 animate-sparkle" />
+                  <CelebrationIcon className="w-4 h-4" />
                 </div>
               )}
             </div>

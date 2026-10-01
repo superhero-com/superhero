@@ -333,11 +333,13 @@ export async function getPairAddress(
   factory: any,
   tokenA: string,
   tokenB: string,
+  strict = false,
 ): Promise<string | null> {
   try {
     const { decodedResult } = await factory.get_pair(tokenA, tokenB);
     return decodedResult || null;
-  } catch {
+  } catch (error) {
+    if (strict) throw error;
     return null;
   }
 }
@@ -347,13 +349,14 @@ export async function getPairInfo(
   factory: any,
   tokenA: string,
   tokenB: string,
+  strict = false,
 ): Promise<{
   pairAddress: string;
   totalSupply: bigint | null;
   reserveA: bigint;
   reserveB: bigint;
 } | null> {
-  const addr = await getPairAddress(sdk, factory, tokenA, tokenB);
+  const addr = await getPairAddress(sdk, factory, tokenA, tokenB, strict);
   if (!addr) return null;
   const pair = await initializeContractTyped<PairContractApi>(
     sdk,

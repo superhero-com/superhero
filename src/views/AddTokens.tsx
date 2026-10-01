@@ -181,9 +181,9 @@ export default function AddTokens() {
   }, [walletTokens, filter]);
 
   return (
-    <div className="max-w-[900px] mx-auto py-4 px-4">
+    <div className="ui-page max-w-[900px] mx-auto py-4 px-4">
       <DexTabs />
-      <h2 className="text-2xl font-bold text-white mb-2">{t('title')}</h2>
+      <h2 className="ui-page-title mb-2">{t('title')}</h2>
       <p className="text-sm text-white/80 mb-3 leading-relaxed">
         {t('description')}
       </p>
@@ -192,7 +192,7 @@ export default function AddTokens() {
           placeholder={tDex('filterBySymbolAddress')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="flex-1 px-2 py-1.5 rounded bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-purple-400"
+          className="flex-1 px-2 py-1.5 rounded bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-blue-400"
         />
         <AeButton
           onClick={() => void discoverWalletTokens()}
@@ -205,7 +205,7 @@ export default function AddTokens() {
         </AeButton>
       </div>
       {error && <div className="text-red-400 mb-2 p-2 bg-red-500/10 rounded border border-red-500/20">{error}</div>}
-      <div className="overflow-x-auto">
+      <div className="ui-panel overflow-x-auto">
         <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
           <thead>
             <tr className="bg-white/10">

@@ -34,7 +34,7 @@ const DexSwap = () => {
             <PoolCandlestickChart
               pairAddress={selectedPair?.address}
               fromTokenAddress={fromToken?.address}
-              height={460}
+              height={208}
             />
           )}
           <RecentActivity />

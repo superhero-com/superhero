@@ -54,11 +54,11 @@ export default function GovernanceAccount() {
     <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
-        <div className="text-center mb-12 animate-slideInUp">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/25 mb-6 animate-float">
-            <IconGovernance className="w-10 h-10 text-white" />
+        <div className="text-left mb-4 animate-slideInUp">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-blue-500 to-blue-500 shadow-2xl shadow-blue-500/25 mb-6">
+            <IconGovernance className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent mb-4 leading-tight">
+          <h1 className="ui-page-title text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400 bg-clip-text text-transparent mb-4 leading-tight">
             {t('account.title')}
           </h1>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -72,7 +72,7 @@ export default function GovernanceAccount() {
             <MobileCard
               variant="elevated"
               padding="large"
-              className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+              className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-500"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
@@ -87,14 +87,14 @@ export default function GovernanceAccount() {
               {delegatorsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />
+                    <div key={i} className="h-16 bg-white/5 rounded-2xl" />
                   ))}
                 </div>
               ) : activeAccount ? (
                 <div className="grid gap-4">
                   {/* Address */}
-                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
-                    <div className="flex items-center justify-between">
+                  <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
                           <span className="text-sm">📍</span>
@@ -102,18 +102,16 @@ export default function GovernanceAccount() {
                         <span className="text-sm font-medium text-slate-300">{t('account.walletAddress')}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-mono text-white bg-black/20 px-3 py-1 rounded-lg">
-                          {activeAccount.slice(0, 8)}
-                          ...
-                          {activeAccount.slice(-8)}
+                        <div className="break-all text-xs font-mono text-white bg-black/20 px-3 py-2 rounded-lg">
+                          {activeAccount}
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Balance */}
-                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
-                    <div className="flex items-center justify-between">
+                  <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
                           <span className="text-sm">💰</span>
@@ -132,10 +130,10 @@ export default function GovernanceAccount() {
 
                   {/* Delegators Count */}
                   {delegators.length > 0 && (
-                    <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
-                      <div className="flex items-center justify-between">
+                    <div className="ui-panel group p-4 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
                             <span className="text-sm">🤝</span>
                           </div>
                           <span className="text-sm font-medium text-slate-300">{t('account.activeDelegators')}</span>
@@ -167,10 +165,10 @@ export default function GovernanceAccount() {
           <MobileCard
             variant="elevated"
             padding="large"
-            className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+            className="ui-panel bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-500"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center shadow-lg">
                 <span className="text-lg">🤝</span>
               </div>
               <div>
@@ -226,7 +224,7 @@ export default function GovernanceAccount() {
                   size="large"
                   fullWidth
                   loading={isSaving}
-                  className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25"
+                  className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25"
                 >
                   {isSaving ? t('account.savingDelegation') : t('account.saveDelegation')}
                 </AeButton>
@@ -266,7 +264,7 @@ export default function GovernanceAccount() {
                   {delegators.map((delegator: any, idx: number) => (
                     <div
                       key={idx}
-                      className="group p-4 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-2xl rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg"
+                      className="ui-panel group p-4 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-2xl rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-lg"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -336,7 +334,7 @@ export default function GovernanceAccount() {
 
         {(setDelegationMutation.isError || revokeDelegationMutation.isError) && (
           <div className="fixed top-20 right-4 z-50 animate-slideInUp">
-            <div className="p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl shadow-2xl">
+            <div className="p-4 bg-gradient-to-r from-red-500 to-blue-500 text-white rounded-2xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">❌</span>
                 <div>

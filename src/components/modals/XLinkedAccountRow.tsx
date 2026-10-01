@@ -6,8 +6,8 @@ import { useRefreshXLinkState } from '@/hooks/useRefreshXLinkState';
 import { rememberConfirmedXLink, trackXLinkChange } from '@/utils/confirmedXLink';
 import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
 import { TxPayloadType, useTransactionNotification } from '@/features/transaction-notification';
+import { xLinkChangePayload } from '@/features/pending-transactions/payload';
 import { XLinkChangePending } from '../XLinkChangePending';
-import { xLinkChangePayload } from '../XLinkChangeSync';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '../ui/dialog';

@@ -4,10 +4,14 @@ import {
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-  beforeEach, describe, expect, it, vi,
+  afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
 import { TransactionNotificationProvider } from '../../../transaction-notification/transaction-notification.context';
+import {
+  clearPendingTransactions,
+  listPendingTransactions,
+} from '../../../pending-transactions/store';
 import PostForm from '../PostForm';
 
 const mockInitializeContractTyped = vi.fn();
@@ -218,5 +222,75 @@ describe('PostForm', () => {
       tx_hash: 'th_post',
     }));
     expect(topicFeed.post_count).toBe(2);
+    // Already indexed: nothing left to wait for.
+    expect(listPendingTransactions({ kind: 'create_post' })).toEqual([]);
+  });
+
+  describe('before the backend has it', () => {
+    beforeEach(() => {
+      clearPendingTransactions();
+      mockInitializeContractTyped.mockResolvedValue({
+        post_without_tip: vi.fn().mockResolvedValue({ decodedResult: '42', hash: 'th_mined' }),
+      });
+      mockGetById.mockRejectedValue(new Error('Not found'));
+    });
+
+    afterEach(() => {
+      clearPendingTransactions();
+    });
+
+    const renderForm = (props: Record<string, unknown>) => render(
+      <QueryClientProvider client={queryClient}>
+        <TransactionNotificationProvider>
+          <PostForm
+            showEmojiPicker={false}
+            showGifInput={false}
+            showImageInput={false}
+            showMediaFeatures={false}
+            {...props}
+          />
+        </TransactionNotificationProvider>
+      </QueryClientProvider>,
+    );
+
+    const submit = (value: string) => {
+      fireEvent.change(screen.getByRole('textbox'), { target: { value } });
+      fireEvent.submit(screen.getByRole('textbox').closest('form')!);
+    };
+
+    it('shows the post it built and keeps it for a reload', async () => {
+      const onSuccess = vi.fn();
+      renderForm({ onSuccess, requiredHashtag: '#nancy' });
+      submit('#NANCY gm');
+      await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+
+      const latestKey = ['posts', {
+        limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
+      }];
+      const [newest] = queryClient.getQueryData<any>(latestKey).pages[0].items;
+      expect(newest).toEqual(expect.objectContaining({
+        id: '42_v3', content: '#NANCY gm', tx_hash: 'th_mined',
+      }));
+      const [pending] = listPendingTransactions({ kind: 'create_post' });
+      expect(pending).toEqual(expect.objectContaining({
+        account: 'ak_author', txHash: 'th_mined', step: 'confirmed',
+      }));
+      expect(pending.meta).toEqual(expect.objectContaining({ postId: '42_v3', topic: '#nancy' }));
+      expect(JSON.parse(pending.meta.post!))
+        .toEqual(expect.objectContaining({ id: '42_v3', content: '#NANCY gm' }));
+    });
+
+    it('does the same for a reply, under its parent', async () => {
+      const onCommentAdded = vi.fn();
+      renderForm({ isPost: false, postId: '7', onCommentAdded });
+      submit('nice');
+      await waitFor(() => expect(onCommentAdded).toHaveBeenCalledTimes(1));
+
+      expect(queryClient.getQueryData<any>(['comment-replies', '7_v3'])).toEqual([
+        expect.objectContaining({ id: '42_v3', content: 'nice' }),
+      ]);
+      const [pending] = listPendingTransactions({ kind: 'create_comment' });
+      expect(pending.meta).toEqual(expect.objectContaining({ postId: '42_v3', parentId: '7_v3' }));
+    });
   });
 });

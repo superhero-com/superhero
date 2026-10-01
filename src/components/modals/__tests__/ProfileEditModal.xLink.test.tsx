@@ -17,6 +17,12 @@ const ADDRESS = 'ak_owner';
 const mockGetAccount = vi.fn();
 const mockGetProfile = vi.fn();
 
+// The chain is asked before the API; these tests are about the API.
+vi.mock('@/utils/apiRead', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return { ...actual, isTransactionMined: vi.fn().mockResolvedValue(false) };
+});
+
 vi.mock('@/config', async (importOriginal) => {
   const actual: any = await importOriginal();
   return { ...actual, CONFIG: { ...actual.CONFIG, X_OAUTH_CLIENT_ID: 'test-client' } };
@@ -156,7 +162,7 @@ describe('ProfileEditModal X section', () => {
 
     const status = await screen.findByRole('status');
     expect(status).toHaveTextContent('Unlinking @untracenetwork…');
-    expect(status).toHaveTextContent('This usually takes 2–6 minutes');
+    expect(status).toHaveTextContent('This takes a while. You can leave and come back, then refresh later.');
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /unlink @untracenetwork/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Link account' })).not.toBeInTheDocument();

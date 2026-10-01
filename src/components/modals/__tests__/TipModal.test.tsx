@@ -11,6 +11,11 @@ import TipModal from '../TipModal';
 const mockSpend = vi.fn();
 const mockUseQueryClient = vi.fn();
 const mockSetTipStatus = vi.fn();
+const mockTrackPostTip = vi.fn();
+
+vi.mock('../../../features/social/utils/pendingTips', () => ({
+  trackPostTip: (...args: any[]) => mockTrackPostTip(...args),
+}));
 
 vi.mock('../../AeButton', () => ({
   default: ({ children, ...props }: any) => <button type="button" {...props}>{children}</button>,
@@ -111,5 +116,32 @@ describe('TipModal', () => {
 
     expect(typeof optimisticUpdate).toBe('function');
     expect(optimisticUpdate({ totalTips: '2' })).toEqual({ totalTips: '5' });
+    // Kept until the backend counts it, so a reload still shows 5.
+    expect(mockTrackPostTip).toHaveBeenCalledWith({
+      account: 'ak_sender',
+      txHash: 'th_tip',
+      postId: 'post-123_v3',
+      amount: '3',
+      expectedTotal: 5,
+    });
+  });
+
+  it('does not wait on a tip to yourself, which the backend never counts', async () => {
+    render(
+      <TipModal
+        toAddress="ak_sender"
+        onClose={vi.fn()}
+        payload="TIP_POST:post-123"
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('0.0'), {
+      target: { value: '3' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send tip' }));
+
+    await waitFor(() => expect(mockSpend).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(tipState['ak_sender|post-123_v3']?.status).toBe('success'));
+    expect(mockTrackPostTip).not.toHaveBeenCalled();
   });
 });

@@ -7,11 +7,10 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import SuperheroIcon from '@/svg/favicon.svg?react';
 import { IconDiamond } from '@/icons';
-import {
-  XLinkChangeProgressRow,
-  useXLinkChangeElapsed,
-  xLinkChangeWaitKey,
-} from '@/components/XLinkChangePending';
+import { PendingTransaction } from '@/features/pending-transactions/PendingTransaction';
+import { isTrackedPayload, transactionForPayload } from '@/features/pending-transactions/payload';
+import { pendingTransactionTitle } from '@/features/pending-transactions/titles';
+import { usePendingTransactionsVersion } from '@/features/pending-transactions/usePendingTransactions';
 import type { TxPayload } from './transaction-notification.context';
 import { TxPayloadType, useTransactionNotification } from './transaction-notification.context';
 
@@ -428,19 +427,32 @@ const NotificationError = ({ message }: { message: string }) => {
   );
 };
 
-// An X link or unlink is done when the backend's indexer has it, which takes
-// minutes. Say so, and show the wait moving, instead of "confirming…" alone.
-const XLinkChangeWaiting = ({ title, startedAt }: { title: string; startedAt: number }) => {
+// A transaction the app follows until it is live (an X link change, a new
+// token): the same pending card as everywhere else, steps and all, rather
+// than "confirming…" alone for what can take minutes.
+const TrackedTransactionWaiting = ({
+  payload,
+  fallbackTitle,
+  startedAt,
+}: {
+  payload: TxPayload;
+  fallbackTitle: string;
+  startedAt: number;
+}) => {
   const { t } = useTranslation('common');
-  const elapsed = useXLinkChangeElapsed(startedAt);
+  // Re-render as it moves from sent to confirmed.
+  usePendingTransactionsVersion();
+  const transaction = transactionForPayload(payload);
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>
-      <NotificationIcon variant="loading" icon="diamond" />
-      <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-white font-bold text-sm leading-[18px] m-0">{title}</p>
-        <p className="text-gray-400 text-[13px] leading-[17px] m-0">{t(xLinkChangeWaitKey(elapsed))}</p>
-        <XLinkChangeProgressRow elapsedMs={elapsed} className="pt-1.5" />
-      </div>
+      <NotificationIcon variant="loading" icon={getIconVariant(payload)} />
+      <PendingTransaction
+        variant="compact"
+        title={transaction ? pendingTransactionTitle(t, transaction) : fallbackTitle}
+        stage={transaction?.step ?? 'sent'}
+        startedAt={startedAt}
+        className="flex-1"
+      />
     </div>
   );
 };
@@ -456,12 +468,14 @@ const NotificationWaiting = ({
   const { title, subtitle } = kind === 'submitted'
     ? getSubmittedMeta(payload, t)
     : getPendingMeta(payload, t);
-  if (
-    kind === 'pending'
-    && (payload.type === TxPayloadType.LinkX || payload.type === TxPayloadType.UnlinkX)
-    && payload.startedAt
-  ) {
-    return <XLinkChangeWaiting title={title} startedAt={payload.startedAt} />;
+  if (kind === 'pending' && isTrackedPayload(payload)) {
+    return (
+      <TrackedTransactionWaiting
+        payload={payload}
+        fallbackTitle={title}
+        startedAt={payload.startedAt}
+      />
+    );
   }
   return (
     <div className={`${cardBase} bg-[#1a1a1a]/95`}>

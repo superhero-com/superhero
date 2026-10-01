@@ -1,5 +1,8 @@
 {
   "common": {
+    "account": {
+      "firstBlockchainActivity": "Дата присоединения:"
+    },
     "postLanguageFilter": {
       "shortLabel": "Язык",
       "allShort": "Все",

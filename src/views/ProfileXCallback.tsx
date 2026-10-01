@@ -16,8 +16,9 @@ import {
   trackXLinkChange,
   type PendingXLinkChange,
 } from '@/utils/confirmedXLink';
-import { XLinkChangeProgressRow, useXLinkChangeElapsed } from '@/components/XLinkChangePending';
-import { xLinkChangePayload } from '@/components/XLinkChangeSync';
+import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
+import { XLinkChangePending } from '@/components/XLinkChangePending';
+import { xLinkChangePayload } from '@/features/pending-transactions/payload';
 
 const LINK_X_PAYLOAD = { type: TxPayloadType.LinkX } as const;
 
@@ -130,12 +131,6 @@ const ConfirmWalletStep = ({
   );
 };
 
-/** How far along the link is: the bar and the time so far. */
-const LinkProgress = ({ change }: { change: PendingXLinkChange }) => {
-  const elapsed = useXLinkChangeElapsed(change.startedAt);
-  return <XLinkChangeProgressRow elapsedMs={elapsed} className="mb-6" />;
-};
-
 const ProfileXCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -154,6 +149,11 @@ const ProfileXCallback = () => {
   // next render is still recognised as this page's.
   const pendingLinkRef = useRef<PendingXLinkChange | null>(null);
   const startedRef = useRef(false);
+  // The same change as it moves (sent, then in a block).
+  const trackedLink = usePendingXLinkChange(pendingLink ? address : null);
+  const shownLink = trackedLink && trackedLink.txHash === pendingLink?.txHash
+    ? trackedLink
+    : pendingLink;
 
   const goToProfile = useCallback(() => {
     if (address) navigate(`/users/${address}`);
@@ -165,7 +165,7 @@ const ProfileXCallback = () => {
   // refetches them and updates the banner, with or without this page. If the
   // tracker gives up, stop showing a wait that is no longer being watched.
   useEffect(() => onXLinkChangeSettled(({ change, outcome }) => {
-    if (change !== pendingLinkRef.current) return;
+    if (change.txHash !== pendingLinkRef.current?.txHash) return;
     setStatus(outcome === 'settled' ? 'done' : 'timed_out');
   }), []);
 
@@ -262,10 +262,7 @@ const ProfileXCallback = () => {
           <h1 className="m-0 mb-3 text-xl font-bold text-white">
             {t('messages.xCallbackConfirmingTitle')}
           </h1>
-          <p className="m-0 mb-6 text-sm leading-relaxed text-white/60" role="status">
-            {t('messages.xCallbackConfirmingDesc')}
-          </p>
-          {pendingLink && <LinkProgress change={pendingLink} />}
+          {shownLink && <XLinkChangePending change={shownLink} className="mb-6 text-left" />}
           <button
             type="button"
             onClick={goToProfile}

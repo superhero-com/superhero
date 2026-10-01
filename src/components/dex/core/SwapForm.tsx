@@ -300,18 +300,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     return out;
   }, [tokens, searchOut]);
 
-  const handleTokenSwap = () => {
-    const tempToken = tokenIn;
-    setTokenIn(tokenOut);
-    setTokenOut(tempToken);
-    setAmountIn(amountOut);
-    setAmountOut('');
-    setIsExactIn(true);
-
-    // Update URL parameters to reflect the swapped tokens
-    updateUrlParams(tokenOut, tempToken);
-  };
-
   // Balance validation
   const hasInsufficientBalance = useMemo(() => {
     if (!address || !amountIn || !balances.in || Number(amountIn) <= 0) return false;
@@ -361,6 +349,21 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const changeInputToken = (token: DexTokenDto) => { setTokenIn(token); setAmountOut(''); };
   const changeOutputToken = (token: DexTokenDto) => { setTokenOut(token); setAmountOut(''); };
   const hasQuote = !quoteLoading && !error && !hasNoLiquidity && Number(amountOut) > 0;
+
+  const handleTokenSwap = () => {
+    const tempToken = tokenIn;
+    setTokenIn(tokenOut);
+    setTokenOut(tempToken);
+    // Carry the receive amount over only when it is a quote the trader can see.
+    // While a quote is pending or failed it is empty or stale, so keep what they typed.
+    if (hasQuote) setAmountIn(amountOut);
+    setAmountOut('');
+    setIsExactIn(true);
+
+    // Update URL parameters to reflect the swapped tokens
+    updateUrlParams(tokenOut, tempToken);
+  };
+
   const actionLabel = swapLoading ? t('swap.confirmInWallet')
     : quoteLoading ? t('swapCard.gettingQuote')
       : error ? t('swapCard.quoteUnavailable')

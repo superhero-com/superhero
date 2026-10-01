@@ -92,10 +92,14 @@ describe('Token trade panel', () => {
     expect(screen.getByRole('button', { name: 'Trade settings · 1%' })).toHaveFocus();
   });
   it('locks amounts and direction while signing and distinguishes the two sell steps', () => {
+    // Setting up the contract, before the allowance prompt: still step 1.
     trade = {
-      ...trade, isBuying: false, isAllowSelling: true, loadingTransaction: true,
+      ...trade, isBuying: false, isAllowSelling: false, loadingTransaction: true,
     };
     const view = render(panel());
+    expect(screen.getByRole('button', { name: /Confirm in your wallet.*1\/2/ })).toBeDisabled();
+    trade = { ...trade, isAllowSelling: true };
+    view.rerender(panel());
     expect(screen.getByRole('textbox', { name: 'You pay' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Buy' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Confirm in your wallet.*1\/2/ })).toBeDisabled();
@@ -119,6 +123,11 @@ describe('Token trade panel', () => {
     expect(input).toHaveValue('0.50');
     fireEvent.change(input, { target: { value: '1.2.3' } });
     expect(input).toHaveValue('0.50');
+    // Replacing the amount with a lone "." keeps it, ready for the digits.
+    fireEvent.change(input, { target: { value: '.' } });
+    expect(input).toHaveValue('.');
+    fireEvent.change(input, { target: { value: '.5' } });
+    expect(input).toHaveValue('.5');
     view.rerender(<Amount reset />);
     expect(input).toHaveValue('');
   });

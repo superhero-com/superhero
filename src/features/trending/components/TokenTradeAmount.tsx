@@ -20,6 +20,9 @@ interface TokenTradeAmountProps {
   fiat?: string;
 }
 
+// The amount a typed buffer stands for; "" and a lone "." are no amount yet.
+const parseAmount = (text: string) => (text === '' || text === '.' ? undefined : Number(text));
+
 const TokenTradeAmount = ({
   value, onChange, onFocus, symbol, ae, pay = false, balance, connected, disabled,
   insufficient = false, fiat,
@@ -30,15 +33,15 @@ const TokenTradeAmount = ({
   const [buffer, setBuffer] = useState(value == null ? '' : Decimal.from(value).toStringWithoutPrecision());
   useEffect(() => {
     setBuffer((current) => {
-      // Keep intermediate decimals and trailing zeroes while the user edits this side.
-      if (focused.current && current !== '' && Number(current) === value) return current;
+      // Keep intermediate decimals ("0.", a lone ".") and trailing zeroes while editing this side.
+      if (focused.current && current !== '' && parseAmount(current) === value) return current;
       return value == null ? '' : Decimal.from(value).toStringWithoutPrecision();
     });
   }, [value]);
   const update = (raw: string) => {
     const next = raw.replace(/,/g, '.');
     if (!/^\d*(?:\.\d{0,21})?$/.test(next)) return;
-    const parsed = next === '' || next === '.' ? undefined : Number(next);
+    const parsed = parseAmount(next);
     if (parsed !== undefined && !Number.isFinite(parsed)) return;
     setBuffer(next);
     onChange(parsed);

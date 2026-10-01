@@ -1,4 +1,6 @@
-import { useId, useRef, useState } from 'react';
+import {
+  useEffect, useId, useRef, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowUpRight, Check, ChevronDown, Settings2, Wallet,
@@ -37,6 +39,14 @@ const TokenTradePanel = ({
     userBalance, spendableAeBalance, estimatedNextTokenPriceImpactDifferenceFormattedPercentage,
     slippage, switchTradeView, setTokenAmount, setSlippage, placeTokenTradeOrder,
   } = trade;
+  // A sell is two signatures: allowance, then sell. Until the allowance step has
+  // started (the contract is still being set up) the sale is on step 1, not 2.
+  const [allowanceStarted, setAllowanceStarted] = useState(false);
+  useEffect(() => {
+    if (!loadingTransaction) setAllowanceStarted(false);
+    else if (isAllowSelling) setAllowanceStarted(true);
+  }, [loadingTransaction, isAllowSelling]);
+  const sellStep = isAllowSelling || !allowanceStarted ? '1/2' : '2/2';
   const symbol = token.symbol || token.name;
   const hasAmount = Number.isFinite(tokenA) && tokenA > 0 && Number.isFinite(tokenB) && tokenB > 0;
   const parsedSlippage = Number(draft);
@@ -183,7 +193,7 @@ const TokenTradePanel = ({
           {(loadingTransaction || connecting) && <Spinner className="w-4 h-4" />}
           {!loadingTransaction && !connecting && !connected && <Wallet aria-hidden="true" />}
           <span>{action}</span>
-          {loadingTransaction && !isBuying && <bdi>{isAllowSelling ? '1/2' : '2/2'}</bdi>}
+          {loadingTransaction && !isBuying && <bdi>{sellStep}</bdi>}
           {connected && !disabled && <ArrowUpRight aria-hidden="true" />}
         </button>
         <p className="trade-note">{t('tradePanel.note')}</p>

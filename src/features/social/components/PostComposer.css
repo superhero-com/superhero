@@ -95,7 +95,6 @@
 .post-composer__tool-icon svg { width: 15px; height: 15px; transform: rotate(7deg); }
 .post-composer__tool-icon--emoji { --tool-light: #edb24c; --tool-deep: #a17426; }
 .post-composer__tool-icon--gif { --tool-light: #a68aef; --tool-deep: #6850ac; }
-.post-composer__tool-icon--image { --tool-light: #4ecbbb; --tool-deep: #1f7a73; }
 
 .post-composer .post-composer__primary {
   min-height: 44px;
@@ -145,6 +144,7 @@
 }
 @media (max-width: 767px) {
   .post-composer .post-composer__textarea { padding: 12px 12px 72px; font-size: 16px; }
+  .post-composer .post-composer__textarea::placeholder { font-size: 14px; line-height: 1.45; }
   .post-composer .post-composer__mobile-tools {
     position: static;
     flex: 1;
@@ -163,7 +163,41 @@
     background: var(--rail-raised);
     font-size: 11px;
   }
+  .post-composer .post-composer__mobile-tools .post-composer__gif {
+    position: relative;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    min-height: 32px;
+    padding: 6px 9px;
+    border-color: light-dark(#b9cce5, #85aceb33);
+    border-radius: 8px;
+    background: light-dark(#edf3fc, #172337);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .post-composer .post-composer__gif::after { content: ''; position: absolute; inset: -6px 0; }
+  .post-composer .post-composer__mobile-tools .post-composer__gif:hover {
+    border-color: light-dark(#6c98d5, #85aceb80);
+    background: light-dark(#e1ecfa, #1e304c);
+  }
   .post-composer .post-composer__mobile-submit { margin-top: 12px; }
+  .post-composer .post-composer__mobile-submit .post-composer__connect {
+    position: relative;
+    align-self: flex-end;
+    width: auto;
+    max-width: 100%;
+    min-height: 32px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+  .post-composer .post-composer__mobile-submit .post-composer__connect::after {
+    content: '';
+    position: absolute;
+    inset: -6px 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .post-composer .post-composer__input-wrap,
@@ -176,9 +210,10 @@
 @media (max-width:767px) {
   .post-composer--compact-mobile { --composer-min-height:112px; }
   .post-composer--compact-mobile .post-composer__textarea { padding:8px 12px 56px; line-height:1.375; }
-  .post-composer--compact-mobile .post-composer__input-footer { gap:6px; flex-wrap:wrap; align-items:center; }
+  .post-composer--compact-mobile .post-composer__input-footer { gap:6px; flex-wrap:wrap; align-items:center; min-height:52px; }
   .post-composer--compact-mobile .post-composer__mobile-tools { flex:0 1 auto; gap:4px; }
   .post-composer--compact-mobile .post-composer__mobile-submit { flex:1; min-width:90px; width:auto; margin:0; order:3; }
+  .post-composer--compact-mobile .post-composer__mobile-submit:has(.post-composer__connect) { flex:0 1 auto; max-width:100%; margin-inline-start:auto; }
   .post-composer--compact-mobile .post-composer__mobile-submit .post-composer__primary { padding:7px 8px; font-size:10px; line-height:14px; border-radius:9px; }
   .post-composer--compact-mobile .post-composer__counter { margin:0; padding-inline:4px; font-size:10px; }
 }

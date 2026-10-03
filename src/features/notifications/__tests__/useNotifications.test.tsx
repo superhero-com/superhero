@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -16,7 +16,7 @@ const mockWaitForWalletReconnect = vi.fn(async (a: string) => a);
 // effect runs.
 const { clients, env } = vi.hoisted(() => ({
   clients: [] as any[],
-  env: { cachedSession: false },
+  env: { cachedSession: false } as { cachedSession: boolean; pushConfigured?: boolean },
 }));
 
 vi.mock('../notification-feed-client', () => ({
@@ -33,6 +33,7 @@ vi.mock('../notification-feed-client', () => ({
         hasCachedSession: vi.fn(() => env.cachedSession),
         markRead: vi.fn().mockResolvedValue(undefined),
         getPushState: vi.fn().mockResolvedValue('default'),
+        isPushConfigured: vi.fn().mockResolvedValue(env.pushConfigured ?? true),
         enablePush: vi.fn().mockResolvedValue('subscribed'),
         disablePush: vi.fn().mockResolvedValue(undefined),
       });
@@ -61,13 +62,20 @@ vi.mock('@/hooks/useWalletReconnect', () => ({
 }));
 vi.mock('@/utils/signLinkMessage', () => ({ signAndVerifyLinkMessage: vi.fn() }));
 vi.mock('@/utils/walletSdk', () => ({ normalizeAddress: (a: string) => a }));
+vi.mock('@/i18n', () => ({
+  default: {
+    t: (key: string) => (key === 'common.messages.walletNotConnected'
+      ? 'Your wallet is not connected'
+      : key),
+  },
+}));
 vi.mock('@/config', () => ({
   CONFIG: { SUPERHERO_API_URL: 'http://api.test', BACKEND_URL: 'http://api.test' },
 }));
 
 // import AFTER mocks
 // eslint-disable-next-line import/first
-import { useNotifications } from '../useNotifications';
+import { connectErrorMessage, useNotifications } from '../useNotifications';
 
 describe('useNotifications', () => {
   beforeEach(() => {
@@ -131,6 +139,26 @@ describe('useNotifications', () => {
     // state reset for the new account
     expect(result.current.connected).toBe(false);
     expect(result.current.items).toEqual([]);
+  });
+
+  it('reports push as unconfigured once connected when the server has no VAPID key', async () => {
+    env.pushConfigured = false;
+    try {
+      const { result } = renderHook(() => useNotifications());
+      await act(async () => {
+        await result.current.connect();
+      });
+      await waitFor(() => expect(result.current.pushState).toBe('unconfigured'));
+    } finally {
+      env.pushConfigured = undefined;
+    }
+  });
+
+  it('turns the bare "wallet not connected" error into an instruction (#733)', () => {
+    expect(connectErrorMessage(new Error('Your wallet is not connected')))
+      .toMatch(/connect your wallet first/i);
+    expect(connectErrorMessage(new Error('boom'))).toBe('boom');
+    expect(connectErrorMessage('x')).toBe('Failed to connect notifications');
   });
 
   it('enablePush maps "unconfigured" to an error message', async () => {

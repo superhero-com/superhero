@@ -189,7 +189,9 @@ const NotificationBell = ({ className = '' }: { className?: string }) => {
     && pushSupported
     && pushState !== 'subscribed'
     && pushState !== 'denied'
-    && pushState !== 'unsupported';
+    && pushState !== 'unsupported'
+    // The server has no VAPID key: the button could only fail.
+    && pushState !== 'unconfigured';
   // Whoever can turn browser push on has to be able to turn it back off from the
   // same place; the OS-level permission alone can't be revoked from a web page.
   const showPushOff = connected && pushSupported && pushState === 'subscribed';

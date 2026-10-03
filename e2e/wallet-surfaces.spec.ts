@@ -196,9 +196,16 @@ test.describe('the passkey wallet can actually be created', () => {
       // Argon2id runs between the ceremony and the next screen. The choice
       // screen must not have appeared along the way.
       await expect(chooseScreen(page)).toHaveCount(0);
-      await expect(page.getByRole('heading', { name: /save your recovery code/i }))
+      // No recovery code on the passkey path: the next screen is the wallet backup
+      // the passkey derives, hidden until revealed, with download or skip.
+      await expect(page.getByText(/your passkey generated this wallet/i))
         .toBeVisible({ timeout: 90_000 });
-      await expect(page.getByText(/^[0-9A-F]{4}(-[0-9A-F]{4}){5,}$/)).toBeVisible();
+      await expect(page.getByRole('heading', { name: /save your recovery code/i })).toHaveCount(0);
+      await expect(page.getByText(/^sk_/)).toHaveCount(0);
+      await page.getByRole('button', { name: /^reveal$/i }).click();
+      await expect(page.getByText(/^sk_[1-9A-HJ-NP-Za-km-z]{40,}$/)).toBeVisible();
+      await expect(page.getByRole('button', { name: /download backup file/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /skip for now/i })).toBeVisible();
 
       // Nothing was transcribed: the seed is recoverable from the passkey, so
       // the twelve-word backup and its verify step are skipped entirely.

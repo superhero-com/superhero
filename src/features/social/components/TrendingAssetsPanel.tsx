@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
+import { hasSparseHistory } from '@/features/trending/components/ExploreMarketValues';
 import {
   formatAmount, holderCount, marketCap, tokenPrice,
 } from '@/features/trending/components/TokenRanking/ranking';
@@ -74,11 +75,15 @@ const TrendingAssetCard = memo(({ token }: { token: TokenDto }) => {
           </span>
         </div>
       </div>
-      <div className="feed-asset__chart" onErrorCapture={() => setFailedChart(address)}>
-        {hasHistory ? (
-          <TokenLineChart saleAddress={address} height={32} width={240} interval="30d" />
-        ) : <span>{t('trendingAssetCards.noHistory')}</span>}
-      </div>
+      {/* With only one or two trades the sparkline is a flat line or a lone bar,
+          so the card collapses and the % change above carries the signal. */}
+      {!hasSparseHistory(token) && (
+        <div className="feed-asset__chart" onErrorCapture={() => setFailedChart(address)}>
+          {hasHistory ? (
+            <TokenLineChart saleAddress={address} height={32} width={240} interval="30d" />
+          ) : <span>{t('trendingAssetCards.noHistory')}</span>}
+        </div>
+      )}
       <dl className="feed-asset__stats">
         <div>
           <dt>{t('trendingAssetCards.marketCap')}</dt>

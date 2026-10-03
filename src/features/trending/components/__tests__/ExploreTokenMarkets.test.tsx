@@ -59,7 +59,7 @@ describe('Explore market layouts', () => {
     expect(screen.getByText('21')).toBeInTheDocument();
     expect(screen.getByText('22')).toBeInTheDocument();
     expect(screen.getAllByText('−4.20%')).toHaveLength(2);
-    expect(screen.getAllByText('2040')).toHaveLength(2);
+    expect(screen.getAllByText('0.000000204')).toHaveLength(2);
     expect(screen.getAllByAltText('Token Line Chart')[0]).toHaveAttribute('src', expect.stringContaining('/ct_sale/sparkline.svg?interval=all-time'));
     view.unmount();
 

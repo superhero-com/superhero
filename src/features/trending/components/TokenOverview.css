@@ -52,3 +52,9 @@
 .token-overview-container[dir=rtl] .token-overview-fiat { margin-left:auto; }
 .token-overview-change.is-neutral { color:var(--detail-muted); }
 @container token-overview (max-width:599px) { .token-overview-price__value { font-size:30px; line-height:38px; } }
+
+/* Post-refresh fixes: header meta (type · collection · rank) was 11px grey on grey. */
+.token-overview-container{--detail-muted:light-dark(#4d596b,#b3bdcc)}
+.token-overview-meta,.token-overview-price__label,.token-overview-stats dt,.token-overview-fiat{font-size:12px}
+.token-overview-rank{border:0;padding:1px 0;margin-inline-start:0;font-weight:550}
+.token-overview-change>span,.token-overview-stats dd span{font-size:12px}

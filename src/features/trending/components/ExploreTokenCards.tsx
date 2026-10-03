@@ -5,7 +5,8 @@ import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import { tokenCollectionLabel } from '@/utils/collection';
 import {
-  MarketAmount, MarketChange, MarketHistory, MarketPrice, marketVolume, tokenMarketHref,
+  hasSparseHistory, MarketAmount, MarketChange, MarketHistory, MarketPrice, marketVolume,
+  tokenMarketHref,
 } from './ExploreMarketValues';
 
 const ExploreTokenCard = ({ token, rank }: { token: TokenDto; rank: number }) => {
@@ -41,13 +42,17 @@ const ExploreTokenCard = ({ token, rank }: { token: TokenDto; rank: number }) =>
           <small>AE</small>
         </div>
       </div>
-      <div className="market-card__history">
-        <div className="market-card__history-label">
-          <span>{t('market.history')}</span>
-          <span>{t('tokenListTable.allTime')}</span>
+      {/* A sparkline of one or two trades is a flat line or a single bar; the
+          change row below already carries the signal for young tokens. */}
+      {!hasSparseHistory(token) && (
+        <div className="market-card__history">
+          <div className="market-card__history-label">
+            <span>{t('market.history')}</span>
+            <span>{t('tokenListTable.allTime')}</span>
+          </div>
+          <MarketHistory token={token} large />
         </div>
-        <MarketHistory token={token} large />
-      </div>
+      )}
       <dl className="market-card__changes">
         {(['past_24h', 'past_7d', 'past_30d'] as const).map((period, index) => (
           <div key={period}>

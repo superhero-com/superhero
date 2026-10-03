@@ -68,8 +68,8 @@ const TokenTradePanel = ({
           <p>{t('tradePanel.subtitle')}</p>
         </header>
         <div className="trade-modes" role="group" aria-label={t('tradePanel.direction')}>
-          <button type="button" aria-pressed={isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(true)}>{t('tradePanel.buy')}</button>
-          <button type="button" aria-pressed={!isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(false)}>{t('tradePanel.sell')}</button>
+          <button type="button" className="trade-mode--buy" aria-pressed={isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(true)}>{t('tradePanel.buy')}</button>
+          <button type="button" className="trade-mode--sell" aria-pressed={!isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(false)}>{t('tradePanel.sell')}</button>
         </div>
         {errorMessage && <p className="trade-error" role="alert">{errorMessage}</p>}
         <TradeTokenInput
@@ -186,7 +186,7 @@ const TokenTradePanel = ({
         )}
         <button
           type="button"
-          className="trade-submit"
+          className={`trade-submit ${isBuying ? 'is-buy' : 'is-sell'}`}
           disabled={disabled}
           onClick={() => { if (connected) placeTokenTradeOrder(token); else onConnect(); }}
         >

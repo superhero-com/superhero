@@ -322,6 +322,18 @@ export function hasFactor(record: VaultRecord, type: FactorEnrollment['type']): 
   return record.factors.some((f) => f.type === type);
 }
 
+/**
+ * Was this wallet's seed DERIVED from a passkey (the "Use a passkey" path), as
+ * opposed to a phrase wallet that later added a device passkey? Told apart by
+ * the PRF salt: only the seed path uses the fixed, public `seedPrfSalt()`;
+ * `addPasskeyFactor` wraps with a random one. A passkey-derived wallet's backup
+ * is the derived main key shown at onboarding, not a recovery code.
+ */
+export function isPasskeyDerived(record: VaultRecord): boolean {
+  const seedSalt = toB64(seedPrfSalt());
+  return record.factors.some((f) => f.type === 'webauthn-prf' && f.webauthn?.prfSalt === seedSalt);
+}
+
 /** DEVICE-GATED. The passkey UnlockProvider (UV = the WebAuthn PRF ceremony). */
 export function passkeyUnlockProvider(): UnlockProvider {
   return async (record: VaultRecord) => {

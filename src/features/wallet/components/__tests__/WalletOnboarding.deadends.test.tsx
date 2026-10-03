@@ -64,6 +64,8 @@ vi.mock('../../wallet-lifecycle', () => ({
   importWalletWithDek: vi.fn(),
   recordMnemonicBackedUp: vi.fn(),
   hasFactor: (r: { factors: { type: string }[] }, t: string) => r.factors.some((f) => f.type === t),
+  isPasskeyDerived: (r: { factors: { webauthn?: { prfSalt?: string } }[] }) => r.factors
+    .some((f) => f.webauthn?.prfSalt === 'SEED'),
   passkeyUnlockProvider: () => mocks.passkeyUnlock,
   passphraseUnlockProvider: (p: string) => () => mocks.passphraseUnlock(p),
   deriveRecoveredWallet: vi.fn(),
@@ -76,6 +78,7 @@ vi.mock('../../vault-record', () => ({
 
 vi.mock('../../derivation', () => ({
   deriveAccount: () => ({ address: 'ak_test1234' }),
+  deriveSecretKey: () => 'sk_test_main_key',
 }));
 
 const { default: WalletOnboarding } = await import('../WalletOnboarding');
@@ -384,27 +387,70 @@ describe('WalletOnboarding — no step is a dead end', () => {
     });
   });
 
-  describe('the `creating` step when recovery-code enrollment fails', () => {
-    it('shows the error and a retry instead of spinning forever', async () => {
-      // The vault is already persisted, so the retry must happen in place.
+  describe('the passkey create path', () => {
+    it('shows the passkey-derived main key instead of a recovery code', async () => {
       mocks.createWalletFromPasskey.mockResolvedValue({
         record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
       });
-      mocks.addRecoveryCodeFactor.mockRejectedValue(new Error('QuotaExceededError'));
+      const onComplete = vi.fn();
+      await mount({ onComplete });
+      await act(async () => {
+        fireEvent.click(await screen.findByRole('button', { name: /continue with passkey/i }));
+      });
 
+      expect(await screen.findByText(/your main key/i)).toBeInTheDocument();
+      expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
+      expect(screen.queryByText(/save your recovery code/i)).not.toBeInTheDocument();
+      // Hidden until the user asks to see it.
+      expect(screen.queryByText('sk_test_main_key')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /reveal/i }));
+      expect(screen.getByText('sk_test_main_key')).toBeInTheDocument();
+    });
+
+    it('can skip the download and still finish', async () => {
+      mocks.createWalletFromPasskey.mockResolvedValue({
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
+      });
+      const onComplete = vi.fn();
+      await mount({ onComplete });
+      await act(async () => {
+        fireEvent.click(await screen.findByRole('button', { name: /continue with passkey/i }));
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: /skip for now/i }));
+      fireEvent.click(await screen.findByRole('button', { name: /open wallet/i }));
+      expect(onComplete).toHaveBeenCalledWith(FAKE_RECORD, 'ak_test1234');
+    });
+
+    it('downloads the key, then finishes', async () => {
+      mocks.createWalletFromPasskey.mockResolvedValue({
+        record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
+      });
+      const createObjectURL = vi.fn(() => 'blob:key');
+      const revokeObjectURL = vi.fn();
+      Object.assign(URL, { createObjectURL, revokeObjectURL });
       await mount();
       await act(async () => {
         fireEvent.click(await screen.findByRole('button', { name: /continue with passkey/i }));
       });
 
-      expect(await screen.findByText(/QuotaExceededError/)).toBeInTheDocument();
-      const retry = await screen.findByRole('button', { name: /try again/i });
-      expect(retry).toBeEnabled();
+      fireEvent.click(await screen.findByRole('button', { name: /download key/i }));
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:key');
+      expect(await screen.findByRole('button', { name: /open wallet/i })).toBeInTheDocument();
+    });
+  });
 
-      // And the retry actually re-attempts the enrollment.
-      mocks.addRecoveryCodeFactor.mockResolvedValue({ record: FAKE_RECORD, code: 'CODE' });
-      await act(async () => { fireEvent.click(retry); });
-      expect(mocks.addRecoveryCodeFactor).toHaveBeenCalledTimes(2);
+  describe('a passkey-derived wallet on `exists`', () => {
+    it('is complete without a recovery code', async () => {
+      mocks.record = { factors: [{ type: 'webauthn-prf', webauthn: { prfSalt: 'SEED' } }] };
+      mocks.manifest = {
+        accounts: [{ index: 0, address: 'ak_existing' }], activeAddress: 'ak_existing',
+      };
+      await mount();
+
+      await screen.findByRole('button', { name: /continue with this wallet/i });
+      expect(screen.queryByText(/recovery code was never set up/i)).not.toBeInTheDocument();
     });
   });
 

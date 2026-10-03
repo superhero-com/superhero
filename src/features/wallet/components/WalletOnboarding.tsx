@@ -5,7 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@/lib/utils';
 import {
   ShieldCheck, KeyRound, CircleCheck, Download, Lock, Loader2, Wallet, ChevronLeft,
-  CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, Sparkles, type LucideIcon,
+  CircleAlert, Trash2, Fingerprint, LifeBuoy, Copy, Sparkles, Eye, EyeOff, type LucideIcon,
 } from 'lucide-react';
 import AeButton, { type AeButtonProps } from '@/components/AeButton';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
 } from '../passphrase';
 import {
   addPasskeyFactor, addRecoveryCodeFactor, commitRecoveredWallet, createWalletFromPasskey,
-  deriveRecoveredWallet, hasFactor, importWalletWithDek, passkeyUnlockProvider,
+  deriveRecoveredWallet, hasFactor, importWalletWithDek, isPasskeyDerived, passkeyUnlockProvider,
   passphraseUnlockProvider, recordMnemonicBackedUp, type RecoveredWalletMaterial,
 } from '../wallet-lifecycle';
 import { checkAccountUsage, type AccountUsage } from '../account-usage';
@@ -27,7 +27,7 @@ import { isPlatformAuthenticatorAvailable, RP_ID } from '../webauthn';
 import {
   clearManifest, loadManifest, manifestForFirstAccount, saveManifest,
 } from '../manifest-store';
-import { deriveAccount } from '../derivation';
+import { deriveAccount, deriveSecretKey } from '../derivation';
 import { createIndexedDbVaultStore } from '../vault-store';
 import type { VaultStore } from '../vault-store';
 import { unlockVault, type VaultRecord } from '../vault-record';
@@ -58,6 +58,7 @@ type Step =
   | 'creating'
   | 'protect'
   | 'recovery'
+  | 'passkey-key'
   | 'done';
 
 const defaultStore = createIndexedDbVaultStore();
@@ -88,6 +89,7 @@ const STEP_PROGRESS: Partial<Record<Step, number>> = {
   creating: 0.6,
   protect: 0.75,
   recovery: 0.9,
+  'passkey-key': 0.9,
   done: 1,
 };
 
@@ -294,6 +296,11 @@ const WalletOnboarding = ({
   const [recoveryCode, setRecoveryCode] = useState('');
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Passkey wallets only: the main private key derived from the passkey, held
+  // ONLY for the `passkey-key` step and dropped at `done` (see `finish`).
+  const [mainKey, setMainKey] = useState('');
+  const [keyRevealed, setKeyRevealed] = useState(false);
+  const [keyCopied, setKeyCopied] = useState(false);
   // Erasing is unrecoverable for a passkey wallet, so it takes two taps.
   const [resetArmed, setResetArmed] = useState(false);
   // Held ONLY between the recovery ceremony and the user's confirm — see
@@ -307,7 +314,8 @@ const WalletOnboarding = ({
   const existingAddress = recoveredAddress || (loadManifest()?.activeAddress ?? '');
   // The vault is persisted before the mandatory recovery code is enrolled, so a
   // reload in that window leaves this state — see repairWallet.
-  const needsRecoveryCode = !!record && !hasFactor(record, 'recovery-code');
+  const needsRecoveryCode = !!record && !isPasskeyDerived(record)
+    && !hasFactor(record, 'recovery-code');
   /** Something is missing that only an unlock can rebuild (manifest, recovery code). */
   const showUnlockBox = !!record && (!existingAddress || needsRecoveryCode);
   /**
@@ -498,6 +506,38 @@ const WalletOnboarding = ({
   }, [store, dek]);
 
   /**
+   * Passkey wallets: show the main private key the passkey derives, and offer to
+   * download it — or skip. This replaces the recovery code on the passkey path:
+   * the passkey itself re-derives the wallet on any device it syncs to, and the
+   * key is the copy that works without it (importable into the extension or the
+   * app). Nothing is persisted; the key is derived on the spot from the seed.
+   */
+  const goToKeyBackup = useCallback((seed: string) => {
+    setError('');
+    setMainKey(deriveSecretKey(seed, 0));
+    setKeyRevealed(false);
+    setKeyCopied(false);
+    setStep('passkey-key');
+  }, []);
+
+  const downloadMainKey = useCallback(() => {
+    const blob = new Blob([
+      'Superhero wallet - main private key\n',
+      `Address: ${firstAddr}\n`,
+      `Private key: ${mainKey}\n\n`,
+      'Anyone with this key controls this wallet and its funds. Keep it offline. Never share it.\n',
+    ], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `superhero-wallet-${firstAddr.slice(0, 10) || 'key'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [firstAddr, mainKey]);
+
+  /**
    * Repair a valid-but-incomplete vault, by unlocking once.
    *
    * Two things go missing independently. `saveManifest` is best-effort and
@@ -531,7 +571,7 @@ const WalletOnboarding = ({
       // Hold the DEK only where a later step spends it — the mandatory recovery
       // code, or a device passkey this wallet never got. Everywhere else it dies
       // with the unlock, which is the shortest lifetime this screen can give it.
-      const missingCode = !hasFactor(record, 'recovery-code');
+      const missingCode = !isPasskeyDerived(record) && !hasFactor(record, 'recovery-code');
       if (missingCode || (passkeySupported && !hasFactor(record, 'webauthn-prf'))) {
         setDek(unlocked);
       }
@@ -611,9 +651,10 @@ const WalletOnboarding = ({
       setFirstAddr(address);
       setPasskeyEnrolled(true);
       setDeviceUnlockAvailable(true);
-      // Straight to the recovery code: the passkey already IS the unlock, so the
-      // `protect` step (which offers to add one) has nothing left to ask.
-      await goToRecovery(created.record, created.dek);
+      // Straight to the main key: the passkey already IS the unlock, so the
+      // `protect` step (which offers to add one) has nothing left to ask, and
+      // no recovery code is needed — the passkey re-derives the wallet.
+      goToKeyBackup(created.mnemonic);
     } catch (e) {
       // An RP ID / origin mismatch fails as a SecurityError BEFORE any OS UI
       // appears, so "nothing happened when I tapped" is the symptom. Say which
@@ -625,7 +666,7 @@ const WalletOnboarding = ({
         : (e as Error).message);
       setStep('choose');
     }
-  }, [store, goToRecovery]);
+  }, [store, goToKeyBackup]);
 
   // Take the path the caller chose, once — only from a fresh `choose`, so an
   // existing vault (`exists`) and a failed ceremony that fell back to `choose`
@@ -696,14 +737,15 @@ const WalletOnboarding = ({
       setFirstAddr(recovered.address);
       setPasskeyEnrolled(true);
       setDeviceUnlockAvailable(true);
+      const seed = recovered.mnemonic;
       dropRecovered();
-      await goToRecovery(committed.record, committed.dek);
+      goToKeyBackup(seed);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [store, recovered, record, dek, goToRecovery, dropRecovered]);
+  }, [store, recovered, record, dek, goToRecovery, goToKeyBackup, dropRecovered]);
 
   /**
    * Enrollment is complete. Drop every transient secret this component held —
@@ -721,6 +763,8 @@ const WalletOnboarding = ({
     setPass2('');
     setGenerated('');
     setRecoveryCode('');
+    setMainKey('');
+    setKeyRevealed(false);
     setStep('done');
   }, []);
 
@@ -1318,6 +1362,58 @@ const WalletOnboarding = ({
                 </AeCard>
                 )}
 
+                {step === 'passkey-key' && (
+                <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
+                  <IconChip icon={KeyRound} />
+                  <h2 className={heading}>Your main key</h2>
+                  <p className={description}>
+                    Your passkey created this private key. It is the master key to your wallet,
+                    like a seed phrase. Your passkey brings it back on any device it syncs to.
+                    Download a copy if you want a way in without the passkey.
+                  </p>
+                  <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                    <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>Anyone with this key controls your wallet and its funds. Never share it.</span>
+                  </div>
+                  {keyRevealed ? (
+                    <p className="rounded-xl border border-border bg-muted/60 px-3 py-3 font-mono text-xs break-all text-foreground mb-2" data-testid="main-key">
+                      {mainKey}
+                    </p>
+                  ) : (
+                    <div className="mb-2 flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-5 text-sm text-muted-foreground">
+                      <EyeOff className="h-4 w-4" />
+                      Hidden
+                    </div>
+                  )}
+                  <div className="mb-4 flex gap-2">
+                    <AeButton variant="ghost" fullWidth onClick={() => setKeyRevealed((v) => !v)}>
+                      {keyRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {keyRevealed ? 'Hide' : 'Reveal'}
+                    </AeButton>
+                    <AeButton
+                      variant="ghost"
+                      fullWidth
+                      onClick={() => {
+                        navigator.clipboard?.writeText(mainKey)
+                          .then(() => setKeyCopied(true))
+                          .catch(() => setError('Couldn’t copy — download the key instead.'));
+                      }}
+                    >
+                      {keyCopied ? <CircleCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      {keyCopied ? 'Copied' : 'Copy'}
+                    </AeButton>
+                  </div>
+                  <ErrorNote error={error} />
+                  <PrimaryButton className="mb-3" onClick={() => { downloadMainKey(); finish(); }}>
+                    <Download className="h-4 w-4" />
+                    Download key
+                  </PrimaryButton>
+                  <AeButton variant="ghost" fullWidth onClick={finish}>
+                    Skip for now
+                  </AeButton>
+                </AeCard>
+                )}
+
                 {step === 'done' && (
                 <AeCard variant="glass" hover={false} className="ui-panel w-full p-6">
                   <IconChip icon={CircleCheck} tone="success" />
@@ -1325,7 +1421,9 @@ const WalletOnboarding = ({
                   <p className="text-sm text-muted-foreground mb-1">Your first account:</p>
                   <p className="text-xs font-mono break-all text-emerald-400 mb-4">{firstAddr}</p>
                   <p className="text-xs text-muted-foreground mb-5">
-                    {`Unlocks with your ${passkeyEnrolled ? 'device, your passphrase, or your recovery code' : 'passphrase or your recovery code'}. `}
+                    {record && isPasskeyDerived(record)
+                      ? 'Unlocks with your passkey. '
+                      : `Unlocks with your ${passkeyEnrolled ? 'device, your passphrase, or your recovery code' : 'passphrase or your recovery code'}. `}
                     You&apos;ll confirm every transaction.
                   </p>
                   <PrimaryButton onClick={() => onComplete?.(record as VaultRecord, firstAddr)}>

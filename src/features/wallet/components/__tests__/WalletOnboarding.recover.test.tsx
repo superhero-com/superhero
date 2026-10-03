@@ -63,8 +63,14 @@ vi.mock('../../wallet-lifecycle', () => ({
   importWalletWithDek: vi.fn(),
   recordMnemonicBackedUp: vi.fn(),
   hasFactor: () => false,
+  isPasskeyDerived: () => true,
   passkeyUnlockProvider: vi.fn(),
   passphraseUnlockProvider: vi.fn(),
+}));
+
+vi.mock('../../derivation', () => ({
+  deriveAccount: () => ({ address: 'ak_recovered123' }),
+  deriveSecretKey: () => 'sk_recovered_main_key',
 }));
 
 const { default: WalletOnboarding } = await import('../WalletOnboarding');
@@ -141,7 +147,7 @@ describe('WalletOnboarding — passkey recovery', () => {
     expect(await screen.findByRole('button', { name: /create with a phrase/i })).toBeInTheDocument();
   });
 
-  it('confirming commits, writes the manifest, and enrolls the recovery code', async () => {
+  it('confirming commits, writes the manifest, and shows the main key (no recovery code)', async () => {
     await startRecovery();
     await act(async () => {
       fireEvent.click(await screen.findByRole('button', { name: /this is my wallet/i }));
@@ -151,31 +157,9 @@ describe('WalletOnboarding — passkey recovery', () => {
     expect(mocks.saveManifest).toHaveBeenCalledWith(
       { accounts: [{ index: 0, address: 'ak_recovered123' }], activeAddress: 'ak_recovered123' },
     );
-    expect(mocks.addRecoveryCodeFactor).toHaveBeenCalledTimes(1);
-  });
-
-  it('a failed recovery-code step retries only that, and cannot back out', async () => {
-    mocks.addRecoveryCodeFactor.mockRejectedValueOnce(new Error('QuotaExceededError'));
-    await startRecovery();
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: /this is my wallet/i }));
-    });
-
-    // The wallet is already saved, so the screen must stop asking "is this yours?":
-    // no address, no activity verdict, and no route back to `choose`, where the
-    // fresh vault would reject every action on offer.
-    expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument();
-    expect(screen.queryByText('ak_recovered123')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /try again/i }));
-    });
-
-    // Only the enrollment is retried — a second commit would hit "a vault already exists".
-    expect(mocks.commitRecoveredWallet).toHaveBeenCalledTimes(1);
-    expect(mocks.addRecoveryCodeFactor).toHaveBeenCalledTimes(2);
-    expect(await screen.findByText(/CODE/)).toBeInTheDocument();
+    expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
+    expect(await screen.findByText(/your main key/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /skip for now/i })).toBeEnabled();
   });
 
   it('a slow check from an abandoned ceremony cannot verdict the next one', async () => {

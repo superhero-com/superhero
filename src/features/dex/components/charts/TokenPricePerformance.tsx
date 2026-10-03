@@ -42,8 +42,8 @@ const BAR_CHART_TYPES = ['TVL', 'Volume', 'Fees', 'Locked'];
 
 // Price series can hold values far below the axis' fixed step (e.g. 0.0000001032),
 // which lightweight-charts' fixed-precision formatter renders as a flat
-// "0.0000000". Reuse the same compressed-zeros style used for the token's own
-// price ("0.0 (7) 1032") so tiny prices stay distinguishable on axis/crosshair.
+// "0.0000000". Reuse the same plain significant-digits format used for the
+// token's own price ("0.0000001032") so tiny prices stay distinguishable.
 const formatChartPrice = (price: number): string => {
   const formatted = formatFractionalPrice(Decimal.from(price));
   return formatted.value ?? formatted.number;

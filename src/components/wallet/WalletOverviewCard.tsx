@@ -97,8 +97,6 @@ const WalletOverviewCard = ({
     }
   }, [open]);
 
-  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-
   const balanceAe = useMemo(() => Number(decimalBalance?.toString() || 0), [
     decimalBalance,
   ]);
@@ -134,7 +132,6 @@ const WalletOverviewCard = ({
       <AePriceCard
         price={price != null && Number.isFinite(price) ? formatPrice(price, selectedCurrency) : '—'}
         currency={selectedCurrency}
-        isOnline={isOnline}
         blockHeight={currentBlockHeight}
         className={className}
       />
@@ -200,28 +197,16 @@ const WalletOverviewCard = ({
           </div>
         </Link>
 
-        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-[11px] tabular-nums text-[var(--light-font-color)]">
-          <span className="flex items-center gap-1.5" role="status" aria-live="polite">
-            <span
-              className={`size-1.5 shrink-0 rounded-full ${
-                isOnline
-                  ? 'bg-[var(--neon-green)]'
-                  : 'bg-[var(--neon-pink)]'
-              }`}
-              aria-hidden="true"
-            />
-            {isOnline ? t('common.wallet.online') : t('common.wallet.offline')}
-          </span>
-          {currentBlockHeight != null && (
-            <span className="flex flex-wrap gap-x-1">
-              <span>{t('common.wallet.block')}</span>
-              <span dir="ltr">
-                #
-                {Number(currentBlockHeight).toLocaleString()}
-              </span>
+        {/* The online/offline dot was dropped: it never helped anyone decide anything. */}
+        {currentBlockHeight != null && (
+          <div className="mt-3.5 flex flex-wrap items-center gap-x-1 border-t border-white/10 pt-2.5 text-xs tabular-nums text-[var(--light-font-color)]">
+            <span>{t('common.wallet.block')}</span>
+            <span dir="ltr">
+              #
+              {Number(currentBlockHeight).toLocaleString()}
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Expanded Details */}

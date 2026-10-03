@@ -37,7 +37,6 @@ if (tsc.error || tsc.status === null || startupErrors.length > 0
   process.exit(1);
 }
 
-if (process.env.CI) console.error(errors.join('\n'));
 if (errors.length > BASELINE) {
   const byFile = new Map();
   for (const line of errors) {

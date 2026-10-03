@@ -329,7 +329,7 @@ const LatestTransactionsCarousel = () => {
           onTouchStart={() => setIsHovered(true)}
           onTouchEnd={() => setIsHovered(false)}
         >
-          {transactions.map((item, index) => renderItem(item, index))}
+          {transactions.map((item) => renderItem(item))}
         </div>
       </div>
     </div>

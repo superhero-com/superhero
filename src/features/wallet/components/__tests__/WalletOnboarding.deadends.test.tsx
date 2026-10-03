@@ -388,7 +388,7 @@ describe('WalletOnboarding — no step is a dead end', () => {
   });
 
   describe('the passkey create path', () => {
-    it('shows the passkey-derived main key instead of a recovery code', async () => {
+    it('shows the passkey-generated wallet key instead of a recovery code', async () => {
       mocks.createWalletFromPasskey.mockResolvedValue({
         record: FAKE_RECORD, dek: {} as CryptoKey, mnemonic: 'a b c',
       });
@@ -398,7 +398,7 @@ describe('WalletOnboarding — no step is a dead end', () => {
         fireEvent.click(await screen.findByRole('button', { name: /continue with passkey/i }));
       });
 
-      expect(await screen.findByText(/your main key/i)).toBeInTheDocument();
+      expect(await screen.findByText(/your passkey generated this wallet/i)).toBeInTheDocument();
       expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
       expect(screen.queryByText(/save your recovery code/i)).not.toBeInTheDocument();
       // Hidden until the user asks to see it.
@@ -434,7 +434,7 @@ describe('WalletOnboarding — no step is a dead end', () => {
         fireEvent.click(await screen.findByRole('button', { name: /continue with passkey/i }));
       });
 
-      fireEvent.click(await screen.findByRole('button', { name: /download key/i }));
+      fireEvent.click(await screen.findByRole('button', { name: /download backup file/i }));
       expect(createObjectURL).toHaveBeenCalledTimes(1);
       expect(revokeObjectURL).toHaveBeenCalledWith('blob:key');
       expect(await screen.findByRole('button', { name: /open wallet/i })).toBeInTheDocument();

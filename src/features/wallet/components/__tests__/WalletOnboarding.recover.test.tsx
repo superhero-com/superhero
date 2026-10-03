@@ -147,7 +147,7 @@ describe('WalletOnboarding — passkey recovery', () => {
     expect(await screen.findByRole('button', { name: /create with a phrase/i })).toBeInTheDocument();
   });
 
-  it('confirming commits, writes the manifest, and shows the main key (no recovery code)', async () => {
+  it('confirming commits, writes the manifest, and shows the wallet backup step (no recovery code)', async () => {
     await startRecovery();
     await act(async () => {
       fireEvent.click(await screen.findByRole('button', { name: /this is my wallet/i }));
@@ -158,7 +158,7 @@ describe('WalletOnboarding — passkey recovery', () => {
       { accounts: [{ index: 0, address: 'ak_recovered123' }], activeAddress: 'ak_recovered123' },
     );
     expect(mocks.addRecoveryCodeFactor).not.toHaveBeenCalled();
-    expect(await screen.findByText(/your main key/i)).toBeInTheDocument();
+    expect(await screen.findByText(/your passkey generated this wallet/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /skip for now/i })).toBeEnabled();
   });
 

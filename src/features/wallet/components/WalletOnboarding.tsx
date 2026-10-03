@@ -1456,7 +1456,7 @@ const WalletOnboarding = ({
                       <p className="mb-2 font-semibold text-foreground">Use this wallet in the Superhero Wallet app</p>
                       <ol className="list-decimal space-y-1 pl-4">
                         <li>Install Superhero Wallet on iOS or Android.</li>
-                        <li>Choose Import wallet, then Private key.</li>
+                        <li>Choose Import wallet.</li>
                         <li>Paste the private key from your backup file.</li>
                       </ol>
                     </div>

@@ -29,8 +29,9 @@ export function postDetailPath(idOrSlug: string): string {
 /** ak_… address of the actor behind a notification, used for the row avatar. */
 export function getNotificationActor(item: FeedItem): string | undefined {
   const d = item.data ?? {};
-  // post-comment → commenter, incoming-transfer → sender, invitation → claimer.
-  return str(d.commenter) || str(d.sender) || str(d.claimer);
+  // post-comment → commenter, incoming-transfer → sender, invitation → claimer,
+  // new-follow → follower.
+  return str(d.commenter) || str(d.sender) || str(d.claimer) || str(d.follower);
 }
 
 /**
@@ -58,6 +59,11 @@ export function getNotificationLink(item: FeedItem): string | undefined {
     case 'room-messages': {
       const sale = str(d.saleAddress);
       return sale ? `/trends/tokens/${encodeURIComponent(sale)}` : undefined;
+    }
+    // The backend pushes 'new-follow' (web feed + browser push); open the follower.
+    case 'new-follow': {
+      const follower = str(d.follower);
+      return follower ? `/users/${encodeURIComponent(follower)}` : undefined;
     }
     default:
       return undefined;

@@ -13,6 +13,7 @@ import {
 import { useAeSdk, useWalletConnect } from '@/hooks';
 import { useWalletReconnect } from '@/hooks/useWalletReconnect';
 import { CONFIG } from '@/config';
+import i18n from '@/i18n';
 import { signAndVerifyLinkMessage } from '@/utils/signLinkMessage';
 import { normalizeAddress } from '@/utils/walletSdk';
 import {
@@ -63,6 +64,21 @@ export interface UseNotifications {
   disablePush: () => Promise<void>;
   /** The most recent live item, for a raw alert/toast in the MVP UI. */
   lastLive: FeedItem | null;
+}
+
+/**
+ * User-facing text for a failed "Turn on notifications".
+ *
+ * The wallet-reconnect helper throws a bare "Your wallet is not connected" when
+ * there is no wallet to sign with. Shown as-is under the CTA it reads like a
+ * fault (superhero#733); say what to do instead.
+ */
+export function connectErrorMessage(e: unknown): string {
+  const message = e instanceof Error ? e.message : '';
+  if (message && message === i18n.t('common.messages.walletNotConnected')) {
+    return 'Connect your wallet first, then turn on notifications.';
+  }
+  return message || 'Failed to connect notifications';
 }
 
 export function useNotifications(): UseNotifications {
@@ -192,7 +208,19 @@ export function useNotifications(): UseNotifications {
   // freshly reset 'default' would never get recomputed against the new account's
   // own marker (see notification-feed-client's pushMarkerKey).
   useEffect(() => {
-    clientRef.current?.getPushState().then(setPushState).catch(() => {});
+    const client = clientRef.current;
+    if (!client) return;
+    (async () => {
+      let next = await client.getPushState();
+      // 'default' only means "not subscribed here". When the server publishes no
+      // VAPID key, push can't be turned on at all, so report that instead of
+      // offering a prompt that can only fail. Asked once connected: the key route
+      // is public, but there is no prompt to show before then anyway.
+      if (next === 'default' && connected && !(await client.isPushConfigured())) {
+        next = 'unconfigured';
+      }
+      if (clientRef.current === client) setPushState(next);
+    })().catch(() => {});
   }, [connected, activeAccount]);
 
   const connect = useCallback(async () => {
@@ -218,7 +246,7 @@ export function useNotifications(): UseNotifications {
       // Release the guard so the CTA can retry this same client.
       if (startedClientRef.current === client) startedClientRef.current = null;
       if (clientRef.current === client) {
-        setError(e instanceof Error ? e.message : 'Failed to connect notifications');
+        setError(connectErrorMessage(e));
       }
     } finally {
       if (clientRef.current === client) setConnecting(false);

@@ -251,6 +251,13 @@ describe('NotificationBell — browser push', () => {
     expect(screen.queryByRole('button', { name: /turn off/i })).toBeNull();
   });
 
+  it('offers neither prompt when the server has no VAPID key', () => {
+    // A button that can only answer "not configured" is worse than none.
+    openPanel({ pushState: 'unconfigured' });
+    expect(screen.queryByRole('button', { name: /enable browser push/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /turn off/i })).toBeNull();
+  });
+
   it('offers neither prompt when the browser has no push support', () => {
     openPanel({ pushSupported: false, pushState: 'unsupported' });
     expect(screen.queryByRole('button', { name: /enable browser push/i })).toBeNull();

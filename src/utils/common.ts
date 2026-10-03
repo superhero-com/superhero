@@ -35,27 +35,20 @@ export function formatFractionalPrice(input: Decimal): FormattedFractionalPrice 
       number: input.prettify(6),
     };
   }
-  const inputStr = input.prettify(18);
-  const [, fractionalPart = ''] = inputStr.split('.');
-
-  // Handle fractional parts
+  // Tiny prices are written out in full (e.g. 0.00004111) with four significant
+  // digits. The previous compressed-zeros notation ("0.0₄4111") read as noise to
+  // anyone who has not seen it on a crypto exchange.
+  const [, fractionalPart = ''] = input.toString(18).split('.');
   const nonZeroIndex = fractionalPart.search(/[1-9]/);
-  // if contain -e
-  let zerosCount = 0;
-  if (inputStr.includes('e')) {
-    const [, exponent] = inputStr.split('e-');
-    const exp = parseInt(exponent, 10);
-
-    zerosCount = exp - 1;
-  } else {
-    zerosCount = nonZeroIndex;
+  if (nonZeroIndex < 0) {
+    return {
+      number: '0.00',
+    };
   }
-
-  const value = `0.0 (${zerosCount}) ${fractionalPart.substr(nonZeroIndex, 4)}`;
+  const digits = fractionalPart.slice(0, nonZeroIndex + 4).replace(/0+$/, '');
+  const value = `0.${digits}`;
   return {
-    number: '0.0',
-    zerosCount,
-    significantDigits: fractionalPart.substr(nonZeroIndex, 4),
+    number: value,
     value,
   };
 }

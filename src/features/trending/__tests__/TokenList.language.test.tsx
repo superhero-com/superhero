@@ -23,11 +23,10 @@ vi.mock('@/seo/Head', () => ({ Head: () => null }));
 vi.mock('@/api/generated', () => ({
   TokensService: { listAll: vi.fn() },
 }));
-vi.mock('@/components/Trendminer/LatestTransactionsCarousel', () => ({
+vi.mock('@/components/Trendminer/LatestTransactionsCarouselClassic', () => ({
   default: () => null,
 }));
 vi.mock('../components/TokenListTable', () => ({ default: () => null }));
-vi.mock('../components/ExploreTokenMarkets', () => ({ default: () => null }));
 vi.mock('../components/TrendSearchExploreResultLists', () => ({
   PostResultsList: ({ items }: any) => (
     <>{items.map((item: any) => <p key={item.id}>{item.content}</p>)}</>

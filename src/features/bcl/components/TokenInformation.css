@@ -4,3 +4,8 @@
 
 .token-information a{text-decoration:none}.token-info-address{flex-wrap:wrap}.token-info-address>[role=status]{flex-basis:100%;font-size:11px;line-height:18px;color:var(--info-muted)}
 @media(prefers-reduced-motion:reduce){.token-info-card *{transition:none!important}}
+
+/* Post-refresh fixes: drop the bordered box nested inside the info card, readable labels. */
+.token-information{--info-muted:light-dark(#4d596b,#b3bdcc)}
+.token-info-contracts{border:0}
+.token-info-eyebrow,.token-info-facts dt,.token-info-facts small,.token-info-contracts>div>span,.token-info-heading p,.token-info-links :is(a,button),.token-info-dao small{font-size:12px}

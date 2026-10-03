@@ -13,3 +13,19 @@
 @media(prefers-reduced-motion:reduce){.trade-card *{transition:none!important}}
 
 .trade-heading h2{overflow-wrap:anywhere}.trade-details dd{white-space:normal;text-align:end;overflow-wrap:anywhere;max-width:58%}.trade-details dd>span{display:block;color:var(--trade-muted)}.trade-submit{white-space:normal}.trade-cancel{min-height:44px;width:100%;background:none;color:var(--trade-muted);font-size:12px;margin-top:8px}.trade-summary bdi{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}.trade-amount input:disabled{opacity:.65}
+
+/* Post-refresh fixes (CEO feedback): the primary action must be obvious at a glance,
+   Buy and Sell must look different, and the panel should not stack card-in-card. */
+.token-trade{--trade-muted:light-dark(#4d596b,#b3bdcc);--trade-buy:light-dark(#0b8a5f,#10b981);--trade-buy-text:light-dark(#fff,#03140d);--trade-sell:light-dark(#c2334d,#f0607a);--trade-sell-text:light-dark(#fff,#1d0309)}
+.trade-heading h2{font-size:15px;line-height:22px;font-weight:600;letter-spacing:-.01em}.trade-heading p{font-size:12px;line-height:18px}
+.trade-modes{border:0;padding:3px;background:light-dark(#eef1f5,#ffffff0a)}
+.trade-modes button{font-size:14px;font-weight:650;color:var(--trade-text)}
+.trade-modes button.trade-mode--buy[aria-pressed=true]{background:var(--trade-buy);border-color:var(--trade-buy);color:var(--trade-buy-text);box-shadow:none}
+.trade-modes button.trade-mode--sell[aria-pressed=true]{background:var(--trade-sell);border-color:var(--trade-sell);color:var(--trade-sell-text);box-shadow:none}
+.trade-submit.is-buy:not(:disabled){background:var(--trade-buy);border-color:var(--trade-buy);color:var(--trade-buy-text);box-shadow:0 4px 14px light-dark(#0b8a5f33,#10b98140)}
+.trade-submit.is-sell:not(:disabled){background:var(--trade-sell);border-color:var(--trade-sell);color:var(--trade-sell-text);box-shadow:0 4px 14px light-dark(#c2334d33,#f0607a40)}
+.trade-submit{font-size:15px;font-weight:700;min-height:50px}
+.trade-settings{border:0}
+.trade-amount>label,.trade-amount__meta,.trade-summary>div,.trade-summary bdi,.trade-details>div,.trade-details-toggle,.trade-note{font-size:12px}.trade-amount>label span{font-size:12px}
+@media(hover:hover){.trade-modes button.trade-mode--buy[aria-pressed=true]:hover{background:var(--trade-buy);color:var(--trade-buy-text);filter:brightness(1.06)}.trade-modes button.trade-mode--sell[aria-pressed=true]:hover{background:var(--trade-sell);color:var(--trade-sell-text);filter:brightness(1.06)}}
+@container trade (max-width:350px){.trade-heading h2{font-size:15px}.trade-summary>div,.trade-summary bdi,.trade-note{font-size:12px}}

@@ -11,6 +11,13 @@ export const tokenMarketHref = (token: TokenDto) => (
   `/trending/tokens/${encodeURIComponent(token.name || token.address)}`
 );
 
+// Fewer than three trades cannot draw a meaningful line. When the trade count is
+// unknown we keep the chart rather than guess.
+export const MIN_HISTORY_POINTS = 3;
+export const hasSparseHistory = (token: Pick<TokenDto, 'tx_count'>) => (
+  typeof token.tx_count === 'number' && token.tx_count < MIN_HISTORY_POINTS
+);
+
 export const MarketChange = ({ period }: { period?: PerformancePeriodDto | null }) => {
   const percent = period?.current_change_percent;
   if (percent == null || !Number.isFinite(percent)) {

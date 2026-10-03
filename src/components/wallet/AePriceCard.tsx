@@ -6,13 +6,12 @@ import '@/components/layout/RailCards.css';
 interface AePriceCardProps {
   price: string;
   currency: string;
-  isOnline: boolean;
   blockHeight?: number;
   className?: string;
 }
 
 const AePriceCard = ({
-  price, currency, isOnline, blockHeight, className = '',
+  price, currency, blockHeight, className = '',
 }: AePriceCardProps) => {
   const { t } = useTranslation('common');
   const highlight = usePointerHighlight();
@@ -26,12 +25,9 @@ const AePriceCard = ({
         </div>
         <span className="ae-price-card__currency">{currency.toUpperCase()}</span>
       </div>
-      <div className="ae-price-card__footer">
-        <span className={`ae-price-card__status${isOnline ? '' : ' ae-price-card__status--offline'}`} role="status">
-          <span className="ae-price-card__dot" aria-hidden="true" />
-          {t(isOnline ? 'wallet.online' : 'wallet.offline')}
-        </span>
-        {blockHeight != null && (
+      {/* No "Online" status dot: it was noise next to the price. */}
+      {blockHeight != null && (
+        <div className="ae-price-card__footer">
           <span className="ae-price-card__block">
             <span>{t('wallet.block')}</span>
             <strong dir="ltr">
@@ -39,8 +35,8 @@ const AePriceCard = ({
               {Number(blockHeight).toLocaleString()}
             </strong>
           </span>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 };

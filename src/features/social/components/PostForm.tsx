@@ -13,7 +13,7 @@ import './PostComposer.css';
 import AeButton from '../../../components/AeButton';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import {
-  IconClose, IconGif, IconImage, IconLink, IconSmile,
+  IconClose, IconGif, IconLink, IconSmile,
 } from '../../../icons';
 // @ts-ignore
 import { PostsService } from '../../../api/generated';
@@ -23,7 +23,6 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
-import { ImageSelectorDialog } from './ImageSelectorDialog';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { MentionSuggestionList } from './MentionSuggestionList';
@@ -82,7 +81,6 @@ interface PostFormProps {
   showMediaFeatures?: boolean;
   showEmojiPicker?: boolean;
   showGifInput?: boolean;
-  showImageInput?: boolean;
   characterLimit?: number;
   autoFocus?: boolean;
 }
@@ -143,7 +141,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     showMediaFeatures = true,
     showEmojiPicker = true,
     showGifInput = true,
-    showImageInput = true,
     characterLimit = 280,
     autoFocus = false,
   } = props;
@@ -188,7 +185,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
-  const [showImage, setShowImage] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [dismissedLinkUrl, setDismissedLinkUrl] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -605,7 +601,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       setMentions([]);
       setMediaUrls([]);
       setDismissedLinkUrl(null);
-      setShowImage(false);
 
       // Call onPostCreated callback if this is a new post (for tab switching, etc.)
       if (isPost) {
@@ -647,7 +642,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       : tf('connectWalletToReply');
   }
 
-  const hasMediaTools = showEmojiPicker || showGifInput || showImageInput;
+  const hasMediaTools = showEmojiPicker || showGifInput;
   const replyMinHeight = appearance === 'integrated' ? '132px' : computedMinHeight;
 
   const desktopTools = (
@@ -681,7 +676,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           onClick={() => {
             setShowGif((s) => !s);
             setShowEmoji(false);
-            setShowImage(false);
           }}
         >
           {usesComposerSurface ? (
@@ -690,26 +684,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             </span>
           ) : <IconGif className="w-4 h-4" />}
           <span>{ts('gif')}</span>
-        </button>
-      )}
-
-      {showImageInput && (
-        <button
-          type="button"
-          className="post-composer__tool bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-          title={ts('image')}
-          onClick={() => {
-            setShowImage((s) => !s);
-            setShowGif(false);
-            setShowEmoji(false);
-          }}
-        >
-          {usesComposerSurface ? (
-            <span className="post-composer__tool-icon post-composer__tool-icon--image" aria-hidden="true">
-              <IconImage className="w-4 h-4" />
-            </span>
-          ) : <IconImage className="w-4 h-4" />}
-          <span>{ts('image')}</span>
         </button>
       )}
 
@@ -767,15 +741,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           onMediaUrlsChange={setMediaUrls}
         />
       )}
-
-      {showImageInput && (
-        <ImageSelectorDialog
-          open={showImage}
-          onOpenChange={setShowImage}
-          mediaUrls={mediaUrls}
-          onMediaUrlsChange={setMediaUrls}
-        />
-      )}
     </div>
   );
 
@@ -825,7 +790,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
             })()}
           </AeButton>
         ) : (
-          <ConnectWalletButton block className="post-composer__primary w-full rounded-xl md:rounded-full" />
+          <ConnectWalletButton block className="post-composer__primary post-composer__connect w-full rounded-xl md:rounded-full" />
         )}
       </div>
     </div>
@@ -1019,7 +984,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                     {showGifInput && (
                       <button
                         type="button"
-                        className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                        className="post-composer__gif md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
                         title={ts('gif')}
                         ref={gifBtnRef}
                         onClick={(e) => {
@@ -1039,36 +1004,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           setShowEmoji(false);
                         }}
                       >
+                        <IconGif className="w-4 h-4" aria-hidden="true" />
                         <span className="uppercase tracking-wide">{ts('gif')}</span>
-                      </button>
-                    )}
-                    {/* Mobile-only Image button */}
-                    {showImageInput && (
-                      <button
-                        type="button"
-                        className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation gap-1"
-                        title={ts('image')}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowImage((s) => !s);
-                          setShowGif(false);
-                          setShowEmoji(false);
-                        }}
-                        onTouchStart={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onTouchEnd={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowImage((s) => !s);
-                          setShowGif(false);
-                          setShowEmoji(false);
-                        }}
-                      >
-                        <IconImage className="w-3 h-3" />
-                        <span className="uppercase tracking-wide">IMG</span>
                       </button>
                     )}
                     {/* Mobile-only Link preview toggle */}

@@ -160,7 +160,6 @@ describe('PostForm', () => {
             appearance="integrated"
             showEmojiPicker={false}
             showGifInput={false}
-            showImageInput={false}
             showMediaFeatures={false}
           />
         </TransactionNotificationProvider>
@@ -209,7 +208,6 @@ describe('PostForm', () => {
             requiredHashtag="#nancy"
             showEmojiPicker={false}
             showGifInput={false}
-            showImageInput={false}
             showMediaFeatures={false}
           />
         </TransactionNotificationProvider>
@@ -268,7 +266,6 @@ describe('PostForm', () => {
           <PostForm
             showEmojiPicker={false}
             showGifInput={false}
-            showImageInput={false}
             showMediaFeatures={false}
             {...props}
           />

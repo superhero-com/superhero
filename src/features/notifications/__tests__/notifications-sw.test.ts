@@ -247,6 +247,8 @@ describe('notifications service worker — routing parity with the in-app bell',
     { type: 'room-messages', saleAddress: 'ct_sale' },
     { type: 'room-membership', saleAddress: 'ct_sale' },
     { type: 'room-membership' },
+    { type: 'new-follow', follower: 'ak_fan' },
+    { type: 'new-follow' },
     { type: 'announcement' },
     { type: 'something-new-the-backend-added' },
   ];

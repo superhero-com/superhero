@@ -520,7 +520,6 @@ const WalletOnboarding = ({
     setStep('passkey-key');
   }, []);
 
-
   /**
    * Repair a valid-but-incomplete vault, by unlocking once.
    *

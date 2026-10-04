@@ -3,7 +3,7 @@ import {
 } from 'react';
 import {
   ArrowLeft, ArrowRight, Bookmark, CheckCircle2, Clapperboard,
-  CloudUpload, Film, Heart, LockKeyhole, ScanEye, Share2, Sparkles, ChevronDown,
+  CloudUpload, Heart, LockKeyhole, ScanEye, Share2, Sparkles, ChevronDown,
 } from 'lucide-react';
 import type { useShorts } from './use-shorts';
 import './shorts-upload.css';
@@ -209,7 +209,6 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 </p>
                 )}
                 {step === 0 && (
-                <>
                   <div
                     className={`su-dropzone ${dragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
                     role="region"
@@ -236,7 +235,6 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                       {' '}
                       <ArrowRight size={16} aria-hidden="true" />
                     </button>
-                    {!file && <small>MP4 or MOV · 2–60 seconds · Up to 40 MB</small>}
                     {file && (
                     <div className="su-file-facts">
                       <span>
@@ -256,24 +254,11 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                       )}
                     </div>
                     )}
+                    <small>
+                      {!file && 'MP4 or MOV · 2–60 seconds · Up to 40 MB · '}
+                      Vertical 9:16 recommended
+                    </small>
                   </div>
-                  {canContinue && (
-                  <p className="su-file-ready">
-                    <CheckCircle2 size={17} aria-hidden="true" />
-                    {' '}
-                    Video ready.
-                    {' '}
-                    {info!.width > info!.height ? 'Landscape works too. Your full frame will be kept.' : 'Looking good in the Shorts player.'}
-                  </p>
-                  )}
-                  <div className="su-tips">
-                    <Film size={21} aria-hidden="true" />
-                    <div>
-                      <strong>A great Short starts in the first seconds.</strong>
-                      <p>Keep the opening clear. Vertical 9:16 video makes the most of the screen.</p>
-                    </div>
-                  </div>
-                </>
                 )}
                 {step === 1 && (
                 <div className="su-fields">

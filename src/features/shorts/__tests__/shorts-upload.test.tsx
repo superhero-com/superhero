@@ -1,15 +1,31 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  fireEvent, render, screen, waitFor,
+} from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import { ShortsUpload } from '../shorts-upload';
+import { hostingPrice } from '../shorts-upload-hosting';
+import type { Short } from '../types';
 
 type State = Parameters<typeof ShortsUpload>[0]['s'];
 const upload = vi.fn();
+const signIn = vi.fn();
+const pay = vi.fn();
+const createQuote = vi.fn();
 const state = (overrides: Partial<State> = {}) => ({
   config: { topics: ['All', 'Art', 'Technology'] },
   busy: false,
+  authenticated: true,
+  actor: 'ak_creator',
+  dashboard: { shorts: [], account: { available: '0.08' } },
   upload,
+  signIn,
+  source: 'wallet',
+  setSource: vi.fn(),
+  editQuote: vi.fn(),
+  createUploadQuote: createQuote,
+  confirmUploadFunding: pay,
   setUploadDraft: vi.fn(),
   clearMessage: vi.fn(),
   ...overrides,
@@ -26,15 +42,33 @@ const selectVideo = (duration = 8) => {
   });
   fireEvent.loadedMetadata(video);
 };
+const details = () => {
+  selectVideo();
+  fireEvent.click(screen.getByRole('button', { name: 'Next: Details' }));
+  fireEvent.change(screen.getByLabelText(/Title/), { target: { value: '  My first story  ' } });
+  fireEvent.change(screen.getByLabelText('Main topic'), { target: { value: 'Technology' } });
+  fireEvent.click(screen.getByLabelText(/I have the rights/));
+};
+const prices = {
+  shortId: 'prepared', bytes: 100000000, numerator: '10000000000000000000', denominator: '3000000000', maxDays: 3650,
+};
+const video = {
+  id: 'prepared', title: 'My first story', topic: 'Technology', language: 'und', bytes: 100000000, creator: 'ak_creator', guidelines: { status: 'reviewing' }, hostingStatus: 'unfunded',
+} as Short;
+const quote = {
+  id: '1', shortId: 'prepared', days: 30, charge: '10', unused: '0', source: 'wallet', expiresAt: Date.now() + 1000000, estimatedUntil: Date.now() + 30 * 86400000,
+} as State['quote'];
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.clearAllMocks(); upload.mockResolvedValue(true); createQuote.mockResolvedValue(true);
   URL.createObjectURL = vi.fn(() => 'blob:owned'); URL.revokeObjectURL = vi.fn();
 });
 
-describe('Guided Short upload', () => {
-  it('requires a supported, readable video within the duration limit before continuing', () => {
+describe('Four-step Short upload', () => {
+  it('validates file format, size and duration before enabling the numbered stepper', () => {
     render(<ShortsUpload s={state()} />);
-    expect(screen.getByRole('button', { name: 'Continue to details' })).toBeDisabled();
+    expect(screen.getByRole('list', { name: 'Create a Short progress' }).children).toHaveLength(4);
+    expect(screen.getByRole('button', { name: '4 Review' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Video file'), { target: { files: [new File(['image'], 'wrong.png')] } });
     expect(screen.getByRole('alert')).toHaveTextContent('MP4 or MOV');
     const large = new File(['video'], 'large.mp4'); Object.defineProperty(large, 'size', { value: 41 * 1024 * 1024 });
@@ -42,78 +76,110 @@ describe('Guided Short upload', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('under 40 MB');
     selectVideo(61);
     expect(screen.getByRole('alert')).toHaveTextContent('2–60 seconds');
-    expect(screen.getByRole('button', { name: 'Continue to details' })).toBeDisabled();
     selectVideo();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue to details' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Next: Details' })).toBeEnabled();
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it('preserves details on back-navigation and submits only the reviewed file and declarations', () => {
-    render(<ShortsUpload s={state()} />); selectVideo();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to details' }));
-    expect(screen.getByRole('button', { name: 'Review your Short' })).toBeDisabled();
-    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: '  My first story  ' } });
-    fireEvent.change(screen.getByLabelText(/Description/), { target: { value: 'A little context.' } });
-    fireEvent.change(screen.getByLabelText('Main topic'), { target: { value: 'Technology' } });
-    fireEvent.click(screen.getByLabelText(/AI-generated/));
-    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to details' }));
+  it('lets guests prepare details before authentication and never uploads just from connecting', () => {
+    const { rerender } = render(<ShortsUpload s={state({ authenticated: false, actor: '' })} />);
+    details();
+    fireEvent.click(screen.getByRole('button', { name: 'Connect wallet to continue' }));
+    expect(signIn).toHaveBeenCalledOnce(); expect(upload).not.toHaveBeenCalled();
+    rerender(<ShortsUpload s={state({ authenticated: false })} />);
     expect(screen.getByLabelText(/Title/)).toHaveValue('  My first story  ');
-    fireEvent.click(screen.getByRole('button', { name: 'Review your Short' }));
-    expect(screen.getByRole('button', { name: 'Upload Short' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Verify creator account' }));
+    rerender(<ShortsUpload s={state()} />);
     expect(upload).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByLabelText(/I have the rights/));
-    fireEvent.click(screen.getByRole('button', { name: 'Upload Short' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
     expect(upload).toHaveBeenCalledOnce();
-    const data = upload.mock.calls[0][0] as FormData;
-    expect((data.get('file') as File).name).toBe('owned.mp4');
-    expect(data.get('title')).toBe('My first story');
-    expect(data.get('topic')).toBe('Technology');
-    expect(data.get('synthetic')).toBe('true');
-    expect(data.get('sponsored')).toBe('false');
-    expect(data.get('rights')).toBe('true');
   });
 
-  it('keeps review available after a failed attempt and shows honest processing progress', () => {
-    const { rerender } = render(<ShortsUpload s={state()} />); selectVideo();
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to details' }));
-    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Keep this draft' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Review your Short' }));
-    fireEvent.click(screen.getByLabelText(/I have the rights/));
+  it('preserves details and coverage when moving back, and pays only from final review', async () => {
+    const { rerender } = render(<ShortsUpload s={state()} />);
+    details();
+    fireEvent.change(screen.getByLabelText(/Description/), { target: { value: 'A little context.' } });
+    fireEvent.click(screen.getByLabelText(/AI-generated/));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Details' }));
+    expect(screen.getByLabelText(/Title/)).toHaveValue('  My first story  ');
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    const [data, key] = upload.mock.calls[0] as [FormData, string];
+    expect(data.get('title')).toBe('My first story'); expect(data.get('topic')).toBe('Technology');
+    expect(data.get('synthetic')).toBe('true'); expect(data.get('rights')).toBe('true');
+    const ready = { preparedUpload: { video, key }, uploadPrices: prices };
+    rerender(<ShortsUpload s={state(ready)} />);
+    expect(screen.getByRole('radio', { name: '30 days' })).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    expect(upload).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
+    await waitFor(() => expect(createQuote).toHaveBeenCalledWith({ days: 30 }));
+    rerender(<ShortsUpload s={state({ ...ready, quote })} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Confirm hosting · 10 AE' })).toBeVisible());
+    expect(pay).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm hosting · 10 AE' }));
+    expect(pay).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the draft after a failed transfer and reports indeterminate processing honestly', () => {
+    const { rerender } = render(<ShortsUpload s={state()} />); details();
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
     rerender(<ShortsUpload s={state({ busy: true, uploadProgress: 100, uploadStage: 'processing' })} />);
     expect(screen.getByRole('progressbar')).not.toHaveAttribute('value');
-    expect(screen.queryByRole('button', { name: 'Upload Short' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2 Details' })).toBeDisabled();
     rerender(<ShortsUpload s={state({ uploadProgress: 100, uploadStage: 'processing' })} />);
-    expect(screen.getByRole('button', { name: 'Try upload again' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry upload' }));
+    expect(upload).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByLabelText(/Title/)).toHaveValue('  My first story  ');
     expect(screen.getByLabelText(/I have the rights/)).toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit details' }));
-    expect(screen.getByLabelText(/Title/)).toHaveValue('Keep this draft');
   });
 
-  it('restores a tab-only draft when returning to the composer', () => {
+  it('requires new preparation after changing an already uploaded title', () => {
+    const { rerender } = render(<ShortsUpload s={state()} />); details();
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    rerender(<ShortsUpload s={state({ preparedUpload: { video, key: upload.mock.calls[0][1] }, uploadPrices: prices })} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'A new title' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(upload.mock.calls[1][0].get('title')).toBe('A new title');
+    expect(createQuote).not.toHaveBeenCalled();
+  });
+
+  it('refreshes expired review instead of invoking another payment', async () => {
+    const { rerender } = render(<ShortsUpload s={state()} />); details();
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    const ready = { preparedUpload: { video, key: upload.mock.calls[0][1] }, uploadPrices: prices };
+    rerender(<ShortsUpload s={state(ready)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
+    rerender(<ShortsUpload s={state({ ...ready, quote: { ...quote!, expiresAt: 1 } })} />);
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('quote expired'));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh hosting quote' }));
+    expect(screen.getByRole('button', { name: 'Next: Review' })).toBeVisible();
+    expect(pay).not.toHaveBeenCalled();
+  });
+
+  it('restores a tab draft and rejects multiple files or unreadable media', () => {
     let draft: State['uploadDraft'];
     const setUploadDraft = vi.fn((next) => { draft = next; });
     const { unmount } = render(<ShortsUpload s={state({ setUploadDraft })} />);
-    selectVideo(); fireEvent.click(screen.getByRole('button', { name: 'Continue to details' }));
-    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Return to this idea' } });
-    unmount();
-    render(<ShortsUpload s={state({ uploadDraft: draft, setUploadDraft })} />);
-    expect(screen.getByLabelText(/Title/)).toHaveValue('Return to this idea');
-    expect(screen.getByLabelText('Preview your video')).toBeInTheDocument();
-    expect(upload).not.toHaveBeenCalled();
-  });
-
-  it('rejects multiple dropped files and recovers after a decoder error', () => {
-    render(<ShortsUpload s={state()} />);
-    fireEvent.drop(screen.getByRole('region', { name: 'Video upload' }), {
-      dataTransfer: { files: [new File(['a'], 'a.mp4'), new File(['b'], 'b.mp4')] },
-    });
+    fireEvent.drop(screen.getByRole('region', { name: 'Video upload' }), { dataTransfer: { files: [new File(['a'], 'a.mp4'), new File(['b'], 'b.mp4')] } });
     expect(screen.getByRole('alert')).toHaveTextContent('one video');
     selectVideo(); fireEvent.error(screen.getByLabelText('Preview your video'));
-    expect(screen.getByRole('button', { name: 'Continue to details' })).toBeDisabled();
     expect(screen.getByRole('alert')).toHaveTextContent('H.264');
-    selectVideo();
-    expect(screen.getByRole('button', { name: 'Continue to details' })).toBeEnabled();
+    details(); unmount();
+    render(<ShortsUpload s={state({ uploadDraft: draft, setUploadDraft })} />);
+    expect(screen.getByLabelText(/Title/)).toHaveValue('  My first story  ');
+    expect(screen.getByLabelText('Preview your video')).toBeInTheDocument();
+  });
+
+  it('uses integer pricing and rounds up fractional aettos rather than undercharging', () => {
+    expect(hostingPrice(prices, 30)).toBe('10');
+    expect(hostingPrice({ ...prices, bytes: 1 }, 1)).toBe('0.000000003333333334');
+    expect(hostingPrice(prices, 1.5)).toBeUndefined();
+    expect(hostingPrice(prices, 3651)).toBeUndefined();
   });
 });

@@ -706,7 +706,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           <button type="button" onClick={s.clearMessage} aria-label="Dismiss message">×</button>
         </div>
         )}
-        {!s.authenticated ? (
+        {!s.authenticated && page !== 'upload' ? (
           <div className="ss-welcome ss-panel">
             <BarChart3 size={45} />
             <h2>A home for your next chapter.</h2>
@@ -715,7 +715,8 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <small>Choose the account you want in Superhero Wallet, then connect and sign in. Signing in does not spend AE.</small>
           </div>
         ) : null}
-        {s.authenticated && !s.dashboard && <div className="ss-panel" role="status">Loading your creator account…</div>}
+        {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
+        {s.authenticated && !s.dashboard && page !== 'upload' && <div className="ss-panel" role="status">Loading your creator account…</div>}
         {s.authenticated && s.dashboard && (
           <>
             {s.dashboard.pending.map((p) => (
@@ -765,7 +766,6 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             </>
             )}
             {page === 'hosting' && <Hosting s={s} />}
-            {page === 'upload' && <ShortsUpload s={s} />}
             {page === 'video' && <VideoDetail s={s} />}
             {page === 'review' && (s.isOperator ? <ReviewQueue s={s} /> : <p>Operator sign-in is required for moderation.</p>)}
             {!Object.keys(titles).includes(page) && (

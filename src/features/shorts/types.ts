@@ -67,6 +67,13 @@ export interface Quote {
   estimatedUntil: number;
   expiresAt: number;
 }
+export interface HostingPrices {
+  shortId: string;
+  bytes: number;
+  numerator: string;
+  denominator: string;
+  maxDays: number;
+}
 export interface Dashboard {
   account: Account;
   shorts: Short[];
@@ -127,9 +134,10 @@ export interface VisualSafety {
   frames?: { at: number; sha256: string; nsfwScore: number; labels: { topic: string; score: number }[] }[];
 }
 
-// In-memory only; cleared on successful submission or wallet account changes.
+// In-memory only; a first wallet connection preserves the guest draft.
 export interface UploadDraft {
   step: number;
+  revision?: number;
   file?: File;
   title: string;
   description: string;

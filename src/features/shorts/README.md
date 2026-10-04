@@ -23,6 +23,12 @@ Run the playback regression tests with `npm test -- --run src/features/shorts/__
 
 ## Creator Studio
 
+The upload composer is a four-step journey: Video → Details → Hosting → Review, with numbered steps and Previous/Next controls. Guests can choose a local video and enter details before connecting and verifying a creator wallet. Verification never uploads or pays automatically; Next: Hosting explicitly starts the private resumable transfer. The first wallet connection preserves that guest draft; switching an existing account clears private composer state.
+
+After preparation, choose 7/30/90 days, a custom duration (1–3650 whole days), or an AE budget, funded from the wallet or available rewards. Read-only price estimates use the contract tariff and prepared package size; Next: Review registers the exact quote. The final button states the hosting charge and requests one wallet transaction. Feed status and additional network fees are disclosed separately. Existing Studio top-ups retain their hosting dialog.
+
+Preparation, review and purchase results stay inside the composer. Wallet rejection returns to review; expired quotes return to hosting. Confirmed payments awaiting activation and ambiguous wallet responses show tracking guidance instead of another pay button. Successful activation offers Watch & share and Studio. Draft files/details are held in memory while staying in Shorts, not persisted across a page reload. Uploaded private drafts remain in Studio. Changing already prepared metadata creates a new unpaid draft; unchanged back-navigation reuses the prepared video. Mobile has a collapsible preview and sticky Previous/Next actions.
+
 - `/shorts/studio`: overview with live available rewards, measured performance and latest content.
 - `/shorts/studio/content`: searchable, status-filtered content library.
 - `/shorts/studio/analytics`: 7/28/90-day UTC reports, daily views/reach/watch time/earnings/paid Likes, completion, prior-period comparisons when coverage permits, and privacy-suppressed discovery sources. Creator accruals exclude hosting refunds and wallet claims.

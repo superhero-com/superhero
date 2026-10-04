@@ -257,7 +257,8 @@ describe('Shorts wallet session and recovery', () => {
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
     let uploading: Promise<unknown>;
     act(() => { uploading = result.current.upload(data); });
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/shorts/studio/video/new-upload'));
+    await waitFor(() => expect(result.current.preparedUpload?.video.id).toBe('new-upload'));
+    expect(mocks.navigate).not.toHaveBeenCalled();
     expect(result.current.dashboard?.shorts).toContainEqual(prepared);
     await act(async () => { finishRefresh({ ...dashboard, shorts: [prepared] }); await uploading; });
   });
@@ -364,5 +365,111 @@ describe('Shared links remain separate from the discovery feed', () => {
     const hook = renderHook(useShorts);
     await waitFor(() => expect(hook.result.current.feedReady).toBe(true));
     expect(hook.result.current.feed).toEqual([]);
+  });
+});
+
+describe('Inline upload hosting', () => {
+  const prepare = async () => {
+    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/uploads') {
+        return {
+          id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+        };
+      }
+      if (path === '/uploads/draft/finish') {
+        return {
+          ...clip, id: 'draft', creator: 'ak_creator', hostingStatus: 'unfunded',
+        };
+      }
+      if (path === '/draft/hosting-prices') {
+        return {
+          shortId: 'draft', bytes: 100000000, numerator: '1', denominator: '1', maxDays: 3650,
+        };
+      }
+      if (path === '/quote') {
+        return {
+          id: '7', shortId: 'draft', source: 'wallet', amountAettos: '100', expiresAt: Date.now() + 60000,
+        };
+      }
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
+    await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+    await act(async () => { await hook.result.current.createUploadQuote({ days: 30 }); });
+    return hook;
+  };
+
+  it('preserves a guest draft on the first connection but clears it on account switches', async () => {
+    mocks.actor = '';
+    const { result, rerender } = renderHook(useShorts);
+    await waitFor(() => expect(result.current.config).toBeDefined());
+    const draft = {
+      step: 1, title: 'Guest idea', description: '', topic: 'Art', language: 'und', captions: '', synthetic: false, sponsored: false, rights: true,
+    };
+    act(() => result.current.setUploadDraft(draft));
+    mocks.actor = 'ak_creator'; rerender();
+    expect(result.current.uploadDraft).toEqual(draft);
+    mocks.actor = 'ak_other'; rerender();
+    expect(result.current.uploadDraft).toBeUndefined();
+  });
+
+  it('keeps wallet rejection on review and signs a single deliberate hosting retry', async () => {
+    const { result } = await prepare();
+    expect(result.current.funding).toBeUndefined();
+    expect(mocks.request).toHaveBeenCalledWith('/quote', { shortId: 'draft', source: 'wallet', days: 30 }, 'session');
+    mocks.call.mockRejectedValueOnce(new Error('Rejected by user'));
+    await act(async () => { await result.current.confirmUploadFunding(); });
+    expect(result.current.uploadPayment).toBeUndefined();
+    expect(result.current.quote?.id).toBe('7');
+    await act(async () => { await Promise.all([result.current.confirmUploadFunding(), result.current.confirmUploadFunding()]); });
+    expect(mocks.call).toHaveBeenCalledTimes(2);
+    expect(result.current.uploadPayment?.status).toBe('active');
+    expect(result.current.quote).toBeUndefined();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it('tracks a confirmed payment when activation fails and prevents another charge', async () => {
+    const { result } = await prepare();
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/activate') throw new Error('Storage temporarily offline');
+      return original(path, ...args);
+    });
+    await act(async () => { await result.current.confirmUploadFunding(); });
+    expect(result.current.uploadPayment?.status).toBe('pending');
+    expect(result.current.messageTone).toBe('success');
+    await act(async () => { await result.current.confirmUploadFunding(); });
+    expect(mocks.call).toHaveBeenCalledOnce();
+    expect(result.current.quote).toBeUndefined();
+  });
+
+  it('does not offer payment retry after an ambiguous wallet timeout', async () => {
+    const { result } = await prepare();
+    mocks.call.mockRejectedValueOnce(new Error('Transaction polling timeout'));
+    await act(async () => { await result.current.confirmUploadFunding(); });
+    expect(result.current.uploadPayment?.status).toBe('uncertain');
+    expect(result.current.message).toContain('Check your wallet and Studio');
+    await act(async () => { await result.current.confirmUploadFunding(); });
+    expect(mocks.call).toHaveBeenCalledOnce();
+  });
+
+  it('does not expose an old creator’s completed payment after switching wallet', async () => {
+    const { result, rerender } = await prepare();
+    let finish: (value: unknown) => void = () => undefined;
+    mocks.call.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    let payment: Promise<unknown>;
+    act(() => { payment = result.current.confirmUploadFunding(); });
+    await waitFor(() => expect(mocks.call).toHaveBeenCalledOnce());
+    mocks.actor = 'ak_other'; rerender();
+    await act(async () => { finish({ hash: 'th_old-account' }); await payment; });
+    expect(result.current.uploadPayment).toBeUndefined();
+    expect(result.current.preparedUpload).toBeUndefined();
   });
 });

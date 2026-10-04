@@ -3,7 +3,7 @@ import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, Cloud, Coins, LayoutDashboard, Plus, ShieldCheck,
+  ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, Cloud, Coins, LayoutDashboard, Plus, RefreshCw, ShieldCheck,
 } from 'lucide-react';
 import { SHORTS_API } from './api';
 import { ShortsUpload } from './shorts-upload';
@@ -691,15 +691,12 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
             <h1>{titles[page] || 'Creator Studio'}</h1>
           </div>
-          {(s.authenticated || s.restoringCreatorSession) && <button type="button" disabled={s.busy || loading} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
+          {(s.authenticated || s.restoringCreatorSession) && (
+            <button type="button" className="ss-refresh" disabled={s.busy || loading} onClick={s.refreshNow} aria-label="Refresh Studio" title="Refresh Studio">
+              <RefreshCw size={19} aria-hidden="true" />
+            </button>
+          )}
         </header>
-        )}
-        {page !== 'upload' && (
-        <div className="ss-health">
-          <span className={s.config?.ipfs ? 'sh-dot' : 'sh-dot offline'} />
-          {s.config ? `Testnet · IPFS ${s.config.ipfs ? 'ready' : 'offline'}` : 'Connecting…'}
-          <span>{s.config ? `${s.config.replicas || 0} storage replicas` : 'Checking storage…'}</span>
-        </div>
         )}
         {s.message && (page !== 'upload' || s.messageTone === 'error') && (
         <div className={`sh-notice ss-message ${s.messageTone}`} role={s.messageTone === 'error' ? 'alert' : 'status'}>

@@ -54,8 +54,13 @@
 .su-captions label { display: block; margin: 1rem 0; }
 .su-disclosures { border: 0; padding: 0; margin: 0; display: grid; gap: 1rem; }
 .su-disclosures legend { font-size: .875rem; padding: 0; margin-bottom: 1rem; }
-.su-disclosures label, .su-rights { display: flex; align-items: flex-start; gap: .75rem; cursor: pointer; }
-.su-disclosures input[type=checkbox], .su-rights input[type=checkbox] { width: 1.125rem; height: 1.125rem; flex-shrink: 0; margin: .2rem 0 0; padding: 0; accent-color: var(--blue); }
+.su-disclosures label, .su-rights { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 44px; cursor: pointer; }
+.su-disclosures label>span, .su-rights>span { min-width: 0; }
+.shorts-app input.su-switch[type=checkbox] { appearance: none; position: relative; flex-shrink: 0; width: 44px; height: 26px; margin: 0; padding: 3px; border: 1px solid #52617a; border-radius: 999px; background: #263247; cursor: pointer; transition: background .15s, border-color .15s; }
+.shorts-app input.su-switch[type=checkbox]::after { content: ''; display: block; width: 18px; height: 18px; border-radius: 50%; background: #f4f6fc; box-shadow: 0 1px 3px #0004; transform: translateX(0); transition: transform .15s; }
+.shorts-app input.su-switch[type=checkbox]:checked { background: var(--blue); border-color: var(--blue); }
+.shorts-app input.su-switch[type=checkbox]:checked::after { transform: translateX(18px); }
+.shorts-app input.su-switch[type=checkbox]:disabled { opacity: .5; cursor: not-allowed; }
 .su-disclosures small { display: block; margin-top: .3rem; font-size: .75rem; }
 .ss-main:has(.su-action-bar) { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }
 .su-editor :is(input, select, textarea, button, summary) { scroll-margin-block: 1rem 10rem; }

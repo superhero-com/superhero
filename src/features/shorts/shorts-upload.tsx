@@ -289,7 +289,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     </label>
                   </div>
                   <small>Your topic helps discovery. We check the video and its labels during review.</small>
-                  <details className="su-captions">
+                  <details className="su-captions" hidden>
                     <summary>
                       Captions
                       <span>Optional · WebVTT</span>
@@ -303,23 +303,23 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   <fieldset className="su-disclosures">
                     <legend>Keep your audience informed</legend>
                     <label htmlFor="short-synthetic">
-                      <input id="short-synthetic" type="checkbox" checked={synthetic} onChange={(event) => setSynthetic(event.target.checked)} />
                       <span>
                         AI-generated or substantially altered
                         <small>Adds an AI-altered label to your Short.</small>
                       </span>
+                      <input id="short-synthetic" className="su-switch" type="checkbox" role="switch" checked={synthetic} disabled={s.busy} onChange={(event) => setSynthetic(event.target.checked)} />
                     </label>
                     <label htmlFor="short-sponsored">
-                      <input id="short-sponsored" type="checkbox" checked={sponsored} onChange={(event) => setSponsored(event.target.checked)} />
                       <span>
                         Sponsored or paid promotion
                         <small>Makes your commercial relationship visible.</small>
                       </span>
+                      <input id="short-sponsored" className="su-switch" type="checkbox" role="switch" checked={sponsored} disabled={s.busy} onChange={(event) => setSponsored(event.target.checked)} />
                     </label>
                   </fieldset>
                   <label className="su-rights" htmlFor="short-rights">
-                    <input id="short-rights" type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} />
                     <span>I have the rights to publish this video and its audio.</span>
+                    <input id="short-rights" className="su-switch" type="checkbox" role="switch" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} />
                   </label>
                   {!s.authenticated && (
                   <div className="su-auth-note">

@@ -8,7 +8,7 @@ import {
 import type { useShorts } from './use-shorts';
 import './shorts-upload.css';
 import {
-  UploadCoverage, UploadReview, UploadOutcome, validCoverage, type Coverage,
+  UploadCoverage, UploadReview, UploadPublishOverlay, validCoverage, type Coverage,
 } from './shorts-upload-hosting';
 
 const languages = [
@@ -45,10 +45,11 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const inputKey = JSON.stringify([revision, file?.name, file?.size, file?.lastModified, title.trim(), description.trim(), selectedTopic, language, captions, synthetic, sponsored, rights]);
   const prepared = s.preparedUpload?.key === inputKey ? s.preparedUpload.video : undefined;
   const video = s.dashboard?.shorts.find((item) => item.id === prepared?.id) || prepared;
-  const quote = s.quote?.shortId === prepared?.id ? s.quote : undefined;
-  const expired = !quote || quote.expiresAt <= now;
+  const publishing = !!s.uploadPayment;
+  const quote = s.uploadPayment?.quote || (s.quote?.shortId === prepared?.id ? s.quote : undefined);
+  const expired = !publishing && (!quote || quote.expiresAt <= now);
   const pricesReady = !!prepared && s.uploadPrices?.shortId === prepared.id;
-  const verifying = s.busy && s.walletPending && !s.uploadStage;
+  const verifying = !publishing && s.busy && s.walletPending && !s.uploadStage;
   const preparing = s.busy && !!s.uploadStage;
   const canContinue = !!file && !!info && !fileError;
   const uploading = s.uploadStage === 'uploading';
@@ -65,12 +66,14 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     if (index < phase) return 'Done';
     return index === phase ? 'In progress' : 'Next';
   };
-  let nextLabel = ['Next: Details', 'Next: Hosting', 'Next: Review', 'Continue to wallet'][step];
+  let nextLabel = ['Next: Details', 'Next: Hosting', 'Next: Review', 'Publish'][step];
   if (step === 1 && !s.actor) nextLabel = 'Connect wallet to continue';
   if (step === 2 && !prepared) nextLabel = 'Retry upload';
   if (step === 3 && expired) nextLabel = 'Update price';
   if (step >= 2 && prepared && !s.authenticated) nextLabel = s.actor ? 'Continue' : 'Connect wallet to continue';
-  const disabled = s.busy || (step > 0 && s.restoringCreatorSession) || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
+  if (publishing) nextLabel = 'Publish';
+  else if (s.busy) nextLabel = 'Please wait…';
+  const disabled = s.busy || publishing || (step > 0 && s.restoringCreatorSession) || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
     || (step === 2 && !!prepared && s.authenticated && (!pricesReady || !validCoverage(coverage)));
   useEffect(() => {
     if (!quote) return undefined;
@@ -97,6 +100,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     return () => window.removeEventListener('beforeunload', warn);
   }, [file, s.uploadPayment]);
   const go = (next: number) => {
+    if (s.busy || publishing) return;
     s.clearMessage();
     if (next < 3) s.editQuote();
     setStep(next);
@@ -152,297 +156,296 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
           <h1>Create a Short</h1>
         </div>
       </header>
-      {s.uploadPayment ? <UploadOutcome s={s} /> : (
-        <div className={`su-workspace ${previewOpen ? 'su-preview-open' : ''}`}>
-          <button type="button" className="su-mobile-preview-toggle" aria-expanded={previewOpen} aria-controls="su-preview" onClick={() => setPreviewOpen(!previewOpen)}>
-            {previewOpen ? 'Hide preview' : 'Show video preview'}
-            <ChevronDown size={16} aria-hidden="true" />
-          </button>
-          <form className="su-editor" onSubmit={submit} noValidate>
-            <div className="su-intro">
-              <span className="su-kicker">{preparing ? 'BRINGING YOUR SHORT TO LIFE' : `STEP ${step + 1} OF 4`}</span>
-              <h2 ref={heading} tabIndex={-1}>
-                {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Choose how long it stays.', 'One last look.'][step]}
-              </h2>
-              <p>
-                {(preparing || verifying) ? phaseCopy[phase] : [
-                  'A fresh idea, a tiny tutorial, a moment worth sharing. Make it yours.',
-                  'A little context helps the right people find your story.',
-                  'Keep your Short available for viewers. Extend anytime.',
-                  'Check your Short and payment before you confirm.',
-                ][step]}
-              </p>
-            </div>
-            {verifying && (
-              <section className="su-processing" aria-label="Preparing upload">
-                <LockKeyhole size={36} aria-hidden="true" />
-                <p role="status">Getting ready to upload. Your video will continue automatically.</p>
-              </section>
-            )}
-            {!verifying && (preparing ? (
-              <section className="su-processing" aria-label="Upload progress">
-                <div className="su-process-icon"><ScanEye size={36} aria-hidden="true" /></div>
-                <div role="status">
-                  <strong>{uploading ? `${s.uploadProgress}% uploaded` : phaseTitles[phase]}</strong>
-                  <progress aria-label={phaseTitles[phase]} max={100} value={uploading ? s.uploadProgress : undefined} />
-                </div>
-                <ol>
-                  {['Check file', 'Upload privately', 'Prepare playback'].map((label, index) => (
-                    <li key={label} className={index <= phase ? 'reached' : ''} aria-current={index === phase ? 'step' : undefined}>
-                      {index < phase ? <CheckCircle2 size={18} aria-hidden="true" /> : <span className="su-process-dot" />}
-                      {label}
-                      <small>{phaseStatus(index)}</small>
-                    </li>
-                  ))}
-                </ol>
-                {s.config?.visualModeration && (
-                <p>
-                  <LockKeyhole size={15} aria-hidden="true" />
-                  {' '}
-                  Your video will only appear in the feed after review and while hosting is active.
-                </p>
-                )}
-              </section>
-            ) : (
-              <>
-                {fileError && (
-                <p className="su-error" role="alert">
-                  {fileError}
-                  {step > 0 && <button type="button" onClick={() => go(0)}>Change video</button>}
-                </p>
-                )}
-                {step === 0 && (
-                  <div
-                    className={`su-dropzone ${dragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
-                    role="region"
-                    aria-label="Video upload"
-                    onDragOver={(event) => { event.preventDefault(); if (!s.busy) setDragging(true); }}
-                    onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
-                    onDrop={drop}
-                  >
-                    <input
-                      ref={input}
-                      id="short-file"
-                      className="su-file-input"
-                      aria-label="Video file"
-                      type="file"
-                      accept="video/mp4,video/quicktime,.mp4,.mov"
-                      disabled={s.busy}
-                      onChange={(event) => { const control = event.currentTarget; choose(Array.from(control.files || [])); control.value = ''; }}
-                    />
-                    <div className="su-upload-mark"><CloudUpload size={34} aria-hidden="true" /></div>
-                    <h3>{file ? 'Your moment is in.' : 'Drop your video here'}</h3>
-                    <p>{file ? file.name : 'Or choose a file from your device.'}</p>
-                    <button type="button" className={file ? '' : 'primary'} disabled={s.busy} onClick={() => input.current?.click()}>
-                      {file ? 'Change video' : 'Choose video'}
-                      {' '}
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </button>
-                    {file && (
-                    <div className="su-file-facts">
-                      <span>
-                        {(file.size / 1024 / 1024).toFixed(1)}
-                        {' '}
-                        MB
-                      </span>
-                      <span>{info ? durationLabel(info.duration) : 'Reading video…'}</span>
-                      {info && (
-                      <span>
-                        {info.width}
-                        {' '}
-                        ×
-                        {' '}
-                        {info.height}
-                      </span>
-                      )}
-                    </div>
-                    )}
-                    <small>
-                      {!file && 'MP4 or MOV · 2–60 seconds · Up to 40 MB · '}
-                      Vertical 9:16 recommended
-                    </small>
-                  </div>
-                )}
-                {step === 1 && (
-                <div className="su-fields">
-                  <label htmlFor="short-title">
-                    Title
-                    <span className="su-count">
-                      {title.length}
-                      /100
-                    </span>
-                    <input id="short-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={100} placeholder="Make them curious" required />
-                  </label>
-                  <label htmlFor="short-description">
-                    Description
-                    <span className="su-optional">Optional</span>
-                    <textarea id="short-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={1000} rows={3} placeholder="The story behind the moment…" />
-                  </label>
-                  <div className="su-field-pair">
-                    <label htmlFor="short-topic">
-                      Main topic
-                      <select id="short-topic" value={selectedTopic} onChange={(event) => setTopic(event.target.value)}>
-                        <option value="" disabled>Choose a topic</option>
-                        {topics.map((value) => <option key={value}>{value}</option>)}
-                      </select>
-                    </label>
-                    <label htmlFor="short-language">
-                      Spoken language
-                      <select id="short-language" value={language} onChange={(event) => setLanguage(event.target.value)}>{languages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
-                    </label>
-                  </div>
-                  <small>Your topic helps discovery. We check the video and its labels during review.</small>
-                  <details className="su-captions" hidden>
-                    <summary>
-                      Captions
-                      <span>Optional · WebVTT</span>
-                    </summary>
-                    <label htmlFor="short-captions">
-                      Timed captions
-                      <textarea id="short-captions" value={captions} onChange={(event) => setCaptions(event.target.value)} maxLength={10000} rows={5} placeholder={'WEBVTT\n\n00:00.000 --> 00:03.000\nYour words here'} />
-                    </label>
-                    <small>Help people watch without sound. Captions aren’t generated automatically.</small>
-                  </details>
-                  <fieldset className="su-disclosures">
-                    <legend>Keep your audience informed</legend>
-                    <label htmlFor="short-synthetic">
-                      <span>
-                        AI-generated or substantially altered
-                        <small>Adds an AI-altered label to your Short.</small>
-                      </span>
-                      <input id="short-synthetic" className="su-switch" type="checkbox" role="switch" checked={synthetic} disabled={s.busy} onChange={(event) => setSynthetic(event.target.checked)} />
-                    </label>
-                    <label htmlFor="short-sponsored">
-                      <span>
-                        Sponsored or paid promotion
-                        <small>Makes your commercial relationship visible.</small>
-                      </span>
-                      <input id="short-sponsored" className="su-switch" type="checkbox" role="switch" checked={sponsored} disabled={s.busy} onChange={(event) => setSponsored(event.target.checked)} />
-                    </label>
-                  </fieldset>
-                  <label className="su-rights" htmlFor="short-rights">
-                    <input id="short-rights" type="checkbox" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} />
-                    <span>I have the rights to publish this video and its audio.</span>
-                  </label>
-                  {s.preparedUpload && !prepared && <small>Changing the video or details requires a new private upload. The previous unpaid version stays in Studio.</small>}
-                </div>
-                )}
-                {step === 2 && video && <UploadCoverage s={s} video={video} selection={coverage} onChange={(value) => { s.editQuote(); setCoverage(value); }} />}
-                {step === 2 && !video && (
-                <div className="su-processing">
-                  <CloudUpload size={30} aria-hidden="true" />
-                  <h3>Your upload needs another try</h3>
-                  <p>Your details are still here. Retry to reuse the video parts already received.</p>
-                </div>
-                )}
-                {step === 3 && video && (
-                  <UploadReview
-                    video={video}
-                    quote={quote}
-                    expired={expired}
-                    busy={s.busy}
-                    onEdit={go}
-                    languageLabel={languages.find(([code]) => code === video.language)?.[1] || video.language || 'No spoken language'}
-                  />
-                )}
-              </>
-            ))}
-            <div className="su-action-bar">
-              <div className="su-actions">
-                <ol className="su-steps" aria-label="Create a Short progress">
-                  {steps.map((label, index) => (
-                    <li key={label} className={index === step ? 'current' : ''}>
-                      <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
-                        <span>{index + 1}</span>
-                        {label}
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-                <div className="su-action-buttons">
-                  {step > 0 && (
-                  <button type="button" disabled={s.busy} onClick={() => go(step - 1)}>
-                    <ArrowLeft size={16} aria-hidden="true" />
-                    {' '}
-                    Previous
-                  </button>
-                  )}
-                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 3 && video && quote && !verifying && !preparing ? 'su-payment-context' : undefined}>
-                    {s.busy ? 'Please wait…' : nextLabel}
-                    <ArrowRight size={17} aria-hidden="true" />
-                  </button>
-                </div>
+      <div className={`su-workspace ${previewOpen ? 'su-preview-open' : ''}`}>
+        <button type="button" className="su-mobile-preview-toggle" disabled={publishing} aria-expanded={previewOpen} aria-controls="su-preview" onClick={() => setPreviewOpen(!previewOpen)}>
+          {previewOpen ? 'Hide preview' : 'Show video preview'}
+          <ChevronDown size={16} aria-hidden="true" />
+        </button>
+        <form className="su-editor" onSubmit={submit} noValidate inert={publishing}>
+          <div className="su-intro">
+            <span className="su-kicker">{preparing ? 'BRINGING YOUR SHORT TO LIFE' : `STEP ${step + 1} OF 4`}</span>
+            <h2 ref={heading} tabIndex={-1}>
+              {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Choose how long it stays.', 'One last look.'][step]}
+            </h2>
+            <p>
+              {(preparing || verifying) ? phaseCopy[phase] : [
+                'A fresh idea, a tiny tutorial, a moment worth sharing. Make it yours.',
+                'A little context helps the right people find your story.',
+                'Keep your Short available for viewers. Extend anytime.',
+                'Check your Short and payment before you confirm.',
+              ][step]}
+            </p>
+          </div>
+          {verifying && (
+            <section className="su-processing" aria-label="Preparing upload">
+              <LockKeyhole size={36} aria-hidden="true" />
+              <p role="status">Getting ready to upload. Your video will continue automatically.</p>
+            </section>
+          )}
+          {!verifying && (preparing ? (
+            <section className="su-processing" aria-label="Upload progress">
+              <div className="su-process-icon"><ScanEye size={36} aria-hidden="true" /></div>
+              <div role="status">
+                <strong>{uploading ? `${s.uploadProgress}% uploaded` : phaseTitles[phase]}</strong>
+                <progress aria-label={phaseTitles[phase]} max={100} value={uploading ? s.uploadProgress : undefined} />
               </div>
-            </div>
-          </form>
-          <aside id="su-preview" className="su-preview" aria-label="Short preview">
-            <div className="su-preview-heading">
-              <span>
-                <Sparkles size={15} aria-hidden="true" />
+              <ol>
+                {['Check file', 'Upload privately', 'Prepare playback'].map((label, index) => (
+                  <li key={label} className={index <= phase ? 'reached' : ''} aria-current={index === phase ? 'step' : undefined}>
+                    {index < phase ? <CheckCircle2 size={18} aria-hidden="true" /> : <span className="su-process-dot" />}
+                    {label}
+                    <small>{phaseStatus(index)}</small>
+                  </li>
+                ))}
+              </ol>
+              {s.config?.visualModeration && (
+              <p>
+                <LockKeyhole size={15} aria-hidden="true" />
                 {' '}
-                THE VIEWER’S VIEW
-              </span>
-              <span>Preview</span>
-            </div>
-            <div className={`su-player ${preview ? 'with-video' : ''}`}>
-              {preview ? (
-                <video
-                  key={preview}
-                  src={preview}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  aria-label="Preview your video"
-                  onLoadedMetadata={(event) => {
-                    const media = event.currentTarget;
-                    if (!Number.isFinite(media.duration) || media.duration < 2 || media.duration > 60) {
-                      setFileError('Your video must be 2–60 seconds long. Choose another clip.'); setInfo(undefined); return;
-                    }
-                    setInfo({ duration: media.duration, width: media.videoWidth, height: media.videoHeight });
-                  }}
-                  onError={() => { setFileError('This video couldn’t be previewed. Try an MP4 with H.264 video.'); setInfo(undefined); }}
+                Your video will only appear in the feed after review and while hosting is active.
+              </p>
+              )}
+            </section>
+          ) : (
+            <>
+              {fileError && (
+              <p className="su-error" role="alert">
+                {fileError}
+                {step > 0 && <button type="button" onClick={() => go(0)}>Change video</button>}
+              </p>
+              )}
+              {step === 0 && (
+                <div
+                  className={`su-dropzone ${dragging ? 'dragging' : ''} ${file ? 'has-file' : ''}`}
+                  role="region"
+                  aria-label="Video upload"
+                  onDragOver={(event) => { event.preventDefault(); if (!s.busy) setDragging(true); }}
+                  onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }}
+                  onDrop={drop}
                 >
-                  <track kind="captions" />
-                </video>
-              ) : (
-                <div className="su-preview-empty">
-                  <div className="su-orbit"><Clapperboard size={38} aria-hidden="true" /></div>
-                  <p>
-                    A little moment.
-                    <br />
-                    <strong>A whole new audience.</strong>
-                  </p>
+                  <input
+                    ref={input}
+                    id="short-file"
+                    className="su-file-input"
+                    aria-label="Video file"
+                    type="file"
+                    accept="video/mp4,video/quicktime,.mp4,.mov"
+                    disabled={s.busy}
+                    onChange={(event) => { const control = event.currentTarget; choose(Array.from(control.files || [])); control.value = ''; }}
+                  />
+                  <div className="su-upload-mark"><CloudUpload size={34} aria-hidden="true" /></div>
+                  <h3>{file ? 'Your moment is in.' : 'Drop your video here'}</h3>
+                  <p>{file ? file.name : 'Or choose a file from your device.'}</p>
+                  <button type="button" className={file ? '' : 'primary'} disabled={s.busy} onClick={() => input.current?.click()}>
+                    {file ? 'Change video' : 'Choose video'}
+                    {' '}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                  {file && (
+                  <div className="su-file-facts">
+                    <span>
+                      {(file.size / 1024 / 1024).toFixed(1)}
+                      {' '}
+                      MB
+                    </span>
+                    <span>{info ? durationLabel(info.duration) : 'Reading video…'}</span>
+                    {info && (
+                    <span>
+                      {info.width}
+                      {' '}
+                      ×
+                      {' '}
+                      {info.height}
+                    </span>
+                    )}
+                  </div>
+                  )}
+                  <small>
+                    {!file && 'MP4 or MOV · 2–60 seconds · Up to 40 MB · '}
+                    Vertical 9:16 recommended
+                  </small>
                 </div>
               )}
-              <div className="su-preview-copy">
-                <span className="su-preview-author">
-                  <img src="/logo.png" alt="" />
-                  {' '}
-                  Your Short
-                </span>
-                <strong>{previewTitle}</strong>
-                <div>
-                  {selectedTopic && (
-                  <span>
-                    #
-                    {selectedTopic.toLowerCase()}
+              {step === 1 && (
+              <div className="su-fields">
+                <label htmlFor="short-title">
+                  Title
+                  <span className="su-count">
+                    {title.length}
+                    /100
                   </span>
-                  )}
-                  {synthetic && <span>AI-altered</span>}
-                  {sponsored && <span>Sponsored</span>}
+                  <input id="short-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={100} placeholder="Make them curious" required />
+                </label>
+                <label htmlFor="short-description">
+                  Description
+                  <span className="su-optional">Optional</span>
+                  <textarea id="short-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={1000} rows={3} placeholder="The story behind the moment…" />
+                </label>
+                <div className="su-field-pair">
+                  <label htmlFor="short-topic">
+                    Main topic
+                    <select id="short-topic" value={selectedTopic} onChange={(event) => setTopic(event.target.value)}>
+                      <option value="" disabled>Choose a topic</option>
+                      {topics.map((value) => <option key={value}>{value}</option>)}
+                    </select>
+                  </label>
+                  <label htmlFor="short-language">
+                    Spoken language
+                    <select id="short-language" value={language} onChange={(event) => setLanguage(event.target.value)}>{languages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+                  </label>
                 </div>
+                <small>Your topic helps discovery. We check the video and its labels during review.</small>
+                <details className="su-captions" hidden>
+                  <summary>
+                    Captions
+                    <span>Optional · WebVTT</span>
+                  </summary>
+                  <label htmlFor="short-captions">
+                    Timed captions
+                    <textarea id="short-captions" value={captions} onChange={(event) => setCaptions(event.target.value)} maxLength={10000} rows={5} placeholder={'WEBVTT\n\n00:00.000 --> 00:03.000\nYour words here'} />
+                  </label>
+                  <small>Help people watch without sound. Captions aren’t generated automatically.</small>
+                </details>
+                <fieldset className="su-disclosures">
+                  <legend>Keep your audience informed</legend>
+                  <label htmlFor="short-synthetic">
+                    <span>
+                      AI-generated or substantially altered
+                      <small>Adds an AI-altered label to your Short.</small>
+                    </span>
+                    <input id="short-synthetic" className="su-switch" type="checkbox" role="switch" checked={synthetic} disabled={s.busy} onChange={(event) => setSynthetic(event.target.checked)} />
+                  </label>
+                  <label htmlFor="short-sponsored">
+                    <span>
+                      Sponsored or paid promotion
+                      <small>Makes your commercial relationship visible.</small>
+                    </span>
+                    <input id="short-sponsored" className="su-switch" type="checkbox" role="switch" checked={sponsored} disabled={s.busy} onChange={(event) => setSponsored(event.target.checked)} />
+                  </label>
+                </fieldset>
+                <label className="su-rights" htmlFor="short-rights">
+                  <input id="short-rights" type="checkbox" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} />
+                  <span>I have the rights to publish this video and its audio.</span>
+                </label>
+                {s.preparedUpload && !prepared && <small>Changing the video or details requires a new private upload. The previous unpaid version stays in Studio.</small>}
               </div>
-              <div className="su-preview-rail" aria-hidden="true">
-                <Heart size={22} />
-                <Bookmark size={21} />
-                <Share2 size={21} />
+              )}
+              {step === 2 && video && <UploadCoverage s={s} video={video} selection={coverage} onChange={(value) => { s.editQuote(); setCoverage(value); }} />}
+              {step === 2 && !video && (
+              <div className="su-processing">
+                <CloudUpload size={30} aria-hidden="true" />
+                <h3>Your upload needs another try</h3>
+                <p>Your details are still here. Retry to reuse the video parts already received.</p>
+              </div>
+              )}
+              {step === 3 && video && (
+                <UploadReview
+                  video={video}
+                  quote={quote}
+                  expired={expired}
+                  busy={s.busy || publishing}
+                  onEdit={go}
+                  languageLabel={languages.find(([code]) => code === video.language)?.[1] || video.language || 'No spoken language'}
+                />
+              )}
+            </>
+          ))}
+          <div className="su-action-bar">
+            <div className="su-actions">
+              <ol className="su-steps" aria-label="Create a Short progress">
+                {steps.map((label, index) => (
+                  <li key={label} className={index === step ? 'current' : ''}>
+                    <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
+                      <span>{index + 1}</span>
+                      {label}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <div className="su-action-buttons">
+                {step > 0 && (
+                <button type="button" disabled={s.busy || publishing} onClick={() => go(step - 1)}>
+                  <ArrowLeft size={16} aria-hidden="true" />
+                  {' '}
+                  Previous
+                </button>
+                )}
+                <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 3 && video && quote && !verifying && !preparing ? 'su-payment-context' : undefined}>
+                  {nextLabel}
+                  <ArrowRight size={17} aria-hidden="true" />
+                </button>
               </div>
             </div>
-            {file && step < 3 && <small className="su-draft-note">{prepared ? 'Uploaded draft saved in Studio. Hosting starts after payment and activation.' : 'Kept in this tab while you stay in Shorts. Reloading clears these local details.'}</small>}
-            {file && step < 3 && <small className="su-preview-filename">{file.name}</small>}
-          </aside>
-        </div>
-      )}
+          </div>
+        </form>
+        <aside id="su-preview" className="su-preview" aria-label="Short preview" inert={publishing}>
+          <div className="su-preview-heading">
+            <span>
+              <Sparkles size={15} aria-hidden="true" />
+              {' '}
+              THE VIEWER’S VIEW
+            </span>
+            <span>Preview</span>
+          </div>
+          <div className={`su-player ${preview ? 'with-video' : ''}`}>
+            {preview ? (
+              <video
+                key={preview}
+                src={preview}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label="Preview your video"
+                onLoadedMetadata={(event) => {
+                  const media = event.currentTarget;
+                  if (!Number.isFinite(media.duration) || media.duration < 2 || media.duration > 60) {
+                    setFileError('Your video must be 2–60 seconds long. Choose another clip.'); setInfo(undefined); return;
+                  }
+                  setInfo({ duration: media.duration, width: media.videoWidth, height: media.videoHeight });
+                }}
+                onError={() => { setFileError('This video couldn’t be previewed. Try an MP4 with H.264 video.'); setInfo(undefined); }}
+              >
+                <track kind="captions" />
+              </video>
+            ) : (
+              <div className="su-preview-empty">
+                <div className="su-orbit"><Clapperboard size={38} aria-hidden="true" /></div>
+                <p>
+                  A little moment.
+                  <br />
+                  <strong>A whole new audience.</strong>
+                </p>
+              </div>
+            )}
+            <div className="su-preview-copy">
+              <span className="su-preview-author">
+                <img src="/logo.png" alt="" />
+                {' '}
+                Your Short
+              </span>
+              <strong>{previewTitle}</strong>
+              <div>
+                {selectedTopic && (
+                <span>
+                  #
+                  {selectedTopic.toLowerCase()}
+                </span>
+                )}
+                {synthetic && <span>AI-altered</span>}
+                {sponsored && <span>Sponsored</span>}
+              </div>
+            </div>
+            <div className="su-preview-rail" aria-hidden="true">
+              <Heart size={22} />
+              <Bookmark size={21} />
+              <Share2 size={21} />
+            </div>
+          </div>
+          {file && step < 3 && <small className="su-draft-note">{prepared ? 'Uploaded draft saved in Studio. Hosting starts after payment and activation.' : 'Kept in this tab while you stay in Shorts. Reloading clears these local details.'}</small>}
+          {file && step < 3 && <small className="su-preview-filename">{file.name}</small>}
+        </aside>
+      </div>
+      {publishing && <UploadPublishOverlay s={s} />}
     </div>
   );
 };

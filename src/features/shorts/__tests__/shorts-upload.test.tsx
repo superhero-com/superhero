@@ -1,6 +1,7 @@
 import {
-  fireEvent, render, screen, waitFor,
+  fireEvent, render, screen, waitFor, within,
 } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -58,6 +59,28 @@ const video = {
 const quote = {
   id: '1', shortId: 'prepared', days: 30, charge: '10', unused: '0', source: 'wallet', expiresAt: Date.now() + 1000000, estimatedUntil: Date.now() + 30 * 86400000,
 } as State['quote'];
+const reviewState = () => {
+  const file = new File(['owned media'], 'owned.mp4', { type: 'video/mp4', lastModified: 1 });
+  const draft = {
+    step: 3,
+    revision: 0,
+    file,
+    title: video.title,
+    description: '',
+    topic: video.topic,
+    language: 'und',
+    captions: '',
+    synthetic: false,
+    sponsored: false,
+    rights: true,
+  };
+  return {
+    uploadDraft: draft,
+    preparedUpload: { video, key: JSON.stringify([0, file.name, file.size, 1, video.title, '', video.topic, 'und', '', false, false, true]) },
+    quote,
+    dashboard: { shorts: [video], pending: [], account: { available: '0.08' } } as unknown as State['dashboard'],
+  };
+};
 beforeEach(() => {
   vi.clearAllMocks(); upload.mockResolvedValue(true); createQuote.mockResolvedValue(true);
   URL.createObjectURL = vi.fn(() => 'blob:owned'); URL.revokeObjectURL = vi.fn();
@@ -153,7 +176,7 @@ describe('Four-step Short upload', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
     await waitFor(() => expect(createQuote).toHaveBeenCalledWith({ days: 30 }));
     rerender(<ShortsUpload s={state({ ...ready, quote })} />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue to wallet' })).toBeVisible());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish' })).toBeVisible());
     expect(pay).not.toHaveBeenCalled();
     expect(screen.getByText('From your wallet')).toBeVisible();
     expect(screen.getByText('30 days available')).toBeVisible();
@@ -171,8 +194,8 @@ describe('Four-step Short upload', () => {
     expect(screen.getByRole('radio', { name: '30 days' })).toBeChecked();
     expect(pay).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Next: Review' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Continue to wallet' })).toBeVisible());
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to wallet' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish' })).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
     expect(pay).toHaveBeenCalledOnce();
   });
 
@@ -238,5 +261,72 @@ describe('Four-step Short upload', () => {
     expect(hostingPrice({ ...prices, bytes: 1 }, 1)).toBe('0.000000003333333334');
     expect(hostingPrice(prices, 1.5)).toBeUndefined();
     expect(hostingPrice(prices, 3651)).toBeUndefined();
+  });
+
+  it('keeps Review mounted through wallet cancellation, payment and publication', () => {
+    const ready = reviewState();
+    const view = (overrides: Partial<State> = {}) => (
+      <MemoryRouter><ShortsUpload s={state({ ...ready, ...overrides })} /></MemoryRouter>
+    );
+    const payment = { shortId: video.id, quoteId: quote!.id, quote: quote! };
+    const { rerender } = render(view());
+    const preview = screen.getByLabelText('Preview your video');
+    Object.defineProperties(preview, {
+      duration: { value: 8 }, videoWidth: { value: 720 }, videoHeight: { value: 1280 },
+    });
+    fireEvent.loadedMetadata(preview);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    expect(pay).toHaveBeenCalledOnce();
+    rerender(view({ busy: true, walletPending: true, uploadPayment: { ...payment, status: 'wallet' } }));
+    expect(screen.getByRole('heading', { name: 'Confirm in your wallet' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '4 Review' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByLabelText('Preview your video')).toBe(preview);
+    expect(screen.queryByRole('region', { name: 'Preparing upload' })).not.toBeInTheDocument();
+
+    // A declined wallet request returns to the same review, without resubmitting.
+    rerender(view());
+    expect(screen.queryByRole('region', { name: 'Publishing your Short' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    expect(pay).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    expect(pay).toHaveBeenCalledTimes(2);
+
+    rerender(view({ quote: undefined, busy: true, uploadPayment: { ...payment, status: 'activating' } }));
+    expect(screen.getByRole('heading', { name: 'Publishing your Short' })).toBeVisible();
+    expect(screen.getByText('30 days available')).toBeVisible();
+    expect(screen.getByRole('list', { name: 'Publishing progress' })).toHaveTextContent('Confirm paymentDone');
+    expect(screen.queryByText(/price has expired/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
+    rerender(view({ quote: undefined, uploadPayment: { ...payment, status: 'active' } }));
+    expect(screen.getByRole('heading', { name: 'Your Short is ready to share.' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Watch & share' })).toHaveAttribute('href', `/shorts?short=${video.id}`);
+    expect(screen.getByRole('button', { name: '4 Review' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByLabelText('Preview your video')).toBe(preview);
+    expect(pay).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['pending', 'uncertain'] as const)('keeps %s payments tracked instead of enabling Publish again', (status) => {
+    const ready = reviewState();
+    render(
+      <MemoryRouter>
+        <ShortsUpload s={state({
+          ...ready,
+          quote: undefined,
+          uploadPayment: {
+            shortId: video.id, quoteId: quote!.id, quote: quote!, status,
+          },
+        })}
+        />
+      </MemoryRouter>,
+    );
+    const overlay = screen.getByRole('region', { name: 'Publishing your Short' });
+    expect(within(overlay).getByText('Needs attention')).toBeVisible();
+    expect(within(overlay).getByRole('link', { name: 'View in Studio' })).toBeVisible();
+    expect(within(overlay).queryByRole('link', { name: 'Watch & share' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.queryByText(/price has expired/)).not.toBeInTheDocument();
+    expect(pay).not.toHaveBeenCalled();
   });
 });

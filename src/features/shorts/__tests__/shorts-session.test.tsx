@@ -436,6 +436,7 @@ describe('Inline upload hosting', () => {
     await act(async () => { await Promise.all([result.current.confirmUploadFunding(), result.current.confirmUploadFunding()]); });
     expect(mocks.call).toHaveBeenCalledTimes(2);
     expect(result.current.uploadPayment?.status).toBe('active');
+    expect(result.current.uploadPayment?.quote).toMatchObject({ id: '7', shortId: 'draft', source: 'wallet' });
     expect(result.current.quote).toBeUndefined();
     expect(mocks.navigate).not.toHaveBeenCalled();
   });

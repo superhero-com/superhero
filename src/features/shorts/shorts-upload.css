@@ -225,13 +225,6 @@
 .su-review-help p { margin: .5rem 0 0; font-size: .75rem; line-height: 1.65; }
 .su-review-help .su-feed-status { margin-top: .75rem; padding: .75rem; }
 .su-review-help .su-feed-status>svg { display: none; }
-.su-outcome { max-width: 40rem; margin: 3rem auto; text-align: center; padding: 2rem; border: 1px solid var(--line); border-radius: 1.5rem; background: radial-gradient(ellipse at top,#183560,#101722 70%); }
-.su-outcome-art { display: grid; place-items: center; margin: .5rem auto 2.5rem; width: 6rem; height: 6rem; border-radius: 2rem; background: #24509255; color: var(--su-accent-text); box-shadow: 0 0 0 1rem #6295ff0a,0 0 0 2rem #6295ff05; }
-.su-outcome.is-live .su-outcome-art { color: var(--su-success); animation: su-enter .5s ease-out; }
-.su-outcome h2 { font-size: clamp(1.6rem,3vw,2.1rem); letter-spacing: -.03em; }
-.su-outcome p { line-height: 1.7; font-size: .9375rem; }
-.su-outcome .su-feed-status { text-align: left; margin: 1.5rem 0; }
-.su-outcome-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1.5rem; }
 @keyframes su-enter { from { opacity: .5; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media(max-width:760px) {
   .su-steps { padding: 0 .2rem; gap: .25rem; justify-content: space-between; }
@@ -251,7 +244,6 @@
   .su-plans { gap: .5rem; }
   .su-plans label { padding: 1rem .65rem; }
   .su-field-pair { grid-template-columns: 1fr 1fr; gap: .75rem; }
-  .su-outcome { margin: 1.5rem 0; padding: 1.5rem 1rem; }
 }
 
 .shorts-app .su-steps button,
@@ -260,7 +252,6 @@
 .shorts-app .su-steps .current button { color: var(--su-accent-text); }
 .shorts-app .su-intro h2 { font-size: clamp(1.5rem, 2vw, 1.875rem); margin: .5rem 0; line-height: 1.2; }
 .shorts-app .su-plans input[type=radio] { margin: 0; padding: 0; }
-.shorts-app .su-outcome h2 { font-size: clamp(1.6rem,3vw,2.1rem); }
 
 .shorts-app .su-actions .primary { min-width: 0; flex-shrink: 1; overflow-wrap: anywhere; }
 @media(max-width:1100px) {
@@ -275,3 +266,25 @@
   .shorts-app .su-steps button { font-size: .6875rem; gap: .25rem; }
   .su-steps button span { width: 1.5rem; height: 1.5rem; font-size: .6875rem; }
 }
+
+/* Keep Review and its fixed stepper in place throughout publication. */
+.su-publish-overlay { position: fixed; inset: 0 0 0 var(--ss-sidebar-width, 0px); z-index: 30; display: grid; justify-items: center; align-items: safe center; overflow-y: auto; padding: 2rem 1.5rem calc(7rem + env(safe-area-inset-bottom)); background: #080e19df; backdrop-filter: blur(4px); }
+.su-publish-content { width: 100%; max-width: 28rem; text-align: center; }
+.su-publish-art { display: grid; place-items: center; width: 5rem; height: 5rem; margin: 0 auto 1.75rem; border-radius: 1.5rem; color: var(--su-accent-text); background: #173763; box-shadow: 0 0 0 .75rem #6295ff08; }
+.su-publish-content.is-live .su-publish-art { color: var(--su-success); background: #163c36; }
+.shorts-app .su-publish-content h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); margin: 0 0 .75rem; letter-spacing: -.035em; outline: none; }
+.su-publish-content p { font-size: .875rem; line-height: 1.7; margin: 0; }
+.su-publish-steps { padding: 0; list-style: none; margin: 1.75rem 0 0; text-align: left; }
+.su-publish-steps li { display: flex; align-items: center; gap: .75rem; padding: .875rem 0; color: var(--muted); font-size: .875rem; }
+.su-publish-steps li+li { border-top: 1px solid #27374d80; }
+.su-publish-steps li[aria-current] { color: var(--su-accent-text); }
+.su-publish-steps li.complete { color: var(--su-success); }
+.su-publish-step-icon { display: grid; place-items: center; flex-shrink: 0; width: 1.875rem; height: 1.875rem; border: 1px solid #354966; border-radius: 50%; font-size: .75rem; }
+.su-publish-steps .complete .su-publish-step-icon { border-color: transparent; }
+.su-publish-steps li[aria-current] .su-publish-step-icon { border-color: #4080e1; background: #18366a; }
+.su-publish-steps small { margin-left: auto; font-size: .6875rem; text-align: right; }
+.su-publish-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1.5rem; }
+.su-publish-spinner { animation: su-publish-spin 1.2s linear infinite; }
+@keyframes su-publish-spin { to { transform: rotate(360deg); } }
+@media(max-width:1100px) { .su-publish-overlay { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); } }
+@media(max-width:760px) { .su-publish-overlay { padding-inline: 1rem; }.su-publish-art { width: 4rem; height: 4rem; margin-bottom: 1.25rem; }.su-publish-steps li { font-size: .8125rem; gap: .5rem; } }

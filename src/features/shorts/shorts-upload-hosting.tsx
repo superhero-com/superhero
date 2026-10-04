@@ -1,6 +1,7 @@
 import {
-  CalendarDays, CheckCircle2, ChevronDown, Clock3, Coins, Info, Pencil, ShieldCheck, Wallet,
+  CalendarDays, CheckCircle2, ChevronDown, Clock3, Coins, Info, LoaderCircle, Pencil, ShieldCheck, Wallet,
 } from 'lucide-react';
+import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { HostingPrices, Quote, Short } from './types';
 import type { useShorts } from './use-shorts';
@@ -222,38 +223,64 @@ export const UploadReview = ({
   </div>
 );
 
-export const UploadOutcome = ({ s }: { s: State }) => {
+export const UploadPublishOverlay = ({ s }: { s: State }) => {
   const payment = s.uploadPayment!;
   const video = s.dashboard?.shorts.find((v) => v.id === payment.shortId) || s.preparedUpload!.video;
   const active = payment.status === 'active' || hostingStatus(video) === 'active';
   const eligible = guidelinesStatus(video) === 'eligible';
   const pending = s.dashboard?.pending.find((item) => item.id === payment.quoteId);
-  let title = 'Confirm hosting in your wallet';
-  let copy = 'Review the amount and network fee. You can cancel and return to your Short.';
-  if (payment.status === 'activating') { title = 'Making your Short available'; copy = 'Payment received. We’re verifying your video’s hosting. You won’t need to pay again.'; }
-  if (payment.status === 'pending') { title = 'Payment received. Finishing setup.'; copy = 'Activation is taking longer than expected. We’ll keep trying while the local service is running. Track this purchase in Studio.'; }
-  if (payment.status === 'uncertain') { title = 'Let’s check your payment'; copy = 'The wallet response was interrupted. Check this purchase in Studio and your wallet before making another payment.'; }
-  if (active) { title = eligible ? 'Your Short is live.' : 'Your Short is ready to share.'; copy = eligible ? 'Your hosting is active and your Short is eligible for the feed.' : 'Hosting is active. Share your Short using its link.'; }
+  const paused = !active && ['pending', 'uncertain'].includes(payment.status);
+  const phase = active ? 3 : Number(['activating', 'pending'].includes(payment.status));
+  let StatusIcon = LoaderCircle;
+  if (active) StatusIcon = CheckCircle2;
+  else if (paused) StatusIcon = Clock3;
+  const heading = useRef<HTMLHeadingElement>(null);
+  useLayoutEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    heading.current?.focus();
+    return () => { requestAnimationFrame(() => { if (previous?.isConnected) previous.focus(); }); };
+  }, []);
+  let title = 'Confirm in your wallet';
+  let copy = 'Approve the payment in your wallet. We’ll continue once it’s confirmed.';
+  if (payment.status === 'activating') { title = 'Publishing your Short'; copy = 'Payment confirmed. We’re making your video available to watch.'; }
+  if (payment.status === 'pending') { title = 'Your Short needs a little more time'; copy = 'Payment confirmed. We’re still activating hosting. Track progress in Studio; you don’t need to pay again.'; }
+  if (payment.status === 'uncertain') { title = 'Let’s check your payment'; copy = 'We couldn’t confirm the wallet response. Check your wallet and this purchase in Studio before paying again.'; }
+  if (active) { title = eligible ? 'Your Short is live.' : 'Your Short is ready to share.'; copy = 'Share your moment with the world.'; }
+  const stageStatus = (index: number) => {
+    if (index < phase) return 'Done';
+    if (index > phase) return 'Next';
+    return paused ? 'Needs attention' : 'In progress';
+  };
   return (
-    <section className={`su-outcome ${active ? 'is-live' : ''}`} aria-live="polite">
-      <div className="su-outcome-art">{active ? <CheckCircle2 size={48} aria-hidden="true" /> : <Clock3 size={42} aria-hidden="true" />}</div>
-      <span className="su-kicker">{active ? 'YOUR MOMENT IS OUT THERE' : 'YOUR HOSTING PURCHASE'}</span>
-      <h2>{title}</h2>
-      <p>{copy}</p>
-      {active && video.until > Date.now() && (
-      <p>
-        Available until
-        <strong>{coverageDate(video.until)}</strong>
-        . Extend anytime from Studio.
-      </p>
-      )}
-      {active && <UploadFeedStatus video={video} />}
-      <div className="su-outcome-actions">
-        {active && <Link className="ss-button primary" to={`/shorts?short=${video.id}`}>Watch & share</Link>}
-        <Link className="ss-button" to={`/shorts/studio/video/${video.id}`}>View in Studio</Link>
-        {pending && <button type="button" disabled={s.busy || !s.authenticated} onClick={() => s.recover(pending.id, false)}>Retry activation</button>}
-        {pending?.refundable && <button type="button" disabled={s.busy || !s.authenticated} onClick={() => s.recover(pending.id, true)}>Restore funding</button>}
-        {active && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
+    <section className="su-publish-overlay" aria-label="Publishing your Short">
+      <div className={`su-publish-content ${active ? 'is-live' : ''}`}>
+        <div className="su-publish-art" aria-hidden="true">
+          <StatusIcon className={!active && !paused ? 'su-publish-spinner' : undefined} size={40} />
+        </div>
+        <div role="status" aria-atomic="true">
+          <h2 ref={heading} tabIndex={-1}>{title}</h2>
+          <p>{copy}</p>
+        </div>
+        <ol className="su-publish-steps" aria-label="Publishing progress">
+          {['Confirm payment', 'Activate hosting', 'Ready to watch'].map((label, index) => (
+            <li key={label} className={index < phase ? 'complete' : ''} aria-current={index === phase ? 'step' : undefined}>
+              <span className="su-publish-step-icon" aria-hidden="true">
+                {index < phase ? <CheckCircle2 size={19} /> : index + 1}
+              </span>
+              <span>{label}</span>
+              <small>{stageStatus(index)}</small>
+            </li>
+          ))}
+        </ol>
+        {(active || paused) && (
+          <div className="su-publish-actions">
+            {active && <Link className="ss-button primary" to={`/shorts?short=${video.id}`}>Watch & share</Link>}
+            <Link className="ss-button" to={`/shorts/studio/video/${video.id}`}>View in Studio</Link>
+            {!active && pending && <button type="button" disabled={s.busy || !s.authenticated} onClick={() => s.recover(pending.id, false)}>Retry activation</button>}
+            {!active && pending?.refundable && <button type="button" disabled={s.busy || !s.authenticated} onClick={() => s.recover(pending.id, true)}>Restore funding</button>}
+            {active && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
+          </div>
+        )}
       </div>
     </section>
   );

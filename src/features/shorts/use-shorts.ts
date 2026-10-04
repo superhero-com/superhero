@@ -71,7 +71,7 @@ export function useShorts() {
   const [preparedUpload, setPreparedUpload] = useState<{ video: Short; key: string }>();
   const [uploadPrices, setUploadPrices] = useState<HostingPrices>();
   const [uploadPayment, setUploadPayment] = useState<{
-    shortId: string; quoteId: string; status: 'wallet' | 'activating' | 'pending' | 'active' | 'uncertain';
+    shortId: string; quoteId: string; quote: Quote; status: 'wallet' | 'activating' | 'pending' | 'active' | 'uncertain';
   }>();
   const [uploadProgress, setUploadProgress] = useState<number>();
   const [uploadStage, setUploadStage] = useState<'checking' | 'uploading' | 'processing'>();
@@ -375,7 +375,7 @@ export function useShorts() {
     await checkNetwork();
     requireLogin();
     if (sdk.address !== actor) throw new Error('Wallet signer does not match the connected account.');
-    const purchase = { shortId: quote.shortId, quoteId: quote.id };
+    const purchase = { shortId: quote.shortId, quoteId: quote.id, quote };
     setUploadPayment({ ...purchase, status: 'wallet' });
     try {
       await transact(quote.source === 'wallet' ? 'fund_wallet' : 'fund_rewards', [BigInt(quote.id)], quote.source === 'wallet' ? quote.amountAettos : undefined, () => {

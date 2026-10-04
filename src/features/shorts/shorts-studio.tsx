@@ -11,6 +11,7 @@ import { dailyCreatorRevenue } from './shorts-trends';
 import type { useShorts } from './use-shorts';
 import type { Performance, Short, VisualSafety } from './types';
 import { ShortsJourney } from './shorts-journey';
+import { StudioSkeleton } from './shorts-studio-skeleton';
 import {
   ShortsGuidelines, feedLabel, guidelinesStatus, hostingStatus,
 } from './shorts-guidelines';
@@ -164,7 +165,11 @@ const Trend = ({ performance: p }: { performance: Performance }) => {
 };
 const Analytics = ({ s }: { s: State }) => {
   const p = s.performance;
-  if (!p) return <div className="ss-panel" role="status">{s.performanceError || 'Loading your analytics…'}</div>;
+  if (!p) {
+    return s.performanceError
+      ? <div className="ss-panel" role="alert">{s.performanceError}</div>
+      : <StudioSkeleton page="analytics" label="Loading your analytics…" />;
+  }
   const { summary: m } = p;
   return (
     <>
@@ -328,7 +333,11 @@ const actionLabel: Record<string, string> = {
 };
 const Ledger = ({ s, hosting = false }: { s: State; hosting?: boolean }) => {
   const p = s.performance;
-  if (!p) return <p>{s.performanceError || 'Loading verified history…'}</p>;
+  if (!p) {
+    return s.performanceError
+      ? <div className="ss-panel" role="alert">{s.performanceError}</div>
+      : <StudioSkeleton page="activity" label="Loading your activity…" />;
+  }
   const rows = p.finance.entries.filter((e) => e.at >= p.start && e.at < p.end && (hosting ? ['HostingFunded', 'HostingRefunded', 'Activated', 'StorageSettled'].includes(e.action) : ['PaidLike', 'Claimed', 'HostingFunded', 'HostingRefunded'].includes(e.action)));
   return (
     <section className="ss-panel">
@@ -464,7 +473,7 @@ const Hosting = ({ s }: { s: State }) => {
 const VideoDetail = ({ s }: { s: State }) => {
   const [appeal, setAppeal] = useState('');
   const video = s.dashboard?.shorts.find((v) => v.id === s.videoId);
-  if (!video && (s.busy || !s.dashboard)) return <div className="ss-panel" role="status">Loading your Short…</div>;
+  if (!video && (s.busy || !s.dashboard)) return <StudioSkeleton page="video" label="Loading your Short…" />;
   if (!video) return <div className="ss-panel">This Short is not in your creator account.</div>;
   return (
     <>
@@ -640,6 +649,7 @@ const ReviewQueue = ({ s }: { s: State }) => {
 };
 export const ShortsStudio = ({ s }: { s: State }) => {
   const page = s.section;
+  const loading = page !== 'upload' && (s.restoringCreatorSession || (s.authenticated && !s.dashboard));
   const titles: Record<string, string> = {
     overview: 'Your ideas. Your impact.', content: 'Your Shorts', analytics: 'Audience analytics', revenue: 'Your rewards', hosting: 'Hosting & coverage', upload: 'Create a Short', video: 'Short details', review: 'Review & safety',
   };
@@ -681,14 +691,14 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
             <h1>{titles[page] || 'Creator Studio'}</h1>
           </div>
-          {s.authenticated && <button type="button" disabled={s.busy} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
+          {(s.authenticated || s.restoringCreatorSession) && <button type="button" disabled={s.busy || loading} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
         </header>
         )}
         {page !== 'upload' && (
         <div className="ss-health">
           <span className={s.config?.ipfs ? 'sh-dot' : 'sh-dot offline'} />
           {s.config ? `Testnet · IPFS ${s.config.ipfs ? 'ready' : 'offline'}` : 'Connecting…'}
-          <span>{`${s.config?.replicas || 0} storage replicas`}</span>
+          <span>{s.config ? `${s.config.replicas || 0} storage replicas` : 'Checking storage…'}</span>
         </div>
         )}
         {s.message && (page !== 'upload' || s.messageTone === 'error') && (
@@ -710,10 +720,9 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             ) : <ConnectWalletButton label="Connect wallet" />}
           </div>
         ) : null}
-        {s.restoringCreatorSession && page !== 'upload' && <div className="ss-panel" role="status">Opening your Studio…</div>}
+        {loading && <StudioSkeleton page={page} label={s.restoringCreatorSession ? 'Opening your Studio…' : 'Loading your Studio…'} />}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
-        {s.authenticated && !s.dashboard && page !== 'upload' && <div className="ss-panel" role="status">Loading your creator account…</div>}
-        {s.authenticated && s.dashboard && (
+        {s.authenticated && s.dashboard && !loading && (
           <>
             {s.dashboard.pending.map((p) => (
               <div className="sh-notice" key={p.id}>

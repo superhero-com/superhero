@@ -8,7 +8,7 @@ import { Contract } from '@aeternity/aepp-sdk';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWalletConnect } from '@/hooks/useWalletConnect';
 import { CONFIG } from '@/config';
-import { creatorSessionAtom, type CreatorLogin } from './shorts-wallet-session';
+import { creatorSessionAtom, openConnectedCreatorSession, type CreatorLogin } from './shorts-wallet-session';
 import { useShortsPreferences, rankShorts } from './shorts-preferences';
 import { useShortsSocial } from './use-shorts-social';
 import { request, SHORTS_API, ShortsApiError } from './api';
@@ -36,9 +36,20 @@ export function useShorts() {
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
   const [config, setConfig] = useState<Config>();
+  const connectionOnly = config?.creatorAccess === 'connected-wallet';
+  const [creatorConnecting, setCreatorConnecting] = useState(false);
+  const [creatorConnectionError, setCreatorConnectionError] = useState('');
+  const creatorScope = JSON.stringify([actor, config?.network, config?.contract, config?.creatorAccess]);
+  const currentCreatorScope = useRef(creatorScope);
+  currentCreatorScope.current = creatorScope;
+  useEffect(() => {
+    currentCreatorScope.current = creatorScope;
+    return () => { if (currentCreatorScope.current === creatorScope) currentCreatorScope.current = ''; };
+  }, [creatorScope]);
   const authenticated = !!login && login.address === actor && login.expiresAt > Date.now()
     && login.api === SHORTS_API && login.network === CONFIG.NETWORK
-    && login.network === config?.network && login.contract === config?.contract;
+    && login.network === config?.network && login.contract === config?.contract
+    && (login.kind !== 'connected-wallet' || connectionOnly);
   const token = authenticated ? login.token : undefined;
   const currentLogin = useRef(login);
   currentLogin.current = login;
@@ -88,6 +99,7 @@ export function useShorts() {
     setFeed((items) => items.map((item) => ({ ...item, liked: false, mine: item.creator === actor })));
     setSharedResult(undefined);
     setLogin((current) => (current?.address === actor ? current : undefined));
+    setCreatorConnecting(false); setCreatorConnectionError('');
     setDashboard(undefined);
     setPerformance(undefined);
     setClaimReview(false);
@@ -112,10 +124,10 @@ export function useShorts() {
     if (!login) return undefined;
     const timer = setTimeout(() => {
       setLogin(undefined); setDashboard(undefined); setReview([]); setPerformance(undefined);
-      setMessageTone('info'); setMessage('Creator access expired. Your wallet is still connected; verify ownership when you continue.');
+      if (!connectionOnly) { setMessageTone('info'); setMessage('Your Studio session expired. Continue with your connected wallet.'); }
     }, Math.max(0, login.expiresAt - Date.now()));
     return () => clearTimeout(timer);
-  }, [login, setLogin]);
+  }, [login, setLogin, connectionOnly]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
   const refresh = useCallback(async () => {
     generation.current += 1;
@@ -129,10 +141,11 @@ export function useShorts() {
     let r: Review[] = [];
     try {
       d = token ? await request<Dashboard>('/dashboard', undefined, token) : undefined;
-      r = token && actor === c.operator ? await request<Review[]>('/review', undefined, token) : [];
+      r = token && actor === c.operator && login?.kind !== 'connected-wallet' ? await request<Review[]>('/review', undefined, token) : [];
     } catch (error) {
       if (error instanceof ShortsApiError && error.status === 401) {
         setLogin((current) => (current?.token === token ? undefined : current));
+        if (c.creatorAccess === 'connected-wallet') setCreatorConnectionError('Studio couldn’t load your account. Please try again.');
       }
       throw error;
     }
@@ -150,7 +163,7 @@ export function useShorts() {
     setFeed(f.map(withConfirmedLike));
     setSharedResult(sharedId ? { id: sharedId, video: shared ? withConfirmedLike(shared) : undefined } : undefined);
     setDashboard(d); setReview(r);
-  }, [actor, topic, token, sharedId, setLogin]);
+  }, [actor, topic, token, sharedId, setLogin, login?.kind]);
   useEffect(() => {
     const counter = generation;
     refresh().catch((e) => setMessage(e.message));
@@ -209,7 +222,8 @@ export function useShorts() {
     if (!session || session.address !== actor || currentAddress.current !== actor
       || session.expiresAt <= Date.now() || session.api !== SHORTS_API
       || session.network !== config?.network || session.network !== CONFIG.NETWORK
-      || session.contract !== config?.contract) throw new Error('Verify your connected wallet to access creator tools.');
+      || session.contract !== config?.contract
+      || (session.kind === 'connected-wallet' && !connectionOnly)) throw new Error('Studio is still connecting to your wallet. Please try again.');
     return session.token;
   };
   const checkNetwork = async () => {
@@ -220,9 +234,8 @@ export function useShorts() {
     if (!actor || currentAddress.current !== actor) throw new Error('Wallet changed. Reconnect and try again.');
   };
   const transact = async (method: string, args: unknown[], amount?: string, onConfirmed?: () => void) => {
-    // A paid Like is authorized by the wallet-signed contract call itself.
-    // Creator operations still require their separate private API session.
-    const auth = method === 'paid_like' ? token : requireLogin();
+    // The wallet-signed contract call authorizes every on-chain action.
+    const auth = token;
     setWalletPending(true);
     try {
       await checkNetwork();
@@ -244,8 +257,27 @@ export function useShorts() {
       return result;
     } finally { setWalletPending(false); }
   };
-  const verifyCreator = async () => {
+  const connectCreator = useCallback(async () => {
+    const scope = creatorScope;
+    setCreatorConnecting(true); setCreatorConnectionError('');
+    try {
+      const next = await openConnectedCreatorSession(actor, config?.network || '', config?.contract || '');
+      if (currentCreatorScope.current !== scope) throw new Error('Wallet changed while opening Studio.');
+      currentLogin.current = next;
+      setLogin(next);
+      return next.token;
+    } catch (error) {
+      if (currentCreatorScope.current === scope) setCreatorConnectionError(error instanceof Error ? error.message : 'Studio could not connect. Please try again.');
+      throw error;
+    } finally { if (currentCreatorScope.current === scope) setCreatorConnecting(false); }
+  }, [actor, config?.network, config?.contract, creatorScope, setLogin]);
+  useEffect(() => {
+    if (!connectionOnly || !actor || authenticated || creatorConnectionError || tab === 'feed') return;
+    connectCreator().catch(() => undefined);
+  }, [connectionOnly, actor, authenticated, creatorConnectionError, tab, connectCreator]);
+  const ensureCreatorSession = async () => {
     if (authenticated) return requireLogin();
+    if (connectionOnly) return connectCreator();
     setWalletPending(true);
     try {
       await checkNetwork();
@@ -265,7 +297,7 @@ export function useShorts() {
   };
   const signIn = () => perform(async () => {
     if (!actor) { openModal({ name: 'connect-wallet' }); return; }
-    await verifyCreator();
+    await ensureCreatorSession();
   }, actor ? 'Creator access ready. Your connected wallet is unchanged.' : 'Choose a wallet using Superhero’s connect dialog.');
   const connectForLike = () => perform(async () => {
     if (actor) return;
@@ -287,12 +319,11 @@ export function useShorts() {
     requireLogin(); setUploadPrices(prices);
   }, 'Hosting prices updated.');
   const upload = async (data: FormData, key = '') => perform(async () => {
-    // Next: Hosting is the explicit upload intent. Verify only when private
-    // access is missing, then continue the same action without a second click.
+    // Reuse the main connected account and continue the same upload action.
     if (uploadPayment) throw new Error('Check your existing hosting purchase in Studio before starting again.');
     const file = data.get('file') as File;
     if (!file?.size || file.size > 40 * 1024 * 1024) throw new Error('Choose a video smaller than 40 MB.');
-    const auth = token ? requireLogin() : await verifyCreator();
+    const auth = token ? requireLogin() : await ensureCreatorSession();
     const hash = async (bytes: ArrayBuffer) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((v) => v.toString(16).padStart(2, '0')).join('');
     setUploadProgress(0); setUploadStage('checking');
     const details = {
@@ -323,7 +354,7 @@ export function useShorts() {
       setUploadProgress(Math.round(((i + 1) / count) * 100));
     }
     setUploadStage('processing');
-    setMessage('Upload received. Analyzing your video for community guidelines and preparing playback…');
+    setMessage('Upload received. Preparing your video for playback…');
     const prepared = await request<Short>(`/uploads/${resume.id}/finish`, {}, requireLogin());
     requireLogin();
     try { localStorage.removeItem(storageKey); } catch { /* No persisted draft. */ }
@@ -332,7 +363,7 @@ export function useShorts() {
     setUploadProgress(undefined); setUploadStage(undefined);
     const prices = await request<HostingPrices>(`/${prepared.id}/hosting-prices`, undefined, auth).catch(() => undefined);
     if (currentAddress.current === actor) setUploadPrices(prices);
-  }, 'Your video is ready for hosting. We’re reviewing its eligibility for the feed. You only pay when you confirm a hosting quote.');
+  }, 'Your video is ready. Choose how long it stays available.');
   const createUploadQuote = (selection: { days: number } | { budget: string }) => perform(async () => {
     if (!preparedUpload || uploadPayment) throw new Error('Prepare your video before choosing hosting.');
     const next = await request<Quote>('/quote', { shortId: preparedUpload.video.id, source, ...selection }, requireLogin());
@@ -409,10 +440,11 @@ export function useShorts() {
   return {
     actor,
     authenticated,
-    restoringCreatorSession: !!login && login.address === actor && login.expiresAt > Date.now() && !config,
+    restoringCreatorSession: !!actor && (!config || creatorConnecting || (connectionOnly && !authenticated && !creatorConnectionError)),
+    creatorConnectionError,
     signIn,
     connectForLike,
-    isOperator: authenticated && actor === config?.operator,
+    isOperator: authenticated && actor === config?.operator && login?.kind !== 'connected-wallet',
     tab,
     section,
     videoId,

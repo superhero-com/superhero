@@ -38,6 +38,7 @@ export interface Account {
   restored: string;
 }
 export interface Config {
+  creatorAccess?: 'connected-wallet' | 'signed-session';
   visualModeration: boolean;
   replicas: number;
   mode: string;

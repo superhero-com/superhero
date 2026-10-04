@@ -32,7 +32,23 @@ describe('Studio main-wallet identity', () => {
     expect(screen.getByRole('button', { name: 'Shared wallet account menu' })).toBeVisible();
     expect(screen.queryByRole('button', { name: /Sign in|Switch wallet|Reconnect/i })).not.toBeInTheDocument();
     expect(signIn).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Unlock creator tools' }));
+    expect(screen.queryByText(/Confirm ownership/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Studio' }));
     expect(signIn).toHaveBeenCalledOnce();
+  });
+  it('opens the connected creator account without an unlock action', () => {
+    const signIn = vi.fn();
+    render(
+      <MemoryRouter initialEntries={['/shorts/studio']}>
+        <ShortsStudio s={{
+          actor: 'ak_connected', authenticated: false, restoringCreatorSession: true, busy: false, signIn,
+        } as unknown as Parameters<typeof ShortsStudio>[0]['s']}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Opening your Studio');
+    expect(screen.queryByRole('button', { name: /Unlock|Open Studio/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Confirm ownership/)).not.toBeInTheDocument();
+    expect(signIn).not.toHaveBeenCalled();
   });
 });

@@ -85,7 +85,7 @@ beforeEach(() => {
 });
 
 describe('Shorts wallet session and recovery', () => {
-  it('sends one contract transaction without sign-in, and keeps creator actions authenticated', async () => {
+  it('authorizes paid Likes and reward claims through their wallet transactions without an API sign-in', async () => {
     const { result } = await startLike(false);
     expect(result.current.authenticated).toBe(false);
     await act(async () => { await result.current.confirmLike(); });
@@ -95,8 +95,9 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
     expect(result.current.authenticated).toBe(false);
     await act(async () => { await result.current.claim(); });
-    expect(result.current.message).toContain('Verify your connected wallet');
-    expect(mocks.call).toHaveBeenCalledTimes(1);
+    expect(mocks.call).toHaveBeenLastCalledWith('claim', [], {});
+    expect(mocks.call).toHaveBeenCalledTimes(2);
+    expect(mocks.sign).not.toHaveBeenCalled();
     expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
   });
 
@@ -285,12 +286,13 @@ describe('Shorts wallet session and recovery', () => {
         rights: false,
       });
     });
+    const previousAccountClaim = result.current.claim;
     mocks.actor = 'ak_another'; rerender();
     expect(result.current.authenticated).toBe(false);
     expect(result.current.dashboard).toBeUndefined();
     expect(result.current.claimReview).toBe(false);
     expect(result.current.uploadDraft).toBeUndefined();
-    await act(async () => { await result.current.claim(); });
+    await act(async () => { await previousAccountClaim(); });
     expect(mocks.call).not.toHaveBeenCalled();
   });
 
@@ -474,6 +476,130 @@ describe('Inline upload hosting', () => {
     await act(async () => { finish({ hash: 'th_old-account' }); await payment; });
     expect(result.current.uploadPayment).toBeUndefined();
     expect(result.current.preparedUpload).toBeUndefined();
+  });
+});
+
+const enableConnectedStudio = () => {
+  const original = mocks.request.getMockImplementation()!;
+  mocks.request.mockImplementation(async (path: string, body?: { address?: string }, ...args: unknown[]) => {
+    if (path === '/config') return { ...await original(path), creatorAccess: 'connected-wallet' };
+    if (path === '/auth/connect') {
+      return {
+        address: body?.address, token: `connected-${body?.address}`, kind: 'connected-wallet', expiresAt: Date.now() + 1800000,
+      };
+    }
+    return original(path, body, ...args);
+  });
+};
+
+describe('Connection-only local Studio', () => {
+  it('opens all creator data from the main connection and requests only the claim transaction', async () => {
+    enableConnectedStudio();
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.dashboard).toEqual(dashboard));
+    expect(hook.result.current.authenticated).toBe(true);
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/connect')).toHaveLength(1);
+    expect(mocks.request).toHaveBeenCalledWith('/auth/connect', { address: 'ak_creator' });
+    expect(mocks.sign).not.toHaveBeenCalled();
+    expect(mocks.openModal).not.toHaveBeenCalled();
+    expect(mocks.connect).not.toHaveBeenCalled();
+    await act(async () => { await hook.result.current.claim(); });
+    expect(mocks.call).toHaveBeenCalledExactlyOnceWith('claim', [], {});
+    expect(mocks.request.mock.calls.some(([path]) => path === '/auth/challenge' || path === '/auth/verify')).toBe(false);
+    hook.unmount();
+    mocks.pathname = '/shorts/studio/upload';
+    const again = renderHook(useShorts);
+    await waitFor(() => expect(again.result.current.authenticated).toBe(true));
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/connect')).toHaveLength(1);
+  });
+
+  it('renews an expired connected session automatically without a signature', async () => {
+    enableConnectedStudio();
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    const now = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(now + 1800001);
+    hook.rerender();
+    await waitFor(() => expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/connect')).toHaveLength(2));
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    expect(mocks.sign).not.toHaveBeenCalled();
+  });
+
+  it('uploads with the connected Studio session without an ownership or payment signature', async () => {
+    enableConnectedStudio();
+    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/uploads') {
+        return {
+          id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+        };
+      }
+      if (path === '/uploads/draft/finish') return { ...clip, id: 'draft', creator: 'ak_creator' };
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
+    await act(async () => { await hook.result.current.upload(data, 'connected-draft'); });
+    expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
+    expect(mocks.request).toHaveBeenCalledWith('/uploads/draft/finish', {}, 'connected-ak_creator');
+    expect(mocks.sign).not.toHaveBeenCalled();
+    expect(mocks.call).not.toHaveBeenCalled();
+    expect(mocks.request.mock.calls.some(([path]) => path === '/auth/challenge' || path === '/auth/verify')).toBe(false);
+  });
+
+  it('discards a late connection for a previous account and clears data on disconnect', async () => {
+    enableConnectedStudio();
+    const original = mocks.request.getMockImplementation()!;
+    let finish: (value: unknown) => void = () => undefined;
+    mocks.request.mockImplementation(async (path: string, body?: { address?: string }, ...args: unknown[]) => {
+      if (path === '/auth/connect' && body?.address === 'ak_creator') return new Promise((resolve) => { finish = resolve; });
+      return original(path, body, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/connect', { address: 'ak_creator' }));
+    mocks.actor = 'ak_other'; hook.rerender();
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    await act(async () => {
+      finish({
+        address: 'ak_creator', token: 'late', kind: 'connected-wallet', expiresAt: Date.now() + 60000,
+      });
+    });
+    expect(getDefaultStore().get(creatorSessionAtom)?.address).toBe('ak_other');
+    mocks.actor = ''; hook.rerender();
+    expect(hook.result.current.dashboard).toBeUndefined();
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+    expect(mocks.sign).not.toHaveBeenCalled();
+  });
+
+  it('shows a recoverable API connection error instead of opening the wallet or retrying in a loop', async () => {
+    enableConnectedStudio();
+    const original = mocks.request.getMockImplementation()!;
+    let offline = true;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/auth/connect' && offline) throw new Error('Studio is offline');
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.creatorConnectionError).toBe('Studio is offline'));
+    expect(hook.result.current.restoringCreatorSession).toBe(false);
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/connect')).toHaveLength(1);
+    offline = false;
+    await act(async () => { await hook.result.current.signIn(); });
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    expect(mocks.sign).not.toHaveBeenCalled();
+  });
+
+  it('never grants operator tools to a connection-only session for the operator address', async () => {
+    mocks.actor = 'ak_operator';
+    enableConnectedStudio();
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.dashboard).toEqual(dashboard));
+    expect(hook.result.current.isOperator).toBe(false);
+    expect(mocks.request.mock.calls.some(([path]) => path === '/review')).toBe(false);
   });
 });
 

@@ -180,7 +180,7 @@ describe('Four-step Short upload', () => {
     const { rerender } = render(<ShortsUpload s={state()} />); details();
     fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
     rerender(<ShortsUpload s={state({ busy: true, walletPending: true })} />);
-    expect(screen.getByRole('status')).toHaveTextContent('Confirm ownership in your wallet');
+    expect(screen.getByRole('status')).toHaveTextContent('Getting ready to upload');
     expect(screen.queryByText('Your upload needs another try')).not.toBeInTheDocument();
     rerender(<ShortsUpload s={state({ busy: true, uploadProgress: 100, uploadStage: 'processing' })} />);
     expect(screen.getByRole('progressbar')).not.toHaveAttribute('value');

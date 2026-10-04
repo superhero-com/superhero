@@ -704,13 +704,13 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <p>See what reaches your audience, manage hosting and collect your rewards.</p>
             {s.actor ? (
               <>
-                <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>Unlock creator tools</button>
-                <small>Your Superhero wallet is connected. Confirm ownership once to access private drafts and analytics. This signature does not spend AE.</small>
+                {s.creatorConnectionError && <small role="alert">{s.creatorConnectionError}</small>}
+                <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>{s.creatorConnectionError ? 'Try again' : 'Open Studio'}</button>
               </>
             ) : <ConnectWalletButton label="Connect wallet" />}
           </div>
         ) : null}
-        {s.restoringCreatorSession && page !== 'upload' && <div className="ss-panel" role="status">Restoring creator access…</div>}
+        {s.restoringCreatorSession && page !== 'upload' && <div className="ss-panel" role="status">Opening your Studio…</div>}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
         {s.authenticated && !s.dashboard && page !== 'upload' && <div className="ss-panel" role="status">Loading your creator account…</div>}
         {s.authenticated && s.dashboard && (

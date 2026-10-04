@@ -54,9 +54,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const uploading = s.uploadStage === 'uploading';
   const processing = s.uploadStage === 'processing';
   const phase = processing ? 2 : Number(uploading);
-  const phaseTitles = [verifying ? 'Your wallet is already connected.' : 'Checking your file', 'Sending your video', 'Preparing your video'];
+  const phaseTitles = [verifying ? 'Getting your upload ready' : 'Checking your file', 'Sending your video', 'Preparing your video'];
   const phaseCopy = [
-    verifying ? 'Confirm ownership to continue your private upload. This does not spend AE.' : 'Making sure your file is ready for a reliable upload.',
+    'Making sure your file is ready for a reliable upload.',
     'Your video is being sent privately. Keep this page open.',
     'Getting your Short ready to play.',
   ];
@@ -69,8 +69,8 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   if (step === 1 && !s.actor) nextLabel = 'Connect wallet to continue';
   if (step === 2 && !prepared) nextLabel = 'Retry upload';
   if (step === 3 && expired) nextLabel = 'Update price';
-  if (step >= 2 && prepared && !s.authenticated) nextLabel = s.actor ? 'Confirm creator access' : 'Connect wallet to continue';
-  const disabled = s.busy || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
+  if (step >= 2 && prepared && !s.authenticated) nextLabel = s.actor ? 'Continue' : 'Connect wallet to continue';
+  const disabled = s.busy || (step > 0 && s.restoringCreatorSession) || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
     || (step === 2 && !!prepared && s.authenticated && (!pricesReady || !validCoverage(coverage)));
   useEffect(() => {
     if (!quote) return undefined;
@@ -132,7 +132,8 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     event.preventDefault();
     if (disabled) return;
     if (step === 0) { go(1); return; }
-    if (!s.actor || (step > 1 && prepared && !s.authenticated)) { await s.signIn(); return; }
+    if (!s.actor) { await s.signIn(); return; }
+    if (step > 1 && prepared && !s.authenticated && !await s.signIn()) return;
     if (step === 1) { go(2); if (!prepared) await sendVideo(); return; }
     if (step === 2) {
       if (!prepared) { await sendVideo(); return; }
@@ -173,9 +174,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
               </p>
             </div>
             {verifying && (
-              <section className="su-processing" aria-label="Confirm creator access">
+              <section className="su-processing" aria-label="Preparing upload">
                 <LockKeyhole size={36} aria-hidden="true" />
-                <p role="status">Confirm ownership in your wallet. Your upload will continue automatically afterward.</p>
+                <p role="status">Getting ready to upload. Your video will continue automatically.</p>
               </section>
             )}
             {!verifying && (preparing ? (
@@ -194,11 +195,13 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     </li>
                   ))}
                 </ol>
+                {s.config?.visualModeration && (
                 <p>
                   <LockKeyhole size={15} aria-hidden="true" />
                   {' '}
                   Your video will only appear in the feed after review and while hosting is active.
                 </p>
+                )}
               </section>
             ) : (
               <>

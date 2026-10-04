@@ -1,10 +1,30 @@
 import { useEffect } from 'react';
 import { atom, useAtom } from 'jotai';
 import { CONFIG } from '@/config';
-import { SHORTS_API } from './api';
+import { request, SHORTS_API } from './api';
 
-export type CreatorLogin = { address: string; token: string; expiresAt: number };
+export type CreatorLogin = { address: string; token: string; expiresAt: number; kind?: 'connected-wallet' | 'wallet-signature' };
 export type CreatorSession = CreatorLogin & { api: string; network: string; contract: string };
+const pendingConnections = new Map<string, Promise<CreatorSession>>();
+export const openConnectedCreatorSession = (address: string, network: string, contract: string) => {
+  if (!address || network !== 'ae_uat' || network !== CONFIG.NETWORK || !contract) {
+    return Promise.reject(new Error('Connect your wallet on æternity testnet to open Studio.'));
+  }
+  const scope = JSON.stringify([SHORTS_API, address, network, contract]);
+  let pending = pendingConnections.get(scope);
+  if (!pending) {
+    pending = request<CreatorLogin>('/auth/connect', { address }).then((next) => {
+      if (next.address !== address || next.kind !== 'connected-wallet' || next.expiresAt <= Date.now()) {
+        throw new Error('Studio could not connect to this account. Please try again.');
+      }
+      return {
+        ...next, api: SHORTS_API, network, contract,
+      };
+    }).finally(() => pendingConnections.delete(scope));
+    pendingConnections.set(scope, pending);
+  }
+  return pending;
+};
 const storageKey = 'shorts:creator-session';
 const readSession = (): CreatorSession | undefined => {
   try {

@@ -54,11 +54,11 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const uploading = s.uploadStage === 'uploading';
   const processing = s.uploadStage === 'processing';
   const phase = processing ? 2 : Number(uploading);
-  const phaseTitles = [verifying ? 'Your wallet is already connected.' : 'Checking your file', 'Sending your video', 'Analyzing your video'];
+  const phaseTitles = [verifying ? 'Your wallet is already connected.' : 'Checking your file', 'Sending your video', 'Preparing your video'];
   const phaseCopy = [
     verifying ? 'Confirm ownership to continue your private upload. This does not spend AE.' : 'Making sure your file is ready for a reliable upload.',
     'Your video is being sent privately. Keep this page open.',
-    'Preparing playback and checking your video against our community guidelines for the feed.',
+    'Getting your Short ready to play.',
   ];
   const previewTitle = title.trim() || 'Your story, in a Short.';
   const phaseStatus = (index: number) => {
@@ -161,13 +161,13 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
             <div className="su-intro">
               <span className="su-kicker">{preparing ? 'BRINGING YOUR SHORT TO LIFE' : `STEP ${step + 1} OF 4`}</span>
               <h2 ref={heading} tabIndex={-1}>
-                {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Give your Short time to shine.', 'One last look.'][step]}
+                {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Choose how long it stays.', 'One last look.'][step]}
               </h2>
               <p>
                 {(preparing || verifying) ? phaseCopy[phase] : [
                   'A fresh idea, a tiny tutorial, a moment worth sharing. Make it yours.',
                   'A little context helps the right people find your story.',
-                  'Choose how long your Short stays available. You can extend it anytime.',
+                  'Keep your Short available for viewers. Extend anytime.',
                   'Your video, your coverage, your choice. Review everything before opening your wallet.',
                 ][step]}
               </p>
@@ -186,7 +186,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   <progress aria-label={phaseTitles[phase]} max={100} value={uploading ? s.uploadProgress : undefined} />
                 </div>
                 <ol>
-                  {['Check file', 'Upload privately', 'Prepare playback & check guidelines'].map((label, index) => (
+                  {['Check file', 'Upload privately', 'Prepare playback'].map((label, index) => (
                     <li key={label} className={index <= phase ? 'reached' : ''} aria-current={index === phase ? 'step' : undefined}>
                       {index < phase ? <CheckCircle2 size={18} aria-hidden="true" /> : <span className="su-process-dot" />}
                       {label}
@@ -338,7 +338,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
             {step > 1 && (
             <p className="su-footer-note" id="su-action-note">
               {[
-                'Next: Review calculates your exact charge. It doesn’t charge your wallet.',
+                'Review the total next. You won’t pay yet.',
                 'No automatic renewal. Your wallet shows the additional network fee.',
               ][step - 2]}
             </p>

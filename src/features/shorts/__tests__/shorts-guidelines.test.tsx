@@ -3,7 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import {
   describe, expect, it, vi,
 } from 'vitest';
-import { ShortsGuidelines } from '../shorts-guidelines';
+import { feedLabel, guidelinesStatus, ShortsGuidelines } from '../shorts-guidelines';
+import { UploadFeedStatus } from '../shorts-upload-hosting';
 import { ShortsJourney } from '../shorts-journey';
 import type { Short } from '../types';
 
@@ -29,14 +30,14 @@ const video = (overrides: Partial<Short> = {}): Short => ({
   ...overrides,
 });
 const show = (short: Short, busy = false) => {
-  const fund = vi.fn(); const retry = vi.fn();
+  const fund = vi.fn();
   render(
     <MemoryRouter>
       <ShortsJourney video={short} busy={busy} fund={fund} />
-      <ShortsGuidelines video={short} busy={busy} retry={retry} />
+      <ShortsGuidelines video={short} />
     </MemoryRouter>,
   );
-  return { fund, retry };
+  return { fund };
 };
 
 describe('Hosting and community-guidelines status', () => {
@@ -61,12 +62,16 @@ describe('Hosting and community-guidelines status', () => {
     expect(fund).toHaveBeenCalledOnce();
   });
 
-  it('explains a check outage without exposing model diagnostics or blocking hosting', () => {
-    const { retry } = show(video({ guidelines: { status: 'unavailable' } }));
-    expect(screen.getByRole('heading', { name: 'Checks temporarily unavailable' })).toBeInTheDocument();
+  it('hides unavailable checks without granting feed eligibility or blocking hosting', () => {
+    const short = video({ guidelines: { status: 'unavailable' } });
+    show(short);
+    render(<UploadFeedStatus video={short} />);
+    expect(screen.queryByRole('region', { name: 'Community guidelines' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Checks temporarily unavailable')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Choose hosting' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry check' }));
-    expect(retry).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Retry check' })).not.toBeInTheDocument();
+    expect(guidelinesStatus(short)).toBe('unavailable');
+    expect(feedLabel(short)).toBe('Not in feed');
   });
 
   it('only shows a live feed link after review and active hosting', () => {
@@ -82,9 +87,9 @@ describe('Hosting and community-guidelines status', () => {
     expect(screen.getByRole('link', { name: 'Create another Short' })).toBeInTheDocument();
   });
 
-  it('prevents duplicate funding or check requests while busy', () => {
+  it('prevents duplicate funding while busy', () => {
     show(video({ guidelines: { status: 'unavailable' } }), true);
     expect(screen.getByRole('button', { name: 'Choose hosting' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Checking…' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Checking…' })).not.toBeInTheDocument();
   });
 });

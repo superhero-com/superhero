@@ -20,7 +20,7 @@ export const validCoverage = (selection: Coverage) => (selection.mode === 'days'
   ? /^\d+$/.test(selection.days) && Number(selection.days) >= 1 && Number(selection.days) <= 3650
   : /^\d{1,6}(\.\d{1,18})?$/.test(selection.budget) && Number(selection.budget) > 0);
 
-export const UploadFeedStatus = ({ video }: { video: Short }) => (
+export const UploadFeedStatus = ({ video }: { video: Short }) => (guidelinesStatus(video) === 'unavailable' ? null : (
   <div className="su-feed-status">
     <ShieldCheck size={19} aria-hidden="true" />
     <div>
@@ -29,7 +29,7 @@ export const UploadFeedStatus = ({ video }: { video: Short }) => (
       {guidelinesStatus(video) === 'ineligible' && video.guidelines?.reason && <p>{video.guidelines.reason}</p>}
     </div>
   </div>
-);
+));
 
 export const UploadCoverage = ({
   s, video, selection, onChange,
@@ -38,21 +38,13 @@ export const UploadCoverage = ({
 }) => {
   const prices = s.uploadPrices?.shortId === video.id ? s.uploadPrices : undefined;
   const estimated = prices && selection.mode === 'days' ? hostingPrice(prices, Number(selection.days)) : undefined;
+  const custom = selection.mode === 'budget' || ![7, 30, 90].includes(Number(selection.days));
+  const estimateLabel = (value: string) => Number(value).toLocaleString(undefined, { maximumSignificantDigits: 6 });
+  const total = selection.mode === 'budget' ? selection.budget : '—';
   return (
     <div className="su-coverage">
-      <div className="su-prepared">
-        <CheckCircle2 size={18} aria-hidden="true" />
-        {' '}
-        Video uploaded and prepared
-        {' '}
-        <small>
-          {(video.bytes / 1e6).toFixed(2)}
-          {' '}
-          MB
-        </small>
-      </div>
       <fieldset className="su-plans" disabled={s.busy || !prices}>
-        <legend>How long should your Short stay available?</legend>
+        <legend>Choose a duration</legend>
         {[7, 30, 90].map((days) => (
           <label key={days} className={selection.mode === 'days' && Number(selection.days) === days ? 'selected' : ''}>
             <input type="radio" aria-label={`${days} days`} name="short-hosting-plan" value={days} checked={selection.mode === 'days' && Number(selection.days) === days} onChange={() => onChange({ ...selection, mode: 'days', days: String(days) })} />
@@ -60,7 +52,7 @@ export const UploadCoverage = ({
               {days}
               <small>days</small>
             </strong>
-            <span>{prices ? `${Number(hostingPrice(prices, days)).toLocaleString(undefined, { maximumSignificantDigits: 5 })} AE` : 'Loading…'}</span>
+            <span>{prices ? `≈ ${estimateLabel(hostingPrice(prices, days)!)} AE` : 'Loading…'}</span>
           </label>
         ))}
       </fieldset>
@@ -70,62 +62,68 @@ export const UploadCoverage = ({
         <button type="button" disabled={s.busy} onClick={() => s.loadUploadPrices(video.id)}>Retry prices</button>
       </p>
       )}
-      <div className="su-field-pair">
-        <label htmlFor="su-coverage-mode">
-          Or choose your own
-          <select id="su-coverage-mode" value={selection.mode} onChange={(e) => onChange({ ...selection, mode: e.target.value as Coverage['mode'] })}>
-            <option value="days">Number of days</option>
-            <option value="budget">AE budget</option>
-          </select>
-        </label>
-        {selection.mode === 'days' ? (
-          <label htmlFor="su-days">
-            Hosting days
-            <input id="su-days" type="number" min="1" max="3650" step="1" value={selection.days} onChange={(e) => onChange({ ...selection, days: e.target.value })} />
+      <details className="su-custom-coverage">
+        <summary>
+          Custom duration or budget
+          {' '}
+          {custom && <span>{selection.mode === 'days' ? `${selection.days || '—'} days` : `${selection.budget || '—'} AE`}</span>}
+        </summary>
+        <div className="su-field-pair">
+          <label htmlFor="su-coverage-mode">
+            Choose by
+            <select id="su-coverage-mode" disabled={s.busy} value={selection.mode} onChange={(e) => onChange({ ...selection, mode: e.target.value as Coverage['mode'] })}>
+              <option value="days">Number of days</option>
+              <option value="budget">My budget</option>
+            </select>
           </label>
-        ) : (
-          <label htmlFor="su-budget">
-            Budget in test AE
-            <input id="su-budget" inputMode="decimal" value={selection.budget} onChange={(e) => onChange({ ...selection, budget: e.target.value })} />
-          </label>
-        )}
-      </div>
-      {!validCoverage(selection) && <p className="su-error" role="alert">{selection.mode === 'days' ? 'Choose 1–3650 whole days.' : 'Enter a positive AE budget with up to 18 decimal places.'}</p>}
-      <label htmlFor="su-source">
-        Pay from
-        <select id="su-source" value={s.source} onChange={(e) => { s.editQuote(); s.setSource(e.target.value as 'wallet' | 'rewards'); }}>
-          <option value="wallet">My testnet wallet</option>
-          <option value="rewards" disabled={!Number(s.dashboard?.account.available)}>
-            My rewards ·
-            {s.dashboard?.account.available || '0'}
-            {' '}
-            AE available
-          </option>
-        </select>
-      </label>
-      <div className="su-price-summary">
-        <div>
-          <span>{estimated ? 'Estimated hosting cost' : 'Your hosting budget'}</span>
-          <strong>
-            {estimated || (selection.mode === 'budget' ? selection.budget : '—')}
-            {' '}
-            <small>test AE</small>
-          </strong>
+          {selection.mode === 'days' ? (
+            <label htmlFor="su-days">
+              Number of days
+              <input id="su-days" disabled={s.busy} type="number" min="1" max="3650" step="1" value={selection.days} onChange={(e) => onChange({ ...selection, days: e.target.value })} />
+            </label>
+          ) : (
+            <label htmlFor="su-budget">
+              Budget in test AE
+              <input id="su-budget" disabled={s.busy} inputMode="decimal" value={selection.budget} onChange={(e) => onChange({ ...selection, budget: e.target.value })} />
+            </label>
+          )}
         </div>
-        <p>
-          {selection.mode === 'days' ? `${selection.days || '—'} days from activation. ` : 'We’ll calculate the whole days your budget covers. '}
-          No automatic renewal. Extend anytime.
-        </p>
+      </details>
+      {!validCoverage(selection) && <p className="su-error" role="alert">{selection.mode === 'days' ? 'Choose 1–3650 whole days.' : 'Enter a valid AE amount greater than 0.'}</p>}
+      <div className="su-price-summary">
+        <div className="su-payment-row">
+          <div className="su-estimate" aria-live="polite">
+            <span>{selection.mode === 'days' ? 'Estimated total' : 'Your budget'}</span>
+            <strong>
+              {estimated ? `≈ ${estimateLabel(estimated)}` : total}
+              {' '}
+              <small>test AE</small>
+            </strong>
+          </div>
+          <label htmlFor="su-source">
+            Pay with
+            <select id="su-source" disabled={s.busy} value={s.source} onChange={(e) => { s.editQuote(); s.setSource(e.target.value as 'wallet' | 'rewards'); }}>
+              <option value="wallet">My wallet</option>
+              <option value="rewards" disabled={!Number(s.dashboard?.account.available)}>
+                My rewards ·
+                {' '}
+                {s.dashboard?.account.available || '0'}
+                {' '}
+                AE
+              </option>
+            </select>
+          </label>
+        </div>
+        <p>{selection.mode === 'days' ? 'One-time payment. No auto-renewal.' : 'Review how many days your budget covers next.'}</p>
       </div>
       <details className="su-price-info">
         <summary>
           <Info size={15} aria-hidden="true" />
           {' '}
-          How hosting is priced
+          About this cost
         </summary>
-        <p>The cost depends on the size of your prepared video and how long it stays available. Prices above are estimates; the next step shows the exact charge. Purchased days are protected from later price changes. Your wallet shows the additional network fee, including when you pay from rewards.</p>
+        <p>Pricing depends on video size and the number of days you choose. Review the exact total next. A network fee applies, even when using rewards. Paid days won’t change if prices go up.</p>
       </details>
-      <UploadFeedStatus video={video} />
     </div>
   );
 };
@@ -201,7 +199,7 @@ export const UploadOutcome = ({ s }: { s: State }) => {
   if (payment.status === 'activating') { title = 'Making your Short available'; copy = 'Payment received. We’re verifying your video’s hosting. You won’t need to pay again.'; }
   if (payment.status === 'pending') { title = 'Payment received. Finishing setup.'; copy = 'Activation is taking longer than expected. We’ll keep trying while the local service is running. Track this purchase in Studio.'; }
   if (payment.status === 'uncertain') { title = 'Let’s check your payment'; copy = 'The wallet response was interrupted. Check this purchase in Studio and your wallet before making another payment.'; }
-  if (active) { title = eligible ? 'Your Short is live.' : 'Your Short is ready to share.'; copy = eligible ? 'Your hosting is active and your Short is eligible for the feed.' : 'Hosting is active. Feed visibility follows the community-guidelines status below.'; }
+  if (active) { title = eligible ? 'Your Short is live.' : 'Your Short is ready to share.'; copy = eligible ? 'Your hosting is active and your Short is eligible for the feed.' : 'Hosting is active. Share your Short using its link.'; }
   return (
     <section className={`su-outcome ${active ? 'is-live' : ''}`} aria-live="polite">
       <div className="su-outcome-art">{active ? <CheckCircle2 size={48} aria-hidden="true" /> : <Clock3 size={42} aria-hidden="true" />}</div>

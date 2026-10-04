@@ -167,24 +167,27 @@
 .su-mobile-preview-toggle { display: none!important; }
 .su-intro { animation: su-enter .25s ease-out; }
 .su-plans { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: 0; border: 0; margin: 0; }
-.su-plans legend { margin-bottom: 1rem; font-size: .95rem; }
-.su-plans label { position: relative; display: grid; gap: .75rem; padding: 1.2rem .75rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--su-surface); cursor: pointer; }
+.su-plans legend { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.su-plans label { position: relative; display: grid; gap: .5rem; padding: 1rem .75rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--su-surface); cursor: pointer; }
 .su-plans label.selected { border-color: #5591ff; background: linear-gradient(145deg,#183b70,#101d35); box-shadow: 0 0 0 1px #5591ff; }
 .su-plans input { position: absolute; right: .65rem; top: .65rem; width: 1rem!important; height: 1rem; accent-color: var(--blue); }
-.su-plans strong { font-size: 1.65rem; font-weight: 600; }
-.su-plans strong small { display: block; font-size: .75rem; color: var(--muted); font-weight: 400; }
+.su-plans strong { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem; margin-top: .5rem; font-size: 1.5rem; font-weight: 600; }
+.su-plans strong small { font-size: .75rem; color: var(--muted); font-weight: 400; }
 .su-plans label>span { font-size: .75rem; overflow-wrap: anywhere; }
-.su-coverage { display: grid; gap: 1.5rem; }
+.su-coverage { display: grid; gap: 1rem; }
 .su-coverage label { font-size: .875rem; }
-.su-coverage input:not([type=radio]), .su-coverage select { margin-top: .5rem; padding: .85rem; font-size: 1rem; }
-.su-prepared { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .8125rem; color: var(--su-success); }
-.su-prepared small { margin-left: auto; color: var(--muted); }
-.su-price-summary { padding: 1.25rem; border-radius: 1rem; background: var(--su-surface); border: 1px solid var(--line); }
-.su-price-summary>div { display: grid; gap: .6rem; }
+.su-coverage input:not([type=radio]), .su-coverage select { margin-top: .4rem; padding: .65rem .75rem; font-size: .875rem; }
+.su-custom-coverage summary { cursor: pointer; padding: .5rem 0; font-size: .8125rem; color: var(--su-accent-text); overflow-wrap: anywhere; }
+.su-custom-coverage summary span { margin-left: .5rem; color: var(--muted); }
+.su-custom-coverage .su-field-pair { margin-top: .75rem; }
+.su-price-summary { padding: 1rem; border-radius: .75rem; background: var(--su-surface); border: 1px solid var(--line); }
+.su-payment-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1rem; align-items: center; }
+.su-estimate { display: grid; gap: .25rem; }
 .su-price-summary span { font-size: .8rem; color: var(--muted); }
-.su-price-summary strong, .su-review-charge strong { font-size: clamp(1.25rem,2.2vw,1.75rem); overflow-wrap: anywhere; line-height: 1.4; }
+.su-price-summary strong { font-size: 1.25rem; overflow-wrap: anywhere; line-height: 1.4; }
+.su-review-charge strong { font-size: clamp(1.25rem,2.2vw,1.75rem); overflow-wrap: anywhere; line-height: 1.4; }
 .su-price-summary strong small, .su-review-charge small { font-size: .75rem; color: var(--muted); white-space: nowrap; }
-.su-price-summary p { font-size: .8rem; margin: .75rem 0 0; }
+.su-price-summary p { font-size: .75rem; margin: .75rem 0 0; }
 .su-price-info summary { display: flex; gap: .5rem; align-items: center; font-size: .8125rem; color: var(--su-accent-text); cursor: pointer; }
 .su-price-info p { font-size: .8rem; line-height: 1.7; }
 .su-feed-status { display: flex; align-items: flex-start; gap: .75rem; padding: 1.1rem; border: 1px solid var(--line); border-radius: .85rem; background: #111d2b; }
@@ -240,6 +243,7 @@
 
 .shorts-app .su-actions .primary { min-width: 0; flex-shrink: 1; overflow-wrap: anywhere; }
 @media(max-width:400px) {
+  .su-payment-row, .su-custom-coverage .su-field-pair { grid-template-columns: 1fr; }
   .shorts-app .su-steps button { font-size: .6875rem; gap: .25rem; }
   .su-steps button span { width: 1.5rem; height: 1.5rem; font-size: .6875rem; }
 }

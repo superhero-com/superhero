@@ -492,7 +492,7 @@ const VideoDetail = ({ s }: { s: State }) => {
             {' '}
             MB
           </p>
-          <ShortsGuidelines video={video} busy={s.busy} retry={() => s.rescan(video.id)} />
+          <ShortsGuidelines video={video} />
           <div className="ss-action-row">
             <button type="button" disabled={s.busy} onClick={() => s.reviewClip(video.id)}>Load private preview</button>
             {hostingStatus(video) === 'active' && <button type="button" disabled={s.busy} onClick={() => s.setWithdrawal(video)}>Withdraw</button>}
@@ -688,7 +688,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         <div className="ss-health">
           <span className={s.config?.ipfs ? 'sh-dot' : 'sh-dot offline'} />
           {s.config ? `Testnet · IPFS ${s.config.ipfs ? 'ready' : 'offline'}` : 'Connecting…'}
-          <span>{`${s.config?.replicas || 0} storage replicas · ${s.config?.visualModeration ? 'Community-guidelines checks available' : 'Community-guidelines checks temporarily unavailable'}`}</span>
+          <span>{`${s.config?.replicas || 0} storage replicas`}</span>
         </div>
         )}
         {s.message && (page !== 'upload' || s.messageTone === 'error') && (

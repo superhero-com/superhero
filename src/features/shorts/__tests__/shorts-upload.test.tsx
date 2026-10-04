@@ -82,15 +82,13 @@ describe('Four-step Short upload', () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it('lets guests prepare details before authentication and never uploads just from connecting', () => {
+  it('uses the connected wallet and uploads only after the explicit Next action', () => {
     const { rerender } = render(<ShortsUpload s={state({ authenticated: false, actor: '' })} />);
     details();
     fireEvent.click(screen.getByRole('button', { name: 'Connect wallet to continue' }));
     expect(signIn).toHaveBeenCalledOnce(); expect(upload).not.toHaveBeenCalled();
     rerender(<ShortsUpload s={state({ authenticated: false })} />);
     expect(screen.getByLabelText(/Title/)).toHaveValue('  My first story  ');
-    fireEvent.click(screen.getByRole('button', { name: 'Verify creator account' }));
-    rerender(<ShortsUpload s={state()} />);
     expect(upload).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
     expect(upload).toHaveBeenCalledOnce();
@@ -126,6 +124,9 @@ describe('Four-step Short upload', () => {
   it('keeps the draft after a failed transfer and reports indeterminate processing honestly', () => {
     const { rerender } = render(<ShortsUpload s={state()} />); details();
     fireEvent.click(screen.getByRole('button', { name: 'Next: Hosting' }));
+    rerender(<ShortsUpload s={state({ busy: true, walletPending: true })} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Confirm ownership in your wallet');
+    expect(screen.queryByText('Your upload needs another try')).not.toBeInTheDocument();
     rerender(<ShortsUpload s={state({ busy: true, uploadProgress: 100, uploadStage: 'processing' })} />);
     expect(screen.getByRole('progressbar')).not.toHaveAttribute('value');
     expect(screen.getByRole('button', { name: '2 Details' })).toBeDisabled();

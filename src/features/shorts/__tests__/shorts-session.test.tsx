@@ -1,7 +1,9 @@
+import { getDefaultStore } from 'jotai';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
+import { creatorSessionAtom, useSyncShortsWalletSession } from '../shorts-wallet-session';
 import { useShorts } from '../use-shorts';
 import type { Short } from '../types';
 
@@ -12,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   disconnect: vi.fn(),
   connect: vi.fn(),
+  openModal: vi.fn(),
   sign: vi.fn(),
   network: 'ae_uat',
   signer: '',
@@ -25,6 +28,7 @@ vi.mock('@/hooks/useAeSdk', () => ({
     sdk: { address: mocks.signer || mocks.actor, getNodeInfo: async () => ({ nodeNetworkId: mocks.network }), getContext: () => ({}) },
   }),
 }));
+vi.mock('@/hooks/useModal', () => ({ useModal: () => ({ openModal: mocks.openModal }) }));
 vi.mock('@/hooks/useWalletConnect', () => ({ useWalletConnect: () => ({ connectWallet: mocks.connect, disconnectWallet: mocks.disconnect }) }));
 vi.mock('@/config', () => ({ CONFIG: { NETWORK: 'ae_uat' } }));
 vi.mock('@aeternity/aepp-sdk', () => ({ Contract: { initialize: async () => ({ $call: mocks.call }) } }));
@@ -62,6 +66,7 @@ const startLike = async (signIn = true) => {
 afterEach(() => vi.unstubAllGlobals());
 beforeEach(() => {
   mocks.pathname = '/shorts/studio'; mocks.search = '';
+  getDefaultStore().set(creatorSessionAtom, undefined); sessionStorage.clear();
   vi.clearAllMocks(); localStorage.clear(); mocks.actor = 'ak_creator'; mocks.network = 'ae_uat'; mocks.signer = '';
   mocks.connect.mockResolvedValue(null);
   mocks.sign.mockResolvedValue('signature'); mocks.call.mockResolvedValue({ hash: 'th_confirmed' });
@@ -90,9 +95,7 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.feed[0]).toMatchObject({ likes: 10, liked: true });
     expect(result.current.authenticated).toBe(false);
     await act(async () => { await result.current.claim(); });
-    expect(result.current.message).toContain('Sign in with your wallet first');
-    await act(async () => { await result.current.upload(new FormData()); });
-    expect(result.current.message).toContain('Sign in with your wallet first');
+    expect(result.current.message).toContain('Verify your connected wallet');
     expect(mocks.call).toHaveBeenCalledTimes(1);
     expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
   });
@@ -472,4 +475,125 @@ describe('Inline upload hosting', () => {
     expect(result.current.uploadPayment).toBeUndefined();
     expect(result.current.preparedUpload).toBeUndefined();
   });
+});
+
+describe('Creator access follows the main wallet', () => {
+  it('restores verified access after leaving Shorts without reconnecting or signing again', async () => {
+    const first = await startLike();
+    first.unmount();
+    mocks.pathname = '/shorts/studio/upload';
+    const second = renderHook(useShorts);
+    await waitFor(() => expect(second.result.current.dashboard).toEqual(dashboard));
+    expect(second.result.current.authenticated).toBe(true);
+    await act(async () => { await second.result.current.signIn(); });
+    expect(mocks.sign).toHaveBeenCalledOnce();
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.disconnect).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('shorts:creator-session')).toContain('ct_test');
+  });
+
+  it('uses the main connect dialog for guests and never reconnects a connected account', async () => {
+    mocks.actor = '';
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    expect(mocks.openModal).toHaveBeenCalledWith({ name: 'connect-wallet' });
+    expect(mocks.connect).not.toHaveBeenCalled();
+    expect(mocks.sign).not.toHaveBeenCalled();
+    mocks.actor = 'ak_creator'; hook.rerender();
+    await act(async () => { await hook.result.current.signIn(); });
+    expect(mocks.sign).toHaveBeenCalledOnce();
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
+  it('clears private access when the main wallet switches or disconnects outside Shorts', async () => {
+    const first = await startLike(); first.unmount();
+    const sync = renderHook(({ address }) => useSyncShortsWalletSession(address), { initialProps: { address: 'ak_creator' } });
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeDefined();
+    sync.rerender({ address: 'ak_other' });
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+    expect(sessionStorage.getItem('shorts:creator-session')).toBeNull();
+    sync.rerender({ address: 'ak_creator' });
+    const second = await startLike(); second.unmount();
+    sync.rerender({ address: '' });
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+  });
+
+  it.each([{ api: 'http://other.invalid' }, { network: 'ae_mainnet' }, { contract: 'ct_other' }])('does not restore a session with a changed scope: %j', async (change) => {
+    const first = await startLike(); first.unmount();
+    const valid = getDefaultStore().get(creatorSessionAtom)!;
+    act(() => getDefaultStore().set(creatorSessionAtom, { ...valid, ...change }));
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    expect(hook.result.current.authenticated).toBe(false);
+    expect(mocks.sign).toHaveBeenCalledOnce();
+  });
+
+  it('invalidates a revoked server session without disconnecting the main wallet', async () => {
+    const first = await startLike(); first.unmount();
+    const { ShortsApiError } = await import('../api');
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/dashboard') throw new ShortsApiError('Session expired', 401);
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined());
+    expect(hook.result.current.actor).toBe('ak_creator');
+    expect(hook.result.current.authenticated).toBe(false);
+    expect(mocks.disconnect).not.toHaveBeenCalled();
+  });
+
+  it('discards verification completed after the connected account changed', async () => {
+    const original = mocks.request.getMockImplementation()!;
+    let finish: (value: unknown) => void = () => undefined;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/auth/verify') return new Promise((resolve) => { finish = resolve; });
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    let operation: Promise<unknown>;
+    act(() => { operation = hook.result.current.signIn(); });
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/verify', { id: 'challenge', signature: 'signature' }));
+    mocks.actor = 'ak_other'; hook.rerender();
+    await act(async () => { finish({ address: 'ak_creator', token: 'old', expiresAt: Date.now() + 60000 }); await operation; });
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+  });
+});
+
+it('verifies the existing wallet once and continues the requested upload without reconnecting', async () => {
+  vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+  const original = mocks.request.getMockImplementation()!;
+  mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+    if (path === '/uploads') {
+      return {
+        id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+      };
+    }
+    if (path === '/uploads/draft/finish') {
+      return {
+        ...clip, id: 'draft', creator: 'ak_creator', hostingStatus: 'unfunded',
+      };
+    }
+    return original(path, ...args);
+  });
+  const hook = renderHook(useShorts);
+  await waitFor(() => expect(hook.result.current.config).toBeDefined());
+  const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
+  Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+  const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
+  mocks.sign.mockRejectedValueOnce(new Error('Rejected by user'));
+  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
+  expect(hook.result.current.preparedUpload).toBeUndefined();
+  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
+  expect(hook.result.current.authenticated).toBe(true);
+  expect(mocks.connect).not.toHaveBeenCalled();
+  expect(mocks.disconnect).not.toHaveBeenCalled();
+  expect(mocks.call).not.toHaveBeenCalled();
+  const count = mocks.sign.mock.calls.length;
+  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  expect(mocks.sign).toHaveBeenCalledTimes(count);
 });

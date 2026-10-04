@@ -2,10 +2,13 @@ import {
   useCallback, useEffect, useRef, useState,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAtom } from 'jotai';
+import { useModal } from '@/hooks/useModal';
 import { Contract } from '@aeternity/aepp-sdk';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWalletConnect } from '@/hooks/useWalletConnect';
 import { CONFIG } from '@/config';
+import { creatorSessionAtom, type CreatorLogin } from './shorts-wallet-session';
 import { useShortsPreferences, rankShorts } from './shorts-preferences';
 import { useShortsSocial } from './use-shorts-social';
 import { request, SHORTS_API, ShortsApiError } from './api';
@@ -13,16 +16,14 @@ import type {
   Config, Dashboard, Quote, Review, Short, Performance, UploadDraft, HostingPrices,
 } from './types';
 
-type Login = { address: string; token: string; expiresAt: number };
 export function useShorts() {
   const { activeAccount, sdk, signMessage } = useAeSdk();
-  const { connectWallet, disconnectWallet } = useWalletConnect();
+  const { connectWallet } = useWalletConnect();
+  const { openModal } = useModal();
   const actor = activeAccount || '';
   const currentAddress = useRef(actor);
   currentAddress.current = actor;
-  const [login, setLogin] = useState<Login>();
-  const authenticated = !!login && login.address === actor && login.expiresAt > Date.now();
-  const token = authenticated ? login.token : undefined;
+  const [login, setLogin] = useAtom(creatorSessionAtom);
   const navigate = useNavigate();
   const location = useLocation();
   const section = location.pathname.split('/')[3] || 'overview';
@@ -35,6 +36,12 @@ export function useShorts() {
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
   const [config, setConfig] = useState<Config>();
+  const authenticated = !!login && login.address === actor && login.expiresAt > Date.now()
+    && login.api === SHORTS_API && login.network === CONFIG.NETWORK
+    && login.network === config?.network && login.contract === config?.contract;
+  const token = authenticated ? login.token : undefined;
+  const currentLogin = useRef(login);
+  currentLogin.current = login;
   const [feed, setFeed] = useState<Short[]>([]);
   const sharedId = tab === 'feed' ? new URLSearchParams(location.search).get('short') : null;
   const [sharedResult, setSharedResult] = useState<{ id: string; video?: Short }>();
@@ -80,7 +87,7 @@ export function useShorts() {
     confirmedLikes.current.clear();
     setFeed((items) => items.map((item) => ({ ...item, liked: false, mine: item.creator === actor })));
     setSharedResult(undefined);
-    setLogin(undefined);
+    setLogin((current) => (current?.address === actor ? current : undefined));
     setDashboard(undefined);
     setPerformance(undefined);
     setClaimReview(false);
@@ -100,15 +107,15 @@ export function useShorts() {
     setPreparedUpload(undefined); setUploadPrices(undefined); setUploadPayment(undefined);
     setUploadStage(undefined);
     setMessage('');
-  }, [actor]);
+  }, [actor, setLogin]);
   useEffect(() => {
     if (!login) return undefined;
     const timer = setTimeout(() => {
       setLogin(undefined); setDashboard(undefined); setReview([]); setPerformance(undefined);
-      setMessageTone('info'); setMessage('Your sign-in expired. Sign again to continue; your uploaded videos are saved.');
+      setMessageTone('info'); setMessage('Creator access expired. Your wallet is still connected; verify ownership when you continue.');
     }, Math.max(0, login.expiresAt - Date.now()));
     return () => clearTimeout(timer);
-  }, [login]);
+  }, [login, setLogin]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
   const refresh = useCallback(async () => {
     generation.current += 1;
@@ -118,8 +125,17 @@ export function useShorts() {
       request<Short[]>(`?address=${encodeURIComponent(actor)}&topic=${encodeURIComponent(topic)}`),
       sharedId ? request<Short>(`/shared/${encodeURIComponent(sharedId)}?address=${encodeURIComponent(actor)}`).catch(() => undefined) : undefined,
     ]);
-    const d = token ? await request<Dashboard>('/dashboard', undefined, token) : undefined;
-    const r = token && actor === c.operator ? await request<Review[]>('/review', undefined, token) : [];
+    let d: Dashboard | undefined;
+    let r: Review[] = [];
+    try {
+      d = token ? await request<Dashboard>('/dashboard', undefined, token) : undefined;
+      r = token && actor === c.operator ? await request<Review[]>('/review', undefined, token) : [];
+    } catch (error) {
+      if (error instanceof ShortsApiError && error.status === 401) {
+        setLogin((current) => (current?.token === token ? undefined : current));
+      }
+      throw error;
+    }
     if (gen !== generation.current) return;
     setConfig(c);
     const withConfirmedLike = (item: Short) => {
@@ -134,7 +150,7 @@ export function useShorts() {
     setFeed(f.map(withConfirmedLike));
     setSharedResult(sharedId ? { id: sharedId, video: shared ? withConfirmedLike(shared) : undefined } : undefined);
     setDashboard(d); setReview(r);
-  }, [actor, topic, token, sharedId]);
+  }, [actor, topic, token, sharedId, setLogin]);
   useEffect(() => {
     const counter = generation;
     refresh().catch((e) => setMessage(e.message));
@@ -189,8 +205,12 @@ export function useShorts() {
     } finally { actionLock.current = false; setBusy(false); }
   };
   const requireLogin = () => {
-    if (!token || currentAddress.current !== actor) throw new Error('Sign in with your wallet first.');
-    return token;
+    const session = currentLogin.current;
+    if (!session || session.address !== actor || currentAddress.current !== actor
+      || session.expiresAt <= Date.now() || session.api !== SHORTS_API
+      || session.network !== config?.network || session.network !== CONFIG.NETWORK
+      || session.contract !== config?.contract) throw new Error('Verify your connected wallet to access creator tools.');
+    return session.token;
   };
   const checkNetwork = async () => {
     if (CONFIG.NETWORK !== 'ae_uat' || config?.network !== 'ae_uat'
@@ -224,18 +244,29 @@ export function useShorts() {
       return result;
     } finally { setWalletPending(false); }
   };
-  const signIn = () => perform(async () => {
+  const verifyCreator = async () => {
+    if (authenticated) return requireLogin();
     setWalletPending(true);
     try {
-      if (!actor) { await connectWallet(); return; }
       await checkNetwork();
       const c = await request<{ id: string; message: string }>('/auth/challenge', { address: actor });
+      if (currentAddress.current !== actor) throw new Error('Wallet changed during verification.');
       const signature = await signMessage(c.message);
-      if (currentAddress.current !== actor) throw new Error('Wallet changed during sign-in.');
-      const next = await request<Login>('/auth/verify', { id: c.id, signature });
-      setLogin(next);
+      if (currentAddress.current !== actor) throw new Error('Wallet changed during verification.');
+      const next = await request<CreatorLogin>('/auth/verify', { id: c.id, signature });
+      if (currentAddress.current !== actor || next.address !== actor) throw new Error('Wallet changed during verification.');
+      const session = {
+        ...next, api: SHORTS_API, network: CONFIG.NETWORK, contract: config!.contract,
+      };
+      currentLogin.current = session;
+      setLogin(session);
+      return session.token;
     } finally { setWalletPending(false); }
-  }, actor ? 'Wallet verified. You can continue.' : 'Connect your testnet wallet, then sign in.');
+  };
+  const signIn = () => perform(async () => {
+    if (!actor) { openModal({ name: 'connect-wallet' }); return; }
+    await verifyCreator();
+  }, actor ? 'Creator access ready. Your connected wallet is unchanged.' : 'Choose a wallet using Superhero’s connect dialog.');
   const connectForLike = () => perform(async () => {
     if (actor) return;
     likeAfterConnect.current = like;
@@ -256,10 +287,12 @@ export function useShorts() {
     requireLogin(); setUploadPrices(prices);
   }, 'Hosting prices updated.');
   const upload = async (data: FormData, key = '') => perform(async () => {
-    const auth = requireLogin();
+    // Next: Hosting is the explicit upload intent. Verify only when private
+    // access is missing, then continue the same action without a second click.
     if (uploadPayment) throw new Error('Check your existing hosting purchase in Studio before starting again.');
     const file = data.get('file') as File;
     if (!file?.size || file.size > 40 * 1024 * 1024) throw new Error('Choose a video smaller than 40 MB.');
+    const auth = token ? requireLogin() : await verifyCreator();
     const hash = async (bytes: ArrayBuffer) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((v) => v.toString(16).padStart(2, '0')).join('');
     setUploadProgress(0); setUploadStage('checking');
     const details = {
@@ -376,13 +409,9 @@ export function useShorts() {
   return {
     actor,
     authenticated,
+    restoringCreatorSession: !!login && login.address === actor && login.expiresAt > Date.now() && !config,
     signIn,
     connectForLike,
-    switchWallet: async () => {
-      if (actionLock.current) return;
-      await disconnectWallet();
-      setLogin(undefined); setTab('studio');
-    },
     isOperator: authenticated && actor === config?.operator,
     tab,
     section,

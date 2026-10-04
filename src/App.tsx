@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import { useNavigate, useRoutes } from 'react-router-dom';
 import { useAtom } from 'jotai';
+import { useSyncShortsWalletSession } from './features/shorts/shorts-wallet-session';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
@@ -64,6 +65,7 @@ const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
+  useSyncShortsWalletSession(activeAccount);
   const {
     canPrompt, promptInstall, isIOS, isInstalled,
   } = usePwaInstall();

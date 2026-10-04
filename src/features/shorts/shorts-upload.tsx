@@ -48,14 +48,15 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   const quote = s.quote?.shortId === prepared?.id ? s.quote : undefined;
   const expired = !quote || quote.expiresAt <= now;
   const pricesReady = !!prepared && s.uploadPrices?.shortId === prepared.id;
+  const verifying = s.busy && s.walletPending && !s.uploadStage;
   const preparing = s.busy && !!s.uploadStage;
   const canContinue = !!file && !!info && !fileError;
   const uploading = s.uploadStage === 'uploading';
   const processing = s.uploadStage === 'processing';
   const phase = processing ? 2 : Number(uploading);
-  const phaseTitles = ['Checking your file', 'Sending your video', 'Analyzing your video'];
+  const phaseTitles = [verifying ? 'Your wallet is already connected.' : 'Checking your file', 'Sending your video', 'Analyzing your video'];
   const phaseCopy = [
-    'Making sure your file is ready for a reliable upload.',
+    verifying ? 'Confirm ownership to continue your private upload. This does not spend AE.' : 'Making sure your file is ready for a reliable upload.',
     'Your video is being sent privately. Keep this page open.',
     'Preparing playback and checking your video against our community guidelines for the feed.',
   ];
@@ -65,10 +66,10 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     return index === phase ? 'In progress' : 'Next';
   };
   let nextLabel = ['Next: Details', 'Next: Hosting', 'Next: Review', `Confirm hosting · ${quote?.charge || '—'} AE`][step];
-  if (step === 1 && !s.authenticated) nextLabel = s.actor ? 'Verify creator account' : 'Connect wallet to continue';
+  if (step === 1 && !s.actor) nextLabel = 'Connect wallet to continue';
   if (step === 2 && !prepared) nextLabel = 'Retry upload';
   if (step === 3 && expired) nextLabel = 'Refresh hosting quote';
-  if (step >= 2 && !s.authenticated) nextLabel = s.actor ? 'Sign in to continue' : 'Connect wallet to continue';
+  if (step >= 2 && prepared && !s.authenticated) nextLabel = s.actor ? 'Confirm creator access' : 'Connect wallet to continue';
   const disabled = s.busy || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
     || (step === 2 && !!prepared && s.authenticated && (!pricesReady || !validCoverage(coverage)));
   useEffect(() => {
@@ -131,7 +132,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     event.preventDefault();
     if (disabled) return;
     if (step === 0) { go(1); return; }
-    if (!s.authenticated) { await s.signIn(); return; }
+    if (!s.actor || (step > 1 && prepared && !s.authenticated)) { await s.signIn(); return; }
     if (step === 1) { go(2); if (!prepared) await sendVideo(); return; }
     if (step === 2) {
       if (!prepared) { await sendVideo(); return; }
@@ -164,10 +165,10 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
             <div className="su-intro">
               <span className="su-kicker">{preparing ? 'BRINGING YOUR SHORT TO LIFE' : `STEP ${step + 1} OF 4`}</span>
               <h2 ref={heading} tabIndex={-1}>
-                {preparing ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Give your Short time to shine.', 'One last look.'][step]}
+                {(preparing || verifying) ? phaseTitles[phase] : ['Start with a moment.', 'Make it yours.', 'Give your Short time to shine.', 'One last look.'][step]}
               </h2>
               <p>
-                {preparing ? phaseCopy[phase] : [
+                {(preparing || verifying) ? phaseCopy[phase] : [
                   'A fresh idea, a tiny tutorial, a moment worth sharing. Make it yours.',
                   'A little context helps the right people find your story.',
                   'Choose how long your Short stays available. You can extend it anytime.',
@@ -175,7 +176,13 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 ][step]}
               </p>
             </div>
-            {preparing ? (
+            {verifying && (
+              <section className="su-processing" aria-label="Confirm creator access">
+                <LockKeyhole size={36} aria-hidden="true" />
+                <p role="status">Confirm ownership in your wallet. Your upload will continue automatically afterward.</p>
+              </section>
+            )}
+            {!verifying && (preparing ? (
               <section className="su-processing" aria-label="Upload progress">
                 <div className="su-process-icon"><ScanEye size={36} aria-hidden="true" /></div>
                 <div role="status">
@@ -337,8 +344,8 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   <div className="su-auth-note">
                     <LockKeyhole size={19} aria-hidden="true" />
                     <div>
-                      <strong>Your creator account</strong>
-                      <p>Connect and verify your wallet before uploading. Verification doesn’t spend AE. Your video stays on this device until you choose Next: Hosting.</p>
+                      <strong>{s.actor ? 'Using your connected Superhero wallet' : 'Your creator account'}</strong>
+                      <p>{s.actor ? 'Next: Hosting may ask you to confirm ownership once before your private upload. This signature does not spend AE.' : 'Connect through Superhero to continue. Your video stays on this device until you choose Next: Hosting.'}</p>
                     </div>
                   </div>
                   )}
@@ -378,7 +385,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   ][step]}
                 </p>
               </>
-            )}
+            ))}
           </form>
           <aside id="su-preview" className="su-preview" aria-label="Short preview">
             <div className="su-preview-heading">

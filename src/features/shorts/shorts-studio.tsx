@@ -1,3 +1,6 @@
+import AddressCopyChip from '@/features/social/components/AddressCopyChip';
+import HeaderWalletButton from '@/components/layout/app-header/HeaderWalletButton';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import {
@@ -668,14 +671,21 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             );
           })}
         </nav>
-        <div className="ss-sidebar-footer">
-          <span className="ss-pill active">Testnet preview</span>
-          <p>
-            Build your audience.
-            <br />
-            Own your rewards.
-          </p>
-          <small>Test AE only. Local development.</small>
+        <div className="ss-sidebar-end">
+          <section className="ss-sidebar-account" aria-label="Your Superhero wallet">
+            <HeaderWalletButton avatarOnly />
+            {s.actor && <AddressCopyChip address={s.actor} />}
+            {s.actor && <span className="ss-verified">Connected to Superhero</span>}
+          </section>
+          <div className="ss-sidebar-footer">
+            <span className="ss-pill active">Testnet preview</span>
+            <p>
+              Build your audience.
+              <br />
+              Own your rewards.
+            </p>
+            <small>Test AE only. Local development.</small>
+          </div>
         </div>
       </aside>
       <main className="ss-main">
@@ -684,14 +694,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
             <h1>{titles[page] || 'Creator Studio'}</h1>
           </div>
-          <div className="ss-account">
-            <span className="sh-address">{s.actor || 'Connect your creator wallet'}</span>
-            <div className="ss-account-actions">
-              {s.authenticated ? <span className="ss-verified">Wallet verified</span> : <button type="button" disabled={s.busy} onClick={s.signIn}>{s.actor ? 'Sign in with wallet' : 'Connect wallet'}</button>}
-              {s.actor && <button type="button" disabled={s.busy} onClick={s.switchWallet}>Switch wallet</button>}
-              {s.authenticated && <button type="button" disabled={s.busy} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
-            </div>
-          </div>
+          {s.authenticated && <button type="button" disabled={s.busy} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
         </header>
         {page !== 'upload' && (
         <div className="ss-health">
@@ -706,15 +709,20 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           <button type="button" onClick={s.clearMessage} aria-label="Dismiss message">×</button>
         </div>
         )}
-        {!s.authenticated && page !== 'upload' ? (
+        {!s.authenticated && !s.restoringCreatorSession && page !== 'upload' ? (
           <div className="ss-welcome ss-panel">
             <BarChart3 size={45} />
             <h2>A home for your next chapter.</h2>
             <p>See what reaches your audience, manage hosting and collect your rewards.</p>
-            <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>Sign in to Creator Studio</button>
-            <small>Choose the account you want in Superhero Wallet, then connect and sign in. Signing in does not spend AE.</small>
+            {s.actor ? (
+              <>
+                <button type="button" className="primary" disabled={s.busy} onClick={s.signIn}>Unlock creator tools</button>
+                <small>Your Superhero wallet is connected. Confirm ownership once to access private drafts and analytics. This signature does not spend AE.</small>
+              </>
+            ) : <ConnectWalletButton label="Connect wallet" />}
           </div>
         ) : null}
+        {s.restoringCreatorSession && page !== 'upload' && <div className="ss-panel" role="status">Restoring creator access…</div>}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
         {s.authenticated && !s.dashboard && page !== 'upload' && <div className="ss-panel" role="status">Loading your creator account…</div>}
         {s.authenticated && s.dashboard && (

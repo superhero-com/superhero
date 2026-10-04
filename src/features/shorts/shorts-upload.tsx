@@ -150,16 +150,6 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
           <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
           <h1>Create a Short</h1>
         </div>
-        <ol className="su-steps" aria-label="Create a Short progress">
-          {steps.map((label, index) => (
-            <li key={label} className={index === step ? 'current' : ''}>
-              <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
-                <span>{index + 1}</span>
-                {label}
-              </button>
-            </li>
-          ))}
-        </ol>
       </header>
       {s.uploadPayment ? <UploadOutcome s={s} /> : (
         <div className={`su-workspace ${previewOpen ? 'su-preview-open' : ''}`}>
@@ -369,16 +359,28 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 {step === 3 && video && <UploadReview video={video} quote={quote} expired={expired} />}
               </>
             ))}
+            {step > 0 && (
+            <p className="su-footer-note" id="su-action-note">
+              {[
+                '',
+                'Next: Hosting uploads your video privately. No payment yet.',
+                'Next: Review calculates your exact charge. It doesn’t charge your wallet.',
+                'No automatic renewal. Your wallet shows the additional network fee.',
+              ][step]}
+            </p>
+            )}
             <div className="su-action-bar">
               <div className="su-actions">
-                <p className="su-footer-note" id="su-action-note">
-                  {[
-                    'Free to watch. Prepaid hosting required—you’ll see the exact cost before confirming.',
-                    'Next: Hosting uploads your video privately. No payment yet.',
-                    'Next: Review calculates your exact charge. It doesn’t charge your wallet.',
-                    'No automatic renewal. Your wallet shows the additional network fee.',
-                  ][step]}
-                </p>
+                <ol className="su-steps" aria-label="Create a Short progress">
+                  {steps.map((label, index) => (
+                    <li key={label} className={index === step ? 'current' : ''}>
+                      <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
+                        <span>{index + 1}</span>
+                        {label}
+                      </button>
+                    </li>
+                  ))}
+                </ol>
                 <div className="su-action-buttons">
                   {step > 0 && (
                   <button type="button" disabled={s.busy} onClick={() => go(step - 1)}>
@@ -387,7 +389,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     Previous
                   </button>
                   )}
-                  <button type="submit" className="primary" disabled={disabled} aria-describedby="su-action-note">
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step > 0 ? 'su-action-note' : undefined}>
                     {s.busy ? 'Please wait…' : nextLabel}
                     <ArrowRight size={17} aria-hidden="true" />
                   </button>
@@ -458,7 +460,6 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 <Share2 size={21} />
               </div>
             </div>
-            <p>Public and free to watch once published.</p>
             {file && <small className="su-draft-note">{prepared ? 'Uploaded draft saved in Studio. Hosting starts after payment and activation.' : 'Kept in this tab while you stay in Shorts. Reloading clears these local details.'}</small>}
             {file && <small className="su-preview-filename">{file.name}</small>}
           </aside>

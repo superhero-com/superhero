@@ -772,10 +772,6 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             )}
           </>
         )}
-        <footer className="ss-footer">
-          {s.config && <a href={`https://testnet.aescan.io/contracts/${s.config.contract}`} target="_blank" rel="noreferrer">View Shorts contract ↗</a>}
-          <span>Public viewing · Creator-funded hosting · Wallet-owned rewards</span>
-        </footer>
       </main>
     </div>
   );

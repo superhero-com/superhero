@@ -318,18 +318,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     </label>
                   </fieldset>
                   <label className="su-rights" htmlFor="short-rights">
+                    <input id="short-rights" type="checkbox" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} />
                     <span>I have the rights to publish this video and its audio.</span>
-                    <input id="short-rights" className="su-switch" type="checkbox" role="switch" checked={rights} disabled={s.busy} onChange={(event) => setRights(event.target.checked)} />
                   </label>
-                  {!s.authenticated && (
-                  <div className="su-auth-note">
-                    <LockKeyhole size={19} aria-hidden="true" />
-                    <div>
-                      <strong>{s.actor ? 'Using your connected Superhero wallet' : 'Your creator account'}</strong>
-                      <p>{s.actor ? 'Next: Hosting may ask you to confirm ownership once before your private upload. This signature does not spend AE.' : 'Connect through Superhero to continue. Your video stays on this device until you choose Next: Hosting.'}</p>
-                    </div>
-                  </div>
-                  )}
                   {s.preparedUpload && !prepared && <small>Changing the video or details requires a new private upload. The previous unpaid version stays in Studio.</small>}
                 </div>
                 )}
@@ -344,14 +335,12 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 {step === 3 && video && <UploadReview video={video} quote={quote} expired={expired} />}
               </>
             ))}
-            {step > 0 && (
+            {step > 1 && (
             <p className="su-footer-note" id="su-action-note">
               {[
-                '',
-                'Next: Hosting uploads your video privately. No payment yet.',
                 'Next: Review calculates your exact charge. It doesn’t charge your wallet.',
                 'No automatic renewal. Your wallet shows the additional network fee.',
-              ][step]}
+              ][step - 2]}
             </p>
             )}
             <div className="su-action-bar">
@@ -374,7 +363,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     Previous
                   </button>
                   )}
-                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step > 0 ? 'su-action-note' : undefined}>
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step > 1 ? 'su-action-note' : undefined}>
                     {s.busy ? 'Please wait…' : nextLabel}
                     <ArrowRight size={17} aria-hidden="true" />
                   </button>

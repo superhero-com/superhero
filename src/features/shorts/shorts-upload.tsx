@@ -367,22 +367,11 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 </div>
                 )}
                 {step === 3 && video && <UploadReview video={video} quote={quote} expired={expired} />}
-                <div className="su-actions">
-                  <div>
-                    {step > 0 && (
-                    <button type="button" disabled={s.busy} onClick={() => go(step - 1)}>
-                      <ArrowLeft size={16} aria-hidden="true" />
-                      {' '}
-                      Previous
-                    </button>
-                    )}
-                  </div>
-                  <button type="submit" className="primary" disabled={disabled}>
-                    {s.busy ? 'Please wait…' : nextLabel}
-                    <ArrowRight size={17} aria-hidden="true" />
-                  </button>
-                </div>
-                <p className="su-footer-note">
+              </>
+            ))}
+            <div className="su-action-bar">
+              <div className="su-actions">
+                <p className="su-footer-note" id="su-action-note">
                   {[
                     'Free to watch. Prepaid hosting required—you’ll see the exact cost before confirming.',
                     'Next: Hosting uploads your video privately. No payment yet.',
@@ -390,8 +379,21 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     'No automatic renewal. Your wallet shows the additional network fee.',
                   ][step]}
                 </p>
-              </>
-            ))}
+                <div className="su-action-buttons">
+                  {step > 0 && (
+                  <button type="button" disabled={s.busy} onClick={() => go(step - 1)}>
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    {' '}
+                    Previous
+                  </button>
+                  )}
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby="su-action-note">
+                    {s.busy ? 'Please wait…' : nextLabel}
+                    <ArrowRight size={17} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </form>
           <aside id="su-preview" className="su-preview" aria-label="Short preview">
             <div className="su-preview-heading">

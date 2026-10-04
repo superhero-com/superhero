@@ -15,12 +15,12 @@
     "Segoe UI",
     sans-serif;
 }
-.shorts-app button,
+.shorts-app button:not(:where(.ss-sidebar-account *)),
 .shorts-app input,
 .shorts-app select {
   font: inherit;
 }
-.shorts-app button {
+.shorts-app button:not(:where(.ss-sidebar-account *)) {
   cursor: pointer;
   border: 1px solid var(--line);
   background: #171e2c;
@@ -29,19 +29,19 @@
   padding: 10px 15px;
   transition: background 0.15s;
 }
-.shorts-app button:hover {
+.shorts-app button:not(:where(.ss-sidebar-account *)):hover {
   background: #26334b;
 }
-.shorts-app button:disabled {
+.shorts-app button:not(:where(.ss-sidebar-account *)):disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.shorts-app button.primary {
+.shorts-app button:not(:where(.ss-sidebar-account *)).primary {
   background: var(--blue);
   border-color: var(--blue);
   font-weight: 650;
 }
-.shorts-app button:focus-visible,
+.shorts-app button:not(:where(.ss-sidebar-account *)):focus-visible,
 .shorts-app input:focus-visible,
 .shorts-app select:focus-visible {
   outline: 2px solid #80aaff;

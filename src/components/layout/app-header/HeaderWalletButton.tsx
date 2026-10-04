@@ -1,4 +1,3 @@
-import AddressAvatar from '@/components/AddressAvatar';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import {
@@ -12,7 +11,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { IconThreeDots } from '../../../icons';
 
-const HeaderWalletButton = ({ avatarOnly = false }: { avatarOnly?: boolean }) => {
+const HeaderWalletButton = () => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
   const { disconnectWallet } = useWalletConnect();
@@ -56,19 +55,17 @@ const HeaderWalletButton = ({ avatarOnly = false }: { avatarOnly?: boolean }) =>
         className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5 max-w-[210px] overflow-hidden"
         aria-label={t('aria.viewProfile')}
       >
-        {avatarOnly ? <AddressAvatar address={activeAccount} size={36} /> : (
-          <AddressAvatarWithChainName
-            key={activeAccount}
-            isHoverEnabled={false}
-            address={activeAccount}
-            size={36}
-            showBalance={false}
-            showAddressAndChainName={false}
-            showPrimaryOnly
-            contentClassName="px-2 pb-0 max-w-[160px] overflow-hidden"
-            className="w-full max-w-[210px]"
-          />
-        )}
+        <AddressAvatarWithChainName
+          key={activeAccount}
+          isHoverEnabled={false}
+          address={activeAccount}
+          size={36}
+          showBalance={false}
+          showAddressAndChainName={false}
+          showPrimaryOnly
+          contentClassName="px-2 pb-0 max-w-[160px] overflow-hidden"
+          className="w-full max-w-[210px]"
+        />
       </button>
 
       <DropdownMenu>

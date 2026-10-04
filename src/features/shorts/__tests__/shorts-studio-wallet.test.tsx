@@ -24,10 +24,11 @@ describe('Studio main-wallet identity', () => {
       </MemoryRouter>,
     );
     const sidebar = screen.getByRole('complementary');
-    expect(within(sidebar).getByText('ak_existing_home_wallet')).toBeVisible();
-    expect(within(sidebar).getByTestId('profile-address-chip')).toBeVisible();
+    expect(within(sidebar).getByRole('button', { name: 'Shared wallet account menu' })).toBeVisible();
+    expect(within(sidebar).queryByTestId('profile-address-chip')).not.toBeInTheDocument();
+    expect(within(sidebar).queryByText('Testnet preview')).not.toBeInTheDocument();
     expect(within(screen.getByRole('main')).queryByRole('button', { name: 'Shared wallet account menu' })).not.toBeInTheDocument();
-    expect(screen.getByText('Connected to Superhero')).toBeVisible();
+    expect(screen.queryByText('Connected to Superhero')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shared wallet account menu' })).toBeVisible();
     expect(screen.queryByRole('button', { name: /Sign in|Switch wallet|Reconnect/i })).not.toBeInTheDocument();
     expect(signIn).not.toHaveBeenCalled();

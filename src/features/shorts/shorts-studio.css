@@ -33,14 +33,10 @@
 .ss-guidelines--ineligible .ss-guidelines-icon,.ss-guidelines--unavailable .ss-guidelines-icon{color:#e5bd80;background:#3a3021}
 .ss-guidelines .ss-guidelines-reason{padding:10px 12px;border-left:2px solid #ba9968;background:#201e1a;color:#e0caa7}
 
-/* The Studio sidebar owns the shared wallet controls and complete address. */
+/* Use the main sidebar wallet component without Studio-specific identity UI. */
 .ss-sidebar { overflow-y: auto; }
-.ss-sidebar-end { margin-top: auto; display: grid; gap: 18px; min-width: 0; }
-.ss-sidebar-end .ss-sidebar-footer { margin: 0; padding: 0; }
-.ss-sidebar-account { display: grid; gap: 10px; min-width: 0; border-top: 1px solid var(--line); padding-top: 18px; }
+.ss-sidebar-account { margin-top: auto; padding-top: 18px; min-width: 0; line-height: 1.6; color: var(--standard-font-color); }
 .ss-sidebar-account>div { min-width: 0; max-width: 100%; }
-.shorts-app .ss-sidebar-account [data-testid="profile-address-chip"] { width: 100%; padding: 7px 9px; font-size: 11px; line-height: 1.5; }
 @media(max-width:760px) {
-  .ss-sidebar-end { margin-top: 0; gap: 0; }
-  .ss-sidebar-account { padding-top: 12px; gap: 8px; }
+  .ss-sidebar-account { margin-top: 0; padding-top: 12px; }
 }

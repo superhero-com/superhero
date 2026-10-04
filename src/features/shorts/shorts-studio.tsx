@@ -1,4 +1,3 @@
-import AddressCopyChip from '@/features/social/components/AddressCopyChip';
 import HeaderWalletButton from '@/components/layout/app-header/HeaderWalletButton';
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { useState } from 'react';
@@ -671,22 +670,9 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             );
           })}
         </nav>
-        <div className="ss-sidebar-end">
-          <section className="ss-sidebar-account" aria-label="Your Superhero wallet">
-            <HeaderWalletButton avatarOnly />
-            {s.actor && <AddressCopyChip address={s.actor} />}
-            {s.actor && <span className="ss-verified">Connected to Superhero</span>}
-          </section>
-          <div className="ss-sidebar-footer">
-            <span className="ss-pill active">Testnet preview</span>
-            <p>
-              Build your audience.
-              <br />
-              Own your rewards.
-            </p>
-            <small>Test AE only. Local development.</small>
-          </div>
-        </div>
+        <section className="ss-sidebar-account" aria-label="Your Superhero wallet">
+          <HeaderWalletButton />
+        </section>
       </aside>
       <main className="ss-main">
         <header className="ss-header">

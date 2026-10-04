@@ -1,7 +1,7 @@
 export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
   hostingStatus?: 'unfunded' | 'active' | 'expired' | 'withdrawn';
-  guidelines?: { status: 'analyzing' | 'reviewing' | 'eligible' | 'ineligible' | 'unavailable'; reason?: string };
+  guidelines?: { status: 'analyzing' | 'reviewing' | 'eligible' | 'ineligible' | 'unavailable'; reason?: string; approval?: 'demo' };
   id: string;
   title: string;
   topic: string;

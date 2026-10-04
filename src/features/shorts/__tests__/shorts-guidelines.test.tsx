@@ -80,6 +80,13 @@ describe('Hosting and community-guidelines status', () => {
     expect(screen.getByRole('heading', { name: 'Eligible for the feed' })).toBeInTheDocument();
   });
 
+  it('offers demo playback without claiming community-guidelines checks passed', () => {
+    show(video({ status: 'active', hostingStatus: 'active', guidelines: { status: 'eligible', approval: 'demo' } }));
+    expect(screen.getByRole('link', { name: 'Watch & share' })).toHaveAttribute('href', '/shorts?short=example');
+    expect(screen.queryByRole('region', { name: 'Community guidelines' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/meets our community guidelines/)).not.toBeInTheDocument();
+  });
+
   it('does not offer hosting or a feed link for withdrawn videos', () => {
     show(video({ status: 'withdrawn', hostingStatus: 'withdrawn', guidelines: { status: 'eligible' } }));
     expect(screen.queryByRole('button', { name: /hosting/ })).not.toBeInTheDocument();

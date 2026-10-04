@@ -23,7 +23,7 @@ export const feedLabel = (video: Short) => messages[guidelinesStatus(video)][0];
 
 export const ShortsGuidelines = ({ video }: { video: Short }) => {
   const status = guidelinesStatus(video);
-  if (status === 'unavailable') return null;
+  if (status === 'unavailable' || video.guidelines?.approval === 'demo') return null;
   const [title, description] = messages[status];
   return (
     <section className={`ss-guidelines ss-guidelines--${status}`} aria-label="Community guidelines">

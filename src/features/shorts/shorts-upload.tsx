@@ -145,16 +145,22 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
   };
   return (
     <div className="su-composer">
-      <ol className="su-steps" aria-label="Create a Short progress">
-        {steps.map((label, index) => (
-          <li key={label} className={index === step ? 'current' : ''}>
-            <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
-              <span>{index + 1}</span>
-              {label}
-            </button>
-          </li>
-        ))}
-      </ol>
+      <header className="su-header">
+        <div className="su-title">
+          <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
+          <h1>Create a Short</h1>
+        </div>
+        <ol className="su-steps" aria-label="Create a Short progress">
+          {steps.map((label, index) => (
+            <li key={label} className={index === step ? 'current' : ''}>
+              <button type="button" aria-label={`${index + 1} ${label}`} aria-current={index === step ? 'step' : undefined} disabled={s.busy || !!s.uploadPayment || index > step} onClick={() => go(index)}>
+                <span>{index + 1}</span>
+                {label}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </header>
       {s.uploadPayment ? <UploadOutcome s={s} /> : (
         <div className={`su-workspace ${previewOpen ? 'su-preview-open' : ''}`}>
           <button type="button" className="su-mobile-preview-toggle" aria-expanded={previewOpen} aria-controls="su-preview" onClick={() => setPreviewOpen(!previewOpen)}>

@@ -675,6 +675,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
         </section>
       </aside>
       <main className="ss-main">
+        {page !== 'upload' && (
         <header className="ss-header">
           <div>
             <span className="sh-eyebrow">YOUR CREATOR SPACE</span>
@@ -682,6 +683,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           </div>
           {s.authenticated && <button type="button" disabled={s.busy} onClick={s.refreshNow} aria-label="Refresh Studio">Refresh</button>}
         </header>
+        )}
         {page !== 'upload' && (
         <div className="ss-health">
           <span className={s.config?.ipfs ? 'sh-dot' : 'sh-dot offline'} />

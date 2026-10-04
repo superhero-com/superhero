@@ -335,12 +335,9 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 {step === 3 && video && <UploadReview video={video} quote={quote} expired={expired} />}
               </>
             ))}
-            {step > 1 && (
+            {step === 3 && (
             <p className="su-footer-note" id="su-action-note">
-              {[
-                'Review the total next. You won’t pay yet.',
-                'No automatic renewal. Your wallet shows the additional network fee.',
-              ][step - 2]}
+              No automatic renewal. Your wallet shows the additional network fee.
             </p>
             )}
             <div className="su-action-bar">
@@ -363,7 +360,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     Previous
                   </button>
                   )}
-                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step > 1 ? 'su-action-note' : undefined}>
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 3 ? 'su-action-note' : undefined}>
                     {s.busy ? 'Please wait…' : nextLabel}
                     <ArrowRight size={17} aria-hidden="true" />
                   </button>

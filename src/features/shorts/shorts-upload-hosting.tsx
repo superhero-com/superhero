@@ -1,5 +1,5 @@
 import {
-  CheckCircle2, Clock3, Info, ShieldCheck, Wallet,
+  CheckCircle2, Clock3, Coins, Info, ShieldCheck, Wallet,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { HostingPrices, Quote, Short } from './types';
@@ -100,19 +100,22 @@ export const UploadCoverage = ({
               <small>test AE</small>
             </strong>
           </div>
-          <label htmlFor="su-source">
-            Pay with
-            <select id="su-source" disabled={s.busy} value={s.source} onChange={(e) => { s.editQuote(); s.setSource(e.target.value as 'wallet' | 'rewards'); }}>
-              <option value="wallet">My wallet</option>
-              <option value="rewards" disabled={!Number(s.dashboard?.account.available)}>
-                My rewards ·
-                {' '}
-                {s.dashboard?.account.available || '0'}
-                {' '}
-                AE
-              </option>
-            </select>
-          </label>
+          <fieldset className="su-plans su-payment-options" disabled={s.busy}>
+            <legend>Pay with</legend>
+            <label htmlFor="su-source-wallet" className={s.source === 'wallet' ? 'selected' : ''}>
+              <input id="su-source-wallet" type="radio" name="short-payment-source" value="wallet" aria-label="My wallet" checked={s.source === 'wallet'} onChange={() => { s.editQuote(); s.setSource('wallet'); }} />
+              <Wallet size={18} aria-hidden="true" />
+              <b>My wallet</b>
+            </label>
+            <label htmlFor="su-source-rewards" className={s.source === 'rewards' ? 'selected' : ''}>
+              <input id="su-source-rewards" type="radio" name="short-payment-source" value="rewards" aria-label="My rewards" aria-describedby="su-rewards-available" disabled={!Number(s.dashboard?.account.available)} checked={s.source === 'rewards'} onChange={() => { s.editQuote(); s.setSource('rewards'); }} />
+              <Coins size={18} aria-hidden="true" />
+              <b>My rewards</b>
+              <small id="su-rewards-available">
+                {Number(s.dashboard?.account.available) ? `${s.dashboard!.account.available} AE available` : 'No rewards yet'}
+              </small>
+            </label>
+          </fieldset>
         </div>
         <p>{selection.mode === 'days' ? 'One-time payment. No auto-renewal.' : 'Review how many days your budget covers next.'}</p>
       </div>

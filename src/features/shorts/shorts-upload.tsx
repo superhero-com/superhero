@@ -65,10 +65,10 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
     if (index < phase) return 'Done';
     return index === phase ? 'In progress' : 'Next';
   };
-  let nextLabel = ['Next: Details', 'Next: Hosting', 'Next: Review', `Confirm hosting · ${quote?.charge || '—'} AE`][step];
+  let nextLabel = ['Next: Details', 'Next: Hosting', 'Next: Review', 'Continue to wallet'][step];
   if (step === 1 && !s.actor) nextLabel = 'Connect wallet to continue';
   if (step === 2 && !prepared) nextLabel = 'Retry upload';
-  if (step === 3 && expired) nextLabel = 'Refresh hosting quote';
+  if (step === 3 && expired) nextLabel = 'Update price';
   if (step >= 2 && prepared && !s.authenticated) nextLabel = s.actor ? 'Confirm creator access' : 'Connect wallet to continue';
   const disabled = s.busy || !canContinue || (step > 0 && (!title.trim() || !selectedTopic || !rights))
     || (step === 2 && !!prepared && s.authenticated && (!pricesReady || !validCoverage(coverage)));
@@ -168,7 +168,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   'A fresh idea, a tiny tutorial, a moment worth sharing. Make it yours.',
                   'A little context helps the right people find your story.',
                   'Keep your Short available for viewers. Extend anytime.',
-                  'Your video, your coverage, your choice. Review everything before opening your wallet.',
+                  'Check your Short and payment before you confirm.',
                 ][step]}
               </p>
             </div>
@@ -332,14 +332,18 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                   <p>Your details are still here. Retry to reuse the video parts already received.</p>
                 </div>
                 )}
-                {step === 3 && video && <UploadReview video={video} quote={quote} expired={expired} />}
+                {step === 3 && video && (
+                  <UploadReview
+                    video={video}
+                    quote={quote}
+                    expired={expired}
+                    busy={s.busy}
+                    onEdit={go}
+                    languageLabel={languages.find(([code]) => code === video.language)?.[1] || video.language || 'No spoken language'}
+                  />
+                )}
               </>
             ))}
-            {step === 3 && (
-            <p className="su-footer-note" id="su-action-note">
-              No automatic renewal. Your wallet shows the additional network fee.
-            </p>
-            )}
             <div className="su-action-bar">
               <div className="su-actions">
                 <ol className="su-steps" aria-label="Create a Short progress">
@@ -360,7 +364,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                     Previous
                   </button>
                   )}
-                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 3 ? 'su-action-note' : undefined}>
+                  <button type="submit" className="primary" disabled={disabled} aria-describedby={step === 3 && video && quote && !verifying && !preparing ? 'su-payment-context' : undefined}>
                     {s.busy ? 'Please wait…' : nextLabel}
                     <ArrowRight size={17} aria-hidden="true" />
                   </button>
@@ -431,8 +435,8 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 <Share2 size={21} />
               </div>
             </div>
-            {file && <small className="su-draft-note">{prepared ? 'Uploaded draft saved in Studio. Hosting starts after payment and activation.' : 'Kept in this tab while you stay in Shorts. Reloading clears these local details.'}</small>}
-            {file && <small className="su-preview-filename">{file.name}</small>}
+            {file && step < 3 && <small className="su-draft-note">{prepared ? 'Uploaded draft saved in Studio. Hosting starts after payment and activation.' : 'Kept in this tab while you stay in Shorts. Reloading clears these local details.'}</small>}
+            {file && step < 3 && <small className="su-preview-filename">{file.name}</small>}
           </aside>
         </div>
       )}

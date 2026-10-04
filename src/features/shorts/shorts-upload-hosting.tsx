@@ -1,5 +1,5 @@
 import {
-  CheckCircle2, Clock3, Coins, Info, ShieldCheck, Wallet,
+  CalendarDays, CheckCircle2, ChevronDown, Clock3, Coins, Info, Pencil, ShieldCheck, Wallet,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { HostingPrices, Quote, Short } from './types';
@@ -131,63 +131,94 @@ export const UploadCoverage = ({
   );
 };
 
-export const UploadReview = ({ video, quote, expired }: { video: Short; quote?: Quote; expired: boolean }) => (
+export const UploadReview = ({
+  video, quote, expired, languageLabel, busy, onEdit,
+}: {
+  video: Short; quote?: Quote; expired: boolean; languageLabel: string;
+  busy: boolean; onEdit: (step: 1 | 2) => void;
+}) => (
   <div className="su-review">
-    <span className="su-review-label">
-      <CheckCircle2 size={18} aria-hidden="true" />
-      {' '}
-      Your Short, ready for its next step
-    </span>
-    <h3>{video.title}</h3>
-    {video.description && <p className="su-description">{video.description}</p>}
-    <div className="su-tags">
-      <span>{video.topic}</span>
-      <span>{video.language === 'und' ? 'No spoken language' : video.language}</span>
-      {video.synthetic && <span>AI-altered</span>}
-      {video.sponsored && <span>Sponsored</span>}
-    </div>
+    <section className="su-review-short" aria-label="Your Short">
+      <div className="su-review-heading">
+        <h3>{video.title}</h3>
+        <button type="button" disabled={busy} onClick={() => onEdit(1)}>
+          <Pencil size={14} aria-hidden="true" />
+          Edit details
+        </button>
+      </div>
+      <div className="su-tags">
+        <span>{video.topic}</span>
+        <span>{languageLabel}</span>
+        {video.synthetic && <span>AI-altered</span>}
+        {video.sponsored && <span>Sponsored</span>}
+      </div>
+      {video.description && (
+        <details className="su-review-description">
+          <summary>Description</summary>
+          <p className="su-description">{video.description}</p>
+        </details>
+      )}
+    </section>
     {quote && (
-      <>
+      <section className="su-review-summary" aria-label="Hosting and payment">
+        <div className="su-review-heading">
+          <div className="su-review-duration">
+            <CalendarDays size={19} aria-hidden="true" />
+            <div>
+              <strong>
+                {quote.days}
+                {' '}
+                days available
+              </strong>
+              <small>{`Until about ${coverageDate(quote.estimatedUntil)}`}</small>
+            </div>
+          </div>
+          <button type="button" disabled={busy} onClick={() => onEdit(2)}>
+            <Pencil size={14} aria-hidden="true" />
+            Edit hosting
+          </button>
+        </div>
         <div className="su-review-charge">
-          <span>Prepaid hosting</span>
+          <div>
+            <span>One-time payment</span>
+            <small>{quote.source === 'wallet' ? 'From your wallet' : 'From your rewards'}</small>
+          </div>
           <strong>
             {quote.charge}
             {' '}
             <small>test AE</small>
           </strong>
         </div>
-        <dl className="su-receipt">
-          <dt>Coverage</dt>
-          <dd>
-            {quote.days}
-            {' '}
-            days
-          </dd>
-          <dt>Pay from</dt>
-          <dd>{quote.source === 'wallet' ? 'Testnet wallet' : 'Available rewards'}</dd>
-          <dt>Estimated available until</dt>
-          <dd>{coverageDate(quote.estimatedUntil)}</dd>
-          {quote.unused !== '0' && (
-          <>
-            <dt>Budget left unspent</dt>
-            <dd>
-              {quote.unused}
-              {' '}
-              AE
-            </dd>
-          </>
-          )}
-        </dl>
-        <p className="su-payment-note">
-          <Wallet size={17} aria-hidden="true" />
-          {' '}
-          You’ll approve one hosting payment in your wallet. Network fees are additional. Coverage begins after activation.
-        </p>
-      </>
+        <p id="su-payment-context">You’ll confirm in your wallet. Network fee is additional.</p>
+      </section>
     )}
-    {expired && <p className="su-error" role="alert">This quote expired. Go back to hosting to refresh the price. No payment has been made.</p>}
-    <UploadFeedStatus video={video} />
-    <small>Payment covers storage and sharing. It does not guarantee inclusion in the feed.</small>
+    {expired && <p className="su-error" role="alert">This price has expired. Update it before continuing. You haven’t been charged.</p>}
+    {guidelinesStatus(video) === 'ineligible' && <UploadFeedStatus video={video} />}
+    <div className="su-review-help">
+      <details>
+        <summary>
+          <Info size={15} aria-hidden="true" />
+          Payment &amp; duration
+          <ChevronDown size={15} className="su-info-chevron" aria-hidden="true" />
+        </summary>
+        <div>
+          <p>Your paid days start when hosting is active. There’s no auto-renewal; extend anytime in Studio.</p>
+          <p>Your wallet shows the network fee before you confirm. This fee comes from your wallet even when hosting is paid with rewards.</p>
+          {quote && quote.unused !== '0' && <p>{`${quote.unused} AE of your budget will stay unspent.`}</p>}
+        </div>
+      </details>
+      <details>
+        <summary>
+          <Info size={15} aria-hidden="true" />
+          Sharing &amp; feed
+          <ChevronDown size={15} className="su-info-chevron" aria-hidden="true" />
+        </summary>
+        <div>
+          <p>Hosting keeps your Short available to watch and share by link. It doesn’t guarantee a place in the feed.</p>
+          {guidelinesStatus(video) !== 'ineligible' && <UploadFeedStatus video={video} />}
+        </div>
+      </details>
+    </div>
   </div>
 );
 

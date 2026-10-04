@@ -197,11 +197,11 @@ const TokenListTableRow = ({
 
         {/* Token Name + Avatar + Buy */}
         <td className="cell cell-name px-3">
-          <div className="flex items-center gap-2.5">
+          <div className="token-identity">
+            <span className="token-mark" aria-hidden="true">#</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <div className="token-name text-sm font-bold text-white truncate">
-                  <span className="text-white/40 text-[.85em] mr-0.5">#</span>
                   {token.symbol || token.name}
                 </div>
               </div>

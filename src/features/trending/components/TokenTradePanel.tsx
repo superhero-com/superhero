@@ -3,7 +3,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowUpRight, Check, ChevronDown, Settings2, Wallet,
+  ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, ChevronDown, Settings2, Wallet,
 } from 'lucide-react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import Spinner from '@/components/Spinner';
@@ -64,12 +64,21 @@ const TokenTradePanel = ({
     <div className="token-trade" dir={i18n.dir()}>
       <section className="trade-card" aria-label={t('tradePanel.title', { symbol })}>
         <header className="trade-heading">
-          <h2>{t('tradePanel.title', { symbol })}</h2>
-          <p>{t('tradePanel.subtitle')}</p>
+          <span className="trade-heading__mark" aria-hidden="true"><ArrowLeftRight /></span>
+          <div className="trade-heading__copy">
+            <h2>{t('tradePanel.title', { symbol })}</h2>
+            <p>{t('tradePanel.subtitle')}</p>
+          </div>
         </header>
         <div className="trade-modes" role="group" aria-label={t('tradePanel.direction')}>
-          <button type="button" className="trade-mode--buy" aria-pressed={isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(true)}>{t('tradePanel.buy')}</button>
-          <button type="button" className="trade-mode--sell" aria-pressed={!isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(false)}>{t('tradePanel.sell')}</button>
+          <button type="button" className="trade-mode--buy" aria-pressed={isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(true)}>
+            <ArrowDownLeft aria-hidden="true" />
+            {t('tradePanel.buy')}
+          </button>
+          <button type="button" className="trade-mode--sell" aria-pressed={!isBuying} disabled={loadingTransaction} onClick={() => switchTradeView(false)}>
+            <ArrowUpRight aria-hidden="true" />
+            {t('tradePanel.sell')}
+          </button>
         </div>
         {errorMessage && <p className="trade-error" role="alert">{errorMessage}</p>}
         <TradeTokenInput

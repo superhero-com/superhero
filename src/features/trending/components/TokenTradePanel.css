@@ -29,3 +29,12 @@
 .trade-amount>label,.trade-amount__meta,.trade-summary>div,.trade-summary bdi,.trade-details>div,.trade-details-toggle,.trade-note{font-size:12px}.trade-amount>label span{font-size:12px}
 @media(hover:hover){.trade-modes button.trade-mode--buy[aria-pressed=true]:hover{background:var(--trade-buy);color:var(--trade-buy-text);filter:brightness(1.06)}.trade-modes button.trade-mode--sell[aria-pressed=true]:hover{background:var(--trade-sell);color:var(--trade-sell-text);filter:brightness(1.06)}}
 @container trade (max-width:350px){.trade-heading h2{font-size:15px}.trade-summary>div,.trade-summary bdi,.trade-note{font-size:12px}}
+
+.trade-heading { display: flex; align-items: center; gap: 10px; }
+.trade-heading__mark { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 1px solid light-dark(#d6e3f4, #8fb9ef20); border-radius: 10px; background: light-dark(#eef4fd, #192435); color: light-dark(#36639f, #aac9f4); }
+.trade-heading__mark svg { width: 17px; height: 17px; stroke-width: 1.7; }
+.trade-heading__copy { min-width: 0; }
+.trade-heading p { margin-top: 1px; font-size: 11px; color: light-dark(#627086, #94a0b3); }
+.trade-modes { margin: 14px 0 12px; gap: 6px; background: transparent; padding: 0; }
+.trade-modes button { display: flex; align-items: center; justify-content: center; gap: 7px; border-color: var(--trade-line); border-radius: 10px; }
+.trade-modes button svg { width: 15px; height: 15px; stroke-width: 1.8; }

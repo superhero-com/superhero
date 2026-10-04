@@ -749,7 +749,7 @@ const TokenSaleDetails = () => {
       {/* Mobile Trading Modal */}
       {(showTradePanels && tradeActionSheet && token?.sale_address) && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-end"
+          className="fixed inset-0 z-[1100] bg-black/50 flex items-end"
           onClick={closeTradeActionSheet}
           role="presentation"
           style={{

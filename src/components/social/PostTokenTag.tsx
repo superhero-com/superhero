@@ -89,7 +89,7 @@ const TokenRow = ({
   const ariaLabel = spoken.join(', ').replace(/, link$/, ' — link');
 
   let chartHeight = preview ? 44 : 72;
-  if (compact) chartHeight = 36;
+  if (compact) chartHeight = 28;
 
   return (
     <Link

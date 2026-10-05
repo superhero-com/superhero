@@ -156,7 +156,7 @@ const TokenListTable = ({
         '--token-list-sticky-top': isViewportMobile
           ? 'calc(var(--mobile-navigation-height) + env(safe-area-inset-top))'
           : '0px',
-        '--bctsl-table-v-spacing': isCompactTable ? '0px' : '6px',
+        '--bctsl-table-v-spacing': '0px',
       } as React.CSSProperties}
     >
       <table className="w-full bctsl-token-list-table">
@@ -280,7 +280,11 @@ const TokenListTable = ({
         }
 
         .bctsl-token-list-table th {
-          font-weight: bold;
+          font-weight: 500;
+          font-size: 11px;
+          color: #9ba9bd;
+          opacity: 1;
+          white-space: nowrap;
         }
 
         .bctsl-token-list-table .cell-fake {
@@ -289,9 +293,26 @@ const TokenListTable = ({
           border: none !important;
         }
 
-        .cell-name {
-          width: auto;
+        .bctsl-token-list-table .cell-name { width: auto; }
+        .bctsl-token-list-table th.text-right > div { justify-content: flex-end; }
+        .bctsl-token-list-table .token-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .bctsl-token-list-table .token-mark {
+          display: grid; place-items: center; flex: none; width: 30px; height: 30px;
+          border: 1px solid #8fb9ef1a; border-radius: 9px;
+          background: #8fb9ef0b; color: #94b5e0; font-size: 18px; font-weight: 400;
         }
+        .bctsl-token-list-table-row .cell { height: 62px; padding-block: 9px; }
+        .bctsl-token-list-table-row .cell-rank { padding-inline: 12px 4px; }
+        .bctsl-token-list-table-row .cell-rank > div { font-size: 11px; font-weight: 400; color: #8492a6; }
+        .bctsl-token-list-table-row .token-name { font-size: 13px; font-weight: 600; }
+        .bctsl-token-list-table-row .cell-price > div { font-size: 13px; font-weight: 600; }
+        .bctsl-token-list-table-row :is(.cell-market-cap, .cell-volume, .cell-supply) > div { font-size: 12px; }
+        .bctsl-token-list-table-row .cell-chart { padding-inline: 12px; }
+        .bctsl-token-list-table-row .cell-chart .relative { padding: 0; max-width: 118px; }
+        .mobile-only-card:first-child + .bctsl-token-list-table-row td.cell-rank { border-start-start-radius: 12px; }
+        .mobile-only-card:first-child + .bctsl-token-list-table-row td.cell-link { border-start-end-radius: 12px; }
+        .bctsl-token-list-table-row:last-child td.cell-rank { border-end-start-radius: 12px; }
+        .bctsl-token-list-table-row:last-child td.cell-link { border-end-end-radius: 12px; }
 
         /* Desktop token rows — solid td backgrounds (no tr::after, no row transform): Safari scroll compositing */
         .bctsl-token-list-table-row {
@@ -306,9 +327,9 @@ const TokenListTable = ({
         }
 
         .bctsl-token-list-table-row td {
-          background-color: rgba(255, 255, 255, 0.035);
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          background-color: #11151b;
+          border-top: 1px solid transparent;
+          border-bottom: 1px solid #ffffff0b;
           transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
@@ -319,18 +340,16 @@ const TokenListTable = ({
 
         .bctsl-token-list-table-row td.cell-rank {
           border-left: 1px solid rgba(255, 255, 255, 0.06);
-          border-top-left-radius: 12px;
-          border-bottom-left-radius: 12px;
+          border-radius: 0;
         }
 
         .bctsl-token-list-table-row td.cell-link {
           border-right: 1px solid rgba(255, 255, 255, 0.06);
-          border-top-right-radius: 12px;
-          border-bottom-right-radius: 12px;
+          border-radius: 0;
         }
 
         .bctsl-token-list-table-row:hover td:not(.cell-fake) {
-          background-color: rgba(17, 97, 254, 0.08);
+          background-color: #182337;
         }
 
         .bctsl-token-list-table-row:hover td.cell-rank {
@@ -393,15 +412,15 @@ const TokenListTable = ({
           display: table-cell;
         }
 
-        .bctsl-token-list-container[data-container-lg="true"] .cell-rank { width: 52px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-collection { width: 100px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-price { width: 145px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-change24h { width: 110px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-change7d { width: 110px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-change30d { width: 110px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-market-cap { width: 185px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-chart { width: 175px; }
-        .bctsl-token-list-container[data-container-lg="true"] .cell-chart .chart { max-width: 155px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-rank { width: 40px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-collection { width: 80px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-price { width: 130px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change24h { width: 82px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change7d { width: 82px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-change30d { width: 82px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-market-cap { width: 140px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-chart { width: 142px; }
+        .bctsl-token-list-container[data-container-lg="true"] .cell-chart .chart { max-width: 118px; }
         .bctsl-token-list-container[data-container-lg="true"] .cell-link { width: 8px; }
 
         /* ≥ 1200px container: show Volume and Supply */
@@ -490,7 +509,7 @@ const TokenListTable = ({
 
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-fake { width: 0; padding: 0; }
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-rank { width: 36px; }
-        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-price { width: 88px; }
+        .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-price { width: 112px; }
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-chart { width: 72px; }
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-change24h,
         .bctsl-token-list-container[data-compact="true"] .bctsl-token-list-table .cell-change7d,

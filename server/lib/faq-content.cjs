@@ -19,18 +19,6 @@ const FAQ_ENTRIES = [
     answer: 'Superhero is a social + crypto app on the aeternity blockchain. You can discover content, create posts, tip, trade community tokens, and take part in on‑chain governance — all in one place.',
   },
   {
-    titleKey: 'qChatPoweredByQualiTitle',
-    answerKeys: ['qChatPoweredByQualiAnswer'],
-    question: 'Who powers chat here?',
-    answer: 'We partner with Quali.chat — a quality chat app for crypto people. Expect realtime conversations, moderation tools, and crypto‑friendly UX. Each token has a public room; holders can coordinate faster.',
-  },
-  {
-    titleKey: 'qWhatIsTrendingTitle',
-    answerKeys: ['qWhatIsTrendingAnswer'],
-    question: 'What is Trendminer?',
-    answer: 'Trendminer lets you tokenize trending ideas. Creators launch community tokens on a bonding curve. Price adjusts with buys and sells; no order books, just math. A small fee flows into a token treasury (DAO) to fund community initiatives.',
-  },
-  {
     titleKey: 'qQuickStartTitle',
     answerKeys: ['qQuickStartLi1', 'qQuickStartLi2', 'qQuickStartLi3', 'qQuickStartLi4'],
     question: 'Quick start: how do I begin?',
@@ -70,7 +58,7 @@ const FAQ_ENTRIES = [
     titleKey: 'qSocialTitle',
     answerKeys: ['qSocialAnswer'],
     question: 'Is there a social feed?',
-    answer: 'Yes. You can browse posts, comment, and explore communities. Comments and token chats are powered by Quali.chat — real‑time rooms built for crypto‑native communities.',
+    answer: 'Yes. You can browse posts, comment, and explore communities. Chat is built into the Superhero web and mobile apps and runs on Nostr.',
   },
   {
     titleKey: 'qAccountsTitle',

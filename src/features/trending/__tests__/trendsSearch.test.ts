@@ -61,16 +61,16 @@ describe('trendsSearch api helpers', () => {
       meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
     } as any);
 
-    const result = await fetchTrendSearchPreview('a');
+    const result = await fetchFeedRailSearchItems('a');
 
     expect(SearchService.search).not.toHaveBeenCalled();
     expect(SuperheroApi.listTokens).toHaveBeenCalledWith({
-      search: 'a', limit: 3, page: 1, orderBy: 'market_cap', orderDirection: 'DESC',
+      search: 'a', limit: FEED_RAIL_SEARCH_LIMIT, page: 1, orderBy: 'market_cap', orderDirection: 'DESC',
     });
     expect(SuperheroApi.listPosts).toHaveBeenCalledWith({
-      search: 'a', limit: 3, page: 1, orderBy: 'created_at', orderDirection: 'DESC',
+      search: 'a', limit: FEED_RAIL_SEARCH_LIMIT, page: 1, orderBy: 'created_at', orderDirection: 'DESC',
     });
-    expect(result.tokens.items[0].name).toBe('A');
+    expect(result[0]).toMatchObject({ type: 'token', item: { name: 'A' } });
   });
 
   it('fetchFeedRailSearchItems requests the unified search and accounts endpoints with rail limit and trimmed term', async () => {
@@ -187,24 +187,32 @@ describe('trendsSearch api helpers', () => {
     expect(result.map((r) => r.type)).toEqual(Array(10).fill('user'));
   });
 
-  it('loads preview results from the unified search and accounts endpoints', async () => {
-    vi.mocked(SearchService.search).mockResolvedValueOnce({
-      tokens: [{ address: 'ct_token', sale_address: 'ct_sale', name: 'HELLO' }],
-      accounts: [],
-      posts: [{ id: 'post_1_v3', sender_address: 'ak_user', content: 'hello post', media: [], topics: [], total_comments: 0, tx_hash: '', tx_args: [], contract_address: '', type: 'post', created_at: '2026-03-27T12:00:00.000Z' }],
+  it('loads preview results with totals from the paginated endpoints', async () => {
+    vi.mocked(SuperheroApi.listTokens).mockResolvedValueOnce({
+      items: [{ address: 'ct_token', sale_address: 'ct_sale', name: 'HELLO' }],
+      meta: { totalItems: 42, totalPages: 14, currentPage: 1 },
     } as any);
     vi.mocked(SuperheroApi.fetchJson).mockResolvedValueOnce({
       items: [{ address: 'ak_user', chain_name: 'hello.chain' }],
       meta: { totalItems: 5, totalPages: 2, currentPage: 1 },
     } as any);
+    vi.mocked(SuperheroApi.listPosts).mockResolvedValueOnce({
+      items: [{ id: 'post_1_v3', sender_address: 'ak_user', content: 'hello post', media: [], topics: [], total_comments: 0, tx_hash: '', tx_args: [], contract_address: '', type: 'post', created_at: '2026-03-27T12:00:00.000Z' }],
+      meta: { totalItems: 7, totalPages: 3, currentPage: 1 },
+    } as any);
 
-    const result = await fetchTrendSearchPreview('hello');
+    const result = await fetchTrendSearchPreview('  hello  ');
 
-    expect(SearchService.search).toHaveBeenCalledWith({ q: 'hello', limit: 3 });
+    expect(SearchService.search).not.toHaveBeenCalled();
+    expect(SuperheroApi.listTokens).toHaveBeenCalledWith({
+      search: 'hello', limit: 3, page: 1, orderBy: 'market_cap', orderDirection: 'DESC',
+    });
     expect(SuperheroApi.fetchJson).toHaveBeenCalledWith('/api/accounts?limit=3&search=hello');
     expect(result.tokens.items[0].name).toBe('HELLO');
+    expect(result.tokens.meta.totalItems).toBe(42);
     expect(result.users.items[0].address).toBe('ak_user');
     expect(result.posts.items[0].id).toBe('post_1_v3');
+    expect(result.posts.meta.totalItems).toBe(7);
   });
 
   it('loads a full section result set for users', async () => {

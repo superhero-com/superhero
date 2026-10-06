@@ -115,33 +115,37 @@ function settledValue<T>(
 // silently losing real matches for e.g. a single-character search.
 const UNIFIED_SEARCH_MIN_LENGTH = 2;
 
+async function fetchPaginatedSearch(term: string, limit: number) {
+  const [tokens, users, posts] = await Promise.allSettled([
+    SuperheroApi.listTokens({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'market_cap',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
+    fetchAccountSearch(limit, term),
+    SuperheroApi.listPosts({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendPostItem>>,
+  ]);
+
+  return {
+    tokens: normalizeSection(settledValue(tokens)),
+    users: normalizeSection(settledValue(users)),
+    posts: normalizeSection(settledValue(posts)),
+  };
+}
+
 async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   const term = search.trim();
 
   if (term.length < UNIFIED_SEARCH_MIN_LENGTH) {
-    const [tokens, users, posts] = await Promise.allSettled([
-      SuperheroApi.listTokens({
-        search: term,
-        limit,
-        page: 1,
-        orderBy: 'market_cap',
-        orderDirection: 'DESC',
-      }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
-      fetchAccountSearch(limit, term),
-      SuperheroApi.listPosts({
-        search: term,
-        limit,
-        page: 1,
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
-      }) as Promise<PaginatedApiResponse<TrendPostItem>>,
-    ]);
-
-    return {
-      tokens: normalizeSection(settledValue(tokens)),
-      users: normalizeSection(settledValue(users)),
-      posts: normalizeSection(settledValue(posts)),
-    };
+    return fetchPaginatedSearch(term, limit);
   }
 
   // Tokens + posts come from the unified endpoint (one request instead of
@@ -163,8 +167,10 @@ async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   };
 }
 
+// Explore needs real totals for its result counts and "View all" toggle, which
+// the unified endpoint can't give — it returns bare arrays capped at `limit`.
 export async function fetchTrendSearchPreview(search: string) {
-  return fetchTrendSearchPreviewWithLimit(search, SEARCH_PREVIEW_LIMIT);
+  return fetchPaginatedSearch(search.trim(), SEARCH_PREVIEW_LIMIT);
 }
 
 export async function fetchTrendSearchSection(tab: SearchTab, search: string) {

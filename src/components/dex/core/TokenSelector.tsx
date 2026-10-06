@@ -8,7 +8,7 @@ import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { CONFIG } from '../../../config';
 import Spinner from '../../Spinner';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Coins, Search } from 'lucide-react';
 import aeMark from '../../../svg/aeternity-mark.svg';
 
 interface TokenSelectorProps {
@@ -172,8 +172,8 @@ export default function TokenSelector({
               autoFocus
               className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
-              🔍
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60">
+              <Search size={18} aria-hidden="true" />
             </div>
           </div>
 
@@ -375,7 +375,7 @@ export default function TokenSelector({
               fontSize: 14,
             }}
             >
-              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🪙</div>
+              <Coins size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} aria-hidden="true" />
               <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('dex.tokenSelector.noTokensAvailable')}</div>
               <div style={{ fontSize: 12, opacity: 0.8 }}>{t('dex.tokenSelector.tryAddingCustomToken')}</div>
             </div>
@@ -389,7 +389,7 @@ export default function TokenSelector({
               fontSize: 14,
             }}
             >
-              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
+              <Search size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} aria-hidden="true" />
               <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('dex.noTokensFound')}</div>
               <div style={{ fontSize: 12, opacity: 0.8 }}>
                 {t('dex.tokenSelector.tokenNotFoundHint')}

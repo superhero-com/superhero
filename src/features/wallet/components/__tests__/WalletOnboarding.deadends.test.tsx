@@ -520,4 +520,39 @@ describe('WalletOnboarding — no step is a dead end', () => {
       expect(screen.getByRole('button', { name: /create with a phrase/i })).toBeEnabled();
     });
   });
+
+  describe('opened from the sign-in card', () => {
+    it('falls back to a recovery phrase when the passkey create fails', async () => {
+      // The error tells the user to use a recovery phrase instead, and the modal
+      // behind this flow has no phrase option of its own (#730).
+      mocks.standalone = false;
+      mocks.createWalletFromPasskey.mockRejectedValue(new Error('PRF unsupported on this device'));
+
+      await mount({ entry: 'passkey', onCancel: vi.fn() });
+
+      expect(await screen.findByText(/PRF unsupported on this device/)).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /create with a phrase/i }));
+      });
+      expect(screen.getByRole('heading', { name: /write down your recovery phrase/i })).toBeInTheDocument();
+    });
+
+    it('opens straight onto a new phrase with the `phrase` entry', async () => {
+      // A device that can't create a passkey: the card's tap was the choice.
+      mocks.standalone = false;
+      await mount({ entry: 'phrase', onCancel: vi.fn() });
+
+      expect(await screen.findByRole('heading', { name: /write down your recovery phrase/i })).toBeInTheDocument();
+      expect(mocks.createWalletFromPasskey).not.toHaveBeenCalled();
+    });
+
+    it('backs out of the new phrase to the modal that opened it', async () => {
+      const onCancel = vi.fn();
+      await mount({ entry: 'phrase', onCancel });
+      await screen.findByRole('heading', { name: /write down your recovery phrase/i });
+
+      fireEvent.click(screen.getByRole('button', { name: /back/i }));
+      expect(onCancel).toHaveBeenCalled();
+    });
+  });
 });

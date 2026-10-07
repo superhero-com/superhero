@@ -58,6 +58,8 @@ export const hasDeviceVault = (d: DeviceWallet): boolean => d === 'passkey' || d
  */
 export function usePasskeyConnect(enabled = true) {
   const [available, setAvailable] = useState(false);
+  /** False until the probe below answers, so "no passkey" is never assumed early. */
+  const [availabilityChecked, setAvailabilityChecked] = useState(false);
   const [state, setState] = useState<PasskeyState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -66,7 +68,10 @@ export function usePasskeyConnect(enabled = true) {
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    isPlatformAuthenticatorAvailable().then(setAvailable);
+    isPlatformAuthenticatorAvailable().then((ok) => {
+      setAvailable(ok);
+      setAvailabilityChecked(true);
+    });
   }, []);
 
   const probeVault = useCallback(() => {
@@ -182,6 +187,7 @@ export function usePasskeyConnect(enabled = true) {
 
   return {
     available,
+    availabilityChecked,
     state,
     errorMsg,
     needsOnboarding,

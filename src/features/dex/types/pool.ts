@@ -9,20 +9,6 @@ export interface LiquidityPosition {
   valueUsd?: string;
 }
 
-export interface PoolInfo {
-  address: string;
-  token0: string;
-  token1: string;
-  token0Symbol: string;
-  token1Symbol: string;
-  reserve0: string;
-  reserve1: string;
-  totalSupply: string;
-  tvlUsd?: string;
-  volume24h?: string;
-  transactions?: number;
-}
-
 export interface AddLiquidityState {
   tokenA: string;
   tokenB: string;
@@ -53,37 +39,12 @@ export interface AddLiquidityState {
   allowanceInfo: string | null;
 }
 
-export interface RemoveLiquidityState {
-  pairId: string;
-  lpAmount: string;
-  token0Amount: string;
-  token1Amount: string;
-  loading: boolean;
-  error: string | null;
-  showConfirm: boolean;
-  pairInfo: PoolInfo | null;
-}
-
 export interface PoolListState {
   positions: LiquidityPosition[];
   loading: boolean;
   error: string | null;
   showImport: boolean;
   showCreate: boolean;
-}
-
-export interface PoolSettings {
-  slippagePct: number;
-  deadlineMins: number;
-}
-
-export interface LiquidityQuoteParams {
-  tokenA: string;
-  tokenB: string;
-  amountA: string;
-  amountB: string;
-  decA: number;
-  decB: number;
 }
 
 export interface LiquidityExecutionParams {

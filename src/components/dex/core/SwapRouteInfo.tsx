@@ -27,13 +27,6 @@ export default function SwapRouteInfo({
     return found ? found.symbol : `${addr.slice(0, 6)}…${addr.slice(-4)}`;
   }
 
-  function tokenDecimals(addr?: string): number {
-    if (!addr) return 18;
-    if (addr === CONFIG.DEX_WAE) return 18;
-    const t = tokens.find((x) => x.address === addr);
-    return t?.decimals ?? 18;
-  }
-
   function formatAmountHuman(amountStr: string): string {
     if (!amountStr) return '0';
     const [i, f] = amountStr.split('.');
@@ -80,8 +73,6 @@ export default function SwapRouteInfo({
                 const t1 = String(pair.token1);
                 const r0 = pair?.liquidityInfo?.reserve0 ?? pair?.reserve0;
                 const r1 = pair?.liquidityInfo?.reserve1 ?? pair?.reserve1;
-                const d0 = tokenDecimals(t0);
-                const d1 = tokenDecimals(t1);
                 const hr0 = r0 != null ? formatAmountHuman(r0) : null;
                 const hr1 = r1 != null ? formatAmountHuman(r1) : null;
 

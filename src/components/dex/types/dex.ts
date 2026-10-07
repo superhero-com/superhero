@@ -1,39 +1,5 @@
 import { DexTokenDto } from '../../../api/generated';
 
-export interface TokenBalance {
-  in?: string;
-  out?: string;
-}
-
-export interface WrapBalances {
-  ae?: string;
-  wae?: string;
-}
-
-export interface SwapState {
-  tokenIn: DexTokenDto | null;
-  tokenOut: DexTokenDto | null;
-  amountIn: string;
-  amountOut: string;
-  isExactIn: boolean;
-  loading: boolean;
-  error: string | null;
-  quoteLoading: boolean;
-  path: string[];
-  routesFromBackend: any[][] | null;
-  priceImpactPct: number | null;
-  allowanceInfo: string | null;
-  balances: TokenBalance;
-  searchIn: string;
-  searchOut: string;
-}
-
-export interface WrapState {
-  wrapAmount: string;
-  wrapBalances: WrapBalances;
-  wrapping: boolean;
-}
-
 export interface TransactionStatus {
   confirmed: boolean;
   blockNumber?: number;
@@ -77,11 +43,6 @@ export interface SwapExecutionParams {
 export interface TokenListState {
   tokens: DexTokenDto[];
   loading: boolean;
-}
-
-export interface SwapSettings {
-  slippagePct: number;
-  deadlineMins: number;
 }
 
 export interface RouteInfo {

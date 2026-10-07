@@ -31,8 +31,6 @@ export const MODE_ORDER: TokenTagMode[] = ['tag', 'compact', 'advanced'];
 const TAG_PRESET = MODE_PRESETS.tag;
 const BOOLEAN_KEYS = ['chart', 'price', 'change'] as const;
 
-export const DEFAULT_TOKEN_TAG_OPTIONS: TokenTagDisplayOptions = { ...TAG_PRESET };
-
 // The envelope payload following a token symbol: at most 64 chars, no braces or newlines.
 // Kept here so the reader and the SEO strippers share one grammar.
 export const TOKEN_TAG_ENVELOPE_PAYLOAD = '[^{}\\r\\n]{0,64}';

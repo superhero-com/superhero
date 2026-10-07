@@ -223,9 +223,39 @@ describe('trendsSearch api helpers', () => {
 
     const result = await fetchTrendSearchSection('users', 'full');
 
-    expect(SuperheroApi.fetchJson).toHaveBeenCalledWith('/api/accounts?limit=24&search=full');
+    expect(SuperheroApi.fetchJson).toHaveBeenCalledWith('/api/accounts?limit=24&page=1&search=full');
     expect(result.meta.totalItems).toBe(14);
     expect(result.items[0].address).toBe('ak_full');
+  });
+
+  it('requests later pages of a section', async () => {
+    vi.mocked(SuperheroApi.fetchJson).mockResolvedValue({ items: [] } as any);
+    vi.mocked(SuperheroApi.listTokens).mockResolvedValue({ items: [] } as any);
+    vi.mocked(SuperheroApi.listPosts).mockResolvedValue({ items: [] } as any);
+
+    await fetchTrendSearchSection('users', 'ae', 3);
+    await fetchTrendSearchSection('tokens', 'ae', 3);
+    await fetchTrendSearchSection('posts', 'ae', 3);
+
+    expect(SuperheroApi.fetchJson).toHaveBeenCalledWith('/api/accounts?limit=24&page=3&search=ae');
+    expect(SuperheroApi.listTokens).toHaveBeenCalledWith(expect.objectContaining({ search: 'ae', page: 3 }));
+    expect(SuperheroApi.listPosts).toHaveBeenCalledWith(expect.objectContaining({ search: 'ae', page: 3 }));
+  });
+
+  it('sorts and filters token sections, by market cap unless told otherwise', async () => {
+    vi.mocked(SuperheroApi.listTokens).mockResolvedValue({ items: [] } as any);
+
+    await fetchTrendSearchSection('tokens', 'ae');
+    await fetchTrendSearchSection('tokens', 'ae', 2, {
+      orderBy: 'created_at', orderDirection: 'ASC', collection: 'CHINESE',
+    });
+
+    expect(SuperheroApi.listTokens).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      orderBy: 'market_cap', orderDirection: 'DESC', collection: undefined,
+    }));
+    expect(SuperheroApi.listTokens).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      page: 2, orderBy: 'created_at', orderDirection: 'ASC', collection: 'CHINESE',
+    }));
   });
 
   it('loads fallback content for tokens, posts and traders', async () => {

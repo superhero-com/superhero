@@ -1,5 +1,6 @@
 import AddressAvatar from '@/components/AddressAvatar';
 import type { TFunction } from 'i18next';
+import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { formatAddress } from '@/utils/address';
@@ -39,13 +40,22 @@ function getUserStats(
   ];
 }
 
-export const TokenResultsList = ({ items }: { items: TrendTokenItem[] }) => (
+type TokenListTableProps = ComponentProps<typeof TokenListTable>;
+
+export const TokenResultsList = ({
+  items,
+  orderBy = 'market_cap',
+  orderDirection = 'DESC',
+  onSort = () => {},
+}: {
+  items: TrendTokenItem[];
+} & Partial<Pick<TokenListTableProps, 'orderBy' | 'orderDirection' | 'onSort'>>) => (
   <TokenListTable
     pages={[{ items }]}
     loading={false}
-    orderBy="market_cap"
-    orderDirection="DESC"
-    onSort={() => {}}
+    orderBy={orderBy}
+    orderDirection={orderDirection}
+    onSort={onSort}
   />
 );
 

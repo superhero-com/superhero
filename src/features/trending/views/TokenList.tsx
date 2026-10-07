@@ -9,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnsureFactorySchemaLoaded } from '@/hooks/useCommunityFactory';
+import { useLoadMoreSentinel } from '@/hooks/useLoadMoreSentinel';
 import { usePostLanguageFilter } from '@/hooks/usePostLanguageFilter';
 import { collectionLabel, LANGUAGE_COLLECTIONS } from '@/utils/collection';
 import { TokensService } from '../../../api/generated';
@@ -28,6 +29,7 @@ import { Head } from '../../../seo/Head';
 import {
   DEFAULT_TAB_LIMIT,
   EXPLORE_SEARCH_QUERY_KEY,
+  EXPLORE_SEARCH_TYPE_KEY,
   FALLBACK_LIMIT,
   SEARCH_PREVIEW_LIMIT,
   fetchPopularPosts,
@@ -36,6 +38,7 @@ import {
   fetchTrendSearchPreview,
   fetchTrendSearchSection,
   type SearchSection,
+  type TokenSearchOptions,
   type SearchTab,
   type TrendPostItem,
   type TrendTokenItem,
@@ -66,29 +69,132 @@ const SORT = {
 
 const SEARCH_TABS: SearchTab[] = ['tokens', 'users', 'posts'];
 
+type SearchCategory = 'all' | SearchTab;
+
+const SEARCH_CATEGORIES: SearchCategory[] = ['all', ...SEARCH_TABS];
+
 type OrderByOption = typeof SORT[keyof typeof SORT];
+
+/** Sort state for a token table, mapped to the order /api/tokens expects. */
+function useTokenSort(initialOrderBy: OrderByOption) {
+  const [orderBy, setOrderBy] = useState<OrderByOption>(initialOrderBy);
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
+
+  const orderByMapped = orderBy === SORT.newest || orderBy === SORT.oldest
+    ? 'created_at' as const
+    : orderBy;
+  let finalOrderDirection = orderDirection;
+  if (orderBy === SORT.oldest) finalOrderDirection = 'ASC';
+  if (orderBy === SORT.newest) finalOrderDirection = 'DESC';
+
+  function updateOrderBy(val: OrderByOption) {
+    setOrderBy(val);
+    setOrderDirection('DESC');
+  }
+
+  function handleSort(sortKey: OrderByOption) {
+    if (
+      orderBy === sortKey
+      || (orderBy === 'newest' && sortKey === 'oldest')
+      || (orderBy === 'oldest' && sortKey === 'newest')
+    ) {
+      if (sortKey === 'newest' || sortKey === 'oldest') {
+        setOrderBy(orderBy === 'newest' ? 'oldest' : 'newest');
+        return;
+      }
+
+      setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
+      return;
+    }
+
+    setOrderBy(sortKey);
+    setOrderDirection('DESC');
+  }
+
+  return {
+    orderBy, orderByMapped, finalOrderDirection, updateOrderBy, handleSort,
+  };
+}
+
+const TokenListControls = ({
+  orderBy,
+  orderByOptions,
+  onOrderByChange,
+  collection,
+  collectionOptions,
+  onCollectionChange,
+}: {
+  orderBy: OrderByOption;
+  orderByOptions: SelectOptions<OrderByOption>;
+  onOrderByChange: (value: OrderByOption) => void;
+  collection: string;
+  collectionOptions: SelectOptions<string>;
+  onCollectionChange: (value: string) => void;
+}) => {
+  const { t, i18n } = useTranslation('trending');
+
+  return (
+    <>
+      <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
+        <Select value={orderBy} onValueChange={onOrderByChange}>
+          <SelectTrigger aria-label={t('tokenList.sortBy')} className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-900 border-white/10">
+            {orderByOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                {option.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {collectionOptions.length > 1 && (
+        <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
+          <Select dir={i18n.dir()} value={collection} onValueChange={onCollectionChange}>
+            <SelectTrigger aria-label={t('tokenListTable.collection')} className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/10">
+              {collectionOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                  {option.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </>
+  );
+};
 
 const SearchSectionShell = ({
   title,
   subtitle,
+  actions,
   children,
   footer,
   contentClassName,
 }: {
   title: string;
   subtitle?: string;
+  actions?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   contentClassName?: string;
 }) => (
   <section className="overflow-hidden bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6">
-    <div className="flex flex-col gap-1 mb-4">
-      <h2
-        className="text-lg sm:text-xl font-semibold text-white"
-      >
-        {title}
-      </h2>
-      {subtitle ? <p className="text-sm text-white/60">{subtitle}</p> : null}
+    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+      <div className="flex flex-col gap-1">
+        <h2
+          className="text-lg sm:text-xl font-semibold text-white"
+        >
+          {title}
+        </h2>
+        {subtitle ? <p className="text-sm text-white/60">{subtitle}</p> : null}
+      </div>
+      {actions}
     </div>
     <div className={`flex flex-col divide-y divide-white/10 ${contentClassName || ''}`}>{children}</div>
     {footer ? <div className="pt-4">{footer}</div> : null}
@@ -108,16 +214,56 @@ const InlineLoading = ({ label }: { label: string }) => (
   </div>
 );
 
+const LoadMoreButton = ({
+  loading,
+  onClick,
+  sentinelRef,
+}: {
+  loading: boolean;
+  onClick: () => void;
+  sentinelRef: (element: Element | null) => void;
+}) => {
+  const { t } = useTranslation('trending');
+
+  return (
+    <button
+      ref={sentinelRef}
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className={`px-6 py-3 rounded-full border text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ${
+        loading
+          ? 'border-white/10 bg-white/10 cursor-not-allowed opacity-60'
+          : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
+      }`}
+    >
+      {loading ? (
+        <div className="flex items-center justify-center gap-2">
+          <Spinner className="w-4 h-4" />
+          {t('tokenList.loadingEllipsis')}
+        </div>
+      ) : t('tokenList.loadMore')}
+    </button>
+  );
+};
+
 const TokenList = () => {
-  const { t, i18n } = useTranslation('trending');
+  const { t } = useTranslation('trending');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const qFromUrl = searchParams.get(EXPLORE_SEARCH_QUERY_KEY)?.trim() ?? '';
+  const typeFromUrl = searchParams.get(EXPLORE_SEARCH_TYPE_KEY);
+  const searchCategory: SearchCategory = SEARCH_TABS.find((tab) => tab === typeFromUrl) ?? 'all';
   const collectionParam = searchParams.get('collection');
   const collectionFromUrl = collectionParam?.toLowerCase() === 'all'
     ? 'all' : collectionParam?.toUpperCase();
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
-  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const {
+    orderBy, orderByMapped, finalOrderDirection, updateOrderBy, handleSort,
+  } = useTokenSort(SORT.trendingScore);
+  const searchSort = useTokenSort(SORT.marketCap);
+  // Search starts across every collection: the browse list's language
+  // default would hide matches from the other collections.
+  const [searchCollection, setSearchCollection] = useState('all');
   const activeFactoryCollections = useEnsureFactorySchemaLoaded();
   const [activeTab, setActiveTab] = useState<SearchTab>('tokens');
   // Content-language filter shared with home; only applies to the Posts tab.
@@ -153,14 +299,19 @@ const TokenList = () => {
   }, [uiLanguage, setSearchParams]);
   const [searchInput, setSearchInput] = useState(qFromUrl);
   const [searchTerm, setSearchTerm] = useState(qFromUrl);
-  const [expandedSections, setExpandedSections] = useState<Record<SearchTab, boolean>>({
-    tokens: false,
-    users: false,
-    posts: false,
-  });
-  const loadMoreBtn = useRef<HTMLButtonElement>(null);
 
-  const tabLabels = useMemo((): Record<SearchTab, string> => ({
+  // A history entry per category, so Back returns from a category to all results.
+  const setSearchCategory = useCallback((category: SearchCategory) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (category === 'all') next.delete(EXPLORE_SEARCH_TYPE_KEY);
+      else next.set(EXPLORE_SEARCH_TYPE_KEY, category);
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const tabLabels = useMemo((): Record<SearchCategory, string> => ({
+    all: t('tokenList.tabAll'),
     tokens: t('tokenList.tabTokens'),
     users: t('tokenList.tabUsers'),
     posts: t('tokenList.tabPosts'),
@@ -201,34 +352,22 @@ const TokenList = () => {
     return () => window.clearTimeout(timeoutId);
   }, [searchInput]);
 
-  useEffect(() => {
-    setExpandedSections({
-      tokens: false,
-      users: false,
-      posts: false,
-    });
-  }, [searchTerm]);
-
   const hasSearch = searchTerm.length > 0;
+  const focusedTab = hasSearch && searchCategory !== 'all' ? searchCategory : undefined;
+
+  useEffect(() => {
+    if (hasSearch || searchCategory === 'all') return;
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete(EXPLORE_SEARCH_TYPE_KEY);
+      return next;
+    }, { replace: true });
+  }, [hasSearch, searchCategory, setSearchParams]);
 
   const handleOpenPost = useCallback(
     (slugOrId: string) => navigate(`/post/${encodeURIComponent(slugOrId)}`),
     [navigate],
   );
-
-  const orderByMapped = useMemo(() => {
-    if (orderBy === SORT.newest || orderBy === SORT.oldest) {
-      return 'created_at';
-    }
-
-    return orderBy;
-  }, [orderBy]);
-
-  const finalOrderDirection = useMemo((): 'ASC' | 'DESC' => {
-    if (orderBy === SORT.oldest) return 'ASC';
-    if (orderBy === SORT.newest) return 'DESC';
-    return orderDirection;
-  }, [orderBy, orderDirection]);
 
   const {
     data: tokenPages,
@@ -262,26 +401,10 @@ const TokenList = () => {
     staleTime: 60 * 1000,
   });
 
-  useEffect(() => {
-    if (hasSearch || activeTab !== 'tokens') {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.intersectionRatio === 1 && hasNextPage && !isFetchingTokens) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 1 },
-    );
-
-    if (loadMoreBtn.current) {
-      observer.observe(loadMoreBtn.current);
-    }
-
-    return () => observer.disconnect();
-  }, [activeTab, fetchNextPage, hasNextPage, hasSearch, isFetchingTokens]);
+  const tokensSentinelRef = useLoadMoreSentinel(
+    fetchNextPage,
+    !hasSearch && activeTab === 'tokens' && hasNextPage && !isFetchingTokens,
+  );
 
   const usersTabQuery = useQuery({
     enabled: !hasSearch && activeTab === 'users',
@@ -305,32 +428,56 @@ const TokenList = () => {
     retry: 1,
   });
 
-  const expandedTokenQuery = useQuery({
-    enabled: hasSearch
-      && expandedSections.tokens
-      && (searchPreviewQuery.data?.tokens.meta.totalItems ?? 0) > SEARCH_PREVIEW_LIMIT,
-    queryKey: ['trends', 'search-section', 'tokens', searchTerm],
-    queryFn: () => fetchTrendSearchSection('tokens', searchTerm),
+  const tokenSearchOptions: TokenSearchOptions = {
+    orderBy: searchSort.orderByMapped,
+    orderDirection: searchSort.finalOrderDirection,
+    collection: searchCollection,
+  };
+
+  const focusedSearchQuery = useInfiniteQuery({
+    enabled: Boolean(focusedTab),
+    initialPageParam: 1,
+    queryKey: [
+      'trends',
+      'search-section',
+      focusedTab,
+      searchTerm,
+      focusedTab === 'tokens' ? tokenSearchOptions : null,
+    ],
+    queryFn: ({ pageParam }) => fetchTrendSearchSection(
+      focusedTab as SearchTab,
+      searchTerm,
+      pageParam,
+      tokenSearchOptions,
+    ),
+    getNextPageParam: (lastPage, _allPages, lastPageParam) => (
+      lastPage.items.length && lastPageParam < lastPage.meta.totalPages
+        ? lastPageParam + 1
+        : undefined
+    ),
     staleTime: 30 * 1000,
   });
 
-  const expandedUsersQuery = useQuery({
-    enabled: hasSearch
-      && expandedSections.users
-      && (searchPreviewQuery.data?.users.meta.totalItems ?? 0) > SEARCH_PREVIEW_LIMIT,
-    queryKey: ['trends', 'search-section', 'users', searchTerm],
-    queryFn: () => fetchTrendSearchSection('users', searchTerm),
-    staleTime: 30 * 1000,
-  });
+  const focusedSentinelRef = useLoadMoreSentinel(
+    focusedSearchQuery.fetchNextPage,
+    focusedSearchQuery.hasNextPage && !focusedSearchQuery.isFetching,
+  );
 
-  const expandedPostsQuery = useQuery({
-    enabled: hasSearch
-      && expandedSections.posts
-      && (searchPreviewQuery.data?.posts.meta.totalItems ?? 0) > SEARCH_PREVIEW_LIMIT,
-    queryKey: ['trends', 'search-section', 'posts', searchTerm],
-    queryFn: () => fetchTrendSearchSection('posts', searchTerm),
-    staleTime: 30 * 1000,
-  });
+  const focusedItems = useMemo(() => {
+    // Results can shift between pages while the user scrolls (new posts,
+    // moving market caps), so a later page may repeat an item already shown.
+    const seen = new Set<string>();
+    return (focusedSearchQuery.data?.pages ?? [])
+      .flatMap((page): Array<TrendTokenItem | TrendUserItem | TrendPostItem> => page.items)
+      .filter((item) => {
+        const key = focusedTab === 'posts'
+          ? (item as TrendPostItem).id
+          : (item as TrendTokenItem | TrendUserItem).address;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [focusedSearchQuery.data, focusedTab]);
 
   const fallbackTokensQuery = useQuery({
     enabled: hasSearch
@@ -395,68 +542,34 @@ const TokenList = () => {
     return [...SEARCH_TABS].sort((a, b) => score(b) - score(a));
   }, [activeTab, searchPreviewQuery.data, searchTerm]);
 
-  function updateOrderBy(val: OrderByOption) {
-    setOrderBy(val);
-    setOrderDirection('DESC');
+  function selectTab(tab: SearchCategory) {
+    if (hasSearch) setSearchCategory(tab);
+    else if (tab !== 'all') setActiveTab(tab);
   }
 
-  function handleSort(sortKey: OrderByOption) {
-    if (
-      orderBy === sortKey
-      || (orderBy === 'newest' && sortKey === 'oldest')
-      || (orderBy === 'oldest' && sortKey === 'newest')
-    ) {
-      if (sortKey === 'newest' || sortKey === 'oldest') {
-        setOrderBy(orderBy === 'newest' ? 'oldest' : 'newest');
-        return;
-      }
-
-      setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
-      return;
-    }
-
-    setOrderBy(sortKey);
-    setOrderDirection('DESC');
-  }
-
-  function toggleSection(tab: SearchTab) {
-    setExpandedSections((current) => ({
-      ...current,
-      [tab]: !current[tab],
-    }));
+  function openSearchCategory(tab: SearchTab) {
+    setSearchCategory(tab);
+    // "View all" can sit far down the page; start the full list from its top.
+    window.scrollTo({ top: 0 });
   }
 
   function openFullTopic(tab: SearchTab) {
-    setExpandedSections({
-      tokens: false,
-      users: false,
-      posts: false,
-    });
     setActiveTab(tab);
     setSearchInput('');
     setSearchTerm('');
   }
 
   function getSearchSectionState<TItem>(
-    tab: SearchTab,
     preview: SearchSection<TItem> | undefined,
-    expanded: SearchSection<TItem> | undefined,
     fallback: SearchSection<any> | undefined,
   ) {
-    const hasResults = Boolean(preview?.items.length);
-    const isExpanded = expandedSections[tab];
-    const usesExpandedData = isExpanded && Boolean(expanded?.items.length);
-
-    if (hasResults) {
-      const items = usesExpandedData ? expanded!.items : preview!.items;
-      const totalItems = usesExpandedData ? expanded!.meta.totalItems : preview!.meta.totalItems;
-
+    if (preview?.items.length) {
       return {
-        items,
-        totalItems,
+        items: preview.items,
+        totalItems: preview.meta.totalItems,
         hasResults: true,
         usesFallback: false,
-        canExpand: (preview?.meta.totalItems ?? 0) > SEARCH_PREVIEW_LIMIT,
+        canExpand: preview.meta.totalItems > SEARCH_PREVIEW_LIMIT,
       };
     }
 
@@ -469,33 +582,59 @@ const TokenList = () => {
     };
   }
 
-  const tokenSearchState = getSearchSectionState(
-    'tokens',
-    searchPreviewQuery.data?.tokens,
-    expandedTokenQuery.data as SearchSection<TrendTokenItem> | undefined,
-    fallbackTokensQuery.data,
-  );
-  const userSearchState = getSearchSectionState(
-    'users',
-    searchPreviewQuery.data?.users,
-    expandedUsersQuery.data as SearchSection<TrendUserItem> | undefined,
-    fallbackUsersQuery.data,
-  );
-  const postSearchState = getSearchSectionState(
-    'posts',
-    searchPreviewQuery.data?.posts,
-    expandedPostsQuery.data as SearchSection<TrendPostItem> | undefined,
-    fallbackPostsQuery.data,
-  );
-
   const searchStates = {
-    tokens: tokenSearchState,
-    users: userSearchState,
-    posts: postSearchState,
+    tokens: getSearchSectionState(searchPreviewQuery.data?.tokens, fallbackTokensQuery.data),
+    users: getSearchSectionState(searchPreviewQuery.data?.users, fallbackUsersQuery.data),
+    posts: getSearchSectionState(searchPreviewQuery.data?.posts, fallbackPostsQuery.data),
   };
 
-  const showSearchLoading = hasSearch && searchPreviewQuery.isLoading;
-  const searchError = hasSearch && searchPreviewQuery.isError
+  function renderSearchResults(tab: SearchTab, items: unknown[]) {
+    if (tab === 'tokens') return <TokenResultsList items={items as TrendTokenItem[]} />;
+    if (tab === 'users') {
+      return <UserResultsList items={items as Array<TrendUserItem | LeaderboardItem>} />;
+    }
+    return <PostResultsList items={items as TrendPostItem[]} onOpenPost={handleOpenPost} />;
+  }
+
+  function renderFocusedResults(tab: SearchTab) {
+    if (!focusedSearchQuery.data && focusedSearchQuery.isError) {
+      return <div className="py-6 text-sm text-white/60">{t('tokenList.searchError')}</div>;
+    }
+    if (focusedSearchQuery.isLoading) {
+      return <InlineLoading label={t('tokenList.searchingTrends')} />;
+    }
+    if (!focusedItems.length) {
+      return (
+        <div className="py-6 text-sm text-white/60">
+          {t('tokenList.noCategoryResults', { query: searchTerm })}
+        </div>
+      );
+    }
+    if (tab === 'tokens') {
+      return (
+        <TokenResultsList
+          items={focusedItems as TrendTokenItem[]}
+          orderBy={searchSort.orderBy}
+          orderDirection={searchSort.finalOrderDirection}
+          onSort={searchSort.handleSort}
+        />
+      );
+    }
+    return renderSearchResults(tab, focusedItems);
+  }
+
+  const focusedTotal = focusedSearchQuery.data?.pages[0]?.meta.totalItems;
+
+  function getTabCount(tab: SearchCategory) {
+    if (!hasSearch || tab === 'all') return undefined;
+    // The open category's own total reflects its sort and collection filter.
+    if (tab === focusedTab && focusedTotal !== undefined) return focusedTotal;
+    return searchPreviewQuery.data?.[tab].meta.totalItems;
+  }
+
+  // The focused view handles its own loading and errors so its filters stay put.
+  const showSearchLoading = hasSearch && !focusedTab && searchPreviewQuery.isLoading;
+  const searchError = hasSearch && !focusedTab && searchPreviewQuery.isError
     ? t('tokenList.searchError')
     : null;
 
@@ -524,36 +663,42 @@ const TokenList = () => {
               </div>
             </div>
 
-            {!hasSearch ? (
-              <div className="flex items-center gap-6 border-b border-white/10 w-full overflow-x-auto overflow-y-hidden pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {SEARCH_TABS.map((tab) => {
-                  const isActive = activeTab === tab;
+            <div className="flex items-center gap-6 border-b border-white/10 w-full overflow-x-auto overflow-y-hidden pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {(hasSearch ? SEARCH_CATEGORIES : SEARCH_TABS).map((tab) => {
+                const isActive = (hasSearch ? searchCategory : activeTab) === tab;
+                const count = getTabCount(tab);
 
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`normal-case tracking-normal relative pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm ${
-                        isActive ? 'text-white' : 'text-white/55 hover:text-white/80'
-                      }`}
-                    >
-                      {tabLabels[tab]}
-                      {isActive ? (
-                        <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#1161FE]" />
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => selectTab(tab)}
+                    className={`normal-case tracking-normal relative pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1161FE] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm ${
+                      isActive ? 'text-white' : 'text-white/55 hover:text-white/80'
+                    }`}
+                  >
+                    {tabLabels[tab]}
+                    {count !== undefined ? (
+                      <>
+                        {' '}
+                        <span className="font-normal text-white/40">{count}</span>
+                      </>
+                    ) : null}
+                    {isActive ? (
+                      <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#1161FE]" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {searchError ? <EmptyPanel message={searchError} /> : null}
 
           {showSearchLoading ? <InlineLoading label={t('tokenList.searchingTrends')} /> : null}
 
-          {hasSearch && !showSearchLoading && !searchError ? (
+          {hasSearch && !focusedTab && !showSearchLoading && !searchError ? (
             <div className="flex flex-col gap-4">
               {searchOrder.map((tab) => {
                 const state = searchStates[tab];
@@ -562,37 +707,9 @@ const TokenList = () => {
                   return null;
                 }
 
-                const expanded = expandedSections[tab];
-                const isLoadingExpanded = (
-                  (tab === 'tokens' && expandedTokenQuery.isLoading)
-                  || (tab === 'users' && expandedUsersQuery.isLoading)
-                  || (tab === 'posts' && expandedPostsQuery.isLoading)
-                );
-
                 const subtitle = state.hasResults
                   ? t('tokenList.resultsCount', { count: state.totalItems })
                   : getFallbackSubtitle(tab);
-                const footerLabel = expanded && !state.usesFallback
-                  ? t('tokenList.showLess')
-                  : t('tokenList.viewAll');
-
-                let sectionBody: React.ReactNode = null;
-                if (tab === 'tokens') {
-                  sectionBody = <TokenResultsList items={state.items as TrendTokenItem[]} />;
-                } else if (tab === 'users') {
-                  sectionBody = (
-                    <UserResultsList
-                      items={state.items as Array<TrendUserItem | LeaderboardItem>}
-                    />
-                  );
-                } else {
-                  sectionBody = (
-                    <PostResultsList
-                      items={state.items as TrendPostItem[]}
-                      onOpenPost={handleOpenPost}
-                    />
-                  );
-                }
 
                 return (
                   <SearchSectionShell
@@ -603,28 +720,53 @@ const TokenList = () => {
                     footer={state.canExpand || state.usesFallback ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (state.usesFallback) {
-                            openFullTopic(tab);
-                            return;
-                          }
-
-                          toggleSection(tab);
-                        }}
+                        onClick={() => (state.usesFallback
+                          ? openFullTopic(tab)
+                          : openSearchCategory(tab))}
                         className="text-sm font-medium text-[#8bc9ff] hover:text-white transition-colors"
                       >
-                        {footerLabel}
+                        {t('tokenList.viewAll')}
                       </button>
                     ) : null}
                   >
-                    {sectionBody}
-                    {expanded && isLoadingExpanded ? (
-                      <InlineLoading label={t('tokenList.loadingMore')} />
-                    ) : null}
+                    {renderSearchResults(tab, state.items)}
                   </SearchSectionShell>
                 );
               })}
             </div>
+          ) : null}
+
+          {focusedTab ? (
+            <SearchSectionShell
+              title={tabLabels[focusedTab]}
+              subtitle={focusedTotal !== undefined
+                ? t('tokenList.resultsCount', { count: focusedTotal })
+                : undefined}
+              actions={focusedTab === 'tokens' ? (
+                <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+                  <TokenListControls
+                    orderBy={searchSort.orderBy}
+                    orderByOptions={orderByOptions}
+                    onOrderByChange={searchSort.updateOrderBy}
+                    collection={searchCollection}
+                    collectionOptions={collectionOptions}
+                    onCollectionChange={setSearchCollection}
+                  />
+                </div>
+              ) : undefined}
+              contentClassName={focusedTab === 'posts' ? 'divide-y-0' : undefined}
+              footer={focusedSearchQuery.hasNextPage ? (
+                <div className="text-center">
+                  <LoadMoreButton
+                    sentinelRef={focusedSentinelRef}
+                    loading={focusedSearchQuery.isFetchingNextPage}
+                    onClick={() => focusedSearchQuery.fetchNextPage()}
+                  />
+                </div>
+              ) : null}
+            >
+              {renderFocusedResults(focusedTab)}
+            </SearchSectionShell>
           ) : null}
 
           {!hasSearch && activeTab === 'tokens' ? (
@@ -638,36 +780,14 @@ const TokenList = () => {
                   <div className="w-full text-xl font-bold text-white sm:w-auto sm:text-2xl">
                     {t('tokenList.tokenizedTrends')}
                   </div>
-                  <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
-                    <Select value={orderBy} onValueChange={updateOrderBy}>
-                      <SelectTrigger className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-white/10">
-                        {orderByOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                            {option.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {activeFactoryCollections.length > 0 && (
-                    <div className="flex-1 sm:w-auto sm:flex-none sm:flex-shrink-0">
-                      <Select dir={i18n.dir()} value={collection} onValueChange={setCollection}>
-                        <SelectTrigger aria-label={t('tokenListTable.collection')} className="h-10 w-full rounded-lg border border-white/10 bg-white/[0.06] px-2 py-2 text-xs text-white transition-all duration-300 hover:bg-white/[0.08] focus:outline-none focus:border-[#1161FE] sm:min-w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 border-white/10">
-                          {collectionOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
-                              {option.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                  <TokenListControls
+                    orderBy={orderBy}
+                    orderByOptions={orderByOptions}
+                    onOrderByChange={updateOrderBy}
+                    collection={collection}
+                    collectionOptions={collectionOptions}
+                    onCollectionChange={setCollection}
+                  />
                   <Link
                     to="/trends/create"
                     className="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-full border-none bg-[#1161FE] px-4 py-2 text-sm font-semibold text-white no-underline shadow-[0_8px_25px_rgba(17,97,254,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#0d4fd8] active:translate-y-0 sm:ml-auto"
@@ -692,24 +812,11 @@ const TokenList = () => {
 
               {hasNextPage ? (
                 <div className="text-center pt-2 pb-4">
-                  <button
-                    ref={loadMoreBtn}
-                    type="button"
+                  <LoadMoreButton
+                    sentinelRef={tokensSentinelRef}
+                    loading={isFetchingTokens}
                     onClick={() => fetchNextPage()}
-                    disabled={isFetchingTokens}
-                    className={`px-6 py-3 rounded-full border text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ${
-                      isFetchingTokens
-                        ? 'border-white/10 bg-white/10 cursor-not-allowed opacity-60'
-                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    {isFetchingTokens ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <Spinner className="w-4 h-4" />
-                        {t('tokenList.loadingEllipsis')}
-                      </div>
-                    ) : t('tokenList.loadMore')}
-                  </button>
+                  />
                 </div>
               ) : null}
             </>

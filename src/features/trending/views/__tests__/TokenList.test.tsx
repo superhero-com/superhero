@@ -1,7 +1,7 @@
 /* eslint-disable object-curly-newline */
 import React from 'react';
 import {
-  fireEvent, render, screen, waitFor,
+  act, fireEvent, render, screen, waitFor,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -40,12 +40,16 @@ vi.mock('../../../../api/generated', () => ({
   },
 }));
 
+const factoryMocks = vi.hoisted(() => ({
+  collections: [] as Array<{ name: string }>,
+}));
+
 vi.mock('@/hooks/useCommunityFactory', () => ({
   useCommunityFactory: () => ({
     activeFactoryCollections: [],
     loadFactorySchema: vi.fn().mockResolvedValue({ collections: {} }),
   }),
-  useEnsureFactorySchemaLoaded: () => [],
+  useEnsureFactorySchemaLoaded: () => factoryMocks.collections,
 }));
 
 vi.mock('../../../../seo/Head', () => ({
@@ -61,11 +65,12 @@ vi.mock('../../../../components/Trendminer/LatestTransactionsCarouselClassic', (
 }));
 
 vi.mock('../../components/TokenListTable', () => ({
-  default: ({ pages }: any) => (
+  default: ({ pages, onSort }: any) => (
     <div data-testid="token-list-table">
       {(pages?.[0]?.items ?? []).map((item: any) => (
         <span key={item.address}>{item.name}</span>
       ))}
+      <button type="button" onClick={() => onSort('price')}>Price header</button>
     </div>
   ),
 }));
@@ -76,7 +81,7 @@ vi.mock('../../../social/components/ReplyToFeedItem', () => ({
   ),
 }));
 
-function renderView() {
+function renderView(initialEntries?: string[]) {
   const client = new QueryClient({
     defaultOptions: {
       queries: {
@@ -86,12 +91,43 @@ function renderView() {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <QueryClientProvider client={client}>
         <TokenList />
       </QueryClientProvider>
     </MemoryRouter>,
   );
+}
+
+type ObserverCallback = (entries: Array<{ isIntersecting: boolean }>) => void;
+
+let observedSentinels: Set<ObserverCallback>;
+
+function scrollSentinelsIntoView() {
+  act(() => {
+    observedSentinels.forEach((callback) => callback([{ isIntersecting: true }]));
+  });
+}
+
+const searchToken = (name: string, index: number) => ({
+  address: `ct_${index}`, sale_address: `ct_sale_${index}`, name, symbol: name, price: '1', holders_count: 1, market_cap: '1',
+});
+
+const defaultTokenOptions = { orderBy: 'market_cap', orderDirection: 'DESC', collection: 'all' };
+
+function expectSectionFetched(
+  tab: string,
+  term: string,
+  page: number,
+  tokenOptions: object = defaultTokenOptions,
+) {
+  expect(searchApiMocks.fetchTrendSearchSection)
+    .toHaveBeenCalledWith(tab, term, page, tokenOptions);
+}
+
+function chooseOption(select: string, option: string) {
+  fireEvent.keyDown(screen.getByRole('combobox', { name: select }), { key: 'Enter' });
+  fireEvent.click(screen.getByRole('option', { name: option }));
 }
 
 describe('TokenList search experience', () => {
@@ -172,15 +208,20 @@ describe('TokenList search experience', () => {
       meta: { totalItems: 4, totalPages: 1, currentPage: 1 },
     });
 
+    observedSentinels = new Set();
     Object.defineProperty(window, 'IntersectionObserver', {
       writable: true,
-      value: function IntersectionObserverMock() {
+      value: function IntersectionObserverMock(callback: ObserverCallback) {
         return {
-          observe() {},
-          disconnect() {},
+          observe() { observedSentinels.add(callback); },
+          disconnect() { observedSentinels.delete(callback); },
         };
       },
     });
+    window.scrollTo = vi.fn() as typeof window.scrollTo;
+    // jsdom lacks it; Radix Select scrolls the highlighted option into view on open.
+    Element.prototype.scrollIntoView = vi.fn();
+    factoryMocks.collections = [];
   });
 
   it('shows default tab content and switches to users and posts tabs', async () => {
@@ -205,7 +246,7 @@ describe('TokenList search experience', () => {
     expect(screen.getByText('Popular Posts')).toBeInTheDocument();
   });
 
-  it('renders search sections and expands tokens with view all', async () => {
+  it('opens one category with view all and returns to all results', async () => {
     renderView();
 
     fireEvent.change(screen.getByLabelText('Search tokens, users and posts'), {
@@ -219,21 +260,114 @@ describe('TokenList search experience', () => {
     // Await the rendered result, not just the fetch call: the preview paints a tick after the
     // request resolves, and React 19 no longer happens to flush that before `waitFor` returns.
     expect(await screen.findByText('ALPHA')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Users' })).not.toBeInTheDocument();
     expect(screen.getByText('user.chain')).toBeInTheDocument();
     expect(screen.getByText('Searchable post')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'View all' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Tokens 4' })).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(screen.getByRole('button', { name: 'View all' }));
 
-    await waitFor(() => {
-      expect(searchApiMocks.fetchTrendSearchSection).toHaveBeenCalledWith('tokens', 'hello');
+    expect(await screen.findByText('DELTA')).toBeInTheDocument();
+    expectSectionFetched('tokens', 'hello', 1);
+    expect(screen.queryByText('user.chain')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tokens 4' })).toHaveAttribute('aria-pressed', 'true');
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+
+    expect(await screen.findByText('user.chain')).toBeInTheDocument();
+    expect(screen.queryByText('DELTA')).not.toBeInTheDocument();
+  });
+
+  it('keeps loading a category past the first page, on scroll or on click', async () => {
+    const pages = [
+      ['ALPHA', 'BETA'],
+      ['GAMMA', 'DELTA'],
+      ['EPSILON'],
+    ];
+    searchApiMocks.fetchTrendSearchSection.mockImplementation(
+      async (_tab: string, _term: string, page: number) => ({
+        items: pages[page - 1].map((name) => searchToken(name, pages.flat().indexOf(name))),
+        meta: { totalItems: 5, totalPages: pages.length, currentPage: page },
+      }),
+    );
+
+    renderView(['/trends/tokens?q=hello&type=tokens']);
+
+    expect(await screen.findByText('BETA')).toBeInTheDocument();
+    expect(screen.getByText('5 results')).toBeInTheDocument();
+
+    scrollSentinelsIntoView();
+
+    expect(await screen.findByText('DELTA')).toBeInTheDocument();
+    expectSectionFetched('tokens', 'hello', 2);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Load More' }));
+
+    expect(await screen.findByText('EPSILON')).toBeInTheDocument();
+    expectSectionFetched('tokens', 'hello', 3);
+    expect(screen.queryByRole('button', { name: 'Load More' })).not.toBeInTheDocument();
+    expect(searchApiMocks.fetchTrendSearchSection).toHaveBeenCalledTimes(3);
+  });
+
+  it('says so when the opened category has no matches', async () => {
+    searchApiMocks.fetchTrendSearchSection.mockResolvedValue({
+      items: [],
+      meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('DELTA')).toBeInTheDocument();
+    renderView(['/trends/tokens?q=nothing&type=users']);
+
+    expect(await screen.findByText('Nothing found for “nothing”.')).toBeInTheDocument();
+    expectSectionFetched('users', 'nothing', 1);
+    expect(screen.queryByRole('button', { name: 'Load More' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Sort by' })).not.toBeInTheDocument();
+  });
+
+  it('sorts and filters token results like the Tokens view', async () => {
+    factoryMocks.collections = [{ name: 'WORDS' }, { name: 'CHINESE' }];
+    searchApiMocks.fetchTrendSearchSection.mockImplementation(
+      async (_tab: string, _term: string, page: number, options: { collection: string }) => {
+        const names = options.collection === 'CHINESE' ? ['GAMMA'] : ['ALPHA', 'BETA'];
+        return {
+          items: names.map(searchToken),
+          meta: { totalItems: names.length, totalPages: 1, currentPage: page },
+        };
+      },
+    );
+
+    renderView(['/trends/tokens?q=hello&type=tokens']);
+
+    expect(await screen.findByText('BETA')).toBeInTheDocument();
+    expectSectionFetched('tokens', 'hello', 1);
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveTextContent('Market Cap');
+    expect(screen.getByRole('combobox', { name: 'Collection' })).toHaveTextContent('All');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Price header' }));
+    await waitFor(() => expectSectionFetched('tokens', 'hello', 1, {
+      ...defaultTokenOptions, orderBy: 'price',
+    }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Price header' }));
+    await waitFor(() => expectSectionFetched('tokens', 'hello', 1, {
+      ...defaultTokenOptions, orderBy: 'price', orderDirection: 'ASC',
+    }));
+
+    chooseOption('Collection', 'Chinese');
+
+    // The filters stay on screen while the filtered results load.
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveTextContent('Price');
+    expect(await screen.findByText('GAMMA')).toBeInTheDocument();
+    expectSectionFetched('tokens', 'hello', 1, {
+      orderBy: 'price', orderDirection: 'ASC', collection: 'CHINESE',
     });
-    expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+    expect(screen.getByText('1 result')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tokens 1' })).toHaveAttribute('aria-pressed', 'true');
+
+    chooseOption('Sort by', 'Newest');
+
+    await waitFor(() => expectSectionFetched('tokens', 'hello', 1, {
+      orderBy: 'created_at', orderDirection: 'DESC', collection: 'CHINESE',
+    }));
   });
 
   it('shows fallback view all buttons and opens the full topic when nothing is found', async () => {

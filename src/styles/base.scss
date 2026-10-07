@@ -57,10 +57,6 @@
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  
-  /* Governance Vote Animations */
-  --vote-pulse: 0 0 0 0 rgba(255, 107, 107, 0.7);
-  --vote-pulse-active: 0 0 0 6px rgba(255, 107, 107, 0);
 }
 
 :root[data-theme='light'] {
@@ -206,11 +202,8 @@ html.ios-webkit .mobile-app-footer {
   will-change: transform;
 }
 
-html.ios-webkit .animate-glow,
 html.ios-webkit .animate-float,
 html.ios-webkit .animate-shimmer,
-html.ios-webkit .animate-vote-pulse,
-html.ios-webkit .animate-success-glow,
 html.ios-webkit .animate-winning-pulse {
   animation: none !important;
 }
@@ -225,17 +218,11 @@ html.safari.safari-zooming body::before {
 }
 
 /* Temporary zoom performance mode: target expensive effects, not layout transforms */
-html.zooming .animate-glow,
 html.zooming .animate-float,
 html.zooming .animate-shimmer,
-html.zooming .animate-vote-pulse,
-html.zooming .animate-success-glow,
 html.zooming .animate-winning-pulse,
-html.safari.safari-zooming .animate-glow,
 html.safari.safari-zooming .animate-float,
 html.safari.safari-zooming .animate-shimmer,
-html.safari.safari-zooming .animate-vote-pulse,
-html.safari.safari-zooming .animate-success-glow,
 html.safari.safari-zooming .animate-winning-pulse {
   animation: none !important;
 }
@@ -272,12 +259,6 @@ a:hover {
   }
 }
 
-/* Banner CTA shared hover: gentle nudge up, subtle scale, no underline bar */
-.banner-cta { position: relative; transform: translateY(0); transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease; }
-.banner-cta::after { display: none !important; }
-.banner-cta:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
-.banner-cta:active { transform: translateY(0) scale(0.995); }
-
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */
@@ -292,7 +273,6 @@ html.ios-webkit .transition-all {
 
 /* Ensure card-like surfaces fully contain their contents */
 .genz-card,
-.mobile-card,
 .card {
   overflow: hidden;
   isolation: isolate;
@@ -301,15 +281,12 @@ html.ios-webkit .transition-all {
 
 /* Be conservative to avoid unexpected wrapping */
 .genz-card *,
-.mobile-card *,
 .card * {
   min-width: 0;
 }
 
 .genz-card img,
 .genz-card video,
-.mobile-card img,
-.mobile-card video,
 .card img,
 .card video {
   max-width: 100%;
@@ -371,7 +348,6 @@ input, textarea, select {
 
 /* Gen Z Ultra Modern Form Elements */
 select,
-.flat-select,
 input,
 textarea {
   -webkit-appearance: none;
@@ -402,7 +378,6 @@ select {
 }
 
 select:focus,
-.flat-select:focus,
 input:focus,
 textarea:focus {
   border-color: var(--neon-teal);
@@ -412,7 +387,6 @@ textarea:focus {
 }
 
 select:disabled,
-.flat-select:disabled,
 input:disabled,
 textarea:disabled { 
   opacity: 0.6; 
@@ -432,23 +406,12 @@ textarea:disabled {
     }
   }
   
-  /* Better spacing for mobile */
-  .mobile-spacing {
-    padding: 16px;
-  }
-  
   /* Prevent text selection on interactive elements */
   button, a, [role="button"] {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-  }
-  
-  /* Better scrolling containers */
-  .scroll-container {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
   }
   
   /* Sexy Mobile-optimized forms */
@@ -538,16 +501,8 @@ textarea:disabled {
   animation: slideInUp 0.6s ease-out;
 }
 
-.animate-slideIn {
-  animation: slideIn 0.5s ease-out;
-}
-
 .animate-fadeInUp {
   animation: fadeInUp 0.4s ease-out;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
 }
 
 .animate-float {
@@ -561,36 +516,6 @@ textarea:disabled {
 }
 
 /* Governance Vote Specific Animations */
-@keyframes votePulse {
-  0% {
-    box-shadow: var(--vote-pulse);
-  }
-  70% {
-    box-shadow: var(--vote-pulse-active);
-  }
-  100% {
-    box-shadow: var(--vote-pulse);
-  }
-}
-
-@keyframes resultBarFill {
-  0% {
-    width: 0%;
-  }
-  100% {
-    width: var(--bar-width);
-  }
-}
-
-@keyframes successGlow {
-  0%, 100% {
-    box-shadow: 0 0 4px rgba(16, 185, 129, 0.45);
-  }
-  50% {
-    box-shadow: 0 0 14px rgba(16, 185, 129, 0.65);
-  }
-}
-
 @keyframes winningPulse {
   0%, 100% {
     transform: scale(1);
@@ -602,30 +527,8 @@ textarea:disabled {
   }
 }
 
-.animate-vote-pulse {
-  animation: votePulse 2s infinite;
-}
-
-.animate-result-fill {
-  animation: resultBarFill 1.5s ease-out forwards;
-}
-
-.animate-success-glow {
-  animation: successGlow 2s ease-in-out infinite;
-}
-
 .animate-winning-pulse {
   animation: winningPulse 2s ease-in-out infinite;
-}
-
-/* Enhanced hover effects for governance components */
-.governance-card {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.governance-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .vote-button {
@@ -782,13 +685,6 @@ textarea:disabled {
 .sh-pill__chg--flat { color: var(--light-font-color); background: rgba(148, 163, 184, 0.16); }
 .sh-pill__chg-arrow { font-size: 0.85em; line-height: 1; }
 
-.sh-pill__chart {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  line-height: 0;
-}
-
 /* Data-slot skeleton. The symbol is known from the string, so it never
    skeletons — only the data slots do. */
 .sh-pill__skel {
@@ -805,7 +701,6 @@ textarea:disabled {
   animation: sh-pill-shimmer 1.2s ease-in-out infinite;
 }
 .sh-pill__skel--price { width: 3.4em; }
-.sh-pill__skel--chart { width: 5em; }
 @keyframes sh-pill-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -842,7 +737,6 @@ textarea:disabled {
     white-space: normal;
     margin-block: 0.15em;
   }
-  .sh-pill--rich .sh-pill__chart { margin-left: auto; }
 }
 
 /* Composer rung preview: the pill renders at natural width and the row clips it, rather than

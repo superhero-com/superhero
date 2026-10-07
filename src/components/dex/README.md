@@ -10,15 +10,12 @@ This directory contains the refactored DEX components, breaking down the origina
 src/components/dex/
 ├── core/                    # Core swap functionality
 │   ├── SwapForm.tsx        # Main swap interface
-│   ├── TokenInput.tsx      # Token input with amount
 │   ├── TokenSelector.tsx   # Token selection dropdown
 │   ├── SwapSettings.tsx    # Slippage and deadline settings
 │   ├── SwapRouteInfo.tsx   # Route display and reserves
 │   └── SwapConfirmation.tsx # Confirmation modal
 ├── widgets/                 # Specialized functionality
-│   ├── WrapUnwrapWidget.tsx # AE ↔ WAE conversion
-│   ├── EthxitWidget.tsx    # aeETH → AE conversion
-│   └── EthBridgeWidget.tsx # ETH → AE bridge + swap
+│   └── WrapUnwrapWidget.tsx # AE ↔ WAE conversion
 ├── supporting/              # Supporting components
 │   └── RecentActivity.tsx  # Transaction history
 ├── hooks/                   # Custom hooks
@@ -26,9 +23,8 @@ src/components/dex/
 │   ├── useTokenBalances.ts # Balance fetching
 │   ├── useSwapQuote.ts     # Quote fetching with debouncing
 │   └── useSwapExecution.ts # Swap execution and approvals
-├── types/                   # TypeScript types
-│   └── dex.ts              # All DEX-related types
-└── index.ts                # Component exports
+└── types/                   # TypeScript types
+    └── dex.ts              # All DEX-related types
 ```
 
 ## Components
@@ -39,11 +35,6 @@ src/components/dex/
 - Main swap interface orchestrating all swap functionality
 - Manages token selection, amounts, and swap execution
 - Integrates with all hooks and sub-components
-
-#### `TokenInput.tsx`
-- Combines token selector and amount input
-- Handles amount validation and formatting
-- Displays token balances
 
 #### `TokenSelector.tsx`
 - Enhanced token selection with search functionality
@@ -71,16 +62,6 @@ src/components/dex/
 - AE ↔ WAE conversion interface
 - Balance display and amount input
 - Wrap/unwrap functionality
-
-#### `EthxitWidget.tsx`
-- aeETH → AE conversion
-- Automated quoting
-- Bridge information and hints
-
-#### `EthBridgeWidget.tsx`
-- ETH → AE bridge + swap flow
-- Multi-step process handling
-- Status tracking and error handling
 
 ### Supporting Components
 

@@ -42,7 +42,6 @@ export default function TokenSelector({
 }: TokenSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [customAddress, setCustomAddress] = useState('');
   const { aex9Balances, balance } = useAccount();
 
   const filteredTokens = useMemo(() => {
@@ -69,30 +68,10 @@ export default function TokenSelector({
   const handleSelect = (token: DexTokenDto) => {
     onSelect(token);
     setOpen(false);
-    setCustomAddress('');
     // Clear search when closing
     if (onSearchChange) {
       onSearchChange('');
     }
-  };
-
-  const handleAddCustomToken = () => {
-    if (!customAddress.trim()) return;
-
-    // Create a custom token object - you may need to adjust this based on your Token type
-    const customToken: DexTokenDto = {
-      address: customAddress.trim(),
-      symbol: 'CUSTOM', // You might want to fetch this from the blockchain
-      decimals: 18, // Default decimals, might want to fetch this too
-      is_ae: false,
-      pairs_count: 0,
-      name: 'CUSTOM',
-      created_at: new Date().toISOString(),
-    };
-
-    onSelect(customToken);
-    setOpen(false);
-    setCustomAddress('');
   };
 
   const isValidAddress = (address: string) =>
@@ -118,7 +97,6 @@ export default function TokenSelector({
                 if (onSearchChange) {
                   onSearchChange('');
                 }
-                setCustomAddress('');
               }}
               className={variant === 'swap' ? 'swap-asset-select' : `min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
                 disabled || loading

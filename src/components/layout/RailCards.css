@@ -83,9 +83,6 @@
   color: var(--rail-muted);
   font-variant-numeric: tabular-nums;
 }
-.ae-price-card__status { display: inline-flex; align-items: center; gap: 6px; color: light-dark(#237966, #72d7b4); }
-.ae-price-card__status--offline { color: light-dark(#a0375d, #ef94b0); }
-.ae-price-card__dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: currentColor; }
 .ae-price-card__block { display: flex; flex-wrap: wrap; gap: 5px; }
 .ae-price-card__block strong { font-weight: 500; color: var(--rail-text); }
 

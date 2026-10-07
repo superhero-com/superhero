@@ -3,10 +3,8 @@
  * Fails the build when the bundle can reach an origin `connect-src` does not allow.
  *
  * The allowlist used to be assembled by grepping src/ for literal URLs, which cannot see an
- * origin that only exists inside a dependency. That asymmetry was real: api.ethplorer.io is a
- * literal in our own bridge code and was listed, while the Reown/WalletConnect origins the same
- * feature needs live in @reown/appkit-common and were not. Scanning the built bundle instead
- * catches both, because whatever survived tree-shaking is what the browser can actually run.
+ * origin that only exists inside a dependency. Scanning the built bundle instead catches both,
+ * because whatever survived tree-shaking is what the browser can actually run.
  *
  *   node scripts/check-csp-origins.cjs
  */
@@ -14,8 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const {
-  CONNECT_SRC_ALLOWLIST, CHAT_RELAY_ALLOWLIST, BRIDGE_CONNECT_SRC, BRIDGE_FRAME_SRC,
-  RUNTIME_CONNECT_ENV_KEYS,
+  CONNECT_SRC_ALLOWLIST, CHAT_RELAY_ALLOWLIST, RUNTIME_CONNECT_ENV_KEYS,
   createCspPolicy, originOf,
 } = require('../server/lib/csp.cjs');
 
@@ -75,12 +72,11 @@ function bundleOrigins() {
   return origins;
 }
 
-// Everything the header could permit under any deploy config: the bridge origins count as
-// covered even while the feature is off, otherwise re-enabling it would trip this check.
+// Everything the header could permit under the current deploy config.
 function permittedOrigins() {
-  const { frameSrc } = createCspPolicy({ ...process.env, AE_ETH_BRIDGE_ENABLED: 'true' });
+  const { frameSrc } = createCspPolicy(process.env);
   return new Set([
-    ...CONNECT_SRC_ALLOWLIST, ...CHAT_RELAY_ALLOWLIST, ...BRIDGE_CONNECT_SRC, ...BRIDGE_FRAME_SRC,
+    ...CONNECT_SRC_ALLOWLIST, ...CHAT_RELAY_ALLOWLIST,
     ...frameSrc.split(' '),
     ...RUNTIME_CONNECT_ENV_KEYS.map((k) => originOf(process.env[k])).filter(Boolean),
   ]);

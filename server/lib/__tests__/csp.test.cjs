@@ -44,31 +44,6 @@ describe('script execution', () => {
   });
 });
 
-describe('bridge origins', () => {
-  it('stay off the header while the bridge routes redirect away', () => {
-    const csp = policy();
-    expect(csp).not.toContain('walletconnect.org');
-    expect(csp).not.toContain('api.web3modal.org');
-    expect(csp).not.toContain('api.ethplorer.io');
-  });
-
-  it('arrive together when the bridge is enabled', () => {
-    // Ethplorer is a literal in our own source; the Reown origins are only inside
-    // @reown/appkit-common. Enabling one without the other is the failure this guards.
-    const csp = policy({ AE_ETH_BRIDGE_ENABLED: 'true' });
-    const connect = directive(csp, 'connect-src');
-    expect(connect).toContain('https://api.ethplorer.io');
-    expect(connect).toContain('https://api.web3modal.org');
-    expect(connect).toContain('wss://relay.walletconnect.org');
-    expect(connect).toContain('https://rpc.walletconnect.org');
-    expect(directive(csp, 'frame-src')).toContain('https://verify.walletconnect.org');
-  });
-
-  it('is not switched on by a truthy-looking value', () => {
-    expect(policy({ AE_ETH_BRIDGE_ENABLED: '1' })).not.toContain('walletconnect.org');
-  });
-});
-
 describe('relay origins', () => {
   it('accepts the same schemes as the client origin gate', () => {
     expect(isSecureRelayUrl('wss://relay.example.com')).toBe(true);

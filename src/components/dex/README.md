@@ -23,9 +23,8 @@ src/components/dex/
 │   ├── useTokenBalances.ts # Balance fetching
 │   ├── useSwapQuote.ts     # Quote fetching with debouncing
 │   └── useSwapExecution.ts # Swap execution and approvals
-├── types/                   # TypeScript types
-│   └── dex.ts              # All DEX-related types
-└── index.ts                # Component exports
+└── types/                   # TypeScript types
+    └── dex.ts              # All DEX-related types
 ```
 
 ## Components

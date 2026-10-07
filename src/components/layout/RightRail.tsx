@@ -104,15 +104,14 @@ const RightRail = ({
       {/* Onboarding nudge — placed below the search bar so users can continue account setup. */}
       <RewardsOnboarding variant="rail" />
 
-      {/* Network & Wallet Overview - Hidden on own profile */}
+      {/* AE price, plus the wallet under it once signed in - hidden on own profile */}
       {!isOwnProfile && (
-        <div className={activeAccount ? walletRailCardClassName : undefined}>
-          <WalletOverviewCard
-            key={activeAccount}
-            selectedCurrency={selectedCurrency}
-            prices={prices}
-          />
-        </div>
+        <WalletOverviewCard
+          key={activeAccount}
+          selectedCurrency={selectedCurrency}
+          prices={prices}
+          className={activeAccount ? walletRailCardClassName : undefined}
+        />
       )}
 
       {/* Enhanced Price Section (via hidePriceSection;

@@ -126,161 +126,166 @@ const WalletOverviewCard = ({
     topHoldingsResp,
   ]);
 
-  if (!activeAccount) {
-    const price = prices?.[selectedCurrency];
-    return (
-      <AePriceCard
-        price={price != null && Number.isFinite(price) ? formatPrice(price, selectedCurrency) : '—'}
-        currency={selectedCurrency}
-        blockHeight={currentBlockHeight}
-        className={className}
-      />
-    );
-  }
+  const price = prices?.[selectedCurrency];
+  const priceCard = (cardClassName?: string) => (
+    <AePriceCard
+      price={price != null && Number.isFinite(price) ? formatPrice(price, selectedCurrency) : '—'}
+      currency={selectedCurrency}
+      blockHeight={currentBlockHeight}
+      className={cardClassName}
+    />
+  );
 
+  if (!activeAccount) return priceCard(className);
+
+  // Signed in, the wallet card goes under the AE price card instead of replacing
+  // it, so the price stays in view after login (#735).
   return (
-    <div className={`min-w-0 ${className || ''}`}>
-      {/* Summary Row */}
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div className="text-xs text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
-            <span className="text-base" aria-hidden="true">👛</span>
-            <span>{t('common.wallet.yourWallet')}</span>
+    <>
+      {priceCard()}
+      <div className={`min-w-0 ${className || ''}`}>
+        {/* Summary Row */}
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="text-xs text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
+              <span className="text-base" aria-hidden="true">👛</span>
+              <span>{t('common.wallet.yourWallet')}</span>
+            </div>
+            <div className="ms-auto flex max-w-full items-center gap-1">
+              <button
+                type="button"
+                onClick={() => navigate(`/users/${activeAccount}`)}
+                className="min-h-[30px] [@media(pointer:coarse)]:min-h-11 bg-white/5 border border-transparent rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                {t('common.wallet.viewProfile')}
+              </button>
+              <button
+                type="button"
+                aria-label={open ? t('common.wallet.collapseWallet') : t('common.wallet.expandWallet')}
+                aria-expanded={open}
+                aria-controls={detailsId}
+                className="flex shrink-0 items-center justify-center size-[30px] [@media(pointer:coarse)]:size-11 bg-white/5 border border-transparent rounded-lg cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen((v) => !v);
+                }}
+              >
+                <ChevronDown className={`size-4 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </button>
+            </div>
           </div>
-          <div className="ms-auto flex max-w-full items-center gap-1">
-            <button
-              type="button"
-              onClick={() => navigate(`/users/${activeAccount}`)}
-              className="min-h-[30px] [@media(pointer:coarse)]:min-h-11 bg-white/5 border border-transparent rounded-lg px-2 py-1 text-[11px] cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {t('common.wallet.viewProfile')}
-            </button>
-            <button
-              type="button"
-              aria-label={open ? t('common.wallet.collapseWallet') : t('common.wallet.expandWallet')}
-              aria-expanded={open}
-              aria-controls={detailsId}
-              className="flex shrink-0 items-center justify-center size-[30px] [@media(pointer:coarse)]:size-11 bg-white/5 border border-transparent rounded-lg cursor-pointer transition-colors hover:bg-white/10 hover:border-white/10 text-[var(--light-font-color)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen((v) => !v);
-              }}
-            >
-              <ChevronDown className={`size-4 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
-            </button>
-          </div>
+
+          <Link
+            to={`/users/${activeAccount}`}
+            className="flex min-w-0 items-start gap-2.5 rounded-sm no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <AddressAvatar address={activeAccount} size={36} className="mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className={`[overflow-wrap:anywhere] font-semibold leading-snug text-[var(--standard-font-color)] ${preferredName ? 'text-[15px]' : 'text-[13px]'}`} dir="auto">
+                {preferredName || activeAccount}
+              </div>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] font-medium tabular-nums text-[var(--standard-font-color)]">
+                <span className="[overflow-wrap:anywhere]" dir="ltr">
+                  {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                  {' '}
+                  AE
+                </span>
+                {aeFiat != null && (
+                  <span className="text-xs font-normal text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
+                    ≈
+                    {' '}
+                    {formatPrice(aeFiat, selectedCurrency, 2)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* The online/offline dot was dropped: it never helped anyone decide anything. */}
+          {currentBlockHeight != null && (
+            <div className="mt-3.5 flex flex-wrap items-center gap-x-1 border-t border-white/10 pt-2.5 text-xs tabular-nums text-[var(--light-font-color)]">
+              <span>{t('common.wallet.block')}</span>
+              <span dir="ltr">
+                #
+                {Number(currentBlockHeight).toLocaleString()}
+              </span>
+            </div>
+          )}
         </div>
 
-        <Link
-          to={`/users/${activeAccount}`}
-          className="flex min-w-0 items-start gap-2.5 rounded-sm no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <AddressAvatar address={activeAccount} size={36} className="mt-0.5" />
-          <div className="min-w-0 flex-1">
-            <div className={`[overflow-wrap:anywhere] font-semibold leading-snug text-[var(--standard-font-color)] ${preferredName ? 'text-[15px]' : 'text-[13px]'}`} dir="auto">
-              {preferredName || activeAccount}
+        {/* Expanded Details */}
+        {open && (
+          <div id={detailsId} className="mt-3 border-t border-white/10 pt-3">
+            <div className="mb-2.5 text-xs text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
+              {activeAccount}
             </div>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] font-medium tabular-nums text-[var(--standard-font-color)]">
-              <span className="[overflow-wrap:anywhere]" dir="ltr">
-                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                {' '}
-                AE
-              </span>
-              {aeFiat != null && (
-                <span className="text-xs font-normal text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
-                  ≈
-                  {' '}
-                  {formatPrice(aeFiat, selectedCurrency, 2)}
-                </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(activeAccount);
+                  } catch {
+                    // Ignore clipboard errors
+                  }
+                }}
+              >
+                {t('common.wallet.copyAddress')}
+              </button>
+              <button
+                type="button"
+                className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
+              >
+                {t('common.wallet.openOnAescan')}
+              </button>
+            </div>
+
+            <Separator className="my-3" />
+
+            <div className="grid min-w-0 gap-2">
+              <div className="text-xs text-white/70 font-medium">{t('explore:ownedTrends')}</div>
+              {topHoldings.length === 0 ? (
+                <div className="text-xs text-white/60">
+                  {t('common.wallet.noHoldings')}
+                </div>
+              ) : (
+                <div className="flex min-w-0 flex-col gap-2">
+                  {topHoldings.map((it: any) => {
+                    const label = getTokenLabelSafe(it);
+                    const balanceLabel = getBalanceLabelSafe(it);
+                    return (
+                      <div key={`${label}-${balanceLabel}`} className="flex min-w-0 items-center justify-between gap-2 text-sm">
+                        <div
+                          className="min-w-0 flex-1 truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
+                          title={label}
+                        >
+                          <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+                          <span className="font-bold">{(label || '').toString()}</span>
+                        </div>
+                        <div className="max-w-[50%] shrink-0 text-end [overflow-wrap:anywhere] text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                          {balanceLabel}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(topHoldingsResp as any)?.meta?.totalItems > 3 && (
+                    <button
+                      type="button"
+                      className="self-start mt-1 text-[11px] text-white/70 hover:text-white/90 hover:underline"
+                      onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
+                    >
+                      {t('common.wallet.showMore')}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
-        </Link>
-
-        {/* The online/offline dot was dropped: it never helped anyone decide anything. */}
-        {currentBlockHeight != null && (
-          <div className="mt-3.5 flex flex-wrap items-center gap-x-1 border-t border-white/10 pt-2.5 text-xs tabular-nums text-[var(--light-font-color)]">
-            <span>{t('common.wallet.block')}</span>
-            <span dir="ltr">
-              #
-              {Number(currentBlockHeight).toLocaleString()}
-            </span>
-          </div>
         )}
       </div>
-
-      {/* Expanded Details */}
-      {open && (
-        <div id={detailsId} className="mt-3 border-t border-white/10 pt-3">
-          <div className="mb-2.5 text-xs text-[var(--light-font-color)] [overflow-wrap:anywhere]" dir="ltr">
-            {activeAccount}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(activeAccount);
-                } catch {
-                  // Ignore clipboard errors
-                }
-              }}
-            >
-              {t('common.wallet.copyAddress')}
-            </button>
-            <button
-              type="button"
-              className="px-2 py-1.5 [@media(pointer:coarse)]:min-h-11 rounded-lg text-xs transition-colors bg-white/5 text-[var(--light-font-color)] hover:bg-white/10 hover:text-white border border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
-            >
-              {t('common.wallet.openOnAescan')}
-            </button>
-          </div>
-
-          <Separator className="my-3" />
-
-          <div className="grid min-w-0 gap-2">
-            <div className="text-xs text-white/70 font-medium">{t('explore:ownedTrends')}</div>
-            {topHoldings.length === 0 ? (
-              <div className="text-xs text-white/60">
-                {t('common.wallet.noHoldings')}
-              </div>
-            ) : (
-              <div className="flex min-w-0 flex-col gap-2">
-                {topHoldings.map((it: any) => {
-                  const label = getTokenLabelSafe(it);
-                  const balanceLabel = getBalanceLabelSafe(it);
-                  return (
-                    <div key={`${label}-${balanceLabel}`} className="flex min-w-0 items-center justify-between gap-2 text-sm">
-                      <div
-                        className="min-w-0 flex-1 truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
-                        title={label}
-                      >
-                        <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
-                        <span className="font-bold">{(label || '').toString()}</span>
-                      </div>
-                      <div className="max-w-[50%] shrink-0 text-end [overflow-wrap:anywhere] text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                        {balanceLabel}
-                      </div>
-                    </div>
-                  );
-                })}
-                {(topHoldingsResp as any)?.meta?.totalItems > 3 && (
-                  <button
-                    type="button"
-                    className="self-start mt-1 text-[11px] text-white/70 hover:text-white/90 hover:underline"
-                    onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
-                  >
-                    {t('common.wallet.showMore')}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 

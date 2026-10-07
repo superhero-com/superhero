@@ -12,6 +12,7 @@ import PostLanguageEmptyState from '../components/PostLanguageEmptyState';
 import PostLanguageErrorState from '../components/PostLanguageErrorState';
 import WebSocketClient from '../../../libs/WebSocketClient';
 import AeButton from '../../../components/AeButton';
+import Spinner from '../../../components/Spinner';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
@@ -850,6 +851,9 @@ const FeedList = ({
   const hasMoreFeedItems = sortBy === 'hot'
     ? hasMorePopular || hasMoreLatestForHot
     : hasMoreLatest || (!languageParam && hasMoreActivities);
+  const fetchingMoreFeedItems = sortBy === 'hot'
+    ? fetchingMorePopular || fetchingMoreLatestForHot
+    : fetchingMoreLatest || fetchingMoreActivities;
 
   // An empty response is distinct from a pending or failed request, including
   // Hot's latest-post backfill. Keep the language control available in every state.
@@ -1310,15 +1314,21 @@ const FeedList = ({
       {/* Load more button (desktop) */}
       {!initialLoading && !feedError && hasMoreFeedItems && (
         <>
+          {/* The desktop load more button shows its own spinner */}
+          {fetchingMoreFeedItems && (
+            <div
+              className={`flex justify-center py-4${showLoadMore ? ' md:hidden' : ''}`}
+              role="status"
+              aria-label={t('emptyState.loadingPosts')}
+            >
+              <Spinner className="w-6 h-6" />
+            </div>
+          )}
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
             <div className="hidden md:block p-4 md:p-6 text-center">
               <AeButton
-                loading={
-                  sortBy === 'hot'
-                    ? (fetchingMorePopular || fetchingMoreLatestForHot)
-                    : (fetchingMoreLatest || fetchingMoreActivities)
-                }
+                loading={fetchingMoreFeedItems}
                 onClick={async () => {
                   if (sortBy === 'hot') {
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];

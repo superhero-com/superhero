@@ -28,23 +28,6 @@ export interface SwapState {
   searchOut: string;
 }
 
-export interface EthxitState {
-  ethxitIn: string;
-  ethxitOut: string;
-  ethxitQuoting: boolean;
-  ethxitSwapping: boolean;
-  ethxitError: string | null;
-}
-
-export interface EthBridgeState {
-  ethBridgeIn: string;
-  ethBridgeOutAe: string;
-  ethBridgeQuoting: boolean;
-  ethBridgeProcessing: boolean;
-  ethBridgeError: string | null;
-  ethBridgeStep: 'idle' | 'bridging' | 'waiting' | 'swapping' | 'done';
-}
-
 export interface WrapState {
   wrapAmount: string;
   wrapBalances: WrapBalances;

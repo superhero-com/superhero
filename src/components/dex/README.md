@@ -16,9 +16,7 @@ src/components/dex/
 │   ├── SwapRouteInfo.tsx   # Route display and reserves
 │   └── SwapConfirmation.tsx # Confirmation modal
 ├── widgets/                 # Specialized functionality
-│   ├── WrapUnwrapWidget.tsx # AE ↔ WAE conversion
-│   ├── EthxitWidget.tsx    # aeETH → AE conversion
-│   └── EthBridgeWidget.tsx # ETH → AE bridge + swap
+│   └── WrapUnwrapWidget.tsx # AE ↔ WAE conversion
 ├── supporting/              # Supporting components
 │   └── RecentActivity.tsx  # Transaction history
 ├── hooks/                   # Custom hooks
@@ -71,16 +69,6 @@ src/components/dex/
 - AE ↔ WAE conversion interface
 - Balance display and amount input
 - Wrap/unwrap functionality
-
-#### `EthxitWidget.tsx`
-- aeETH → AE conversion
-- Automated quoting
-- Bridge information and hints
-
-#### `EthBridgeWidget.tsx`
-- ETH → AE bridge + swap flow
-- Multi-step process handling
-- Status tracking and error handling
 
 ### Supporting Components
 

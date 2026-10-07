@@ -10,7 +10,6 @@ This directory contains the refactored DEX components, breaking down the origina
 src/components/dex/
 ├── core/                    # Core swap functionality
 │   ├── SwapForm.tsx        # Main swap interface
-│   ├── TokenInput.tsx      # Token input with amount
 │   ├── TokenSelector.tsx   # Token selection dropdown
 │   ├── SwapSettings.tsx    # Slippage and deadline settings
 │   ├── SwapRouteInfo.tsx   # Route display and reserves
@@ -37,11 +36,6 @@ src/components/dex/
 - Main swap interface orchestrating all swap functionality
 - Manages token selection, amounts, and swap execution
 - Integrates with all hooks and sub-components
-
-#### `TokenInput.tsx`
-- Combines token selector and amount input
-- Handles amount validation and formatting
-- Displays token balances
 
 #### `TokenSelector.tsx`
 - Enhanced token selection with search functionality

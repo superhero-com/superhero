@@ -1350,17 +1350,8 @@
       "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
     },
     "noLiquidity": {
-      "insufficientTitle": "Insufficient Liquidity",
-      "insufficientDescription": "The requested amount exceeds the available liquidity in the pool. Maximum available:",
       "reduceAmount": "• Reduce your input amount to {{amount}} {{symbol}} or less",
-      "noLiquidityTitle": "No Liquidity Available",
-      "noLiquidityForPair": "No liquidity found for the",
-      "pairCannotComplete": "pair. This swap cannot be completed at this time.",
-      "tryDifferentPair": "• Try a different token pair",
       "addLiquidity": "Add Liquidity"
-    },
-    "tokenInput": {
-      "balanceLabel": "Balance:"
     },
     "bridge": {
       "title": "Bridge ETH ⇆ AE",
@@ -1426,8 +1417,6 @@
       "title": "DEX Settings",
       "slippageTolerance": "Slippage Tolerance",
       "transactionDeadline": "Transaction Deadline",
-      "slippageHint": "Your transaction will revert if the price changes unfavorably by more than this percentage.",
-      "deadlineHint": "Your transaction will be cancelled if it's pending for more than this long.",
       "cancel": "Cancel",
       "save": "Save"
     },
@@ -2440,11 +2429,6 @@
     }
   },
   "trending": {
-    "newBadge": "NEW",
-    "assetInput": {
-      "balanceLabel": "Balance:",
-      "max": "Max"
-    },
     "tradeTab": {
       "today": "Today",
       "7days": "7 Days",

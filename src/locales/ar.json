@@ -1344,8 +1344,6 @@
       "title": "إعدادات DEX",
       "slippageTolerance": "نسبة الانزلاق المسموحة",
       "transactionDeadline": "مهلة المعاملة",
-      "slippageHint": "ستُلغى معاملتك إذا تغيّر السعر بشكل غير ملائم بأكثر من هذه النسبة المئوية.",
-      "deadlineHint": "ستُلغى معاملتك إذا ظلت معلّقة لفترة أطول من هذه المدة.",
       "cancel": "إلغاء",
       "save": "حفظ"
     },
@@ -1532,17 +1530,8 @@
       "failed": "تعذر تحميل تفاصيل المجمع"
     },
     "noLiquidity": {
-      "insufficientTitle": "سيولة غير كافية",
-      "insufficientDescription": "المبلغ المطلوب يتجاوز السيولة المتاحة في التجمّع. الحد الأقصى المتاح:",
       "reduceAmount": "• قلّل مبلغ إدخالك إلى {{amount}} {{symbol}} أو أقل",
-      "noLiquidityTitle": "لا توجد سيولة متاحة",
-      "noLiquidityForPair": "لم يُعثر على سيولة لزوج",
-      "pairCannotComplete": "لا يمكن إتمام هذا التبديل في الوقت الحالي.",
-      "tryDifferentPair": "• جرّب زوج رموز مختلف",
       "addLiquidity": "إضافة سيولة"
-    },
-    "tokenInput": {
-      "balanceLabel": "الرصيد:"
     },
     "liquidityPositionCard": {
       "lpTokens": "رموز LP",
@@ -2781,11 +2770,6 @@
       "holdersOnly": "المالكون فقط",
       "allPosts": "جميع المنشورات"
     },
-    "assetInput": {
-      "balanceLabel": "الرصيد:",
-      "max": "الحد الأقصى"
-    },
-    "newBadge": "جديد",
     "performanceTimeframe": {
       "closeMenu": "إغلاق قائمة الإطار الزمني"
     },

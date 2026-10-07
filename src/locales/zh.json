@@ -1344,8 +1344,6 @@
       "title": "DEX 设置",
       "slippageTolerance": "滑点容差",
       "transactionDeadline": "交易截止时间",
-      "slippageHint": "如果价格的不利变化超过此百分比，你的交易将被回滚。",
-      "deadlineHint": "如果交易待处理时间超过此时长，交易将被取消。",
       "cancel": "取消",
       "save": "保存"
     },
@@ -1532,17 +1530,8 @@
       "failed": "无法加载资金池详情"
     },
     "noLiquidity": {
-      "insufficientTitle": "流动性不足",
-      "insufficientDescription": "请求的数量超出了资金池中的可用流动性。最大可用：",
       "reduceAmount": "• 将你的输入数量减少至 {{amount}} {{symbol}} 或更少",
-      "noLiquidityTitle": "无可用流动性",
-      "noLiquidityForPair": "未找到以下交易对的流动性：",
-      "pairCannotComplete": "对。此兑换目前无法完成。",
-      "tryDifferentPair": "• 尝试不同的代币对",
       "addLiquidity": "添加流动性"
-    },
-    "tokenInput": {
-      "balanceLabel": "余额："
     },
     "liquidityPositionCard": {
       "lpTokens": "LP 代币",
@@ -2777,11 +2766,6 @@
       "holdersOnly": "仅限持有者",
       "allPosts": "所有帖子"
     },
-    "assetInput": {
-      "balanceLabel": "余额：",
-      "max": "最大"
-    },
-    "newBadge": "新",
     "performanceTimeframe": {
       "closeMenu": "关闭时间范围菜单"
     },

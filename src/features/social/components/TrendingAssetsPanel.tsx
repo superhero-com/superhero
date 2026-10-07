@@ -8,13 +8,19 @@ import {
 } from 'lucide-react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
-import { hasSparseHistory } from '@/features/trending/components/ExploreMarketValues';
 import {
   formatAmount, holderCount, marketCap, tokenPrice,
 } from '@/features/trending/components/TokenRanking/ranking';
 import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import { tokenCollectionLabel } from '@/utils/collection';
 import './TrendingAssetsPanel.css';
+
+// Fewer than three trades cannot draw a meaningful line. When the trade count is
+// unknown we keep the chart rather than guess.
+const MIN_HISTORY_POINTS = 3;
+const hasSparseHistory = (token: Pick<TokenDto, 'tx_count'>) => (
+  typeof token.tx_count === 'number' && token.tx_count < MIN_HISTORY_POINTS
+);
 
 const TrendingAssetCard = memo(({ token }: { token: TokenDto }) => {
   const { t, i18n } = useTranslation('social');

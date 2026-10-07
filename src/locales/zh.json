@@ -2363,18 +2363,6 @@
     }
   },
   "trending": {
-    "market": {
-      "layout": "市场布局",
-      "table": "表格",
-      "cards": "卡片",
-      "history": "价格走势",
-      "noHistory": "暂无价格历史",
-      "supply": "供应量",
-      "rank": "排名",
-      "details": "代币详情",
-      "capShort": "市值",
-      "markets": "代币市场"
-    },
     "noCreatedTokens": "无已创建代币",
     "noCreatedTokensDescription": "此用户尚未创建任何 Trendminer 代币。",
     "success": "成功",
@@ -2472,9 +2460,6 @@
       }
     },
     "tokenList": {
-      "sortBy": "排序方式",
-      "clearSearch": "清除搜索",
-      "exploreSections": "探索分类",
       "tabTokens": "代币",
       "tabUsers": "用户",
       "tabPosts": "帖子",
@@ -2917,25 +2902,7 @@
       "done": "全部完成！"
     },
     "users": {
-      "list": "列表",
-      "cards": "卡片",
-      "layout": "用户显示方式",
-      "title": "顶尖交易者",
-      "subtitle": "按 7 天盈亏排名 · USD",
-      "leaderboard": "查看排行榜",
-      "trader": "交易者",
-      "pnl": "盈亏 · 7天",
-      "roi": "收益率 · 7天",
-      "aum": "资产规模",
-      "rank": "排名 {{rank}}",
-      "profile": "查看个人资料: {{name}}",
-      "empty": "暂无交易者",
-      "emptyCopy": "排行榜可用时，将显示交易活动。",
-      "error": "无法加载交易者",
-      "errorCopy": "请重试以查看最新排名。",
-      "retry": "重试",
-      "loading": "正在加载交易者",
-      "refreshError": "无法刷新交易者"
+      "title": "顶尖交易者"
     },
     "overview": {
       "back": "返回探索",

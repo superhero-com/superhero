@@ -29,6 +29,10 @@ export interface DataTableProps<T> {
   initialParams?: DataTableParams;
   className?: string;
   emptyMessage?: string;
+  // Replaces the whole table, renderFrame included, so an empty list shows no column header.
+  emptyComponent?: React.ReactNode;
+  // Wraps the table in every state except emptyComponent, e.g. with a column header.
+  renderFrame?: (content: React.ReactNode) => React.ReactNode;
   loadingComponent?: React.ReactNode;
   fetchingOverlayComponent?: React.ReactNode;
   errorComponent?: (error: Error) => React.ReactNode;
@@ -42,6 +46,8 @@ export const DataTable = <T, >({
   initialParams = {},
   className = '',
   emptyMessage,
+  emptyComponent,
+  renderFrame,
   loadingComponent,
   fetchingOverlayComponent,
   errorComponent,
@@ -92,8 +98,10 @@ export const DataTable = <T, >({
     }
   }, [data?.meta?.currentPage, error, isFetching, params.page]);
 
+  const frame = (content: React.ReactNode) => (renderFrame ? renderFrame(content) : content);
+
   if (isLoading && !data) {
-    return (
+    return frame(
       <div className={`flex items-center justify-center p-8 ${className}`}>
         {loadingComponent || (
           <div className="flex items-center space-x-2">
@@ -101,12 +109,12 @@ export const DataTable = <T, >({
             <span className="text-sm text-muted-foreground">{t('dataTable.loading')}</span>
           </div>
         )}
-      </div>
+      </div>,
     );
   }
 
   if (error) {
-    return (
+    return frame(
       <div className={`p-8 text-center ${className}`}>
         {errorComponent ? (
           errorComponent(error as Error)
@@ -125,21 +133,22 @@ export const DataTable = <T, >({
             </button>
           </div>
         )}
-      </div>
+      </div>,
     );
   }
 
   if (!data || !data.items || data.items.length === 0) {
-    return (
+    if (emptyComponent) return emptyComponent;
+    return frame(
       <div className={`p-8 text-center ${className}`}>
         <div className="text-muted-foreground">
           <p className="font-medium">{emptyMessage ?? t('dataTable.noDataFound')}</p>
         </div>
-      </div>
+      </div>,
     );
   }
 
-  return (
+  return frame(
     <div className={`space-y-2 ${className}`}>
       {/* Data Table Content */}
       <div className="relative">
@@ -178,6 +187,6 @@ export const DataTable = <T, >({
           isLoading={isTableLoading}
         />
       )}
-    </div>
+    </div>,
   );
 };

@@ -26,7 +26,7 @@ normal configured API in deployed builds, and loopback port 3334 in development.
 Set `VITE_NETWORK=ae_uat` for the current testnet contract. The API separately needs
 `ENABLE_SHORTS=true`. Never put IPFS, moderation or streaming service keys in these variables.
 
-Docker accepts the same three build arguments. CI reads `ENABLE_SHORTS` from its
+Docker accepts `ENABLE_SHORTS`, `VITE_NETWORK`, `VITE_SHORTS_API_URL` and `VITE_SHORTS_STREAM_URL` as build arguments. CI reads `ENABLE_SHORTS` from its
 repository variable (default false), with `DEV_ENABLE_SHORTS` for preview builds.
 For the Express server, also supply `VITE_SHORTS_API_URL` and `VITE_SHORTS_STREAM_URL`
 at runtime so the CSP allows those origins. Other hosting providers must add their

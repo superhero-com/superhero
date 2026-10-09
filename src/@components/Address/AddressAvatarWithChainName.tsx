@@ -50,6 +50,8 @@ export const AddressAvatarWithChainName = memo(({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const resolvedShowBalanceInHover = showBalanceInHover ?? (variant === 'feed' ? showBalance : true);
+  // Apart from balances the card only repeats the inline avatar and name.
+  const hoverCardEnabled = isHoverEnabled && resolvedShowBalanceInHover;
 
   // Hooks must be called unconditionally before any early returns
   // Use empty string as fallback to ensure hooks are always called with a valid value
@@ -83,7 +85,7 @@ export const AddressAvatarWithChainName = memo(({
   // Show card after 300ms delay when hovering
   useEffect(() => {
     let timeoutId: number | undefined;
-    if (hover && isHoverEnabled) {
+    if (hover && hoverCardEnabled) {
       updatePosition();
       timeoutId = window.setTimeout(() => setVisible(true), 300);
     } else {
@@ -92,7 +94,7 @@ export const AddressAvatarWithChainName = memo(({
     return () => {
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [hover, isHoverEnabled]);
+  }, [hover, hoverCardEnabled]);
 
   // Keep the ref updated with the latest loadAccountData function
   useEffect(() => {
@@ -102,13 +104,10 @@ export const AddressAvatarWithChainName = memo(({
   // Start loading data immediately when hover starts (not when card becomes visible)
   // This way data is loading/loaded by the time the 300ms delay expires
   useEffect(() => {
-    if (
-      address
-      && (showBalance || (hover && isHoverEnabled && resolvedShowBalanceInHover))
-    ) {
+    if (address && (showBalance || (hover && hoverCardEnabled))) {
       loadAccountDataRef.current();
     }
-  }, [address, isHoverEnabled, resolvedShowBalanceInHover, showBalance, hover]);
+  }, [address, hoverCardEnabled, showBalance, hover]);
 
   // Handle click outside to close card
   useEffect(() => {
@@ -291,12 +290,10 @@ export const AddressAvatarWithChainName = memo(({
               </div>
               <div className="min-w-0 flex-1">
                 {/* AE Balance */}
-                {resolvedShowBalanceInHover && (
                 <div className="text-xs text-muted-foreground mb-2">
                   <span className="font-semibold">{t('common.account.aeBalanceLabel')}</span>
                   <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : t('common.dataTable.loading')}</span>
                 </div>
-                )}
 
                 {/* Top 3 Token Holdings */}
                 {aex9Balances.length > 0 && (

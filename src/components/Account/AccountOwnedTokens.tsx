@@ -42,7 +42,7 @@ const AccountOwnedTokens = ({
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-4">
       <DataTable
         renderFrame={(content) => (
           <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">

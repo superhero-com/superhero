@@ -15,6 +15,13 @@ import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import { tokenCollectionLabel } from '@/utils/collection';
 import './TrendingAssetsPanel.css';
 
+// Fewer than three trades cannot draw a meaningful line. When the trade count is
+// unknown we keep the chart rather than guess.
+const MIN_HISTORY_POINTS = 3;
+const hasSparseHistory = (token: Pick<TokenDto, 'tx_count'>) => (
+  typeof token.tx_count === 'number' && token.tx_count < MIN_HISTORY_POINTS
+);
+
 const TrendingAssetCard = memo(({ token }: { token: TokenDto }) => {
   const { t, i18n } = useTranslation('social');
   const highlight = usePointerHighlight();
@@ -74,11 +81,15 @@ const TrendingAssetCard = memo(({ token }: { token: TokenDto }) => {
           </span>
         </div>
       </div>
-      <div className="feed-asset__chart" onErrorCapture={() => setFailedChart(address)}>
-        {hasHistory ? (
-          <TokenLineChart saleAddress={address} height={32} width={240} interval="30d" />
-        ) : <span>{t('trendingAssetCards.noHistory')}</span>}
-      </div>
+      {/* With only one or two trades the sparkline is a flat line or a lone bar,
+          so the card collapses and the % change above carries the signal. */}
+      {!hasSparseHistory(token) && (
+        <div className="feed-asset__chart" onErrorCapture={() => setFailedChart(address)}>
+          {hasHistory ? (
+            <TokenLineChart saleAddress={address} height={32} width={240} interval="30d" />
+          ) : <span>{t('trendingAssetCards.noHistory')}</span>}
+        </div>
+      )}
       <dl className="feed-asset__stats">
         <div>
           <dt>{t('trendingAssetCards.marketCap')}</dt>

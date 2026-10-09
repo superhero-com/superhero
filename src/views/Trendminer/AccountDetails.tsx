@@ -1,9 +1,8 @@
 /* eslint-disable
-  @typescript-eslint/no-unused-vars,
   react/function-component-definition,
   no-use-before-define
 */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { SuperheroApi } from '../../api/backend';

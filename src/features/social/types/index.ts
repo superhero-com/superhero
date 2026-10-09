@@ -8,28 +8,3 @@ export interface PostApiResponse {
     totalItems: number;
   };
 }
-
-export interface FeedItemProps {
-  item: PostDto;
-  commentCount: number;
-  chainName?: string;
-  onItemClick: (postId: string) => void;
-}
-
-export interface SortControlsProps {
-  sortBy: string;
-  onSortChange: (sortBy: string) => void;
-}
-
-export interface EmptyStateProps {
-  type: 'error' | 'empty' | 'loading';
-  error?: Error | null;
-  hasSearch?: boolean;
-  onRetry?: () => void;
-}
-
-export interface CommentFormProps {
-  postId: string;
-  onCommentAdded?: () => void;
-  placeholder?: string;
-}

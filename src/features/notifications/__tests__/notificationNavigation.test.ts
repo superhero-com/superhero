@@ -58,6 +58,11 @@ describe('getNotificationLink', () => {
     expect(getNotificationLink(item('room-membership', {}))).toBeUndefined();
   });
 
+  it('routes a new follower to their profile', () => {
+    expect(getNotificationLink(item('new-follow', { follower: 'ak_fan' }))).toBe('/users/ak_fan');
+    expect(getNotificationLink(item('new-follow', {}))).toBeUndefined();
+  });
+
   it('leaves unknown types non-navigable', () => {
     expect(getNotificationLink(item('announcement', { foo: 'bar' }))).toBeUndefined();
   });

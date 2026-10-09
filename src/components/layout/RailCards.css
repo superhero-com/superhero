@@ -58,7 +58,7 @@
 .ae-price-card .rail-badge--ae { width: 38px; height: 40px; border-radius: 12px; }
 .ae-price-card .rail-badge img { width: 28px; height: 16px; }
 .ae-price-card__copy { flex: 1; min-width: 0; }
-.ae-price-card__label { font-size: 11px; line-height: 14px; font-weight: 500; color: var(--rail-muted); margin-bottom: 2px; }
+.ae-price-card__label { font-size: 12px; line-height: 14px; font-weight: 500; color: var(--rail-muted); margin-bottom: 2px; }
 .ae-price-card__value {
   display: block;
   font-size: 24px;
@@ -78,14 +78,11 @@
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid light-dark(#dce5f1, #ffffff0d);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
   color: var(--rail-muted);
   font-variant-numeric: tabular-nums;
 }
-.ae-price-card__status { display: inline-flex; align-items: center; gap: 6px; color: light-dark(#237966, #72d7b4); }
-.ae-price-card__status--offline { color: light-dark(#a0375d, #ef94b0); }
-.ae-price-card__dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: currentColor; }
 .ae-price-card__block { display: flex; flex-wrap: wrap; gap: 5px; }
 .ae-price-card__block strong { font-weight: 500; color: var(--rail-text); }
 

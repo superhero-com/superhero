@@ -86,3 +86,10 @@
 .token-ranking-refresh button{display:inline-flex;align-items:center;min-height:44px;padding:4px 8px;color:light-dark(#2458a1,#b3cff5);background:none}
 .token-ranking button:disabled{opacity:.5;cursor:default}
 .token-ranking button:not(:disabled){cursor:pointer}
+
+/* Post-refresh fixes: no bordered row inside the bordered card, readable labels. */
+.token-ranking{--token-ranking-muted:light-dark(#4d596b,#b3bdcc)}
+.token-ranking-row.is-current{border-color:transparent}
+.token-ranking-metric dt,.token-ranking-summary span,.token-ranking-heading p,.token-ranking-position{font-size:12px;line-height:16px}
+.token-ranking-metric dt span{font-size:12px}
+.token-ranking-current{font-size:11px}

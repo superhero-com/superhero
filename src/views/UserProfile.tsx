@@ -2,7 +2,6 @@
   import/no-named-as-default,
   import/order,
   react/function-component-definition,
-  @typescript-eslint/no-unused-vars,
   react/button-has-type,
   max-len
 */
@@ -68,7 +67,7 @@ export default function UserProfile({
   );
   const effectiveAddress = isChainName && resolvedAddress ? resolvedAddress : (address as string);
   const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
-  const { aex9Balances, loadAccountData } = useAccountBalances(effectiveAddress);
+  const { aex9Balances } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
   const { activeAccount } = useAeSdk();
@@ -90,7 +89,7 @@ export default function UserProfile({
   const isOwnProfile = !!activeAccount && activeAccount === effectiveAddress;
   const showWalletActions = walletActionsEnabled && !!activeAccount && !!effectiveAddress;
 
-  const { data, refetch: refetchPosts } = useQuery({
+  const { data } = useQuery({
     queryKey: ['PostsService.listAll', address],
     queryFn: () => PostsService.listAll({
       limit: 100,

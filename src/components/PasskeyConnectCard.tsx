@@ -6,10 +6,13 @@
  * everywhere else. `usePasskeyConnect` owns why.
  */
 
-import React, { Suspense, useEffect, useRef } from 'react';
+import React, {
+  Suspense, useEffect, useRef, useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '@/hooks';
 import { hasDeviceVault, usePasskeyConnect, type DeviceWallet } from '@/hooks/usePasskeyConnect';
+import type { OnboardingEntry } from '@/features/wallet/components/WalletOnboarding';
 
 // One import promise for both the lazy element and the warm-up below.
 const loadWalletOnboarding = () => import('@/features/wallet/components/WalletOnboarding');
@@ -31,6 +34,7 @@ const PasskeyIcon = () => (
 
 type CardCopy = {
   available: boolean;
+  phraseOnly: boolean;
   state: string;
   errorMsg: string | null;
   deviceWallet: DeviceWallet;
@@ -38,7 +42,7 @@ type CardCopy = {
 };
 
 function getPasskeySubtitle({
-  available, state, errorMsg, deviceWallet, t,
+  available, phraseOnly, state, errorMsg, deviceWallet, t,
 }: CardCopy): string {
   if (state === 'unlocking') {
     return t('common.modals.onboarding.passkeyUnlocking', { defaultValue: 'Waiting for biometric…' });
@@ -62,6 +66,9 @@ function getPasskeySubtitle({
   if (deviceWallet === 'other-factors') {
     return t('common.modals.onboarding.deviceWalletDesc', { defaultValue: 'Continue with the wallet stored on this device' });
   }
+  if (phraseOnly) {
+    return t('common.modals.onboarding.phraseCreateDesc', { defaultValue: 'Passkeys aren’t available here. Create a wallet with a 12-word recovery phrase.' });
+  }
   if (!available) {
     return t('common.modals.onboarding.passkeyUnavailable', { defaultValue: 'Not available on this device/browser' });
   }
@@ -81,6 +88,7 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
   // in-page signer and its signatures are made by the key this device holds.
   const {
     available,
+    availabilityChecked,
     state,
     errorMsg,
     needsOnboarding,
@@ -115,6 +123,11 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
   }, [connectedAddress, addStaticAccount, onConnected]);
 
   const hasDeviceWallet = hasDeviceVault(deviceWallet);
+  // A device that can't create a passkey and holds no wallet yet: the card's
+  // only way to a new wallet is a recovery phrase. Disabling it instead left a
+  // brand-new web user with nothing but "connect a wallet you already have".
+  const phraseOnly = availabilityChecked && !available && !hasDeviceWallet;
+  const [entry, setEntry] = useState<OnboardingEntry>('passkey');
 
   // ── Inline wallet: create one, or open the one already here ──────────────────
   if (needsOnboarding) {
@@ -130,9 +143,9 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
               : t('common.modals.onboarding.passkeySetupTitle', { defaultValue: 'Set up your Superhero Wallet' })}
           </p>
           <p className="text-xs text-white/60 mb-4">
-            {hasDeviceWallet
-              ? t('common.modals.onboarding.deviceWalletSetupDesc', { defaultValue: 'This device already has your wallet — pick up where you left off.' })
-              : t('common.modals.onboarding.passkeySetupDesc', { defaultValue: 'Create a wallet secured by your device biometrics — no password needed.' })}
+            {hasDeviceWallet && t('common.modals.onboarding.deviceWalletSetupDesc', { defaultValue: 'This device already has your wallet — pick up where you left off.' })}
+            {!hasDeviceWallet && entry === 'phrase' && t('common.modals.onboarding.phraseSetupDesc', { defaultValue: 'Create a wallet with a 12-word recovery phrase that you write down and keep.' })}
+            {!hasDeviceWallet && entry !== 'phrase' && t('common.modals.onboarding.passkeySetupDesc', { defaultValue: 'Create a wallet secured by your device biometrics — no password needed.' })}
           </p>
           <Suspense
             fallback={(
@@ -151,11 +164,12 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
               </div>
             )}
           >
-            {/* `entry="passkey"`: the tap on this card WAS the choice, so the
-                flow runs the ceremony instead of asking again on a second
-                screen. Back on its first screen returns to this modal. */}
+            {/* The tap on this card WAS the choice, so the flow runs the passkey
+                ceremony, or opens on a new phrase where there is no passkey,
+                instead of asking again on a second screen. Back on its first
+                screen returns to this modal. */}
             <WalletOnboarding
-              entry="passkey"
+              entry={entry}
               onCancel={resetOnboarding}
               onComplete={(_record, address) => {
                 resetOnboarding();
@@ -173,25 +187,35 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
 
   // ── Inline wallet option card ────────────────────────────────────────────────
   const subtitle = getPasskeySubtitle({
-    available, state, errorMsg, deviceWallet, t,
+    available, phraseOnly, state, errorMsg, deviceWallet, t,
   });
   const subtitleColor = state === 'error' ? '#fbbf24' : 'rgba(255,255,255,0.5)';
-  // A device wallet is reachable without a platform authenticator — its
-  // passphrase opens it on the `exists` screen — so `available` may only gate
-  // the passkey ceremony, never the card.
-  const actionable = available || hasDeviceWallet;
-  // Once the ceremony has failed, the tap must go somewhere it can still
-  // succeed: the same handoff the no-passkey vault takes.
-  const onCardClick = state === 'error' && hasDeviceWallet ? openDeviceWallet : trigger;
-  const cardBg = actionable
-    ? 'bg-gradient-to-r from-purple-600/15 to-blue-600/10 border border-purple-500/30 hover:from-purple-600/25 hover:to-blue-600/20 hover:border-purple-500/50 cursor-pointer'
-    : 'bg-white/[0.03] border border-white/10 opacity-50 cursor-not-allowed';
+  // `available` only gates the passkey ceremony, never the card: a device
+  // wallet opens with its passphrase on the `exists` screen, and with no wallet
+  // here the card creates one from a recovery phrase. Once the ceremony has
+  // failed, the tap must go somewhere it can still succeed: the same handoff
+  // the no-passkey vault takes.
+  const onCardClick = () => {
+    if (phraseOnly) {
+      setEntry('phrase');
+      openDeviceWallet();
+      return;
+    }
+    setEntry('passkey');
+    if (state === 'error' && hasDeviceWallet) openDeviceWallet();
+    else trigger();
+  };
+  const cardBg = 'bg-gradient-to-r from-purple-600/15 to-blue-600/10 border border-purple-500/30 hover:from-purple-600/25 hover:to-blue-600/20 hover:border-purple-500/50 cursor-pointer';
+
+  let title = t('common.modals.onboarding.passkeyTitle', { defaultValue: 'Passkey' });
+  if (phraseOnly) title = t('common.modals.onboarding.phraseCreateTitle', { defaultValue: 'Create a wallet' });
+  else if (deviceWallet === 'other-factors') title = t('common.modals.onboarding.deviceWalletCardTitle', { defaultValue: 'This device’s wallet' });
 
   return (
     <button
       type="button"
-      onClick={actionable ? onCardClick : undefined}
-      disabled={loading || !actionable}
+      onClick={onCardClick}
+      disabled={loading || !availabilityChecked}
       className={`relative flex items-center gap-4 w-full rounded-2xl p-4 text-left border-0 transition-all duration-200 ${cardBg}`}
       style={{ outline: 'none' }}
     >
@@ -204,12 +228,8 @@ const PasskeyConnectCard = ({ onConnected }: PasskeyConnectCardProps) => {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-white text-sm">
-            {deviceWallet === 'other-factors'
-              ? t('common.modals.onboarding.deviceWalletCardTitle', { defaultValue: 'This device’s wallet' })
-              : t('common.modals.onboarding.passkeyTitle', { defaultValue: 'Passkey' })}
-          </span>
-          {actionable && state !== 'error' && (
+          <span className="font-bold text-white text-sm">{title}</span>
+          {!phraseOnly && state !== 'error' && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
               style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa' }}

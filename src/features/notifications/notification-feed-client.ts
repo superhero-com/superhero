@@ -919,6 +919,20 @@ export class NotificationFeedClient {
     this.swMessageHandler = null;
   }
 
+  /**
+   * Whether the server can do browser push at all (it publishes a VAPID key).
+   * Lets the UI hide the "enable browser push" prompt instead of offering a
+   * button that can only fail. A network error counts as configured: hiding the
+   * prompt because of a blip would be worse than one failed click.
+   */
+  async isPushConfigured(): Promise<boolean> {
+    try {
+      return !!(await this.getVapidPublicKey());
+    } catch {
+      return true;
+    }
+  }
+
   /** Unsubscribe locally and tell the server to drop the endpoint. */
   async disablePush(): Promise<void> {
     if (!isPushSupported()) return;

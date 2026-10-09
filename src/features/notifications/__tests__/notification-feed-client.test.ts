@@ -1093,6 +1093,13 @@ describe('web push', () => {
   const subCalls = (backend: ReturnType<typeof makeBackend>) => backend.fetchMock.mock.calls
     .filter((c) => String(c[0]).endsWith('/web-push/subscription'));
 
+  it('isPushConfigured follows whether the server publishes a VAPID key', async () => {
+    const off = makeClient({ backend: makeBackend({ vapidKey: null }) }).client;
+    await expect(off.isPushConfigured()).resolves.toBe(false);
+    const on = makeClient({ backend: makeBackend({ vapidKey: 'AQID' }) }).client;
+    await expect(on.isPushConfigured()).resolves.toBe(true);
+  });
+
   it('enablePush returns "unconfigured" when the server has no VAPID key', async () => {
     stubPushEnv('granted');
     const { client } = makeClient({ backend: makeBackend({ vapidKey: null }) });

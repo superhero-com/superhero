@@ -57,7 +57,7 @@ describe('Token overview', () => {
     expect(screen.getByText('Rank #2')).toBeInTheDocument();
     expect(document.querySelector('.token-overview-fiat')).toHaveTextContent('€');
     expect(document.querySelector('.token-overview-fiat')).toHaveTextContent('EUR');
-    expect(document.querySelector('.token-overview-price__value')).toHaveTextContent('2040');
+    expect(document.querySelector('.token-overview-price__value')).toHaveTextContent('0.000000204AE');
     fireEvent.click(screen.getByRole('button', { name: 'Share SUPERHERO' }));
     expect(onShare).toHaveBeenCalledOnce();
   });

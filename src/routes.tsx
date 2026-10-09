@@ -46,7 +46,6 @@ const TxQueue = lazy(() => import('./views/TxQueue'));
 const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
 const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
 const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
-// const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
 const Pool = lazy(() => import('./features/dex/views/Pool'));
 const DexExploreTokens = lazy(
   () => import('./features/dex/views/DexExploreTokens'),
@@ -57,7 +56,6 @@ const DexExplorePools = lazy(
 const DexExploreTransactions = lazy(
   () => import('./features/dex/views/DexExploreTransactions'),
 );
-// const Bridge = lazy(() => import('./features/ae-eth-bridge/views/Bridge'));
 
 // Legacy DEX components (for backward compatibility)
 const Explore = lazy(() => import('./views/Explore'));
@@ -216,26 +214,9 @@ export const routes: RouteObject[] = [
       </DexLayout>
     ),
   },
-  {
-    path: '/defi/buy-ae-with-eth',
-    // Re-enable: uncomment DexBridge lazy import above, then swap `element` for the block below.
-    element: <Navigate to="/defi/swap" replace />,
-    // element: (
-    //   <DexLayout>
-    //     <DexBridge />
-    //   </DexLayout>
-    // ),
-  },
-  {
-    path: '/defi/bridge',
-    // Re-enable: uncomment Bridge lazy import above, then swap `element` for the block below.
-    element: <Navigate to="/defi/swap" replace />,
-    // element: (
-    //   <DexLayout>
-    //     <Bridge />
-    //   </DexLayout>
-    // ),
-  },
+  // The ETH bridge was removed; keep old links landing somewhere useful.
+  { path: '/defi/buy-ae-with-eth', element: <Navigate to="/defi/swap" replace /> },
+  { path: '/defi/bridge', element: <Navigate to="/defi/swap" replace /> },
   {
     path: '/defi/pool',
     element: (

@@ -109,6 +109,11 @@ function resolveNotificationPath(data) {
       const sale = str(data.saleAddress);
       return sale ? `/trends/tokens/${encodeURIComponent(sale)}` : '/';
     }
+    // Mirrors getNotificationLink: open the follower's profile.
+    case 'new-follow': {
+      const follower = str(data.follower);
+      return follower ? `/users/${encodeURIComponent(follower)}` : '/';
+    }
     default:
       return '/';
   }

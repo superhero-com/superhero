@@ -30,20 +30,6 @@ This feature contains all trending (wordcraft) related logic and components that
 - Insufficient balance warnings
 - Focus management for input fields
 
-### AssetInput
-- **Location**: `src/features/trending/components/AssetInput.tsx`
-- **Migrated from**: `external/wordcraft/src/components/Forms/AssetInput.vue`
-- **Description**: Individual asset input field with balance and currency features
-
-#### Features:
-- Decimal number input with validation
-- Token symbol display
-- Balance display (AE or token balance)
-- Max button for quick balance input
-- Error message display
-- Fiat price display for AE
-- Focus and ref management
-
 ## Hooks
 
 ### useTokenTrade

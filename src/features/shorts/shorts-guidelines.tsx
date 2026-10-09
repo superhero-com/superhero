@@ -1,21 +1,21 @@
 import { ShieldCheck } from 'lucide-react';
 import type { Short } from './types';
 
-export const hostingStatus = (video: Short): NonNullable<Short['hostingStatus']> => {
-  if (video.hostingStatus) return video.hostingStatus;
-  if (video.status === 'active' || video.status === 'expired' || video.status === 'withdrawn') return video.status;
-  return 'unfunded';
+export const publicationStatus = (video: Short): NonNullable<Short['publicationStatus']> => {
+  if (video.publicationStatus) return video.publicationStatus;
+  if (video.status === 'withdrawn') return 'withdrawn';
+  return video.status === 'active' ? 'published' : 'draft';
 };
 export const guidelinesStatus = (video: Short): NonNullable<Short['guidelines']>['status'] => {
   if (video.guidelines) return video.guidelines.status;
   if (video.moderation === 'rejected') return 'ineligible';
-  if (['ready', 'active', 'expired'].includes(video.status)) return 'eligible';
+  if (['ready', 'active'].includes(video.status)) return 'eligible';
   return 'analyzing';
 };
 const messages = {
   analyzing: ['Analyzing your video', 'We’re checking your video against our community guidelines for the Superhero feed.'],
   reviewing: ['Under review', 'Our team is reviewing your video before it can appear in the Superhero feed.'],
-  eligible: ['Eligible for the feed', 'Your video meets our community guidelines. It can appear in the feed while hosting is active.'],
+  eligible: ['Eligible for the feed', 'Your video meets our community guidelines. It can appear in the feed once published.'],
   ineligible: ['Not eligible for the feed', 'This video won’t appear in the Superhero feed. You can request another review below.'],
   unavailable: ['Not in feed', ''],
 };
@@ -36,7 +36,6 @@ export const ShortsGuidelines = ({ video }: { video: Short }) => {
       </div>
       <p>{description}</p>
       {status === 'ineligible' && video.guidelines?.reason && <p className="ss-guidelines-reason">{video.guidelines.reason}</p>}
-      <small>These checks decide feed visibility. Your paid hosting is unaffected.</small>
     </section>
   );
 };

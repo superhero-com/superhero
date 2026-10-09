@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { useNavigate, useRoutes } from 'react-router-dom';
 import { useAtom } from 'jotai';
-import { useSyncShortsWalletSession } from './features/shorts/shorts-wallet-session';
+import { SHORTS_ENABLED } from './shorts-enabled';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import { CollectInvitationLinkCard } from './features/trending/components/Invitation';
 import ModalProvider from './components/ModalProvider';
@@ -61,11 +61,13 @@ const FollowConnectionsModal = React.lazy(
   () => import('./features/social/components/FollowConnectionsModal'),
 );
 
+const ShortsWalletSync = SHORTS_ENABLED
+  ? React.lazy(() => import('./features/shorts/shorts-wallet-sync')) : null;
+
 const App = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { initSdk, activeAccount, sdkInitialized } = useAeSdk();
-  useSyncShortsWalletSession(activeAccount);
   const {
     canPrompt, promptInstall, isIOS, isInstalled,
   } = usePwaInstall();
@@ -188,6 +190,9 @@ const App = () => {
 
   return (
     <NotificationsProvider>
+      {ShortsWalletSync && (
+        <Suspense fallback={null}><ShortsWalletSync address={activeAccount} /></Suspense>
+      )}
       {/* Mounted above the router so the relay pool survives route changes. */}
       <ChatProvider>
         <div className="app-container">

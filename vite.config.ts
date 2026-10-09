@@ -55,6 +55,8 @@ export default defineConfig(({ mode }) => {
   // runs, Vite has already set process.env.NODE_ENV (e.g. 'production' for `vite build`), so
   // this preserves prior behavior without re-exposing the rest of the host environment.
   env.NODE_ENV = process.env.NODE_ENV as string;
+  // Expose this one non-secret switch, never the rest of the host environment.
+  const shortsEnabled = loadEnv(mode, envDir, 'ENABLE_SHORTS').ENABLE_SHORTS === 'true';
   return {
     plugins: [react(), svgr(), jsonPlugin(), chatPrecache()],
     resolve: {
@@ -73,6 +75,7 @@ export default defineConfig(({ mode }) => {
       // `env` is restricted to VITE_*/VUE_APP_* keys + NODE_ENV above — never the full
       // build-machine environment.
       'process.env': env,
+      'import.meta.env.ENABLE_SHORTS': JSON.stringify(shortsEnabled ? 'true' : 'false'),
     },
     build: {
       sourcemap: false,

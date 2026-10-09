@@ -10,10 +10,11 @@ import { useWalletConnect } from '@/hooks/useWalletConnect';
 import { CONFIG } from '@/config';
 import { creatorSessionAtom, openConnectedCreatorSession, type CreatorLogin } from './shorts-wallet-session';
 import { useShortsPreferences, rankShorts } from './shorts-preferences';
+import { PlaybackDelivery, type PlaybackResult } from './shorts-playback';
 import { useShortsSocial } from './use-shorts-social';
 import { request, SHORTS_API, ShortsApiError } from './api';
 import type {
-  Config, Dashboard, Quote, Review, Short, Performance, UploadDraft, HostingPrices,
+  Config, Dashboard, Review, Short, Performance, UploadDraft,
 } from './types';
 
 export function useShorts() {
@@ -32,6 +33,8 @@ export function useShorts() {
   const [days, setDays] = useState(28);
   const [performance, setPerformance] = useState<Performance>();
   const [performanceError, setPerformanceError] = useState('');
+  const [performanceRevision, setPerformanceRevision] = useState(0);
+  const performanceScope = useRef('');
   const [claimReview, setClaimReview] = useState(false);
   const videoId = section === 'video' ? location.pathname.split('/')[4] : undefined;
   const [topic, setTopic] = useState('All');
@@ -63,16 +66,14 @@ export function useShorts() {
   // Briefly bridge node/API lag after a mined Like; canonical reads then take over.
   const confirmedLikes = useRef(new Map<string, { count: number; until: number }>());
   const [dashboard, setDashboard] = useState<Dashboard>();
+  const [dashboardError, setDashboardError] = useState('');
   const [review, setReview] = useState<Review[]>([]);
   const [preview, setPreview] = useState<{ id: string; url: string }>();
   const [busy, setBusy] = useState(false);
   const [uploadDraft, setUploadDraft] = useState<UploadDraft>();
   const [uploadEpoch, setUploadEpoch] = useState(0);
   const [preparedUpload, setPreparedUpload] = useState<{ video: Short; key: string }>();
-  const [uploadPrices, setUploadPrices] = useState<HostingPrices>();
-  const [uploadPayment, setUploadPayment] = useState<{
-    shortId: string; quoteId: string; quote: Quote; status: 'wallet' | 'activating' | 'pending' | 'active' | 'uncertain';
-  }>();
+  const [uploadPublication, setUploadPublication] = useState<{ shortId?: string; status: 'uploading' | 'publishing' | 'published' | 'error' }>();
   const [uploadProgress, setUploadProgress] = useState<number>();
   const [uploadStage, setUploadStage] = useState<'checking' | 'uploading' | 'processing'>();
   const [walletPending, setWalletPending] = useState(false);
@@ -82,10 +83,6 @@ export function useShorts() {
     setMessage('');
     navigate({ feed: '/shorts', publish: '/shorts/studio/upload', review: '/shorts/studio/review' }[value] || '/shorts/studio');
   };
-  const [quote, setQuote] = useState<Quote>();
-  const [funding, setFunding] = useState<Short>();
-  const [budget, setBudget] = useState('0.1');
-  const [source, setSource] = useState<'wallet' | 'rewards'>('wallet');
   const [like, setLike] = useState<Short>();
   const likeAfterConnect = useRef<Short | undefined>(undefined);
   const [withdrawal, setWithdrawal] = useState<Short>();
@@ -101,12 +98,11 @@ export function useShorts() {
     setLogin((current) => (current?.address === actor ? current : undefined));
     setCreatorConnecting(false); setCreatorConnectionError('');
     setDashboard(undefined);
+    setDashboardError('');
     setPerformance(undefined);
     setClaimReview(false);
     setReview([]);
     setPreview(undefined);
-    setQuote(undefined);
-    setFunding(undefined);
     // A first connection returns to review; connecting never submits a payment.
     setLike(actor ? likeAfterConnect.current : undefined);
     if (actor) likeAfterConnect.current = undefined;
@@ -116,7 +112,7 @@ export function useShorts() {
       setUploadDraft(undefined);
       setUploadEpoch((value) => value + 1);
     }
-    setPreparedUpload(undefined); setUploadPrices(undefined); setUploadPayment(undefined);
+    setPreparedUpload(undefined); setUploadPublication(undefined);
     setUploadStage(undefined);
     setMessage('');
   }, [actor, setLogin]);
@@ -132,37 +128,44 @@ export function useShorts() {
   const refresh = useCallback(async () => {
     generation.current += 1;
     const gen = generation.current;
-    const [c, f, shared] = await Promise.all([
-      request<Config>('/config'),
-      request<Short[]>(`?address=${encodeURIComponent(actor)}&topic=${encodeURIComponent(topic)}`),
-      sharedId ? request<Short>(`/shared/${encodeURIComponent(sharedId)}?address=${encodeURIComponent(actor)}`).catch(() => undefined) : undefined,
-    ]);
-    let d: Dashboard | undefined;
-    let r: Review[] = [];
     try {
-      d = token ? await request<Dashboard>('/dashboard', undefined, token) : undefined;
-      r = token && actor === c.operator && login?.kind !== 'connected-wallet' ? await request<Review[]>('/review', undefined, token) : [];
+      const [c, f, shared] = await Promise.all([
+        request<Config>('/config'),
+        request<Short[]>(`?address=${encodeURIComponent(actor)}&topic=${encodeURIComponent(topic)}`),
+        sharedId ? request<Short>(`/shared/${encodeURIComponent(sharedId)}?address=${encodeURIComponent(actor)}`).catch(() => undefined) : undefined,
+      ]);
+      let d: Dashboard | undefined;
+      let r: Review[] = [];
+      try {
+        d = token ? await request<Dashboard>('/dashboard', undefined, token) : undefined;
+        r = token && actor === c.operator && login?.kind !== 'connected-wallet' ? await request<Review[]>('/review', undefined, token) : [];
+      } catch (error) {
+        if (error instanceof ShortsApiError && error.status === 401) {
+          setLogin((current) => (current?.token === token ? undefined : current));
+          if (c.creatorAccess === 'connected-wallet') setCreatorConnectionError('Studio couldn’t load your account. Please try again.');
+        }
+        throw error;
+      }
+      if (gen !== generation.current) return;
+      setConfig(c);
+      const withConfirmedLike = (item: Short) => {
+        const confirmed = confirmedLikes.current.get(item.id);
+        if (!confirmed) return item;
+        if (Date.now() >= confirmed.until || (item.liked && item.likes >= confirmed.count)) {
+          confirmedLikes.current.delete(item.id);
+          return item;
+        }
+        return { ...item, likes: Math.max(item.likes, confirmed.count), liked: true };
+      };
+      setFeed(f.map(withConfirmedLike));
+      setSharedResult(sharedId ? { id: sharedId, video: shared ? withConfirmedLike(shared) : undefined } : undefined);
+      setDashboard(d); setReview(r); setDashboardError('');
     } catch (error) {
-      if (error instanceof ShortsApiError && error.status === 401) {
-        setLogin((current) => (current?.token === token ? undefined : current));
-        if (c.creatorAccess === 'connected-wallet') setCreatorConnectionError('Studio couldn’t load your account. Please try again.');
+      if (gen === generation.current && currentAddress.current === actor && token) {
+        setDashboardError('Your account couldn’t be updated. Check your connection and try again.');
       }
       throw error;
     }
-    if (gen !== generation.current) return;
-    setConfig(c);
-    const withConfirmedLike = (item: Short) => {
-      const confirmed = confirmedLikes.current.get(item.id);
-      if (!confirmed) return item;
-      if (Date.now() >= confirmed.until || (item.liked && item.likes >= confirmed.count)) {
-        confirmedLikes.current.delete(item.id);
-        return item;
-      }
-      return { ...item, likes: Math.max(item.likes, confirmed.count), liked: true };
-    };
-    setFeed(f.map(withConfirmedLike));
-    setSharedResult(sharedId ? { id: sharedId, video: shared ? withConfirmedLike(shared) : undefined } : undefined);
-    setDashboard(d); setReview(r);
   }, [actor, topic, token, sharedId, setLogin, login?.kind]);
   useEffect(() => {
     const counter = generation;
@@ -172,16 +175,54 @@ export function useShorts() {
   }, [refresh]);
   useEffect(() => {
     let cancelled = false;
-    setPerformance(undefined); setPerformanceError('');
+    const scope = JSON.stringify([days, token, tab, videoId]);
+    if (performanceScope.current !== scope) {
+      setPerformance(undefined); setPerformanceError('');
+    }
+    performanceScope.current = scope;
+    let requestId = 0;
     if (!token || tab === 'feed') return undefined;
-    const load = () => request<Performance>(`/performance?days=${days}${videoId ? `&short=${encodeURIComponent(videoId)}` : ''}`, undefined, token)
-      .then((value) => { if (!cancelled) { setPerformance(value); setPerformanceError(''); } })
-      .catch((error) => { if (!cancelled) setPerformanceError(error.message); });
+    const load = () => {
+      requestId += 1;
+      const id = requestId;
+      return request<Performance>(`/performance?days=${days}${videoId ? `&short=${encodeURIComponent(videoId)}` : ''}`, undefined, token)
+        .then((value) => { if (!cancelled && id === requestId) { setPerformance(value); setPerformanceError(''); } })
+        .catch((error) => { if (!cancelled && id === requestId) setPerformanceError(error.message); });
+    };
     load();
     const timer = setInterval(load, 20000);
     return () => { cancelled = true; clearInterval(timer); };
-  }, [days, token, tab, videoId]);
+  }, [days, token, tab, videoId, performanceRevision]);
   const measuredSession = useRef('');
+  const delivery = useRef<PlaybackDelivery | undefined>(undefined);
+  const getDelivery = useCallback(() => {
+    if (delivery.current) return delivery.current;
+    const sender = new PlaybackDelivery(
+      (id, payload) => request<PlaybackResult>(`/${id}/playback`, payload, undefined, { keepalive: true, timeout: 10000 }),
+      (id, counters) => {
+        const update = (item: Short) => (item.id === id ? { ...item, views: counters.views, engagement: counters.engagement } : item);
+        setFeed((items) => items.map(update));
+        setSharedResult((current) => (current?.video?.id === id ? { ...current, video: update(current.video) } : current));
+      },
+    );
+    delivery.current = sender;
+    return sender;
+  }, []);
+  useEffect(() => {
+    const flush = () => delivery.current?.flushPending();
+    const online = () => delivery.current?.retry();
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('online', online);
+    return () => {
+      const sender = delivery.current;
+      // Let player cleanup enqueue its final fraction before closing this queue.
+      queueMicrotask(() => {
+        sender?.flushPending(); sender?.dispose();
+        if (delivery.current === sender) delivery.current = undefined;
+      });
+      window.removeEventListener('pagehide', flush); window.removeEventListener('online', online);
+    };
+  }, []);
   const getMeasuredSession = () => {
     if (!measuredSession.current) {
       try { measuredSession.current = localStorage.getItem('shorts.measurement.session') || crypto.randomUUID(); localStorage.setItem('shorts.measurement.session', measuredSession.current); } catch { measuredSession.current = crypto.randomUUID(); }
@@ -189,11 +230,11 @@ export function useShorts() {
     return measuredSession.current;
   };
   const playback = useCallback((id: string, _event: string, seconds: number) => {
-    if (!personal.preferences.measured || !_event) return;
-    request(`/${id}/playback`, {
+    if (!_event) return;
+    getDelivery().enqueue(id, {
       id: `${getMeasuredSession().slice(0, 20)}-${id}-${new Date().toISOString().slice(0, 10)}`, seconds: Math.min(60, seconds), session: getMeasuredSession(), source: new URLSearchParams(location.search).has('short') ? 'shared' : personal.preferences.mode,
-    }).catch(() => undefined);
-  }, [personal.preferences.measured, personal.preferences.mode, location.search]);
+    });
+  }, [personal.preferences.mode, location.search, getDelivery]);
   const perform = async (fn: () => Promise<unknown>, success: string, backgroundRefresh = false) => {
     if (actionLock.current) return false;
     actionLock.current = true; setBusy(true); setMessage(''); setMessageTone('info');
@@ -233,14 +274,14 @@ export function useShorts() {
     }
     if (!actor || currentAddress.current !== actor) throw new Error('Wallet changed. Reconnect and try again.');
   };
-  const transact = async (method: string, args: unknown[], amount?: string, onConfirmed?: () => void) => {
+  const transact = async (method: string, args: unknown[], amount?: string, onConfirmed?: () => void, previous = false) => {
     // The wallet-signed contract call authorizes every on-chain action.
     const auth = token;
     setWalletPending(true);
     try {
       await checkNetwork();
       const contract = await Contract.initialize({
-        ...sdk.getContext(), aci: config!.aci as any, address: config!.contract as `ct_${string}`,
+        ...sdk.getContext(), aci: (previous ? config!.previousAci : config!.aci) as any, address: (previous ? config!.previousContract : config!.contract) as `ct_${string}`,
       });
       if (sdk.address !== actor || currentAddress.current !== actor) throw new Error('Wallet signer does not match the connected account.');
       setMessage('Review the testnet transaction in your wallet…');
@@ -314,13 +355,7 @@ export function useShorts() {
       throw error;
     } finally { setWalletPending(false); }
   }, 'Wallet connected. You can now send your Like.', true);
-  const loadUploadPrices = (id: string) => perform(async () => {
-    const prices = await request<HostingPrices>(`/${id}/hosting-prices`, undefined, requireLogin());
-    requireLogin(); setUploadPrices(prices);
-  }, 'Hosting prices updated.');
-  const upload = async (data: FormData, key = '') => perform(async () => {
-    // Reuse the main connected account and continue the same upload action.
-    if (uploadPayment) throw new Error('Check your existing hosting purchase in Studio before starting again.');
+  const prepareUpload = async (data: FormData, key: string) => {
     const file = data.get('file') as File;
     if (!file?.size || file.size > 40 * 1024 * 1024) throw new Error('Choose a video smaller than 40 MB.');
     const auth = token ? requireLogin() : await ensureCreatorSession();
@@ -339,7 +374,7 @@ export function useShorts() {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
       if (saved.fingerprint === fingerprint && saved.expires > Date.now()) resume = await request<UploadSession>(`/uploads/${saved.id}`, undefined, auth);
-    } catch { /* A missing/expired session can be replaced before any payment. */ }
+    } catch { /* A missing/expired upload session can be replaced. */ }
     if (!resume) resume = await request<UploadSession>('/uploads', metadata, auth);
     try { localStorage.setItem(storageKey, JSON.stringify({ id: resume.id, expires: resume.expires, fingerprint })); } catch { /* Uploading still works without persisted resume. */ }
     const count = Math.ceil(file.size / resume.partSize);
@@ -357,61 +392,29 @@ export function useShorts() {
     setMessage('Upload received. Preparing your video for playback…');
     const prepared = await request<Short>(`/uploads/${resume.id}/finish`, {}, requireLogin());
     requireLogin();
-    try { localStorage.removeItem(storageKey); } catch { /* No persisted draft. */ }
-    setDashboard((current) => (current ? { ...current, shorts: [prepared, ...current.shorts.filter((short) => short.id !== prepared.id)] } : current));
-    setPreparedUpload({ video: prepared, key }); setQuote(undefined); setUploadPrices(undefined);
+    setPreparedUpload({ video: prepared, key });
     setUploadProgress(undefined); setUploadStage(undefined);
-    const prices = await request<HostingPrices>(`/${prepared.id}/hosting-prices`, undefined, auth).catch(() => undefined);
-    if (currentAddress.current === actor) setUploadPrices(prices);
-  }, 'Your video is ready. Choose how long it stays available.');
-  const createUploadQuote = (selection: { days: number } | { budget: string }) => perform(async () => {
-    if (!preparedUpload || uploadPayment) throw new Error('Prepare your video before choosing hosting.');
-    const next = await request<Quote>('/quote', { shortId: preparedUpload.video.id, source, ...selection }, requireLogin());
-    requireLogin(); setQuote(next);
-  }, 'Review your Short and the exact hosting charge.');
-  const confirmUploadFunding = () => perform(async () => {
-    if (!quote || quote.shortId !== preparedUpload?.video.id || quote.expiresAt <= Date.now()) throw new Error('Refresh your hosting quote before confirming.');
-    if (uploadPayment) throw new Error('This purchase is already being tracked. Check its status in Studio.');
-    await checkNetwork();
-    requireLogin();
-    if (sdk.address !== actor) throw new Error('Wallet signer does not match the connected account.');
-    const purchase = { shortId: quote.shortId, quoteId: quote.id, quote };
-    setUploadPayment({ ...purchase, status: 'wallet' });
+    return prepared;
+  };
+  const publishUpload = (data: FormData, key: string) => perform(async () => {
+    if (uploadPublication?.status === 'published') return;
+    let short = preparedUpload?.key === key ? preparedUpload.video : undefined;
+    setUploadPublication({ shortId: short?.id, status: short ? 'publishing' : 'uploading' });
     try {
-      await transact(quote.source === 'wallet' ? 'fund_wallet' : 'fund_rewards', [BigInt(quote.id)], quote.source === 'wallet' ? quote.amountAettos : undefined, () => {
-        if (currentAddress.current !== actor) return;
-        setUploadPayment({ ...purchase, status: 'activating' }); setQuote(undefined);
-      });
+      if (!short) short = await prepareUpload(data, key);
+      requireLogin();
+      setUploadPublication({ shortId: short.id, status: 'publishing' });
+      const published = await request<Short>(`/${short.id}/publish`, {}, requireLogin());
+      requireLogin();
+      setPreparedUpload({ video: published, key });
+      setUploadPublication({ shortId: short.id, status: 'published' });
+      try { localStorage.removeItem(`shorts.upload.${actor}`); } catch { /* Session-only storage. */ }
     } catch (error) {
-      if (currentAddress.current !== actor) throw error;
-      if (/user rejected|rejected by user|request rejected|cancelled|canceled|user denied/i.test(error instanceof Error ? error.message : '')) {
-        setUploadPayment(undefined);
-        throw error;
-      }
-      setUploadPayment({ ...purchase, status: 'uncertain' });
-      setQuote(undefined);
-      throw new Error('We couldn’t confirm the payment outcome. Check your wallet and Studio before paying again.');
-    }
-    if (currentAddress.current !== actor) return;
-    try {
-      await request('/activate', { quoteId: purchase.quoteId }, requireLogin());
-      if (currentAddress.current === actor) setUploadPayment({ ...purchase, status: 'active' });
-    } catch {
-      if (currentAddress.current === actor) setUploadPayment({ ...purchase, status: 'pending' });
-    }
-  }, 'Your hosting purchase is being tracked below.', true);
-  const createQuote = () => perform(async () => {
-    setQuote(await request<Quote>('/quote', { shortId: funding?.id, budget, source }, requireLogin()));
-  }, 'Quote ready. Review the exact debit and coverage.');
-  const confirmFunding = () => perform(async () => {
-    if (!quote || quote.expiresAt <= Date.now()) throw new Error('Quote expired. Calculate a new quote.');
-    await transact(quote.source === 'wallet' ? 'fund_wallet' : 'fund_rewards', [BigInt(quote.id)], quote.source === 'wallet' ? quote.amountAettos : undefined);
-    const { id } = quote;
-    const { shortId } = quote;
-    setQuote(undefined); setFunding(undefined);
-    navigate(`/shorts/studio/video/${shortId}`);
-    try { await request('/activate', { quoteId: id }, requireLogin()); } catch { throw new Error('Payment confirmed. Hosting activation is pending; the worker will retry. You can also recover it from Studio.'); }
-  }, 'Hosting activated after IPFS verification. Your purchased days are protected.');
+      if (currentAddress.current === actor) setUploadPublication({ shortId: short?.id, status: 'error' });
+      throw error;
+    } finally { setUploadStage(undefined); setUploadProgress(undefined); }
+  }, 'Your Short is published.', true);
+  const publish = (id: string) => perform(() => request(`/${id}/publish`, {}, requireLogin()), 'Your Short is published.');
   const confirmLike = () => perform(async () => {
     if (!like) throw new Error('Choose a Short to Like.');
     if (like.creator === actor) throw new Error('You cannot send a paid Like to your own Short.');
@@ -433,8 +436,6 @@ export function useShorts() {
       setLike(undefined);
     });
   }, 'Like sent. Thanks for supporting this creator!', true);
-  // Playback telemetry is recorded only through the consent-gated endpoint.
-  const view = () => undefined;
   const visibleFeed = sharedId ? [sharedVideo].filter((item): item is Short => !!item)
     : rankShorts(feed, personal.preferences, topic, social.followed);
   return {
@@ -453,18 +454,14 @@ export function useShorts() {
     setDays,
     performance,
     performanceError,
+    refreshPerformance: () => setPerformanceRevision((value) => value + 1),
+    dashboardError,
     personal,
     social,
     connectWallet,
     playback,
     claimReview,
     setClaimReview: (value: boolean) => { setClaimReview(value); if (value) setMessage(''); },
-    deleteMeasurements: () => perform(async () => {
-      await request('/analytics/forget', { session: getMeasuredSession() });
-      personal.update({ measured: false });
-      measuredSession.current = crypto.randomUUID();
-      try { localStorage.setItem('shorts.measurement.session', measuredSession.current); } catch { /* Session-only storage. */ }
-    }, 'Playback measurements deleted and collection switched off.'),
     topic,
     setTopic,
     config,
@@ -480,48 +477,38 @@ export function useShorts() {
     setUploadDraft,
     uploadEpoch,
     preparedUpload,
-    uploadPrices,
-    uploadPayment,
-    loadUploadPrices,
-    createUploadQuote,
-    confirmUploadFunding,
+    uploadPublication,
+    publishUpload,
+    publish,
+    dismissPublication: () => { if (!actionLock.current) setUploadPublication(undefined); },
     resetUpload: () => {
       if (actionLock.current) return;
-      setUploadDraft(undefined); setPreparedUpload(undefined); setUploadPrices(undefined);
-      setUploadPayment(undefined); setQuote(undefined); setMessage('');
+      setUploadDraft(undefined); setPreparedUpload(undefined);
+      setUploadPublication(undefined); setMessage('');
       setUploadProgress(undefined); setUploadStage(undefined); setUploadEpoch((value) => value + 1);
     },
     uploadStage,
     walletPending,
     message,
     messageTone,
-    refreshNow: () => perform(refresh, 'Your Studio is up to date.'),
+    refreshNow: () => {
+      setPerformanceRevision((value) => value + 1);
+      return perform(refresh, 'Account updated. Performance refresh requested.');
+    },
     clearMessage: () => setMessage(''),
-    quote,
-    funding,
-    budget,
-    setBudget,
-    source,
-    setSource,
     like,
     setLike: (value?: Short) => { setLike(value); if (value) setMessage(''); },
     withdrawal,
     setWithdrawal: (value?: Short) => { setWithdrawal(value); if (value) setMessage(''); },
-    upload,
-    createQuote,
-    editQuote: () => setQuote(undefined),
-    confirmFunding,
     confirmLike,
-    view,
-    openFunding: (s: Short) => { setFunding(s); setQuote(undefined); setMessage(''); if (Number(dashboard?.account.available || 0) <= 0) setSource('wallet'); },
-    closeFunding: () => { if (!busy) { setFunding(undefined); setQuote(undefined); } },
     claim: () => perform(async () => { await transact('claim', []); setClaimReview(false); }, 'Rewards claimed to your testnet wallet.'),
+    claimPrevious: () => perform(() => transact('claim', [], undefined, undefined, true), 'Earlier rewards claimed to your testnet wallet.'),
     rescan: (id: string) => perform(() => request(`/${id}/scan`, {}, requireLogin()), 'Community-guidelines status updated.'),
     moderate: (id: string, approved: boolean, reason: string, reviewedTopic: string, visualConfirmed = false) => perform(
       () => request(`/review/${id}`, {
         approved, reason, topic: reviewedTopic, visualConfirmed,
       }, requireLogin()),
-      approved ? 'Approved for the feed. Paid hosting is managed separately.' : 'Excluded from the feed. Paid hosting is unchanged.',
+      approved ? 'Approved for the feed.' : 'Excluded from the feed.',
     ),
     reviewClip: (id: string) => perform(async () => {
       const response = await fetch(`${SHORTS_API}/api/shorts/review-media/${id}`, { headers: { Authorization: `Bearer ${requireLogin()}` } });
@@ -532,10 +519,6 @@ export function useShorts() {
       await transact('withdraw', [id]);
       setWithdrawal(undefined);
     }, 'Short permanently withdrawn from official playback.'),
-    recover: (id: string, refund: boolean) => perform(
-      () => (refund ? transact('refund_failed', [BigInt(id)]) : request('/activate', { quoteId: id }, requireLogin())),
-      refund ? 'Funds returned to their original source.' : 'Hosting activated.',
-    ),
     appeal: (id: string, explanation: string) => perform(() => request(`/${id}/appeal`, { message: explanation }, requireLogin()), 'Your request for another feed review has been submitted.'),
     report: (id: string, reportId: string, reason: string, detail: string) => perform(async () => {
       await request(`/${id}/report`, { id: reportId, reason, detail });

@@ -24,7 +24,7 @@ function originOf(url) {
 const RUNTIME_CONNECT_ENV_KEYS = [
   'BACKEND_URL', 'SUPERHERO_API_URL', 'SUPERHERO_WS_URL', 'NODE_URL', 'WALLET_URL',
   'MIDDLEWARE_URL', 'DEX_BACKEND_URL', 'MAINNET_DEX_BACKEND_URL', 'TESTNET_DEX_BACKEND_URL',
-  'GOVERNANCE_API_URL', 'EXPLORER_URL',
+  'GOVERNANCE_API_URL', 'EXPLORER_URL', 'VITE_SHORTS_API_URL', 'VITE_SHORTS_STREAM_URL',
 ];
 
 // The mainnet/testnet API/middleware/node/DEX/governance/compiler origins from src/config.ts,

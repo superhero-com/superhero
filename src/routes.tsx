@@ -1,3 +1,4 @@
+import { SHORTS_ENABLED } from '@/shorts-enabled';
 import React, { lazy } from 'react';
 import { RouteObject, Navigate, useParams } from 'react-router-dom';
 import SocialLayout from './components/layout/SocialLayout';
@@ -126,7 +127,7 @@ if (import.meta.env.DEV) {
   devRoutes.push({ path: '/wallet-lab', element: <WalletLab /> });
 }
 
-if (import.meta.env.DEV && import.meta.env.VITE_SHORTS_TESTNET_MVP === '1') {
+if (SHORTS_ENABLED) {
   const Shorts = lazy(() => import('./features/shorts/shorts-page').then((m) => ({ default: m.ShortsPage })));
   devRoutes.push({ path: '/shorts/*', element: <Shorts /> });
 }

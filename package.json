@@ -29,7 +29,7 @@
     "check:types": "node ./scripts/check-types.cjs",
     "release": "standard-version",
     "postinstall": "node ./scripts/update-package-type.cjs",
-    "start:shorts:testnet": "VITE_NETWORK=ae_uat VITE_SHORTS_TESTNET_MVP=1 vite --host 127.0.0.1 --port 5180 --strictPort"
+    "start:shorts:testnet": "ENABLE_SHORTS=true VITE_NETWORK=ae_uat vite --host 127.0.0.1 --port 5180 --strictPort"
   },
   "dependencies": {
     "@aeternity/aepp-calldata": "^1.9.1",
@@ -65,6 +65,7 @@
     "embla-carousel-react": "^8.6.0",
     "ethers": "^6.13.2",
     "express": "^5.2.1",
+    "hls.js": "1.7.3",
     "i18next": "^26.4.0",
     "jdenticon": "^3.3.0",
     "jotai": "^2.13.1",

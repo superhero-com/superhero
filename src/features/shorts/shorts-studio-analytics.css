@@ -1,0 +1,69 @@
+.ss-analytics-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:16px 0}
+.ss-analytics-toolbar>b{font-size:13px;font-weight:600}
+.ss-analytics-period{display:flex;align-items:center;gap:16px;margin-left:auto}
+.ss-analytics-period>span{font-size:11px;color:var(--muted)}
+.ss-layout .ss-analytics-period select{width:145px;margin:0}
+.ss-layout .ss-performance-panel{padding:0;overflow:hidden}
+.ss-metric-tabs{display:flex;border-bottom:1px solid var(--line)}
+.ss-layout .ss-metric-tabs .ss-metric{flex:1;min-width:0;border:0;border-radius:0;border-right:1px solid var(--line);padding:20px;text-align:left;position:relative;background:transparent;justify-content:flex-start}
+.ss-layout .ss-metric-tabs .ss-metric:last-child{border-right:0}
+.ss-layout .ss-metric-tabs .ss-metric[aria-pressed=true]{background:#15243b}
+.ss-metric-tabs .ss-metric[aria-pressed=true]::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:#78a5ff}
+.ss-layout .ss-metric-tabs .ss-metric:hover{background:#182235}
+.ss-metric-tabs .ss-metric>span{font-size:12px}
+.ss-metric-tabs .ss-metric>small{font-weight:400;color:var(--muted)}
+.ss-performance-body{padding:20px}
+.ss-chart-caption{display:flex;gap:12px;align-items:baseline;margin-bottom:12px}
+.ss-layout .ss-chart-caption h2{font-size:12px;font-weight:500;color:#bdcbe0}
+.ss-chart-caption>span{font-size:11px;color:var(--muted)}
+.ss-line-chart{height:210px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr);gap:12px}
+.ss-line-chart svg{width:100%;height:100%;min-height:0;min-width:0;overflow:visible}
+.ss-chart-gridline{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.ss-chart-line{fill:none;stroke:#79a8ff;stroke-width:2}
+.ss-chart-point{fill:#79a8ff}
+.ss-chart-scale{display:flex;flex-direction:column;justify-content:space-between;padding:12px 0 16px;color:var(--muted);font-size:10px;min-width:36px;text-align:right}
+.ss-chart-empty{display:grid;place-items:center;min-height:180px;color:var(--muted);font-size:13px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 58px,var(--line) 59px,transparent 60px)}
+.ss-performance-body .ss-chart-axis{margin:6px 0 0}
+.ss-performance-body .ss-chart-data{margin-top:16px;color:var(--muted)}
+.ss-chart-data summary{cursor:pointer;min-height:24px;width:fit-content}
+.ss-layout .ss-analytics-cards{gap:16px}
+.ss-analytics-cards>.ss-panel{margin-top:0}
+.ss-analytics-cards .ss-panel>small{font-size:11px;line-height:1.5;display:block;color:var(--muted)}
+.ss-layout .ss-card-empty{padding:24px 0;color:var(--muted);font-size:12px}
+.ss-source-bars{display:grid;gap:14px;margin:20px 0}
+.ss-source-bars>div{display:grid;grid-template-columns:minmax(100px,1fr) minmax(60px,1fr) auto;align-items:center;gap:16px;font-size:12px}
+.ss-source-bars>div>span{text-transform:capitalize}
+.ss-source-bars>div>small{grid-column:2/-1;text-align:right;font-size:11px}
+.ss-source-bars meter{width:100%;height:8px;accent-color:#79a8ff}
+.ss-source-bars b{min-width:20px;text-align:right;font-weight:500}
+.ss-top-shorts>a{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:12px;color:#dbe5f5;text-decoration:none}
+.ss-top-shorts>a>img{width:26px;height:38px;border-radius:4px;object-fit:cover}
+.ss-top-shorts>a>span:not(.ss-rank){flex:1;min-width:0;overflow-wrap:anywhere}
+.ss-rank{color:var(--muted);width:12px}
+.ss-top-shorts>a>b{font-variant-numeric:tabular-nums;font-weight:500}
+.ss-layout .ss-metrics-strip{gap:0;border:1px solid var(--line);border-radius:var(--ss-radius);overflow:hidden;background:#101722}
+.ss-layout .ss-metrics-strip>.ss-metric{border:0;border-radius:0;border-right:1px solid var(--line);background:transparent}
+.ss-layout .ss-metrics-strip>.ss-metric:last-child{border-right:0}
+@media(max-width:1100px){
+  .ss-analytics-toolbar{align-items:flex-end}
+  .ss-analytics-period{align-items:flex-end;flex-direction:column;gap:4px}
+  .ss-layout .ss-metric-tabs .ss-metric{padding:16px}
+  .ss-layout .ss-metrics-strip>.ss-metric:nth-child(2){border-right:0}
+  .ss-layout .ss-metrics-strip>.ss-metric:nth-child(n+3){border-top:1px solid var(--line)}
+}
+@media(max-width:760px){
+  .ss-analytics-toolbar{flex-wrap:wrap;gap:12px}
+  .ss-analytics-toolbar>.ss-section-tabs{width:100%}
+  .ss-analytics-period{width:100%;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+  .ss-analytics-period>span{font-size:10px;min-width:0;max-width:180px}
+  .ss-layout .ss-analytics-period select{width:132px;flex-shrink:0}
+  .ss-metric-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ss-layout .ss-metric-tabs .ss-metric{padding:14px;min-height:112px}
+  .ss-layout .ss-metric-tabs .ss-metric:nth-child(even){border-right:0}
+  .ss-layout .ss-metric-tabs .ss-metric:nth-child(n+3){border-top:1px solid var(--line)}
+  .ss-performance-body{padding:14px}
+  .ss-line-chart{height:170px;gap:8px}
+  .ss-layout .ss-analytics-cards{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+  .ss-layout .ss-analytics-cards>.ss-panel{margin-bottom:14px}
+  .ss-source-bars>div{gap:10px}
+}

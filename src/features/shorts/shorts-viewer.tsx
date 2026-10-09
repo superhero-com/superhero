@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 import {
   Bookmark, Captions, ArrowDown, ArrowLeft, ArrowUp, ChevronDown, Clapperboard,
   Flag, Info, Maximize2, Pause, Play, Plus, Share2, SlidersHorizontal,
-  Volume2, VolumeX, X, EyeOff,
+  Volume2, VolumeX, X, EyeOff, Eye,
 } from 'lucide-react';
-import { SHORTS_API } from './api';
+import { shortsMediaUrl } from './shorts-media';
+import { useShortHls } from './use-short-hls';
+import { PlaybackProgress } from './shorts-playback-progress';
 import { ShortsContentWarning } from './shorts-content-warning';
 import { ShortsDialog } from './shorts-dialog';
 import { ShortsLikeButton } from './shorts-like-button';
@@ -24,12 +26,10 @@ type Props = {
   topic: string;
   onTopic: (topic: string) => void;
   onLike: (short: Short) => void;
-  onView: (id: string, seconds: number) => void;
   onReport: (id: string, reportId: string, reason: string, detail: string) => Promise<boolean | undefined> | void;
   personal?: ReturnType<typeof useShortsPreferences>;
   social?: ReturnType<typeof useShortsSocial>;
   onConnect?: () => unknown;
-  onDeleteMeasurements?: () => void;
   onPlayback?: (id: string, event: string, seconds: number) => void;
   onStudio: () => void;
   onUpload: () => void;
@@ -43,11 +43,10 @@ type Props = {
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 const ShortPlayer = ({
-  short, active, warm, muted, onMute, onLike, onView, onDetails, onShare, busy, onPlayback, onSave, saved,
+  short, active, warm, muted, onMute, onLike, onDetails, onShare, busy, onPlayback, onSave, saved,
 }: {
   short: Short; active: boolean; warm: boolean; muted: boolean; busy: boolean;
   onMute: () => void; onLike: () => void; onDetails: () => void; onShare: () => void;
-  onView: Props['onView'];
   onPlayback?: Props['onPlayback']; onSave?: () => void; saved?: boolean;
 }) => {
   const video = useRef<HTMLVideoElement>(null);
@@ -57,9 +56,9 @@ const ShortPlayer = ({
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const manuallyPaused = useRef(false);
-  const watched = useRef(0);
-  const lastTime = useRef(0);
-  const measurement = useRef({ id: crypto.randomUUID(), sent: -1 });
+  const playbackStarted = useRef(false);
+  const progress = useRef(new PlaybackProgress(short.duration));
+  const measurement = useRef({ id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) });
   const playbackRef = useRef(onPlayback);
   playbackRef.current = onPlayback;
   const [captions, setCaptions] = useState(false);
@@ -67,19 +66,41 @@ const ShortPlayer = ({
   const warningKey = `${short.id}:${warning}:${short.guidelines?.status}`;
   const [revealedFor, setRevealedFor] = useState('');
   const covered = !!warning && revealedFor !== warningKey;
+  const hls = useShortHls(video, short.id, warm && !covered, () => active && !manuallyPaused.current);
+  const hasFailed = failed || hls.status === 'error';
+  const loading = waiting || (warm && hls.status !== 'ready' && hls.status !== 'error');
   useEffect(() => { if (!warning) setRevealedFor(''); }, [warning]);
-  const measure = useCallback(() => {
-    if (!playbackRef.current) return;
-    const seconds = Math.min(short.duration, watched.current);
-    if (measurement.current.sent < 0 || seconds - measurement.current.sent >= 2 || seconds >= short.duration * 0.95) {
-      if (measurement.current.sent >= short.duration && seconds >= short.duration) return;
+  const measure = useCallback((final = false) => {
+    if (!playbackRef.current || !playbackStarted.current) return;
+    const day = new Date().toISOString().slice(0, 10);
+    if (measurement.current.day !== day) {
+      measurement.current = { id: crypto.randomUUID(), sent: -1, day };
+      progress.current = new PlaybackProgress(short.duration);
+      progress.current.resetPosition(video.current?.currentTime || 0);
+    }
+    const { seconds } = progress.current;
+    if (measurement.current.sent < 0 || seconds - measurement.current.sent >= 2 || (final && seconds > measurement.current.sent) || seconds >= short.duration * 0.95) {
+      if (measurement.current.sent === seconds) return;
       playbackRef.current(short.id, measurement.current.id, seconds);
       measurement.current.sent = seconds;
     }
   }, [short.duration, short.id]);
+  const measured = !!onPlayback;
   useEffect(() => {
-    if (onPlayback) { measurement.current = { id: crypto.randomUUID(), sent: -1 }; watched.current = 0; }
-  }, [onPlayback]);
+    measurement.current = { id: crypto.randomUUID(), sent: -1, day: new Date().toISOString().slice(0, 10) };
+    progress.current = new PlaybackProgress(short.duration);
+    progress.current.resetPosition(video.current?.currentTime || 0);
+    playbackStarted.current = !!video.current && !video.current.paused && active && !covered && !document.hidden;
+    if (measured && active) measure();
+    // A new callback or feed refresh must not reset a running measurement.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [measured, short.id, short.duration]);
+  useEffect(() => {
+    const flush = () => measure(true);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => { flush(); window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', flush); };
+  }, [measure]);
   useEffect(() => {
     const element = video.current;
     if (element?.textTracks[0]) element.textTracks[0].mode = captions ? 'showing' : 'hidden';
@@ -88,14 +109,13 @@ const ShortPlayer = ({
     const element = video.current;
     if (!element) return undefined;
     if (active && !manuallyPaused.current) {
-      measure();
       element.play().catch(() => setPaused(true));
     } else element.pause();
     return () => element.pause();
   }, [active, measure, covered]);
   const toggle = useCallback(() => {
     const element = video.current;
-    if (!element || failed || covered) return;
+    if (!element || hasFailed || covered) return;
     if (element.paused) {
       manuallyPaused.current = false;
       element.play().catch(() => setPaused(true));
@@ -103,7 +123,7 @@ const ShortPlayer = ({
       manuallyPaused.current = true;
       element.pause();
     }
-  }, [failed, covered]);
+  }, [hasFailed, covered]);
   useEffect(() => {
     if (!active || covered) return undefined;
     const keydown = (event: KeyboardEvent) => {
@@ -117,12 +137,8 @@ const ShortPlayer = ({
   }, [active, onMute, toggle, covered]);
   const updateTime = () => {
     const element = video.current!;
-    const delta = element.currentTime - lastTime.current;
-    // Seek jumps do not count as watched time. The API still treats this as a preview metric.
-    if (active && !element.paused && delta > 0 && delta < 1.5) watched.current += delta;
-    lastTime.current = element.currentTime;
+    progress.current.sample(element.currentTime, active && !element.paused && !element.seeking && !document.hidden && !waiting);
     setPosition(element.currentTime);
-    if (watched.current >= 2) onView(short.id, watched.current);
     if (active) measure();
   };
   const fullscreen = async () => {
@@ -137,32 +153,47 @@ const ShortPlayer = ({
     <div className={`sv-composition ${covered ? 'sv-composition--covered' : ''}`}>
       <div className="sv-frame">
         {covered ? (
-          <ShortsContentWarning warning={warning!} posterUrl={`${SHORTS_API}${short.posterUrl}`} onReveal={() => setRevealedFor(warningKey)} />
+          <ShortsContentWarning warning={warning!} posterUrl={shortsMediaUrl(short.id, 'poster.jpg')} onReveal={() => setRevealedFor(warningKey)} />
         ) : (
           <>
             <video
               ref={video}
-              src={warm ? `${SHORTS_API}${short.videoUrl}` : undefined}
-              poster={`${SHORTS_API}${short.posterUrl}`}
+              poster={shortsMediaUrl(short.id, 'poster.jpg')}
               playsInline
               crossOrigin="anonymous"
-              loop
               muted={muted}
-              preload={warm ? 'auto' : 'none'}
-              onPlay={() => { setPaused(false); measure(); }}
-              onPause={() => { setPaused(true); measure(); }}
+              preload={active ? 'auto' : 'metadata'}
+              onPlay={() => {
+                progress.current.resetPosition(video.current?.currentTime || 0);
+                if (active && !document.hidden) playbackStarted.current = true;
+                setPaused(false); measure();
+              }}
+              onPause={() => {
+                progress.current.sample(video.current?.currentTime || 0, active && !document.hidden && !waiting);
+                setPaused(true); measure(true);
+              }}
+              onEnded={() => {
+                const element = video.current;
+                if (!element) return;
+                progress.current.sample(element.currentTime, active && !document.hidden && !waiting);
+                measure(true);
+                element.currentTime = 0;
+                progress.current.resetPosition(0);
+                if (active && !manuallyPaused.current) element.play().catch(() => setPaused(true));
+              }}
               onWaiting={() => setWaiting(true)}
-              onPlaying={() => { setWaiting(false); setFailed(false); }}
+              onPlaying={() => { progress.current.resetPosition(video.current?.currentTime || 0); setWaiting(false); setFailed(false); }}
               onError={() => { if (warm) { setFailed(true); setWaiting(false); } }}
               onTimeUpdate={updateTime}
               onLoadedMetadata={() => setDuration(video.current?.duration || short.duration)}
-              onSeeking={() => { lastTime.current = video.current?.currentTime || 0; }}
+              onSeeking={() => { progress.current.resetPosition(video.current?.currentTime || 0); }}
+              onSeeked={() => { progress.current.resetPosition(video.current?.currentTime || 0); }}
             >
-              <track kind="captions" src={short.captionsUrl ? `${SHORTS_API}${short.captionsUrl}` : undefined} srcLang={short.language || 'en'} label="Creator captions" />
+              <track kind="captions" src={short.captions ? shortsMediaUrl(short.id, 'captions.vtt') : undefined} srcLang={short.language || 'en'} label="Creator captions" />
             </video>
-            <button type="button" className="sv-play-surface" aria-label={paused ? `Play ${short.title}` : `Pause ${short.title}`} onClick={toggle} disabled={!active || failed} tabIndex={active ? 0 : -1} />
+            <button type="button" className="sv-play-surface" aria-label={paused ? `Play ${short.title}` : `Pause ${short.title}`} onClick={toggle} disabled={!active || hasFailed} tabIndex={active ? 0 : -1} />
             <div className="sv-top-controls">
-              <button type="button" className="sv-round" aria-label={paused ? 'Play video' : 'Pause video'} onClick={toggle} disabled={failed}>
+              <button type="button" className="sv-round" aria-label={paused ? 'Play video' : 'Pause video'} onClick={toggle} disabled={hasFailed}>
                 {paused ? <Play size={21} fill="currentColor" /> : <Pause size={21} fill="currentColor" />}
               </button>
               {!!warning && (
@@ -176,16 +207,16 @@ const ShortPlayer = ({
                 <button type="button" className="sv-round" aria-label={muted ? 'Unmute video' : 'Mute video'} onClick={onMute} aria-pressed={!muted}>
                   {muted ? <VolumeX size={21} /> : <Volume2 size={21} />}
                 </button>
-                {short.captionsUrl && <button type="button" className="sv-round" aria-label="Toggle captions" aria-pressed={captions} onClick={() => setCaptions((v) => !v)}><Captions size={21} /></button>}
+                {short.captions && <button type="button" className="sv-round" aria-label="Toggle captions" aria-pressed={captions} onClick={() => setCaptions((v) => !v)}><Captions size={21} /></button>}
                 <button type="button" className="sv-round sv-fullscreen" aria-label="Toggle fullscreen" onClick={fullscreen}><Maximize2 size={19} /></button>
               </div>
             </div>
-            {paused && !failed && !waiting && <div className="sv-play-indicator" aria-hidden="true"><Play size={32} fill="currentColor" /></div>}
-            {waiting && !failed && <div className="sv-loading" role="status">Loading video…</div>}
-            {failed && (
+            {paused && !hasFailed && !loading && <div className="sv-play-indicator" aria-hidden="true"><Play size={32} fill="currentColor" /></div>}
+            {loading && !hasFailed && active && <div className="sv-loading" role="status">{hls.status === 'preparing' ? 'Preparing video…' : 'Loading video…'}</div>}
+            {hasFailed && (
             <div className="sv-video-error" role="status">
               <p>This Short couldn’t load.</p>
-              <button type="button" onClick={() => { setFailed(false); video.current?.load(); if (active) video.current?.play().catch(() => setPaused(true)); }}>Try again</button>
+              <button type="button" onClick={() => { setFailed(false); hls.retry(); }}>Try again</button>
             </div>
             )}
             <div className="sv-caption">
@@ -196,7 +227,13 @@ const ShortPlayer = ({
                   #
                   {short.topic.toLowerCase()}
                 </span>
-                <span>Free to watch</span>
+                <span title={`${short.views.toLocaleString()} ${short.views === 1 ? 'view' : 'views'}`}>
+                  <Eye size={13} aria-hidden="true" />
+                  {' '}
+                  {new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(short.views)}
+                  {' '}
+                  {short.views === 1 ? 'view' : 'views'}
+                </span>
                 {short.synthetic && <span>AI-altered</span>}
                 {short.sponsored && <span>Sponsored</span>}
               </div>
@@ -251,8 +288,8 @@ const ShortPlayer = ({
 };
 
 export const ShortsViewer = ({
-  feed, topics, topic, onTopic, onLike, onView, onReport, onStudio, onUpload,
-  message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onDeleteMeasurements, onPlayback, shared = false,
+  feed, topics, topic, onTopic, onLike, onReport, onStudio, onUpload,
+  message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onPlayback, shared = false,
 }: Props) => {
   const scroller = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState('');
@@ -279,11 +316,13 @@ export const ShortsViewer = ({
       emptyTitle = 'Couldn’t load your follows'; emptyMessage = 'Your follows are safe. Try again when the connection is available.';
     }
   }
-  if (unavailable) { emptyTitle = 'This Short is unavailable'; emptyMessage = 'Its hosting may have expired, or its creator may have withdrawn it.'; }
-  let why = details && prefs?.topics.includes(details.topic) ? `It matches your interest in ${details.topic}.` : 'Recent eligible content, balanced across creators. Payments never affect selection.';
+  if (unavailable) { emptyTitle = 'This Short is unavailable'; emptyMessage = 'It may have been withdrawn or is not published yet.'; }
+  let why = details && prefs?.topics.includes(details.topic) ? `It matches your interest in ${details.topic}.` : 'Selected using recent watch time, completion, freshness and creator variety. Payments never affect selection.';
   if (shared) why = 'You opened a direct link to this video. Availability by link does not mean it is eligible for the feed.';
   const feedIds = feed.map((video) => video.id).join(',');
   const index = Math.max(0, feed.findIndex((video) => video.id === activeId));
+  const windowStart = Math.max(0, index - 2);
+  const windowEnd = Math.min(feed.length, index + 3);
   const firstMount = useRef(true);
   const previousTopic = useRef(topic);
   const currentId = useRef(activeId);
@@ -291,13 +330,13 @@ export const ShortsViewer = ({
   useEffect(() => {
     const root = scroller.current;
     if (!root || !feedIds) return undefined;
-    const entries = [...root.querySelectorAll<HTMLElement>('[data-short-id]')];
     let requested = previousTopic.current === topic ? currentId.current : undefined;
     if (firstMount.current) requested = new URLSearchParams(window.location.search).get('short') || undefined;
     previousTopic.current = topic;
-    const initial = Math.max(0, entries.findIndex((entry) => entry.dataset.shortId === requested));
+    const ids = feedIds.split(',');
+    const initial = Math.max(0, ids.indexOf(requested || ''));
     firstMount.current = false;
-    setActiveId(entries[initial]?.dataset.shortId || '');
+    setActiveId(ids[initial] || '');
     root.scrollTo({ top: initial * root.clientHeight, behavior: 'instant' });
     return undefined;
   }, [feedIds, topic]);
@@ -368,32 +407,37 @@ export const ShortsViewer = ({
           ref={scroller}
           onScroll={(event) => {
             const root = event.currentTarget;
-            const next = Math.round(root.scrollTop / root.clientHeight);
+            if (!root.clientHeight) return;
+            const next = Math.max(0, Math.min(feed.length - 1, Math.round(root.scrollTop / root.clientHeight)));
             setActiveId(feed[next]?.id || '');
           }}
           role="region"
           aria-label="Shorts video feed"
           tabIndex={0}
         >
-          {!unavailable && feed.map((short, i) => (
-            <article key={short.id} className="sv-slide" data-short-id={short.id} aria-label={`Short ${i + 1} of ${feed.length}: ${short.title}`} inert={i !== index}>
-              <ShortPlayer
-                short={short}
-                active={i === index && !suspended && !details && !filters && !reporting && visible}
-                warm={Math.abs(i - index) <= 1}
-                muted={muted}
-                onMute={() => setMuted((value) => !value)}
-                busy={busy}
-                onLike={() => onLike(short)}
-                onView={onView}
-                onPlayback={prefs?.measured ? onPlayback : undefined}
-                onSave={personal ? () => personal.toggle('saved', short.id) : undefined}
-                saved={prefs?.saved.includes(short.id)}
-                onDetails={() => setDetails(short)}
-                onShare={() => share(short)}
-              />
-            </article>
-          ))}
+          {!unavailable && windowStart > 0 && <div aria-hidden="true" style={{ height: `${windowStart * 100}%` }} />}
+          {!unavailable && feed.slice(windowStart, windowEnd).map((short, offset) => {
+            const i = windowStart + offset;
+            return (
+              <article key={short.id} className="sv-slide" data-short-id={short.id} aria-label={`Short ${i + 1} of ${feed.length}: ${short.title}`} inert={i !== index}>
+                <ShortPlayer
+                  short={short}
+                  active={i === index && !suspended && !details && !filters && !reporting && visible}
+                  warm={Math.abs(i - index) <= 1}
+                  muted={muted}
+                  onMute={() => setMuted((value) => !value)}
+                  busy={busy}
+                  onLike={() => onLike(short)}
+                  onPlayback={onPlayback}
+                  onSave={personal ? () => personal.toggle('saved', short.id) : undefined}
+                  saved={prefs?.saved.includes(short.id)}
+                  onDetails={() => setDetails(short)}
+                  onShare={() => share(short)}
+                />
+              </article>
+            );
+          })}
+          {!unavailable && windowEnd < feed.length && <div aria-hidden="true" style={{ height: `${(feed.length - windowEnd) * 100}%` }} />}
           {(!feed.length || unavailable) && (
             <div className="sv-empty">
               <Clapperboard size={38} />
@@ -452,13 +496,6 @@ export const ShortsViewer = ({
                 <select id="viewer-language" value={prefs.language} onChange={(e) => personal.update({ language: e.target.value })}>{[['all', 'All languages'], ['und', 'Unspecified'], ['en', 'English'], ['ar', 'Arabic'], ['fr', 'French'], ['es', 'Spanish'], ['de', 'German'], ['zh', 'Chinese']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
               </label>
               <p>Follows sync with your Superhero profile. Saved videos, interests and hidden creators stay in this browser. Payments never boost ranking.</p>
-              <label className="sh-checkbox" htmlFor="viewer-measurements">
-                <input type="checkbox" id="viewer-measurements" checked={prefs.measured} onChange={(e) => personal.update({ measured: e.target.checked })} />
-                {' '}
-                Share playback measurements to help creators
-              </label>
-              <small>Optional. A random browser ID is hashed on the server; no wallet address is attached. Playback records are retained for 90 days. Turning this off stops collection.</small>
-              <button type="button" disabled={busy} onClick={onDeleteMeasurements}>Delete my playback measurements</button>
               <button
                 type="button"
                 onClick={() => {
@@ -505,8 +542,6 @@ export const ShortsViewer = ({
               <dd>{details.likes}</dd>
               <dt>Views (preview)</dt>
               <dd>{details.views}</dd>
-              <dt>Hosted until</dt>
-              <dd>{new Date(details.until).toLocaleDateString()}</dd>
             </dl>
             <p>Each Like costs 0.1 test AE: 0.08 AE to the creator and 0.02 AE to the treasury. Network fees are additional.</p>
             <details>

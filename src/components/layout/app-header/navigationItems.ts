@@ -1,3 +1,4 @@
+import { SHORTS_ENABLED } from '@/shorts-enabled';
 import { TRENDING_ENABLED } from '@/config';
 import {
   Clapperboard, Home, Search, ArrowLeftRight, Gift, LucideIcon, User, Vote, Landmark, MessageCircle,
@@ -11,7 +12,7 @@ export interface NavigationItem {
   isExternal?: boolean;
 }
 
-const SHORTS_ITEMS: NavigationItem[] = import.meta.env.DEV && import.meta.env.VITE_SHORTS_TESTNET_MVP === '1'
+const SHORTS_ITEMS: NavigationItem[] = SHORTS_ENABLED
   ? [{
     id: 'shorts', labelKey: 'Shorts', path: '/shorts', icon: Clapperboard,
   }] : [];

@@ -51,7 +51,8 @@ body:has(.shorts-watching) { overflow: hidden; }
 .shorts-app .sv-follow-note button { border-radius: 100px; padding: 6px 12px; font-size: 12px; }
 .sv-address { display: block; font-size: 11px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; word-break: break-word; color: #e0e5f1; }
 .shorts-app .sv-caption h2 { margin: 0 0 10px; font-size: 18px; line-height: 1.35; font-weight: 650; letter-spacing: -.3px; overflow-wrap: anywhere; }
-.sv-caption-meta { display: flex; gap: 14px; font-size: 11px; color: #d9deeb; }
+.sv-caption-meta { display: flex; flex-wrap: wrap; gap: 5px 14px; font-size: 11px; color: #d9deeb; }
+.sv-caption-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .sv-caption-meta span + span { opacity: .75; }
 .sv-timeline { position: absolute; bottom: 10px; left: 14px; right: 14px; z-index: 5; display: flex; align-items: center; gap: 10px; }
 .shorts-app .sv-timeline input { appearance: none; -webkit-appearance: none; height: 24px; min-width: 0; width: 100%; margin: 0; padding: 0; border: none; border-radius: 0; background: transparent; cursor: pointer; }

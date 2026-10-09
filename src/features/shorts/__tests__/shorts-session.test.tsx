@@ -85,6 +85,79 @@ beforeEach(() => {
 });
 
 describe('Shorts wallet session and recovery', () => {
+  it('counts guest playback automatically even with the legacy opt-out saved', async () => {
+    mocks.pathname = '/shorts'; mocks.actor = '';
+    localStorage.setItem('superhero.shorts.preferences.v1', JSON.stringify({ measured: false }));
+    const original = mocks.request.getMockImplementation()!;
+    let views = 0;
+    mocks.request.mockImplementation(async (path: string, body?: { seconds: number }) => {
+      if (path.startsWith('?')) return [{ ...clip, views }];
+      if (path.endsWith('/playback')) {
+        if (body!.seconds >= 2) views = 1;
+        return { accepted: true, views, engagement: { score: 0.5 } };
+      }
+      return original(path, body);
+    });
+    const { result } = renderHook(useShorts);
+    await waitFor(() => expect(result.current.feed).toHaveLength(1));
+    expect(result.current.authenticated).toBe(false);
+    expect(result.current.personal.preferences).not.toHaveProperty('measured');
+    await act(async () => { result.current.playback('video', 'event', 0); });
+    expect(result.current.feed[0].views).toBe(0);
+    await act(async () => { result.current.playback('video', 'event', 2.5); });
+    expect(result.current.feed[0].views).toBe(1);
+    expect(mocks.request).toHaveBeenCalledWith('/video/playback', expect.objectContaining({ seconds: 2.5, source: 'for-you' }), undefined, { keepalive: true, timeout: 10000 });
+    const event = mocks.request.mock.calls.find(([path]) => path.endsWith('/playback'))![1];
+    expect(event).not.toHaveProperty('address');
+    act(() => result.current.personal.update({ topics: ['Art'] }));
+    await act(async () => { result.current.playback('video', 'event', 4); });
+    expect(result.current.feed[0].views).toBe(1);
+    expect(mocks.request).toHaveBeenLastCalledWith('/video/playback', expect.objectContaining({ id: event.id, session: event.session, seconds: 4 }), undefined, { keepalive: true, timeout: 10000 });
+  });
+  it('exposes an initial dashboard failure and clears it after a successful retry', async () => {
+    const original = mocks.request.getMockImplementation()!;
+    let unavailable = true;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/dashboard' && unavailable) throw new Error('Offline');
+      return original(path, ...args);
+    });
+    const { result } = renderHook(useShorts);
+    await waitFor(() => expect(result.current.config).toBeDefined());
+    await act(async () => { await result.current.signIn(); });
+    await waitFor(() => expect(result.current.dashboardError).toMatch(/couldn’t be updated/));
+    expect(result.current.dashboard).toBeUndefined();
+    unavailable = false;
+    await act(async () => { await result.current.refreshNow(); });
+    expect(result.current.dashboardError).toBe('');
+    expect(result.current.dashboard).toEqual(dashboard);
+  });
+
+  it('retries analytics immediately and keeps the last report during refresh', async () => {
+    const hook = await startLike();
+    const original = mocks.request.getMockImplementation()!;
+    const report = { days: 28, marker: 'last successful report' };
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path.startsWith('/performance')) return report;
+      return original(path, ...args);
+    });
+    await act(async () => { hook.result.current.refreshPerformance(); });
+    await waitFor(() => expect(hook.result.current.performance).toEqual(report));
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path.startsWith('/performance')) throw new Error('Analytics offline');
+      return original(path, ...args);
+    });
+    await act(async () => { await hook.result.current.refreshNow(); });
+    await waitFor(() => expect(hook.result.current.performanceError).toBe('Analytics offline'));
+    expect(hook.result.current.performance).toEqual(report);
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path.startsWith('/performance')) return { ...report, marker: 'updated' };
+      return original(path, ...args);
+    });
+    await act(async () => { hook.result.current.refreshPerformance(); });
+    await waitFor(() => expect(hook.result.current.performanceError).toBe(''));
+    expect(hook.result.current.performance).toEqual({ ...report, marker: 'updated' });
+  });
+
   it('authorizes paid Likes and reward claims through their wallet transactions without an API sign-in', async () => {
     const { result } = await startLike(false);
     expect(result.current.authenticated).toBe(false);
@@ -252,7 +325,7 @@ describe('Shorts wallet session and recovery', () => {
           id: 'upload', parts: [], partSize: 100, expires: Date.now() + 60000, complete: true,
         };
       }
-      if (path === '/uploads/upload/finish') return prepared;
+      if (path === '/uploads/upload/finish' || path === '/new-upload/publish') return prepared;
       if (path === '/dashboard') return new Promise((resolve) => { finishRefresh = resolve; });
       return original(path, ...args);
     });
@@ -260,10 +333,10 @@ describe('Shorts wallet session and recovery', () => {
     Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
     let uploading: Promise<unknown>;
-    act(() => { uploading = result.current.upload(data); });
+    act(() => { uploading = result.current.publishUpload(data, 'key'); });
     await waitFor(() => expect(result.current.preparedUpload?.video.id).toBe('new-upload'));
     expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(result.current.dashboard?.shorts).toContainEqual(prepared);
+    expect(result.current.uploadPublication?.status).toBe('published');
     await act(async () => { finishRefresh({ ...dashboard, shorts: [prepared] }); await uploading; });
   });
 
@@ -314,30 +387,6 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.like).toBeUndefined();
     expect(result.current.messageTone).toBe('success');
   });
-
-  it('keeps a confirmed hosting payment out of the retry dialog if activation is delayed', async () => {
-    const { result } = renderHook(useShorts);
-    await waitFor(() => expect(result.current.config).toBeDefined());
-    await act(async () => { await result.current.signIn(); });
-    const original = mocks.request.getMockImplementation()!;
-    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path === '/quote') {
-        return {
-          id: '12', shortId: 'video', source: 'wallet', amountAettos: '100', expiresAt: Date.now() + 60000,
-        };
-      }
-      if (path === '/activate') throw new Error('Node unavailable');
-      return original(path, ...args);
-    });
-    act(() => result.current.openFunding({ id: 'video' } as Parameters<typeof result.current.openFunding>[0]));
-    await act(async () => { await result.current.createQuote(); });
-    await act(async () => { await result.current.confirmFunding(); });
-    expect(mocks.call).toHaveBeenCalledTimes(1);
-    expect(result.current.quote).toBeUndefined();
-    expect(result.current.funding).toBeUndefined();
-    expect(mocks.navigate).toHaveBeenCalledWith('/shorts/studio/video/video');
-    expect(result.current.message).toContain('Payment confirmed. Hosting activation is pending');
-  });
 });
 
 describe('Shared links remain separate from the discovery feed', () => {
@@ -370,113 +419,6 @@ describe('Shared links remain separate from the discovery feed', () => {
     const hook = renderHook(useShorts);
     await waitFor(() => expect(hook.result.current.feedReady).toBe(true));
     expect(hook.result.current.feed).toEqual([]);
-  });
-});
-
-describe('Inline upload hosting', () => {
-  const prepare = async () => {
-    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
-    const original = mocks.request.getMockImplementation()!;
-    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path === '/uploads') {
-        return {
-          id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
-        };
-      }
-      if (path === '/uploads/draft/finish') {
-        return {
-          ...clip, id: 'draft', creator: 'ak_creator', hostingStatus: 'unfunded',
-        };
-      }
-      if (path === '/draft/hosting-prices') {
-        return {
-          shortId: 'draft', bytes: 100000000, numerator: '1', denominator: '1', maxDays: 3650,
-        };
-      }
-      if (path === '/quote') {
-        return {
-          id: '7', shortId: 'draft', source: 'wallet', amountAettos: '100', expiresAt: Date.now() + 60000,
-        };
-      }
-      return original(path, ...args);
-    });
-    const hook = renderHook(useShorts);
-    await waitFor(() => expect(hook.result.current.config).toBeDefined());
-    await act(async () => { await hook.result.current.signIn(); });
-    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
-    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
-    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
-    await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
-    await act(async () => { await hook.result.current.createUploadQuote({ days: 30 }); });
-    return hook;
-  };
-
-  it('preserves a guest draft on the first connection but clears it on account switches', async () => {
-    mocks.actor = '';
-    const { result, rerender } = renderHook(useShorts);
-    await waitFor(() => expect(result.current.config).toBeDefined());
-    const draft = {
-      step: 1, title: 'Guest idea', description: '', topic: 'Art', language: 'und', captions: '', synthetic: false, sponsored: false, rights: true,
-    };
-    act(() => result.current.setUploadDraft(draft));
-    mocks.actor = 'ak_creator'; rerender();
-    expect(result.current.uploadDraft).toEqual(draft);
-    mocks.actor = 'ak_other'; rerender();
-    expect(result.current.uploadDraft).toBeUndefined();
-  });
-
-  it('keeps wallet rejection on review and signs a single deliberate hosting retry', async () => {
-    const { result } = await prepare();
-    expect(result.current.funding).toBeUndefined();
-    expect(mocks.request).toHaveBeenCalledWith('/quote', { shortId: 'draft', source: 'wallet', days: 30 }, 'session');
-    mocks.call.mockRejectedValueOnce(new Error('Rejected by user'));
-    await act(async () => { await result.current.confirmUploadFunding(); });
-    expect(result.current.uploadPayment).toBeUndefined();
-    expect(result.current.quote?.id).toBe('7');
-    await act(async () => { await Promise.all([result.current.confirmUploadFunding(), result.current.confirmUploadFunding()]); });
-    expect(mocks.call).toHaveBeenCalledTimes(2);
-    expect(result.current.uploadPayment?.status).toBe('active');
-    expect(result.current.uploadPayment?.quote).toMatchObject({ id: '7', shortId: 'draft', source: 'wallet' });
-    expect(result.current.quote).toBeUndefined();
-    expect(mocks.navigate).not.toHaveBeenCalled();
-  });
-
-  it('tracks a confirmed payment when activation fails and prevents another charge', async () => {
-    const { result } = await prepare();
-    const original = mocks.request.getMockImplementation()!;
-    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
-      if (path === '/activate') throw new Error('Storage temporarily offline');
-      return original(path, ...args);
-    });
-    await act(async () => { await result.current.confirmUploadFunding(); });
-    expect(result.current.uploadPayment?.status).toBe('pending');
-    expect(result.current.messageTone).toBe('success');
-    await act(async () => { await result.current.confirmUploadFunding(); });
-    expect(mocks.call).toHaveBeenCalledOnce();
-    expect(result.current.quote).toBeUndefined();
-  });
-
-  it('does not offer payment retry after an ambiguous wallet timeout', async () => {
-    const { result } = await prepare();
-    mocks.call.mockRejectedValueOnce(new Error('Transaction polling timeout'));
-    await act(async () => { await result.current.confirmUploadFunding(); });
-    expect(result.current.uploadPayment?.status).toBe('uncertain');
-    expect(result.current.message).toContain('Check your wallet and Studio');
-    await act(async () => { await result.current.confirmUploadFunding(); });
-    expect(mocks.call).toHaveBeenCalledOnce();
-  });
-
-  it('does not expose an old creator’s completed payment after switching wallet', async () => {
-    const { result, rerender } = await prepare();
-    let finish: (value: unknown) => void = () => undefined;
-    mocks.call.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
-    let payment: Promise<unknown>;
-    act(() => { payment = result.current.confirmUploadFunding(); });
-    await waitFor(() => expect(mocks.call).toHaveBeenCalledOnce());
-    mocks.actor = 'ak_other'; rerender();
-    await act(async () => { finish({ hash: 'th_old-account' }); await payment; });
-    expect(result.current.uploadPayment).toBeUndefined();
-    expect(result.current.preparedUpload).toBeUndefined();
   });
 });
 
@@ -536,7 +478,7 @@ describe('Connection-only local Studio', () => {
           id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
         };
       }
-      if (path === '/uploads/draft/finish') return { ...clip, id: 'draft', creator: 'ak_creator' };
+      if (path === '/uploads/draft/finish' || path === '/draft/publish') return { ...clip, id: 'draft', creator: 'ak_creator' };
       return original(path, ...args);
     });
     const hook = renderHook(useShorts);
@@ -544,7 +486,7 @@ describe('Connection-only local Studio', () => {
     const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
     Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
-    await act(async () => { await hook.result.current.upload(data, 'connected-draft'); });
+    await act(async () => { await hook.result.current.publishUpload(data, 'connected-draft'); });
     expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
     expect(mocks.request).toHaveBeenCalledWith('/uploads/draft/finish', {}, 'connected-ak_creator');
     expect(mocks.sign).not.toHaveBeenCalled();
@@ -698,9 +640,9 @@ it('verifies the existing wallet once and continues the requested upload without
         id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
       };
     }
-    if (path === '/uploads/draft/finish') {
+    if (path === '/uploads/draft/finish' || path === '/draft/publish') {
       return {
-        ...clip, id: 'draft', creator: 'ak_creator', hostingStatus: 'unfunded',
+        ...clip, id: 'draft', creator: 'ak_creator', publicationStatus: 'draft',
       };
     }
     return original(path, ...args);
@@ -711,16 +653,52 @@ it('verifies the existing wallet once and continues the requested upload without
   Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
   const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
   mocks.sign.mockRejectedValueOnce(new Error('Rejected by user'));
-  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  await act(async () => { await hook.result.current.publishUpload(data, 'draft-key'); });
   expect(mocks.request.mock.calls.some(([path]) => path === '/uploads')).toBe(false);
   expect(hook.result.current.preparedUpload).toBeUndefined();
-  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  await act(async () => { await hook.result.current.publishUpload(data, 'draft-key'); });
   expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
   expect(hook.result.current.authenticated).toBe(true);
   expect(mocks.connect).not.toHaveBeenCalled();
   expect(mocks.disconnect).not.toHaveBeenCalled();
   expect(mocks.call).not.toHaveBeenCalled();
   const count = mocks.sign.mock.calls.length;
-  await act(async () => { await hook.result.current.upload(data, 'draft-key'); });
+  await act(async () => { await hook.result.current.publishUpload(data, 'draft-key'); });
   expect(mocks.sign).toHaveBeenCalledTimes(count);
+});
+
+it('publishes for free and safely retries the same prepared video after a lost response', async () => {
+  enableConnectedStudio();
+  vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+  const original = mocks.request.getMockImplementation()!;
+  let attempts = 0;
+  mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+    if (path === '/uploads') {
+      return {
+        id: 'free', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
+      };
+    }
+    if (path === '/uploads/free/finish') return { ...clip, id: 'free', creator: mocks.actor };
+    if (path === '/free/publish') {
+      attempts += 1;
+      if (attempts === 1) throw new Error('Connection lost');
+      return {
+        ...clip, id: 'free', creator: mocks.actor, publicationStatus: 'published',
+      };
+    }
+    return original(path, ...args);
+  });
+  const { result } = renderHook(useShorts);
+  await waitFor(() => expect(result.current.authenticated).toBe(true));
+  const file = new File(['video'], 'owned.mp4');
+  Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+  const data = new FormData(); data.set('file', file);
+  await act(async () => { await result.current.publishUpload(data, 'same-video'); });
+  expect(result.current.uploadPublication?.status).toBe('error');
+  expect(result.current.preparedUpload?.video.id).toBe('free');
+  await act(async () => { await Promise.all([result.current.publishUpload(data, 'same-video'), result.current.publishUpload(data, 'same-video')]); });
+  expect(result.current.uploadPublication?.status).toBe('published');
+  expect(attempts).toBe(2);
+  expect(mocks.request.mock.calls.filter(([path]) => path === '/uploads')).toHaveLength(1);
+  expect(mocks.call).not.toHaveBeenCalled(); expect(mocks.sign).not.toHaveBeenCalled();
 });

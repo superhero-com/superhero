@@ -64,6 +64,7 @@ jobs:
           secrets: |
             "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
           build-args: |
+            ENABLE_SHORTS=${{ vars.ENABLE_SHORTS || 'false' }}
             ${{ steps.vite_args.outputs.build_args }}
   deploy_develop:
     if: github.ref_name == 'develop'

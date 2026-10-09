@@ -19,7 +19,7 @@ describe('Studio main-wallet identity', () => {
       <MemoryRouter initialEntries={['/shorts/studio']}>
         <ShortsStudio s={{
           actor: 'ak_existing_home_wallet', authenticated: false, busy: false, signIn,
-        } as unknown as Parameters<typeof ShortsStudio>[0]['s']}
+        } as unknown as unknown as Parameters<typeof ShortsStudio>[0]['s']}
         />
       </MemoryRouter>,
     );
@@ -42,7 +42,7 @@ describe('Studio main-wallet identity', () => {
       <MemoryRouter initialEntries={['/shorts/studio']}>
         <ShortsStudio s={{
           actor: 'ak_connected', authenticated: false, restoringCreatorSession: true, busy: false, signIn,
-        } as unknown as Parameters<typeof ShortsStudio>[0]['s']}
+        } as unknown as unknown as Parameters<typeof ShortsStudio>[0]['s']}
         />
       </MemoryRouter>,
     );
@@ -57,7 +57,7 @@ describe('Studio main-wallet identity', () => {
     };
     const studio = (state: object) => (
       <MemoryRouter initialEntries={['/shorts/studio/content']}>
-        <ShortsStudio s={{ ...base, ...state } as Parameters<typeof ShortsStudio>[0]['s']} />
+        <ShortsStudio s={{ ...base, ...state } as unknown as Parameters<typeof ShortsStudio>[0]['s']} />
       </MemoryRouter>
     );
     const { rerender } = render(studio({ restoringCreatorSession: true }));
@@ -66,18 +66,18 @@ describe('Studio main-wallet identity', () => {
     expect(screen.queryByText('Your next idea belongs here')).not.toBeInTheDocument();
     rerender(studio({ restoringCreatorSession: false }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading your Studio');
-    rerender(studio({ dashboard: { shorts: [], pending: [] } }));
+    rerender(studio({ dashboard: { shorts: [] } }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByText('Your next idea belongs here')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Refresh Studio' })).toBeEnabled();
   });
   it('replaces analytics loading with the error instead of leaving placeholders running', () => {
     const base = {
-      section: 'analytics', authenticated: true, dashboard: { shorts: [], pending: [] },
+      section: 'analytics', authenticated: true, dashboard: { shorts: [] },
     };
     const studio = (state: object) => (
       <MemoryRouter initialEntries={['/shorts/studio/analytics']}>
-        <ShortsStudio s={{ ...base, ...state } as Parameters<typeof ShortsStudio>[0]['s']} />
+        <ShortsStudio s={{ ...base, ...state } as unknown as Parameters<typeof ShortsStudio>[0]['s']} />
       </MemoryRouter>
     );
     const { rerender } = render(studio({}));

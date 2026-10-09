@@ -1,6 +1,6 @@
 export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
-  hostingStatus?: 'unfunded' | 'active' | 'expired' | 'withdrawn';
+  publicationStatus?: 'draft' | 'published' | 'withdrawn';
   guidelines?: { status: 'analyzing' | 'reviewing' | 'eligible' | 'ineligible' | 'unavailable'; reason?: string; approval?: 'demo' };
   id: string;
   title: string;
@@ -10,20 +10,18 @@ export interface Short {
   cid: string;
   bytes: number;
   duration: number;
-  until: number;
   likes: number;
   views: number;
+  engagement?: { score: number };
   liked: boolean;
   mine: boolean;
   moderation: string;
-  videoUrl: string;
-  posterUrl: string;
   createdAt?: number;
   description?: string;
   language?: string;
   synthetic?: boolean;
   sponsored?: boolean;
-  captionsUrl?: string;
+  captions?: boolean;
   classification?: Classification;
   reviewReason?: string;
   appeal?: { message: string; at: number; status: string };
@@ -34,13 +32,13 @@ export interface Account {
   available: string;
   earned: string;
   claimed: string;
-  allocated: string;
-  restored: string;
+  previousAvailable?: string;
 }
 export interface Config {
+  previousContract?: string;
+  previousAci?: unknown[];
   creatorAccess?: 'connected-wallet' | 'signed-session';
   visualModeration: boolean;
-  replicas: number;
   mode: string;
   network: string;
   contract: string;
@@ -53,40 +51,13 @@ export interface Config {
   classification: string;
   analyticsSince: number;
 }
-export interface Quote {
-  id: string;
-  shortId: string;
-  title: string;
-  bytes: number;
-  days: number;
-  source: 'wallet' | 'rewards';
-  charge: string;
-  amountAettos: string;
-  unused: string;
-  daily: string;
-  previousUntil: number;
-  estimatedUntil: number;
-  expiresAt: number;
-}
-export interface HostingPrices {
-  shortId: string;
-  bytes: number;
-  numerator: string;
-  denominator: string;
-  maxDays: number;
-}
 export interface Dashboard {
   account: Account;
   shorts: Short[];
   totalViews: number;
   totalLikes: number;
   receipts: { tx: string; action: string; at: number }[];
-  pending: {
-    id: string;
-    shortId: string;
-    deadline: number;
-    refundable: boolean;
-  }[];
+
 }
 export interface Review {
   safety?: VisualSafety;
@@ -106,13 +77,13 @@ export interface Review {
 }
 
 export interface PlaybackSummary {
-  views: number; reach: number; watchSeconds: number; averageSeconds: number | null;
+  views: number; reach: number; watchSeconds: number; watchHours: number; averageSeconds: number | null;
   completion: number | null; retention: { at: number; viewers: number }[];
 }
 export interface LedgerEntry {
   id: string; tx: string; at: number; height: number; confirmations: number; confirmed: boolean;
   action: string; actor: string; beneficiary: string; amount: string; amountAe: string;
-  shortId?: string; quoteId?: string; source?: string;
+  shortId?: string; source?: string;
 }
 export interface Performance {
   days: number; start: number; end: number; timezone: string; since: number; retentionDays: number;

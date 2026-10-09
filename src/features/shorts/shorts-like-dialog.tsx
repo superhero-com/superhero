@@ -113,7 +113,7 @@ export const ShortsLikeDialog = ({
                 <dd>0.02 test AE</dd>
               </div>
             </dl>
-            <p>The creator can claim their rewards or use them to keep their Shorts hosted.</p>
+            <p>The creator can claim their rewards directly to their wallet.</p>
             <div className="sh-support-fee-note">
               <strong>Network fee is separate</strong>
               <p>Your wallet shows the additional fee before you confirm. It goes to the network and is not part of the split.</p>

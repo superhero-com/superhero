@@ -96,9 +96,8 @@
 .su-player.with-video .su-preview-rail { bottom: 6rem; }
 .su-preview>p { font-size: .75rem; text-align: center; margin: 1rem 0 .25rem; }
 .su-preview-filename { display: block; text-align: center; overflow-wrap: anywhere; font-size: .6875rem; }
+.su-review-short { border: 1px solid var(--line); border-radius: var(--su-radius); padding: 1.25rem; background: var(--su-surface); }
 .su-review { display: grid; gap: .875rem; }
-.su-review-short, .su-review-summary { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-radius: .875rem; background: var(--su-surface); }
-.su-review-summary { border-color: #2a4268; background: linear-gradient(135deg,#12223c,var(--su-surface)); }
 .su-review-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .su-review-heading h3 { min-width: 0; font-size: 1.0625rem; overflow-wrap: anywhere; margin: 0; }
 .shorts-app .su-review-heading button { flex-shrink: 0; gap: .375rem; font-size: .75rem; padding: .375rem .5rem; border-color: transparent; background: transparent; color: var(--su-accent-text); }
@@ -160,7 +159,7 @@
 /* Keep installation prompts clear of the composer’s primary action. */
 .app-container:has(.su-composer) .app-install-affordances { display: none; }
 
-/* One continuous creation journey, from local preview to active hosting. */
+/* One continuous creation journey, from local preview to publication. */
 .su-steps { gap: .75rem; }
 .su-steps li { display: flex; align-items: center; gap: .75rem; max-width: none; min-width: 0; }
 .su-steps li:last-child { flex: 0 0 auto; }
@@ -171,50 +170,7 @@
 .su-steps li:has(~ .current) span { border-color: #95e6c680; color: var(--su-success); }
 .su-mobile-preview-toggle { display: none!important; }
 .su-intro { animation: su-enter .25s ease-out; }
-.su-plans { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: 0; border: 0; margin: 0; }
-.su-plans legend { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.su-plans label { position: relative; display: grid; gap: .5rem; padding: 1rem .75rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--su-surface); cursor: pointer; }
-.su-plans label.selected { border-color: #5591ff; background: linear-gradient(145deg,#183b70,#101d35); box-shadow: 0 0 0 1px #5591ff; }
-.su-plans input { position: absolute; right: .65rem; top: .65rem; width: 1rem!important; height: 1rem; accent-color: var(--blue); }
-.su-plans strong { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem; margin-top: .5rem; font-size: 1.5rem; font-weight: 600; }
-.su-plans strong small { font-size: .75rem; color: var(--muted); font-weight: 400; }
-.su-plans label>span { font-size: .75rem; overflow-wrap: anywhere; }
-.su-coverage { display: grid; gap: 1rem; }
-.su-coverage label { font-size: .875rem; }
-.su-coverage input:not([type=radio]), .su-coverage select { margin-top: .4rem; padding: .65rem .75rem; font-size: .875rem; }
-.su-custom-coverage summary { cursor: pointer; padding: .5rem 0; font-size: .8125rem; color: var(--su-accent-text); overflow-wrap: anywhere; }
-.su-custom-coverage summary span { margin-left: .5rem; color: var(--muted); }
-.su-custom-coverage .su-field-pair { margin-top: .75rem; }
-.su-price-summary { padding: 1rem; border-radius: .75rem; background: var(--su-surface); border: 1px solid var(--line); }
-.su-payment-row { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.5fr); gap: 1rem; align-items: center; }
-.su-payment-options { grid-template-columns: repeat(2,minmax(0,1fr)); min-width: 0; }
-.su-payment-options legend { position: static; width: auto; height: auto; margin: 0 0 .65rem; clip-path: none; font-size: .8125rem; }
-.su-payment-options label { align-content: start; padding: .75rem; gap: .35rem; }
-.su-payment-options label>svg { margin-bottom: .25rem; color: var(--su-accent-text); }
-.su-payment-options b { font-size: .8125rem; font-weight: 500; }
-.su-payment-options small { font-size: .6875rem; overflow-wrap: anywhere; }
-.su-payment-options label:has(input:disabled) { opacity: .5; cursor: not-allowed; }
-.su-estimate { display: grid; gap: .25rem; }
-.su-price-summary span { font-size: .8rem; color: var(--muted); }
-.su-price-summary strong { font-size: 1.25rem; overflow-wrap: anywhere; line-height: 1.4; }
-.su-review-charge strong { font-size: clamp(1.125rem,1.8vw,1.5rem); overflow-wrap: anywhere; line-height: 1.4; text-align: right; }
-.su-price-summary strong small, .su-review-charge small { font-size: .75rem; color: var(--muted); white-space: nowrap; }
-.su-price-summary p { font-size: .75rem; margin: .75rem 0 0; }
-.su-price-info summary { display: flex; gap: .5rem; align-items: center; font-size: .8125rem; color: var(--su-accent-text); cursor: pointer; }
-.su-price-info p { font-size: .8rem; line-height: 1.7; }
-.su-feed-status { display: flex; align-items: flex-start; gap: .75rem; padding: 1.1rem; border: 1px solid var(--line); border-radius: .85rem; background: #111d2b; }
-.su-feed-status>svg { flex-shrink: 0; color: var(--su-accent-text); }
-.su-feed-status strong { font-size: .8125rem; }
-.su-feed-status p { margin: .4rem 0 0; font-size: .8rem; line-height: 1.65; }
-.su-review-duration { display: flex; align-items: center; gap: .625rem; min-width: 0; }
-.su-review-duration>svg { color: var(--su-accent-text); flex-shrink: 0; }
-.su-review-duration strong { display: block; font-size: .9375rem; font-weight: 500; }
-.su-review-duration small { display: block; font-size: .6875rem; margin-top: .125rem; }
-.su-review-charge { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr); align-items: center; gap: 1rem; margin-top: .875rem; padding-top: .875rem; border-top: 1px solid #30405a; }
-.su-review-charge>div>span { font-size: .8125rem; }
-.su-review-charge>div>small { display: block; font-size: .6875rem; margin-top: .2rem; }
-.su-review-summary>p { margin: .75rem 0 0; font-size: .6875rem; line-height: 1.6; }
-.su-review-help { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .625rem; align-items: start; }
+.su-review-help { display: grid; grid-template-columns: 1fr; gap: .625rem; align-items: start; }
 .su-review-help details { border: 1px solid var(--line); border-radius: .625rem; background: var(--su-surface); min-width: 0; }
 .su-review-help summary { display: flex; align-items: center; gap: .5rem; padding: .625rem .75rem; min-height: 44px; cursor: pointer; color: var(--su-accent-text); font-size: .75rem; list-style: none; }
 .su-review-help summary::-webkit-details-marker { display: none; }
@@ -223,8 +179,6 @@
 .su-review-help details[open] .su-info-chevron { transform: rotate(180deg); }
 .su-review-help details>div { padding: 0 .875rem .75rem; }
 .su-review-help p { margin: .5rem 0 0; font-size: .75rem; line-height: 1.65; }
-.su-review-help .su-feed-status { margin-top: .75rem; padding: .75rem; }
-.su-review-help .su-feed-status>svg { display: none; }
 @keyframes su-enter { from { opacity: .5; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media(max-width:760px) {
   .su-steps { padding: 0 .2rem; gap: .25rem; justify-content: space-between; }
@@ -241,8 +195,6 @@
   .su-action-buttons { gap: .5rem; }
   .shorts-app .su-action-buttons button { font-size: .8125rem; padding: .65rem .75rem; }
   .su-actions button svg { display: none; }
-  .su-plans { gap: .5rem; }
-  .su-plans label { padding: 1rem .65rem; }
   .su-field-pair { grid-template-columns: 1fr 1fr; gap: .75rem; }
 }
 
@@ -251,18 +203,9 @@
 .shorts-app .su-steps button:disabled { opacity: .8; }
 .shorts-app .su-steps .current button { color: var(--su-accent-text); }
 .shorts-app .su-intro h2 { font-size: clamp(1.5rem, 2vw, 1.875rem); margin: .5rem 0; line-height: 1.2; }
-.shorts-app .su-plans input[type=radio] { margin: 0; padding: 0; }
 
 .shorts-app .su-actions .primary { min-width: 0; flex-shrink: 1; overflow-wrap: anywhere; }
-@media(max-width:1100px) {
-  .su-payment-row { grid-template-columns: 1fr; }
-}
 @media(max-width:400px) {
-  .su-review-help, .su-review-charge { grid-template-columns: 1fr; }
-  .su-review-charge { gap: .5rem; }
-  .su-review-charge strong { text-align: left; }
-  .su-review-summary .su-review-heading { flex-wrap: wrap; }
-  .su-payment-row, .su-custom-coverage .su-field-pair { grid-template-columns: 1fr; }
   .shorts-app .su-steps button { font-size: .6875rem; gap: .25rem; }
   .su-steps button span { width: 1.5rem; height: 1.5rem; font-size: .6875rem; }
 }

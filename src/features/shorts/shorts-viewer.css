@@ -146,8 +146,10 @@ body:has(.shorts-watching) { overflow: hidden; }
   .sv-toolbar { height: 48px; }
   .sv-actions { gap: 8px; }
   .sv-action > span { display: none; }
-  .sv-caption { bottom: 36px; left: 12px; right: 12px; }
-  .sv-creator { display: none; }
+  .sv-frame { width: min(56vw, 440px); aspect-ratio: auto; }
+  .sv-caption { bottom: 36px; left: 12px; right: 12px; max-height: calc(100% - 100px); overflow-y: auto; pointer-events: auto; overscroll-behavior: contain; }
+  .sv-caption .sv-creator { align-items: flex-start; margin-bottom: 8px; }
+  .shorts-app .sv-caption .sv-creator-identity h3 { font-size: 12px; }
   .shorts-app .sv-caption h2 { font-size: 13px; }
   .sv-caption-meta { font-size: 9px; }
 }

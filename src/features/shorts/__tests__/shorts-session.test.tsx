@@ -34,6 +34,7 @@ vi.mock('@/config', () => ({ CONFIG: { NETWORK: 'ae_uat' } }));
 vi.mock('@aeternity/aepp-sdk', () => ({ Contract: { initialize: async () => ({ $call: mocks.call }) } }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate, useLocation: () => ({ pathname: mocks.pathname, search: mocks.search }) }));
 vi.mock('../api', async (original) => ({ ...await original<typeof import('../api')>(), request: mocks.request }));
+vi.mock('@/libs/WebSocketClient', () => ({ default: { subscribeForShortsUpdates: () => () => {}, subscribeForConnection: () => () => {} } }));
 vi.mock('../use-shorts-social', () => ({ useShortsSocial: () => ({ followed: [], status: 'ready', retry: vi.fn() }) }));
 
 const dashboard = { shorts: [], pending: [], account: { available: '0.08' } };

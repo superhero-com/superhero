@@ -68,3 +68,17 @@ Studio preserves the last successful report during background updates, exposes r
 ## Playback service
 
 Run `make start` in `superhero-video-streaming` alongside the API and IPFS. Feed records carry IDs and metadata. `shorts-media.ts` requests a short-lived HLS session; `use-short-hls.ts` attaches hls.js/MediaSource (`blob:`) or native HLS on supported Safari versions. Set `VITE_SHORTS_STREAM_URL` to the playback origin (default `http://127.0.0.1:3335`). Public bytes no longer go through the API. A background worker converts the private IPFS source once into a pinned 540p HLS rendition with two-second segments. Publication enqueues preparation, and existing videos need no re-upload. A video awaiting preparation shows “Preparing video.” Cache eviction only re-fetches prepared segments. The viewer mounts at most five nearby cards; the current and adjacent videos buffer a few seconds, while distant players unmount, abort requests and destroy their MediaSource. An authenticated edge shares immutable segment bytes across sessions after validating every request. Sessions renew before expiry while preserving position and explicit pauses. Source failures show retry guidance, with no full-MP4 fallback. The previous `/videos/:id/video.mp4` endpoint returns 410. Upload object-URL previews and authenticated review previews keep their existing flow. HLS and signed URLs discourage direct-file links but are not DRM or download prevention. Run the HLS lifecycle/session tests with `npm test -- --run src/features/shorts/__tests__/shorts-hls.test.tsx`.
+
+
+## Live indexing updates
+
+Hosted Shorts subscribes to `shorts-updated` on the existing API socket. If
+`VITE_SHORTS_API_URL` points to a separate API, Shorts owns a scoped connection
+that closes when leaving the feature. Events are checked against the configured
+network and contract, coalesced, and refresh feed, balances and analytics.
+Reconnect and returning to the tab refetch current state. A one-minute fallback
+updates confirmations and off-chain analytics; the isolated local preview uses
+a 20-second fallback. Mined Likes still animate immediately.
+
+Hosted financial totals and daily charts use complete PostgreSQL aggregates.
+The activity list shows up to 200 recent receipts and explicitly marks that limit.

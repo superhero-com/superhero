@@ -167,6 +167,7 @@ const Ledger = ({ s }: { s: State }) => {
           <p>{stale ? 'Try again to load your reward history.' : 'Try a different period. Rewards appear here when viewers send paid Likes.'}</p>
         </div>
       )}
+      {p.finance.truncated && <p className="ss-measurement-note">Showing the latest 200 receipts. Totals and charts include all activity in the selected period.</p>}
       {rows.length > limit && <button type="button" className="ss-load-more" onClick={() => setLimit(limit + 10)}>Show more activity</button>}
       <details className="ss-measurement-note">
         <summary>About reward activity</summary>

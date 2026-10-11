@@ -13,6 +13,7 @@ import { useShortsPreferences, rankShorts } from './shorts-preferences';
 import { PlaybackDelivery, type PlaybackResult } from './shorts-playback';
 import { useShortsSocial } from './use-shorts-social';
 import { request, SHORTS_API, ShortsApiError } from './api';
+import { createShortsRefresh, subscribeShortsUpdates } from './shorts-updates';
 import type {
   Config, Dashboard, Review, Short, Performance, UploadDraft,
 } from './types';
@@ -168,11 +169,29 @@ export function useShorts() {
     }
   }, [actor, topic, token, sharedId, setLogin, login?.kind]);
   useEffect(() => {
-    const counter = generation;
-    refresh().catch((e) => setMessage(e.message));
-    const timer = setInterval(() => refresh().catch(() => undefined), 20000);
-    return () => { clearInterval(timer); counter.current += 1; };
-  }, [refresh]);
+    let disposed = false;
+    const queued = createShortsRefresh(async () => {
+      if (document.visibilityState === 'hidden') return;
+      try { await refresh(); } catch (error) {
+        if (!disposed) setMessage(error instanceof Error ? error.message : 'Shorts could not be updated.');
+      }
+      if (!disposed) setPerformanceRevision((value) => value + 1);
+    });
+    queued.schedule();
+    const stopUpdates = config?.realtime
+      ? subscribeShortsUpdates(SHORTS_API, config.network, config.contract, queued.schedule) : undefined;
+    const resume = () => { if (document.visibilityState !== 'hidden') queued.schedule(); };
+    window.addEventListener('online', resume);
+    document.addEventListener('visibilitychange', resume);
+    // Fallback also advances confirmation counts and off-chain view analytics.
+    const timer = setInterval(queued.schedule, config?.realtime ? 60000 : 20000);
+    return () => {
+      disposed = true; queued.stop(); stopUpdates?.(); clearInterval(timer);
+      window.removeEventListener('online', resume);
+      document.removeEventListener('visibilitychange', resume);
+      generation.current += 1;
+    };
+  }, [refresh, config?.realtime, config?.network, config?.contract]);
   useEffect(() => {
     let cancelled = false;
     const scope = JSON.stringify([days, token, tab, videoId]);
@@ -190,8 +209,7 @@ export function useShorts() {
         .catch((error) => { if (!cancelled && id === requestId) setPerformanceError(error.message); });
     };
     load();
-    const timer = setInterval(load, 20000);
-    return () => { cancelled = true; clearInterval(timer); };
+    return () => { cancelled = true; };
   }, [days, token, tab, videoId, performanceRevision]);
   const measuredSession = useRef('');
   const delivery = useRef<PlaybackDelivery | undefined>(undefined);

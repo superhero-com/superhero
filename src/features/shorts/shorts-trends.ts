@@ -2,6 +2,7 @@ import type { Performance } from './types';
 
 export function dailyCreatorRevenue(p: Performance) {
   return p.series.map(({ at }) => {
+    if (p.finance.series) return p.finance.series.find((day) => day.at === at) || { at, earnedAe: '0', paidLikes: 0 };
     const likes = p.finance.entries.filter((e) => (
       e.confirmed && e.action === 'PaidLike' && e.at >= at && e.at < at + 86400000
     ));

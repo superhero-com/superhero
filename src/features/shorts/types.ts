@@ -35,6 +35,7 @@ export interface Account {
   previousAvailable?: string;
 }
 export interface Config {
+  realtime?: boolean;
   previousContract?: string;
   previousAci?: unknown[];
   creatorAccess?: 'connected-wallet' | 'signed-session';
@@ -92,7 +93,9 @@ export interface Performance {
   series: ({ at: number } & PlaybackSummary)[];
   videos: Record<string, PlaybackSummary>;
   sources: { source: string; views: number | null; suppressed: boolean }[];
-  finance: { syncedAt: number; stale: boolean; message: string; confirmationsRequired: number; earned: string; paidLikes: number; pending: number; entries: LedgerEntry[] };
+  finance: {
+    truncated?: boolean;
+    series?: { at: number; earnedAe: string; paidLikes: number }[]; syncedAt: number; stale: boolean; message: string; confirmationsRequired: number; earned: string; paidLikes: number; pending: number; entries: LedgerEntry[] };
   previousFinance: { earned: string; paidLikes: number };
 }
 export interface Classification {

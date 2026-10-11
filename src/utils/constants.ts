@@ -99,6 +99,7 @@ export const WEB_SOCKET_CHANNELS = {
   TokenTransaction: 'token-transaction',
   TokenHistory: 'token-history',
   SocialGraphUpdated: 'social-graph-updated',
+  ShortsUpdated: 'shorts-updated',
 };
 
 export const WEB_SOCKET_RECONNECT_TIMEOUT = 1000;

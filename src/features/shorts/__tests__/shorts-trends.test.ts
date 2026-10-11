@@ -28,3 +28,8 @@ describe('creator earnings trends', () => {
     ]);
   });
 });
+
+it('uses complete server aggregates when the visible receipt list is capped', () => {
+  const report = { series: [{ at: 86400000 }, { at: 172800000 }], finance: { entries: [], series: [{ at: 86400000, earnedAe: '176.32', paidLikes: 2204 }] } } as unknown as Performance;
+  expect(dailyCreatorRevenue(report)).toEqual([{ at: 86400000, earnedAe: '176.32', paidLikes: 2204 }, { at: 172800000, earnedAe: '0', paidLikes: 0 }]);
+});

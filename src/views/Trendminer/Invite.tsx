@@ -14,6 +14,7 @@ import {
 import Shell from '../../components/layout/Shell';
 import PageSpaceHero from '../../components/hero-banner/PageSpaceHero';
 import { useAeSdk } from '../../hooks';
+import { Head } from '../../seo/Head';
 
 export default function Invite() {
   const { t } = useTranslation('trending');
@@ -29,6 +30,10 @@ export default function Invite() {
   return (
     <Shell>
       <div className="ui-page rewards-page mx-auto px-4 py-2">
+        <Head
+          title={`${t('nav.earnRewards', { ns: 'common' })} – Superhero`}
+          canonicalPath="/trends/invite"
+        />
         {/* Hero */}
         <PageSpaceHero
           className="ui-hero mb-6"

@@ -23,6 +23,7 @@ import {
 } from '../libs/dex';
 
 import { useAeSdk } from '../hooks';
+import { Head } from '../seo/Head';
 
 type Aex9ContractApi = ContractMethodsBase & {
   balance: (owner: string) => Promise<{ decodedResult: bigint | string | null | undefined }>;
@@ -178,6 +179,10 @@ export default function AddTokens() {
 
   return (
     <div className="ui-page max-w-[900px] mx-auto py-4 px-4">
+      <Head
+        title={`${t('title')} – Superhero`}
+        canonicalPath="/defi/pool/add-tokens"
+      />
       <DexTabs />
       <h2 className="ui-page-title mb-2">{t('title')}</h2>
       <p className="text-sm text-white/80 mb-3 leading-relaxed">

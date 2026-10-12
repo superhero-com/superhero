@@ -1,6 +1,8 @@
 import { DexPairService } from '@/api/generated';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { Head } from '../../../seo/Head';
 import { PoolCandlestickChart } from '../components/charts/PoolCandlestickChart';
 import {
   PoolHeader,
@@ -9,6 +11,7 @@ import {
 } from '../components/PoolDetail';
 
 const PoolDetail = () => {
+  const { t } = useTranslation('dex');
   const { poolAddress, id } = useParams();
   // Support both :poolAddress (new routes) and :id (legacy routes)
   const address = poolAddress || id || '';
@@ -31,6 +34,12 @@ const PoolDetail = () => {
 
   return (
     <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <Head
+        title={pairData
+          ? `${pairData.token0.symbol}/${pairData.token1.symbol} – ${t('poolHeader.liquidityPool')} – Superhero`
+          : `${t('poolHeader.liquidityPool')} – Superhero`}
+        canonicalPath={`/defi/explore/pools/${address}`}
+      />
       <PoolHeader
         address={address}
         pairData={pairData}

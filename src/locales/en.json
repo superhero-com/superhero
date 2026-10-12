@@ -1185,7 +1185,7 @@
         "failedToLoad": "Failed to load token data"
       },
       "notFound": {
-        "pageTitle": "Page Not Found | Superhero.com",
+        "pageTitle": "Page Not Found – Superhero",
         "pageDescription": "The page you're looking for doesn't exist.",
         "lostInThe": "Oops! Lost in the",
         "blockchain": "blockchain",

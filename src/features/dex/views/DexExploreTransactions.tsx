@@ -10,6 +10,7 @@ import { DexService, PairTransactionDto } from '../../../api/generated';
 import type { DataTableResponse } from '../../shared/components/DataTable';
 import { TransactionCard } from '../components/TransactionCard';
 import DexTransactionExplorerToolbar from '../components/DexTransactionExplorerToolbar';
+import { Head } from '../../../seo/Head';
 import './DexExploreTokens.scss';
 import './DexExploreTransactions.scss';
 
@@ -73,6 +74,10 @@ const DexExploreTransactions = () => {
 
   return (
     <div className="dex-token-explorer dex-tx-explorer">
+      <Head
+        title={`${t('dex.transactionExplorer.title')} – Superhero`}
+        canonicalPath="/defi/explore/transactions"
+      />
       <section aria-labelledby="dex-tx-title">
         <header className="dex-token-explorer__heading">
           <div>

@@ -1,11 +1,14 @@
+import { useTranslation } from 'react-i18next';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 import { useAccount } from '../../../hooks';
+import { Head } from '../../../seo/Head';
 import { AddLiquidityForm, RemoveLiquidityForm } from '../components';
 import { PoolProvider, usePool } from '../context/PoolProvider';
 import { useLiquidityPositions } from '../hooks';
 import LiquidityPositionsPanel from '../components/LiquidityPositionsPanel';
 
 const PoolContent = () => {
+  const { t } = useTranslation('dex');
   const { activeAccount } = useAccount();
   const {
     positions, loading, error, refreshPositions,
@@ -24,6 +27,10 @@ const PoolContent = () => {
 
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <Head
+        title={`${t('dexLayout.pool.label')} – Superhero`}
+        canonicalPath="/defi/pool"
+      />
       {/* Top Row - Forms and Positions */}
       <div className="grid grid-cols-1 min-[1360px]:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start">
         {/* Mobile: Forms First, Desktop: Forms First (left column) */}

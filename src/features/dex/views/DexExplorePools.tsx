@@ -12,6 +12,7 @@ import { TokenChip } from '../../../components/TokenChip';
 import { PairLineChart } from '../components/charts/PairLineChart';
 import DexPoolExplorerToolbar, { PoolSort } from '../components/DexPoolExplorerToolbar';
 import type { TokenPeriod } from '../components/DexTokenExplorerToolbar';
+import { Head } from '../../../seo/Head';
 import './DexExploreTokens.scss';
 import './DexExplorePools.scss';
 import '@/components/explore/components/DexMarketResults.scss';
@@ -75,6 +76,10 @@ const DexExplorePools = () => {
 
   return (
     <div className="dex-token-explorer dex-pool-explorer dex-market-results">
+      <Head
+        title={`${t('explore.explorePools')} – Superhero`}
+        canonicalPath="/defi/explore/pools"
+      />
       <section aria-labelledby="dex-pool-title">
         <header className="dex-token-explorer__heading">
           <div>

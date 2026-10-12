@@ -16,6 +16,7 @@ import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
 import Spinner from '../components/Spinner';
 import { getTokenWithUsd } from '../libs/dexBackend';
+import { Head } from '../seo/Head';
 
 interface TokenData {
   address: string;
@@ -99,6 +100,12 @@ export default function TokenDetail() {
 
   return (
     <div className="dex-token-detail mx-auto mb-10 md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <Head
+        title={tokenDetails
+          ? `${tokenDetails.symbol} – ${t('dex.tokenHeader.token')} – Superhero`
+          : `${t('dex.tokenHeader.token')} – Superhero`}
+        canonicalPath={`/defi/explore/tokens/${tokenAddress}`}
+      />
       <DexTokenHeader
         address={tokenAddress}
         token={tokenDetails}

@@ -10,6 +10,7 @@ import { TokenListTable } from '../../../components/explore/components/TokenList
 import DexTokenExplorerToolbar, {
   tokenOrder, TokenOrder, TokenPeriod, TokenSort,
 } from '../components/DexTokenExplorerToolbar';
+import { Head } from '../../../seo/Head';
 import './DexExploreTokens.scss';
 
 interface PaginatedTokens {
@@ -71,6 +72,10 @@ const DexExploreTokens = () => {
 
   return (
     <div className="dex-token-explorer">
+      <Head
+        title={`${t('dex.exploreTokens.title')} – Superhero`}
+        canonicalPath="/defi/explore/tokens"
+      />
       <section aria-labelledby="dex-token-title">
         <header className="dex-token-explorer__heading">
           <div>

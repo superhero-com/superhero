@@ -17,6 +17,7 @@ import type {
   NostrEvent, NostrFilter, RelayDict,
 } from '../core/types';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
+import { RelayPublishError, type RelayRejection } from './relay-publish-error';
 
 export type NostrClientEvents = {
   event: (event: NostrEvent) => void;
@@ -53,19 +54,28 @@ function generateSubscriptionId(): string {
 }
 
 /**
- * Resolve as soon as ANY input promise fulfills; reject only when they all
- * reject. `Promise.any` equivalent for the repo's pre-ES2021 TS lib target.
+ * Resolve as soon as ANY relay's publish fulfills; reject only when they all
+ * reject, with a {@link RelayPublishError} that keeps each relay's own reason.
+ * `promises[i]` belongs to `relays[i]` (the pool maps them in order).
+ * `Promise.any` equivalent for the repo's pre-ES2021 TS lib target.
  */
-function firstResolved<T>(promises: Promise<T>[]): Promise<T> {
+function firstResolved<T>(relays: string[], promises: Promise<T>[]): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     if (promises.length === 0) {
       reject(new Error('no relays to publish to'));
       return;
     }
+    const rejections: RelayRejection[] = [];
     let pending = promises.length;
-    promises.forEach((p) => p.then(resolve, () => {
+    promises.forEach((p, i) => p.then(resolve, (error: unknown) => {
+      // The pool rejects with an Error for a relay's `OK false` and with a plain
+      // string ("connection failure: …") when the socket never opened.
+      rejections[i] = {
+        relay: relays[i],
+        reason: error instanceof Error ? error.message : String(error),
+      };
       pending -= 1;
-      if (pending === 0) reject(new Error('all relays rejected the event'));
+      if (pending === 0) reject(new RelayPublishError(rejections));
     }));
   });
 }
@@ -171,11 +181,23 @@ export class NostrClient {
     }
   }
 
-  /** Sign (via the revocable identity) and publish an event. Returns its id. */
+  /**
+   * Sign (via the revocable identity) and publish an event. Returns its id.
+   * A relay that answers `auth-required:` gets a NIP-42 AUTH signed by the same
+   * identity and then the event once more (the pool's own retry). When no relay
+   * accepts, rejects with a {@link RelayPublishError} naming each relay's reason.
+   */
   async publishEvent(eventTemplate: EventTemplate): Promise<string> {
     const writeRelays = this.getWriteRelays();
     const event = await this.identity.signEvent(eventTemplate);
-    await firstResolved(this.pool.publish(writeRelays, event as unknown as VerifiedEvent));
+    const onauth = async (authTemplate: EventTemplate): Promise<VerifiedEvent> => {
+      const signed = await this.identity.signEvent(authTemplate);
+      return signed as unknown as VerifiedEvent;
+    };
+    await firstResolved(
+      writeRelays,
+      this.pool.publish(writeRelays, event as unknown as VerifiedEvent, { onauth }),
+    );
     return event.id;
   }
 

@@ -3589,18 +3589,22 @@
       "stepDotLabel": "第 {{number}} 步",
       "ios": {
         "step1": {
-          "title": "点按 ⋯ 菜单",
-          "description": "点按 Safari 右上角的三点菜单（⋯）。"
+          "title": "打开“共享”菜单",
+          "description": "在 iOS 26 上，点按地址栏旁的 •••，然后点按“共享”。在较早的版本上，点按工具栏中的“共享”按钮。"
         },
         "step2": {
-          "title": "添加到主屏幕",
-          "description": "向下滚动并在菜单中点按“添加到主屏幕”。"
+          "title": "点按“添加到主屏幕”",
+          "description": "如果看到“查看更多”，请先点按它，然后向下滚动列表并点按“添加到主屏幕”。"
         },
         "step3": {
-          "title": "点按“添加”",
-          "description": "点按右上角的“添加”确认——应用图标会出现在主屏幕上。"
+          "title": "保持“作为网页 App 打开”开启",
+          "description": "保持此开关开启，Superhero 就会像 App 一样全屏打开。在较早的 iOS 版本上，直接进行下一步即可。"
         },
         "step4": {
+          "title": "点按“添加”",
+          "description": "点按右上角的“添加”——Superhero 图标会出现在主屏幕上。"
+        },
+        "step5": {
           "title": "从主屏幕打开",
           "description": "通过主屏幕图标启动——位置共享和离线模式现已可用。"
         }

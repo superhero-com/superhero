@@ -380,6 +380,8 @@
     },
     "views": {
       "wallet": {
+        "pageTitle": "محفظة متعددة السلاسل – Superhero",
+        "pageDescription": "محفظة Superhero هي مفتاحك إلى منظمات DAO والرموز وأدوات DeFi والمزيد.",
         "hero": {
           "badge": "محفظة متعددة السلاسل",
           "subtitle": "**Superhero** — أكثر من مجرّد محفظة، إنها **مفتاحك** إلى العالم اللامركزي! ادخل وأنشئ وتفاعل. Superhero هي المفتاح إلى DAOs والرموز وأدوات DeFi والمزيد."
@@ -693,6 +695,8 @@
         }
       },
       "privacy": {
+        "pageTitle": "سياسة الخصوصية – Superhero",
+        "pageDescription": "كيف يتعامل Superhero مع بياناتك.",
         "title": "سياسة الخصوصية",
         "lastUpdated": "تم آخر تحديث لسياسة الخصوصية هذه في 29 سبتمبر 2025.",
         "introHeading": "I. مقدمة",
@@ -730,6 +734,8 @@
         "contactP1": "للتواصل معنا بأسئلتك أو تعليقاتك بخصوص هذه السياسة أو ممارسات Superhero.com في جمع المعلومات ونشرها المتعلقة باستخدامك للموقع، يرجى مراسلتنا عبر البريد الإلكتروني على superherowallet@protonmail.com."
       },
       "landing": {
+        "pageTitle": "سوق الانتباه على السلسلة – Superhero",
+        "pageDescription": "اكتشف الترندات التي تؤمن بها وتداولها وشارك في حوكمتها على Superhero.",
         "heroBadge": "نقلة نوعية جديدة في أسواق الانتباه",
         "heroTitleLine1": "متابعة الترندات",
         "heroTitleLine2": "أصبح لها معنى جديد",
@@ -808,6 +814,8 @@
         }
       },
       "branding": {
+        "pageTitle": "حزمة الهوية – Superhero",
+        "pageDescription": "ألوان Superhero وخطوطها وشعاراتها وقوالب أصولها.",
         "brandKit": "حزمة هوية Superhero",
         "heroTitle": "إرشادات الهوية البصرية",
         "heroDescription": "مرحبًا بك في مركز موارد Superhero الرسمي. يفصّل هذا الدليل ألوان علامتنا التجارية والخطوط والشعارات وقوالب الأصول الرقمية لمساعدتك في إنشاء المواد.",
@@ -870,6 +878,8 @@
         }
       },
       "terms": {
+        "pageTitle": "شروط الاستخدام – Superhero",
+        "pageDescription": "شروط استخدام Superhero.",
         "title": "شروط الاستخدام",
         "lastUpdated": "تم آخر تحديث لشروط الاستخدام الحالية (\"الشروط\") في 29 سبتمبر 2025.",
         "section1Title": "I. معلومات الشركة",
@@ -919,6 +929,8 @@
         "inviteAndEarn": "ادعُ واكسب"
       },
       "tokenDetail": {
+        "pageTitle": "تفاصيل الرمز – Superhero DEX",
+        "pageDescription": "أداء السعر والتجمّعات والمعروض لهذا الرمز على Superhero DEX.",
         "loadingTokenDetails": "جارٍ تحميل تفاصيل الرمز...",
         "detailsAndStatistics": "تفاصيل الرمز وإحصاءاته",
         "pools": "التجمّعات ({{count}})",
@@ -949,6 +961,110 @@
       "dexSwap": {
         "pageTitle": "تبديل AE والرموز – Superhero DEX",
         "pageDescription": "تبديل دون الحاجة إلى ثقة على Superhero DEX مع رسوم بيانية مباشرة ونشاط حديث."
+      },
+      "invite": {
+        "pageTitle": "ادعُ واكسب – Superhero",
+        "pageDescription": "ادعُ أصدقاءك إلى Superhero وشارك روابطك واجمع المكافآت مع نمو مجتمعك."
+      },
+      "trendCloud": {
+        "pageTitle": "سحابة الترندات – Superhero",
+        "pageDescription": "اطّلع على الرائج بنظرة واحدة وحوّل المواضيع التي تهمك إلى رموز."
+      },
+      "daos": {
+        "pageTitle": "DAOs – Superhero",
+        "pageDescription": "استكشف منظمات DAO المجتمعية على Superhero، حيث يدير حاملو الرموز خزائنهم معًا."
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "اعرض تفاصيل DAO والمقترحات والتصويتات على Superhero."
+      },
+      "daoVote": {
+        "pageTitle": "تصويت DAO – Superhero",
+        "pageDescription": "راجع المقترح وأسمِع صوتك على Superhero."
+      },
+      "accounts": {
+        "pageTitle": "أبرز الحسابات – Superhero",
+        "pageDescription": "اكتشف أبرز المتداولين والمبدعين على Superhero، مرتّبين حسب النشاط على السلسلة."
+      },
+      "accountDetails": {
+        "pageTitle": "نشاط الحساب – Superhero",
+        "pageDescription": "اطّلع على الرموز التي يملكها هذا الحساب والتي أنشأها، إلى جانب معاملاته، على Superhero."
+      },
+      "createToken": {
+        "pageTitle": "تحويل ترند إلى رمز – Superhero",
+        "pageDescription": "حوّل أي ترند إلى رمز وابنِ مجتمعًا حوله على Superhero."
+      },
+      "txQueue": {
+        "pageTitle": "حالة المعاملة – Superhero",
+        "pageDescription": "تابع حالة معاملتك على Superhero."
+      },
+      "chat": {
+        "pageTitle": "الدردشة – Superhero",
+        "pageDescription": "دردش مع أصدقائك ومجتمعات الرموز على Superhero."
+      },
+      "chatRelays": {
+        "pageTitle": "مرحّلات Nostr – Superhero",
+        "pageDescription": "اختر مرحّلات Nostr التي تقرأ منها دردشة Superhero وتكتب إليها."
+      },
+      "chatDm": {
+        "pageTitle": "رسالة مباشرة – Superhero",
+        "pageDescription": "محادثتك الخاصة على Superhero."
+      },
+      "chatRoom": {
+        "pageTitle": "دردشة المجتمع – Superhero",
+        "pageDescription": "دردش مع حاملي الرموز الآخرين في غرفة هذا المجتمع على Superhero."
+      },
+      "chatRoomInfo": {
+        "pageTitle": "معلومات الغرفة – Superhero",
+        "pageDescription": "اطّلع على أعضاء وتفاصيل دردشة هذا المجتمع على Superhero."
+      },
+      "meet": {
+        "pageTitle": "اجتماع – Superhero",
+        "pageDescription": "انضم إلى اجتماع على Superhero."
+      },
+      "governance": {
+        "pageTitle": "الحوكمة – Superhero",
+        "pageDescription": "شكّل مستقبل المنظومة من خلال تصويتات المجتمع على Superhero."
+      },
+      "faq": {
+        "pageTitle": "الأسئلة الشائعة – Superhero",
+        "pageDescription": "إجابات على أكثر الأسئلة شيوعًا حول Superhero."
+      },
+      "whitepaper": {
+        "pageTitle": "الورقة البيضاء – Superhero",
+        "pageDescription": "كيف يعمل Superhero: منشورات على السلسلة ورموز المجتمعات ومنظمات DAO والحوكمة على æternity."
+      },
+      "dexWrap": {
+        "pageTitle": "تغليف AE – Superhero DEX",
+        "pageDescription": "حوّل AE إلى WAE وبالعكس بنسبة 1:1 تمامًا على Superhero DEX."
+      },
+      "dexPool": {
+        "pageTitle": "توفير السيولة – Superhero DEX",
+        "pageDescription": "أضف السيولة إلى أزواج الرموز وأدِر مراكزك على Superhero DEX."
+      },
+      "dexAddTokens": {
+        "pageTitle": "إضافة الرموز – Superhero DEX",
+        "pageDescription": "اعثر على الرموز في محفظتك وأنشئ لها تجمّعات أو أضف لها السيولة على Superhero DEX."
+      },
+      "dexExploreTokens": {
+        "pageTitle": "استكشاف الرموز – Superhero DEX",
+        "pageDescription": "تصفّح جميع الرموز على Superhero DEX وقارن الأسعار والسيولة."
+      },
+      "dexExplorePools": {
+        "pageTitle": "استكشاف التجمّعات – Superhero DEX",
+        "pageDescription": "اعثر على أزواج الرموز وقارن نشاط التداول والحجم على Superhero DEX."
+      },
+      "dexPoolDetail": {
+        "pageTitle": "تفاصيل التجمّع – Superhero DEX",
+        "pageDescription": "مخطط السعر والاحتياطيات وأحدث المعاملات لهذا التجمّع على Superhero DEX."
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "المعاملات – Superhero DEX",
+        "pageDescription": "تابع أحدث عمليات التبديل ونشاط السيولة على Superhero DEX."
+      },
+      "dexExplore": {
+        "pageTitle": "استكشاف – Superhero DEX",
+        "pageDescription": "استكشف الرموز والتجمّعات والمعاملات على Superhero DEX."
       }
     },
     "removeLiquidity": {

@@ -2742,7 +2742,8 @@
       "step2": "发布关于 Superhero 的帖子，获得 50 AE",
       "progress": "已完成 {{done}}/{{total}} 个步骤",
       "connectX": "连接 X",
-      "postOnX": "发帖赚取"
+      "postOnX": "发帖赚取",
+      "dismiss": "隐藏设置步骤"
     },
     "users": {
       "title": "顶尖交易者"

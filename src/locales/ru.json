@@ -32,6 +32,9 @@
       "searchPlaceholder": "Поиск трендов, пользователей и постов",
       "noCategoryResults": "Ничего не найдено по запросу «{{query}}»."
     },
+    "onboarding": {
+      "dismiss": "Скрыть шаги настройки"
+    },
     "users": {
       "title": "Лучшие трейдеры"
     },

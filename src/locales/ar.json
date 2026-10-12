@@ -2746,7 +2746,8 @@
       "step2": "انشر عن Superhero لكسب 50 AE",
       "progress": "{{done}} من {{total}} خطوات مكتملة",
       "connectX": "توصيل X",
-      "postOnX": "انشر واكسب"
+      "postOnX": "انشر واكسب",
+      "dismiss": "إخفاء خطوات الإعداد"
     },
     "users": {
       "title": "أفضل المتداولين"

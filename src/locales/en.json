@@ -2819,7 +2819,8 @@
       "step2": "Post about Superhero to earn 50 AE",
       "progress": "{{done}} of {{total}} steps done",
       "connectX": "Connect X",
-      "postOnX": "Post & earn"
+      "postOnX": "Post & earn",
+      "dismiss": "Hide setup steps"
     },
     "users": {
       "title": "Top traders"

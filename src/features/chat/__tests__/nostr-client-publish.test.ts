@@ -1,16 +1,22 @@
 import {
   describe, it, expect, vi, beforeEach,
 } from 'vitest';
-import type { EventTemplate } from 'nostr-tools/pure';
+import { verifyEvent, type EventTemplate, type VerifiedEvent } from 'nostr-tools/pure';
+import { makeAuthEvent } from 'nostr-tools/nip42';
 
 import { NostrKeySession } from '../identity/nostr-session';
-import { createRevocableNostrIdentity } from '../identity/revocable-identity';
+import {
+  createRevocableNostrIdentity,
+  NostrIdentityLockedError,
+} from '../identity/revocable-identity';
 import { generateKeys } from '../nostr/crypto';
 import { NostrClient } from '../nostr/nostr-client';
 import { RelayPublishError } from '../nostr/relay-publish-error';
 
+type PublishParams = { onauth?: (evt: EventTemplate) => Promise<VerifiedEvent> };
+
 const pool = vi.hoisted(() => ({
-  publish: vi.fn<(relays: string[], event: unknown) => Promise<string>[]>(),
+  publish: vi.fn<(relays: string[], event: unknown, params?: PublishParams) => Promise<string>[]>(),
   close: vi.fn(),
 }));
 
@@ -44,15 +50,16 @@ const dm = (): EventTemplate => ({
 
 function makeClient() {
   const session = new NostrKeySession();
-  session.unlock(generateKeys());
+  const keys = generateKeys();
+  session.unlock(keys);
   const identity = createRevocableNostrIdentity(() => session.identity());
-  return { client: new NostrClient(identity, relays) };
+  return { client: new NostrClient(identity, relays), session, keys };
 }
 
 /**
  * `publishEvent` used to collapse every per-relay failure into a bare "all
  * relays rejected the event" (issue #742), hiding whether the relay refused the
- * event or was never reached.
+ * event or was never reached, and it never answered a NIP-42 `auth-required:`.
  */
 describe('NostrClient.publishEvent', () => {
   beforeEach(() => {
@@ -105,6 +112,35 @@ describe('NostrClient.publishEvent', () => {
     expect(error.message).toBe(
       'The chat relay is not reachable right now (relay.superhero.chat: connection failed; '
       + 'relay.two.example: connection timed out). Please try again in a moment.',
+    );
+  });
+
+  it('answers a NIP-42 challenge by signing the AUTH event with the same identity', async () => {
+    pool.publish.mockImplementation(() => [Promise.resolve(''), Promise.resolve('')]);
+    const { client, keys } = makeClient();
+
+    await client.publishEvent(dm());
+
+    const [writeRelays, , params] = pool.publish.mock.calls[0];
+    expect(writeRelays).toEqual([RELAY_A, RELAY_B]);
+    expect(params?.onauth).toBeTypeOf('function');
+    const auth = await params!.onauth!(makeAuthEvent(RELAY_A, 'challenge-123'));
+    expect(auth.kind).toBe(22242);
+    expect(auth.pubkey).toBe(keys.publicKey);
+    expect(auth.tags).toContainEqual(['challenge', 'challenge-123']);
+    expect(verifyEvent(auth)).toBe(true);
+  });
+
+  it('cannot answer AUTH once the session is locked', async () => {
+    pool.publish.mockImplementation(() => [Promise.resolve(''), Promise.resolve('')]);
+    const { client, session } = makeClient();
+    await client.publishEvent(dm());
+    const [, , params] = pool.publish.mock.calls[0];
+
+    session.lock('explicit');
+
+    await expect(params!.onauth!(makeAuthEvent(RELAY_A, 'challenge-123'))).rejects.toBeInstanceOf(
+      NostrIdentityLockedError,
     );
   });
 });

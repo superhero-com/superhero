@@ -183,15 +183,20 @@ export class NostrClient {
 
   /**
    * Sign (via the revocable identity) and publish an event. Returns its id.
-   * When no relay accepts, rejects with a {@link RelayPublishError} naming each
-   * relay's reason.
+   * A relay that answers `auth-required:` gets a NIP-42 AUTH signed by the same
+   * identity and then the event once more (the pool's own retry). When no relay
+   * accepts, rejects with a {@link RelayPublishError} naming each relay's reason.
    */
   async publishEvent(eventTemplate: EventTemplate): Promise<string> {
     const writeRelays = this.getWriteRelays();
     const event = await this.identity.signEvent(eventTemplate);
+    const onauth = async (authTemplate: EventTemplate): Promise<VerifiedEvent> => {
+      const signed = await this.identity.signEvent(authTemplate);
+      return signed as unknown as VerifiedEvent;
+    };
     await firstResolved(
       writeRelays,
-      this.pool.publish(writeRelays, event as unknown as VerifiedEvent),
+      this.pool.publish(writeRelays, event as unknown as VerifiedEvent, { onauth }),
     );
     return event.id;
   }

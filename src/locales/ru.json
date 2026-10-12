@@ -348,6 +348,136 @@
       "previousSlide": "Предыдущий слайд",
       "nextSlide": "Следующий слайд",
       "goToSlide": "Перейти к слайду {{number}}"
+    },
+    "views": {
+      "invite": {
+        "pageTitle": "Приглашай и зарабатывай – Superhero",
+        "pageDescription": "Приглашайте друзей в Superhero, делитесь ссылками и получайте награды по мере роста вашего сообщества."
+      },
+      "trendCloud": {
+        "pageTitle": "Облако трендов – Superhero",
+        "pageDescription": "Смотрите, что сейчас в тренде, и токенизируйте темы, которые вам интересны."
+      },
+      "daos": {
+        "pageTitle": "Список DAO – Superhero",
+        "pageDescription": "Изучайте DAO сообществ в Superhero, где держатели токенов вместе управляют казной."
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "Подробности DAO, предложения и голосования в Superhero."
+      },
+      "daoVote": {
+        "pageTitle": "Голосование DAO – Superhero",
+        "pageDescription": "Изучите предложение и выскажите своё мнение в Superhero."
+      },
+      "accounts": {
+        "pageTitle": "Топ аккаунтов – Superhero",
+        "pageDescription": "Лучшие трейдеры и авторы Superhero по активности в блокчейне."
+      },
+      "accountDetails": {
+        "pageTitle": "Активность аккаунта – Superhero",
+        "pageDescription": "Токены, которыми владеет и которые создал этот аккаунт, и его транзакции в Superhero."
+      },
+      "createToken": {
+        "pageTitle": "Токенизировать тренд – Superhero",
+        "pageDescription": "Превратите любой тренд в токен и соберите вокруг него сообщество в Superhero."
+      },
+      "txQueue": {
+        "pageTitle": "Статус транзакции – Superhero",
+        "pageDescription": "Следите за статусом вашей транзакции в Superhero."
+      },
+      "chat": {
+        "pageTitle": "Чат – Superhero",
+        "pageDescription": "Общайтесь с друзьями и сообществами токенов в Superhero."
+      },
+      "chatRelays": {
+        "pageTitle": "Релеи Nostr – Superhero",
+        "pageDescription": "Выберите релеи Nostr, с которых ваш чат Superhero читает и на которые пишет."
+      },
+      "chatDm": {
+        "pageTitle": "Личные сообщения – Superhero",
+        "pageDescription": "Ваша личная переписка в Superhero."
+      },
+      "chatRoom": {
+        "pageTitle": "Чат сообщества – Superhero",
+        "pageDescription": "Общайтесь с другими держателями токена в комнате этого сообщества в Superhero."
+      },
+      "chatRoomInfo": {
+        "pageTitle": "О комнате – Superhero",
+        "pageDescription": "Участники и подробности чата этого сообщества в Superhero."
+      },
+      "landing": {
+        "pageTitle": "Ончейн-рынок внимания – Superhero",
+        "pageDescription": "Находите, торгуйте и управляйте трендами, в которые верите, в Superhero."
+      },
+      "wallet": {
+        "pageTitle": "Мультичейн-кошелёк – Superhero",
+        "pageDescription": "Кошелёк Superhero — ваш ключ к DAO, токенам, инструментам DeFi и многому другому."
+      },
+      "meet": {
+        "pageTitle": "Встреча – Superhero",
+        "pageDescription": "Присоединяйтесь к встрече в Superhero."
+      },
+      "governance": {
+        "pageTitle": "Управление – Superhero",
+        "pageDescription": "Определяйте будущее экосистемы через голосования сообщества в Superhero."
+      },
+      "terms": {
+        "pageTitle": "Условия использования – Superhero",
+        "pageDescription": "Условия использования Superhero."
+      },
+      "privacy": {
+        "pageTitle": "Политика конфиденциальности – Superhero",
+        "pageDescription": "Как Superhero обращается с вашими данными."
+      },
+      "faq": {
+        "pageTitle": "Вопросы и ответы – Superhero",
+        "pageDescription": "Ответы на самые частые вопросы о Superhero."
+      },
+      "branding": {
+        "pageTitle": "Бренд-кит – Superhero",
+        "pageDescription": "Цвета, шрифты, логотипы и шаблоны материалов бренда Superhero."
+      },
+      "whitepaper": {
+        "pageTitle": "Whitepaper – Superhero",
+        "pageDescription": "Как устроен Superhero: ончейн-посты, токены сообществ, DAO и управление в æternity."
+      },
+      "dexWrap": {
+        "pageTitle": "Обернуть AE – Superhero DEX",
+        "pageDescription": "Конвертируйте AE в WAE и обратно точно 1:1 в Superhero DEX."
+      },
+      "dexPool": {
+        "pageTitle": "Добавить ликвидность – Superhero DEX",
+        "pageDescription": "Добавляйте ликвидность в пары токенов и управляйте позициями в Superhero DEX."
+      },
+      "dexAddTokens": {
+        "pageTitle": "Добавить токены – Superhero DEX",
+        "pageDescription": "Найдите токены в своём кошельке и создайте для них пулы или добавьте ликвидность в Superhero DEX."
+      },
+      "dexExploreTokens": {
+        "pageTitle": "Обзор токенов – Superhero DEX",
+        "pageDescription": "Все токены Superhero DEX: сравнивайте цены и ликвидность."
+      },
+      "tokenDetail": {
+        "pageTitle": "О токене – Superhero DEX",
+        "pageDescription": "Динамика цены, пулы и предложение этого токена в Superhero DEX."
+      },
+      "dexExplorePools": {
+        "pageTitle": "Обзор пулов – Superhero DEX",
+        "pageDescription": "Находите пары токенов и сравнивайте торговую активность и объём в Superhero DEX."
+      },
+      "dexPoolDetail": {
+        "pageTitle": "О пуле – Superhero DEX",
+        "pageDescription": "График цены, резервы и последние транзакции этого пула в Superhero DEX."
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "Транзакции – Superhero DEX",
+        "pageDescription": "Следите за последними обменами и операциями с ликвидностью в Superhero DEX."
+      },
+      "dexExplore": {
+        "pageTitle": "Обзор – Superhero DEX",
+        "pageDescription": "Токены, пулы и транзакции Superhero DEX."
+      }
     }
   },
   "banners": {

@@ -380,6 +380,8 @@
     },
     "views": {
       "wallet": {
+        "pageTitle": "多链钱包 – Superhero",
+        "pageDescription": "Superhero 钱包是你通往 DAO、代币、DeFi 工具等一切的钥匙。",
         "hero": {
           "badge": "多链钱包",
           "subtitle": "**Superhero**——不止是钱包，更是你通往去中心化世界的**钥匙**！访问、创建、参与。Superhero 是通向 DAO、代币、DeFi 工具等一切的钥匙。"
@@ -693,6 +695,8 @@
         }
       },
       "privacy": {
+        "pageTitle": "隐私政策 – Superhero",
+        "pageDescription": "Superhero 如何处理你的数据。",
         "title": "隐私政策",
         "lastUpdated": "本隐私政策最近一次更新于 2025 年 9 月 29 日。",
         "introHeading": "I. 引言",
@@ -730,6 +734,8 @@
         "contactP1": "如需就本政策或与你使用本网站相关的 Superhero.com 信息收集和传播做法向我们提出疑问或意见，请发送电子邮件至 superherowallet@protonmail.com 联系我们。"
       },
       "landing": {
+        "pageTitle": "链上注意力市场 – Superhero",
+        "pageDescription": "在 Superhero 上发现、交易并治理你看好的趋势。",
         "heroBadge": "注意力市场的全新范式变革",
         "heroTitleLine1": "追随趋势",
         "heroTitleLine2": "有了全新的含义",
@@ -808,6 +814,8 @@
         }
       },
       "branding": {
+        "pageTitle": "品牌套件 – Superhero",
+        "pageDescription": "Superhero 的品牌色彩、字体、徽标和素材模板。",
         "brandKit": "Superhero 品牌套件",
         "heroTitle": "品牌识别指南",
         "heroDescription": "欢迎来到官方 Superhero 资源中心。本指南详细介绍了我们的品牌色彩、字体、徽标和数字资产模板，帮助你制作素材。",
@@ -870,6 +878,8 @@
         }
       },
       "terms": {
+        "pageTitle": "使用条款 – Superhero",
+        "pageDescription": "使用 Superhero 的条款。",
         "title": "使用条款",
         "lastUpdated": "本使用条款（\"条款\"）最近一次更新于 2025 年 9 月 29 日。",
         "section1Title": "I. 公司信息",
@@ -919,6 +929,8 @@
         "inviteAndEarn": "邀请赚奖励"
       },
       "tokenDetail": {
+        "pageTitle": "代币详情 – Superhero DEX",
+        "pageDescription": "查看该代币在 Superhero DEX 上的价格表现、资金池和供应量。",
         "loadingTokenDetails": "正在加载代币详情…",
         "detailsAndStatistics": "代币详情与统计数据",
         "pools": "资金池（{{count}}）",
@@ -949,6 +961,110 @@
       "dexSwap": {
         "pageTitle": "兑换 AE 和代币 – Superhero DEX",
         "pageDescription": "在 Superhero DEX 上进行去信任兑换，配有实时图表和近期活动。"
+      },
+      "invite": {
+        "pageTitle": "邀请赚奖励 – Superhero",
+        "pageDescription": "邀请好友加入 Superhero，分享你的邀请链接，随着社区壮大领取奖励。"
+      },
+      "trendCloud": {
+        "pageTitle": "趋势云 – Superhero",
+        "pageDescription": "一眼看清当下热门，将你关注的话题代币化。"
+      },
+      "daos": {
+        "pageTitle": "DAO 列表 – Superhero",
+        "pageDescription": "探索 Superhero 上的社区 DAO，代币持有者在这里共同管理资金库。"
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "在 Superhero 上查看 DAO 详情、提案和投票。"
+      },
+      "daoVote": {
+        "pageTitle": "DAO 投票 – Superhero",
+        "pageDescription": "查看提案详情，在 Superhero 上发出你的声音。"
+      },
+      "accounts": {
+        "pageTitle": "顶级账户 – Superhero",
+        "pageDescription": "发现 Superhero 上的顶级交易者和创作者，按链上活跃度排名。"
+      },
+      "accountDetails": {
+        "pageTitle": "账户动态 – Superhero",
+        "pageDescription": "查看该账户在 Superhero 上持有和创建的代币及其交易。"
+      },
+      "createToken": {
+        "pageTitle": "将趋势代币化 – Superhero",
+        "pageDescription": "在 Superhero 上将任何趋势变成代币，并围绕它建立社区。"
+      },
+      "txQueue": {
+        "pageTitle": "交易状态 – Superhero",
+        "pageDescription": "在 Superhero 上追踪你的交易状态。"
+      },
+      "chat": {
+        "pageTitle": "聊天 – Superhero",
+        "pageDescription": "在 Superhero 上与好友和代币社区聊天。"
+      },
+      "chatRelays": {
+        "pageTitle": "Nostr 中继 – Superhero",
+        "pageDescription": "选择你的 Superhero 聊天读取和写入的 Nostr 中继。"
+      },
+      "chatDm": {
+        "pageTitle": "私信 – Superhero",
+        "pageDescription": "你在 Superhero 上的私密对话。"
+      },
+      "chatRoom": {
+        "pageTitle": "社区聊天 – Superhero",
+        "pageDescription": "在 Superhero 的社区聊天室中与其他代币持有者交流。"
+      },
+      "chatRoomInfo": {
+        "pageTitle": "聊天室信息 – Superhero",
+        "pageDescription": "查看 Superhero 上这个社区聊天室的成员和详情。"
+      },
+      "meet": {
+        "pageTitle": "会议 – Superhero",
+        "pageDescription": "加入 Superhero 会议。"
+      },
+      "governance": {
+        "pageTitle": "治理 – Superhero",
+        "pageDescription": "在 Superhero 上通过社区投票塑造生态系统的未来。"
+      },
+      "faq": {
+        "pageTitle": "常见问题 – Superhero",
+        "pageDescription": "关于 Superhero 最常见问题的解答。"
+      },
+      "whitepaper": {
+        "pageTitle": "白皮书 – Superhero",
+        "pageDescription": "了解 Superhero 的运作方式：链上帖子、社区代币、DAO 以及 æternity 上的治理。"
+      },
+      "dexWrap": {
+        "pageTitle": "封装 AE – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上按精确的 1:1 比例在 AE 和 WAE 之间转换。"
+      },
+      "dexPool": {
+        "pageTitle": "提供流动性 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上为代币对添加流动性并管理你的仓位。"
+      },
+      "dexAddTokens": {
+        "pageTitle": "添加代币 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上找到你钱包中的代币，为其创建资金池或添加流动性。"
+      },
+      "dexExploreTokens": {
+        "pageTitle": "探索代币 – Superhero DEX",
+        "pageDescription": "浏览 Superhero DEX 上的所有代币，比较价格和流动性。"
+      },
+      "dexExplorePools": {
+        "pageTitle": "探索资金池 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上查找代币对，比较交易活跃度和交易量。"
+      },
+      "dexPoolDetail": {
+        "pageTitle": "资金池详情 – Superhero DEX",
+        "pageDescription": "查看该资金池在 Superhero DEX 上的价格图表、储备和近期交易。"
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "交易记录 – Superhero DEX",
+        "pageDescription": "关注 Superhero DEX 上最新的兑换和流动性活动。"
+      },
+      "dexExplore": {
+        "pageTitle": "探索 – Superhero DEX",
+        "pageDescription": "在 Superhero DEX 上探索代币、资金池和交易。"
       }
     },
     "removeLiquidity": {

@@ -630,6 +630,8 @@
         "pageDescription": "Trustless swapping on Superhero DEX with live charts and recent activity."
       },
       "wallet": {
+        "pageTitle": "Multichain Wallet – Superhero",
+        "pageDescription": "The Superhero Wallet is your key to DAOs, tokens, DeFi tools, and more.",
         "hero": {
           "badge": "Multichain Wallet",
           "subtitle": "**Superhero** — more than a wallet, it’s your **key** to the decentralized world! Access, create, and engage. Superhero is the key to DAOs, tokens, DeFi tools, and more."
@@ -958,6 +960,8 @@
         "inviteAndEarn": "Invite & Earn"
       },
       "branding": {
+        "pageTitle": "Brand Kit – Superhero",
+        "pageDescription": "Superhero brand colors, typography, logos, and asset templates.",
         "brandKit": "Superhero Brand Kit",
         "heroTitle": "Brand Identity Guidelines",
         "heroDescription": "Welcome to the official Superhero resource hub. This guide details our brand colors, typography, logos, and digital asset templates to help you create materials.",
@@ -1020,6 +1024,8 @@
         }
       },
       "terms": {
+        "pageTitle": "Terms of Use – Superhero",
+        "pageDescription": "The terms for using Superhero.",
         "title": "TERMS OF USE",
         "lastUpdated": "The present Terms of Use (\"Terms\") were last updated on 29 September 2025.",
         "section1Title": "I. Company information",
@@ -1054,6 +1060,8 @@
         "copyrightNotice": "“COPYRIGHT – 2025 – Superhero.com ALL RIGHTS RESERVED”. Superhero.com reserves its right to take every necessary legal action against any breach or infringement of its intellectual property rights. The rules mentioned above apply to databases on the website, which are protected under Directive 96/9/EC of the European Parliament and the Council of 11 March 1996 on the legal protection of databases. For any additional questions, please contact the Superhero.com team at: superherowallet@protonmail.com"
       },
       "privacy": {
+        "pageTitle": "Privacy Policy – Superhero",
+        "pageDescription": "How Superhero handles your data.",
         "title": "PRIVACY POLICY",
         "lastUpdated": "The present Privacy Policy was last updated on 29 September 2025.",
         "introHeading": "I. Introduction",
@@ -1091,6 +1099,8 @@
         "contactP1": "To contact us with your questions or comments regarding this Policy or the information collection and dissemination practices of Superhero.com relevant to your use of the Website, please email us at superherowallet@protonmail.com."
       },
       "landing": {
+        "pageTitle": "On-Chain Attention Market – Superhero",
+        "pageDescription": "Discover, trade, and govern the trends you believe in on Superhero.",
         "heroBadge": "New paradigm shift in attention markets",
         "heroTitleLine1": "Following trends",
         "heroTitleLine2": "just got a new meaning",
@@ -1169,6 +1179,8 @@
         }
       },
       "tokenDetail": {
+        "pageTitle": "Token Details – Superhero DEX",
+        "pageDescription": "Price performance, pools, and supply for this token on Superhero DEX.",
         "loadingTokenDetails": "Loading token details...",
         "detailsAndStatistics": "Token details and statistics",
         "pools": "Pools ({{count}})",
@@ -1195,6 +1207,110 @@
         "orExplore": "Or explore these pages:",
         "browseTokens": "Browse Tokens",
         "createToken": "Create Token"
+      },
+      "invite": {
+        "pageTitle": "Invite & Earn – Superhero",
+        "pageDescription": "Invite friends to Superhero, share your links, and collect rewards as your community grows."
+      },
+      "trendCloud": {
+        "pageTitle": "Trend Cloud – Superhero",
+        "pageDescription": "See what's trending at a glance and tokenize the topics you care about."
+      },
+      "daos": {
+        "pageTitle": "DAOs – Superhero",
+        "pageDescription": "Explore community DAOs on Superhero, where token holders shape their treasuries together."
+      },
+      "dao": {
+        "pageTitle": "DAO – Superhero",
+        "pageDescription": "View DAO details, proposals, and votes on Superhero."
+      },
+      "daoVote": {
+        "pageTitle": "DAO Vote – Superhero",
+        "pageDescription": "Review the proposal and make your voice heard on Superhero."
+      },
+      "accounts": {
+        "pageTitle": "Top Accounts – Superhero",
+        "pageDescription": "Discover the top traders and creators on Superhero, ranked by on-chain activity."
+      },
+      "accountDetails": {
+        "pageTitle": "Account Activity – Superhero",
+        "pageDescription": "See the tokens this account holds and created, plus its transactions, on Superhero."
+      },
+      "createToken": {
+        "pageTitle": "Tokenize a Trend – Superhero",
+        "pageDescription": "Turn any trend into a token and build a community around it on Superhero."
+      },
+      "txQueue": {
+        "pageTitle": "Transaction Status – Superhero",
+        "pageDescription": "Track the status of your transaction on Superhero."
+      },
+      "chat": {
+        "pageTitle": "Chat – Superhero",
+        "pageDescription": "Chat with friends and token communities on Superhero."
+      },
+      "chatRelays": {
+        "pageTitle": "Nostr Relays – Superhero",
+        "pageDescription": "Choose the Nostr relays your Superhero chat reads from and writes to."
+      },
+      "chatDm": {
+        "pageTitle": "Direct Message – Superhero",
+        "pageDescription": "Your private conversation on Superhero."
+      },
+      "chatRoom": {
+        "pageTitle": "Community Chat – Superhero",
+        "pageDescription": "Chat with fellow token holders in this community room on Superhero."
+      },
+      "chatRoomInfo": {
+        "pageTitle": "Room Info – Superhero",
+        "pageDescription": "See the members and details of this community chat on Superhero."
+      },
+      "meet": {
+        "pageTitle": "Meet – Superhero",
+        "pageDescription": "Join a Superhero meeting."
+      },
+      "governance": {
+        "pageTitle": "Governance – Superhero",
+        "pageDescription": "Shape the future of the ecosystem through community polls on Superhero."
+      },
+      "faq": {
+        "pageTitle": "FAQ – Superhero",
+        "pageDescription": "Answers to the most common questions about Superhero."
+      },
+      "whitepaper": {
+        "pageTitle": "Whitepaper – Superhero",
+        "pageDescription": "How Superhero works: on-chain posts, community tokens, DAOs, and governance on æternity."
+      },
+      "dexWrap": {
+        "pageTitle": "Wrap AE – Superhero DEX",
+        "pageDescription": "Convert AE to WAE and back at an exact 1:1 rate on Superhero DEX."
+      },
+      "dexPool": {
+        "pageTitle": "Provide Liquidity – Superhero DEX",
+        "pageDescription": "Add liquidity to token pairs and manage your positions on Superhero DEX."
+      },
+      "dexAddTokens": {
+        "pageTitle": "Add Tokens – Superhero DEX",
+        "pageDescription": "Find the tokens in your wallet and create pools or add liquidity for them on Superhero DEX."
+      },
+      "dexExploreTokens": {
+        "pageTitle": "Explore Tokens – Superhero DEX",
+        "pageDescription": "Browse every token on Superhero DEX and compare prices and liquidity."
+      },
+      "dexExplorePools": {
+        "pageTitle": "Explore Pools – Superhero DEX",
+        "pageDescription": "Find token pairs and compare trading activity and volume on Superhero DEX."
+      },
+      "dexPoolDetail": {
+        "pageTitle": "Pool Details – Superhero DEX",
+        "pageDescription": "Price chart, reserves, and recent transactions for this pool on Superhero DEX."
+      },
+      "dexExploreTransactions": {
+        "pageTitle": "Transactions – Superhero DEX",
+        "pageDescription": "Follow the latest swaps and liquidity activity on Superhero DEX."
+      },
+      "dexExplore": {
+        "pageTitle": "Explore – Superhero DEX",
+        "pageDescription": "Explore tokens, pools, and transactions on Superhero DEX."
       }
     },
     "removeLiquidity": {

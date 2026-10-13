@@ -18,22 +18,35 @@ describe('errorToUserMessage', () => {
     const wrap = (r: string) => ({ message: `Invocation failed: "${r}"` });
     expect(errorToUserMessage(wrap('AedexV2Router:INSUFFICIENT_A_AMOUNT'))).toContain('pool price moved');
     expect(errorToUserMessage(wrap('AedexV2Router:INSUFFICIENT_B_AMOUNT'))).toContain('pool price moved');
-    expect(errorToUserMessage(wrap('AedexV2Router:INSUFFICIENT_OUTPUT_AMOUNT')).toLowerCase()).toContain('minimum output');
+    expect(errorToUserMessage(wrap('AedexV2Router:INSUFFICIENT_OUTPUT_AMOUNT')).toLowerCase()).toContain('less than the minimum');
     expect(errorToUserMessage(wrap('AedexV2Router:EXPIRED')).toLowerCase()).toContain('deadline');
     expect(errorToUserMessage(wrap('AedexV2Router:INVALID_PATH')).toLowerCase()).toContain('invalid route');
     expect(errorToUserMessage(wrap('AedexV2Router:INVALID_TO')).toLowerCase()).toContain('invalid recipient');
     expect(errorToUserMessage(wrap('AedexV2Router:PAIR_EXISTS')).toLowerCase()).toContain('already exists');
   });
 
-  it('maps DEX contract error codes to readable messages', () => {
+  it('explains each DEX contract error code and keeps the code', () => {
     const wrap = (r: string) => ({ message: `Invocation failed: "${r}"` });
-    expect(errorToUserMessage(wrap('AedexV2Library: IDENTICAL_ADDRESSES'), { action: 'swap' })).toContain('Both tokens are the same');
-    expect(errorToUserMessage(wrap('AedexV2Pair: INSUFFICIENT_LIQUIDITY_MINTED'), { action: 'add-liquidity' })).toContain('too small to mint');
-    expect(errorToUserMessage(wrap('AedexV2Router: INSUFFICIENT_B_AMOUNT'), { slippagePct: 1 })).toContain('1%');
+    const sameToken = errorToUserMessage(wrap('AedexV2Library: IDENTICAL_ADDRESSES'), { action: 'swap' });
+    expect(sameToken).toContain('both selected tokens are the same');
+    expect(sameToken).toContain('(AedexV2Library: IDENTICAL_ADDRESSES)');
+    expect(errorToUserMessage(wrap('AedexV2Pair: INSUFFICIENT_LIQUIDITY_MINTED'), { action: 'add-liquidity' }))
+      .toContain('too small to mint any pool tokens');
+    const bAmount = errorToUserMessage(wrap('AedexV2Router: INSUFFICIENT_B_AMOUNT'), { slippagePct: 1 });
+    expect(bAmount).toContain('less of the second token');
+    expect(bAmount).toContain('1%');
     expect(errorToUserMessage(wrap('AedexV2Router: EXCESSIVE_INPUT_AMOUNT'), { slippagePct: 2 })).toContain('2%');
     expect(errorToUserMessage(wrap('AedexV2Router: EXPIRED'), { deadlineMins: 20 })).toContain('20');
-    expect(errorToUserMessage(new Error('Invocation failed: WAE: LOW_BALANCE'))).toContain('Not enough balance');
-    expect(errorToUserMessage(new Error('AedexV2Pair: BALANCE_ACCOUNT_NOT_EXISTENT'))).toContain('no liquidity in this pool');
+    expect(errorToUserMessage(wrap('AedexV2Router: INVALID_PATH_FIRST'))).toContain('must start with wrapped AE');
+    expect(errorToUserMessage(new Error('Invocation failed: WAE: LOW_BALANCE'))).toContain('WAE) balance is too low');
+    expect(errorToUserMessage(new Error('AedexV2Pair: BALANCE_ACCOUNT_NOT_EXISTENT')))
+      .toContain('never provided liquidity to this pool');
+    expect(errorToUserMessage(wrap('AedexV2Factory: PAIR_EXISTS'))).toContain('already exists');
+  });
+
+  it('shows the raw code for unknown DEX contract errors', () => {
+    expect(errorToUserMessage(new Error('AedexV2Pair: SOMETHING_NEW')))
+      .toBe('The DEX contract rejected this transaction: AedexV2Pair: SOMETHING_NEW.');
   });
 
   it('fallbacks by action', () => {

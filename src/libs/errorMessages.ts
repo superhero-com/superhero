@@ -11,73 +11,39 @@ type ErrorContext = {
 type Translate = (key: string, options?: any) => string;
 
 /**
- * Error codes raised by the DEX contracts (dex-contracts-v2 build/errors.js),
- * mapped to translation keys in the `errors` namespace.
+ * Error codes raised by the DEX contracts. Each code has its own message in
+ * `errors.dexContract.<Contract>_<CODE>`, written from the contract-side reason
+ * in aeternity/dex-contracts-v2 test/shared/utilities/errors.js.
  */
-const DEX_CONTRACT_ERRORS: Record<string, string> = {
-  'AedexV2Library: IDENTICAL_ADDRESSES': 'identicalTokens',
-  'AedexV2Library: INSUFFICIENT_AMOUNT': 'amountTooLow',
-  'AedexV2Library: INSUFFICIENT_LIQUIDITY': 'insufficientLiquidity',
-  'AedexV2Library: NO_PAIR_FOUND': 'noRoute',
-  'AedexV2Library: INSUFFICIENT_INPUT_AMOUNT': 'amountTooLow',
-  'AedexV2Library: INSUFFICIENT_OUTPUT_AMOUNT': 'outputTooLow',
-  'AedexV2Library: INVALID_PATH': 'invalidRoute',
-  'AedexV2Library: INTERNAL_ERROR_AMOUNTS_VOID': 'dexInternalError',
-  'AedexV2Library: INTERNAL_ERROR_PATH_VOID': 'dexInternalError',
-  'AedexV2Router: DIFFERENT_WAE_ADDRESSES': 'dexInternalError',
-  'AedexV2Router: INSUFFICIENT_A_AMOUNT': 'poolRatioMoved',
-  'AedexV2Router: INSUFFICIENT_B_AMOUNT': 'poolRatioMoved',
-  'AedexV2Router: EXCESSIVE_INPUT_AMOUNT': 'excessiveInputAmount',
-  'AedexV2Router: INVALID_PATH_LAST': 'invalidRoute',
-  'AedexV2Router: INVALID_PATH_FIRST': 'invalidRoute',
-  'AedexV2Router: INVALID_PATH': 'invalidRoute',
-  'AedexV2Router: INSUFFICIENT_OUTPUT_AMOUNT': 'insufficientOutputAmount',
-  'AedexV2Router: EXPIRED': 'deadlineReached',
-  'AedexV2Router: AMOUNT_LIST_IS_SHORTER': 'dexInternalError',
-  'WAE: LOW_BALANCE': 'insufficientBalance',
-  'WAE: LOW_ALLOWANCE': 'tokenNotApproved',
-  'WAE: ALLOWANCE_NOT_EXISTENT': 'tokenNotApproved',
-  'WAE: NON_NEGATIVE_VALUE_REQUIRED': 'invalidAmount',
-  'WAE: ALLOWANCE_ALREADY_EXISTENT': 'allowanceExists',
-  'AedexV2Factory: FORBIDDEN': 'forbidden',
-  'AedexV2Factory: IDENTICAL_ADDRESSES': 'identicalTokens',
-  'AedexV2Factory: PAIR_EXISTS': 'pairExists',
-  'AedexV2Pair: NEGATIVE_VALUE_ON_TRANSFER': 'invalidAmount',
-  'AedexV2Pair: NOT_DEBUG_MODE': 'forbidden',
-  'AedexV2Pair: LP': 'dexInternalError',
-  'AedexV2Pair: INSUFFICIENT_LIQUIDITY_MINTED': 'liquidityMintedTooLow',
-  'AedexV2Pair: INSUFFICIENT_OUTPUT_AMOUNT': 'outputTooLow',
-  'AedexV2Pair: INSUFFICIENT_LIQUIDITY': 'insufficientLiquidity',
-  'AedexV2Pair: INVALID_TO': 'invalidRecipient',
-  'AedexV2Pair: INSUFFICIENT_INPUT_AMOUNT': 'amountTooLow',
-  'AedexV2Pair: INSUFFICIENT_BALANCE': 'pairBalanceMissing',
-  'AedexV2Pair: INSUFFICIENT_LIQUIDITY_BURNED': 'liquidityBurnedTooLow',
-  'AedexV2Pair: INSUFFICIENT_BALANCE_FOR_TRANSFER': 'insufficientBalance',
-  'AedexV2Pair: BALANCE_ACCOUNT_NOT_EXISTENT': 'noLiquidityPosition',
-  'AedexV2Pair: INSUFFICIENT_ALLOWANCE': 'tokenNotApproved',
-  'AedexV2Pair: ALLOWANCE_NOT_EXISTENT': 'tokenNotApproved',
-  'AedexV2Pair: INSUFFICIENT_TOTAL_SUPPLY': 'dexInternalError',
-  'AedexV2Pair: INSUFFICIENT_BALANCE_FOR_BURNING': 'liquidityBurnedTooLow',
-};
-
 const DEX_CONTRACT_ERROR_RE = (
   /\b(AedexV2(?:Library|Router|Factory|Pair)|WAE)\s*:\s*([A-Z][A-Z0-9_]*)/
 );
 
+/** Codes whose message ends with a slippage hint. */
+const SLIPPAGE_CODES = new Set([
+  'AedexV2Router_INSUFFICIENT_A_AMOUNT',
+  'AedexV2Router_INSUFFICIENT_B_AMOUNT',
+  'AedexV2Router_EXCESSIVE_INPUT_AMOUNT',
+  'AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT',
+]);
+
+/** Codes whose message ends with a deadline hint. */
+const DEADLINE_CODES = new Set(['AedexV2Router_EXPIRED']);
+
 function dexContractErrorMessage(raw: string, ctx: ErrorContext, t: Translate): string | null {
   const match = raw.match(DEX_CONTRACT_ERROR_RE);
   if (!match) return null;
-  const key = DEX_CONTRACT_ERRORS[`${match[1]}: ${match[2]}`];
-  if (!key) return null;
-  if (key === 'insufficientOutputAmount' || key === 'poolRatioMoved' || key === 'excessiveInputAmount') {
-    const hint = ctx.slippagePct != null ? t('slippageHint', { slippagePct: ctx.slippagePct }) : t('slippageHintGeneric');
-    return t(key, { hint });
+  const code = `${match[1]}: ${match[2]}`;
+  const id = `${match[1]}_${match[2]}`;
+  const key = `dexContract.${id}`;
+  if (!i18n.exists(key, { ns: 'errors' })) return null;
+  let hint = '';
+  if (SLIPPAGE_CODES.has(id)) {
+    hint = ctx.slippagePct != null ? t('slippageHint', { slippagePct: ctx.slippagePct }) : t('slippageHintGeneric');
+  } else if (DEADLINE_CODES.has(id)) {
+    hint = ctx.deadlineMins != null ? t('deadlineHint', { deadlineMins: ctx.deadlineMins }) : t('deadlineHintGeneric');
   }
-  if (key === 'deadlineReached') {
-    const hint = ctx.deadlineMins != null ? t('deadlineHint', { deadlineMins: ctx.deadlineMins }) : t('deadlineHintGeneric');
-    return t(key, { hint });
-  }
-  return t(key);
+  return `${t(key, { hint })} (${code})`;
 }
 
 /**
@@ -201,6 +167,12 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
       default:
         break;
     }
+  }
+
+  // Unknown DEX contract code: show it instead of a generic failure
+  const unknownCode = raw.match(DEX_CONTRACT_ERROR_RE);
+  if (unknownCode) {
+    return t('dexContractFallback', { code: `${unknownCode[1]}: ${unknownCode[2]}` });
   }
 
   // Fallbacks by action

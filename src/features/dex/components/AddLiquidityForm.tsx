@@ -10,6 +10,7 @@ import Spinner from '@/components/Spinner';
 import { CONFIG } from '../../../config';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import { useAddLiquidity } from '../hooks';
+import { useReferenceRatio } from '../hooks/useReferenceRatio';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
 import { DexTokenDto, DexService } from '../../../api/generated';
@@ -53,6 +54,8 @@ const AddLiquidityForm = () => {
   const [searchA, setSearchA] = useState('');
   const [searchB, setSearchB] = useState('');
   const [lastEdited, setLastEdited] = useState<'A' | 'B' | null>(null);
+  // Field currently holding a suggested (not typed) amount for a pool that does not exist yet.
+  const [suggested, setSuggested] = useState<'A' | 'B' | null>(null);
 
   // Liquidity hook
   const {
@@ -258,6 +261,7 @@ const AddLiquidityForm = () => {
     setAmountA('');
     setAmountB('');
     setLastEdited(null);
+    setSuggested(null);
     setState((prev) => ({ ...prev, error: null }));
   }, [tokenA?.address, tokenB?.address, setState]);
 
@@ -291,6 +295,16 @@ const AddLiquidityForm = () => {
     && state.tokenB === (tokenB?.is_ae ? 'AE' : tokenB?.address);
   const poolReady = pairMatches && quoteStatus === 'ready';
   const poolRatio = poolReady && state.pairExists ? state.pairPreview?.ratioAinB : undefined;
+  const newPool = poolReady && !state.pairExists;
+  // New pool: suggest the second amount from both tokens' AE pools, but let the user override it.
+  const suggestedRatio = useReferenceRatio(
+    state.tokenA,
+    state.tokenB,
+    state.decA,
+    state.decB,
+    newPool,
+  );
+  const startRatio = newPool ? suggestedRatio : undefined;
 
   useEffect(() => {
     if (!poolRatio) return;
@@ -307,12 +321,20 @@ const AddLiquidityForm = () => {
     setLastEdited('A');
     setAmountA(value);
     if (poolRatio) setAmountB(linkedDeposit(value, poolRatio, tokenB?.decimals ?? 18, 'A') ?? '');
+    else if (startRatio && (!amountB || suggested === 'B')) {
+      setAmountB(linkedDeposit(value, startRatio, tokenB?.decimals ?? 18, 'A') ?? '');
+      setSuggested('B');
+    } else if (suggested === 'A') setSuggested(null);
     setState((prev) => ({ ...prev, error: null }));
   };
   const handleAmountBChange = (value: string) => {
     setLastEdited('B');
     setAmountB(value);
     if (poolRatio) setAmountA(linkedDeposit(value, poolRatio, tokenA?.decimals ?? 18, 'B') ?? '');
+    else if (startRatio && (!amountA || suggested === 'A')) {
+      setAmountA(linkedDeposit(value, startRatio, tokenA?.decimals ?? 18, 'B') ?? '');
+      setSuggested('A');
+    } else if (suggested === 'B') setSuggested(null);
     setState((prev) => ({ ...prev, error: null }));
   };
   const selectToken = (side: 'A' | 'B', token: DexTokenDto) => {
@@ -320,6 +342,7 @@ const AddLiquidityForm = () => {
     setAmountA('');
     setAmountB('');
     setLastEdited(null);
+    setSuggested(null);
     setState((prev) => ({ ...prev, error: null }));
   };
 
@@ -431,6 +454,13 @@ const AddLiquidityForm = () => {
 
   useEffect(() => { setShowConfirm(false); }, [address, tokenA, tokenB]);
 
+  const amountHint = (side: 'A' | 'B') => {
+    const filled = side === 'A' ? amountA : amountB;
+    if (poolRatio && filled && lastEdited === (side === 'A' ? 'B' : 'A')) return tDex('poolAdd.linked');
+    if (startRatio && filled && suggested === side) return tDex('poolAdd.suggested');
+    return (side === 'A' ? tokenA : tokenB)?.name;
+  };
+
   return (
     <section className="dex-swap pool-add" aria-label={tDex('poolAdd.title')}>
       <header className="dex-swap__header">
@@ -450,7 +480,7 @@ const AddLiquidityForm = () => {
       <SwapAmountField
         pay
         label={tDex('poolAdd.deposit', { symbol: tokenA?.symbol || '' })}
-        hint={lastEdited === 'B' && poolRatio && amountA ? tDex('poolAdd.linked') : tokenA?.name}
+        hint={amountHint('A')}
         selectorLabel={tDex('poolAdd.selectFirst')}
         token={tokenA}
         otherToken={tokenB}
@@ -470,7 +500,7 @@ const AddLiquidityForm = () => {
       <SwapAmountField
         pay
         label={tDex('poolAdd.deposit', { symbol: tokenB?.symbol || '' })}
-        hint={lastEdited === 'A' && poolRatio && amountB ? tDex('poolAdd.linked') : tokenB?.name}
+        hint={amountHint('B')}
         selectorLabel={tDex('poolAdd.selectSecond')}
         token={tokenB}
         otherToken={tokenA}
@@ -488,7 +518,7 @@ const AddLiquidityForm = () => {
       />
       <p className="pool-link-hint">
         <Link2 aria-hidden="true" />
-        {tDex(poolReady && !state.pairExists ? 'poolAdd.startingHint' : 'poolAdd.ratioHint')}
+        {tDex(newPool ? 'poolAdd.startingHint' : 'poolAdd.ratioHint')}
       </p>
       <LiquidityPreview
         preview={poolReady ? state.pairPreview : null}

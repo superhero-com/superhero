@@ -7,6 +7,7 @@ import {
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { DexTokenDto } from '@/api/generated';
+import { CONFIG } from '@/config';
 
 // Import RecentActivity type
 import type { RecentActivity } from '../components/dex/types/dex';
@@ -35,6 +36,13 @@ const dexDeadlineMinsStorage = createClampedNumberJSONStorage(safeLocalJSONStora
 export const slippagePctAtom = atomWithStorage<number>('dex:slippage', 5, dexSlippagePctStorage);
 
 export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', 30, dexDeadlineMinsStorage);
+
+// Tokens the user added to the swap / pool token list by contract address
+export const customDexTokensAtom = atomWithStorage<DexTokenDto[]>(
+  `dex:customTokens:${CONFIG.NETWORK}`,
+  [],
+  safeLocalJSONStorage,
+);
 
 // DEX state atoms
 // Structure: {[accountAddress]: {[pairAddress]: LiquidityPositionData}}

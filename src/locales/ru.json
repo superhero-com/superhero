@@ -588,6 +588,8 @@
     }
   },
   "social": {
+    "originalPost": "Исходный пост",
+    "translatePost": "Перевести",
     "postDetail": {
       "title": "Публикация",
       "conversation": "Обсуждение",

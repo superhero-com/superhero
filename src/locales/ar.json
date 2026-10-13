@@ -199,6 +199,7 @@
       "chainNameClaimStarted": "تم إرسال المطالبة. في انتظار الرعاية والنقل…",
       "chainNameClaimPending": "حالة المطالبة: {{status}}",
       "chainNameClaimCompleted": "تمت المطالبة باسم ‎.chain بنجاح.",
+      "chainNameClaimProcessing": "جارٍ تسجيل اسمك على السلسلة. قد يستغرق ذلك بضع دقائق؛ يمكنك إغلاق هذه النافذة وسيتم تحديث ملفك الشخصي تلقائيًا عند الانتهاء.",
       "chainNameClaimWalletUnavailable": "توقيع الرسائل في المحفظة غير متاح حالياً. يرجى المحاولة مرة أخرى.",
       "chainNameClaimNameTaken": "اسم ‎.chain هذا محجوز بالفعل. جرّب اسماً آخر.",
       "chainNameClaimNameInProgress": "تجري المطالبة باسم ‎.chain هذا حالياً. جرّب اسماً آخر.",

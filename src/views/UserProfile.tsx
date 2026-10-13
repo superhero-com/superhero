@@ -38,6 +38,7 @@ import ProfileHeaderCard from '../features/social/components/ProfileHeaderCard';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
 import { useAddressByChainName, useChainName } from '../hooks/useChainName';
+import { usePreferredChainName } from '../hooks/usePreferredChainName';
 
 import AccountPortfolio from '@/components/Account/AccountPortfolio';
 import ProfileTabPanel from '../features/social/components/ProfileTabPanel';
@@ -69,6 +70,7 @@ export default function UserProfile({
   const { data: graphCounts, countsStatus } = useSocialGraphCounts(effectiveAddress);
   const { aex9Balances } = useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
+  const pendingChainName = usePreferredChainName(effectiveAddress);
   const { canEdit } = useProfile(effectiveAddress);
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
@@ -173,8 +175,14 @@ export default function UserProfile({
 
   const bioText = getLinkedBio(accountInfo) || '';
   const linkedPreferredName = getLinkedPreferredAensName(accountInfo);
-  const displayName = (linkedPreferredName || accountInfo?.public_name || chainName || '').trim()
-    || effectiveAddress;
+  // A name just linked or claimed shows right away; the account keeps
+  // reporting the previous one until the API has indexed the change.
+  const displayName = (
+    (pendingChainName.isPending
+      ? pendingChainName.name || chainName
+      : linkedPreferredName || accountInfo?.public_name || chainName)
+    || ''
+  ).trim() || effectiveAddress;
   const isXVerified = isXLinked(accountInfo);
   const linkedXUsername = getLinkedXUsername(accountInfo);
   // Your own X link or unlink still on its way: shown instead of the "Link

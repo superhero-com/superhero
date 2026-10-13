@@ -34,6 +34,23 @@ export function linkedDeposit(amount: string, ratio: string | undefined, decimal
   return value.isFinite() ? value.decimalPlaces(decimals, BigNumber.ROUND_DOWN).toFixed() : null;
 }
 
+type AeLeg = { reserveA: bigint; reserveB: bigint } | null;
+
+/**
+ * Indicative A-per-B ratio for a pair without a pool, priced through each token's
+ * WAE pool (reserveA = token, reserveB = WAE). Returns undefined when a leg is missing.
+ */
+export function referenceRatio(legA: AeLeg, legB: AeLeg, decA: number, decB: number) {
+  if (!legA || !legB || legA.reserveA <= 0n || legA.reserveB <= 0n
+    || legB.reserveA <= 0n || legB.reserveB <= 0n) return undefined;
+  const aePrice = (leg: NonNullable<AeLeg>, decimals: number) => {
+    const ae = new BigNumber(leg.reserveB.toString()).shiftedBy(-18);
+    return ae.div(new BigNumber(leg.reserveA.toString()).shiftedBy(-decimals));
+  };
+  const ratio = aePrice(legB, decB).div(aePrice(legA, decA));
+  return ratio.isFinite() && ratio.gt(0) ? ratio.toFixed() : undefined;
+}
+
 export function formatLiquidityValue(value?: string, digits = 6) {
   const number = new BigNumber(value ?? NaN);
   return number.isFinite() ? number.precision(digits).toFormat() : '—';

@@ -28,7 +28,7 @@ const NAVIGATION_ONLY = new Set([
   'https://x.com', 'https://apps.apple.com', 'https://play.google.com',
   'https://chrome.google.com', 'https://chromewebstore.google.com', 'https://addons.mozilla.org',
   'https://changelly.com', 'https://swapspace.co', 'https://swapzone.io', 'https://www.gate.io',
-  'https://bit.ly', 'https://quali.chat', 'https://app.quali.chat',
+  'https://bit.ly', 'https://quali.chat', 'https://app.quali.chat', 'https://translate.google.com',
 ]);
 
 // Strings baked into third-party packages (docs links, JSON-LD vocabulary, placeholder hosts in

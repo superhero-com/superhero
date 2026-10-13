@@ -181,7 +181,7 @@ export const CommunityFeatureCard = () => {
             {t('cards.communityDao')}
           </span>
           <Link to="/trends/daos">
-            {t('bannerC.secondaryButton')}
+            {t('bannerC.primaryButton')}
             <ArrowUpRight aria-hidden="true" />
           </Link>
         </footer>

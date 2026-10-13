@@ -15,9 +15,9 @@ const BannerC = () => {
       description={t('bannerC.description')}
       icon={Users}
       primaryButtonText={t('bannerC.primaryButton')}
-      primaryButtonLink="/trends/create"
+      primaryButtonLink="/trends/daos"
       secondaryButtonText={t('bannerC.secondaryButton')}
-      secondaryButtonLink="/trends/daos"
+      secondaryButtonLink="/trends/create"
     />
   );
 };

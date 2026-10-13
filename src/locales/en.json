@@ -1699,7 +1699,11 @@
       "nativeToken": "Native Token",
       "noTokensAvailable": "No tokens available",
       "tryAddingCustomToken": "Try adding a custom token by address",
-      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below."
+      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below.",
+      "tokenNotFound": "No AEX-9 token found at this address.",
+      "showAllTokens": "Show all",
+      "showActiveOnly": "Active only",
+      "verified": "Verified token"
     },
     "exploreTransactions": {
       "title": "Advanced Transaction Explorer",
@@ -2113,6 +2117,10 @@
       "copyFailed": "Could not copy. Select the address to copy it.",
       "actions": "Token actions",
       "pools": "Pools"
+    },
+    "slippageWarning": {
+      "high": "Slippage above 5% ({{slippagePct}}%) is high. Your trade may be front-run and you could receive much less than quoted.",
+      "low": "Slippage below 0.1% ({{slippagePct}}%) is very low. Your transaction may fail if the price moves."
     }
   },
   "social": {
@@ -3113,7 +3121,18 @@
     "wrapFailed": "Wrapping failed. Try again.",
     "unwrapFailed": "Unwrapping failed. Try again.",
     "genericError": "Something went wrong. Please try again.",
-    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols."
+    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols.",
+    "identicalTokens": "Both tokens are the same. Select two different tokens.",
+    "outputTooLow": "The output amount would be zero. Increase the input amount.",
+    "dexInternalError": "The DEX contract rejected this transaction. Please try again or pick a different pair.",
+    "poolRatioMoved": "The pool price moved beyond your slippage tolerance.{{hint}}",
+    "excessiveInputAmount": "The required input is above your maximum due to price movement.{{hint}}",
+    "allowanceExists": "An approval for this token already exists. Please try again.",
+    "forbidden": "This action is not allowed for your account.",
+    "liquidityMintedTooLow": "The deposit is too small to mint any pool tokens. Increase the amounts.",
+    "pairBalanceMissing": "The pool did not receive the tokens for this transaction. Please try again.",
+    "liquidityBurnedTooLow": "The amount of liquidity to remove is too small. Increase the amount.",
+    "noLiquidityPosition": "You have no liquidity in this pool."
   },
   "landing": {
     "hero": {

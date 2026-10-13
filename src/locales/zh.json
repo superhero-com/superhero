@@ -1487,7 +1487,11 @@
       "nativeToken": "原生代币",
       "noTokensAvailable": "无可用代币",
       "tryAddingCustomToken": "请尝试通过地址添加自定义代币",
-      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。"
+      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。",
+      "tokenNotFound": "该地址下未找到 AEX-9 代币。",
+      "showAllTokens": "显示全部",
+      "showActiveOnly": "仅显示活跃",
+      "verified": "已验证代币"
     },
     "exploreTransactions": {
       "title": "高级交易浏览器",
@@ -2042,6 +2046,10 @@
       "copyFailed": "无法复制。请选中地址进行复制。",
       "actions": "代币操作",
       "pools": "流动性池"
+    },
+    "slippageWarning": {
+      "high": "滑点高于 5%（{{slippagePct}}%）过高。您的交易可能被抢跑，实际到账可能远低于报价。",
+      "low": "滑点低于 0.1%（{{slippagePct}}%）过低。价格变动时交易可能失败。"
     }
   },
   "social": {
@@ -3032,7 +3040,18 @@
     "wrapFailed": "封装失败。请重试。",
     "unwrapFailed": "解封失败。请重试。",
     "genericError": "出了点问题。请重试。",
-    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。"
+    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。",
+    "identicalTokens": "两个代币相同。请选择两个不同的代币。",
+    "outputTooLow": "输出数量将为零。请增加输入数量。",
+    "dexInternalError": "DEX 合约拒绝了此交易。请重试或选择其他交易对。",
+    "poolRatioMoved": "资金池价格变动超出了您的滑点容差。{{hint}}",
+    "excessiveInputAmount": "由于价格变动，所需输入超过了您设定的最大值。{{hint}}",
+    "allowanceExists": "该代币的授权已存在。请重试。",
+    "forbidden": "您的账户不允许执行此操作。",
+    "liquidityMintedTooLow": "存入数量太小，无法铸造流动性代币。请增加数量。",
+    "pairBalanceMissing": "资金池未收到此交易的代币。请重试。",
+    "liquidityBurnedTooLow": "要移除的流动性太少。请增加数量。",
+    "noLiquidityPosition": "您在此资金池中没有流动性。"
   },
   "landing": {
     "hero": {

@@ -15,6 +15,7 @@ import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances
 import { DexTokenDto, DexService } from '../../../api/generated';
 import SwapAmountField from '../../../components/dex/core/SwapAmountField';
 import SwapInlineSettings from '../../../components/dex/core/SwapInlineSettings';
+import SlippageWarning from '../../../components/dex/core/SlippageWarning';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
 import { Decimal } from '../../../libs/decimal';
@@ -502,6 +503,7 @@ const AddLiquidityForm = () => {
         onRetry={() => { computePairPreview(); }}
         onSettings={() => setShowSettings(true)}
       />
+      {!showSettings && <SlippageWarning slippagePct={slippagePct} />}
       {state.error && <div className="swap-inline-state is-error" role="alert">{state.error}</div>}
       {address && hasInsufficientBalance && <div className="swap-inline-state is-error" role="status">{tDex('poolAdd.notEnough', { symbol: hasInsufficientBalanceA ? tokenA?.symbol : tokenB?.symbol })}</div>}
       {address ? (

@@ -16,6 +16,7 @@ import Spinner from '../../../components/Spinner';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
+import MobileNetworkStats from '../../../components/layout/MobileNetworkStats';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
 import SortControls, { type PopularWeights } from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
@@ -1236,6 +1237,8 @@ const FeedList = ({
           />
         </div>
       )}
+      {/* The right rail (AE price, block height) is hidden below lg */}
+      {isHomepage && <MobileNetworkStats className="mb-3" />}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
         <CreatePost

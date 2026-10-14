@@ -173,7 +173,7 @@ jobs:
         continue-on-error: true
         id: status
         if: github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN'
-        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        uses: aeternity/ae-github-actions/deploy-status@v7
         with:
           url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 10
@@ -186,7 +186,7 @@ jobs:
         # it, deploying here would recreate an entry undeploy already removed,
         # with no later event left to clean it up again.
         if: steps.status.outputs.status_code != '200' && (github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN')
-        uses: aeternity/ae-github-actions/argocd-deploy@v7.5.0
+        uses: aeternity/ae-github-actions/argocd-deploy@v7
         with:
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}
@@ -197,7 +197,7 @@ jobs:
       - name: Staging PR Sync
         id: sync
         if: steps.status.outputs.status_code == '200' && (github.event_name != 'pull_request' || steps.pr_state.outputs.state == 'OPEN')
-        uses: aeternity/ae-github-actions/argocd-pr-sync@v7.5.0
+        uses: aeternity/ae-github-actions/argocd-pr-sync@v7
         with:
           git-sha: ${{ github.event.pull_request.head.sha || github.sha }}
           url-prefix: ${{ env.BRANCH_SLUG }}
@@ -220,7 +220,7 @@ jobs:
 
       - name: Wait for the deployment to go live
         continue-on-error: true
-        uses: aeternity/ae-github-actions/deploy-status@v7.5.0
+        uses: aeternity/ae-github-actions/deploy-status@v7
         with:
           url: https://${{ env.BRANCH_SLUG }}-${{ env.APP }}.${{ env.ENV }}.service.aepps.com
           timeout: 300

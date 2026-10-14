@@ -68,7 +68,7 @@ jobs:
 
       - name: Staging undeploy
         id: undeploy
-        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7
         with:
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}

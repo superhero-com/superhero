@@ -2377,7 +2377,7 @@
       "title": "Governance",
       "subtitle": "Shape the future of the ecosystem through community-driven decisions",
       "active": "Active",
-      "closing": "Closing",
+      "closed": "Closed",
       "searchLabel": "Search polls",
       "searchPlaceholder": "Find polls by title or description...",
       "filterByStatus": "Filter by status",
@@ -2386,6 +2386,8 @@
       "closedPolls": "🔴 Closed polls",
       "noPollsFound": "No polls found",
       "noPollsHint": "Try adjusting your search terms or filters to discover governance polls that match your interests.",
+      "loadFailed": "Couldn't load polls.",
+      "retry": "Try again",
       "unknown": "Unknown",
       "votes": "votes"
     },

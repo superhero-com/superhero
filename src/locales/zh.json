@@ -2300,7 +2300,7 @@
       "title": "治理",
       "subtitle": "通过社区驱动的决策塑造生态系统的未来",
       "active": "进行中",
-      "closing": "即将结束",
+      "closed": "已结束",
       "searchLabel": "搜索投票",
       "searchPlaceholder": "按标题或描述查找投票...",
       "filterByStatus": "按状态筛选",
@@ -2309,6 +2309,8 @@
       "closedPolls": "🔴 已结束投票",
       "noPollsFound": "未找到投票",
       "noPollsHint": "请尝试调整你的搜索词或筛选条件，发现符合你兴趣的治理投票。",
+      "loadFailed": "无法加载投票。",
+      "retry": "重试",
       "unknown": "未知",
       "votes": "票"
     },

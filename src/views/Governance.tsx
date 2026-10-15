@@ -33,7 +33,7 @@ const Governance = () => {
   return (
     <Shell containerClassName="ui-page governance-page">
       {/* Enhanced Tab Navigation */}
-      <div className="governance-tabs flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
+      <div className="governance-tabs flex flex-wrap gap-2 mb-5 p-2">
         <AeButton
           onClick={() => setActiveTab('polls')}
           className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${

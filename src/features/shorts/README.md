@@ -67,6 +67,13 @@ For the Express server, also supply `VITE_SHORTS_API_URL` and `VITE_SHORTS_STREA
 at runtime so the CSP allows those origins. Other hosting providers must add their
 exact origins to `connect-src` (HLS fetch) and keep `blob:` in `media-src`.
 
+For hosted direct uploads, also set `SHORTS_UPLOAD_ORIGIN` on the Express server
+to the API's public MinIO upload origin (for example `https://uploads.example.com`).
+This adds that origin to CSP without exposing storage credentials. Other hosts
+must add the same origin to `connect-src`. Configure storage CORS for the exact
+website origin and deploy workers that understand `SHPRIV02` before enabling the
+updated API. See the API's `src/shorts/DIRECT-UPLOADS.md` for the rollout guide.
+
 ## Immersive viewer
 
 The consumer view shows one portrait video per viewport with vertical scroll snapping. Desktop has previous/next controls; touch screens use native vertical scrolling. Arrow keys navigate, Space/K toggles playback, and M toggles sound when a text field or control is not focused. Playback starts muted, pauses offscreen, pauses in hidden browser tabs and pauses while dialogs are open. Explicit user pauses survive closing an overlay.
@@ -83,6 +90,13 @@ Creator API access is shared through an app-level Jotai session and cached in se
 The composer has three numbered steps: **Video → Details → Review**. Previous/Next controls stay in the fixed bottom bar. Guests can choose a local video and enter details before connecting through Superhero's shared wallet dialog. Studio reuses the main sidebar's wallet component. The first connection preserves the guest draft; switching an existing account clears private composer state.
 
 **Publish** starts resumable transfer, media preparation, IPFS verification and operator-funded registration. The review step and preview stay in place beneath a progress overlay. Successful publication offers Watch & share and Studio. Failures preserve the draft and resume the same upload/publication on retry. Publishing an existing private draft uses the same API operation. No creator payment or transaction signature is requested.
+
+Hosted upload sessions advertise `direct-s3-v1`. The browser encrypts each 1 MiB
+chunk using a key scoped to that object, then PUTs it to a short-lived MinIO URL.
+Only metadata goes to the API. Storage receives no Studio bearer token or cookies.
+The API verifies the stored checksum before acknowledging a chunk; workers verify
+and decrypt the complete source. The local loopback demo keeps its original
+transport. Expired permissions can be refreshed without starting a second upload.
 
 Draft files/details remain in memory while staying in Shorts. After a reload, reselect identical file/details within 24 hours to resume an interrupted transfer. Uploaded private drafts remain in Studio. Changing prepared metadata creates a new draft; unchanged retries reuse the prepared video. Mobile has a collapsible preview and fixed Previous/Next controls.
 

@@ -21,6 +21,7 @@ import { useShortsSocial } from './use-shorts-social';
 import { useShortsWalletTransactions, WalletActionPending } from './use-shorts-wallet-transactions';
 import type { WalletMethod } from './shorts-wallet-journal';
 import { request, SHORTS_API, ShortsApiError } from './api';
+import { uploadDirectPart } from './shorts-direct-upload';
 import { verifyShortsRelease, type ShortsRelease } from './shorts-release';
 import { createShortsRefresh, subscribeShortsUpdates } from './shorts-updates';
 import {
@@ -530,10 +531,16 @@ export function useShorts() {
     setUploadStage('uploading');
     for (let i = 0; i < count && !resume.complete; i += 1) {
       if (!resume.parts.includes(i)) {
-        const part = new FormData(); part.set('file', file.slice(i * resume.partSize, (i + 1) * resume.partSize), 'part');
-        // Parts are sequential so retries never race over a partially received file.
-        // eslint-disable-next-line no-await-in-loop
-        await request(`/uploads/${resume.id}/parts/${i}`, part, uploadAuth(), { ...options, timeout: 120000 });
+        const bytes = file.slice(i * resume.partSize, (i + 1) * resume.partSize);
+        if (resume.transport === 'direct-s3-v1') {
+          // eslint-disable-next-line no-await-in-loop
+          await uploadDirectPart(resume.id, i, bytes, { token: uploadAuth, signal: controller.signal });
+        } else {
+          const part = new FormData(); part.set('file', bytes, 'part');
+          // Local loopback demos retain their disk-backed upload transport.
+          // eslint-disable-next-line no-await-in-loop
+          await request(`/uploads/${resume.id}/parts/${i}`, part, uploadAuth(), { ...options, timeout: 120000 });
+        }
       }
       setUploadProgress(Math.round(((i + 1) / count) * 100));
     }

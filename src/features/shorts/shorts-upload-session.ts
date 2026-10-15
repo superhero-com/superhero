@@ -5,6 +5,7 @@ export interface UploadSession {
   id: string;
   parts: number[];
   partSize: number;
+  transport?: 'direct-s3-v1';
   expires: number;
   complete: boolean;
   status: 'uploading' | 'queued' | 'processing' | 'ready' | 'failed';

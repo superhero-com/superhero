@@ -73,6 +73,14 @@ describe('relay origins', () => {
 });
 
 describe('deploy-time overrides', () => {
+  it('allows direct uploads only to the configured storage origin', () => {
+    const destination = 'https://uploads.example.com';
+    expect(directive(policy(), 'connect-src')).not.toContain(destination);
+    const csp = policy({ SHORTS_UPLOAD_ORIGIN: destination });
+    expect(directive(csp, 'connect-src').split(' ')).toContain(destination);
+    expect(directive(csp, 'script-src')).not.toContain(destination);
+  });
+
   it('follows the origins the container is actually pointed at', () => {
     const connect = directive(policy({ NODE_URL: 'https://node.example.com/v3' }), 'connect-src');
     expect(connect).toContain('https://node.example.com');

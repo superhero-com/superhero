@@ -37,3 +37,9 @@ export function removalEstimate(raw: string | undefined, pool: PoolReserves | nu
   });
   return values.every((value) => value.positive) ? values : null;
 }
+
+// For a 100% removal, prefer the wallet's live on-chain LP balance over the indexed one.
+// An indexed balance can lag behind the chain and would leave residual LP tokens.
+export function fullRemovalAmount(requested: bigint, onChain: bigint): bigint {
+  return onChain > 0n ? onChain : requested;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { removalAmount, removalEstimate } from '../removalEstimate';
+import { fullRemovalAmount, removalAmount, removalEstimate } from '../removalEstimate';
 
 describe('liquidity removal amounts', () => {
   it('keeps full LP precision in both Max and exact input, and floors fractional base units', () => {
@@ -27,5 +27,13 @@ describe('liquidity removal amounts', () => {
     expect(removalEstimate('1', { ...pool, totalSupply: null }, [18, 6], 5)).toBeNull();
     expect(removalEstimate('10000000000000000001', pool, [18, 6], 5)).toBeNull();
     expect(removalEstimate('1', pool, [18, NaN], 5)).toBeNull();
+  });
+});
+
+describe('full LP removal amount', () => {
+  it('burns the live on-chain balance so no residual LP is left', () => {
+    expect(fullRemovalAmount(100n, 105n)).toBe(105n);
+    expect(fullRemovalAmount(100n, 95n)).toBe(95n);
+    expect(fullRemovalAmount(100n, 0n)).toBe(100n);
   });
 });

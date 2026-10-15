@@ -199,6 +199,7 @@
       "chainNameClaimStarted": "申领已提交。正在等待赞助和转移…",
       "chainNameClaimPending": "申领状态：{{status}}",
       "chainNameClaimCompleted": ".chain 名称申领成功。",
+      "chainNameClaimProcessing": "正在链上注册你的名称，可能需要几分钟。你可以关闭此窗口，完成后个人资料会自动更新。",
       "chainNameClaimWalletUnavailable": "钱包消息签名当前不可用。请重试。",
       "chainNameClaimNameTaken": "该 .chain 名称已被占用。请尝试其他名称。",
       "chainNameClaimNameInProgress": "该 .chain 名称正在被他人申领。请尝试其他名称。",

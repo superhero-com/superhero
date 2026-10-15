@@ -26,6 +26,7 @@ import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { PwaInstallFab, PwaInstallGuide } from './components/PwaInstallGuide';
 import { MobileAppInstallDialog } from './components/MobileAppInstall';
 import { usePwaInstall } from './hooks/usePwaInstall';
+import { usePreferredChainNameSync } from './hooks/usePreferredChainName';
 import { isMobileDevice } from './utils/displayMode';
 
 const CookiesDialog = React.lazy(
@@ -81,6 +82,8 @@ const App = () => {
     setInstallGuideOpen(true);
   }, [canPrompt, promptInstall]);
   const { loadAccountData } = useAccount();
+  // Keep the connected account's display name on the one it picked as preferred.
+  usePreferredChainNameSync(activeAccount);
   const {
     attemptReconnection,
     walletInfo,

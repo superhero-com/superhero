@@ -127,7 +127,7 @@ function createSafeLocalStringStorage(): SyncStringStorage {
 
 let safeStringStorageSingleton: { kind: 'browser' | 'memory'; storage: SyncStringStorage } | null = null;
 
-function getSafeLocalStringStorage(): SyncStringStorage {
+export function getSafeLocalStringStorage(): SyncStringStorage {
   const hasBrowserStorage = !!getWindowLocalStorage();
   if (
     !safeStringStorageSingleton

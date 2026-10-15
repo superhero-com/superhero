@@ -7,8 +7,10 @@ import { AccountsService } from '../api/generated/services/AccountsService';
 import {
   chainNameLookupCheckedAtAtom,
   chainNamesAtom,
+  preferredChainNamesAtom,
 } from '../atoms/walletAtoms';
 import { CURRENT_NETWORK } from '../utils/constants';
+import { isPreferredChainNamePending, mergeServerChainName } from '../utils/preferredChainName';
 
 const CHAIN_NAME_REFRESH_INTERVAL = 1000 * 60 * 60; // 1 hour
 const CHAIN_NAME_RETRY_INTERVAL = 1000 * 60 * 5; // 5 minutes
@@ -198,9 +200,12 @@ export function useEnsureChainName(accountAddress?: string | null) {
 export function useChainName(accountAddress: string, options?: { lookup?: boolean }) {
   const normalizedAddress = normalizeAccountAddress(accountAddress);
   const chainNames = useAtomValue(chainNamesAtom);
+  const preferredNames = useAtomValue(preferredChainNamesAtom);
+  // The batch lookup returns the newest name the account owns; the name the
+  // user picked as preferred (or just claimed) wins over it when known.
   const chainName = useMemo(
-    () => chainNames[normalizedAddress],
-    [chainNames, normalizedAddress],
+    () => preferredNames[normalizedAddress]?.name || chainNames[normalizedAddress],
+    [chainNames, preferredNames, normalizedAddress],
   );
   useEnsureChainName(options?.lookup === false ? undefined : normalizedAddress);
 
@@ -218,6 +223,7 @@ type PostWithSender = {
 export function useStorePostSenderChainNames(posts: Array<PostWithSender | null | undefined>) {
   const setChainNames = useSetAtom(chainNamesAtom);
   const setCheckedAt = useSetAtom(chainNameLookupCheckedAtAtom);
+  const setPreferredNames = useSetAtom(preferredChainNamesAtom);
 
   useEffect(() => {
     const names = posts.reduce<Record<string, string>>((acc, post) => {
@@ -252,7 +258,17 @@ export function useStorePostSenderChainNames(posts: Array<PostWithSender | null 
       });
       return changed ? next : prev;
     });
-  }, [posts, setCheckedAt, setChainNames]);
+    // `public_name` is the name the API displays for the sender, which is the
+    // preferred name when one is linked.
+    setPreferredNames((prev) => entries.reduce(
+      (acc, [address, name]) => (
+        isPreferredChainNamePending(acc[address], now)
+          ? acc
+          : mergeServerChainName(acc, address, { name: name.toLowerCase(), linked: null }, now)
+      ),
+      prev,
+    ));
+  }, [posts, setCheckedAt, setChainNames, setPreferredNames]);
 }
 
 export function useAddressByChainName(chainNameInput?: string) {

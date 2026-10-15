@@ -227,6 +227,7 @@
       "chainNameClaimStarted": "Claim submitted. Waiting for sponsorship and transfer…",
       "chainNameClaimPending": "Claim status: {{status}}",
       "chainNameClaimCompleted": ".chain name claimed successfully.",
+      "chainNameClaimProcessing": "Registering your name on chain. This can take a few minutes; you can close this window and your profile will update when it's done.",
       "chainNameClaimWalletUnavailable": "Wallet message signing is not available right now. Please try again.",
       "chainNameClaimNameTaken": "That .chain name is already taken. Try another one.",
       "chainNameClaimNameInProgress": "That .chain name is currently being claimed. Try another one.",

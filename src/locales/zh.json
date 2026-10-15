@@ -3188,8 +3188,8 @@
     "bannerC": {
       "title": "从信号 → 金库：",
       "description": "对 #trends 的买入手续费自动为 DAO 注入资金，让最优秀的想法获得预算和里程碑。",
-      "primaryButton": "创建目的型 DAO",
-      "secondaryButton": "查看 DAO",
+      "primaryButton": "探索 DAO",
+      "secondaryButton": "发起 #trend",
       "eyebrow": "社区 DAO",
       "titleAccent": "目的型 DAO。",
       "metaMain": "代币持有者",

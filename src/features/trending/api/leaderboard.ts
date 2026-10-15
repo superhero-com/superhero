@@ -40,6 +40,19 @@ export type LeaderboardItem = {
   portfolio_value_usd_sparkline?: [number, number][];
 };
 
+// Smallest starting portfolio (USD) an ROI percentage is still worth showing for.
+export const MIN_ROI_BASE_USD = 0.01;
+
+// The API reports ROI as PnL / starting portfolio value. When that base is
+// effectively zero the percentage explodes (e.g. +16469795374043%) and says
+// nothing useful, so recover the base and only trust ROI above a cent.
+export function isRoiMeaningful(pnlUsd: number, roiPct: number): boolean {
+  if (!Number.isFinite(roiPct)) return false;
+  if (roiPct === 0 || !Number.isFinite(pnlUsd) || pnlUsd === 0) return true;
+  const baseUsd = pnlUsd / (roiPct / 100);
+  return Math.abs(baseUsd) >= MIN_ROI_BASE_USD;
+}
+
 export interface LeaderboardQueryParams {
   timeframe: LeaderboardTimeframe;
   metric: LeaderboardMetric;

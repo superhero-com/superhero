@@ -258,7 +258,11 @@
       "profitLoss": "盈亏：",
       "loadingPortfolio": "正在加载投资组合数据...",
       "noDataAvailable": "暂无投资组合数据",
-      "valueTooltipDescription": "投资组合价值显示此钱包中持有的 AE 余额和趋势代币的总价值。图表追踪该价值随时间的变化。"
+      "valueTooltipDescription": "投资组合价值显示此钱包中持有的 AE 余额和趋势代币的总价值。图表追踪该价值随时间的变化。",
+      "changeSources": "AE 余额 {{ae}} · 代币 {{tokens}}",
+      "tokenValuation": "趋势代币按当前联合曲线价格估值，而不是按卖出后实际可得的金额。卖出会使价格沿曲线下降，因此即使一笔卖出是盈利的，剩余代币的价值也可能随之下降；全部卖出所得也会低于该数值。",
+      "aeDenomination": "以 AE 计价时，只有 AE 余额变化（交易、转账、手续费）或代币重新定价才会改变价值。AE/USD 汇率不会影响它，只会影响 USD 视图。",
+      "pnlPercentage": "交易盈亏百分比是相对于购买代币所花费金额的收益。"
     },
     "account": {
       "firstBlockchainActivity": "加入时间：",
@@ -2708,7 +2712,8 @@
       "buys": "买入：",
       "sells": "卖出：",
       "created": "已创建：",
-      "viewProfile": "查看资料"
+      "viewProfile": "查看资料",
+      "roiNotMeaningful": "无参考意义：该投资组合在本周期开始时价值几乎为零。"
     },
     "leaderboardFilters": {
       "chooseFromCalendar": "从日历中选择{{label}}",

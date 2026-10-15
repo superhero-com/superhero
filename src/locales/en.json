@@ -320,7 +320,11 @@
       "profitLoss": "Profit/Loss:",
       "loadingPortfolio": "Loading portfolio data...",
       "noDataAvailable": "No portfolio data available",
-      "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time."
+      "valueTooltipDescription": "Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.",
+      "changeSources": "AE balance {{ae}} · Tokens {{tokens}}",
+      "tokenValuation": "Trend tokens are valued at their current bonding-curve price, not at what selling them would return. A sale moves the price down the curve, so the tokens you still hold can be worth less right after a profitable sale, and selling everything would return less than this value.",
+      "aeDenomination": "In AE, the value changes only when your AE balance changes (trades, transfers, fees) or your tokens are repriced. The AE/USD rate does not affect it; it only moves the USD view.",
+      "pnlPercentage": "The Trading P/L percentage is the gain relative to the amount spent buying tokens."
     },
     "account": {
       "firstBlockchainActivity": "Joined at:",
@@ -2825,7 +2829,8 @@
       "buys": "Buys:",
       "sells": "Sells:",
       "created": "Created:",
-      "viewProfile": "View profile"
+      "viewProfile": "View profile",
+      "roiNotMeaningful": "Not meaningful: the portfolio was worth almost nothing at the start of this period."
     },
     "performanceTimeframe": {
       "closeMenu": "Close timeframe menu"

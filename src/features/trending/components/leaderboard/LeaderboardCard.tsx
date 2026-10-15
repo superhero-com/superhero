@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatNumber } from '../../../../utils/number';
-import type { LeaderboardItem } from '../../api/leaderboard';
+import { isRoiMeaningful, type LeaderboardItem } from '../../api/leaderboard';
 
 interface LeaderboardCardProps {
   rank: number;
@@ -41,7 +41,10 @@ export const LeaderboardCard = ({
 
   const hasSparkline = Array.isArray(sparkline) && sparkline.length > 1;
   const [isChartHovered, setIsChartHovered] = useState(false);
-  const roiIsNaN = Number.isNaN(roiPct);
+  // ROI divides PnL by the portfolio value at the start of the period; an
+  // almost-empty starting portfolio turns a few cents of profit into an absurd %.
+  const roiIsNaN = Number.isNaN(roiPct) || !isRoiMeaningful(pnlUsd, roiPct);
+  const roiNotMeaningful = !Number.isNaN(roiPct) && roiIsNaN;
   const mddIsNaN = Number.isNaN(mddPct);
   const pnlClassName = useMemo(() => {
     if (pnlUsd < 0) return 'text-red-400';
@@ -157,6 +160,7 @@ export const LeaderboardCard = ({
           </span>
           <span
             className={`text-[10px] sm:text-[11px] ${roiClassName}`}
+            title={roiNotMeaningful ? t('trending.leaderboardCard.roiNotMeaningful') : undefined}
           >
             {t('trending.leaderboardCard.roi', { timeframe: timeframeLabel, value: roiDisplay })}
           </span>

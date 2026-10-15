@@ -194,7 +194,7 @@ const DexExplorePools = () => {
                       {t('explore.totalVolume')}
                     </div>
                     <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                      <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
+                      <PriceDataFormatter priceData={pair.summary?.total_volume} />
                     </div>
                   </div>
                   <div className="dex-market-metric">
@@ -206,7 +206,6 @@ const DexExplorePools = () => {
                     <div className="text-sm text-[var(--standard-font-color)] font-semibold">
                       <PriceDataFormatter
                         priceData={pair.summary?.change?.[timeBase]?.volume}
-                        bignumber
                       />
                     </div>
                   </div>
@@ -323,11 +322,10 @@ const DexExplorePools = () => {
                     <td className="text-right py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
                       <PriceDataFormatter
                         priceData={pair.summary?.change?.[timeBase]?.volume}
-                        bignumber
                       />
                     </td>
                     <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
-                      <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
+                      <PriceDataFormatter priceData={pair.summary?.total_volume} />
                     </td>
                     <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium w-[150px]">
                       <PairLineChart

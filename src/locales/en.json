@@ -1818,6 +1818,7 @@
       "description": "Deposit both tokens to share in trading fees.",
       "deposit": "Deposit {{symbol}}",
       "linked": "Linked to pool ratio",
+      "suggested": "Suggested from AE pool prices. You can edit it.",
       "selectFirst": "Select first deposit token",
       "selectSecond": "Select second deposit token",
       "ratioHint": "Amounts follow the pool ratio. Edit either one.",

@@ -8,12 +8,13 @@ import { useRecentActivities } from '../../../hooks/useRecentActivities';
 import { CONFIG } from '../../../config';
 import {
   MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter,
-  getPairInfo, initDexContracts,
+  getPairBalance, getPairInfo, initDexContracts,
   subSlippage,
   toAettos,
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useLiquidityPreview } from './useLiquidityPreview';
+import { liquidityToBurn } from '../utils/removalEstimate';
 import { TxPayloadType, useTransactionNotification } from '../../transaction-notification/transaction-notification.context';
 import type {
   AddLiquidityState,
@@ -245,12 +246,12 @@ export function useAddLiquidity() {
 
       // Convert liquidity amount to bigint
       // For full removal, use raw balance to avoid precision loss
-      const liquidityAmount = params.isFullRemoval && params.rawBalance
+      const requestedLiquidity = params.isFullRemoval && params.rawBalance
         ? BigInt(params.rawBalance)
         : toAettos(params.liquidity, 18); // LP tokens are 18 decimals
 
       // Validate parameters
-      if (liquidityAmount <= 0n) {
+      if (requestedLiquidity <= 0n) {
         throw new Error('Invalid liquidity amount');
       }
 
@@ -272,6 +273,11 @@ export function useAddLiquidity() {
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
         }
+        const liquidityAmount = liquidityToBurn(
+          requestedLiquidity,
+          !!params.isFullRemoval,
+          await getPairBalance(sdk, pairInfo.pairAddress, address),
+        );
 
         // Calculate expected amounts based on current reserves and total supply
         const totalSupply = BigInt(pairInfo.totalSupply);
@@ -319,6 +325,11 @@ export function useAddLiquidity() {
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
         }
+        const liquidityAmount = liquidityToBurn(
+          requestedLiquidity,
+          !!params.isFullRemoval,
+          await getPairBalance(sdk, pairInfo.pairAddress, address),
+        );
 
         // Calculate expected amounts based on current reserves and total supply
         const totalSupply = BigInt(pairInfo.totalSupply);

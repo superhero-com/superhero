@@ -11,7 +11,11 @@ import DexExplorePools from '../DexExplorePools';
 const mocks = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock('../../../../api/generated', () => ({ DexPairService: { listAllPairs: mocks.list } }));
 vi.mock('../../../../features/shared/components', () => ({
-  PriceDataFormatter: ({ priceData }: { priceData?: { ae: number } }) => <span>{priceData?.ae ?? 'Unavailable'}</span>,
+  PriceDataFormatter: (
+    { priceData, bignumber }: { priceData?: { ae: number }; bignumber?: boolean },
+  ) => (
+    <span>{bignumber ? 'aettos' : priceData?.ae ?? 'Unavailable'}</span>
+  ),
 }));
 vi.mock('../../../../components/TokenChip', () => ({
   TokenChip: ({ token }: { token: { symbol: string } }) => <span>{token.symbol}</span>,
@@ -60,6 +64,13 @@ describe('DeFi pool explorer controls', () => {
     expect(screen.getByText('32 pools')).toBeInTheDocument();
     expect(screen.getByText('Sort by · all time')).toBeInTheDocument();
     expect(screen.getAllByText('Total Volume')).toHaveLength(2);
+  });
+
+  it('shows pool volumes as AE amounts, not aettos', async () => {
+    setup(); await ready();
+    expect(screen.getAllByText('123')).toHaveLength(2);
+    expect(screen.getAllByText('30')).toHaveLength(2);
+    expect(screen.queryByText('aettos')).not.toBeInTheDocument();
   });
 
   it('resets search, sorting, direction and page size to page one', async () => {

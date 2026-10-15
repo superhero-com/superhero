@@ -37,3 +37,15 @@ export function removalEstimate(raw: string | undefined, pool: PoolReserves | nu
   });
   return values.every((value) => value.positive) ? values : null;
 }
+
+/**
+ * LP amount to burn. A full removal always burns the balance read from the pair right
+ * before the transaction: the position balance comes from the indexer and can lag
+ * behind the chain, which would leave dust LP tokens behind.
+ */
+export function liquidityToBurn(requested: bigint, full: boolean, onChainBalance: bigint) {
+  if (onChainBalance <= 0n) throw new Error('No liquidity to remove');
+  if (full) return onChainBalance;
+  if (requested > onChainBalance) throw new Error('Amount exceeds your liquidity balance');
+  return requested;
+}

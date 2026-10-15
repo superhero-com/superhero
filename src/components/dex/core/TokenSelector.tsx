@@ -3,12 +3,16 @@ import { toAe } from '@aeternity/aepp-sdk';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { CONFIG } from '../../../config';
 import Spinner from '../../Spinner';
-import { ChevronDown, Coins, Search } from 'lucide-react';
+import { BadgeCheck, ChevronDown, Coins, Search } from 'lucide-react';
+import { resolveTokenByAddress, useCustomTokens } from '../hooks/useCustomTokens';
+import { useTokenSearch } from '../hooks/useTokenSearch';
+import { isActivelyTraded, isContractAddress, mergeTokens } from '../utils/tokenList';
 import aeMark from '../../../svg/aeternity-mark.svg';
 
 interface TokenSelectorProps {
@@ -43,14 +47,31 @@ export default function TokenSelector({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { aex9Balances, balance } = useAccount();
+  const [showAllTokens, setShowAllTokens] = useState(false);
+  const { customTokens, addCustomToken } = useCustomTokens();
+  const { results: searchResults, loading: searching } = useTokenSearch(open ? searchValue : '');
+  const pastedAddress = isContractAddress(searchValue) ? searchValue.trim() : '';
+  const { data: pastedToken, isFetching: resolvingPasted } = useQuery({
+    queryKey: ['dex-custom-token', pastedAddress],
+    queryFn: () => resolveTokenByAddress(pastedAddress),
+    enabled: open && !!pastedAddress && !tokens.some((token) => token.address === pastedAddress),
+    staleTime: 5 * 60_000,
+  });
 
   const filteredTokens = useMemo(() => {
     const term = searchValue.trim().toLowerCase();
     const excludeIds = exclude.map((t) => t.address);
+    const candidates = term ? mergeTokens(tokens, searchResults) : tokens;
+    const hideInactive = !term && !showAllTokens;
 
-    return tokens.filter((token) => {
+    return candidates.filter((token) => {
+      if (hideInactive && !isActivelyTraded(token) && token.address !== selected?.address
+        && !customTokens.some((custom) => custom.address === token.address)) {
+        return false;
+      }
       const matchesSearch = !term
         || token.symbol.toLowerCase().includes(term)
+        || (token.name || '').toLowerCase().includes(term)
         || (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
       // if the token is WAE, skip it
@@ -63,9 +84,15 @@ export default function TokenSelector({
       const notSkipped = !skipToken || token.address !== skipToken.address;
       return matchesSearch && notExcluded && notSkipped;
     });
-  }, [tokens, searchValue, exclude]);
+  }, [tokens, searchResults, searchValue, exclude, skipToken, showAllTokens, selected, customTokens]);
+
+  const isVerified = (token: DexTokenDto) => token.is_ae || token.listed
+    || token.address === CONFIG.DEX_WAE || token.address === CONFIG.DEX_AEETH;
 
   const handleSelect = (token: DexTokenDto) => {
+    if (!token.is_ae && !tokens.some((item) => item.address === token.address)) {
+      addCustomToken(token);
+    }
     onSelect(token);
     setOpen(false);
     // Clear search when closing
@@ -74,9 +101,6 @@ export default function TokenSelector({
     }
   };
 
-  const isValidAddress = (address: string) =>
-    // Basic validation - you might want to make this more robust
-    address.trim().length > 10 && address.includes('_') || address.startsWith('ak_') || address.startsWith('ct_');
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <div>
@@ -156,7 +180,7 @@ export default function TokenSelector({
           </div>
 
           {/* Custom Token Input */}
-          {searchValue && isValidAddress(searchValue) && (
+          {pastedAddress && !tokens.some((token) => token.address === pastedAddress) && (
           <div style={{
             marginBottom: 20,
             padding: 16,
@@ -180,22 +204,23 @@ export default function TokenSelector({
               marginBottom: 12,
             }}
             >
+              {pastedToken && (
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--standard-font-color)', marginBottom: 4 }}>
+                  {`${pastedToken.symbol} · ${pastedToken.name}`}
+                </div>
+              )}
               {t('dex.tokenSelector.addressLabel')}
               {' '}
-              {searchValue}
+              {pastedAddress}
+              {!resolvingPasted && !pastedToken && (
+                <div role="alert" style={{ marginTop: 6, color: '#efac83' }}>{t('dex.tokenSelector.tokenNotFound')}</div>
+              )}
             </div>
             <button
+              type="button"
+              disabled={!pastedToken}
               onClick={() => {
-                const customToken: DexTokenDto = {
-                  address: searchValue.trim(),
-                  symbol: 'CUSTOM',
-                  name: 'CUSTOM',
-                  pairs_count: 0,
-                  decimals: 18,
-                  is_ae: false,
-                  created_at: new Date().toISOString(),
-                };
-                handleSelect(customToken);
+                if (pastedToken) handleSelect(pastedToken);
               }}
               style={{
                 padding: '8px 16px',
@@ -205,7 +230,8 @@ export default function TokenSelector({
                 color: 'white',
                 fontSize: 12,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: pastedToken ? 'pointer' : 'not-allowed',
+                opacity: pastedToken ? 1 : 0.5,
                 transition: 'all 0.3s ease',
               }}
               onMouseOver={(e) => {
@@ -217,7 +243,7 @@ export default function TokenSelector({
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {t('dex.tokenSelector.addToken')}
+              {resolvingPasted ? <Spinner className="w-3.5 h-3.5" /> : t('dex.tokenSelector.addToken')}
             </button>
           </div>
           )}
@@ -242,6 +268,25 @@ export default function TokenSelector({
             >
               {t('dex.bridge.token')}
             </span>
+            {!searchValue.trim() && (
+              <button
+                type="button"
+                aria-pressed={showAllTokens}
+                onClick={() => setShowAllTokens(!showAllTokens)}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  color: 'var(--standard-font-color)',
+                  cursor: 'pointer',
+                }}
+              >
+                {showAllTokens ? t('dex.tokenSelector.showActiveOnly') : t('dex.tokenSelector.showAllTokens')}
+              </button>
+            )}
             <span style={{
               fontSize: 14,
               fontWeight: 600,
@@ -301,6 +346,13 @@ export default function TokenSelector({
                   }}
                   >
                     {token.symbol}
+                    {isVerified(token) && (
+                      <BadgeCheck
+                        size={14}
+                        aria-label={t('dex.tokenSelector.verified')}
+                        style={{ display: 'inline', marginInlineStart: 4, verticalAlign: '-2px', color: '#4ea1ff' }}
+                      />
+                    )}
                   </div>
                   <div style={{
                     fontSize: 11,
@@ -308,7 +360,7 @@ export default function TokenSelector({
                     opacity: 0.8,
                   }}
                   >
-                    {token.is_ae ? t('dex.tokenSelector.nativeToken') : t('dex.bridge.token')}
+                    {token.is_ae ? t('dex.tokenSelector.nativeToken') : (token.name || t('dex.bridge.token'))}
                   </div>
                 </div>
 
@@ -359,7 +411,11 @@ export default function TokenSelector({
             </div>
             )}
 
-            {filteredTokens.length === 0 && searchValue && !isValidAddress(searchValue) && (
+            {searching && filteredTokens.length === 0 && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}><Spinner className="w-5 h-5" /></div>
+            )}
+
+            {filteredTokens.length === 0 && searchValue && !searching && !pastedAddress && (
             <div style={{
               textAlign: 'center',
               padding: '40px 20px',

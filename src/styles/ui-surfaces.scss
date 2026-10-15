@@ -151,8 +151,6 @@
 }
 
 .ui-page.governance-page {
-  .governance-tabs { scrollbar-width: none; }
-  .governance-tabs::-webkit-scrollbar { display: none; }
   input:not([type="checkbox"]):not([type="radio"]), textarea, select {
     background-color: var(--ui-surface);
     box-shadow: none;

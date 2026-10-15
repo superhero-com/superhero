@@ -10,18 +10,15 @@ env:
   APP: "superhero"
 
 jobs:
-  stg_undeploy:
+  resolve_slug:
     runs-on: ubuntu-latest
-    name: PR undeploy on close or branch delete
+    name: Resolve branch slug
     if: github.event_name == 'pull_request' || (github.event_name == 'delete' && github.event.ref_type == 'branch')
-    concurrency:
-      group: preview-deploy-${{ github.event.pull_request.head.ref || github.event.ref }}
-      cancel-in-progress: false
-    env:
-      BRANCH_SLUG: ""
-
+    outputs:
+      branch_slug: ${{ steps.slug.outputs.branch_slug }}
     steps:
       - name: Compute branch slug
+        id: slug
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -39,8 +36,28 @@ jobs:
             echo "::error::Could not resolve a non-empty branch slug for event '${{ github.event_name }}'"
             exit 1
           fi
-          echo "BRANCH_SLUG=${SLUG}" >> $GITHUB_ENV
+          echo "branch_slug=${SLUG}" >> "$GITHUB_OUTPUT"
 
+  stg_undeploy:
+    runs-on: ubuntu-latest
+    name: PR undeploy on close or branch delete
+    needs: resolve_slug
+    if: needs.resolve_slug.result == 'success'
+    # Shares its group with stg_deploy in pr_preview.yaml (same slug, same
+    # prefix): a deploy build can take several minutes, long enough to still
+    # be running when the PR behind it merges and closes. Serializing the two
+    # under one group, keyed by PR number rather than head branch name (which
+    # a release PR can share with many other PRs), keeps whichever started
+    # first from being overtaken by the other and makes sure this job's commit
+    # always applies on top of any deploy still in flight for the same PR
+    # instead of possibly running before it or racing to push after it.
+    concurrency:
+      group: preview-deploy-${{ needs.resolve_slug.outputs.branch_slug }}
+      cancel-in-progress: false
+    env:
+      BRANCH_SLUG: ${{ needs.resolve_slug.outputs.branch_slug }}
+
+    steps:
       - uses: actions/checkout@v6
         with:
           repository: aeternity/gitops-apps-superhero
@@ -51,7 +68,7 @@ jobs:
 
       - name: Staging undeploy
         id: undeploy
-        uses: aeternity/ae-github-actions/argocd-undeploy@v7.5.0
+        uses: aeternity/ae-github-actions/argocd-undeploy@v7
         with:
           url-prefix: ${{ env.BRANCH_SLUG }}
           env: ${{ env.ENV }}

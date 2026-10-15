@@ -1,6 +1,6 @@
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/ae-dropdown-menu';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { formatNumber } from '@/utils/number';
@@ -171,6 +171,7 @@ const MobileAppHeader = () => {
                     <User className="mr-2 h-4 w-4" />
                     {t('labels.profile')}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     {t('buttons.disconnect')}

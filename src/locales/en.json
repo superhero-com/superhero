@@ -2115,6 +2115,8 @@
     }
   },
   "social": {
+    "originalPost": "Original post",
+    "translatePost": "Translate",
     "copiedAddress": "Copied address",
     "profileTabs": {
       "offline": "Offline — showing last loaded",

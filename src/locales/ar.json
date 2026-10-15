@@ -2048,6 +2048,8 @@
     }
   },
   "social": {
+    "originalPost": "المنشور الأصلي",
+    "translatePost": "ترجمة",
     "share": "مشاركة",
     "sharePost": "مشاركة المنشور",
     "shareComment": "مشاركة التعليق",

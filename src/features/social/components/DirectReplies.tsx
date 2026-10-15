@@ -87,7 +87,8 @@ const DirectReplies = ({
           item={reply}
           commentCount={reply.total_comments ?? 0}
           hideParentContext
-          allowInlineRepliesToggle={false}
+          allowInlineRepliesToggle={(reply.total_comments ?? 0) > 0}
+          threadDepth={0}
           onOpenPost={(replyId) => onOpenPost(String(replyId).replace(/_v3$/, ''))}
         />
       ))}

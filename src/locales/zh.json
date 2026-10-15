@@ -2044,6 +2044,8 @@
     }
   },
   "social": {
+    "originalPost": "原帖",
+    "translatePost": "翻译",
     "share": "分享",
     "sharePost": "分享帖子",
     "shareComment": "分享评论",

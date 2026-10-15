@@ -1,7 +1,8 @@
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { getCurrentSocialGraphConfig, getSocialGraphCounts } from '../socialGraphPolicy';
+import { getCurrentSocialGraphConfig, getSocialGraphCounts, withSocialGraphTimeout } from '../socialGraphPolicy';
+import { CancelablePromise } from '../generated/core/CancelablePromise';
 
 const request = vi.hoisted(() => vi.fn());
 vi.mock('../generated/core/request', () => ({ request }));
@@ -15,6 +16,16 @@ const policy = {
 };
 
 describe('social graph policy and count responses', () => {
+  it('cancels a stalled read and returns an actionable error', async () => {
+    vi.useFakeTimers();
+    const cancel = vi.fn();
+    const pending = new CancelablePromise((_resolve, _reject, onCancel) => { onCancel(cancel); });
+    const assertion = expect(withSocialGraphTimeout(pending, 100)).rejects.toThrow('Social graph is unavailable');
+    await vi.advanceTimersByTimeAsync(100);
+    await assertion;
+    expect(cancel).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
   beforeEach(() => request.mockReset());
   it('retains lifecycle and identity with safely parsed adjustable limits', async () => {
     request.mockResolvedValue(policy);

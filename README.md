@@ -173,6 +173,46 @@ This app is a static site once built. You can deploy the `dist/` directory to an
 - Netlify configuration is included: `netlify.toml` and `public/_redirects` for SPA routing
 - Typical build settings: build command `npm run build`, publish directory `dist`
 
+### Container build
+
+The release Dockerfile builds the frontend from source, then runs the SEO server
+as the unprivileged `node` user. The runtime contains only the built site, server
+code and the dependencies in `server/package-lock.json`. It listens on port 80
+by default; set `PORT` when the deployment requires a different container port.
+
+```bash
+docker build -t superhero-web:local \
+  --build-arg VITE_NETWORK=ae_uat \
+  --build-arg VITE_WEBAUTHN_RP_ID=localhost .
+docker run --rm --read-only --cap-drop=ALL \
+  --security-opt=no-new-privileges \
+  -e PORT=8080 -p 127.0.0.1:8080:8080 superhero-web:local
+```
+
+For Shorts, also pass `ENABLE_SHORTS=true`, `VITE_SHORTS_API_URL`,
+`VITE_SHORTS_STREAM_URL` and the matching `VITE_SHORTS_RELEASE_HASH` as build
+arguments. `VITE_SUPERHERO_API_URL` and `VITE_SUPERHERO_WS_URL` select the client
+API endpoints. The SEO server uses the **runtime** `SUPERHERO_API_URL`. These are
+public configuration values, so never place credentials in them. Shorts remains
+disabled unless explicitly enabled at build time.
+
+If a Git dependency requires authentication, provide a least-privilege token
+through BuildKit: `--secret id=GITHUB_TOKEN,env=GITHUB_TOKEN`. Existing image CI
+already supplies this secret. Do not pass it as a build argument or put it in a
+Git URL. The token is used only during dependency installation.
+
+`Dockerfile.dockerignore` restricts the release context to application inputs and
+excludes local environment files, dependencies, tests and private keys. Node is
+pinned by digest; `docker/web-build-apk.lock` fixes the native build package
+versions; both npm dependency trees have lockfiles. Keep both Express locks in
+sync when updating the server. A missing locked package must fail the build,
+not silently resolve to a newer version. When updating the Node base or Alpine
+lock, verify a clean build and retain the signed APK archives and their hashes
+with the release artifacts. The image workflow currently targets `linux/amd64`. Allow at least 2 GiB of
+RAM for the build worker. Vite defaults to a 1,152 MiB JavaScript heap; a dedicated
+CI worker can raise it with `--build-arg BUILD_NODE_OPTIONS=--max-old-space-size=2048`.
+This setting affects the build only, not the running server.
+
 ## Contributing
 
 1. Create a feature branch from `main`

@@ -1,6 +1,10 @@
+import type { ShortsRelease } from './shorts-release';
+
 export interface Short {
   contentWarning?: 'feed-excluded' | 'unreviewed';
   publicationStatus?: 'draft' | 'published' | 'withdrawn';
+  publicationPending?: boolean;
+  publicationRequest?: 'preparing' | 'queued' | 'claimed' | 'signed' | 'confirmed' | 'reconciled' | 'cancelled' | 'reverted';
   guidelines?: { status: 'analyzing' | 'reviewing' | 'eligible' | 'ineligible' | 'unavailable'; reason?: string; approval?: 'demo' };
   id: string;
   title: string;
@@ -12,6 +16,7 @@ export interface Short {
   duration: number;
   likes: number;
   views: number;
+  periodViews?: number;
   engagement?: { score: number };
   liked: boolean;
   mine: boolean;
@@ -35,6 +40,10 @@ export interface Account {
   previousAvailable?: string;
 }
 export interface Config {
+  release?: ShortsRelease;
+  catalogPaging?: boolean;
+  followingPaging?: boolean;
+  studioPaging?: boolean;
   realtime?: boolean;
   previousContract?: string;
   previousAci?: unknown[];
@@ -55,11 +64,27 @@ export interface Config {
 export interface Dashboard {
   account: Account;
   shorts: Short[];
-  totalViews: number;
-  totalLikes: number;
-  receipts: { tx: string; action: string; at: number }[];
+  library?: StudioCounts;
+  index?: StudioIndex;
+  period?: StudioPeriod;
+  totalViews?: number;
+  totalLikes?: number;
+  receipts?: { tx: string; action: string; at: number }[];
 
 }
+export interface StudioCounts {
+  all: number; published: number; draft: number; withdrawn: number;
+  restricted: number; firstRestricted?: string | null;
+}
+export interface StudioIndex {
+  height: number; syncedAt: number; stale: boolean; confirmationsRequired: number; confirmedHeight: number;
+}
+export interface StudioPeriod { days: number; start: number; end: number }
+export interface StudioContentPage {
+  items: Short[]; total: number; counts: StudioCounts; next?: string | null; previous?: string | null;
+  index: StudioIndex; period: StudioPeriod;
+}
+export interface StudioVideo { video: Short; index: StudioIndex; period: StudioPeriod }
 export interface Review {
   safety?: VisualSafety;
   reviewedTopic?: string;
@@ -92,6 +117,8 @@ export interface Performance {
   summary: PlaybackSummary; previous: PlaybackSummary;
   series: ({ at: number } & PlaybackSummary)[];
   videos: Record<string, PlaybackSummary>;
+  topShorts?: Short[];
+  videoBreakdown?: { total: number; returned: number; complete: boolean };
   sources: { source: string; views: number | null; suppressed: boolean }[];
   finance: {
     truncated?: boolean;

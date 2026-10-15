@@ -164,7 +164,7 @@ export const ShortsUpload = ({ s }: { s: ReturnType<typeof useShorts> }) => {
                 <progress aria-label={phaseTitles[phase]} max={100} value={uploading ? s.uploadProgress : undefined} />
               </div>
               <ol>
-                {['Check file', 'Upload privately', 'Prepare playback'].map((label, index) => (
+                {['Check file', 'Upload privately', 'Prepare video'].map((label, index) => (
                   <li key={label} className={index <= phase ? 'reached' : ''} aria-current={index === phase ? 'step' : undefined}>
                     {index < phase ? <CheckCircle2 size={18} aria-hidden="true" /> : <span className="su-process-dot" />}
                     {label}

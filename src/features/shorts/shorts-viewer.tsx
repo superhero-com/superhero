@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- The scrollable feed needs keyboard focus. */
 import {
-  useCallback, useEffect, useRef, useState,
+  useCallback, useEffect, useLayoutEffect, useRef, useState,
 } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bookmark, Captions, ArrowDown, ArrowLeft, ArrowUp, ChevronDown, Clapperboard,
   Flag, Info, Maximize2, Pause, Play, Plus, Share2, SlidersHorizontal,
-  Volume2, VolumeX, X, EyeOff, Eye,
+  Volume2, VolumeX, X, EyeOff, Eye, RefreshCw,
 } from 'lucide-react';
 import { shortsMediaUrl } from './shorts-media';
 import { useShortHls } from './use-short-hls';
@@ -19,10 +19,12 @@ import { ShortsFollow } from './shorts-follow';
 import type { useShortsSocial } from './use-shorts-social';
 import type { useShortsPreferences } from './shorts-preferences';
 import type { Short } from './types';
+import { shortsPricing, type ShortsPricing } from './shorts-pricing';
 
 type Props = {
   feed: Short[];
   topics: string[];
+  pricing?: ShortsPricing;
   topic: string;
   onTopic: (topic: string) => void;
   onLike: (short: Short) => void;
@@ -30,7 +32,8 @@ type Props = {
   personal?: ReturnType<typeof useShortsPreferences>;
   social?: ReturnType<typeof useShortsSocial>;
   onConnect?: () => unknown;
-  onPlayback?: (id: string, event: string, seconds: number) => void;
+  onPlayback?: (id: string, event: string, seconds: number, token: string) => void;
+  measurementSession?: string;
   onStudio: () => void;
   onUpload: () => void;
   message: string;
@@ -39,15 +42,21 @@ type Props = {
   suspended: boolean;
   ready: boolean;
   shared?: boolean;
+  pagination?: {
+    next?: string | null; loading?: boolean; error?: string;
+    more: (automatic?: boolean) => unknown; restart: () => unknown; focus: (id: string) => void;
+  };
 };
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 const ShortPlayer = ({
-  short, active, warm, muted, onMute, onLike, onDetails, onShare, busy, onPlayback, onSave, saved,
+  short, active, warm, muted, onMute, onLike, onDetails, onShare, busy, onPlayback, onSave, saved, measurementSession, pricing,
 }: {
   short: Short; active: boolean; warm: boolean; muted: boolean; busy: boolean;
   onMute: () => void; onLike: () => void; onDetails: () => void; onShare: () => void;
   onPlayback?: Props['onPlayback']; onSave?: () => void; saved?: boolean;
+  measurementSession?: string;
+  pricing?: ShortsPricing;
 }) => {
   const video = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
@@ -66,12 +75,14 @@ const ShortPlayer = ({
   const warningKey = `${short.id}:${warning}:${short.guidelines?.status}`;
   const [revealedFor, setRevealedFor] = useState('');
   const covered = !!warning && revealedFor !== warningKey;
-  const hls = useShortHls(video, short.id, warm && !covered, () => active && !manuallyPaused.current);
+  const hls = useShortHls(video, short.id, warm && !covered, () => active && !manuallyPaused.current, measurementSession);
+  const measurementToken = useRef(hls.token);
+  measurementToken.current = hls.token;
   const hasFailed = failed || hls.status === 'error';
   const loading = waiting || (warm && hls.status !== 'ready' && hls.status !== 'error');
   useEffect(() => { if (!warning) setRevealedFor(''); }, [warning]);
   const measure = useCallback((final = false) => {
-    if (!playbackRef.current || !playbackStarted.current) return;
+    if (!playbackRef.current || !playbackStarted.current || !measurementToken.current) return;
     const day = new Date().toISOString().slice(0, 10);
     if (measurement.current.day !== day) {
       measurement.current = { id: crypto.randomUUID(), sent: -1, day };
@@ -81,7 +92,7 @@ const ShortPlayer = ({
     const { seconds } = progress.current;
     if (measurement.current.sent < 0 || seconds - measurement.current.sent >= 2 || (final && seconds > measurement.current.sent) || seconds >= short.duration * 0.95) {
       if (measurement.current.sent === seconds) return;
-      playbackRef.current(short.id, measurement.current.id, seconds);
+      playbackRef.current(short.id, measurement.current.id, seconds, measurementToken.current);
       measurement.current.sent = seconds;
     }
   }, [short.duration, short.id]);
@@ -266,7 +277,7 @@ const ShortPlayer = ({
         )}
       </div>
       <div className="sv-actions" aria-label="Video actions">
-        {!covered && <ShortsLikeButton count={short.likes} liked={short.liked} disabled={busy || short.mine} onLike={onLike} />}
+        {!covered && <ShortsLikeButton pricing={pricing} count={short.likes} liked={short.liked} disabled={busy || short.mine} onLike={onLike} />}
         <div className="sv-action">
           <button type="button" className="sv-action-button" aria-label="Copy Short link" onClick={onShare}><Share2 size={23} /></button>
           <span>Share</span>
@@ -289,8 +300,9 @@ const ShortPlayer = ({
 
 export const ShortsViewer = ({
   feed, topics, topic, onTopic, onLike, onReport, onStudio, onUpload,
-  message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onPlayback, shared = false,
+  message, onDismissMessage, busy, suspended, ready, personal, social, onConnect, onPlayback, measurementSession, shared = false, pagination, pricing,
 }: Props) => {
+  const payment = shortsPricing(pricing);
   const scroller = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState('');
   const [muted, setMuted] = useState(true);
@@ -317,17 +329,25 @@ export const ShortsViewer = ({
     }
   }
   if (unavailable) { emptyTitle = 'This Short is unavailable'; emptyMessage = 'It may have been withdrawn or is not published yet.'; }
+  if (pagination?.error && !feed.length) { emptyTitle = 'Couldn’t load Shorts'; emptyMessage = pagination.error; }
+  let pageAction = pagination?.error ? 'Try again' : 'More Shorts';
+  if (pagination?.loading) pageAction = 'Loading more Shorts…';
   let why = details && prefs?.topics.includes(details.topic) ? `It matches your interest in ${details.topic}.` : 'Selected using recent watch time, completion, freshness and creator variety. Payments never affect selection.';
   if (shared) why = 'You opened a direct link to this video. Availability by link does not mean it is eligible for the feed.';
   const feedIds = feed.map((video) => video.id).join(',');
   const index = Math.max(0, feed.findIndex((video) => video.id === activeId));
   const windowStart = Math.max(0, index - 2);
   const windowEnd = Math.min(feed.length, index + 3);
+  useEffect(() => { pagination?.focus(feed[index]?.id || ''); }, [pagination, feed, index]);
+  useEffect(() => {
+    if (pagination?.next && !pagination.loading && !pagination.error && !suspended && visible
+      && index >= feed.length - 3) pagination.more(true);
+  }, [pagination, index, feed.length, suspended, visible]);
   const firstMount = useRef(true);
   const previousTopic = useRef(topic);
   const currentId = useRef(activeId);
   currentId.current = activeId;
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = scroller.current;
     if (!root || !feedIds) return undefined;
     let requested = previousTopic.current === topic ? currentId.current : undefined;
@@ -337,6 +357,8 @@ export const ShortsViewer = ({
     const initial = Math.max(0, ids.indexOf(requested || ''));
     firstMount.current = false;
     setActiveId(ids[initial] || '');
+    // Reconcile the same video before scroll snapping can select a new item
+    // when ranking or the bounded catalog window changes its position.
     root.scrollTo({ top: initial * root.clientHeight, behavior: 'instant' });
     return undefined;
   }, [feedIds, topic]);
@@ -380,7 +402,7 @@ export const ShortsViewer = ({
           <Link to="/" aria-label="Back to Superhero" className="sv-back"><ArrowLeft size={21} /></Link>
           <Clapperboard size={23} />
           <h1>Shorts</h1>
-          <span className="sv-testnet">Testnet</span>
+          {payment && <span className="sv-testnet">{payment.networkLabel}</span>}
         </div>
         {shared ? <Link className="sv-discover" to="/shorts">Back to feed</Link> : (
           <button type="button" className="sv-discover" onClick={() => setFilters(true)}>
@@ -393,7 +415,8 @@ export const ShortsViewer = ({
           </button>
         )}
         <div className="sv-toolbar-actions">
-          <button type="button" onClick={onStudio}>Creator studio</button>
+          {pagination && <button type="button" aria-label="Refresh Shorts feed" title="Refresh Shorts feed" onClick={() => pagination.restart()} disabled={pagination.loading}><RefreshCw size={18} /></button>}
+          <button type="button" className="sv-studio-link" onClick={onStudio}>Creator studio</button>
           <button type="button" className="sv-upload" onClick={onUpload} aria-label="Upload a Short">
             <Plus size={19} />
             <span>Create</span>
@@ -421,6 +444,7 @@ export const ShortsViewer = ({
             return (
               <article key={short.id} className="sv-slide" data-short-id={short.id} aria-label={`Short ${i + 1} of ${feed.length}: ${short.title}`} inert={i !== index}>
                 <ShortPlayer
+                  pricing={pricing}
                   short={short}
                   active={i === index && !suspended && !details && !filters && !reporting && visible}
                   warm={Math.abs(i - index) <= 1}
@@ -429,6 +453,7 @@ export const ShortsViewer = ({
                   busy={busy}
                   onLike={() => onLike(short)}
                   onPlayback={onPlayback}
+                  measurementSession={measurementSession}
                   onSave={personal ? () => personal.toggle('saved', short.id) : undefined}
                   saved={prefs?.saved.includes(short.id)}
                   onDetails={() => setDetails(short)}
@@ -447,9 +472,18 @@ export const ShortsViewer = ({
               {ready && prefs?.mode === 'following' && social?.status === 'error' && <button type="button" onClick={social.retry}>Try again</button>}
               {ready && <button type="button" onClick={() => setFilters(true)}>Adjust my feed</button>}
               {unavailable && <Link to="/shorts">Back to Shorts</Link>}
+              {pagination && (pagination.next || pagination.error) && <button type="button" disabled={pagination.loading} onClick={() => (pagination.next ? pagination.more() : pagination.restart())}>{pageAction}</button>}
             </div>
           )}
         </div>
+        {pagination && feed.length > 0 && index === feed.length - 1 && (pagination.next || pagination.error || pagination.loading) && (
+          <div className="sv-page-status">
+            {pagination.error && <span role="status">{pagination.error}</span>}
+            <button type="button" disabled={pagination.loading} onClick={() => (pagination.next ? pagination.more() : pagination.restart())}>
+              {pageAction}
+            </button>
+          </div>
+        )}
         {feed.length > 1 && !unavailable && (
         <div className="sv-navigation">
           <button type="button" aria-label="Previous Short" onClick={() => navigate(index - 1)} disabled={index === 0}><ArrowUp size={24} /></button>
@@ -543,7 +577,7 @@ export const ShortsViewer = ({
               <dt>Views (preview)</dt>
               <dd>{details.views}</dd>
             </dl>
-            <p>Each Like costs 0.1 test AE: 0.08 AE to the creator and 0.02 AE to the treasury. Network fees are additional.</p>
+            <p>{payment ? `Each Like costs ${payment.price}: ${payment.creatorReward} to the creator and ${payment.treasuryReward} to the treasury. Network fees are additional.` : 'Like payment details are temporarily unavailable.'}</p>
             <details>
               <summary>IPFS content identifier</summary>
               <code>{details.cid}</code>

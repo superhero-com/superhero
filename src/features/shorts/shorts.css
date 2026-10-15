@@ -649,3 +649,11 @@
 .sh-sidebar > button span { font-size: 18px; width: auto; }
 .sh-main { max-width: 1200px; margin: 0 auto; }
 @media (max-width: 780px) { .sh-sidebar { padding: 12px 14px; } }
+.sh-wallet-recovery { position: fixed; z-index: 80; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); width: min(390px, calc(100vw - 32px)); padding: 16px; border: 1px solid #344666; border-radius: 16px; background: #101a2a; box-shadow: 0 8px 32px #0008; color: #f4f7ff; font-size: 14px; }
+.sh-wallet-recovery p { margin: 8px 0; line-height: 1.5; }
+.shorts-studio-page .sh-wallet-recovery { top: max(16px, env(safe-area-inset-top)); bottom: auto; max-height: 45vh; overflow-y: auto; }
+.sh-wallet-recovery details { margin: 10px 0; }
+.sh-wallet-recovery code { display: block; overflow-wrap: anywhere; margin-top: 8px; }
+.sh-wallet-recovery-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.sh-wallet-recovery-actions button { min-height: 40px; padding: 8px 12px; border: 1px solid #55709d; border-radius: 8px; background: #192840; }
+.sh-wallet-recovery-actions button:focus-visible { outline: 2px solid #83b4ff; outline-offset: 3px; }

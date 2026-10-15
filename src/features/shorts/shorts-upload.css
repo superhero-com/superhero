@@ -65,7 +65,8 @@
 .shorts-app input.su-switch[type=checkbox]:checked::after { transform: translateX(18px); }
 .shorts-app input.su-switch[type=checkbox]:disabled { opacity: .5; cursor: not-allowed; }
 .su-disclosures small { display: block; margin-top: .3rem; font-size: .75rem; }
-.ss-main:has(.su-action-bar) { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }
+/* Preserve footer clearance when Studio's compact layout sets padding-block. */
+.ss-layout .ss-main:has(.su-action-bar) { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }
 .su-editor :is(input, select, textarea, button, summary) { scroll-margin-block: 1rem 10rem; }
 .su-action-bar { position: fixed; inset: auto 0 0 var(--ss-sidebar-width, 0px); z-index: 40; border-top: 1px solid var(--line); background: #101722f5; box-shadow: 0 -8px 28px #0002; backdrop-filter: blur(16px); }
 .su-actions { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; max-width: 1660px; margin: 0 auto; padding: 1rem var(--ss-main-gutter, 16px) calc(1rem + env(safe-area-inset-bottom)); }
@@ -135,7 +136,7 @@
   .su-steps { max-width: none; }
   .su-action-buttons { justify-content: space-between; }
   .su-action-buttons .primary { margin-left: auto; }
-  .ss-main:has(.su-action-bar) { padding-bottom: calc(12rem + env(safe-area-inset-bottom)); }
+  .ss-layout .ss-main:has(.su-action-bar) { padding-bottom: calc(12rem + env(safe-area-inset-bottom)); }
   .su-editor :is(input, select, textarea, button, summary) { scroll-margin-bottom: 12rem; }
 }
 @media(max-width:760px) {

@@ -1,9 +1,11 @@
+import { NETWORKS } from '@/config';
 import HeaderWalletButton from '@/components/layout/app-header/HeaderWalletButton';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, ArrowUpRight, BarChart3, Clapperboard, Coins, LayoutDashboard, Plus, RefreshCw, ShieldCheck,
 } from 'lucide-react';
+import { shortsPricing, shortsUnit, type ShortsPricing } from './shorts-pricing';
 import { shortsMediaUrl } from './shorts-media';
 import { StudioContent as Content } from './shorts-studio-content';
 import { ShortsUpload } from './shorts-upload';
@@ -71,7 +73,7 @@ const SafetyReceipt = ({ safety, busy, retry }: { safety?: VisualSafety; busy: b
 );
 export const shortDate = (n: number) => (n ? new Date(n).toLocaleDateString(undefined, { dateStyle: 'medium', timeZone: 'UTC' }) : 'Not activated');
 const number = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
-const transactionUrl = (tx: string) => `https://testnet.aescan.io/transactions/${tx}`;
+const transactionUrl = (tx: string, network?: ShortsPricing['network']) => (network ? `${NETWORKS[network].EXPLORER_URL}/transactions/${encodeURIComponent(tx)}` : undefined);
 const Metric = ({ label, value, detail }: { label: string; value: string; detail: string }) => (
   <div className="ss-metric">
     <span>{label}</span>
@@ -110,7 +112,7 @@ const Ledger = ({ s }: { s: State }) => {
       <div className="ss-ledger-summary">
         <span>
           Earned in this period
-          <b>{stale ? 'Updating…' : `${p.finance.earned} AE`}</b>
+          <b>{stale ? 'Updating…' : `${p.finance.earned} ${shortsUnit(s.paymentRelease?.network)}`}</b>
         </span>
         <span>
           Confirmed paid Likes
@@ -146,14 +148,16 @@ const Ledger = ({ s }: { s: State }) => {
                   </td>
                   <td data-label="Date">{shortDate(e.at)}</td>
                   <td data-label={e.action === 'Claimed' ? 'To wallet' : 'Earned'} className={e.action === 'PaidLike' ? 'ss-earned' : ''}>
-                    {`${e.amountAe} AE`}
+                    {`${e.amountAe} ${shortsUnit(s.paymentRelease?.network)}`}
                     <small className="ss-cell-note">{e.action === 'Claimed' ? 'Transferred to wallet' : 'Your creator share'}</small>
                   </td>
                   <td className="ss-activity-receipt">
-                    <a className="ss-text-link" href={transactionUrl(e.tx)} target="_blank" rel="noreferrer">
-                      View receipt
-                      <ArrowUpRight size={14} />
-                    </a>
+                    {s.paymentRelease ? (
+                      <a className="ss-text-link" href={transactionUrl(e.tx, s.paymentRelease.network)} target="_blank" rel="noreferrer">
+                        View receipt
+                        <ArrowUpRight size={14} />
+                      </a>
+                    ) : <span>Receipt unavailable</span>}
                   </td>
                 </tr>
               ))}
@@ -187,7 +191,7 @@ const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
         <h2>
           {a.available}
           {' '}
-          <span>AE</span>
+          <span>{shortsUnit(s.paymentRelease?.network)}</span>
         </h2>
         <p>{s.dashboardError ? 'Balance may be out of date. Refresh before claiming.' : rewardMessage}</p>
       </div>
@@ -208,7 +212,7 @@ const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
       )}
       {Number(a.previousAvailable || 0) > 0 && (
       <div className="ss-previous-rewards">
-        <p>{`${a.previousAvailable} AE in earlier rewards is available separately.`}</p>
+        <p>{`${a.previousAvailable} ${shortsUnit(s.paymentRelease?.network)} in earlier rewards is available separately.`}</p>
         {!compact && <button type="button" disabled={s.busy || !!s.dashboardError} onClick={s.claimPrevious}>Claim earlier rewards</button>}
       </div>
       )}
@@ -217,26 +221,28 @@ const Rewards = ({ s, compact = false }: { s: State; compact?: boolean }) => {
 };
 const NextSteps = ({ s }: { s: State }) => {
   const videos = s.dashboard!.shorts;
-  const drafts = videos.filter((v) => publicationStatus(v) === 'draft');
-  const restricted = videos.filter((v) => publicationStatus(v) !== 'withdrawn' && guidelinesStatus(v) === 'ineligible');
+  const drafts = s.dashboard!.library?.draft ?? videos.filter((v) => publicationStatus(v) === 'draft').length;
+  const restrictedVideos = videos.filter((v) => publicationStatus(v) !== 'withdrawn' && guidelinesStatus(v) === 'ineligible');
+  const restricted = s.dashboard!.library?.restricted ?? restrictedVideos.length;
+  const firstRestricted = s.dashboard!.library?.firstRestricted ?? restrictedVideos[0]?.id;
   return (
     <section className="ss-panel ss-next-steps">
       <h2>Next steps</h2>
-      {drafts.length > 0 && (
+      {drafts > 0 && (
       <Link to="/shorts/studio/content?status=draft">
         <Clapperboard size={19} />
         <span>
-          <b>{`${drafts.length} draft${drafts.length === 1 ? '' : 's'} to revisit`}</b>
+          <b>{`${drafts} draft${drafts === 1 ? '' : 's'} to revisit`}</b>
           <small>Preview and publish when you’re ready.</small>
         </span>
         <ArrowUpRight size={16} />
       </Link>
       )}
-      {restricted.length > 0 && (
-      <Link to={`/shorts/studio/video/${encodeURIComponent(restricted[0].id)}`}>
+      {restricted > 0 && firstRestricted && (
+      <Link to={`/shorts/studio/video/${encodeURIComponent(firstRestricted!)}`}>
         <ShieldCheck size={19} />
         <span>
-          <b>{`${restricted.length} Short${restricted.length === 1 ? '' : 's'} with a feed restriction`}</b>
+          <b>{`${restricted} Short${restricted === 1 ? '' : 's'} with a feed restriction`}</b>
           <small>Check the reason and request another review.</small>
         </span>
         <ArrowUpRight size={16} />
@@ -245,7 +251,7 @@ const NextSteps = ({ s }: { s: State }) => {
       <Link to="/shorts/studio/upload">
         <Plus size={19} />
         <span>
-          <b>{videos.length ? 'Create your next Short' : 'Share your first Short'}</b>
+          <b>{(s.dashboard!.library?.all ?? videos.length) ? 'Create your next Short' : 'Share your first Short'}</b>
           <small>Superhero covers hosting. Bring your idea.</small>
         </span>
         <ArrowUpRight size={16} />
@@ -257,8 +263,10 @@ const VideoDetail = ({ s }: { s: State }) => {
   const [appeal, setAppeal] = useState('');
   const [params] = useSearchParams();
   const panel = ['analytics', 'revenue'].includes(params.get('panel') || '') ? params.get('panel') : 'details';
-  const video = s.dashboard?.shorts.find((v) => v.id === s.videoId);
-  if (!video && (s.busy || !s.dashboard)) return <StudioSkeleton page="video" label="Loading your Short…" />;
+  const remote = s.config?.studioPaging ? s.studioVideo : undefined;
+  const video = remote ? remote.data?.video : s.dashboard?.shorts.find((v) => v.id === s.videoId);
+  if (remote?.error) return <DataError message={remote.error} retry={remote.retry} />;
+  if (!video && (remote?.loading || s.busy || !s.dashboard)) return <StudioSkeleton page="video" label="Loading your Short…" />;
   if (!video) return <div className="ss-panel">This Short is not in your creator account.</div>;
   return (
     <>
@@ -447,11 +455,13 @@ const ReviewQueue = ({ s }: { s: State }) => {
   );
 };
 export const ShortsStudio = ({ s }: { s: State }) => {
+  const pricing = shortsPricing(s.paymentRelease);
   const page = s.section;
   const [params] = useSearchParams();
   const layout = useRef<HTMLDivElement>(null);
   useEffect(() => { layout.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' }); }, [page, s.videoId]);
   const loading = page !== 'upload' && (s.restoringCreatorSession || (s.authenticated && !s.dashboard && !s.dashboardError));
+  const index = page === 'video' && s.config?.studioPaging ? s.studioVideo.data?.index : s.dashboard?.index;
   const titles: Record<string, string> = {
     overview: 'Overview', content: 'Content', analytics: 'Analytics', revenue: 'Revenue', upload: 'Create a Short', video: 'Short details', review: 'Review & safety',
   };
@@ -528,6 +538,7 @@ export const ShortsStudio = ({ s }: { s: State }) => {
           </div>
         ) : null}
         {s.authenticated && s.dashboardError && page !== 'upload' && <DataError message={s.dashboardError} retry={s.refreshNow} />}
+        {s.authenticated && index?.stale && page !== 'upload' && page !== 'content' && <p className="ss-measurement-note" role="status">Publication status and paid Likes are catching up with the network. Your wallet balance is read separately.</p>}
         {loading && <StudioSkeleton page={page} label={s.restoringCreatorSession ? 'Opening your Studio…' : 'Loading your Studio…'} />}
         {page === 'upload' && <ShortsUpload key={s.uploadEpoch} s={s} />}
         {s.authenticated && s.dashboard && !loading && (
@@ -550,16 +561,26 @@ export const ShortsStudio = ({ s }: { s: State }) => {
             <>
               <Rewards s={s} />
               <div className="ss-metrics ss-revenue-metrics">
-                <Metric label="Lifetime earned" value={`${s.dashboard.account.earned} AE`} detail="Your total creator share of paid Likes" />
-                <Metric label="Claimed to wallet" value={`${s.dashboard.account.claimed} AE`} detail="Total rewards you’ve already collected" />
+                <Metric label="Lifetime earned" value={`${s.dashboard.account.earned} ${shortsUnit(s.paymentRelease?.network)}`} detail="Your total creator share of paid Likes" />
+                <Metric label="Claimed to wallet" value={`${s.dashboard.account.claimed} ${shortsUnit(s.paymentRelease?.network)}`} detail="Total rewards you’ve already collected" />
                 <div className="ss-metric ss-revenue-explainer">
                   <span>How you earn</span>
                   <p>
-                    You receive
-                    {' '}
-                    <b>80%</b>
-                    {' '}
-                    of each paid Like. The remaining 20% goes to the Superhero treasury.
+                    {pricing ? (
+                      <>
+                        You receive
+                        {' '}
+                        <b>
+                          {pricing.creatorPercent}
+                          %
+                        </b>
+                        {' '}
+                        of each paid Like. The remaining
+                        {' '}
+                        {pricing.treasuryPercent}
+                        % goes to the Superhero treasury.
+                      </>
+                    ) : 'Like payment details are temporarily unavailable.'}
                   </p>
                   <small>Superhero pays for hosting your Shorts.</small>
                 </div>

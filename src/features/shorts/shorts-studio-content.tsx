@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowDown, ArrowUp, ArrowUpRight, BarChart3, Clapperboard, Search,
 } from 'lucide-react';
+import { StudioSkeleton } from './shorts-studio-skeleton';
 import { shortsMediaUrl } from './shorts-media';
 import { feedLabel, guidelinesStatus, publicationStatus } from './shorts-guidelines';
 import type { useShorts } from './use-shorts';
@@ -13,31 +14,50 @@ const PAGE_SIZE = 10;
 export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof useShorts>; compact?: boolean }) => {
   const [params, setParams] = useSearchParams();
   const library = useRef<HTMLElement>(null);
-  const viewsAvailable = !!s.performance && !s.performanceError;
+  const paged = !!s.config?.studioPaging;
+  const remote = !compact && paged ? s.studioContent : undefined;
+  const data = remote?.data;
+  const counts = compact ? s.dashboard?.library : data?.counts;
+  const viewsAvailable = paged || (!!s.performance && !s.performanceError);
+  const completeViews = paged || (viewsAvailable && s.performance?.videoBreakdown?.complete !== false);
   const search = compact ? '' : params.get('q') || '';
   const status = !compact && states.some(([value]) => value === params.get('status')) ? params.get('status')! : 'all';
   const requestedSort = compact ? 'newest' : params.get('sort') || 'newest';
   const validSort = ['newest', 'oldest', 'likes', 'likes-asc', 'views', 'views-asc'].includes(requestedSort)
-    && (!requestedSort.startsWith('views') || viewsAvailable);
+    && (!requestedSort.startsWith('views') || completeViews);
   const sort = validSort ? requestedSort : 'newest';
   const videos = s.dashboard?.shorts || [];
-  const rows = videos.filter((v) => (status === 'all' || publicationStatus(v) === status)
+  const legacyRows = videos.filter((v) => (status === 'all' || publicationStatus(v) === status)
     && `${v.title} ${v.topic}`.toLowerCase().includes(search.trim().toLowerCase()))
     .sort((a, b) => {
       if (sort.startsWith('likes')) return (b.likes - a.likes) * (sort === 'likes-asc' ? -1 : 1);
       if (sort.startsWith('views') && viewsAvailable) return ((s.performance?.videos[b.id]?.views ?? 0) - (s.performance?.videos[a.id]?.views ?? 0)) * (sort === 'views-asc' ? -1 : 1);
       return sort === 'oldest' ? (a.createdAt || 0) - (b.createdAt || 0) : (b.createdAt || 0) - (a.createdAt || 0);
     });
+  const rows = paged && !compact ? data?.items || [] : legacyRows;
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const requestedPage = Number(params.get('page'));
   const page = compact || !Number.isSafeInteger(requestedPage) ? 1 : Math.min(pageCount, Math.max(1, requestedPage));
-  const shown = compact ? rows.slice(0, 4) : rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  let shown = rows;
+  if (compact) shown = rows.slice(0, 4);
+  else if (!paged) shown = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const statusCount = (value: string) => {
+    if (paged) return counts?.[value as keyof typeof counts] ?? '—';
+    return value === 'all' ? videos.length : videos.filter((v) => publicationStatus(v) === value).length;
+  };
+  const changedPage = paged && params.has('cursor');
+  const filtered = !!search || status !== 'all';
+  let emptyTitle = 'Your next idea belongs here';
+  let emptyText = 'Upload your first video. Superhero covers hosting.';
+  if (filtered) { emptyTitle = 'No matching Shorts'; emptyText = 'Try another search or show all your Shorts.'; }
+  if (changedPage) { emptyTitle = 'This page has changed'; emptyText = 'Return to the first page to see your latest content.'; }
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value); else next.delete(key);
     if (key !== 'page') next.delete('page');
+    if (key !== 'cursor') next.delete('cursor');
     setParams(next, { replace: true });
-    if (key === 'page') library.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
+    if (key === 'page' || key === 'cursor') library.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
   };
   const reset = () => setParams({}, { replace: true });
   const sortDirection = (descending: string, ascending: string) => {
@@ -47,7 +67,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
     return 'none';
   };
   return (
-    <section ref={library} className={`ss-panel ss-library ${compact ? 'ss-library--compact' : 'ss-library--full'}`} aria-label={compact ? 'Latest Shorts' : 'Content library'}>
+    <section ref={library} className={`ss-panel ss-library ${compact ? 'ss-library--compact' : 'ss-library--full'}`} aria-label={compact ? 'Latest Shorts' : 'Content library'} aria-busy={remote?.loading}>
       {compact && (
       <div className="sh-section-head">
         <h2>Latest Shorts</h2>
@@ -64,14 +84,14 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
               <button type="button" key={value} aria-pressed={status === value} onClick={() => update('status', value)}>
                 {label}
                 {' '}
-                <span>{value === 'all' ? videos.length : videos.filter((v) => publicationStatus(v) === value).length}</span>
+                <span>{statusCount(value)}</span>
               </button>
             ))}
           </div>
           <div className="ss-library-tools">
             <label className="ss-search" htmlFor="studio-search">
               <Search size={17} aria-hidden="true" />
-              <input id="studio-search" aria-label="Search your Shorts" value={search} placeholder="Search title or topic" onChange={(e) => update('q', e.target.value)} />
+              <input id="studio-search" aria-label="Search your Shorts" maxLength={100} value={search} placeholder="Search title or topic" onChange={(e) => update('q', e.target.value)} />
             </label>
             <label className="ss-select ss-sort-select" htmlFor="studio-sort">
               Sort by
@@ -80,8 +100,8 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
                 <option value="oldest">Oldest first</option>
                 <option value="likes">Most paid Likes</option>
                 <option value="likes-asc">Fewest paid Likes</option>
-                <option value="views" disabled={!viewsAvailable}>Most views</option>
-                <option value="views-asc" disabled={!viewsAvailable}>Fewest views</option>
+                <option value="views" disabled={!completeViews}>Most views</option>
+                <option value="views-asc" disabled={!completeViews}>Fewest views</option>
               </select>
             </label>
             <label className="ss-select" htmlFor="studio-content-period">
@@ -89,15 +109,28 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
               <select id="studio-content-period" value={s.days} onChange={(e) => s.setDays(Number(e.target.value))}>{[7, 28, 90].map((days) => <option key={days} value={days}>{`Last ${days} days`}</option>)}</select>
             </label>
           </div>
-          {s.performanceError && (
+          {!paged && s.performanceError && (
           <p className="ss-inline-error" role="alert">
             Views are unavailable. Your content is still here.
             <button type="button" onClick={s.refreshPerformance}>Retry views</button>
           </p>
           )}
+          {viewsAvailable && !completeViews && (
+          <p className="ss-measurement-note">Some video totals aren’t loaded. Open a Short for its full analytics.</p>
+          )}
         </>
       )}
-      {shown.length > 0 ? (
+      {remote?.error && (
+        <p className="ss-inline-error" role="alert">
+          {data ? 'This page may be out of date. ' : 'Your content couldn’t be loaded. '}
+          {remote.error}
+          <button type="button" onClick={remote.retry}>Retry content</button>
+          {params.has('cursor') && <button type="button" onClick={() => update('cursor', '')}>Return to first page</button>}
+        </p>
+      )}
+      {!compact && data?.index.stale && <p className="ss-measurement-note" role="status">Publication status and paid Likes are catching up with the network.</p>}
+      {remote && !data && !remote.error && <StudioSkeleton page="content" label="Loading your content…" />}
+      {(!remote || data) && (shown.length > 0 ? (
         <div className="ss-table-wrap ss-responsive-table">
           <table className="ss-content-table">
             <thead>
@@ -115,7 +148,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
                 )}
                 <th scope="col" className="ss-number-cell" aria-sort={sortDirection('views', 'views-asc')}>
                   {compact ? 'Views' : (
-                    <button type="button" className="ss-sort-heading" disabled={!viewsAvailable} onClick={() => update('sort', sort === 'views' ? 'views-asc' : 'views')}>
+                    <button type="button" className="ss-sort-heading" disabled={!completeViews} onClick={() => update('sort', sort === 'views' ? 'views-asc' : 'views')}>
                       Views
                       {sort === 'views' && <ArrowDown size={13} />}
                       {sort === 'views-asc' && <ArrowUp size={13} />}
@@ -139,6 +172,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
             <tbody>
               {shown.map((v) => {
                 const published = publicationStatus(v);
+                const views = paged ? v.periodViews : s.performance?.videos[v.id]?.views ?? (completeViews ? 0 : undefined);
                 const path = `/shorts/studio/video/${encodeURIComponent(v.id)}`;
                 let visibility = feedLabel(v);
                 if (v.status === 'active') visibility = 'In the feed';
@@ -169,7 +203,7 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
                       <small className="ss-cell-note">Uploaded</small>
                     </td>
                     )}
-                    <td className="ss-content-views ss-number-cell" data-label={`Views · ${s.days} days`}>{viewsAvailable ? (s.performance?.videos[v.id]?.views ?? 0).toLocaleString() : '—'}</td>
+                    <td className="ss-content-views ss-number-cell" data-label={`Views · ${s.days} days`}>{viewsAvailable && views !== undefined ? views.toLocaleString() : '—'}</td>
                     <td className="ss-content-likes ss-number-cell" data-label="Paid Likes · all time">{v.likes.toLocaleString()}</td>
                     {!compact && (
                     <td className="ss-content-actions">
@@ -195,12 +229,23 @@ export const StudioContent = ({ s, compact = false }: { s: ReturnType<typeof use
       ) : (
         <div className="ss-empty">
           <Clapperboard size={30} />
-          <h3>{search || status !== 'all' ? 'No matching Shorts' : 'Your next idea belongs here'}</h3>
-          <p>{search || status !== 'all' ? 'Try another search or show all your Shorts.' : 'Upload your first video. Superhero covers hosting.'}</p>
-          {search || status !== 'all' ? <button type="button" onClick={reset}>Clear filters</button> : <Link className="ss-button primary" to="/shorts/studio/upload">Create your first Short</Link>}
+          <h3>{emptyTitle}</h3>
+          <p>{emptyText}</p>
+          {changedPage && <button type="button" onClick={() => update('cursor', '')}>Return to first page</button>}
+          {!changedPage && filtered && <button type="button" onClick={reset}>Clear filters</button>}
+          {!changedPage && !filtered && <Link className="ss-button primary" to="/shorts/studio/upload">Create your first Short</Link>}
+        </div>
+      ))}
+      {!compact && paged && data && (data.total > 0 || data.previous) && (
+        <div className="ss-pagination">
+          <span>{`Showing ${shown.length} of ${data.total} Shorts`}</span>
+          <div>
+            <button type="button" disabled={remote?.loading || !data.previous} onClick={() => update('cursor', data.previous!)}>Previous</button>
+            <button type="button" disabled={remote?.loading || !data.next} onClick={() => update('cursor', data.next!)}>Next</button>
+          </div>
         </div>
       )}
-      {!compact && rows.length > 0 && (
+      {!compact && !paged && rows.length > 0 && (
       <div className="ss-pagination">
         <span>{`${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, rows.length)} of ${rows.length} Shorts`}</span>
         {pageCount > 1 && (

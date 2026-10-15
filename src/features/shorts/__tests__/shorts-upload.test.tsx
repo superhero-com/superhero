@@ -114,4 +114,25 @@ describe('Free three-step upload', () => {
     });
     expect(publish).not.toHaveBeenCalled();
   });
+
+  it('presents saved uploads awaiting review without failure or public playback actions', () => {
+    render(<MemoryRouter><ShortsUpload s={state({ uploadPublication: { shortId: 'video', status: 'reviewing' } })} /></MemoryRouter>);
+    const overlay = screen.getByRole('region', { name: 'Publishing your Short' });
+    expect(within(overlay).getByRole('heading', { name: 'Your Short is awaiting review' })).toBeVisible();
+    expect(within(overlay).getByRole('link', { name: 'View in Studio' })).toHaveAttribute('href', '/shorts/studio/video/video');
+    expect(within(overlay).queryByText('Let’s try that again')).not.toBeInTheDocument();
+    expect(within(overlay).queryByRole('link', { name: 'Watch & share' })).not.toBeInTheDocument();
+    expect(within(overlay).getByText('Awaiting review')).toBeVisible();
+  });
+
+  it('lets creators leave a saved publication to check its progress in Studio', () => {
+    render(<MemoryRouter><ShortsUpload s={state({ busy: true, uploadPublication: { shortId: 'video', status: 'publishing' } })} /></MemoryRouter>);
+    const overlay = screen.getByRole('region', { name: 'Publishing your Short' });
+    expect(within(overlay).getByRole('link', { name: 'View in Studio' })).toHaveAttribute('href', '/shorts/studio/video/video');
+    expect(within(overlay).getByText(
+      /Your upload is saved. We’re confirming publication/,
+    )).toBeVisible();
+    expect(within(overlay).queryByText(/Keep this page open/)).not.toBeInTheDocument();
+    expect(within(overlay).queryByRole('link', { name: 'Watch & share' })).not.toBeInTheDocument();
+  });
 });

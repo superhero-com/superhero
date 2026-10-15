@@ -91,6 +91,28 @@ const state = (section: string, extra: Partial<State> = {}): State => ({
 const studio = (s: State, query = '') => render(<MemoryRouter initialEntries={[`/shorts/studio/${s.section === 'overview' ? '' : s.section}${query}`]}><ShortsStudio s={s} /></MemoryRouter>);
 
 describe('Creator Studio workflows', () => {
+  it.each(['ae_uat', 'ae_mainnet'] as const)('uses release economics and receipt links for %s', (network) => {
+    const unit = network === 'ae_uat' ? 'test AE' : 'AE';
+    const paymentRelease = {
+      network, likeFeeAetto: '2000000000000000000', treasuryBps: 2500,
+    } as State['paymentRelease'];
+    studio(state('revenue', { paymentRelease }));
+    expect(screen.getByText('75%')).toBeVisible();
+    expect(screen.getByText(/remaining 25%/)).toBeVisible();
+    expect(within(screen.getByRole('region', { name: 'Available rewards' }))
+      .getByRole('heading')).toHaveTextContent(`0.04 ${unit}`);
+    const explorer = network === 'ae_uat' ? 'https://testnet.aescan.io' : 'https://aescan.io';
+    expect(screen.getAllByRole('link', { name: 'View receipt' }).map((link) => link.getAttribute('href')))
+      .toEqual([`${explorer}/transactions/th_claim`, `${explorer}/transactions/th_reward`]);
+  });
+
+  it('does not advertise a default reward split or explorer when release verification is unavailable', () => {
+    studio(state('revenue'));
+    expect(screen.getByText('Like payment details are temporarily unavailable.')).toBeVisible();
+    expect(screen.queryByText('80%')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'View receipt' })).not.toBeInTheDocument();
+  });
+
   it('keeps overview concise with real next actions and a separate analytics destination', () => {
     studio(state('overview'));
     expect(screen.getByRole('heading', { name: 'Latest Shorts' })).toBeVisible();
@@ -111,6 +133,24 @@ describe('Creator Studio workflows', () => {
     expect(screen.getByText('No matching Shorts')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     expect(screen.getByText('Short 1')).toBeVisible();
+  });
+  it('does not treat an omitted video breakdown as zero or offer an incomplete views sort', () => {
+    studio(state('content', {
+      performance: {
+        ...performance,
+        videos: { 1: summary },
+        videoBreakdown: { total: 121, returned: 100, complete: false },
+      },
+    }), '?sort=views');
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('newest');
+    expect(screen.getByRole('button', { name: 'Views' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Most views' })).toBeDisabled();
+    const rows = screen.getAllByRole('row');
+    const missing = rows.find((row) => within(row).queryByText('Short 2'))!;
+    expect(missing.querySelector('.ss-content-views')).toHaveTextContent('—');
+    const measured = rows.find((row) => within(row).queryByText('Short 1'))!;
+    expect(measured.querySelector('.ss-content-views')).toHaveTextContent('4');
+    expect(screen.getByText(/Some video totals aren’t loaded/)).toBeVisible();
   });
   it('sorts and paginates the complete library beyond 50 Shorts', () => {
     const s = state('content');
@@ -247,5 +287,69 @@ describe('Creator Studio workflows', () => {
     expect(within(screen.getAllByRole('row')[1]).getByText('Short 2')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Paid Likes' }));
     expect(within(screen.getAllByRole('row')[1]).getByText('Short 1')).toBeVisible();
+  });
+});
+
+describe('Paged creator library', () => {
+  const counts = {
+    all: 121, published: 41, draft: 40, withdrawn: 40, restricted: 3, firstRestricted: 'older-issue',
+  };
+  const index = {
+    height: 200, confirmedHeight: 198, syncedAt: 100, stale: false, confirmationsRequired: 3,
+  };
+  const data = {
+    items: [{ ...short(107), periodViews: 42 }, { ...short(3), periodViews: 1 }], total: 121, counts, next: 'next-page', previous: 'previous-page', index, period: { days: 28, start: 0, end: 100 },
+  };
+  const config = { studioPaging: true } as State['config'];
+  const read = {
+    data, loading: false, error: '', retry: vi.fn(),
+  };
+  it('renders server order, complete counts and period views independently of the latest summary or analytics subset', () => {
+    studio(state('content', { config, studioContent: read, performance: undefined }), '?sort=views');
+    expect(screen.getByRole('button', { name: 'All Shorts 121' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Drafts 40' })).toBeVisible();
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Short 107')).toBeVisible();
+    expect(within(rows[0]).getByText('42')).toBeVisible();
+    expect(within(rows[1]).getByText('Short 3')).toBeVisible();
+    expect(screen.getByText('Showing 2 of 121 Shorts')).toBeVisible();
+    expect(screen.getByRole('option', { name: 'Most views' })).not.toBeDisabled();
+  });
+  it('shows placeholders or a recoverable error without claiming the library is empty', () => {
+    const props = state('content', { config, studioContent: { ...read, data: undefined, loading: true } });
+    const view = studio(props);
+    expect(screen.getByText('Loading your content…')).toBeVisible();
+    expect(screen.queryByText('Your next idea belongs here')).not.toBeInTheDocument();
+    view.unmount();
+    studio(state('content', { config, studioContent: { ...read, data: undefined, error: 'Network unavailable' } }), '?cursor=old-page');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry content' }));
+    expect(read.retry).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Return to first page' })).toBeVisible();
+    expect(screen.queryByText('Your next idea belongs here')).not.toBeInTheDocument();
+  });
+  it('uses whole-library next actions and can open a Short outside the summary', () => {
+    const base = state('overview');
+    const view = studio({ ...base, config, dashboard: { ...base.dashboard!, library: counts } });
+    expect(screen.getByRole('link', { name: /40 drafts to revisit/ })).toBeVisible();
+    expect(screen.getByRole('link', { name: /3 Shorts with a feed restriction/ })).toHaveAttribute('href', '/shorts/studio/video/older-issue');
+    view.unmount();
+    studio(state('video', {
+      config,
+      videoId: '107',
+      studioVideo: {
+        data: { video: short(107), index, period: data.period }, loading: false, error: '', retry: vi.fn(),
+      },
+    }));
+    expect(screen.getByRole('heading', { name: 'Short 107' })).toBeVisible();
+    expect(screen.queryByText('This Short is not in your creator account.')).not.toBeInTheDocument();
+  });
+  it('shows network lag explicitly and leaves unknown period values blank', () => {
+    studio(state('content', { config, studioContent: { ...read, data: { ...data, index: { ...index, stale: true }, items: [short(107)] } } }));
+    expect(screen.getByText(/Publication status and paid Likes are catching up/)).toBeVisible();
+    expect(screen.getAllByRole('row')[1].querySelector('[data-label="Views · 28 days"]')).toHaveTextContent('—');
+  });
+  it('includes top performers older than the summary window', () => {
+    studio(state('analytics', { config, performance: { ...performance, topShorts: [short(107)], videos: { 107: summary } } }));
+    expect(screen.getByRole('link', { name: /Short 107/ })).toBeVisible();
   });
 });

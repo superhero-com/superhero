@@ -7,6 +7,59 @@ import { ShortsApiError } from '../api';
 
 afterEach(() => vi.useRealTimers());
 describe('measured playback', () => {
+  it('uses a renewed token after expiry without changing the event or reducing progress', async () => {
+    vi.useFakeTimers();
+    const send = vi.fn().mockRejectedValueOnce(new ShortsApiError('Expired', 401))
+      .mockResolvedValue({ accepted: true, views: 1, engagement: { score: 0.5 } });
+    const delivery = new PlaybackDelivery(send, vi.fn());
+    const payload = {
+      id: 'stable', session: 'browser', seconds: 3, source: 'for-you', token: 'old',
+    };
+    delivery.enqueue('short', payload); await vi.advanceTimersByTimeAsync(0);
+    expect(send).toHaveBeenCalledTimes(1);
+    delivery.enqueue('short', { ...payload, seconds: 2, token: 'new' }); await vi.advanceTimersByTimeAsync(0);
+    expect(send.mock.calls.map(([, value]) => [value.token, value.seconds])).toEqual([['old', 3], ['new', 3]]);
+    expect(send.mock.calls.every(([, value]) => value.id === 'stable')).toBe(true);
+    delivery.dispose();
+  });
+  it.each([
+    {},
+    { accepted: true, views: -1, engagement: { score: 0 } },
+    { accepted: true, views: '1', engagement: { score: 0 } },
+    { accepted: true, views: 1, engagement: { score: Number.NaN } },
+  ])('never replaces player counters with malformed acknowledgements: %j', async (result) => {
+    vi.useFakeTimers();
+    const send = vi.fn().mockResolvedValue(result); const
+      confirm = vi.fn();
+    const delivery = new PlaybackDelivery(send, confirm);
+    delivery.enqueue('short', {
+      id: 'stable', session: 'browser', source: 'for-you', seconds: 0,
+    });
+    await vi.runAllTimersAsync();
+    expect(send).toHaveBeenCalledTimes(5);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(send.mock.calls.every(([, payload]) => payload.id === 'stable')).toBe(true);
+    delivery.dispose();
+  });
+
+  it('ignores malformed keepalive acknowledgements while a normal heartbeat is pending', async () => {
+    vi.useFakeTimers();
+    const good = { accepted: true, views: 2, engagement: { score: 0.5 } };
+    let finish!: (value: PlaybackResult) => void;
+    const send = vi.fn().mockResolvedValueOnce(good)
+      .mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }))
+      .mockResolvedValueOnce({});
+    const confirm = vi.fn(); const
+      delivery = new PlaybackDelivery(send, confirm);
+    const payload = {
+      id: 'stable', session: 'browser', source: 'for-you', seconds: 0,
+    };
+    delivery.enqueue('short', payload); await vi.advanceTimersByTimeAsync(0);
+    delivery.enqueue('short', { ...payload, seconds: 2 });
+    delivery.flushPending(); await vi.advanceTimersByTimeAsync(0);
+    expect(confirm).toHaveBeenCalledTimes(1); expect(confirm).toHaveBeenLastCalledWith('short', good);
+    delivery.dispose(); finish(good); await vi.runAllTimersAsync();
+  });
   it('counts unique visible playback and excludes seeks, pauses, background time and repeated fragments', () => {
     const progress = new PlaybackProgress(10);
     progress.resetPosition(0, 0);
@@ -42,7 +95,7 @@ describe('measured playback', () => {
     delivery.enqueue('short', { ...payload, seconds: 2 });
     delivery.enqueue('short', { ...payload, seconds: 2.7 });
     await vi.advanceTimersByTimeAsync(500);
-    expect(send.mock.calls.map((call) => call[1].seconds)).toEqual([0, 0, 2.7]);
+    expect(send.mock.calls.map((call) => call[1].seconds)).toEqual([0, 2.7]);
     expect(send.mock.calls.every((call) => call[1].id === payload.id)).toBe(true);
     expect(confirm).toHaveBeenLastCalledWith('short', result);
     delivery.dispose();

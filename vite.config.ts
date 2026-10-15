@@ -78,6 +78,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.ENABLE_SHORTS': JSON.stringify(shortsEnabled ? 'true' : 'false'),
     },
     build: {
+      // Compression estimates retain extra output buffers; the serving layer
+      // handles compression independently of this optional build report.
+      reportCompressedSize: false,
       sourcemap: false,
       chunkSizeWarningLimit: 900,
       rollupOptions: {

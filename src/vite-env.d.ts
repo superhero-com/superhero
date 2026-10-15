@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly ENABLE_SHORTS?: string;
   readonly VITE_SHORTS_API_URL?: string;
+  readonly VITE_SHORTS_RELEASE_HASH?: string;
   readonly VITE_SHORTS_STREAM_URL?: string;
   /** Network at build time: ae_mainnet (default) or ae_uat (testnet) */
   readonly VITE_NETWORK?: string;

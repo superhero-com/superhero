@@ -19,7 +19,7 @@ vi.mock('../use-short-hls', async () => {
       useEffect(() => {
         if (warm) ref.current?.setAttribute('src', `blob:hls/${id}`);
       }, [ref, id, warm]);
-      return { status: 'ready', retry: vi.fn() };
+      return { status: 'ready', token: 'measured-token', retry: vi.fn() };
     },
   };
 });
@@ -41,6 +41,7 @@ const clips = ['one', 'two'].map((id) => ({
   moderation: 'approved',
 } satisfies Short));
 const makeProps = () => ({
+  pricing: { network: 'ae_uat' as const, likeFeeAetto: '100000000000000000', treasuryBps: 2000 },
   feed: clips,
   topics: ['All', 'Art'],
   topic: 'All',
@@ -56,6 +57,21 @@ const makeProps = () => ({
   busy: false,
   suspended: false,
   ready: true,
+});
+
+it('offers accessible pagination retry and a latest-feed action without replacing the current player', () => {
+  const props = { ...makeProps(), feed: [clips[0]] };
+  const pagination = {
+    next: 'next-page', loading: false, error: 'Please try again.', more: vi.fn(), restart: vi.fn(), focus: vi.fn(),
+  };
+  const view = render(<MemoryRouter><ShortsViewer {...props} pagination={pagination} /></MemoryRouter>);
+  const video = view.container.querySelector('video');
+  expect(pagination.more).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Try again' })); expect(pagination.more).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole('button', { name: 'Refresh Shorts feed' })); expect(pagination.restart).toHaveBeenCalledOnce();
+  view.rerender(<MemoryRouter><ShortsViewer {...props} feed={[...clips]} pagination={{ ...pagination, error: '', next: null }} /></MemoryRouter>);
+  expect(view.container.querySelector('video')).toBe(video);
+  expect(pagination.focus).toHaveBeenCalledWith('one');
 });
 let playing: WeakMap<HTMLMediaElement, boolean>;
 beforeEach(() => {
@@ -79,6 +95,24 @@ const mount = (props = makeProps()) => {
   return { ...view, region, videos: [...view.container.querySelectorAll('video')] };
 };
 describe('Shorts playback lifecycle', () => {
+  it('uses the same release price in the Like action and details, then removes it when unavailable', () => {
+    const props = {
+      ...makeProps(),
+      feed: [clips[0]],
+      pricing: {
+        network: 'ae_mainnet' as const, likeFeeAetto: '2000000000000000000', treasuryBps: 2500,
+      },
+    };
+    const view = render(<MemoryRouter><ShortsViewer {...props} /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: 'Like for 2 AE' })).toBeEnabled();
+    expect(screen.getByText('Mainnet')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Video details and report' }));
+    expect(screen.getByText(/Each Like costs 2 AE: 1.5 AE to the creator and 0.5 AE/)).toBeVisible();
+    view.rerender(<MemoryRouter><ShortsViewer {...props} pricing={undefined} /></MemoryRouter>);
+    expect(screen.queryByText('Mainnet')).not.toBeInTheDocument();
+    expect(screen.getByText('Like payment details are temporarily unavailable.')).toBeVisible();
+  });
+
   it('has no playback opt-in controls and never starts measurement for an unplayed video', () => {
     const props = makeProps();
     mount(props);
@@ -125,13 +159,13 @@ describe('Shorts playback lifecycle', () => {
       now += 500;
       videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
-    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 2);
+    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 2, 'measured-token');
   });
   it('measures the playing video automatically and flushes a partial heartbeat on pause', () => {
     const props = makeProps();
     const { videos, rerender } = mount(props);
     expect(screen.getAllByText('3 views')).toHaveLength(2);
-    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 0);
+    expect(props.onPlayback).toHaveBeenCalledWith('one', expect.any(String), 0, 'measured-token');
     expect(props.onPlayback.mock.calls.every((call) => call[0] === 'one')).toBe(true);
     let now = performance.now();
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -139,11 +173,11 @@ describe('Shorts playback lifecycle', () => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
     fireEvent.click(screen.getAllByRole('button', { name: 'Pause video' })[0]);
-    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2.5);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2.5, 'measured-token');
     const callback = vi.fn();
     rerender(<MemoryRouter><ShortsViewer {...props} onPlayback={callback} /></MemoryRouter>);
     fireEvent.play(videos[0]);
-    expect(callback).not.toHaveBeenCalledWith('one', expect.any(String), 0);
+    expect(callback).not.toHaveBeenCalledWith('one', expect.any(String), 0, 'measured-token');
   });
   it('counts the final segment of a two-second Short before looping, without adding another completion', () => {
     const props = { ...makeProps(), feed: [{ ...clips[0], duration: 2 }] };
@@ -154,7 +188,7 @@ describe('Shorts playback lifecycle', () => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
     });
     now += 500; videos[0].currentTime = 2; fireEvent.ended(videos[0]);
-    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2);
+    expect(props.onPlayback).toHaveBeenLastCalledWith('one', expect.any(String), 2, 'measured-token');
     expect(videos[0].currentTime).toBe(0);
     [0.5, 1, 1.5, 2].forEach((position) => {
       now += 500; videos[0].currentTime = position; fireEvent.timeUpdate(videos[0]);
@@ -193,6 +227,23 @@ describe('Shared video content cover', () => {
 });
 
 describe('Long feed memory bounds', () => {
+  it('retains the current player and restores its position after reordering and window eviction', () => {
+    const feed = Array.from({ length: 60 }, (_, i) => ({ ...clips[0], id: `short-${i}` }));
+    const props = { ...makeProps(), feed };
+    const { container, region, rerender } = mount(props);
+    fireEvent.scroll(region, { target: { scrollTop: 700 * 39 } });
+    const video = container.querySelector('[data-short-id="short-39"] video');
+    // New candidates evict older metadata; ranking can also move the current ID.
+    const next = [...feed.slice(20, 39), ...feed.slice(40), feed[39]];
+    rerender(<MemoryRouter><ShortsViewer {...props} feed={next} /></MemoryRouter>);
+    expect(container.querySelector('[data-short-id="short-39"] video')).toBe(video);
+    expect(container.querySelector('article:not([inert])')).toHaveAttribute('data-short-id', 'short-39');
+    expect(region.scrollTo).toHaveBeenLastCalledWith({ top: 700 * 39, behavior: 'instant' });
+    rerender(<MemoryRouter><ShortsViewer {...props} feed={[feed[39], ...next.slice(0, -1)]} /></MemoryRouter>);
+    expect(container.querySelector('[data-short-id="short-39"] video')).toBe(video);
+    expect(region.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'instant' });
+  });
+
   it('mounts only nearby cards and keeps the correct absolute position after a long scroll', () => {
     const props = { ...makeProps(), feed: Array.from({ length: 1000 }, (_, i) => ({ ...clips[0], id: `short-${i}`, title: `Clip ${i}` })) };
     const { container, region } = mount(props);

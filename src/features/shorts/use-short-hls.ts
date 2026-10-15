@@ -3,6 +3,7 @@ import {
 } from 'react';
 import Hls from 'hls.js';
 import { shortsPlaybackSession } from './shorts-media';
+import { ShortsHlsLoader, shortsLoadPolicy } from './shorts-hls-loader';
 
 type Status = 'loading' | 'preparing' | 'ready' | 'error';
 
@@ -11,9 +12,11 @@ export function useShortHls(
   id: string,
   warm: boolean,
   shouldPlay: () => boolean,
+  measurementSession?: string,
 ) {
   const [status, setStatus] = useState<Status>('loading');
   const [attempt, retry] = useState(0);
+  const [token, setToken] = useState('');
   const play = useRef(shouldPlay);
   play.current = shouldPlay;
   useEffect(() => {
@@ -28,6 +31,7 @@ export function useShortHls(
     let restorePosition = element.currentTime || 0;
     let nativeReady: (() => void) | undefined;
     setStatus('loading');
+    setToken('');
 
     const ready = () => {
       if (controller.signal.aborted) return;
@@ -45,7 +49,7 @@ export function useShortHls(
       if (controller.signal.aborted || pending) return;
       pending = true;
       try {
-        const session = await shortsPlaybackSession(id, controller.signal);
+        const session = await shortsPlaybackSession(id, controller.signal, measurementSession);
         if (controller.signal.aborted) return;
         if (session.status === 'preparing') {
           if (Date.now() > preparedUntil) throw new Error('Video preparation timed out');
@@ -54,6 +58,7 @@ export function useShortHls(
           return;
         }
         preparedUntil = Date.now() + 240000;
+        setToken(session.token);
         restorePosition = element.currentTime || 0;
         if (hls) {
           hls.loadSource(session.manifest);
@@ -72,6 +77,11 @@ export function useShortHls(
     if (Hls.isSupported()) {
       // fMP4 needs no transmux worker; keep the app's strict worker-src policy.
       hls = new Hls({
+        loader: ShortsHlsLoader,
+        manifestLoadPolicy: shortsLoadPolicy(Hls.DefaultConfig.manifestLoadPolicy),
+        playlistLoadPolicy: shortsLoadPolicy(Hls.DefaultConfig.playlistLoadPolicy),
+        fragLoadPolicy: shortsLoadPolicy(Hls.DefaultConfig.fragLoadPolicy),
+        keyLoadPolicy: shortsLoadPolicy(Hls.DefaultConfig.keyLoadPolicy),
         enableWorker: false,
         autoStartLoad: false,
         maxBufferLength: 4,
@@ -101,6 +111,6 @@ export function useShortHls(
       hls?.destroy();
       element.pause(); element.removeAttribute('src'); element.load();
     };
-  }, [id, warm, attempt, video]);
-  return { status, retry: () => retry((value) => value + 1) };
+  }, [id, warm, attempt, video, measurementSession]);
+  return { status, token: warm ? token : '', retry: () => retry((value) => value + 1) };
 }

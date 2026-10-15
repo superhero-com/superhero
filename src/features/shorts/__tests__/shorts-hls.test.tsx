@@ -5,13 +5,17 @@ import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 import Hls from 'hls.js';
+import { webcrypto, createHash } from 'node:crypto';
 import { useShortHls } from '../use-short-hls';
-import { shortsPlaybackSession } from '../shorts-media';
+import { shortsPlaybackSession, shortsPlaybackProof } from '../shorts-media';
 
 const mocks = vi.hoisted(() => ({ instances: [] as Array<any>, supported: true }));
-vi.mock('hls.js', () => {
+vi.mock('hls.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('hls.js')>();
   type Handler = (...args: any[]) => void;
   class FakeHls {
+    static DefaultConfig = actual.default.DefaultConfig;
+
     static Events = { MANIFEST_PARSED: 'manifest', ERROR: 'error', FRAG_BUFFERED: 'buffered' };
 
     static isSupported = () => mocks.supported;
@@ -123,9 +127,63 @@ describe('Shorts HLS player', () => {
     act(() => mocks.instances[0].handlers.get(Hls.Events.ERROR)('error', { fatal: true, response: { code: 401 } }));
     expect(result.current.status).toBe('error');
   });
+  it('waits through session throttling without an error or overriding a pause, and cancels when cold', async () => {
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(async () => new Response('', { status: 429, headers: { 'Retry-After': '3' } }));
+    const video = player();
+    const view = renderHook(({ warm }) => useShortHls(video, 'one', warm, () => false), { initialProps: { warm: true } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2999); });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(view.result.current.status).toBe('loading');
+    fetchMock.mockImplementation(async () => response());
+    video.current.currentTime = 4;
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    act(() => mocks.instances[0].handlers.get(Hls.Events.MANIFEST_PARSED)());
+    expect(view.result.current.status).toBe('ready');
+    expect(mocks.instances[0].startLoad).toHaveBeenLastCalledWith(4);
+    expect(video.current.play).not.toHaveBeenCalled();
+    view.unmount();
+    fetchMock.mockClear().mockImplementation(async () => new Response('', { status: 503 }));
+    const second = renderHook(({ warm }) => useShortHls(player(), 'one', warm, () => true), { initialProps: { warm: true } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    second.rerender({ warm: false });
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('playback session boundary', () => {
+  it('binds measured playback to a hash, returns its token, and obtains a no-store receipt without sending the browser ID', async () => {
+    vi.stubGlobal('crypto', webcrypto);
+    const viewer = 'an-anonymous-browser-identifier';
+    const value = await shortsPlaybackSession('one', new AbortController().signal, viewer);
+    expect(value).toMatchObject({ token: 'example' });
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ 'X-Playback-Viewer': createHash('sha256').update(viewer).digest('hex') });
+    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain(viewer);
+    const proof = `m1.e30.${'a'.repeat(43)}`;
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ proof })));
+    expect(await shortsPlaybackProof('one', 'example')).toBe(proof);
+    expect(fetchMock).toHaveBeenLastCalledWith('http://127.0.0.1:3335/videos/one/measurement', expect.objectContaining({
+      headers: { 'X-Playback-Token': 'example' }, cache: 'no-store', credentials: 'omit', keepalive: true,
+    }));
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 401 }));
+    await expect(shortsPlaybackProof('one', 'expired')).rejects.toMatchObject({ status: 401 });
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ proof: 'not-a-proof' })));
+    await expect(shortsPlaybackProof('one', 'example')).rejects.toThrow('Invalid');
+  });
+  it('bounds temporary session retries and leaves persistent failures available for manual retry', async () => {
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(async () => new Response('', { status: 503 }));
+    const pending = expect(shortsPlaybackSession('one', new AbortController().signal)).rejects.toThrow('unavailable');
+    await vi.advanceTimersByTimeAsync(30000);
+    await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+  it.each([401, 403, 404, 410, 500])('does not retry session status %s', async (status) => {
+    fetchMock.mockResolvedValue(new Response('', { status }));
+    await expect(shortsPlaybackSession('one', new AbortController().signal)).rejects.toThrow('unavailable');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
   it('accepts only expiring HLS links on the configured streaming origin for the requested video', async () => {
     const invalid = [
       { ...session(), manifest: 'https://other.invalid/steal' },

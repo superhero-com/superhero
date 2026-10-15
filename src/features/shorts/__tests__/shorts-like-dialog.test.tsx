@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  fireEvent, render, screen, within,
+} from '@testing-library/react';
 import {
   beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -10,6 +12,7 @@ beforeEach(() => {
 });
 const makeProps = () => ({
   title: 'An original Short',
+  pricing: { network: 'ae_uat' as const, likeFeeAetto: '100000000000000000', treasuryBps: 2000 },
   connected: true,
   busy: false,
   walletPending: false,
@@ -19,6 +22,29 @@ const makeProps = () => ({
 });
 
 describe('Creator support dialog', () => {
+  it('shows the actual split and rounding on a different release without testnet copy', () => {
+    const props = makeProps();
+    const { container } = render(<ShortsLikeDialog
+      {...props}
+      pricing={{
+        network: 'ae_mainnet', likeFeeAetto: '3', treasuryBps: 3333,
+      }}
+    />);
+    expect(screen.getByRole('button', { name: 'Send a Like · 0.000000000000000003 AE' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'How the Like fee is split' }));
+    expect(screen.getByText('66.67%')).toBeVisible();
+    expect(screen.getByText('33.33%')).toBeVisible();
+    expect(within(screen.getByRole('dialog', { name: 'How your Like is shared' }))
+      .getByText('0.000000000000000003 AE')).toBeVisible();
+    expect(screen.getByText('0 AE')).toBeVisible();
+    expect(screen.getByText('Any rounding remainder goes to the creator.')).toBeVisible();
+    expect(screen.queryByText(/testnet/i)).not.toBeInTheDocument();
+    const bars = container.querySelectorAll<HTMLElement>('.sh-support-split span');
+    expect(bars[0].style.flexGrow).toBe('66.67');
+    expect(bars[1].style.flexGrow).toBe('33.33');
+    expect(props.onLike).not.toHaveBeenCalled();
+  });
+
   it('opens fee details without a payment and restores focus when returning', () => {
     const props = makeProps();
     const { container } = render(<ShortsLikeDialog {...props} />);
@@ -71,4 +97,13 @@ describe('Creator support dialog', () => {
     expect(props.onClose).toHaveBeenCalledOnce();
     expect(props.onLike).not.toHaveBeenCalled();
   });
+});
+
+it('disables an unverified payment without displaying an unverified price', () => {
+  const props = makeProps();
+  render(<ShortsLikeDialog {...props} pricing={undefined} />);
+  expect(screen.getByRole('button', { name: 'Likes temporarily unavailable' })).toBeDisabled();
+  expect(screen.queryByText('0.1 test AE')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Likes temporarily unavailable' }));
+  expect(props.onLike).not.toHaveBeenCalled();
 });

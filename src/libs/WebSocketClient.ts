@@ -33,7 +33,6 @@ class WebSocketClient {
       [WEB_SOCKET_CHANNELS.TokenTransaction]: {},
       [WEB_SOCKET_CHANNELS.TokenHistory]: {},
       [WEB_SOCKET_CHANNELS.SocialGraphUpdated]: {},
-      [WEB_SOCKET_CHANNELS.ShortsUpdated]: {},
     };
 
   setUpSocketListeners() {
@@ -42,9 +41,6 @@ class WebSocketClient {
     }
     this.socketClient.on('connect', () => this.handleWebsocketOpen());
     this.socketClient.on('disconnect', () => this.handleWebsocketClose());
-    this.socketClient.on(WEB_SOCKET_CHANNELS.ShortsUpdated, (payload: any) => {
-      this.handleWebsocketMessage({ subscription: WEB_SOCKET_CHANNELS.ShortsUpdated, payload });
-    });
     this.socketClient.on(WEB_SOCKET_CHANNELS.SocialGraphUpdated, (payload: any) => {
       this.handleWebsocketMessage({ subscription: WEB_SOCKET_CHANNELS.SocialGraphUpdated, payload });
     });
@@ -122,10 +118,6 @@ class WebSocketClient {
   subscribeForConnection(callback: () => void) {
     this.connectionSubscribers.add(callback);
     return () => { this.connectionSubscribers.delete(callback); };
-  }
-
-  subscribeForShortsUpdates(callback: (payload: { network: string; contract: string }) => void) {
-    return this.subscribeForChannel({ payload: WEB_SOCKET_CHANNELS.ShortsUpdated }, callback);
   }
 
   subscribeForSocialGraphUpdates(callback: (payload: {

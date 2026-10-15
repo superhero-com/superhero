@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import AddressAvatar from '@/components/AddressAvatar';
@@ -29,7 +30,7 @@ export const ShortsCreator = ({ address, enabled = true }: { address: string; en
   return (
     <div className="sv-creator">
       <ShortsCreatorAvatar address={address} />
-      <div className="sv-creator-identity">
+      <div className="sv-creator-identity" style={{ '--sv-address-length': address.length } as CSSProperties}>
         <ProfileIdentity
           headingAs="h3"
           address={address}

@@ -5,6 +5,16 @@ import { request, SHORTS_API } from './api';
 
 export type CreatorLogin = { address: string; token: string; expiresAt: number; kind?: 'connected-wallet' | 'wallet-signature' };
 export type CreatorSession = CreatorLogin & { api: string; network: string; contract: string };
+// Clear browser access immediately; ask the configured API to invalidate its token.
+// If offline, the server's short session lifetime still applies. Never send an old
+// environment's credential to a different API or persist a logout retry token.
+export const revokeCreatorSession = async (session: Pick<CreatorSession, 'api' | 'token'>) => {
+  if (session.api !== SHORTS_API) return false;
+  try {
+    await request('/auth/logout', {}, session.token, { keepalive: true, timeout: 10000 });
+    return true;
+  } catch { return false; }
+};
 const pendingConnections = new Map<string, Promise<CreatorSession>>();
 export const openConnectedCreatorSession = (address: string, network: string, contract: string) => {
   if (!address || network !== 'ae_uat' || network !== CONFIG.NETWORK || !contract) {
@@ -42,12 +52,14 @@ const currentSessionAtom = atom<CreatorSession | undefined>(readSession());
 export const creatorSessionAtom = atom(
   (get) => get(currentSessionAtom),
   (get, set, update: CreatorSession | undefined | ((current: CreatorSession | undefined) => CreatorSession | undefined)) => {
-    const next = typeof update === 'function' ? update(get(currentSessionAtom)) : update;
+    const current = get(currentSessionAtom);
+    const next = typeof update === 'function' ? update(current) : update;
     set(currentSessionAtom, next);
     try {
       if (next) sessionStorage.setItem(storageKey, JSON.stringify(next));
       else sessionStorage.removeItem(storageKey);
     } catch { /* An unavailable tab store must not break wallet actions. */ }
+    if (current && current.token !== next?.token) revokeCreatorSession(current);
   },
 );
 

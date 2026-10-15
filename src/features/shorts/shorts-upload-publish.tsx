@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  CheckCircle2, ChevronDown, Info, LoaderCircle, Pencil, TriangleAlert,
+  CheckCircle2, ChevronDown, Clock3, Info, LoaderCircle, Pencil, TriangleAlert,
 } from 'lucide-react';
 import type { useShorts } from './use-shorts';
 import type { Short } from './types';
@@ -39,7 +39,7 @@ export const UploadReview = ({
         </summary>
         <div>
           <p>Publishing is free. Superhero covers storage and publishing costs.</p>
-          <p>Once published, your Short is ready to watch and share. You can manage it in Studio.</p>
+          <p>Once published, your link is ready to share. Playback may still be preparing. You can manage your Short in Studio.</p>
         </div>
       </details>
     </div>
@@ -50,6 +50,8 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
   const publication = s.uploadPublication!;
   const done = publication.status === 'published';
   const failed = publication.status === 'error';
+  const reviewing = publication.status === 'reviewing';
+  const publishing = publication.status === 'publishing';
   let phase = s.uploadStage === 'processing' ? 1 : 0;
   if (publication.status === 'publishing' || publication.shortId) phase = 2;
   if (done) phase = 3;
@@ -62,21 +64,25 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
   let StatusIcon = LoaderCircle;
   if (done) StatusIcon = CheckCircle2;
   if (failed) StatusIcon = TriangleAlert;
+  if (reviewing) StatusIcon = Clock3;
   const titles = ['Uploading your video', 'Preparing your Short', 'Publishing your Short'];
   let title = titles[phase];
   let copy = 'We’re taking care of the rest. Keep this page open.';
-  if (done) { title = 'Your Short is published.'; copy = 'Share your moment with the world.'; }
+  if (publishing) copy = 'Your upload is saved. We’re confirming publication. You can check progress in Studio.';
+  if (done) { title = 'Your Short is published.'; copy = 'Your link is ready to share. Playback may still be preparing.'; }
   if (failed) { title = 'Let’s try that again'; copy = 'Your details are saved. Retry to continue from where we left off.'; }
+  if (reviewing) { title = 'Your Short is awaiting review'; copy = 'Your upload is saved. It will stay private until approved. You can check its status in Studio.'; }
   const stageStatus = (index: number) => {
     if (index < phase) return 'Done';
     if (index > phase) return 'Next';
+    if (reviewing) return 'Awaiting review';
     return failed ? 'Try again' : 'In progress';
   };
   return (
     <section className="su-publish-overlay" aria-label="Publishing your Short">
       <div className={`su-publish-content ${done ? 'is-live' : ''}`}>
         <div className="su-publish-art" aria-hidden="true">
-          <StatusIcon className={!done && !failed ? 'su-publish-spinner' : undefined} size={40} />
+          <StatusIcon className={!done && !failed && !reviewing ? 'su-publish-spinner' : undefined} size={40} />
         </div>
         <div role="status" aria-atomic="true">
           <h2 ref={heading} tabIndex={-1}>{title}</h2>
@@ -85,7 +91,7 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
           {failed && s.message && <p role="alert">{s.message}</p>}
         </div>
         <ol className="su-publish-steps" aria-label="Publishing progress">
-          {['Upload video', 'Prepare playback', 'Publish'].map((label, index) => (
+          {['Upload video', 'Prepare video', 'Publish'].map((label, index) => (
             <li key={label} className={index < phase ? 'complete' : ''} aria-current={index === phase ? 'step' : undefined}>
               <span className="su-publish-step-icon" aria-hidden="true">{index < phase ? <CheckCircle2 size={19} /> : index + 1}</span>
               <span>{label}</span>
@@ -93,11 +99,11 @@ export const UploadPublishOverlay = ({ s }: { s: State }) => {
             </li>
           ))}
         </ol>
-        {(done || failed) && (
+        {(done || failed || reviewing || (publishing && publication.shortId)) && (
           <div className="su-publish-actions">
             {done && <Link className="ss-button primary" to={`/shorts?short=${publication.shortId}`}>Watch &amp; share</Link>}
             {publication.shortId && <Link className="ss-button" to={`/shorts/studio/video/${publication.shortId}`}>View in Studio</Link>}
-            {failed && <button type="button" disabled={s.busy} onClick={s.dismissPublication}>Back to review</button>}
+            {(failed || reviewing) && <button type="button" disabled={s.busy} onClick={s.dismissPublication}>Back to review</button>}
             {done && <button type="button" disabled={s.busy} onClick={s.resetUpload}>Create another Short</button>}
           </div>
         )}

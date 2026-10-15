@@ -84,7 +84,8 @@
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
     "tipping-contract": "git+https://git@github.com/aeternity/tipping-contract#v5.0.0-alpha2",
-    "uuid": "^14.0.2"
+    "uuid": "^14.0.2",
+    "@azure/core-rest-pipeline": "1.25.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",

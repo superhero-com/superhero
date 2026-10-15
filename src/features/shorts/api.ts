@@ -5,7 +5,7 @@ export const SHORTS_API = (import.meta.env.VITE_SHORTS_API_URL
 export class ShortsApiError extends Error {
   constructor(message: string, public status: number) { super(message); this.name = 'ShortsApiError'; }
 }
-export async function request<T>(path: string, body?: unknown, token?: string, options?: { keepalive?: boolean; timeout?: number }): Promise<T> {
+export async function request<T>(path: string, body?: unknown, token?: string, options?: { keepalive?: boolean; timeout?: number; signal?: AbortSignal }): Promise<T> {
   const form = body instanceof FormData;
   const response = await fetch(`${SHORTS_API}/api/shorts${path}`, {
     method: body === undefined ? 'GET' : 'POST',
@@ -15,7 +15,9 @@ export async function request<T>(path: string, body?: unknown, token?: string, o
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: form ? body : JSON.stringify(body),
-    signal: AbortSignal.timeout(options?.timeout ?? 180000),
+    signal: options?.signal
+      ? AbortSignal.any([options.signal, AbortSignal.timeout(options?.timeout ?? 180000)])
+      : AbortSignal.timeout(options?.timeout ?? 180000),
     keepalive: options?.keepalive,
   });
   const result = await response.json();

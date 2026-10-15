@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Heart } from 'lucide-react';
+import { shortsPricing, type ShortsPricing } from './shorts-pricing';
 
 export const ShortsLikeButton = ({
-  count, liked, disabled, onLike,
+  count, liked, disabled, onLike, pricing,
 }: {
   count: number; liked: boolean; disabled: boolean; onLike: () => void;
+  pricing?: ShortsPricing;
 }) => {
+  const payment = shortsPricing(pricing);
+  const availableLabel = payment ? `Like for ${payment.price}` : 'Likes temporarily unavailable';
   const previous = useRef({ count, liked });
   const [motion, setMotion] = useState({ from: count, to: count, celebrate: false });
   useEffect(() => {
@@ -20,9 +24,9 @@ export const ShortsLikeButton = ({
         <button
           type="button"
           className={`sv-action-button ${liked ? 'is-liked' : ''} ${motion.celebrate ? 'sv-like-pop' : ''}`}
-          aria-label={liked ? 'Liked' : 'Like for 0.1 test AE'}
+          aria-label={liked ? 'Liked' : availableLabel}
           aria-pressed={liked}
-          disabled={disabled || liked}
+          disabled={disabled || liked || !payment}
           onClick={onLike}
         >
           <Heart size={25} fill={liked ? 'currentColor' : 'none'} aria-hidden="true" />
@@ -44,7 +48,7 @@ export const ShortsLikeButton = ({
           <span className="sv-like-new">{count}</span>
         </span>
       </strong>
-      <span>{liked ? 'Liked' : '0.1 AE'}</span>
+      <span>{liked ? 'Liked' : payment?.price || 'Unavailable'}</span>
     </div>
   );
 };

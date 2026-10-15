@@ -3,6 +3,8 @@ import { useShorts } from './use-shorts';
 import { ShortsDialog } from './shorts-dialog';
 import { ShortsLikeDialog } from './shorts-like-dialog';
 import { ShortsViewer } from './shorts-viewer';
+import { ShortsWalletRecovery } from './shorts-wallet-recovery';
+import { shortsUnit } from './shorts-pricing';
 import './shorts.css';
 import './shorts-viewer.css';
 
@@ -10,9 +12,11 @@ export const ShortsPage = () => {
   const s = useShorts();
   return (
     <div className={`shorts-app ${s.tab === 'feed' ? 'shorts-watching' : 'shorts-studio-page'}`}>
+      <ShortsWalletRecovery recovery={s.walletRecovery} />
       {s.tab === 'feed' ? (
         <ShortsViewer
           feed={s.feed}
+          pricing={s.paymentRelease}
           topics={s.config?.topics || []}
           topic={s.topic}
           onTopic={s.setTopic}
@@ -22,6 +26,7 @@ export const ShortsPage = () => {
           social={s.social}
           onConnect={s.connectWallet}
           onPlayback={s.playback}
+          measurementSession={s.measurementSession}
           onStudio={() => s.setTab('studio')}
           onUpload={() => s.setTab('publish')}
           message={s.message}
@@ -30,6 +35,9 @@ export const ShortsPage = () => {
           suspended={!!s.like || !!s.withdrawal || s.busy}
           ready={s.feedReady}
           shared={s.shared}
+          pagination={s.config?.catalogPaging && !s.shared ? {
+            ...s.feedWindow, more: s.loadMoreFeed, restart: s.restartFeed, focus: s.focusFeed,
+          } : undefined}
         />
       ) : <ShortsStudio s={s} />}
       {s.claimReview && s.dashboard && (
@@ -39,7 +47,7 @@ export const ShortsPage = () => {
             <p>
               {s.dashboard.account.available}
               {' '}
-              test AE is currently available.
+              {`${shortsUnit(s.paymentRelease?.network)} is currently available.`}
             </p>
             <p>Destination wallet</p>
             <code className="sh-address">{s.actor}</code>
@@ -66,6 +74,7 @@ export const ShortsPage = () => {
         <ShortsLikeDialog
           key={s.like.id}
           title={s.like.title}
+          pricing={s.paymentRelease}
           connected={!!s.actor}
           busy={s.busy}
           walletPending={s.walletPending}

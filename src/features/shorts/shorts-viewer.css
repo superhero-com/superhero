@@ -14,7 +14,7 @@ body:has(.shorts-watching) { overflow: hidden; }
 .shorts-app .sv-toolbar button.sv-upload { background: #1161fe; color: #fff; }
 .shorts-app .sv-toolbar button.sv-discover { color: #fff; font-size: 14px; }
 .sv-stage { flex: 1; min-height: 0; position: relative; }
-.sv-scroll { height: 100%; width: 100%; overflow-y: auto; overflow-x: hidden; scroll-snap-type: y mandatory; overscroll-behavior-y: contain; scrollbar-width: none; }
+.sv-scroll { height: 100%; width: 100%; overflow-y: auto; overflow-x: hidden; scroll-snap-type: y mandatory; overflow-anchor: none; overscroll-behavior-y: contain; scrollbar-width: none; }
 .sv-scroll::-webkit-scrollbar { display: none; }
 .sv-scroll:focus-visible { outline: 1px solid #467eff; outline-offset: -2px; }
 .sv-slide { height: 100%; min-height: 100%; width: 100%; padding: 12px 100px 28px; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; }
@@ -33,12 +33,16 @@ body:has(.shorts-watching) { overflow: hidden; }
 .sv-caption { position: absolute; left: 20px; right: 20px; bottom: 40px; z-index: 4; pointer-events: none; text-shadow: 0 1px 12px #0007; }
 .sv-caption a, .sv-caption button { pointer-events: auto; }
 .sv-creator { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; margin-bottom: 14px; }
-.sv-creator-identity { min-width: 0; flex: 1; }
+.sv-creator-identity { min-width: 0; flex: 1; container-type: inline-size; }
 .sv-creator-avatar { display: flex; flex-shrink: 0; width: fit-content; border-radius: 14px; box-shadow: 0 0 0 2px #08090d, 0 0 0 3px #ffffff20; }
 .shorts-app .sv-creator-identity h3 { margin: 0; font-size: 14px; line-height: 1.35; font-weight: 800; letter-spacing: -.2px; }
-.shorts-app .sv-creator-identity h3[aria-label^="ak_"] { font-size: 12px; font-weight: 650; }
+.shorts-app .sv-creator-identity h3[aria-label^="ak_"] { font: 650 min(10px, calc((100cqi - 24px) / var(--sv-address-length) / .62))/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0; }
+/* Fit the complete address to its container, reserving space for the badge/copy icon. */
+.shorts-app .sv-creator-identity h3[aria-label^="ak_"] > span:first-child,
+.shorts-app .sv-creator-identity [data-testid="profile-address-chip"] > span { white-space: nowrap; overflow-wrap: normal; }
 .shorts-app .sv-creator-identity button { min-height: 30px; padding: 4px 8px; border: 1px solid #ffffff1a; background: #ffffff0a; border-radius: 12px; font: 10px/1.5 ui-monospace, monospace; color: #ffffffb3; }
 .shorts-app .sv-creator-identity button:hover { background: #ffffff14; border-color: #ffffff40; }
+.shorts-app .sv-creator-identity [data-testid="profile-address-chip"] { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: min(9px, calc((100cqi - 38px) / var(--sv-address-length) / .62)); letter-spacing: 0; }
 .sv-details .sv-creator { margin: 24px 0 0; align-items: flex-start; }
 .sv-follow-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .shorts-app button.sv-follow-button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 20px; border-radius: 100px; border: 1px solid #ffffff26; background: var(--neon-teal); color: #031b12; font-size: 13px; font-weight: 650; }
@@ -92,6 +96,9 @@ body:has(.shorts-watching) { overflow: hidden; }
 .shorts-app .sv-navigation button:hover { background: #ffffff16; }
 .shorts-app .sv-navigation button:disabled { opacity: .2; }
 .sv-navigation span { font-size: 10px; color: #7f8595; font-variant-numeric: tabular-nums; }
+.sv-page-status { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 6px; width: max-content; max-width: calc(100% - 32px); padding: 8px; border-radius: 14px; background: #0d1423ed; }
+.sv-page-status span { font-size: 12px; text-align: center; }
+.shorts-app .sv-page-status button { font-size: 13px; padding: 8px 16px; }
 .sv-scroll-hint { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-size: 9px; color: #6b7283; pointer-events: none; }
 .sv-toast { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); max-width: min(90vw,560px); padding: 12px 16px; display: flex; align-items: center; gap: 10px; background: #1b2435f5; border: 1px solid #ffffff20; border-radius: 12px; font-size: 12px; z-index: 10; box-shadow: 0 8px 35px #0009; }
 .sv-toast > span { overflow-wrap: anywhere; }
@@ -117,7 +124,7 @@ body:has(.shorts-watching) { overflow: hidden; }
 @media (max-width: 600px) {
   .sv-toolbar { padding-left: 12px; padding-right: 12px; gap: 6px; }
   .sv-toolbar-title { gap: 8px; }
-  .sv-toolbar-title > svg, .sv-testnet, .sv-toolbar-actions > button:first-child { display: none; }
+  .sv-toolbar-title > svg, .sv-testnet, .shorts-app .sv-toolbar .sv-studio-link { display: none; }
   .shorts-app .sv-toolbar h1 { font-size: 18px; }
   .shorts-app .sv-toolbar button { padding: 8px 10px; }
   .shorts-app .sv-toolbar button.sv-upload { background: #ffffff12; }
@@ -133,7 +140,7 @@ body:has(.shorts-watching) { overflow: hidden; }
   .sv-creator { align-items: flex-start; margin-bottom: 12px; gap: 8px; }
   .sv-caption .sv-creator { flex-wrap: wrap; }
   .sv-caption .sv-creator-identity { flex-basis: 100%; }
-  .shorts-app .sv-caption .sv-creator-identity h3 { font-size: 12px; }
+  .shorts-app .sv-caption .sv-creator-identity h3:not([aria-label^="ak_"]) { font-size: 12px; }
   .sv-address { font-size: 11px; }
   .shorts-app .sv-caption h2 { font-size: 16px; }
   .sv-caption-meta { font-size: 10px; gap: 10px; }
@@ -149,7 +156,7 @@ body:has(.shorts-watching) { overflow: hidden; }
   .sv-frame { width: min(56vw, 440px); aspect-ratio: auto; }
   .sv-caption { bottom: 36px; left: 12px; right: 12px; max-height: calc(100% - 100px); overflow-y: auto; pointer-events: auto; overscroll-behavior: contain; }
   .sv-caption .sv-creator { align-items: flex-start; margin-bottom: 8px; }
-  .shorts-app .sv-caption .sv-creator-identity h3 { font-size: 12px; }
+  .shorts-app .sv-caption .sv-creator-identity h3:not([aria-label^="ak_"]) { font-size: 12px; }
   .shorts-app .sv-caption h2 { font-size: 13px; }
   .sv-caption-meta { font-size: 9px; }
 }

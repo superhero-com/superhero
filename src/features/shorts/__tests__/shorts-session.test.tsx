@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import {
   afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { creatorSessionAtom, useSyncShortsWalletSession } from '../shorts-wallet-session';
+import { creatorSessionAtom, revokeCreatorSession, useSyncShortsWalletSession } from '../shorts-wallet-session';
 import { useShorts } from '../use-shorts';
 import type { Short } from '../types';
 
@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   signer: '',
   pathname: '/shorts/studio',
   search: '',
+  followed: [] as string[],
+  graphRevision: 0,
 }));
 vi.mock('@/hooks/useAeSdk', () => ({
   useAeSdk: () => ({
@@ -33,11 +35,31 @@ vi.mock('@/hooks/useWalletConnect', () => ({ useWalletConnect: () => ({ connectW
 vi.mock('@/config', () => ({ CONFIG: { NETWORK: 'ae_uat' } }));
 vi.mock('@aeternity/aepp-sdk', () => ({ Contract: { initialize: async () => ({ $call: mocks.call }) } }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate, useLocation: () => ({ pathname: mocks.pathname, search: mocks.search }) }));
+// Feed/session tests isolate release identity; the SDK suite verifies real hashes.
+vi.mock('../shorts-release', () => ({
+  verifyShortsRelease: async () => ({ release: { network: 'ae_uat', likeFeeAetto: '100000000000000000', treasuryBps: 2000 } }),
+}));
+vi.mock('../shorts-media', () => ({ shortsPlaybackProof: async () => 'signed-proof' }));
 vi.mock('../api', async (original) => ({ ...await original<typeof import('../api')>(), request: mocks.request }));
-vi.mock('@/libs/WebSocketClient', () => ({ default: { subscribeForShortsUpdates: () => () => {}, subscribeForConnection: () => () => {} } }));
-vi.mock('../use-shorts-social', () => ({ useShortsSocial: () => ({ followed: [], status: 'ready', retry: vi.fn() }) }));
+vi.mock('../use-shorts-social', () => ({
+  useShortsSocial: () => ({
+    followed: mocks.followed, status: 'ready', retry: vi.fn(), contract: 'ct_social', revision: mocks.graphRevision,
+  }),
+}));
+// These tests own feed/session reconciliation. Durable signing and recovery have
+// their own real-journal/signature tests in shorts-wallet-transactions.test.tsx.
+vi.mock('../use-shorts-wallet-transactions', () => ({
+  WalletActionPending: class extends Error {},
+  useShortsWalletTransactions: (options: { actor: string; onConfirmed: (action: unknown) => void }) => ({
+    run: async (_sdk: unknown, method: string, videoId: string | undefined, amount: string, _aci: unknown, _target: string, onSigned: () => void) => {
+      await mocks.call(method, method === 'claim' ? [] : [videoId], amount !== '0' ? { amount } : {});
+      onSigned();
+      options.onConfirmed({ address: options.actor, method, videoId });
+    },
+  }),
+}));
 
-const dashboard = { shorts: [], pending: [], account: { available: '0.08' } };
+const dashboard = { shorts: [], pending: [], account: { address: 'ak_creator', available: '0.08' } };
 const clip = {
   id: 'video',
   title: 'Creator clip',
@@ -64,9 +86,24 @@ const startLike = async (signIn = true) => {
   act(() => hook.result.current.setLike(clip));
   return hook;
 };
+const pagedFeed = () => {
+  const original = mocks.request.getMockImplementation()!;
+  const items = Array.from({ length: 40 }, (_, i) => ({ ...clip, id: `paged-${i}`, createdAt: 100 - i }));
+  mocks.request.mockImplementation(async (path: string, body?: unknown, ...args: unknown[]) => {
+    if (path === '/config') return { ...await original(path, body, ...args), catalogPaging: true };
+    if (path.startsWith('/feed?')) {
+      return path.includes('cursor=second')
+        ? { items: items.slice(20), next: null } : { items: items.slice(0, 20), next: 'second' };
+    }
+    if (path === '/feed/state') return { items: items.filter((item) => (body as { ids: string[] }).ids.includes(item.id)).map((item) => ({ ...item, likes: 20 })) };
+    return original(path, body, ...args);
+  });
+  return items;
+};
 afterEach(() => vi.unstubAllGlobals());
 beforeEach(() => {
   mocks.pathname = '/shorts/studio'; mocks.search = '';
+  mocks.followed = []; mocks.graphRevision = 0;
   getDefaultStore().set(creatorSessionAtom, undefined); sessionStorage.clear();
   vi.clearAllMocks(); localStorage.clear(); mocks.actor = 'ak_creator'; mocks.network = 'ae_uat'; mocks.signer = '';
   mocks.connect.mockResolvedValue(null);
@@ -80,8 +117,241 @@ beforeEach(() => {
     if (path.startsWith('?')) return [];
     if (path === '/auth/challenge') return { id: 'challenge', message: 'Local sign-in' };
     if (path === '/auth/verify') return { address: mocks.actor, token: 'session', expiresAt: Date.now() + 1800000 };
-    if (path === '/dashboard') return dashboard;
+    if (path === '/dashboard') return { ...dashboard, account: { ...dashboard.account, address: mocks.actor } };
     return {};
+  });
+});
+
+describe('paginated feed integration', () => {
+  it('uses bounded public pages and state refresh without loading the private dashboard', async () => {
+    mocks.pathname = '/shorts'; pagedFeed();
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    expect(hook.result.current.feedReady).toBe(true);
+    await act(async () => { await hook.result.current.signIn(); });
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(true));
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('?') || path === '/dashboard' || path === '/performance')).toBe(false);
+    act(() => hook.result.current.focusFeed('paged-2'));
+    await act(async () => { await hook.result.current.loadMoreFeed(); });
+    expect(hook.result.current.feed).toHaveLength(40);
+    await act(async () => { await hook.result.current.refreshNow(); });
+    expect(hook.result.current.feed).toHaveLength(40);
+    expect(hook.result.current.feedWindow?.next).toBeNull();
+    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/feed?')).every(([path]) => !path.includes('limit='))).toBe(true);
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/feed/state').every(([, body]) => body.ids.length <= 20)).toBe(true);
+    expect(hook.result.current.feed.every((item) => item.likes === 20)).toBe(true);
+  });
+
+  it('ignores a delayed old-account page and starts a fresh cursor for the new wallet', async () => {
+    mocks.pathname = '/shorts'; pagedFeed(); const original = mocks.request.getMockImplementation()!;
+    let finish!: (value: unknown) => void;
+    mocks.request.mockImplementation((path: string, ...args: unknown[]) => {
+      if (path.includes('/feed?') && path.includes('cursor=second')) return new Promise((resolve) => { finish = resolve; });
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts); await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    let pending: Promise<void> | undefined;
+    act(() => { pending = hook.result.current.loadMoreFeed(); });
+    await waitFor(() => expect(finish).toBeTypeOf('function'));
+    mocks.actor = 'ak_other'; hook.rerender();
+    await waitFor(() => expect(mocks.request.mock.calls.some(([path]) => path === '/feed?address=ak_other')).toBe(true));
+    await act(async () => { finish({ items: [{ ...clip, id: 'old-wallet-result' }], next: null }); await pending; });
+    expect(hook.result.current.feed.some((item) => item.id === 'old-wallet-result')).toBe(false);
+  });
+
+  it('keeps Like confirmation feedback while background window state catches up', async () => {
+    mocks.pathname = '/shorts'; pagedFeed();
+    const hook = renderHook(useShorts); await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    act(() => hook.result.current.setLike(hook.result.current.feed[0]));
+    await act(async () => { await hook.result.current.confirmLike(); });
+    const liked = hook.result.current.feed.find((item) => item.id === 'paged-0')!;
+    expect(liked.liked).toBe(true);
+    await act(async () => { await hook.result.current.refreshNow(); });
+    expect(hook.result.current.feed.find((item) => item.id === liked.id)?.liked).toBe(true);
+    expect(mocks.call).toHaveBeenCalledTimes(1); expect(mocks.sign).not.toHaveBeenCalled();
+  });
+
+  it('preserves the current feed and exposes page errors for retry', async () => {
+    mocks.pathname = '/shorts'; pagedFeed(); const original = mocks.request.getMockImplementation()!;
+    let offline = true;
+    mocks.request.mockImplementation((path: string, ...args: unknown[]) => {
+      if (offline && path.includes('cursor=second')) return Promise.reject(new Error('offline'));
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts); await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    await act(async () => { await hook.result.current.loadMoreFeed(); });
+    expect(hook.result.current.feed).toHaveLength(20); expect(hook.result.current.feedWindow?.error).toContain('try again');
+    offline = false; await act(async () => { await hook.result.current.loadMoreFeed(); });
+    expect(hook.result.current.feed).toHaveLength(40); expect(hook.result.current.feedWindow?.error).toBe('');
+  });
+});
+
+describe('Global Following integration', () => {
+  const revision = 'a'.repeat(64);
+  const prepare = () => {
+    mocks.pathname = '/shorts'; mocks.followed = ['ak_other'];
+    localStorage.setItem('superhero.shorts.preferences.v1', JSON.stringify({ mode: 'following' }));
+    pagedFeed(); const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, body: { ids: string[] }, ...args: unknown[]) => {
+      if (path === '/config') return { ...await original(path, body, ...args), followingPaging: true };
+      if (path.startsWith('/feed/following?')) {
+        return { items: [{ ...clip, id: 'old-followed' }], next: null, revision };
+      }
+      if (path === '/feed/following/state') return { items: body.ids.map((id) => ({ ...clip, id })), revision };
+      return original(path, body, ...args);
+    });
+  };
+  it('uses global Following and scoped state refresh without loading recent candidates', async () => {
+    prepare(); const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed.map((s) => s.id)).toEqual(['old-followed']));
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed?'))).toBe(false);
+    act(() => window.dispatchEvent(new Event('online')));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/feed/following/state', { address: 'ak_creator', ids: ['old-followed'] }, undefined, expect.anything()));
+    const count = mocks.request.mock.calls.filter(([path]) => path.startsWith('/feed/following?')).length;
+    const updates = mocks.request.mock.calls.filter(([path]) => path === '/feed/following/state').length;
+    mocks.graphRevision += 1; hook.rerender();
+    await waitFor(() => expect(mocks.request.mock.calls.filter(([path]) => path === '/feed/following/state').length).toBeGreaterThan(updates));
+    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/feed/following?'))).toHaveLength(count);
+    expect(mocks.sign).not.toHaveBeenCalled(); expect(mocks.call).not.toHaveBeenCalled();
+  });
+  it('recovers from a missed graph event through the membership revision returned by state refresh', async () => {
+    prepare(); const original = mocks.request.getMockImplementation()!; let changed = false;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path.startsWith('/feed/following?') && changed) return { items: [{ ...clip, id: 'new-followed' }], next: null, revision: 'b'.repeat(64) };
+      if (path === '/feed/following/state' && changed) return { items: [], revision: 'b'.repeat(64) };
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed.map((s) => s.id)).toEqual(['old-followed']));
+    changed = true; act(() => window.dispatchEvent(new Event('online')));
+    await waitFor(() => expect(hook.result.current.feed.map((s) => s.id)).toEqual(['new-followed']));
+  });
+  it('does not send a Following query for guests or substitute the recent catalog when unsupported', async () => {
+    prepare(); mocks.actor = ''; const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feedReady).toBe(true));
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed'))).toBe(false);
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => (
+      path === '/config' ? { ...await original(path, ...args), followingPaging: false } : original(path, ...args)
+    ));
+    mocks.actor = 'ak_creator'; hook.rerender();
+    await waitFor(() => expect(hook.result.current.feedWindow?.error).toBeTruthy());
+    expect(hook.result.current.feed).toEqual([]);
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed'))).toBe(false);
+  });
+});
+
+describe('Saved feed integration', () => {
+  const old = { ...clip, id: 'older-bookmark', createdAt: 0 };
+  const prepare = (saved: string[] = [old.id], mode = 'saved') => {
+    mocks.pathname = '/shorts';
+    localStorage.setItem('superhero.shorts.preferences.v1', JSON.stringify({ saved, mode }));
+    pagedFeed();
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (
+      path: string,
+      body: { ids?: string[] },
+      ...args: unknown[]
+    ) => {
+      if (path === '/feed/state') return { items: body.ids!.filter((id) => id !== 'unavailable').map((id) => ({ ...old, id })) };
+      return original(path, body, ...args);
+    });
+  };
+
+  it('resolves an older saved video outside the recent page and switches back to the normal feed', async () => {
+    prepare([old.id], 'for-you');
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    expect(hook.result.current.feed.some((item) => item.id === old.id)).toBe(false);
+    const recentReads = mocks.request.mock.calls.filter(([path]) => path.startsWith('/feed?')).length;
+    act(() => hook.result.current.personal.update({ mode: 'saved' }));
+    await waitFor(() => expect(hook.result.current.feed.map((item) => item.id)).toEqual([old.id]));
+    expect(mocks.request.mock.calls.filter(([path]) => path.startsWith('/feed?'))).toHaveLength(recentReads);
+    expect(mocks.request).toHaveBeenCalledWith('/feed/state', { ids: [old.id], address: 'ak_creator' }, undefined, expect.objectContaining({ signal: expect.any(AbortSignal), timeout: 30000 }));
+    act(() => hook.result.current.personal.update({ mode: 'recent' }));
+    await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    expect(hook.result.current.feed.some((item) => item.id === old.id)).toBe(false);
+    expect(mocks.sign).not.toHaveBeenCalled(); expect(mocks.call).not.toHaveBeenCalled();
+  });
+
+  it('pages bookmarks directly and refreshes only the loaded window', async () => {
+    const saved = Array.from({ length: 45 }, (_, i) => `old-${i}`);
+    prepare(saved); const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed).toHaveLength(20));
+    await act(async () => { await hook.result.current.loadMoreFeed(); });
+    expect(hook.result.current.feed).toHaveLength(40);
+    await act(async () => { await hook.result.current.loadMoreFeed(); });
+    expect(new Set(hook.result.current.feed.map((item) => item.id))).toEqual(new Set(saved));
+    expect(hook.result.current.feedWindow?.next).toBeNull();
+    mocks.request.mockClear();
+    act(() => window.dispatchEvent(new Event('online')));
+    await waitFor(() => expect(mocks.request.mock.calls.filter(([path]) => path === '/feed/state')).toHaveLength(3));
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/feed/state').map(([, body]) => body.ids.length)).toEqual([20, 20, 5]);
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed?'))).toBe(false);
+  });
+
+  it('handles unavailable and removed bookmarks without falling back to unrelated videos', async () => {
+    prepare(['unavailable', old.id]); const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feed.map((item) => item.id)).toEqual([old.id]));
+    expect(hook.result.current.personal.preferences.saved).toEqual(['unavailable', old.id]);
+    act(() => hook.result.current.personal.toggle('saved', old.id));
+    await waitFor(() => {
+      expect(hook.result.current.feedReady && !hook.result.current.feedWindow?.loading).toBe(true);
+    });
+    expect(hook.result.current.feed).toEqual([]);
+    act(() => hook.result.current.personal.toggle('saved', 'unavailable'));
+    await waitFor(() => {
+      expect(hook.result.current.feedReady && !hook.result.current.feedWindow?.loading).toBe(true);
+    });
+    expect(hook.result.current.feedWindow?.next).toBeNull();
+    expect(mocks.request.mock.calls.some(([path, body]) => path === '/feed/state' && body.ids.length === 0)).toBe(false);
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed?'))).toBe(false);
+  });
+
+  it.each(['selection', 'mode', 'account'] as const)('cancels pending saved reads when the %s changes and rejects late results', async (change) => {
+    prepare(); const original = mocks.request.getMockImplementation()!;
+    let finish!: (value: unknown) => void;
+    let oldSignal: AbortSignal | undefined;
+    mocks.request.mockImplementation((
+      path: string,
+      body: unknown,
+      token: unknown,
+      options: { signal?: AbortSignal },
+    ) => {
+      if (path === '/feed/state' && !oldSignal) {
+        oldSignal = options.signal;
+        return new Promise((resolve) => { finish = resolve; });
+      }
+      return original(path, body, token, options);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(oldSignal).toBeDefined());
+    if (change === 'selection') act(() => hook.result.current.personal.update({ saved: ['new-bookmark'] }));
+    else if (change === 'mode') act(() => hook.result.current.personal.update({ mode: 'recent' }));
+    else { mocks.actor = 'ak_other'; hook.rerender(); }
+    await waitFor(() => expect(hook.result.current.feedReady).toBe(true));
+    expect(oldSignal?.aborted).toBe(true);
+    const expected = hook.result.current.feed;
+    await act(async () => { finish({ items: [{ ...old, title: 'Stale response', liked: true }] }); });
+    expect(hook.result.current.feed).toEqual(expected);
+    expect(hook.result.current.feed.some((item) => item.title === 'Stale response')).toBe(false);
+    if (change === 'account') expect(mocks.request).toHaveBeenCalledWith('/feed/state', { ids: [old.id], address: 'ak_other' }, undefined, expect.anything());
+  });
+
+  it('shows a retryable saved-feed error and recovers without scanning recent pages', async () => {
+    prepare(); const original = mocks.request.getMockImplementation()!; let offline = true;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/feed/state' && offline) throw new Error('Offline');
+      return original(path, ...args);
+    });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.feedWindow?.error).toContain('try again'));
+    expect(hook.result.current.feed).toEqual([]);
+    offline = false;
+    await act(async () => { await hook.result.current.restartFeed(); });
+    expect(hook.result.current.feed.map((item) => item.id)).toEqual([old.id]);
+    expect(hook.result.current.feedWindow?.error).toBe('');
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/feed?'))).toBe(false);
   });
 });
 
@@ -103,15 +373,19 @@ describe('Shorts wallet session and recovery', () => {
     await waitFor(() => expect(result.current.feed).toHaveLength(1));
     expect(result.current.authenticated).toBe(false);
     expect(result.current.personal.preferences).not.toHaveProperty('measured');
-    await act(async () => { result.current.playback('video', 'event', 0); });
+    await act(async () => { result.current.playback('video', 'event', 0, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(0);
-    await act(async () => { result.current.playback('video', 'event', 2.5); });
+    await act(async () => { result.current.playback('video', 'event', 1.9, 'measured-token'); });
+    expect(mocks.request.mock.calls.some(([path]) => path.endsWith('/playback'))).toBe(false);
+    await act(async () => { result.current.playback('video', 'event', 2.5, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(1);
     expect(mocks.request).toHaveBeenCalledWith('/video/playback', expect.objectContaining({ seconds: 2.5, source: 'for-you' }), undefined, { keepalive: true, timeout: 10000 });
     const event = mocks.request.mock.calls.find(([path]) => path.endsWith('/playback'))![1];
     expect(event).not.toHaveProperty('address');
+    expect(event).not.toHaveProperty('token');
+    expect(event.proof).toBe('signed-proof');
     act(() => result.current.personal.update({ topics: ['Art'] }));
-    await act(async () => { result.current.playback('video', 'event', 4); });
+    await act(async () => { result.current.playback('video', 'event', 4, 'measured-token'); });
     expect(result.current.feed[0].views).toBe(1);
     expect(mocks.request).toHaveBeenLastCalledWith('/video/playback', expect.objectContaining({ id: event.id, session: event.session, seconds: 4 }), undefined, { keepalive: true, timeout: 10000 });
   });
@@ -323,10 +597,16 @@ describe('Shorts wallet session and recovery', () => {
     mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
       if (path === '/uploads') {
         return {
-          id: 'upload', parts: [], partSize: 100, expires: Date.now() + 60000, complete: true,
+          id: 'new-upload', parts: [], partSize: 100, expires: Date.now() + 60000, complete: true,
         };
       }
-      if (path === '/uploads/upload/finish' || path === '/new-upload/publish') return prepared;
+      if (path === '/uploads/new-upload/finish') {
+        return {
+          id: 'new-upload', status: 'ready', complete: true, video: prepared,
+        };
+      }
+      if (path === '/new-upload/publication') return { ...prepared, publicationStatus: 'draft' };
+      if (path === '/new-upload/publish') return { ...prepared, publicationStatus: 'published' };
       if (path === '/dashboard') return new Promise((resolve) => { finishRefresh = resolve; });
       return original(path, ...args);
     });
@@ -339,6 +619,82 @@ describe('Shorts wallet session and recovery', () => {
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(result.current.uploadPublication?.status).toBe('published');
     await act(async () => { finishRefresh({ ...dashboard, shorts: [prepared] }); await uploading; });
+  });
+
+  it('recovers a lost queue acknowledgement by polling the accepted job, without uploading or submitting twice', async () => {
+    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+    const { result } = renderHook(useShorts);
+    await waitFor(() => expect(result.current.config).toBeDefined());
+    await act(async () => { await result.current.signIn(); });
+    const original = mocks.request.getMockImplementation()!;
+    const job = {
+      id: 'saved', parts: [0], partSize: 100, complete: false,
+    };
+    const video = { ...clip, id: 'saved', creator: 'ak_creator' };
+    let reads = 0;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/uploads') return job;
+      if (path === '/uploads/saved/finish') throw new TypeError('Acknowledgement lost');
+      if (path === '/uploads/saved') {
+        reads += 1;
+        if (reads === 1) return { ...job, status: 'queued' };
+        if (reads === 2) return { ...job, status: 'processing' };
+        return {
+          ...job, status: 'ready', complete: true, video,
+        };
+      }
+      if (path === '/saved/publication') return { ...video, publicationStatus: 'draft' };
+      if (path === '/saved/publish') return { ...video, publicationStatus: 'published' };
+      return original(path, ...args);
+    });
+    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
+    await act(async () => { await result.current.publishUpload(data, 'key'); });
+    expect(result.current.uploadPublication?.status).toBe('published');
+    expect(reads).toBe(3);
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/uploads')).toHaveLength(1);
+    expect(mocks.request.mock.calls.filter(([path]) => path.endsWith('/finish'))).toHaveLength(1);
+    expect(mocks.request.mock.calls.filter(([path]) => path.endsWith('/publish'))).toHaveLength(1);
+    expect(mocks.request.mock.calls.some(([path]) => path.includes('/parts/'))).toBe(false);
+  });
+
+  it('keeps an accepted job resumable but never publishes it after a wallet change while polling', async () => {
+    vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    const original = mocks.request.getMockImplementation()!;
+    const job = {
+      id: 'saved', parts: [0], partSize: 100, complete: false, status: 'queued',
+    };
+    let finishRead: (value: unknown) => void = () => undefined;
+    let readSignal: AbortSignal | undefined;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/uploads') return job;
+      if (path === '/uploads/saved') {
+        readSignal = (args[2] as { signal: AbortSignal }).signal;
+        return new Promise((resolve) => { finishRead = resolve; });
+      }
+      return original(path, ...args);
+    });
+    const file = new File(['video'], 'owned.mp4', { type: 'video/mp4' });
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(5) });
+    const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip'); data.set('rights', 'true');
+    let uploading: Promise<unknown>;
+    act(() => { uploading = hook.result.current.publishUpload(data, 'key'); });
+    await waitFor(() => expect(readSignal).toBeDefined(), { timeout: 2500 });
+    mocks.actor = 'ak_other'; hook.rerender();
+    expect(readSignal!.aborted).toBe(true);
+    await act(async () => {
+      finishRead({
+        ...job, status: 'ready', complete: true, video: { ...clip, id: 'saved' },
+      });
+      await uploading;
+    });
+    expect(hook.result.current.preparedUpload).toBeUndefined();
+    expect(mocks.request.mock.calls.some(([path]) => path.endsWith('/publish'))).toBe(false);
+    expect(Object.values(localStorage).some((value) => String(value).includes('saved'))).toBe(true);
   });
 
   it('drops private data and payment review when the wallet account changes', async () => {
@@ -382,7 +738,7 @@ describe('Shorts wallet session and recovery', () => {
     expect(result.current.like).toEqual(short);
     expect(result.current.walletPending).toBe(false);
     expect(result.current.busy).toBe(false);
-    expect(result.current.message).toContain('Cancelled in your wallet');
+    expect(result.current.message).toContain('Rejected by user');
     await act(async () => { await result.current.confirmLike(); });
     expect(mocks.call).toHaveBeenCalledTimes(2);
     expect(result.current.like).toBeUndefined();
@@ -479,7 +835,17 @@ describe('Connection-only local Studio', () => {
           id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
         };
       }
-      if (path === '/uploads/draft/finish' || path === '/draft/publish') return { ...clip, id: 'draft', creator: 'ak_creator' };
+      if (path === '/uploads/draft/finish') {
+        return {
+          id: 'draft', status: 'ready', complete: true, video: { ...clip, id: 'draft', creator: 'ak_creator' },
+        };
+      }
+      if (path === '/draft/publication') return { ...clip, id: 'draft', publicationStatus: 'draft' };
+      if (path === '/draft/publish') {
+        return {
+          ...clip, id: 'draft', creator: 'ak_creator', publicationStatus: 'published',
+        };
+      }
       return original(path, ...args);
     });
     const hook = renderHook(useShorts);
@@ -489,7 +855,8 @@ describe('Connection-only local Studio', () => {
     const data = new FormData(); data.set('file', file); data.set('title', 'Owned clip');
     await act(async () => { await hook.result.current.publishUpload(data, 'connected-draft'); });
     expect(hook.result.current.preparedUpload?.video.id).toBe('draft');
-    expect(mocks.request).toHaveBeenCalledWith('/uploads/draft/finish', {}, 'connected-ak_creator');
+    expect(hook.result.current.uploadPublication?.status).toBe('published');
+    expect(mocks.request).toHaveBeenCalledWith('/uploads/draft/finish', {}, 'connected-ak_creator', expect.objectContaining({ timeout: 15000 }));
     expect(mocks.sign).not.toHaveBeenCalled();
     expect(mocks.call).not.toHaveBeenCalled();
     expect(mocks.request.mock.calls.some(([path]) => path === '/auth/challenge' || path === '/auth/verify')).toBe(false);
@@ -541,7 +908,7 @@ describe('Connection-only local Studio', () => {
     mocks.actor = 'ak_operator';
     enableConnectedStudio();
     const hook = renderHook(useShorts);
-    await waitFor(() => expect(hook.result.current.dashboard).toEqual(dashboard));
+    await waitFor(() => expect(hook.result.current.dashboard).toEqual({ ...dashboard, account: { ...dashboard.account, address: 'ak_operator' } }));
     expect(hook.result.current.isOperator).toBe(false);
     expect(mocks.request.mock.calls.some(([path]) => path === '/review')).toBe(false);
   });
@@ -583,10 +950,24 @@ describe('Creator access follows the main wallet', () => {
     sync.rerender({ address: 'ak_other' });
     expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
     expect(sessionStorage.getItem('shorts:creator-session')).toBeNull();
+    expect(mocks.request).toHaveBeenCalledWith('/auth/logout', {}, 'session', { keepalive: true, timeout: 10000 });
     sync.rerender({ address: 'ak_creator' });
     const second = await startLike(); second.unmount();
     sync.rerender({ address: '' });
     expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+  });
+
+  it('does not leak credentials to another API and still clears browser access when logout is offline', async () => {
+    const first = await startLike(); first.unmount();
+    const valid = getDefaultStore().get(creatorSessionAtom)!;
+    mocks.request.mockClear();
+    expect(await revokeCreatorSession({ ...valid, api: 'https://other.example.com' })).toBe(false);
+    expect(mocks.request).not.toHaveBeenCalled();
+    mocks.request.mockRejectedValue(new Error('Offline'));
+    act(() => getDefaultStore().set(creatorSessionAtom, undefined));
+    expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+    expect(sessionStorage.getItem('shorts:creator-session')).toBeNull();
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith('/auth/logout', {}, valid.token, { keepalive: true, timeout: 10000 }));
   });
 
   it.each([{ api: 'http://other.invalid' }, { network: 'ae_mainnet' }, { contract: 'ct_other' }])('does not restore a session with a changed scope: %j', async (change) => {
@@ -610,7 +991,7 @@ describe('Creator access follows the main wallet', () => {
     const hook = renderHook(useShorts);
     await waitFor(() => expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined());
     expect(hook.result.current.actor).toBe('ak_creator');
-    expect(hook.result.current.authenticated).toBe(false);
+    await waitFor(() => expect(hook.result.current.authenticated).toBe(false));
     expect(mocks.disconnect).not.toHaveBeenCalled();
   });
 
@@ -629,6 +1010,7 @@ describe('Creator access follows the main wallet', () => {
     mocks.actor = 'ak_other'; hook.rerender();
     await act(async () => { finish({ address: 'ak_creator', token: 'old', expiresAt: Date.now() + 60000 }); await operation; });
     expect(getDefaultStore().get(creatorSessionAtom)).toBeUndefined();
+    expect(mocks.request).toHaveBeenCalledWith('/auth/logout', {}, 'old', { keepalive: true, timeout: 10000 });
   });
 });
 
@@ -641,9 +1023,15 @@ it('verifies the existing wallet once and continues the requested upload without
         id: 'draft', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
       };
     }
-    if (path === '/uploads/draft/finish' || path === '/draft/publish') {
+    if (path === '/uploads/draft/finish') {
       return {
-        ...clip, id: 'draft', creator: 'ak_creator', publicationStatus: 'draft',
+        id: 'draft', status: 'ready', complete: true, video: { ...clip, id: 'draft', creator: 'ak_creator' },
+      };
+    }
+    if (path === '/draft/publication') return { ...clip, id: 'draft', publicationStatus: 'draft' };
+    if (path === '/draft/publish') {
+      return {
+        ...clip, id: 'draft', creator: 'ak_creator', publicationStatus: 'published',
       };
     }
     return original(path, ...args);
@@ -668,7 +1056,7 @@ it('verifies the existing wallet once and continues the requested upload without
   expect(mocks.sign).toHaveBeenCalledTimes(count);
 });
 
-it('publishes for free and safely retries the same prepared video after a lost response', async () => {
+it('publishes for free and resumes a confirmed video after a lost response without submitting again', async () => {
   enableConnectedStudio();
   vi.stubGlobal('crypto', { subtle: { digest: async () => new Uint8Array(32).buffer } });
   const original = mocks.request.getMockImplementation()!;
@@ -679,7 +1067,16 @@ it('publishes for free and safely retries the same prepared video after a lost r
         id: 'free', parts: [], partSize: 100, complete: true, expires: Date.now() + 60000,
       };
     }
-    if (path === '/uploads/free/finish') return { ...clip, id: 'free', creator: mocks.actor };
+    if (path === '/uploads/free/finish') {
+      return {
+        id: 'free', status: 'ready', complete: true, video: { ...clip, id: 'free', creator: mocks.actor },
+      };
+    }
+    if (path === '/free/publication') {
+      return {
+        ...clip, id: 'free', creator: mocks.actor, publicationStatus: attempts ? 'published' : 'draft',
+      };
+    }
     if (path === '/free/publish') {
       attempts += 1;
       if (attempts === 1) throw new Error('Connection lost');
@@ -699,7 +1096,50 @@ it('publishes for free and safely retries the same prepared video after a lost r
   expect(result.current.preparedUpload?.video.id).toBe('free');
   await act(async () => { await Promise.all([result.current.publishUpload(data, 'same-video'), result.current.publishUpload(data, 'same-video')]); });
   expect(result.current.uploadPublication?.status).toBe('published');
-  expect(attempts).toBe(2);
+  expect(attempts).toBe(1);
   expect(mocks.request.mock.calls.filter(([path]) => path === '/uploads')).toHaveLength(1);
   expect(mocks.call).not.toHaveBeenCalled(); expect(mocks.sign).not.toHaveBeenCalled();
+});
+
+describe('Paged Studio integration', () => {
+  const prepare = () => {
+    const original = mocks.request.getMockImplementation()!;
+    mocks.request.mockImplementation(async (path: string, ...args: unknown[]) => {
+      if (path === '/config') return { ...await original(path, ...args), studioPaging: true, catalogPaging: true };
+      if (path.startsWith('/studio/summary?')) return { ...dashboard, period: { days: Number(new URLSearchParams(path.split('?')[1]).get('days')) }, library: { all: 121 } };
+      if (path.startsWith('/studio/content?')) {
+        return {
+          items: [{ ...clip, id: 'older-short' }], total: 121, next: 'second', previous: 'first',
+        };
+      }
+      if (path.startsWith('/studio/video/')) return { video: { ...clip, id: 'older-short' } };
+      return original(path, ...args);
+    });
+  };
+  it('uses bounded summary and server library reads; resets the cursor when the period changes', async () => {
+    prepare(); mocks.pathname = '/shorts/studio/content'; mocks.search = '?sort=views&cursor=second';
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    await waitFor(() => expect(hook.result.current.studioContent.data?.total).toBe(121));
+    await waitFor(() => expect(hook.result.current.dashboard?.library?.all).toBe(121));
+    expect(mocks.request.mock.calls.some(([path]) => path === '/dashboard' || path.startsWith('?') || path.startsWith('/feed'))).toBe(false);
+    const query = new URLSearchParams(mocks.request.mock.calls.find(([path]) => path.startsWith('/studio/content?'))![0].split('?')[1]);
+    expect(query.get('sort')).toBe('views'); expect(query.get('cursor')).toBe('second');
+    act(() => hook.result.current.setDays(7));
+    expect(mocks.navigate).toHaveBeenLastCalledWith({ search: 'sort=views' }, { replace: true });
+    await waitFor(() => expect(hook.result.current.dashboard?.period?.days).toBe(7));
+  });
+  it('loads a direct detail outside the latest summary and does not fetch a library page', async () => {
+    prepare(); mocks.pathname = '/shorts/studio/video/older-short';
+    const hook = renderHook(useShorts);
+    await waitFor(() => expect(hook.result.current.config).toBeDefined());
+    await act(async () => { await hook.result.current.signIn(); });
+    await waitFor(() => expect(hook.result.current.studioVideo.data?.video.id).toBe('older-short'));
+    await waitFor(() => expect(hook.result.current.dashboard?.shorts).toEqual([]));
+    expect(mocks.request.mock.calls.some(([path]) => path.startsWith('/studio/content'))).toBe(false);
+    act(() => { mocks.actor = 'ak_other'; hook.rerender(); });
+    expect(hook.result.current.dashboard).toBeUndefined();
+    expect(hook.result.current.studioVideo.data).toBeUndefined();
+  });
 });

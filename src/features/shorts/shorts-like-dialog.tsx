@@ -5,9 +5,11 @@ import {
 import { ShortsDialog } from './shorts-dialog';
 import supportHeart from './assets/support-heart.png';
 import './shorts-like-dialog.css';
+import { shortsPricing, type ShortsPricing } from './shorts-pricing';
 
 interface Props {
   title: string;
+  pricing?: ShortsPricing;
   connected: boolean;
   busy: boolean;
   walletPending: boolean;
@@ -18,7 +20,7 @@ interface Props {
 }
 
 export const ShortsLikeDialog = ({
-  title, connected, busy, walletPending, error, onClose, onLike, onConnect,
+  title, pricing, connected, busy, walletPending, error, onClose, onLike, onConnect,
 }: Props) => {
   const [feesOpen, setFeesOpen] = useState(false);
   const infoButton = useRef<HTMLButtonElement>(null);
@@ -33,7 +35,10 @@ export const ShortsLikeDialog = ({
       restoreInfoFocus.current = false;
     }
   }, [feesOpen]);
-  let action = connected ? 'Send a Like · 0.1 test AE' : 'Connect wallet to Like';
+  const payment = shortsPricing(pricing);
+  const price = payment?.price || 'Unavailable';
+  let action = payment ? `Send a Like · ${price}` : 'Likes temporarily unavailable';
+  if (!connected) action = 'Connect wallet to Like';
   if (busy) action = 'Waiting for wallet & network…';
 
   return (
@@ -62,7 +67,7 @@ export const ShortsLikeDialog = ({
           <div className="sh-support-price">
             <span>
               One Like
-              <strong>0.1 test AE</strong>
+              <strong>{price}</strong>
             </span>
             <button
               ref={infoButton}
@@ -70,13 +75,13 @@ export const ShortsLikeDialog = ({
               className="sh-support-info"
               aria-label="How the Like fee is split"
               aria-haspopup="dialog"
-              disabled={busy}
+              disabled={busy || !payment}
               onClick={() => setFeesOpen(true)}
             >
               <Info size={18} aria-hidden="true" />
             </button>
           </div>
-          <button type="button" className="primary sh-support-action" disabled={busy} onClick={connected ? onLike : onConnect}>
+          <button type="button" className="primary sh-support-action" disabled={busy || (connected && !payment)} onClick={connected ? onLike : onConnect}>
             <Heart size={18} aria-hidden="true" />
             {action}
           </button>
@@ -92,33 +97,37 @@ export const ShortsLikeDialog = ({
             <span className="sh-support-fee-icon" aria-hidden="true"><Heart size={26} /></span>
             <span className="sh-eyebrow">A LITTLE SUPPORT, SHARED</span>
             <h2>Where your Like goes</h2>
-            <p>Each 0.1 test AE Like supports the creator and Superhero.</p>
+            <p>{payment ? `Each ${price} Like supports the creator and Superhero.` : 'Like payment details are temporarily unavailable.'}</p>
             <div className="sh-support-split" aria-hidden="true">
-              <span />
-              <span />
+              <span style={{ flex: payment?.creatorPercent ?? 0 }} />
+              <span style={{ flex: payment?.treasuryPercent ?? 0 }} />
             </div>
             <dl className="sh-support-shares">
               <div>
                 <dt>
                   Creator
-                  <span>80%</span>
+                  <span>{payment ? `${payment.creatorPercent}%` : '—'}</span>
                 </dt>
-                <dd>0.08 test AE</dd>
+                <dd>{payment?.creatorReward || '—'}</dd>
               </div>
               <div>
                 <dt>
                   Superhero treasury
-                  <span>20%</span>
+                  <span>{payment ? `${payment.treasuryPercent}%` : '—'}</span>
                 </dt>
-                <dd>0.02 test AE</dd>
+                <dd>{payment?.treasuryReward || '—'}</dd>
               </div>
             </dl>
+            {payment?.roundingRemainder && <p>Any rounding remainder goes to the creator.</p>}
             <p>The creator can claim their rewards directly to their wallet.</p>
             <div className="sh-support-fee-note">
               <strong>Network fee is separate</strong>
               <p>Your wallet shows the additional fee before you confirm. It goes to the network and is not part of the split.</p>
             </div>
-            <p className="sh-support-terms">One paid Like per wallet per Short. Confirmed payments are final. This preview uses test AE.</p>
+            <p className="sh-support-terms">
+              One paid Like per wallet per Short. Confirmed payments are final.
+              {pricing?.network === 'ae_uat' ? ' This preview uses test AE.' : ''}
+            </p>
             <button type="button" className="sh-support-back" onClick={closeFees}>
               <ArrowLeft size={17} aria-hidden="true" />
               {' '}

@@ -101,10 +101,12 @@ const ProfileHeaderCard = ({
         {/* Give the complete address the identity row's width at every breakpoint.
             Actions always sit below it, including on desktop. */}
         <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11">
-          <div className="flex min-w-0 items-center gap-3 md:flex-1 md:gap-4">
-            <Avatar address={address} size={60} className="flex md:hidden" />
-            <Avatar address={address} size={88} className="hidden md:flex" />
-            <div className="min-w-0 flex-1">
+          {/* Top-aligned so the name and address stay put whether or not there is a bio.
+              The padding keeps the old centred position for the no-bio case. */}
+          <div className="flex min-w-0 items-start gap-3 md:flex-1 md:gap-4">
+            <Avatar address={address} size={60} className="flex shrink-0 md:hidden" />
+            <Avatar address={address} size={88} className="hidden shrink-0 md:flex" />
+            <div className="min-w-0 flex-1 pt-1 md:pt-3" data-testid="profile-identity-column">
               <ProfileIdentity
                 address={address}
                 displayName={displayName}

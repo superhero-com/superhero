@@ -1376,11 +1376,13 @@ const ProfileEditModal = ({
                         {claimButtonLabel}
                       </Button>
                     </div>
-                    <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
-                      <span>{t('messages.chainNameClaimHint')}</span>
-                      <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
-                        {availabilityStatus === 'available' ? t('labels.available') : ''}
-                      </span>
+                    <div className="mt-2 flex items-start justify-between gap-3 border-t border-white/[0.05] px-1 pt-2 text-[11px] leading-snug text-white/50">
+                      <p className="m-0 min-w-0 flex-1 text-left">{t('messages.chainNameClaimHint')}</p>
+                      {availabilityStatus === 'available' && (
+                        <span className="shrink-0 whitespace-nowrap font-semibold text-green-400">
+                          {t('labels.available')}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isClaimTooShort && (

@@ -2239,7 +2239,10 @@
         "reads": "Reads",
         "interactionsPerHour": "Activity Rate"
       },
-      "customizePopularFeedAria": "Customize popular feed"
+      "customizePopularFeedAria": "Customize popular feed",
+      "following": "Following",
+      "followingEmptyNoFollows": "Follow people to see their posts here.",
+      "followingEmptyNoPosts": "The accounts you follow haven't posted yet."
     },
     "retry": "Retry",
     "tokenTopicFeed": {

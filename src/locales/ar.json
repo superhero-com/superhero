@@ -127,6 +127,9 @@
       "profileBio": "أخبر العالم عن نفسك…"
     },
     "messages": {
+      "txCompletedInWalletTab": "تم تأكيد معاملتك من علامة تبويب المحفظة. حدّث هذه الصفحة لرؤية النتيجة.",
+      "txSentFromCallback": "تم إرسال المعاملة. يمكنك إغلاق علامة التبويب هذه والعودة إلى Superhero.",
+      "txSendFromCallbackFailed": "تعذّر إرسال المعاملة الموقّعة: {{error}}",
       "somethingWentWrong": "حدث خطأ ما",
       "success": "تم بنجاح",
       "savingProfile": "جارٍ حفظ الملف الشخصي…",

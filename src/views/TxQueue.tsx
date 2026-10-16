@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
+import { Node, type Encoded } from '@aeternity/aepp-sdk';
 import {
   TX_QUEUE_ACK_CHANNEL,
   TX_QUEUE_REQUEST_PREFIX,
@@ -17,6 +18,12 @@ import {
   verifyLinkMessageSignature,
 } from '../utils/signLinkMessage';
 import i18n from '../i18n';
+import { CURRENT_NETWORK } from '../utils/constants';
+import {
+  TX_QUEUE_BROADCAST_PARAM,
+  broadcastSignedTransaction,
+  shouldBroadcastFromCallback,
+} from '../utils/txQueueRelay';
 
 const RELAY_ACK_TIMEOUT_MS = 1500;
 
@@ -294,6 +301,38 @@ const TxQueue = () => {
       // before closing or navigating away.
       timer = window.setTimeout(async () => {
         if (acked) return;
+
+        // Nothing acknowledged the result and the requesting tab's pending marker
+        // isn't visible here: this tab can't reach it (iOS Safari Private Browsing
+        // isolates storage per tab), so post the signed transaction ourselves
+        // instead of leaving the requester spinning forever.
+        if (shouldBroadcastFromCallback({
+          id,
+          signedTx: isCompleted ? signedTx : undefined,
+          broadcastAllowed: (query as any)[TX_QUEUE_BROADCAST_PARAM] === '1',
+          hasOpener: Boolean(window.opener),
+        })) {
+          if (fallbackStarted) return;
+          fallbackStarted = true;
+          try {
+            await broadcastSignedTransaction(
+              new Node(CURRENT_NETWORK.url),
+              signedTx as Encoded.Transaction,
+            );
+            safeLocalStringStorage.removeItem(`${TX_QUEUE_RESULT_PREFIX}${id}`);
+            setMessageResult({ status: 'success', message: tCommon('messages.txSentFromCallback') });
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[tx-queue] failed to broadcast signed transaction', error);
+            setMessageResult({
+              status: 'error',
+              message: tCommon('messages.txSendFromCallbackFailed', {
+                error: error instanceof Error ? error.message : String(error || ''),
+              }),
+            });
+          }
+          return;
+        }
 
         const storedRequestKey = `${TX_QUEUE_REQUEST_PREFIX}${id}`;
         const request = parseMessageSignRequest(safeLocalStringStorage.getItem(storedRequestKey));

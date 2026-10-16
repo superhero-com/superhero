@@ -28,6 +28,14 @@ import { CURRENT_NETWORK, IS_MOBILE } from '../utils/constants';
 import { safeLocalStringStorage } from '../utils/jotaiSafeLocalStorage';
 import { INetwork } from '../utils/types';
 import { createDeepLinkUrl, openDeepLink } from '../utils/url';
+import {
+  TX_QUEUE_BROADCAST_PARAM,
+  clearSignRequestPending,
+  getTxNonce,
+  isNonceUsed,
+  markSignRequestPending,
+} from '../utils/txQueueRelay';
+import i18n from '../i18n';
 
 type TxQueueEntry = {
   status: string;
@@ -400,6 +408,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
       const successUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
       successUrl.searchParams.set('transaction', '{transaction}');
       successUrl.searchParams.set('status', 'completed');
+      // Lets the callback tab post the tx itself when it can't reach this tab
+      // (iOS Safari Private Browsing isolates storage per tab). Inner txs are
+      // wrapped and sent by someone else, so never post those directly.
+      const broadcastAllowed = options?.innerTx !== true;
+      if (broadcastAllowed) successUrl.searchParams.set(TX_QUEUE_BROADCAST_PARAM, '1');
 
       // append transaction parameter for failed case
       const cancelUrl = new URL(`${currentDomain}/tx-queue/${uniqueId}`);
@@ -445,11 +458,16 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         let isCleanedUp = false;
         let unloadHandler: (() => void) | null = null;
         const storedResultKey = `${TX_QUEUE_RESULT_PREFIX}${uniqueId}`;
+        const txNonce = IS_MOBILE && broadcastAllowed ? getTxNonce(tx) : null;
+        let pollTicks = 0;
+        let nonceCheckInFlight = false;
+        markSignRequestPending(uniqueId);
 
         // Cleanup function to prevent memory leaks
         const cleanup = () => {
           if (isCleanedUp) return;
           isCleanedUp = true;
+          clearSignRequestPending(uniqueId);
 
           if (interval) {
             clearInterval(interval);
@@ -531,6 +549,32 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             safeLocalStringStorage.removeItem(storedResultKey);
           }
           const queueEntry = currentQueue[uniqueId] || parsedStoredResult;
+          pollTicks += 1;
+
+          // The wallet result may land in a tab that can't hand it back to this one
+          // (iOS Safari Private Browsing). That tab posts the tx itself, so watch
+          // the account nonce and stop waiting once the tx has been used on chain.
+          if (
+            !queueEntry
+            && txNonce != null
+            && pollTicks % 10 === 0
+            && !nonceCheckInFlight
+            && (typeof document === 'undefined' || document.visibilityState !== 'hidden')
+          ) {
+            nonceCheckInFlight = true;
+            isNonceUsed(nodes[0].instance as any, address, txNonce)
+              .then((used) => {
+                if (!used || isCleanedUp) return;
+                cleanup();
+                const newQueue = { ...transactionsQueueRef.current };
+                delete newQueue[uniqueId];
+                setTransactionsQueue(newQueue);
+                reject(new Error(i18n.t('common.messages.txCompletedInWalletTab')));
+              })
+              .finally(() => {
+                nonceCheckInFlight = false;
+              });
+          }
 
           if (queueEntry) {
             if (queueEntry.status === 'cancelled') {

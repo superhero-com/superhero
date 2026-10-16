@@ -1407,8 +1407,6 @@
       "insufficientBalance": "{{symbol}} 余额不足。你需要 {{needed}}，但只有 {{have}}"
     },
     "bridge": {
-      "title": "跨链桥 ETH ⇆ AE",
-      "description": "跨链桥支持在 Ethereum 与 æternity 之间安全地转移代币和原生资产。它支持常见的 ERC‑20/AEX‑9 代币以及原生 ETH 和 AE。请在下方选择方向，连接你的钱包，几分钟即可完成跨链。",
       "selectToken": "选择代币",
       "selectAToken": "选择一个代币",
       "token": "代币"
@@ -3564,7 +3562,6 @@
     "heroTitle": "为 Superhero 购买或赚取 AE",
     "heroDescription": "AE 是 aeternity 区块链的原生币。你用它来支付网络手续费、打赏、交易趋势代币，并参与 Superhero 上的链上活动。",
     "badgeBuy": "购买",
-    "badgeBridge": "跨链",
     "badgeEarn": "赚取",
     "onThisPage": "本页内容",
     "tip": "可用性和交易对可能会变化。发送资金前请务必向服务提供商确认详情。",
@@ -3581,9 +3578,6 @@
     "safetyLi1": "确认代币、网络、存款地址、提现手续费和最低提现金额。",
     "safetyLi2": "在转移大额资金前，先进行小额测试交易。",
     "safetyLi3": "尽可能将资产自托管在你自己的钱包中，切勿分享私钥或助记词。",
-    "buyAeWidget": {
-      "description": "将原生 ETH 从 Ethereum 跨链到 æternity 成为 æETH，然后自动兑换为 AE 代币。"
-    },
     "earnSectionTitle": "赚取 AE",
     "earnSectionDescription": "从 Superhero 原生方式开始，通过壮大社区和参与奖励计划来赚取 AE。",
     "buySectionTitle": "从外部第三方购买",

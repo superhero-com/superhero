@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DexPairService } from '@/api/generated';
 import WebSocketClient from '@/libs/WebSocketClient';
+import { usePairChainState } from '../../hooks/usePairChainState';
 import PoolChartView from './PoolChartView';
 import { poolAssetSymbol, poolCandles, poolQuotePosition } from './poolChartData';
 
@@ -30,6 +31,9 @@ export const PoolCandlestickChart = ({
     enabled: !!pairAddress,
   });
   const pair = pairQuery.data;
+  // Indexed prices follow the contract's token order. When the indexer lists the
+  // tokens the other way round, the raw ratio is the inverse of what the labels say.
+  const swapped = !!usePairChainState(pair)?.swapped;
   const position = pair ? poolQuotePosition(pair, fromTokenAddress) : 'token0';
   const identity = `${pairAddress}:${position}`;
   const flipped = flippedPair === identity;
@@ -59,8 +63,8 @@ export const PoolCandlestickChart = ({
     getNextPageParam: (page, pages) => (page.length >= 100 ? pages.length + 1 : undefined),
   });
   const candles = useMemo(
-    () => poolCandles(pair ? query.data?.pages || [] : [], interval, volumeSymbol, flipped),
-    [pair, query.data, interval, volumeSymbol, flipped],
+    () => poolCandles(pair ? query.data?.pages || [] : [], interval, volumeSymbol, flipped !== swapped),
+    [pair, query.data, interval, volumeSymbol, flipped, swapped],
   );
   useEffect(() => {
     if (!pairAddress) return undefined;

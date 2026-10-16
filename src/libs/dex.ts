@@ -150,6 +150,7 @@ export interface Aex9ContractApi extends ContractMethodsBase {
 
 interface PairContractApi extends ContractMethodsBase {
   token0: () => ContractCallResult<string>;
+  token1: () => ContractCallResult<string>;
   get_reserves: () => ContractCallResult<{ reserve0: bigint | string; reserve1: bigint | string }>;
   allowance: (
     params: { from_account: string; for_account: string },
@@ -325,6 +326,30 @@ export async function ensurePairAllowanceForRouter(
   } else {
     await pair.change_allowance(forAccount, needed - current);
   }
+}
+
+/** Reads token order, reserves and LP supply straight from the pair contract (not the indexer). */
+export async function getPairState(sdk: any, pairAddress: string): Promise<{
+  token0: string;
+  token1: string;
+  reserve0: bigint;
+  reserve1: bigint;
+  totalSupply: bigint;
+}> {
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
+  const [token0, token1, reserves, supply] = await Promise.all([
+    pair.token0(), pair.token1(), pair.get_reserves(), pair.total_supply(),
+  ]);
+  return {
+    token0: token0.decodedResult,
+    token1: token1.decodedResult,
+    reserve0: BigInt(reserves.decodedResult.reserve0),
+    reserve1: BigInt(reserves.decodedResult.reserve1),
+    totalSupply: BigInt(supply.decodedResult),
+  };
 }
 
 // Pair helpers and liquidity flows

@@ -7,7 +7,9 @@ import {
 import type { PairDto, PairSummaryDto } from '@/api/generated';
 import { CONFIG } from '@/config';
 import aeMark from '@/svg/aeternity-mark.svg';
-import { formatPoolAmount, poolBalances, poolNumber } from '../utils/poolStatsValues';
+import {
+  formatPoolAmount, poolBalances, poolNumber, poolValueAe,
+} from '../utils/poolStatsValues';
 import './PoolStatsOverview.scss';
 
 interface PoolStatsOverviewProps {
@@ -35,6 +37,7 @@ export const PoolStatsOverview = ({
   const balances = poolBalances(pairData);
   const tokens = [pairData.token0, pairData.token1];
   const reserves = [balances.reserve0, balances.reserve1];
+  const value = poolValueAe(pairData);
   const volume = poolNumber(current?.volume?.ae);
   const total = poolNumber(summary?.total_volume?.ae);
   const change = poolNumber(current?.price_change?.percentage);
@@ -148,6 +151,12 @@ export const PoolStatsOverview = ({
             {t('poolReserves.lpTokenSupply')}
             <b title={balances.supply?.toFixed()}><bdi>{formatPoolAmount(balances.supply)}</bdi></b>
           </span>
+          {value && (
+            <span>
+              {t('poolStats.poolValue')}
+              <b title={value.toFixed()}><bdi>{`${formatPoolAmount(value)} AE`}</bdi></b>
+            </span>
+          )}
           <button type="button" onClick={() => setDetails(!details)} aria-expanded={details} aria-controls={rateId}>
             {t('poolStats.exchangeRate')}
             {details ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}

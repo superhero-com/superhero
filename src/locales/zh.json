@@ -1629,6 +1629,7 @@
       "allTime": "全部时间",
       "balances": "资金池余额",
       "currentReserves": "当前储备",
+      "poolValue": "资金池价值",
       "exchangeRate": "兑换汇率",
       "rateHint": "当前储备比例，未计入兑换手续费和价格影响。",
       "rateUnavailable": "储备为空或未知时无法计算汇率",

@@ -1474,8 +1474,6 @@
       "addLiquidity": "Add Liquidity"
     },
     "bridge": {
-      "title": "Bridge ETH ⇆ AE",
-      "description": "The Bridge enables secure transfers of tokens and native assets between Ethereum and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE. Choose a direction below, connect your wallets, and bridge in minutes.",
       "selectToken": "Select Token",
       "selectAToken": "Select a token",
       "token": "Token"
@@ -3633,7 +3631,6 @@
     "heroTitle": "Earn AE first, or buy it from external providers",
     "heroDescription": "AE is the native coin of the aeternity blockchain. Use it to pay network fees, tip, trade trend tokens, and participate in on-chain activity on Superhero.",
     "badgeBuy": "Buy",
-    "badgeBridge": "Bridge",
     "badgeEarn": "Earn",
     "onThisPage": "On this page",
     "tip": "Availability and pairs can change. Always confirm details with the provider before sending funds.",
@@ -3653,10 +3650,7 @@
     "safetyTitle": "Before you buy",
     "safetyLi1": "Confirm the token, network, deposit address, withdrawal fees, and minimum withdrawal amount.",
     "safetyLi2": "Start with a small test transaction before moving larger amounts.",
-    "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases.",
-    "buyAeWidget": {
-      "description": "Bridge native ETH from Ethereum to æternity as æETH, then automatically swap to AE tokens."
-    }
+    "safetyLi3": "Keep custody in your own wallet when possible and never share private keys or seed phrases."
   },
   "components": {
     "pwaInstallGuide": {

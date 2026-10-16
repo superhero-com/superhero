@@ -62,11 +62,16 @@ describe('txQueueRelay', () => {
     });
 
     it('still works when localStorage throws (private mode / blocked storage)', () => {
-      vi.spyOn(testStorage, 'getItem').mockImplementation(() => {
-        throw new DOMException('denied', 'SecurityError');
-      });
-      vi.spyOn(testStorage, 'setItem').mockImplementation(() => {
-        throw new DOMException('quota', 'QuotaExceededError');
+      // The storage adapter may already hold the runtime's own Storage, so break both.
+      const targets: any[] = [testStorage];
+      if (typeof Storage !== 'undefined') targets.push(Storage.prototype);
+      targets.forEach((target) => {
+        vi.spyOn(target, 'getItem').mockImplementation(() => {
+          throw new DOMException('denied', 'SecurityError');
+        });
+        vi.spyOn(target, 'setItem').mockImplementation(() => {
+          throw new DOMException('quota', 'QuotaExceededError');
+        });
       });
       expect(() => markSignRequestPending('abc')).not.toThrow();
       expect(shouldBroadcastFromCallback(base)).toBe(true);

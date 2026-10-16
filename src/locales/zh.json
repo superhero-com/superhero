@@ -2124,7 +2124,10 @@
         "reads": "阅读量",
         "interactionsPerHour": "活跃度"
       },
-      "customizePopularFeedAria": "自定义热门动态"
+      "customizePopularFeedAria": "自定义热门动态",
+      "following": "关注",
+      "followingEmptyNoFollows": "关注其他用户即可在这里看到他们的帖子。",
+      "followingEmptyNoPosts": "你关注的账户还没有发布帖子。"
     },
     "showMore": "再显示 {{count}} 条",
     "showLess": "收起",

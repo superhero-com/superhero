@@ -2046,6 +2046,10 @@
   },
   "social": {
     "originalPost": "原帖",
+    "newPosts": {
+      "show_one": "显示 {{count}} 条新帖子",
+      "show_other": "显示 {{count}} 条新帖子"
+    },
     "translatePost": "翻译",
     "share": "分享",
     "sharePost": "分享帖子",

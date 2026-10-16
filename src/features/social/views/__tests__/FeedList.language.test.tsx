@@ -31,6 +31,9 @@ vi.mock('../../components/ReplyToFeedItem', () => ({ default: ({ item }: any) =>
 vi.mock('../../components/TokenCreatedActivityItem', () => ({ default: () => <p>Token activity</p> }));
 vi.mock('../../components/TradeActivityItem', () => ({ default: () => <p>Trade activity</p> }));
 vi.mock('../../components/TrendingAssetsFeedItem', () => ({ default: () => null }));
+vi.mock('../../hooks/useNewPostsWatcher', () => ({
+  useNewPostsWatcher: () => ({ count: 0, acknowledge: () => {} }),
+}));
 
 const page = (items: any[] = []) => ({ items, meta: { currentPage: 1, totalPages: 1 } });
 const post = (id: string) => ({ id, content: id, created_at: '2026-09-20T12:00:00Z' });

@@ -1497,7 +1497,10 @@
     },
     "pool": {
       "refreshing": "刷新中…",
-      "refresh": "刷新"
+      "refresh": "刷新",
+      "bannerTitle": "提供流动性，赚取交易手续费",
+      "bannerSubtitle": "向池中存入两种代币即可获得 LP 代币。每笔经过该池的兑换都会支付手续费，由流动性提供者共享。你可以随时提取你的份额。",
+      "bannerCta": "浏览资金池"
     },
     "swapConfirmation": {
       "confirmSwap": "确认兑换",

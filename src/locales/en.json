@@ -1610,7 +1610,10 @@
     },
     "pool": {
       "refreshing": "Refreshing...",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "bannerTitle": "Provide liquidity, earn trading fees",
+      "bannerSubtitle": "Add two tokens to a pool to receive LP tokens. Every swap through the pool pays a fee that is shared among its liquidity providers. You can withdraw your share at any time.",
+      "bannerCta": "Explore pools"
     },
     "swapConfirmation": {
       "confirmSwap": "Confirm Swap",

@@ -628,7 +628,16 @@
       "next": "Следующие активы"
     },
     "trendingAssets": "Популярные активы",
-    "viewAll": "Все активы"
+    "viewAll": "Все активы",
+    "gifSelector": {
+      "addMedia": "Добавить GIF или изображение",
+      "imageLinkLabel": "Ссылка на изображение или видео",
+      "imageLinkPlaceholder": "Вставьте ссылку на изображение (https://…/photo.jpg)",
+      "imageLinkHint": "Прямые ссылки на .jpg, .png, .gif, .webp, .mp4, .webm или .mov, либо ссылки Imgur и Giphy.",
+      "addLink": "Добавить",
+      "invalidLink": "Это не ссылка на изображение или видео. Нужна прямая ссылка на файл .jpg, .png, .gif, .webp, .mp4, .webm или .mov, либо ссылка Imgur или Giphy.",
+      "maxMedia": "В пост можно добавить до {{count}} изображений или GIF."
+    }
   },
   "dex": {
     "swapCard": {

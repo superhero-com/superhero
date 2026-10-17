@@ -20,6 +20,7 @@ import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import { extractParentId } from '../utils/postParent';
+import { MAX_POST_MEDIA } from '../utils/mediaUrl';
 import { appendToThread, pendingReplies } from '../utils/pendingPosts';
 import { shouldOfferTranslation, translateUrl } from '../utils/translate';
 import PostAuthorHeader from './PostAuthorHeader';
@@ -438,7 +439,7 @@ const ReplyToFeedItem = memo(({
             media.length >= 3 && 'grid-cols-2',
           )}
         >
-          {media.slice(0, 4).map((m: string) => (
+          {media.slice(0, MAX_POST_MEDIA).map((m: string) => (
             media.length === 1 ? (
               <AspectMedia key={`${postId}-${m}`} src={m} alt={t('common:aria.media')} maxHeight={presentation === 'detail' ? 320 : '50vh'} />
             ) : (

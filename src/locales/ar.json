@@ -2190,12 +2190,18 @@
     "holder": "مالك",
     "gifSelector": {
       "results": "{{formattedCount}} نتيجة",
-      "addAGif": "إضافة GIF",
       "searchForAGif": "ابحث عن GIF",
       "mediaAlt": "وسائط",
       "error": "خطأ: {{message}}",
       "gifPreviewAlt": "معاينة GIF",
-      "confirm": "تأكيد"
+      "confirm": "تأكيد",
+      "addMedia": "إضافة GIF أو صورة",
+      "imageLinkLabel": "رابط صورة أو فيديو",
+      "imageLinkPlaceholder": "الصق رابط صورة (https://…/photo.jpg)",
+      "imageLinkHint": "روابط مباشرة لملفات jpg أو png أو gif أو webp أو mp4 أو webm أو mov.",
+      "addLink": "إضافة",
+      "invalidLink": "هذا الرابط ليس صورة أو فيديو. استخدم رابطًا مباشرًا لملف jpg أو png أو gif أو webp أو mp4 أو webm أو mov.",
+      "maxMedia": "يمكنك إضافة حتى {{count}} من الصور أو GIF أو مقاطع الفيديو لكل منشور."
     },
     "imageSelector": {
       "title": "إضافة صورة",

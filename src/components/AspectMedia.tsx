@@ -2,6 +2,7 @@ import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isVideoMediaUrl } from '@/features/social/utils/mediaUrl';
 
 interface AspectMediaProps {
   src: string;
@@ -20,7 +21,7 @@ export const AspectMedia = ({
   const altText = alt ?? t('common.aria.media');
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
-  const isVideo = /\.(mp4|webm|mov)$/i.test(src);
+  const isVideo = isVideoMediaUrl(src);
   const ratioStyle = useMemo(() => {
     if (!dims) return { maxHeight } as React.CSSProperties;
     return { aspectRatio: `${dims.w} / ${dims.h}`, maxHeight } as React.CSSProperties;

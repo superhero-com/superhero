@@ -2261,12 +2261,18 @@
     "holder": "Holder",
     "gifSelector": {
       "results": "{{formattedCount}} Results",
-      "addAGif": "Add a GIF",
       "searchForAGif": "Search for a GIF",
       "mediaAlt": "media",
       "error": "Error: {{message}}",
       "gifPreviewAlt": "GIF preview",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "addMedia": "Add a GIF or image",
+      "imageLinkLabel": "Image or video link",
+      "imageLinkPlaceholder": "Paste an image link (https://…/photo.jpg)",
+      "imageLinkHint": "Direct links ending in .jpg, .png, .gif, .webp, .mp4, .webm or .mov.",
+      "addLink": "Add",
+      "invalidLink": "That link is not an image or video. Use a direct link to a .jpg, .png, .gif, .webp, .mp4, .webm or .mov file.",
+      "maxMedia": "You can add up to {{count}} images, GIFs or videos per post."
     },
     "dismiss": "Dismiss",
     "dismissPreview": "Dismiss preview",

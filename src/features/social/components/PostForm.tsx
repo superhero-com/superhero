@@ -23,6 +23,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import { initializeContractTyped } from '../../../libs/initializeContractTyped';
 import { GifSelectorDialog } from './GifSelectorDialog';
+import { isVideoMediaUrl } from '../utils/mediaUrl';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
 import TokenTagOptionsBar from './TokenTagOptionsBar';
 import { MentionSuggestionList } from './MentionSuggestionList';
@@ -1136,7 +1137,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                       key={`media-${url}`}
                       className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
                     >
-                      {/.mp4$|.webm$|.mov$/i.test(url) ? (
+                      {isVideoMediaUrl(url) ? (
                         <video
                           src={url}
                           controls

@@ -2272,7 +2272,14 @@
       "mediaAlt": "media",
       "error": "Error: {{message}}",
       "gifPreviewAlt": "GIF preview",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "addMedia": "Add a GIF or image",
+      "imageLinkLabel": "Image or video link",
+      "imageLinkPlaceholder": "Paste an image link (https://…/photo.jpg)",
+      "imageLinkHint": "Direct links ending in .jpg, .png, .gif, .webp, .mp4, .webm or .mov, or Imgur and Giphy links.",
+      "addLink": "Add",
+      "invalidLink": "That link is not an image or video. Use a direct link to a .jpg, .png, .gif, .webp, .mp4, .webm or .mov file, or an Imgur or Giphy link.",
+      "maxMedia": "You can add up to {{count}} images or GIFs per post."
     },
     "dismiss": "Dismiss",
     "dismissPreview": "Dismiss preview",

@@ -2168,7 +2168,14 @@
       "mediaAlt": "媒体",
       "error": "错误：{{message}}",
       "gifPreviewAlt": "GIF 预览",
-      "confirm": "确认"
+      "confirm": "确认",
+      "addMedia": "添加 GIF 或图片",
+      "imageLinkLabel": "图片或视频链接",
+      "imageLinkPlaceholder": "粘贴图片链接（https://…/photo.jpg）",
+      "imageLinkHint": "以 .jpg、.png、.gif、.webp、.mp4、.webm 或 .mov 结尾的直链，或 Imgur、Giphy 链接。",
+      "addLink": "添加",
+      "invalidLink": "该链接不是图片或视频。请使用 .jpg、.png、.gif、.webp、.mp4、.webm 或 .mov 文件的直链，或 Imgur、Giphy 链接。",
+      "maxMedia": "每条帖子最多可添加 {{count}} 张图片或 GIF。"
     },
     "imageSelector": {
       "title": "添加图片",

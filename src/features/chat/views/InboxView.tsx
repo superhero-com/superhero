@@ -97,7 +97,7 @@ const InboxView = () => {
           </p>
           {session.error && <p className="text-xs text-error">{session.error.message}</p>}
           <div>
-            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking}>
+            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking || !session.canUnlock}>
               {session.isUnlocking ? 'Unlocking…' : 'Unlock chat'}
             </Button>
           </div>

@@ -32,11 +32,14 @@ export interface LinkNostrIdentity {
 export type DeriveLinkIdentity = (address: string) => Promise<LinkNostrIdentity>;
 
 export const deriveInlineLinkIdentity: DeriveLinkIdentity = async (address) => {
+  const accountIndex = indexForAddress(address);
+  if (accountIndex === null) {
+    throw new Error('Chat linking needs the in-app wallet for this account on this device.');
+  }
   const record = await createIndexedDbVaultStore().load();
   if (!record) {
     throw new Error('Chat linking needs the in-app wallet on this device.');
   }
-  const accountIndex = indexForAddress(address) ?? 0;
   const keys = await deriveNostrIdentity(
     record,
     (r) => requestUnlock(r, { kind: 'nostr-link' }),

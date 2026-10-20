@@ -65,11 +65,14 @@ export function ensureRoomSessionTeardown(): void {
  * device has no in-app wallet vault.
  */
 export async function unlockRoomSession(address: string): Promise<string> {
+  const accountIndex = indexForAddress(address);
+  if (accountIndex === null) {
+    throw new Error('Chat needs the in-app wallet for this account on this device.');
+  }
   const record = await createIndexedDbVaultStore().load();
   if (!record) {
     throw new Error('Chat needs the in-app wallet on this device.');
   }
-  const accountIndex = indexForAddress(address) ?? 0;
   // Name the grant: this approval yields a key cached for a rolling idle window,
   // not the single signature the prompt otherwise describes.
   const keys = await deriveNostrIdentity(

@@ -9,6 +9,7 @@ import {
 } from 'vitest';
 import {
   NO_PROMPT_MOUNTED, requestUnlock, resetUnlockBroker, subscribeUnlockRequests,
+  isUnlockPromptMounted, subscribeUnlockPrompt,
   type UnlockRequest,
 } from '../unlock-broker';
 import type { VaultRecord } from '../vault-record';
@@ -22,6 +23,19 @@ describe('unlock broker', () => {
 
   it('FAILS CLOSED when no prompt host is mounted — never hangs, never signs', async () => {
     await expect(requestUnlock(RECORD)).rejects.toThrow(NO_PROMPT_MOUNTED);
+  });
+
+  it('notifies chat entry points when the confirmation host mounts and unmounts', () => {
+    const states: boolean[] = [];
+    const unsubscribe = subscribeUnlockPrompt(() => states.push(isUnlockPromptMounted()));
+    expect(isUnlockPromptMounted()).toBe(false);
+    const unmountFirst = subscribeUnlockRequests(() => {});
+    const unmountCurrent = subscribeUnlockRequests(() => {});
+    unmountFirst();
+    expect(isUnlockPromptMounted()).toBe(true);
+    unmountCurrent();
+    expect(states).toEqual([true, true, false]);
+    unsubscribe();
   });
 
   it('fails closed again after the host unsubscribes', async () => {

@@ -258,11 +258,10 @@ const WalletOverviewCard = ({
                     return (
                       <div key={`${label}-${balanceLabel}`} className="flex min-w-0 items-center justify-between gap-2 text-sm">
                         <div
-                          className="min-w-0 flex-1 truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
+                          className="min-w-0 flex-1 truncate font-bold text-orange-400"
                           title={label}
                         >
-                          <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
-                          <span className="font-bold">{(label || '').toString()}</span>
+                          {`#${label || ''}`}
                         </div>
                         <div className="max-w-[50%] shrink-0 text-end [overflow-wrap:anywhere] text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                           {balanceLabel}

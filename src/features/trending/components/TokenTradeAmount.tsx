@@ -2,7 +2,6 @@ import {
   useEffect, useId, useRef, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Hash } from 'lucide-react';
 import aeMark from '@/svg/aeternity-mark.svg';
 import { Decimal } from '@/libs/decimal';
 
@@ -46,7 +45,7 @@ const TokenTradeAmount = ({
     setBuffer(next);
     onChange(parsed);
   };
-  const asset = ae ? 'AE' : symbol;
+  const asset = ae ? 'AE' : `#${symbol}`;
   return (
     <div className={`trade-amount${insufficient ? ' has-error' : ''}`}>
       <label htmlFor={id}>
@@ -75,9 +74,11 @@ const TokenTradeAmount = ({
           onBlur={() => { focused.current = false; }}
         />
         <span className={`trade-asset${ae ? ' is-ae' : ''}`}>
-          <span className="trade-asset__icon" aria-hidden="true">
-            {ae ? <img src={aeMark} alt="" /> : <Hash />}
-          </span>
+          {ae && (
+            <span className="trade-asset__icon" aria-hidden="true">
+              <img src={aeMark} alt="" />
+            </span>
+          )}
           <bdi>{asset}</bdi>
         </span>
       </div>

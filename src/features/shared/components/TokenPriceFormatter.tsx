@@ -70,7 +70,7 @@ const TokenPriceFormatter = ({
 
   return (
     <PriceFormatter
-      symbol={token.symbol}
+      symbol={`#${token.symbol || token.name}`}
       aePrice={aePrice}
       fiatPrice={fiatPrice}
       {...priceFormatterProps}

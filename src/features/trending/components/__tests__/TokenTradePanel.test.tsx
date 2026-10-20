@@ -56,7 +56,7 @@ describe('Token trade panel', () => {
     expect(trade.placeTokenTradeOrder).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Max' })).not.toBeInTheDocument();
     view.rerender(panel());
-    fireEvent.click(screen.getByRole('button', { name: 'Buy TEST' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Buy #TEST' }));
     expect(trade.placeTokenTradeOrder).toHaveBeenCalledWith(token);
     trade = { ...trade, tokenB: undefined };
     view.rerender(panel());

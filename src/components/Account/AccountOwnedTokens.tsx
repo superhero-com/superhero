@@ -91,14 +91,13 @@ const AccountOwnedTokens = ({
               <div className="md:hidden">
                 {/* Name on its own row */}
                 <div className="flex items-center min-w-0">
-                  <span className="text-white/60 text-[.85em] mr-0.5 align-baseline font-semibold">#</span>
                   {tokenHref ? (
                     <a href={tokenHref} className="token-name text-sm font-bold hover:underline truncate">
-                      <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
+                      <span className="text-orange-400 font-bold">{`#${tokenName}`}</span>
                     </a>
                   ) : (
                     <div className="token-name text-sm font-bold truncate">
-                      <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
+                      <span className="text-orange-400 font-bold">{`#${tokenName}`}</span>
                     </div>
                   )}
                 </div>
@@ -132,17 +131,16 @@ const AccountOwnedTokens = ({
               {/* Desktop grid layout */}
               <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3">
                 <div className="flex items-center min-w-0">
-                  <span className="text-white/60 text-[.85em] mr-0.5 align-baseline font-semibold">#</span>
                   {tokenHref ? (
                     <a
                       href={tokenHref}
                       className="token-name text-[15px] font-bold hover:underline truncate"
                     >
-                      <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
+                      <span className="text-orange-400 font-bold">{`#${tokenName}`}</span>
                     </a>
                   ) : (
                     <div className="token-name text-[15px] font-bold truncate">
-                      <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
+                      <span className="text-orange-400 font-bold">{`#${tokenName}`}</span>
                     </div>
                   )}
                 </div>

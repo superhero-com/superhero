@@ -4,7 +4,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Hash, TrendingUp,
+  ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, TrendingUp,
 } from 'lucide-react';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
@@ -56,9 +56,8 @@ const TrendingAssetCard = memo(({ token }: { token: TokenDto }) => {
       {...highlight}
     >
       <div className="feed-asset__identity">
-        <span className="feed-asset__mark"><Hash aria-hidden="true" /></span>
         <div>
-          <h4 title={label}><bdi>{label}</bdi></h4>
+          <h4 title={`#${label}`}><bdi>{`#${label}`}</bdi></h4>
           <span className="sr-only">{tokenCollectionLabel(token)}</span>
         </div>
         <ArrowUpRight className="feed-asset__open" aria-hidden="true" />

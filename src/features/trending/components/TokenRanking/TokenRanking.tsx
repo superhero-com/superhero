@@ -36,8 +36,7 @@ const RankingRow = ({ token, current }: { token: RankingToken; current: boolean 
             #
             {token.rank}
           </bdi>
-          <span className="token-ranking-token-mark"><Hash aria-hidden="true" /></span>
-          <span className="token-ranking-identity"><strong dir="auto">{token.symbol || token.name}</strong></span>
+          <span className="token-ranking-identity"><strong dir="auto" title={`#${token.symbol || token.name}`}>{`#${token.symbol || token.name}`}</strong></span>
           {current ? <span className="token-ranking-current">{t('ranking.current')}</span>
             : <ArrowUpRight className="token-ranking-row-arrow" aria-hidden="true" />}
         </div>

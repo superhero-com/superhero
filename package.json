@@ -28,7 +28,8 @@
     "check:csp-origins": "node ./scripts/check-csp-origins.cjs",
     "check:types": "node ./scripts/check-types.cjs",
     "release": "standard-version",
-    "postinstall": "node ./scripts/update-package-type.cjs"
+    "postinstall": "node ./scripts/update-package-type.cjs",
+    "start:shorts:testnet": "ENABLE_SHORTS=true VITE_NETWORK=ae_uat vite --host 127.0.0.1 --port 5180 --strictPort"
   },
   "dependencies": {
     "@aeternity/aepp-calldata": "^1.9.1",
@@ -60,6 +61,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.2.1",
+    "hls.js": "1.7.3",
     "i18next": "^26.4.0",
     "jdenticon": "^3.3.0",
     "jotai": "^2.13.1",
@@ -82,7 +84,8 @@
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
     "tipping-contract": "git+https://git@github.com/aeternity/tipping-contract#v5.0.0-alpha2",
-    "uuid": "^14.0.2"
+    "uuid": "^14.0.2",
+    "@azure/core-rest-pipeline": "1.25.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",

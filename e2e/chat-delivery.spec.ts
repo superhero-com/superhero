@@ -100,6 +100,13 @@ async function openChat(page: Page, path: string) {
   await unlock(page);
   await expect(page.getByLabel('Message', { exact: true })).toBeVisible();
 }
+async function openDmInSession(page: Page, pubkey: string) {
+  await page.getByRole('button', { name: 'New chat', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Chat target' }).fill(pubkey);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByLabel('Message', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Unlock chat', exact: true })).toHaveCount(0);
+}
 async function send(page: Page, text: string) {
   await page.getByLabel('Message', { exact: true }).fill(text);
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
@@ -120,12 +127,17 @@ test('two wallets exchange DMs and private-room messages; history, revocation an
     const a = await onboard(alice);
     const b = await onboard(bob);
     expect(a.pubkey).not.toBe(b.pubkey);
-    await openChat(alice, `/chat/dm/${b.pubkey}`);
-    await openChat(bob, `/chat/dm/${a.pubkey}`);
+    // The inbox unlock covers all in-app navigation in this document.
+    await openDmInSession(alice, b.pubkey);
+    await openDmInSession(bob, a.pubkey);
     await send(alice, '  Alice to Bob browser DM  ');
     await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
     await send(bob, 'Bob to Alice browser DM');
     await expect(alice.getByText('Bob to Alice browser DM', { exact: true })).toHaveCount(1);
+    await bob.getByRole('link', { name: 'Back to chat', exact: true }).click();
+    await openDmInSession(bob, a.pubkey);
+    await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
+    // A full document reload starts a new memory-only session.
     await openChat(bob, `/chat/dm/${a.pubkey}`);
     await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
 
@@ -139,6 +151,15 @@ test('two wallets exchange DMs and private-room messages; history, revocation an
     await expect(alice.getByText('Alice private room message', { exact: true })).toHaveCount(1);
     await send(bob, 'Bob private room reply');
     await expect(alice.getByText('Bob private room reply', { exact: true })).toHaveCount(1);
+    await bob.getByRole('link', { name: 'Room info', exact: true }).click();
+    await bob.getByRole('link', { name: 'Back to room', exact: true }).click();
+    await expect(bob.getByLabel('Message', { exact: true })).toBeVisible();
+    await bob.getByRole('link', { name: 'Back to communities', exact: true }).click();
+    await openDmInSession(bob, a.pubkey);
+    await bob.getByRole('link', { name: 'Back to chat', exact: true }).click();
+    await bob.locator(`a[href="/chat/${ROOM}"]`).click();
+    await expect(bob.getByLabel('Message', { exact: true })).toBeVisible();
+    await expect(bob.getByRole('button', { name: 'Unlock chat', exact: true })).toHaveCount(0);
     await openChat(bob, `/chat/${ROOM}`);
     await expect(bob.getByText('Alice private room message', { exact: true })).toHaveCount(1);
 

@@ -4,7 +4,9 @@
  * `unlock` action, and re-renders on lock/unlock (including the 30-min idle lock)
  * via `useSyncExternalStore`.
  */
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback, useEffect, useState, useSyncExternalStore,
+} from 'react';
 import { useAtomCallback } from 'jotai/utils';
 
 import { useAccount } from '@/hooks';
@@ -14,6 +16,8 @@ import { isUnlockPromptMounted, subscribeUnlockPrompt } from '@/features/wallet/
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
 import {
   lockRoomSession,
+  isRoomSessionUnlocked,
+  retainRoomSessionForAccount,
   roomKeySession,
   roomRevocableIdentity,
   subscribeRoomSession,
@@ -44,11 +48,13 @@ export function useRoomSession(): UseRoomSessionResult {
   const canUnlock = useSyncExternalStore(subscribeUnlockPrompt, isUnlockPromptMounted, () => false);
   const isUnlocked = useSyncExternalStore(
     subscribeRoomSession,
-    () => roomKeySession.isUnlocked,
+    () => isRoomSessionUnlocked(activeAccount),
     () => false,
   );
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => { retainRoomSessionForAccount(activeAccount); }, [activeAccount]);
 
   // Unlocking caches the key locally but does NOT register the account's npub,
   // leaving a session peers cannot reach — they resolve `ak_…` → npub through the

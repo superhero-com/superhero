@@ -1698,7 +1698,11 @@
       "nativeToken": "Native Token",
       "noTokensAvailable": "No tokens available",
       "tryAddingCustomToken": "Try adding a custom token by address",
-      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below."
+      "tokenNotFoundHint": "Can't find the token you're looking for? Try entering the contract address or check the token list settings below.",
+      "tokenNotFound": "No AEX-9 token found at this address.",
+      "showAllTokens": "Show all",
+      "showActiveOnly": "Active only",
+      "verified": "Verified token"
     },
     "exploreTransactions": {
       "title": "Advanced Transaction Explorer",
@@ -2112,6 +2116,10 @@
       "copyFailed": "Could not copy. Select the address to copy it.",
       "actions": "Token actions",
       "pools": "Pools"
+    },
+    "slippageWarning": {
+      "high": "Slippage above 5% ({{slippagePct}}%) is high. Your trade may be front-run and you could receive much less than quoted.",
+      "low": "Slippage below 0.1% ({{slippagePct}}%) is very low. Your transaction may fail if the price moves."
     }
   },
   "social": {
@@ -3096,7 +3104,52 @@
     "wrapFailed": "Wrapping failed. Try again.",
     "unwrapFailed": "Unwrapping failed. Try again.",
     "genericError": "Something went wrong. Please try again.",
-    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols."
+    "nameNotAllowedChar": "This token name uses characters that are not allowed for the selected collection. Choose a different name using only the allowed letters, numbers, or symbols.",
+    "dexContract": {
+      "AedexV2Library_IDENTICAL_ADDRESSES": "The router cannot trade a token for itself: both selected tokens are the same. Select two different tokens.",
+      "AedexV2Library_INSUFFICIENT_AMOUNT": "The router could not price this trade because the amount is zero. Enter an amount greater than zero.",
+      "AedexV2Library_INSUFFICIENT_LIQUIDITY": "This pool has no liquidity yet (both reserves are zero), so no price can be quoted. Add liquidity first or pick another pair.",
+      "AedexV2Library_NO_PAIR_FOUND": "The router found no pool for one step of this route. Pick a different pair or route.",
+      "AedexV2Library_INSUFFICIENT_INPUT_AMOUNT": "The router rejected the trade because the input amount is zero. Increase the amount you pay.",
+      "AedexV2Library_INSUFFICIENT_OUTPUT_AMOUNT": "The router rejected the trade because you would receive zero tokens. Increase the amount.",
+      "AedexV2Library_INVALID_PATH": "The swap route needs at least two tokens. Reselect the tokens and try again.",
+      "AedexV2Library_INTERNAL_ERROR_AMOUNTS_VOID": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "The router hit an internal error while computing the route amounts. Refresh the quote and try again.",
+      "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "The router is misconfigured (its WAE addresses do not match). This is not caused by your transaction; please report it.",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "The pool price moved: the router would use less of the first token than your minimum allows.{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "The pool price moved: the router would use less of the second token than your minimum allows.{{hint}}",
+      "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "The price moved: this trade now needs more input than the maximum you allowed.{{hint}}",
+      "AedexV2Router_INVALID_PATH_LAST": "Swaps to AE must end with wrapped AE (WAE), and this route does not. Reselect the tokens and try again.",
+      "AedexV2Router_INVALID_PATH_FIRST": "Swaps from AE must start with wrapped AE (WAE), and this route does not. Reselect the tokens and try again.",
+      "AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT": "The price moved: you would receive less than the minimum set by your slippage.{{hint}}",
+      "AedexV2Router_EXPIRED": "The transaction deadline passed before it was mined, so the router refused it.{{hint}}",
+      "WAE_LOW_BALANCE": "Your wrapped AE (WAE) balance is too low for this transfer. Lower the amount or wrap more AE.",
+      "WAE_LOW_ALLOWANCE": "The approved WAE amount is lower than this transaction needs. Approve a higher amount and try again.",
+      "WAE_ALLOWANCE_NOT_EXISTENT": "WAE has not been approved for the DEX on this account. Approve it and try again.",
+      "WAE_NON_NEGATIVE_VALUE_REQUIRED": "One of the amounts sent to the WAE contract is negative. Enter a positive amount.",
+      "WAE_ALLOWANCE_ALREADY_EXISTENT": "A WAE approval already exists for this account, so a new one cannot be created. Retry so the existing approval is updated.",
+      "AedexV2Factory_FORBIDDEN": "Only the factory admin can call this function, and your account is not the admin.",
+      "AedexV2Factory_IDENTICAL_ADDRESSES": "A pool needs two different tokens, and both selected tokens are the same. Select two different tokens.",
+      "AedexV2Factory_PAIR_EXISTS": "A pool for these two tokens already exists, so it cannot be created again. Add liquidity to the existing pool instead.",
+      "AedexV2Pair_NEGATIVE_VALUE_ON_TRANSFER": "The pool refused a transfer of a negative amount. Enter a positive amount.",
+      "AedexV2Pair_NOT_DEBUG_MODE": "This pool action is only allowed in debug mode and is disabled on this network.",
+      "AedexV2Pair_LP": "The pool found a negative balance or reserve and stopped the transaction. Refresh and try again.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_MINTED": "Your deposit is too small to mint any pool tokens. Increase both amounts.",
+      "AedexV2Pair_INSUFFICIENT_OUTPUT_AMOUNT": "The pool rejected the swap because both output amounts are zero. Increase the input amount.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY": "The pool does not hold enough tokens for the amount you requested. Try a smaller amount.",
+      "AedexV2Pair_INVALID_TO": "The receiving address cannot be one of the pool's token contracts. Use your wallet address as the recipient.",
+      "AedexV2Pair_INSUFFICIENT_INPUT_AMOUNT": "The pool received no input tokens for this swap. Increase the amount and try again.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE": "The pool did not receive enough tokens for this transaction. Check your balance and approval, then try again.",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_BURNED": "The amount of liquidity to remove is too small to return any tokens. Increase the amount.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_TRANSFER": "You do not hold enough pool tokens for this transfer. Lower the amount.",
+      "AedexV2Pair_BALANCE_ACCOUNT_NOT_EXISTENT": "This account has never provided liquidity to this pool, so there is nothing to remove.",
+      "AedexV2Pair_INSUFFICIENT_ALLOWANCE": "The router is not approved to move enough of your pool tokens. Approve a higher amount and try again.",
+      "AedexV2Pair_ALLOWANCE_NOT_EXISTENT": "Your pool tokens have not been approved for the router. Approve them and try again.",
+      "AedexV2Pair_INSUFFICIENT_TOTAL_SUPPLY": "The pool's total supply is lower than the liquidity being removed (internal pool error). Refresh and try again.",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_BURNING": "The pool's total supply is lower than the liquidity being removed. Refresh your position and try a smaller amount."
+    },
+    "dexContractFallback": "The DEX contract rejected this transaction: {{code}}."
   },
   "landing": {
     "hero": {

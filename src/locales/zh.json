@@ -1489,7 +1489,11 @@
       "nativeToken": "原生代币",
       "noTokensAvailable": "无可用代币",
       "tryAddingCustomToken": "请尝试通过地址添加自定义代币",
-      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。"
+      "tokenNotFoundHint": "找不到你要找的代币？请尝试输入铸造地址或查看下方的代币列表设置。",
+      "tokenNotFound": "该地址下未找到 AEX-9 代币。",
+      "showAllTokens": "显示全部",
+      "showActiveOnly": "仅显示活跃",
+      "verified": "已验证代币"
     },
     "exploreTransactions": {
       "title": "高级交易浏览器",
@@ -2041,6 +2045,10 @@
       "copyFailed": "无法复制。请选中地址进行复制。",
       "actions": "代币操作",
       "pools": "流动性池"
+    },
+    "slippageWarning": {
+      "high": "滑点高于 5%（{{slippagePct}}%）过高。您的交易可能被抢跑，实际到账可能远低于报价。",
+      "low": "滑点低于 0.1%（{{slippagePct}}%）过低。价格变动时交易可能失败。"
     }
   },
   "social": {
@@ -3015,7 +3023,52 @@
     "wrapFailed": "封装失败。请重试。",
     "unwrapFailed": "解封失败。请重试。",
     "genericError": "出了点问题。请重试。",
-    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。"
+    "nameNotAllowedChar": "此代币名称使用了所选集合不允许的字符。请仅使用允许的字母、数字或符号选择其他名称。",
+    "dexContract": {
+      "AedexV2Library_IDENTICAL_ADDRESSES": "路由合约无法将代币兑换为其自身：所选的两个代币相同。请选择两个不同的代币。",
+      "AedexV2Library_INSUFFICIENT_AMOUNT": "金额为零，路由合约无法计算价格。请输入大于零的金额。",
+      "AedexV2Library_INSUFFICIENT_LIQUIDITY": "该池尚无流动性（两侧储备均为零），无法报价。请先添加流动性或选择其他交易对。",
+      "AedexV2Library_NO_PAIR_FOUND": "路由合约未找到此路径中某一步的流动性池。请选择其他交易对或路径。",
+      "AedexV2Library_INSUFFICIENT_INPUT_AMOUNT": "输入金额为零，路由合约拒绝了交易。请增加支付金额。",
+      "AedexV2Library_INSUFFICIENT_OUTPUT_AMOUNT": "您将收到零个代币，路由合约拒绝了交易。请增加金额。",
+      "AedexV2Library_INVALID_PATH": "兑换路径至少需要两个代币。请重新选择代币后重试。",
+      "AedexV2Library_INTERNAL_ERROR_AMOUNTS_VOID": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Library_INTERNAL_ERROR_PATH_VOID": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Router_AMOUNT_LIST_IS_SHORTER": "路由合约在计算路径金额时出现内部错误。请刷新报价后重试。",
+      "AedexV2Router_DIFFERENT_WAE_ADDRESSES": "路由合约配置错误（WAE 地址不一致）。这不是您的交易导致的，请反馈此问题。",
+      "AedexV2Router_INSUFFICIENT_A_AMOUNT": "池价格已变动：路由合约使用的第一个代币数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_INSUFFICIENT_B_AMOUNT": "池价格已变动：路由合约使用的第二个代币数量将低于您设置的最小值。{{hint}}",
+      "AedexV2Router_EXCESSIVE_INPUT_AMOUNT": "价格已变动：此交易所需的输入超过了您允许的最大值。{{hint}}",
+      "AedexV2Router_INVALID_PATH_LAST": "兑换为 AE 的路径必须以 WAE 结尾，而此路径并非如此。请重新选择代币后重试。",
+      "AedexV2Router_INVALID_PATH_FIRST": "从 AE 兑换的路径必须以 WAE 开头，而此路径并非如此。请重新选择代币后重试。",
+      "AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT": "价格已变动：您将收到的数量低于滑点设置的最小值。{{hint}}",
+      "AedexV2Router_EXPIRED": "交易在被打包前已超过截止时间，路由合约拒绝了它。{{hint}}",
+      "WAE_LOW_BALANCE": "您的 WAE 余额不足以完成此转账。请降低金额或包装更多 AE。",
+      "WAE_LOW_ALLOWANCE": "已授权的 WAE 数量低于此交易所需。请授权更高数量后重试。",
+      "WAE_ALLOWANCE_NOT_EXISTENT": "此账户尚未授权 DEX 使用 WAE。请授权后重试。",
+      "WAE_NON_NEGATIVE_VALUE_REQUIRED": "发送给 WAE 合约的某个金额为负数。请输入正数金额。",
+      "WAE_ALLOWANCE_ALREADY_EXISTENT": "此账户已存在 WAE 授权，无法再创建新的授权。请重试以更新现有授权。",
+      "AedexV2Factory_FORBIDDEN": "只有工厂合约管理员可以调用此功能，您的账户不是管理员。",
+      "AedexV2Factory_IDENTICAL_ADDRESSES": "流动性池需要两个不同的代币，但所选代币相同。请选择两个不同的代币。",
+      "AedexV2Factory_PAIR_EXISTS": "这两个代币的流动性池已存在，无法重复创建。请向现有池添加流动性。",
+      "AedexV2Pair_NEGATIVE_VALUE_ON_TRANSFER": "流动性池拒绝了负数金额的转账。请输入正数金额。",
+      "AedexV2Pair_NOT_DEBUG_MODE": "此池操作仅在调试模式下允许，在当前网络中已禁用。",
+      "AedexV2Pair_LP": "流动性池检测到负余额或负储备，已终止交易。请刷新后重试。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_MINTED": "您的存入金额太小，无法铸造任何 LP 代币。请增加两侧金额。",
+      "AedexV2Pair_INSUFFICIENT_OUTPUT_AMOUNT": "两侧输出金额均为零，流动性池拒绝了兑换。请增加输入金额。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY": "流动性池中的代币不足以满足您请求的数量。请尝试更小的金额。",
+      "AedexV2Pair_INVALID_TO": "接收地址不能是池中代币的合约地址。请使用您的钱包地址作为接收方。",
+      "AedexV2Pair_INSUFFICIENT_INPUT_AMOUNT": "流动性池未收到此次兑换的输入代币。请增加金额后重试。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE": "流动性池未收到足够的代币。请检查余额和授权后重试。",
+      "AedexV2Pair_INSUFFICIENT_LIQUIDITY_BURNED": "要移除的流动性太少，无法返还任何代币。请增加数量。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_TRANSFER": "您持有的 LP 代币不足以完成此转账。请降低数量。",
+      "AedexV2Pair_BALANCE_ACCOUNT_NOT_EXISTENT": "此账户从未向该池提供流动性，没有可移除的内容。",
+      "AedexV2Pair_INSUFFICIENT_ALLOWANCE": "路由合约获得的 LP 代币授权不足。请授权更高数量后重试。",
+      "AedexV2Pair_ALLOWANCE_NOT_EXISTENT": "您的 LP 代币尚未授权给路由合约。请授权后重试。",
+      "AedexV2Pair_INSUFFICIENT_TOTAL_SUPPLY": "池的总供应量低于要移除的流动性（池内部错误）。请刷新后重试。",
+      "AedexV2Pair_INSUFFICIENT_BALANCE_FOR_BURNING": "池的总供应量低于要移除的流动性。请刷新您的仓位并尝试更小的数量。"
+    },
+    "dexContractFallback": "DEX 合约拒绝了此交易：{{code}}。"
   },
   "landing": {
     "hero": {

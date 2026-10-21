@@ -19,6 +19,7 @@ import SwapConfirmation from './SwapConfirmation';
 import SwapInfoDisplay from './SwapInfoDisplay';
 import SwapAmountField from './SwapAmountField';
 import SwapInlineSettings from './SwapInlineSettings';
+import SlippageWarning from './SlippageWarning';
 import './SwapForm.css';
 import { Decimal } from '../../../libs/decimal';
 import { ArrowDownUp, ArrowRight, Info, Settings2 } from 'lucide-react';
@@ -405,6 +406,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           <button type="button" disabled={swapLoading} onClick={() => setSettingsOpen(true)}>{slippagePct}%<Settings2 aria-hidden="true" /><span className="sr-only">{t('swap.swapSettings')}</span></button>
         </div>
       )}
+      {!settingsOpen && <SlippageWarning slippagePct={slippagePct} />}
       {(error || hasNoLiquidity || hasInsufficientBalance) && (
         <div className="swap-inline-state is-error" role="status">
           <Info aria-hidden="true" />

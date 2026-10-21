@@ -23,7 +23,7 @@ const actions = [
     key: 'wrapAe', to: '/defi/wrap', title: 'wrapOrUnwrapAe', tone: 'wrap', Icon: Box,
   },
   {
-    key: 'chat', to: 'https://quali.chat', title: 'openChat', tone: 'chat', Icon: MessageCircle,
+    key: 'chat', to: '/chat', title: 'openChat', tone: 'chat', Icon: MessageCircle,
   },
   {
     key: 'provideLiquidity', to: '/defi/pool', title: 'provideLiquidityToPools', tone: 'pool', Icon: Droplets,

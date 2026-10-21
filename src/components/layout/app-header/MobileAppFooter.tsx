@@ -8,7 +8,6 @@ import { useSetAtom } from 'jotai';
 import AddressAvatar from '../../AddressAvatar';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useModal } from '../../../hooks/useModal';
-import { isStandalone } from '../../../utils/displayMode';
 import AppNavigationItemAction from './AppNavigationItemAction';
 import {
   getActiveNavigationPath,
@@ -29,10 +28,9 @@ const MobileAppFooter = () => {
   const setProfileEditOpen = useSetAtom(profileEditModalOpenAtom);
   const setProfileEditFlow = useSetAtom(profileEditModalFlowAtom);
   const setProfileEditPendingAfterConnect = useSetAtom(profileEditModalPendingAfterConnectAtom);
-  const pwaMode = isStandalone();
   const navigationItems = useMemo(
-    () => getMobileFooterNavigationItems(activeAccount, pwaMode),
-    [activeAccount, pwaMode],
+    () => getMobileFooterNavigationItems(activeAccount),
+    [activeAccount],
   );
   const moreItems = useMemo(() => getMobileMoreNavigationItems(), []);
   const footerRef = useRef<HTMLDivElement>(null);

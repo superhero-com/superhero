@@ -2049,6 +2049,14 @@
   },
   "social": {
     "originalPost": "المنشور الأصلي",
+    "newPosts": {
+      "show_zero": "عرض {{count}} منشور جديد",
+      "show_one": "عرض منشور جديد واحد",
+      "show_two": "عرض منشورين جديدين",
+      "show_few": "عرض {{count}} منشورات جديدة",
+      "show_many": "عرض {{count}} منشورًا جديدًا",
+      "show_other": "عرض {{count}} منشور جديد"
+    },
     "translatePost": "ترجمة",
     "share": "مشاركة",
     "sharePost": "مشاركة المنشور",

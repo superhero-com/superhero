@@ -12,9 +12,10 @@ export default function GovernancePolls() {
 
   const [search, setSearch] = useState<string>('');
   const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
-  const { data: polls, isLoading } = usePolls({ status, search });
-
-  if (isLoading) return <div>{t('polls.loading')}</div>;
+  const { data, isLoading } = usePolls({ status, search });
+  const polls = data ?? [];
+  const openCount = polls.filter((p) => p.status === 'open').length;
+  const closedCount = polls.length - openCount;
 
   return (
     <div className="min-h-screen">
@@ -39,24 +40,25 @@ export default function GovernancePolls() {
                 </p>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-3">
-              <div
-                className={`px-4 py-2 rounded-2xl  ${
-                  status === 'open'
-                    ? 'to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20'
-                    : 'to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20'
-                }`}
-              >
-                <span
-                  className={`text-green-400 text-sm font-semibold ${
-                    status === 'open' ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {polls.length}
-                  {' '}
-                  {status === 'open' ? t('polls.active') : t('polls.closing')}
-                </span>
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {status !== 'closed' && (
+                <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                  <span className="text-green-400 text-sm font-semibold whitespace-nowrap">
+                    {openCount}
+                    {' '}
+                    {t('polls.active')}
+                  </span>
+                </div>
+              )}
+              {status !== 'open' && (
+                <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-red-500/20 to-red-500/20 border border-red-500/30">
+                  <span className="text-red-400 text-sm font-semibold whitespace-nowrap">
+                    {closedCount}
+                    {' '}
+                    {t('polls.closed')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -141,7 +143,9 @@ export default function GovernancePolls() {
 
         {/* Enhanced Polls Grid */}
         <div className="space-y-6">
-          {polls.length === 0 ? (
+          {isLoading && polls.length === 0 ? (
+            <div className="text-center py-10 text-slate-300">{t('polls.loading')}</div>
+          ) : polls.length === 0 ? (
             <div className="relative">
               <div className="governance-decoration absolute inset-0 bg-gradient-to-r from-blue-500/5 via-blue-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10" />
               <MobileCard

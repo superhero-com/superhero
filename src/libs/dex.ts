@@ -327,6 +327,20 @@ export async function ensurePairAllowanceForRouter(
   }
 }
 
+/** Reads the owner's LP balance straight from the pair contract (not the indexer). */
+export async function getPairBalance(
+  sdk: any,
+  pairAddress: string,
+  owner: string,
+): Promise<bigint> {
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
+  const { decodedResult } = await pair.balance(owner);
+  return BigInt(decodedResult ?? 0);
+}
+
 // Pair helpers and liquidity flows
 export async function getPairAddress(
   sdk: any,

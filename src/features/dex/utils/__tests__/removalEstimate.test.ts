@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { removalAmount, removalEstimate } from '../removalEstimate';
+import { liquidityToBurn, removalAmount, removalEstimate } from '../removalEstimate';
 
 describe('liquidity removal amounts', () => {
   it('keeps full LP precision in both Max and exact input, and floors fractional base units', () => {
@@ -27,5 +27,12 @@ describe('liquidity removal amounts', () => {
     expect(removalEstimate('1', { ...pool, totalSupply: null }, [18, 6], 5)).toBeNull();
     expect(removalEstimate('10000000000000000001', pool, [18, 6], 5)).toBeNull();
     expect(removalEstimate('1', pool, [18, NaN], 5)).toBeNull();
+  });
+  it('burns the current on-chain balance for a full removal so no LP dust is left', () => {
+    expect(liquidityToBurn(1000n, true, 1118n)).toBe(1118n);
+    expect(liquidityToBurn(1000n, true, 900n)).toBe(900n);
+    expect(liquidityToBurn(500n, false, 1118n)).toBe(500n);
+    expect(() => liquidityToBurn(2000n, false, 1118n)).toThrow('Insufficient balance');
+    expect(() => liquidityToBurn(1000n, true, 0n)).toThrow('Insufficient balance');
   });
 });

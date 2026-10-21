@@ -28,6 +28,7 @@ import { MessageBubble } from '../components/MessageBubble';
 import { PostingBannerCard } from '../components/PostingBannerCard';
 import { isChatRelayConfigured } from '../core/relay-config';
 import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
+import InboxView from './InboxView';
 
 const RoomView = () => {
   const { saleAddress = '' } = useParams();
@@ -46,8 +47,6 @@ const RoomView = () => {
     canPost,
     needsUnlock,
     isReady,
-    error: roomError,
-    retry,
     loadEarlier,
     hasEarlier,
     isLoadingEarlier,
@@ -74,14 +73,13 @@ const RoomView = () => {
   }, [messages.length]);
 
   const onSend = async () => {
-    const submittedDraft = draft;
     const text = draft.trim();
-    if (!text || isSending || !isReady) return;
-    setIsSending(true);
+    if (!text || isSending) return;
     setSendError(null);
+    setIsSending(true);
     try {
       await sendMessage(text);
-      setDraft((current) => (current === submittedDraft ? '' : current));
+      setDraft('');
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
     } finally {
@@ -117,7 +115,7 @@ const RoomView = () => {
             onClick={() => {
               session.unlock();
             }}
-            disabled={session.isUnlocking || !session.canUnlock}
+            disabled={session.isUnlocking}
           >
             {session.isUnlocking ? (
               <>
@@ -133,7 +131,7 @@ const RoomView = () => {
     }
     return (
       <form
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 rounded-full border border-border bg-card p-1 focus-within:border-primary"
         onSubmit={(e) => {
           e.preventDefault();
           onSend();
@@ -144,16 +142,20 @@ const RoomView = () => {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={`Message #${room?.symbol ?? 'room'}`}
           aria-label="Message"
+          disabled={isSending}
+          className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="sm" aria-label="Send message" disabled={!draft.trim() || !isReady || isSending}>
-          <Send className="h-4 w-4" />
+        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-10 w-10 shrink-0 rounded-full" aria-label="Send message">
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
     );
   };
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
+    <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
+      <div className="hidden h-full lg:block"><InboxView embedded /></div>
+      <section className="chat-conversation flex min-w-0 flex-1 flex-col">
       <header className="flex items-center gap-2 border-b border-border px-3 py-3">
         <Link
           to="/chat"
@@ -176,17 +178,9 @@ const RoomView = () => {
 
       <div
         ref={listRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4"
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6"
       >
-        {roomError && (
-          <div role="alert" className="py-8 text-center text-sm text-muted-foreground">
-            <p>{roomError.message}</p>
-            <Button variant="outline" size="sm" onClick={retry} className="mt-3">
-              Retry connection
-            </Button>
-          </div>
-        )}
-        {!isReady && !roomError && !needsUnlock && (
+        {!isReady && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Connecting…
@@ -214,13 +208,14 @@ const RoomView = () => {
         ))}
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
         {renderComposer()}
-        {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
+        {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
       </div>
 
       {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
       <NostrLinkGate />
+      </section>
     </div>
   );
 };

@@ -30,6 +30,7 @@ import { DmThreadHeader } from '../components/DmThreadHeader';
 import { DmMessageBubble } from '../components/DmMessageBubble';
 import { isChatRelayConfigured } from '../core/relay-config';
 import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
+import InboxView from './InboxView';
 
 const DmThreadView = () => {
   const { address = '' } = useParams();
@@ -78,14 +79,13 @@ const DmThreadView = () => {
   }, [messages, markAsRead]);
 
   const onSend = async () => {
-    const submittedDraft = draft;
     const text = draft.trim();
-    if (!text || isSending || !isConnected) return;
-    setIsSending(true);
+    if (!text || isSending) return;
     setSendError(null);
+    setIsSending(true);
     try {
       await sendMessage(text);
-      setDraft((current) => (current === submittedDraft ? '' : current));
+      setDraft('');
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
     } finally {
@@ -99,7 +99,7 @@ const DmThreadView = () => {
         <div className="flex flex-col gap-2 rounded-xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-sm text-foreground">Unlock chat to read and send messages.</p>
           {session.error && <p className="text-xs text-error">{session.error.message}</p>}
-          <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking || !session.canUnlock}>
+          <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking}>
             {session.isUnlocking ? (
               <>
                 <Loader2 className="mr-1 h-4 w-4 animate-spin" />
@@ -112,17 +112,19 @@ const DmThreadView = () => {
     }
     return (
       <form
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 rounded-full border border-border bg-card p-1 focus-within:border-primary"
         onSubmit={(e) => { e.preventDefault(); onSend(); }}
       >
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Type a message…"
+          placeholder="Start a message"
           aria-label="Message"
+          disabled={isSending}
+          className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="sm" aria-label="Send message" disabled={!draft.trim() || !isConnected || isSending}>
-          <Send className="h-4 w-4" />
+        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-10 w-10 shrink-0 rounded-full" aria-label="Send message">
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
     );
@@ -131,7 +133,9 @@ const DmThreadView = () => {
   if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
+    <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
+      <div className="hidden h-full lg:block"><InboxView embedded /></div>
+      <section className="chat-conversation flex min-w-0 flex-1 flex-col">
       <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
       {!isConnected && session.isUnlocked && (
@@ -140,7 +144,7 @@ const DmThreadView = () => {
         </div>
       )}
 
-      <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4">
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6">
         {session.isUnlocked && messages.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <Identicon address={npub} size={72} />
@@ -161,12 +165,13 @@ const DmThreadView = () => {
         ))}
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
         {renderComposer()}
-        {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
+        {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
       </div>
 
       <NostrLinkGate />
+      </section>
     </div>
   );
 };

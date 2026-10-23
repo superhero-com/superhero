@@ -1571,7 +1571,7 @@ const ProfileEditModal = ({
                 <Input
                   value={form.avatar}
                   onChange={(e) => setForm((prev) => ({ ...prev, avatar: e.target.value }))}
-                  placeholder="https://example.com/me.png"
+                  placeholder="https://yoursite.com/me.png"
                   className="bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
                   maxLength={208}
                   inputMode="url"

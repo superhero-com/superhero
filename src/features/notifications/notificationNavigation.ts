@@ -29,9 +29,10 @@ export function postDetailPath(idOrSlug: string): string {
 /** ak_… address of the actor behind a notification, used for the row avatar. */
 export function getNotificationActor(item: FeedItem): string | undefined {
   const d = item.data ?? {};
-  // post-comment → commenter, incoming-transfer → sender, invitation → claimer,
-  // new-follow → follower.
-  return str(d.commenter) || str(d.sender) || str(d.claimer) || str(d.follower);
+  // post-comment → commenter, incoming-transfer / tip-received → sender,
+  // invitation → claimer, new-follow → follower, post-mention → author.
+  return str(d.commenter) || str(d.sender) || str(d.claimer) || str(d.follower)
+    || str(d.author);
 }
 
 /**
@@ -64,6 +65,16 @@ export function getNotificationLink(item: FeedItem): string | undefined {
     case 'new-follow': {
       const follower = str(d.follower);
       return follower ? `/users/${encodeURIComponent(follower)}` : undefined;
+    }
+    // A post tip opens the tipped post; a profile tip settles into the wallet.
+    case 'tip-received': {
+      const post = str(d.postId);
+      return post ? postDetailPath(post) : '/wallet';
+    }
+    // Open the post that mentions the recipient.
+    case 'post-mention': {
+      const post = str(d.postId);
+      return post ? postDetailPath(post) : undefined;
     }
     default:
       return undefined;

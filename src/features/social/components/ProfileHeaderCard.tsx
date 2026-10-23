@@ -1,4 +1,4 @@
-import { type RefObject } from 'react';
+import { type RefObject, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 // eslint-disable-next-line import/no-named-as-default
@@ -18,6 +18,7 @@ interface ProfileHeaderCardProps {
   verifiedUsername?: string | null;
   bio?: string;
   site?: string | null;
+  avatarUrl?: string | null;
   ownProfile: boolean;
   followersCount?: number | null;
   followingCount?: number | null;
@@ -31,26 +32,47 @@ interface ProfileHeaderCardProps {
   errorSlotRef?: RefObject<HTMLElement | null>;
 }
 
-// 3 px page-ground border; identicon only — avatarurl is never rendered because
-// there is no write path to set or clear one.
-const Avatar = ({ address, size, className }: {
+// 3 px page-ground border. Shows the linked profile picture when there is one
+// and it loads; otherwise (or on a broken link) the address identicon.
+const Avatar = ({
+  address, size, className, avatarUrl,
+}: {
   address: string;
   size: number;
   className?: string;
-}) => (
-  <div
-    className={`relative z-10 w-fit shrink-0 rounded-[20px] ring-[3px] ring-[var(--background-color)] bg-[var(--background-color)] ${className || ''}`}
-  >
-    <AddressAvatarWithChainName
-      address={address}
-      size={size}
-      showAddressAndChainName={false}
-      avatarBorderRadius="20px"
-      isHoverEnabled
-      className="rounded-[20px] overflow-hidden"
-    />
-  </div>
-);
+  avatarUrl?: string | null;
+}) => {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showImage = Boolean(avatarUrl) && failedUrl !== avatarUrl;
+  return (
+    <div
+      className={`relative z-10 w-fit shrink-0 rounded-[20px] ring-[3px] ring-[var(--background-color)] bg-[var(--background-color)] ${className || ''}`}
+    >
+      {showImage ? (
+        <img
+          src={avatarUrl as string}
+          alt=""
+          width={size}
+          height={size}
+          style={{ width: size, height: size }}
+          className="rounded-[20px] object-cover"
+          referrerPolicy="no-referrer"
+          data-testid="profile-avatar-image"
+          onError={() => setFailedUrl(avatarUrl ?? null)}
+        />
+      ) : (
+        <AddressAvatarWithChainName
+          address={address}
+          size={size}
+          showAddressAndChainName={false}
+          avatarBorderRadius="20px"
+          isHoverEnabled
+          className="rounded-[20px] overflow-hidden"
+        />
+      )}
+    </div>
+  );
+};
 
 /** Blocks 1-4 as one card: band (with back + share/more over it) -> identity -> counts. */
 const ProfileHeaderCard = ({
@@ -61,6 +83,7 @@ const ProfileHeaderCard = ({
   verifiedUsername,
   bio,
   site,
+  avatarUrl,
   ownProfile,
   followersCount,
   followingCount,
@@ -102,8 +125,8 @@ const ProfileHeaderCard = ({
             Actions always sit below it, including on desktop. */}
         <div className="relative -mt-[30px] flex flex-col gap-3 md:-mt-11">
           <div className="flex min-w-0 items-center gap-3 md:flex-1 md:gap-4">
-            <Avatar address={address} size={60} className="flex md:hidden" />
-            <Avatar address={address} size={88} className="hidden md:flex" />
+            <Avatar address={address} avatarUrl={avatarUrl} size={60} className="flex md:hidden" />
+            <Avatar address={address} avatarUrl={avatarUrl} size={88} className="hidden md:flex" />
             <div className="min-w-0 flex-1">
               <ProfileIdentity
                 address={address}

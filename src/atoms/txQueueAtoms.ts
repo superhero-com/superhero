@@ -59,6 +59,18 @@ export type MessageSignRequest = {
   nonce: number;
   message: string;
 } | {
+  type: 'address-link-avatar-submit';
+  address: string;
+  value: string;
+  nonce: number;
+  verification_token: string;
+  message: string;
+} | {
+  type: 'address-link-avatar-unclaim';
+  address: string;
+  nonce: number;
+  message: string;
+} | {
   type: 'profile-update';
   address: string;
   payload: Record<string, string>;

@@ -374,6 +374,55 @@ export function useProfile(targetAddress?: string) {
     targetAddress,
   ]);
 
+  const submitAvatarAddressLink = useCallback(async (
+    address: string,
+    claim: AddressLinkClaimResponse,
+    signature: string,
+  ) => {
+    const res = await SuperheroApi.submitAvatarAddressLink({
+      address,
+      value: claim.value,
+      nonce: claim.nonce,
+      signature,
+      verification_token: claim.verification_token,
+    });
+    return res.txHash;
+  }, []);
+
+  const linkAvatar = useCallback(async (params: {
+    address?: string;
+    avatarUrl: string;
+  }) => {
+    const target = params.address || targetAddress;
+    if (!target) {
+      throw new Error(i18n.t('common.messages.missingAddressForAvatarLink'));
+    }
+    const value = params.avatarUrl.trim();
+    if (!value) {
+      throw new Error(i18n.t('common.messages.avatarRequiredToLink'));
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const claim = await SuperheroApi.claimAvatarAddressLink(target, value);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, claim.message, {
+      request: {
+        type: 'address-link-avatar-submit',
+        address: target,
+        value: claim.value,
+        nonce: claim.nonce,
+        verification_token: claim.verification_token,
+        message: claim.message,
+      },
+    });
+    return submitAvatarAddressLink(target, claim, signature);
+  }, [
+    addStaticAccount,
+    ensureWalletReadyForMessageSigning,
+    signMessage,
+    submitAvatarAddressLink,
+    targetAddress,
+  ]);
+
   const submitPreferredAensNameAddressLink = useCallback(async (
     address: string,
     claim: AddressLinkClaimResponse,
@@ -495,6 +544,30 @@ export function useProfile(targetAddress?: string) {
     return res.txHash;
   }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
 
+  const unlinkAvatar = useCallback(async (address?: string) => {
+    const target = address || targetAddress;
+    if (!target) {
+      throw new Error(i18n.t('common.messages.missingAddressForAvatarUnlink'));
+    }
+    await addStaticAccount(target);
+    await ensureWalletReadyForMessageSigning(target);
+    const unclaim = await SuperheroApi.unclaimAvatarAddressLink(target);
+    const signature = await signAndVerifyLinkMessage(target, signMessage, unclaim.message, {
+      request: {
+        type: 'address-link-avatar-unclaim',
+        address: target,
+        nonce: unclaim.nonce,
+        message: unclaim.message,
+      },
+    });
+    const res = await SuperheroApi.submitAvatarAddressLinkUnclaim({
+      address: target,
+      nonce: unclaim.nonce,
+      signature,
+    });
+    return res.txHash;
+  }, [addStaticAccount, ensureWalletReadyForMessageSigning, signMessage, targetAddress]);
+
   const unlinkXAccount = useCallback(async (address?: string) => {
     const target = address || targetAddress;
     if (!target) {
@@ -565,6 +638,8 @@ export function useProfile(targetAddress?: string) {
     unlinkBio,
     linkSite,
     unlinkSite,
+    linkAvatar,
+    unlinkAvatar,
     linkPreferredAensName,
     unlinkPreferredAensName,
     getXPostingRewardStatus,

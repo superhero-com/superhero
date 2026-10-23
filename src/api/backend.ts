@@ -60,6 +60,8 @@ export type AccountLinks = {
   prefered_aens_name?: string | null;
   /** Website/domain linked via POST /api/address-links/site */
   site?: string | null;
+  /** Profile picture (`host/path`, https) linked via POST /api/address-links/avatar */
+  avatar?: string | null;
 };
 
 export type AccountAggregate = {
@@ -112,6 +114,19 @@ export function getLinkedSite(
   const fromLinks = String(account?.links?.site ?? '').trim();
   if (fromLinks) return fromLinks;
   return null;
+}
+
+/**
+ * Profile picture URL from `links.avatar` (stored on chain as `host/path`,
+ * served over https), then `profile.avatarurl`. Returns null when unset.
+ */
+export function getLinkedAvatarUrl(
+  account?: Pick<AccountAggregate, 'links' | 'profile'> | null,
+): string | null {
+  const fromLinks = String(account?.links?.avatar ?? '').trim();
+  if (fromLinks) return `https://${fromLinks.replace(/^https?:\/\//i, '')}`;
+  const fromProfile = String(account?.profile?.avatarurl ?? '').trim();
+  return /^https:\/\//i.test(fromProfile) ? fromProfile : null;
 }
 
 const normalizePreferredAensName = (value: string) => value.trim().toLowerCase();
@@ -1054,6 +1069,52 @@ export const SuperheroApi = {
     signature: string;
   }) {
     return this.fetchJson('/api/address-links/site/unclaim/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  claimAvatarAddressLink(address: string, value: string) {
+    return this.fetchJson('/api/address-links/avatar/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address, value }),
+    }) as Promise<AddressLinkClaimResponse>;
+  },
+  submitAvatarAddressLink(payload: {
+    address: string;
+    value: string;
+    nonce: number;
+    signature: string;
+    verification_token: string;
+  }) {
+    return this.fetchJson('/api/address-links/avatar/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    }) as Promise<AddressLinkSubmitResponse>;
+  },
+  unclaimAvatarAddressLink(address: string) {
+    return this.fetchJson('/api/address-links/avatar/unclaim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    }) as Promise<AddressLinkUnclaimResponse>;
+  },
+  submitAvatarAddressLinkUnclaim(payload: {
+    address: string;
+    nonce: number;
+    signature: string;
+  }) {
+    return this.fetchJson('/api/address-links/avatar/unclaim/submit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

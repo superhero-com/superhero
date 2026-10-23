@@ -11,6 +11,7 @@ import {
   getLinkedBio,
   getLinkedPreferredAensName,
   getLinkedSite,
+  getLinkedAvatarUrl,
   getLinkedXUsername,
   patchAccountCacheEntry,
   profileAggregateFromSources,
@@ -48,13 +49,14 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
-  Globe, HelpCircle, Link2, Plus,
+  Globe, HelpCircle, Image as ImageIcon, Link2, Plus,
 } from 'lucide-react';
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
 import { effectiveXLink, onXLinkChangeSettled, resolveXLink } from '@/utils/confirmedXLink';
 import { usePendingXLinkChange } from '@/hooks/useXLinkChanges';
+import { isValidAvatarUrl } from '@/utils/avatarUrl';
 import { XLinkChangePending } from '../XLinkChangePending';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -69,6 +71,7 @@ import { useToast } from '../ToastProvider';
 type EditableFormState = {
   bio: string;
   website: string;
+  avatar: string;
   chain_name: string;
 };
 
@@ -80,6 +83,7 @@ type OwnedChainNameOption = {
 const EMPTY_FORM: EditableFormState = {
   bio: '',
   website: '',
+  avatar: '',
   chain_name: '',
 };
 
@@ -364,6 +368,8 @@ const ProfileEditModal = ({
     unlinkBio,
     linkSite,
     unlinkSite,
+    linkAvatar,
+    unlinkAvatar,
     linkPreferredAensName,
     unlinkPreferredAensName,
     canEdit,
@@ -434,6 +440,7 @@ const ProfileEditModal = ({
   const trimmedForm = useMemo(() => ({
     bio: form.bio.trim(),
     website: form.website.trim(),
+    avatar: form.avatar.trim(),
     chain_name: form.chain_name.trim().toLowerCase(),
   }), [form]);
   useEffect(() => {
@@ -447,6 +454,7 @@ const ProfileEditModal = ({
       // Prefill from profile API first (bio, website/site, chain name)
       let bio = '';
       let site = '';
+      let avatar = '';
       let chainName = '';
       let chainNameExpiresAt: number | null = null;
 
@@ -472,6 +480,8 @@ const ProfileEditModal = ({
         if (linkedBio) bio = linkedBio;
         const linkedSite = getLinkedSite(accountRecord);
         if (linkedSite) site = linkedSite;
+        const linkedAvatar = getLinkedAvatarUrl(accountRecord);
+        if (linkedAvatar) avatar = linkedAvatar;
         const linkedPreferredName = getLinkedPreferredAensName(accountRecord);
         if (linkedPreferredName) chainName = linkedPreferredName;
         hasLinkedPreferredNameRef.current = Boolean(
@@ -543,11 +553,13 @@ const ProfileEditModal = ({
       setForm({
         bio,
         website: site,
+        avatar,
         chain_name: chainName,
       });
       setInitialForm({
         bio,
         website: site,
+        avatar,
         chain_name: chainName,
       });
       if ((CONFIG as any).X_OAUTH_CLIENT_ID) setXSectionReady(true);
@@ -601,6 +613,10 @@ const ProfileEditModal = ({
       } catch {
         return t('messages.invalidWebsiteUrl');
       }
+    }
+    const avatarChanged = trimmedForm.avatar !== initialForm.avatar.trim();
+    if (avatarChanged && trimmedForm.avatar && !isValidAvatarUrl(trimmedForm.avatar)) {
+      return t('messages.invalidAvatarUrl');
     }
     return null;
   };
@@ -987,16 +1003,18 @@ const ProfileEditModal = ({
       trimmedForm.chain_name !== initialForm.chain_name.trim().toLowerCase()
     );
     const websiteChanged = trimmedForm.website !== initialForm.website.trim();
-    if (!bioChanged && !chainNameChanged && !websiteChanged) {
+    const avatarChanged = trimmedForm.avatar !== initialForm.avatar.trim();
+    if (!bioChanged && !chainNameChanged && !websiteChanged && !avatarChanged) {
       const msg = t('messages.profileNothingToUpdate');
       setFormError(msg);
       push(<div style={{ color: '#ffb3b3' }}>{msg}</div>);
       return;
     }
 
-    const changedFields: Array<'bio' | 'website' | 'chain_name'> = [
+    const changedFields: Array<'bio' | 'website' | 'avatar' | 'chain_name'> = [
       ...(bioChanged ? (['bio'] as const) : []),
       ...(websiteChanged ? (['website'] as const) : []),
+      ...(avatarChanged ? (['avatar'] as const) : []),
       ...(chainNameChanged ? (['chain_name'] as const) : []),
     ];
     const notifyPayload = { type: TxPayloadType.UpdateProfile, fields: changedFields } as const;
@@ -1044,6 +1062,13 @@ const ProfileEditModal = ({
           await linkSite({ address: targetAddress, site: trimmedForm.website });
         } else {
           await unlinkSite(targetAddress);
+        }
+      }
+      if (avatarChanged) {
+        if (trimmedForm.avatar) {
+          await linkAvatar({ address: targetAddress, avatarUrl: trimmedForm.avatar });
+        } else {
+          await unlinkAvatar(targetAddress);
         }
       }
 
@@ -1099,6 +1124,15 @@ const ProfileEditModal = ({
           },
         };
       }
+      if (avatarChanged) {
+        updated = {
+          ...updated,
+          profile: {
+            ...updated.profile,
+            avatarurl: trimmedForm.avatar,
+          },
+        };
+      }
       if (chainNameChanged) {
         updated = {
           ...updated,
@@ -1126,9 +1160,10 @@ const ProfileEditModal = ({
         }),
       );
       let successMessage = t('messages.profileUpdated');
-      const onlyBio = bioChanged && !chainNameChanged && !websiteChanged;
-      const onlyChainName = chainNameChanged && !bioChanged && !websiteChanged;
-      const onlySite = websiteChanged && !bioChanged && !chainNameChanged;
+      const onlyBio = bioChanged && !chainNameChanged && !websiteChanged && !avatarChanged;
+      const onlyChainName = chainNameChanged && !bioChanged && !websiteChanged && !avatarChanged;
+      const onlySite = websiteChanged && !bioChanged && !chainNameChanged && !avatarChanged;
+      const onlyAvatar = avatarChanged && !bioChanged && !chainNameChanged && !websiteChanged;
       if (onlyBio) {
         successMessage = trimmedForm.bio
           ? t('messages.bioLinkSuccess')
@@ -1141,6 +1176,10 @@ const ProfileEditModal = ({
         successMessage = trimmedForm.website
           ? t('messages.siteLinkSuccess')
           : t('messages.siteUnlinkSuccess');
+      } else if (onlyAvatar) {
+        successMessage = trimmedForm.avatar
+          ? t('messages.avatarLinkSuccess')
+          : t('messages.avatarUnlinkSuccess');
       }
       notifyConfirmed(notifyPayload);
       push(<div>{successMessage}</div>);
@@ -1512,6 +1551,34 @@ const ProfileEditModal = ({
                   maxLength={200}
                 />
               </div>
+            </div>
+
+            <div>
+              <FieldHeading label={t('labels.profilePicture')} />
+              <div className="mt-1.5 flex items-center gap-2.5">
+                {isValidAvatarUrl(form.avatar.trim()) ? (
+                  <img
+                    src={form.avatar.trim()}
+                    alt=""
+                    className="h-9 w-9 shrink-0 rounded-xl object-cover bg-white/[0.06]"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="h-9 w-9 shrink-0 rounded-xl bg-white/[0.06] flex items-center justify-center">
+                    <ImageIcon className="w-3.5 h-3.5 text-white/35" />
+                  </div>
+                )}
+                <Input
+                  value={form.avatar}
+                  onChange={(e) => setForm((prev) => ({ ...prev, avatar: e.target.value }))}
+                  placeholder="https://example.com/me.png"
+                  className="bg-white/[0.06] border border-white/12 text-white rounded-xl focus-visible:ring-0 focus:border-[var(--neon-teal)] placeholder:text-white/30 text-sm"
+                  maxLength={208}
+                  inputMode="url"
+                  data-testid="profile-avatar-input"
+                />
+              </div>
+              <p className="mt-1 text-[10px] text-white/35">{t('messages.avatarUrlHint')}</p>
             </div>
 
             {formError ? <p className="text-xs text-red-300">{formError}</p> : null}

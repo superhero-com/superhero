@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import {
@@ -14,6 +14,7 @@ import { toAe } from '../../../../utils/bondingCurve';
 import { usePendingXLinkChange } from '../../../../hooks/useXLinkChanges';
 import { XLinkChangePending } from '../../../../components/XLinkChangePending';
 import { RewardHistory } from './RewardHistory';
+import { utcClock } from '../../../../utils/utcClock';
 import TrophyIcon from '../../../../svg/iconTrophy.svg?react';
 import FlameIcon from '../../../../svg/iconFlame.svg?react';
 import CelebrationIcon from '../../../../svg/iconCelebration.svg?react';
@@ -44,6 +45,30 @@ const checkLabel = (loading: boolean, blocked: boolean, next: Date | null, t: TF
   if (loading) return t('rewardsProgram.check.checking');
   if (blocked && next) return t('rewardsProgram.check.checkIn', { time: formatCooldown(next) });
   return t('rewardsProgram.check.checkRewards');
+};
+
+// Its own component so the minute tick re-renders this line, not the whole page.
+const StreakRule = () => {
+  const { t } = useTranslation('trending');
+  const [time, setTime] = useState(utcClock);
+
+  useEffect(() => {
+    let timeoutId: number;
+    const scheduleTick = () => {
+      timeoutId = window.setTimeout(() => {
+        setTime(utcClock());
+        scheduleTick();
+      }, 60_000 - (Date.now() % 60_000));
+    };
+    scheduleTick();
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <p className="text-xs text-white/50 m-0 -mt-3 mb-5 leading-relaxed max-w-xl">
+      {t('rewardsProgram.milestone2.streakRule', { time })}
+    </p>
+  );
 };
 
 const RewardsProgram = () => {
@@ -451,10 +476,14 @@ const RewardsProgram = () => {
                 </span>
               </div>
 
-              {streakDays > 0 && (
+              {streakDays > 0 ? (
                 <p className="text-xs text-cyan-300/70 text-right mb-2 flex items-center gap-1 justify-end animate-slideDown">
                   <FlameIcon className="w-4 h-4 text-orange-400" />
                   {t('rewardsProgram.milestone2.currentStreak', { days: streakDays, total: STREAK_TOTAL })}
+                </p>
+              ) : postStatus === 'in_progress' && (
+                <p className="text-xs text-white/50 text-right mb-2">
+                  {t('rewardsProgram.milestone2.streakNone')}
                 </p>
               )}
 
@@ -521,6 +550,7 @@ const RewardsProgram = () => {
               <p className="text-sm text-white/70 m-0 my-5 leading-relaxed max-w-xl">
                 {t('rewardsProgram.milestone2.streakInfo')}
               </p>
+              <StreakRule />
               {postStatus === 'completed' && (
                 <div className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium animate-celebrationPop success-celebration">
                   <TrophyIcon className="w-5 h-5" />

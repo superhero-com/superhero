@@ -2931,7 +2931,9 @@
         "currentStreak": "Current streak: {{days}}/{{total}} days",
         "openingWallet": "Opening wallet…",
         "postOnX": "Post on X",
-        "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Posting daily for a 10-day consecutive streak will earn you an extra 50 AE, so keep posting and engaging with the community.",
+        "streakInfo": "For every post that meets the criteria, you earn AE tokens based on your follower tier. Post at least once a day for 10 days in a row to earn an extra 50 AE, so keep posting and engaging with the community.",
+        "streakRule": "Streak days follow UTC (now {{time}} UTC). Only posts with your referral link count. A UTC day with no such post resets the streak to 0.",
+        "streakNone": "No active streak. Post with your referral link to start one.",
         "complete": "Milestone complete — {{amount}} AE earned"
       }
     },

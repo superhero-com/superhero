@@ -55,9 +55,11 @@ export function getNotificationLink(item: FeedItem): string | undefined {
     case 'incoming-transfer':
     case 'invitation-claimed':
       return '/wallet';
-    // The token-detail route resolves a sale address (findByAddress) to its room.
+    // The token-detail route resolves a sale address (findByAddress) to its room;
+    // a price alert opens the token it was set on.
     case 'room-membership':
-    case 'room-messages': {
+    case 'room-messages':
+    case 'token-price-alert': {
       const sale = str(d.saleAddress);
       return sale ? `/trends/tokens/${encodeURIComponent(sale)}` : undefined;
     }

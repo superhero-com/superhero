@@ -103,9 +103,11 @@ function resolveNotificationPath(data) {
     case 'incoming-transfer':
     case 'invitation-claimed':
       return '/wallet';
-    // The token-detail route resolves a sale address to its room.
+    // The token-detail route resolves a sale address to its room; a price
+    // alert opens its token (mirrors getNotificationLink).
     case 'room-membership':
-    case 'room-messages': {
+    case 'room-messages':
+    case 'token-price-alert': {
       const sale = str(data.saleAddress);
       return sale ? `/trends/tokens/${encodeURIComponent(sale)}` : '/';
     }

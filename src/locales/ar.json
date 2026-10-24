@@ -2994,6 +2994,30 @@
       "copyFailed": "تعذّر النسخ. حدّد العنوان وانسخه يدويًا.",
       "unavailable": "غير متاح",
       "missingCreator": "لم تُحمّل معلومات المنشئ بعد."
+    },
+    "priceAlerts": {
+      "title": "تنبيه السعر",
+      "hint": "احصل على إشعار مرة واحدة عندما يصل {{name}} إلى السعر الذي تحدده.",
+      "thisToken": "هذا الرمز",
+      "direction": "الاتجاه",
+      "above": "أعلى من",
+      "below": "أقل من",
+      "target": "السعر المستهدف بـ AE",
+      "set": "تعيين التنبيه",
+      "signing": "وقّع في المحفظة…",
+      "saved": "تم تعيين التنبيه. سنرسل إشعارًا مرة واحدة.",
+      "invalidTarget": "أدخل سعرًا أكبر من 0، مثل 0.01.",
+      "failed": "تعذر حفظ التنبيه. حاول مرة أخرى.",
+      "active": "تنبيهاتك",
+      "whenAbove": "عندما يتجاوز {{target}} AE",
+      "whenBelow": "عندما يقل عن {{target}} AE",
+      "remove": "حذف التنبيه",
+      "firedCount_zero": "لم يُرسل أي تنبيه",
+      "firedCount_one": "تم إرسال تنبيه واحد",
+      "firedCount_two": "تم إرسال تنبيهين",
+      "firedCount_few": "تم إرسال {{count}} تنبيهات",
+      "firedCount_many": "تم إرسال {{count}} تنبيهًا",
+      "firedCount_other": "تم إرسال {{count}} تنبيه"
     }
   },
   "errors": {

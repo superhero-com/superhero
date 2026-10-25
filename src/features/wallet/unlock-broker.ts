@@ -57,6 +57,15 @@ type Listener = (request: UnlockRequest) => void;
 
 let listener: Listener | null = null;
 let nextId = 1;
+const hostListeners = new Set<() => void>();
+
+/** UI entry points stay disabled until the lazy confirmation host is mounted. */
+export const isUnlockPromptMounted = (): boolean => listener !== null;
+export function subscribeUnlockPrompt(listener_: () => void): () => void {
+  hostListeners.add(listener_);
+  return () => { hostListeners.delete(listener_); };
+}
+const notifyHost = () => hostListeners.forEach((onChange) => onChange());
 
 /**
  * Mount the prompt host. Returns an unsubscribe function; unsubscribing while
@@ -65,14 +74,19 @@ let nextId = 1;
  */
 export function subscribeUnlockRequests(cb: Listener): () => void {
   listener = cb;
+  notifyHost();
   return () => {
-    if (listener === cb) listener = null;
+    if (listener === cb) {
+      listener = null;
+      notifyHost();
+    }
   };
 }
 
 /** Test seam: drop any mounted host. */
 export function resetUnlockBroker(): void {
   listener = null;
+  notifyHost();
 }
 
 /**

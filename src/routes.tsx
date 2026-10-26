@@ -65,6 +65,7 @@ const AddTokens = lazy(() => import('./views/AddTokens'));
 const ProfileXCallback = lazy(() => import('./views/ProfileXCallback'));
 
 // Chat — inbox (All / Communities / DMs), DM threads, and token-gated rooms
+const ChatLayout = lazy(() => import('./features/chat/layouts/ChatLayout'));
 const ChatInbox = lazy(() => import('./features/chat/views/InboxView'));
 const DmThread = lazy(() => import('./features/chat/views/DmThreadView'));
 const ChatRoom = lazy(() => import('./features/chat/views/RoomView'));
@@ -177,15 +178,17 @@ export const routes: RouteObject[] = [
     element: <NavigateUserProfile />,
   },
   { path: '/profile/x/callback', element: <ProfileXCallback /> },
-  // Chat — inbox, DM threads (2-segment `dm/` never collides with the 1-segment
-  // room `:saleAddress`), and token-gated rooms.
-  { path: '/chat', element: <PageHead page="chat"><ChatInbox /></PageHead> },
-  // Two-segment literal `settings/relays` outranks and never collides with the
-  // 1-segment room `:saleAddress`.
-  { path: '/chat/settings/relays', element: <PageHead page="chatRelays"><ChatRelaySettings /></PageHead> },
-  { path: '/chat/dm/:address', element: <PageHead page="chatDm"><DmThread /></PageHead> },
-  { path: '/chat/:saleAddress', element: <PageHead page="chatRoom"><ChatRoom /></PageHead> },
-  { path: '/chat/:saleAddress/info', element: <PageHead page="chatRoomInfo"><ChatRoomInfo /></PageHead> },
+  {
+    path: '/chat',
+    element: <ChatLayout />,
+    children: [
+      { index: true, element: <PageHead page="chat"><ChatInbox /></PageHead> },
+      { path: 'settings/relays', element: <PageHead page="chatRelays"><ChatRelaySettings /></PageHead> },
+      { path: 'dm/:address', element: <PageHead page="chatDm"><DmThread /></PageHead> },
+      { path: ':saleAddress', element: <PageHead page="chatRoom"><ChatRoom /></PageHead> },
+      { path: ':saleAddress/info', element: <PageHead page="chatRoomInfo"><ChatRoomInfo /></PageHead> },
+    ],
+  },
   { path: '/landing', element: <PageHead page="landing"><Landing /></PageHead> },
   { path: '/wallet', element: <PageHead page="wallet"><Wallet /></PageHead> },
   { path: '/meet/:room?', element: <PageHead page="meet"><Conference /></PageHead> },

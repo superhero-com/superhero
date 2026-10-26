@@ -49,7 +49,7 @@ const RoomInfoView = () => {
   const heading = room ? `#${room.symbol}` : name;
 
   return (
-    <div className="ui-page chat-page mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="ui-page chat-page chat-detail-page">
       <header className="mb-4 flex items-center gap-2">
         <Link
           to={`/chat/${saleAddress}`}

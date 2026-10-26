@@ -40,10 +40,10 @@ export const MessageBubble = ({ message }: { message: GatedMessage }) => {
       )}
       <div
         className={cn(
-          'max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm',
+          'chat-message-bubble',
           isMe
-            ? 'rounded-br-sm bg-primary text-primary-foreground'
-            : 'rounded-bl-sm bg-muted text-foreground',
+            ? 'chat-message-bubble--sent'
+            : 'chat-message-bubble--received',
         )}
       >
         {message.content}

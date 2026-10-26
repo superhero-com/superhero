@@ -79,9 +79,9 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-/** Collapse whitespace and trim message content. */
+/** Trim outer whitespace while preserving intentional message line breaks. */
 export function sanitizeMessageContent(content: string): string {
-  return content.trim().replace(/\s+/g, ' ');
+  return content.trim().replace(/\r\n?/g, '\n').replace(/[^\S\n]+/g, ' ');
 }
 
 /** Trim and clamp a profile field. */

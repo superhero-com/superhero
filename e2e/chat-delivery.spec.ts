@@ -1,3 +1,4 @@
+import { mkdir } from 'node:fs/promises';
 import { test, expect, type Page } from '@playwright/test';
 import { startNostrRelay } from './helpers/nostr-relay';
 import { forceStandalone } from './helpers/display-mode';
@@ -113,33 +114,136 @@ async function send(page: Page, text: string) {
   await expect(page.getByLabel('Message', { exact: true })).toHaveValue('');
 }
 
+async function captureDesign(page: Page, name: string) {
+  if (!process.env.CHAT_DESIGN_SCREENSHOTS) return;
+  if (name.startsWith('inbox')) {
+    await expect(page).toHaveURL(/\/chat\/?$/);
+    await expect(page.locator('.chat-shell--inbox')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Relay settings', exact: true })).toBeInViewport();
+    await expect.poll(() => page.evaluate(() => {
+      const tools = document.querySelector('.chat-sidebar-footer')!.getBoundingClientRect();
+      const nav = document.querySelector('.mobile-app-footer')!;
+      const bottom = getComputedStyle(nav).display === 'none' ? window.innerHeight : nav.getBoundingClientRect().top;
+      return Math.round(tools.bottom - bottom);
+    })).toBeLessThanOrEqual(0);
+  }
+  await mkdir(process.env.CHAT_DESIGN_SCREENSHOTS, { recursive: true });
+  await page.screenshot({ path: `${process.env.CHAT_DESIGN_SCREENSHOTS}/${name}.png` });
+}
+
+// Reproduce a mobile visual-viewport resize without requiring an OS keyboard in CI.
+async function checkKeyboardViewport(page: Page) {
+  await page.getByLabel('Message', { exact: true }).focus();
+  await page.evaluate(() => {
+    Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 440 });
+    window.visualViewport!.dispatchEvent(new Event('resize'));
+  });
+  try {
+    await expect.poll(() => page.getByLabel('Message', { exact: true }).evaluate((input) => input.getBoundingClientRect().bottom <= 440)).toBe(true);
+    await expect(page.locator('.mobile-app-footer')).toBeHidden();
+  } finally {
+    await page.evaluate(() => {
+      Reflect.deleteProperty(window.visualViewport!, 'height');
+      window.visualViewport!.dispatchEvent(new Event('resize'));
+    });
+  }
+  await expect(page.locator('.mobile-app-footer')).toBeVisible();
+}
+
+async function checkResponsiveMessenger(page: Page, scene: string) {
+  const sizes = [
+    { width: 1920, height: 1080 }, { width: 1440, height: 1000 },
+    { width: 1024, height: 768 }, { width: 820, height: 1180 },
+    { width: 768, height: 1024 }, { width: 767, height: 800 },
+    { width: 390, height: 844 }, { width: 320, height: 568 },
+  ];
+  for (let index = 0; index < sizes.length; index += 1) {
+    const size = sizes[index];
+    // eslint-disable-next-line no-await-in-loop
+    await page.setViewportSize(size);
+    const sidebar = page.getByRole('complementary', { name: 'Chat list' });
+    // eslint-disable-next-line no-await-in-loop
+    if (size.width >= 768) await expect(sidebar).toBeVisible();
+    // eslint-disable-next-line no-await-in-loop
+    else await expect(sidebar).toBeHidden();
+    // eslint-disable-next-line no-await-in-loop
+    await expect(page.getByLabel('Message', { exact: true })).toBeVisible();
+    // eslint-disable-next-line no-await-in-loop
+    await expect.poll(() => page.evaluate(() => {
+      const composer = document.querySelector('.chat-composer')!.getBoundingClientRect();
+      const shell = document.querySelector('.chat-shell')!.getBoundingClientRect();
+      const input = document.querySelector('.chat-composer textarea')!.getBoundingClientRect();
+      const sendButton = document.querySelector('.chat-composer button')!.getBoundingClientRect();
+      const footer = document.querySelector('.mobile-app-footer')!;
+      const bottom = getComputedStyle(footer).display === 'none' ? window.innerHeight : footer.getBoundingClientRect().top;
+      return document.documentElement.scrollWidth <= window.innerWidth
+        && composer.left >= 0 && composer.right <= window.innerWidth
+        && composer.top >= 0 && composer.bottom <= bottom + 1
+        && sendButton.left >= input.right && Math.abs(bottom - shell.bottom) <= 20;
+    })).toBe(true);
+    if (process.env.CHAT_DESIGN_SCREENSHOTS && [1440, 820, 390, 320].includes(size.width)) {
+      // Screenshots are taken only after wallet creation and unlock have finished.
+      // eslint-disable-next-line no-await-in-loop
+      await mkdir(process.env.CHAT_DESIGN_SCREENSHOTS, { recursive: true });
+      // eslint-disable-next-line no-await-in-loop
+      await page.screenshot({ path: `${process.env.CHAT_DESIGN_SCREENSHOTS}/${scene}-${size.width}.png` });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+}
+
 test.beforeAll(async () => { relay = await startNostrRelay(18777); });
 test.afterAll(async () => { await relay?.close(); });
 
 test('two wallets exchange DMs and private-room messages; history, revocation and config failures', async ({ browser }) => {
-  const contextA = await browser.newContext({ baseURL: 'http://localhost:5186' });
-  const contextB = await browser.newContext({ baseURL: 'http://localhost:5186' });
+  const contextA = await browser.newContext({ baseURL: 'http://localhost:5186', viewport: { width: 1440, height: 1000 } });
+  const contextB = await browser.newContext({ baseURL: 'http://localhost:5186', viewport: { width: 390, height: 844 } });
   const alice = await contextA.newPage();
   const bob = await contextB.newPage();
   try {
     await prepare(alice);
     await prepare(bob);
     const a = await onboard(alice);
+    await captureDesign(alice, 'inbox-desktop');
     const b = await onboard(bob);
     expect(a.pubkey).not.toBe(b.pubkey);
     // The inbox unlock covers all in-app navigation in this document.
     await openDmInSession(alice, b.pubkey);
     await openDmInSession(bob, a.pubkey);
     await send(alice, '  Alice to Bob browser DM  ');
-    await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
+    await expect(bob.locator('.chat-message-list').getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
     await send(bob, 'Bob to Alice browser DM');
-    await expect(alice.getByText('Bob to Alice browser DM', { exact: true })).toHaveCount(1);
+    await expect(alice.locator('.chat-message-list').getByText('Bob to Alice browser DM', { exact: true })).toHaveCount(1);
+    await expect(alice.locator(`.chat-list a[href="/chat/dm/${b.pubkey}"]`)).toHaveAttribute('aria-current', 'page');
+    await alice.getByLabel('Search chats').fill('no-such-conversation');
+    await expect(alice.getByText('No matches found')).toBeVisible();
+    await expect(alice.getByLabel('Message', { exact: true })).toBeVisible();
+    await alice.getByRole('button', { name: 'Clear chat search' }).click();
+    // Multi-line drafts and keyboard send share the same delivery path.
+    await alice.getByLabel('Message', { exact: true }).fill('First line');
+    await alice.getByLabel('Message', { exact: true }).press('Shift+Enter');
+    await alice.getByLabel('Message', { exact: true }).pressSequentially('Second line');
+    await expect(alice.getByLabel('Message', { exact: true })).toHaveValue('First line\nSecond line');
+    await alice.getByLabel('Message', { exact: true }).press('Enter');
+    await expect(bob.locator('.chat-message-bubble').filter({ hasText: 'Second line' }))
+      .toHaveText('First line\nSecond line', { useInnerText: true });
+    await checkResponsiveMessenger(alice, 'dm');
+    await send(alice, `${'A longer message that wraps naturally. '.repeat(35)}${'a'.repeat(160)}`);
+    await alice.setViewportSize({ width: 390, height: 844 });
+    await expect.poll(() => alice.locator('.chat-message-list').evaluate((list) => list.scrollHeight > list.clientHeight)).toBe(true);
+    await alice.locator('.chat-message-list').evaluate((list) => list.scrollTo({ top: 0 }));
+    await expect(alice.getByRole('button', { name: 'Send message' })).toBeInViewport();
+    await expect.poll(() => alice.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    )).toBe(true);
+    await checkKeyboardViewport(alice);
+    await alice.setViewportSize({ width: 1440, height: 1000 });
     await bob.getByRole('link', { name: 'Back to chat', exact: true }).click();
     await openDmInSession(bob, a.pubkey);
-    await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
+    await expect(bob.locator('.chat-message-list').getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
     // A full document reload starts a new memory-only session.
     await openChat(bob, `/chat/dm/${a.pubkey}`);
-    await expect(bob.getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
+    await expect(bob.locator('.chat-message-list').getByText('Alice to Bob browser DM', { exact: true })).toHaveCount(1);
 
     members.add(a.pubkey);
     members.add(b.pubkey);
@@ -151,10 +255,33 @@ test('two wallets exchange DMs and private-room messages; history, revocation an
     await expect(alice.getByText('Alice private room message', { exact: true })).toHaveCount(1);
     await send(bob, 'Bob private room reply');
     await expect(alice.getByText('Bob private room reply', { exact: true })).toHaveCount(1);
+    await checkResponsiveMessenger(alice, 'room');
+    await alice.getByRole('button', { name: /^Direct/ }).click();
+    await alice.getByLabel('Search chats').fill('A longer message');
+    await alice.locator(`.chat-list a[href="/chat/dm/${b.pubkey}"]`).click();
+    await expect(alice.getByLabel('Search chats')).toHaveValue('A longer message');
+    await expect(alice.getByRole('button', { name: /^Direct/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(alice.getByLabel('Message', { exact: true })).toBeVisible();
+    await expect(alice.getByRole('button', { name: 'Unlock chat', exact: true })).toHaveCount(0);
+    await alice.getByRole('button', { name: 'Clear chat search' }).click();
+    await alice.getByRole('button', { name: /^All/ }).click();
+    await alice.locator(`.chat-list a[href="/chat/${ROOM}"]`).click();
     await bob.getByRole('link', { name: 'Room info', exact: true }).click();
     await bob.getByRole('link', { name: 'Back to room', exact: true }).click();
     await expect(bob.getByLabel('Message', { exact: true })).toBeVisible();
     await bob.getByRole('link', { name: 'Back to communities', exact: true }).click();
+    await captureDesign(bob, 'inbox-mobile');
+    await bob.setViewportSize({ width: 320, height: 568 });
+    await expect(bob.getByLabel('Search chats')).toBeInViewport();
+    await bob.getByText('About web chat', { exact: true }).click();
+    await expect(bob.locator('.chat-safety')).toHaveAttribute('open', '');
+    await expect(bob.getByLabel('Search chats')).toBeInViewport();
+    await expect.poll(() => bob.locator('.chat-sidebar-footer').evaluate(
+      (footer) => footer.getBoundingClientRect().bottom <= document.querySelector('.mobile-app-footer')!.getBoundingClientRect().top,
+    )).toBe(true);
+    await bob.getByText('About web chat', { exact: true }).click();
+    await captureDesign(bob, 'inbox-mobile-small');
+    await bob.setViewportSize({ width: 390, height: 844 });
     await openDmInSession(bob, a.pubkey);
     await bob.getByRole('link', { name: 'Back to chat', exact: true }).click();
     await bob.locator(`a[href="/chat/${ROOM}"]`).click();

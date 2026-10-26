@@ -121,9 +121,9 @@ const DmThreadView = () => {
           placeholder="Start a message"
           aria-label="Message"
           disabled={isSending}
-          className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
+          className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-10 w-10 shrink-0 rounded-full" aria-label="Send message">
+        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
           {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
@@ -136,16 +136,16 @@ const DmThreadView = () => {
     <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
       <div className="hidden h-full lg:block"><InboxView embedded /></div>
       <section className="chat-conversation flex min-w-0 flex-1 flex-col">
-      <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
+        <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
-      {!isConnected && session.isUnlocked && (
+        {!isConnected && session.isUnlocked && (
         <div className="border-b border-border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground">
           Connecting to the chat network…
         </div>
-      )}
+        )}
 
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6">
-        {session.isUnlocked && messages.length === 0 && (
+        <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6">
+          {session.isUnlocked && messages.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <Identicon address={npub} size={72} />
             <p className="text-lg font-semibold text-foreground">{displayName}</p>
@@ -153,24 +153,24 @@ const DmThreadView = () => {
               Start a conversation. Your messages are end-to-end encrypted (NIP-04).
             </p>
           </div>
-        )}
-        {!session.isUnlocked && (
+          )}
+          {!session.isUnlocked && (
           <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Chat is locked.
           </div>
-        )}
-        {messages.map((message) => (
-          <DmMessageBubble key={message.id} message={message} />
-        ))}
-      </div>
+          )}
+          {messages.map((message) => (
+            <DmMessageBubble key={message.id} message={message} />
+          ))}
+        </div>
 
-      <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
-        {renderComposer()}
-        {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
-      </div>
+        <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
+          {renderComposer()}
+          {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
+        </div>
 
-      <NostrLinkGate />
+        <NostrLinkGate />
       </section>
     </div>
   );

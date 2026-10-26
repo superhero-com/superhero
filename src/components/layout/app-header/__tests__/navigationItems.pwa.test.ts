@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import {
+  describe, expect, it, vi,
+} from 'vitest';
+import { isStandalone } from '@/utils/displayMode';
 import {
   getMobileFooterNavigationItems,
   getNavigationItems,
@@ -6,7 +9,6 @@ import {
   getMobileMoreNavigationItems,
   getActiveNavigationPath,
 } from '../navigationItems';
-import { isStandalone } from '@/utils/displayMode';
 
 const ids = (items: { id: string }[]) => items.map((item) => item.id);
 

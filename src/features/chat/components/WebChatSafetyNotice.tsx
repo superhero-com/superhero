@@ -20,7 +20,9 @@ export const WebChatSafetyNotice = () => (
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
           <a className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-            <Smartphone className="h-4 w-4" aria-hidden /> iOS app
+            <Smartphone className="h-4 w-4" aria-hidden />
+            {' '}
+            iOS app
           </a>
           <a className="text-primary underline-offset-2 hover:underline" href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
             Android app

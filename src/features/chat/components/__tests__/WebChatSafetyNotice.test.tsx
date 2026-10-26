@@ -5,8 +5,6 @@ import {
 
 import { WebChatSafetyNotice } from '../WebChatSafetyNotice';
 
-const DISMISS_KEY = 'superhero:chat:web-safety-notice-dismissed';
-
 describe('WebChatSafetyNotice', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -29,23 +27,22 @@ describe('WebChatSafetyNotice', () => {
     ).toContain('play.google.com');
   });
 
-  it('stays dismissed once dismissed', () => {
+  it('starts collapsed and opens its explanation on request', () => {
     const { unmount } = render(<WebChatSafetyNotice />);
+    const details = screen.getByText(/Chat works on web/i).closest('details');
+    expect(details?.open).toBe(false);
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Dismiss chat security recommendation' }),
-    );
-    expect(screen.queryByLabelText('Chat security recommendation')).toBeNull();
-    expect(localStorage.getItem(DISMISS_KEY)).toBe('1');
+    fireEvent.click(screen.getByText(/Chat works on web/i));
+    expect(details?.open).toBe(true);
+    expect(screen.getByText(/Browser extensions with access/i)).toBeTruthy();
 
     unmount();
     render(<WebChatSafetyNotice />);
-    expect(screen.queryByLabelText('Chat security recommendation')).toBeNull();
+    expect(screen.getByText(/Chat works on web/i).closest('details')?.open).toBe(false);
   });
 
-  it('still renders and still dismisses when storage throws', () => {
-    // Private windows and blocked site data make both calls throw. Chat must
-    // not break over a dismissal preference.
+  it('still renders and expands when storage throws', () => {
+    // The disclosure is native and needs no site storage, including in private windows.
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
@@ -56,9 +53,7 @@ describe('WebChatSafetyNotice', () => {
     render(<WebChatSafetyNotice />);
     expect(screen.getByLabelText('Chat security recommendation')).toBeTruthy();
 
-    expect(() => fireEvent.click(
-      screen.getByRole('button', { name: 'Dismiss chat security recommendation' }),
-    )).not.toThrow();
-    expect(screen.queryByLabelText('Chat security recommendation')).toBeNull();
+    expect(() => fireEvent.click(screen.getByText(/Chat works on web/i))).not.toThrow();
+    expect(screen.getByText(/Chat works on web/i).closest('details')?.open).toBe(true);
   });
 });

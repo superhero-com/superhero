@@ -39,6 +39,11 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
   const [startOpen, setStartOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const { rows, counts, roomsLoading } = useChatList({ activeTab, searchQuery });
+  let emptyMessage = 'No conversations yet. Start a new chat.';
+  if (activeTab === 'communities') {
+    emptyMessage = 'No communities yet. Hold a community token to join a room.';
+  }
+  if (searchQuery) emptyMessage = 'No matching conversations.';
 
   if (!isChatRelayConfigured()) return embedded ? null : <ChatUnavailableNotice />;
 
@@ -47,15 +52,15 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <h1 className="ui-page-title m-0 text-xl">Messages</h1>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" asChild aria-label="Relay settings" title="Relay settings">
+          <Button variant="ghost" size="sm" asChild aria-label="Relay settings" title="Relay settings" className="min-h-11 min-w-11">
             <Link to="/chat/settings/relays"><Settings className="h-5 w-5" /></Link>
           </Button>
           {session.isUnlocked && (
-            <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)} aria-label="Edit chat profile" title="Edit chat profile">
+            <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)} aria-label="Edit chat profile" title="Edit chat profile" className="min-h-11 min-w-11">
               <UserRoundPen className="h-5 w-5" />
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={() => setStartOpen(true)} disabled={!activeAccount} aria-label="New chat" title="New chat">
+          <Button variant="ghost" size="sm" onClick={() => setStartOpen(true)} disabled={!activeAccount} aria-label="New chat" title="New chat" className="min-h-11 min-w-11">
             <MessageSquarePlus className="h-5 w-5" />
           </Button>
         </div>
@@ -63,10 +68,11 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
       <WebChatSafetyNotice />
       {activeAccount && (
         <>
-          <label className="relative mx-4 mt-3 block">
+          <label htmlFor="chat-conversation-search" className="relative mx-4 mt-3 block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <span className="sr-only">Search conversations</span>
             <input
+              id="chat-conversation-search"
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -84,7 +90,9 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
                 onClick={() => setActiveTab(tab.key)}
                 className={`min-h-11 flex-1 border-b-2 px-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary ${activeTab === tab.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:bg-card hover:text-foreground'}`}
               >
-                {tab.label} <span className="text-xs font-normal">{counts[tab.key]}</span>
+                {tab.label}
+                {' '}
+                <span className="text-xs font-normal">{counts[tab.key]}</span>
               </button>
             ))}
           </div>
@@ -109,13 +117,14 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
           </div>
         )}
         {activeAccount && activeTab !== 'dms' && roomsLoading && (
-          <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground"><Spinner className="h-4 w-4" />Checking access…</div>
+          <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+            <Spinner className="h-4 w-4" />
+            Checking access…
+          </div>
         )}
         {activeAccount && rows.length === 0 && !roomsLoading && (
           <div className="px-6 py-14 text-center text-sm text-muted-foreground">
-            {searchQuery ? 'No matching conversations.' : activeTab === 'communities'
-              ? 'No communities yet. Hold a community token to join a room.'
-              : 'No conversations yet. Start a new chat.'}
+            {emptyMessage}
           </div>
         )}
         <ul className="divide-y divide-border">
@@ -127,10 +136,25 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
               return (
                 <li key={`room_${room.sale_address}`}>
                   <Link to={path} aria-current={pathname === path ? 'page' : undefined} className={`flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-card focus-visible:outline-2 focus-visible:outline-primary ${pathname === path ? 'bg-card' : ''}`}>
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">#{room.symbol.slice(0, 2).toUpperCase()}</span>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                      #
+                      {room.symbol.slice(0, 2).toUpperCase()}
+                    </span>
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1 truncate font-semibold text-foreground">#{room.symbol}{room.is_private && <Lock className="h-3 w-3 text-muted-foreground" aria-label="Private room" />}</span>
-                      {threshold && <span className="block truncate text-xs text-muted-foreground">Hold ≥ {threshold} #{room.symbol}</span>}
+                      <span className="flex items-center gap-1 truncate font-semibold text-foreground">
+                        #
+                        {room.symbol}
+                        {room.is_private && <Lock className="h-3 w-3 text-muted-foreground" aria-label="Private room" />}
+                      </span>
+                      {threshold && (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        Hold ≥
+                        {threshold}
+                        {' '}
+                        #
+                        {room.symbol}
+                      </span>
+                      )}
                     </span>
                     <RoomStatusChip room={room} />
                   </Link>

@@ -143,9 +143,9 @@ const RoomView = () => {
           placeholder={`Message #${room?.symbol ?? 'room'}`}
           aria-label="Message"
           disabled={isSending}
-          className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
+          className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-10 w-10 shrink-0 rounded-full" aria-label="Send message">
+        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
           {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
@@ -156,37 +156,37 @@ const RoomView = () => {
     <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
       <div className="hidden h-full lg:block"><InboxView embedded /></div>
       <section className="chat-conversation flex min-w-0 flex-1 flex-col">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-3">
-        <Link
-          to="/chat"
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Back to communities"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 truncate text-lg font-semibold text-foreground">
-          {title}
-        </h1>
-        <Link
-          to={`/chat/${saleAddress}/info`}
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Room info"
-        >
-          <Info className="h-5 w-5" />
-        </Link>
-      </header>
+        <header className="flex items-center gap-2 border-b border-border px-3 py-3">
+          <Link
+            to="/chat"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            aria-label="Back to communities"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="flex-1 truncate text-lg font-semibold text-foreground">
+            {title}
+          </h1>
+          <Link
+            to={`/chat/${saleAddress}/info`}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            aria-label="Room info"
+          >
+            <Info className="h-5 w-5" />
+          </Link>
+        </header>
 
-      <div
-        ref={listRef}
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6"
-      >
-        {!isReady && (
+        <div
+          ref={listRef}
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6"
+        >
+          {!isReady && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Connecting…
           </div>
-        )}
-        {isReady && hasEarlier && messages.length > 0 && (
+          )}
+          {isReady && hasEarlier && messages.length > 0 && (
           <button
             type="button"
             onClick={() => {
@@ -197,24 +197,24 @@ const RoomView = () => {
           >
             {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
           </button>
-        )}
-        {isReady && messages.length === 0 && (
+          )}
+          {isReady && messages.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No messages yet.
           </p>
-        )}
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-      </div>
+          )}
+          {messages.map((message) => (
+            <MessageBubble key={message.id} message={message} />
+          ))}
+        </div>
 
-      <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
-        {renderComposer()}
-        {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
-      </div>
+        <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
+          {renderComposer()}
+          {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
+        </div>
 
-      {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
-      <NostrLinkGate />
+        {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
+        <NostrLinkGate />
       </section>
     </div>
   );

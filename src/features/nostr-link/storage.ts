@@ -38,3 +38,57 @@ export function clearDismissal(address: string): void {
     // Non-fatal.
   }
 }
+
+// Public submission receipts bridge the account indexer's delay and 10-minute
+// account cache. They only suppress duplicate registration UI: they never unlock
+// a signer or grant room access. Always read the API before using this fallback.
+const submissionKey = (api: string, address: string) => (
+  `nostr_link_submitted:${api}:${address}`
+);
+
+export function rememberNostrSubmission(
+  api: string,
+  address: string,
+  npub: string,
+  txHash: string,
+) {
+  try {
+    localStorage.setItem(submissionKey(api, address), JSON.stringify({
+      npub, txHash, submittedAt: Date.now(),
+    }));
+  } catch {
+    // Storage can be unavailable; the API remains the source of truth.
+  }
+}
+
+export function clearNostrSubmission(api: string, address: string) {
+  try {
+    localStorage.removeItem(submissionKey(api, address));
+  } catch {
+    // Non-fatal.
+  }
+}
+
+interface NostrSubmission {
+  npub: string;
+  txHash: string;
+  submittedAt: number;
+}
+
+export function readNostrSubmission(api: string, address: string): NostrSubmission | null {
+  try {
+    const raw = localStorage.getItem(submissionKey(api, address));
+    if (!raw) return null;
+    const receipt = JSON.parse(raw);
+    const age = Date.now() - receipt.submittedAt;
+    if (typeof receipt.npub !== 'string' || !receipt.npub.startsWith('npub1')
+      || typeof receipt.txHash !== 'string' || !receipt.txHash.startsWith('th_')
+      || !Number.isFinite(receipt.submittedAt) || age < 0) {
+      clearNostrSubmission(api, address);
+      return null;
+    }
+    return receipt;
+  } catch {
+    return null;
+  }
+}

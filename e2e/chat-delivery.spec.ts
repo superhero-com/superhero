@@ -58,7 +58,7 @@ async function unlock(page: Page) {
 }
 
 /** Create a real encrypted wallet through the UI, then use its chat unlock prompt. */
-async function onboard(page: Page) {
+async function onboard(page: Page, register = false) {
   await page.goto('/');
   await page.getByRole('button', { name: /connect wallet/i }).filter({ visible: true }).first().click();
   await page.getByRole('button', { name: /^Create a wallet/ }).click();
@@ -86,6 +86,15 @@ async function onboard(page: Page) {
     localStorage.setItem('account:activeAccount', JSON.stringify(active));
   }, address);
   await page.goto('/chat');
+  if (register) {
+    await page.getByRole('button', { name: 'Enable', exact: true }).click();
+    await page.locator('input[type="password"]').fill(PASSPHRASE);
+    await page.getByRole('button', { name: 'Approve & link', exact: true }).click();
+    await page.getByRole('button', { name: 'Approve & sign', exact: true }).waitFor();
+    await page.locator('input[type="password"]').fill(PASSPHRASE);
+    await page.getByRole('button', { name: 'Approve & sign', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
+  }
   await unlock(page);
   // Read only the public identity; all keys were derived by the real wallet flow.
   const pubkey: string = await page.evaluate(async () => {
@@ -305,4 +314,66 @@ test('two wallets exchange DMs and private-room messages; history, revocation an
     await contextA.close().catch(() => {});
     await contextB.close().catch(() => {});
   }
+});
+
+test('fresh registration survives refresh while the account API is stale or unavailable', async ({ page }) => {
+  await prepare(page);
+  let linkedNpub = '';
+  let submissions = 0;
+  let lookupMode: 'stale' | 'missing' | 'offline' | 'linked' = 'stale';
+  await page.route(/\/api\/accounts\/ak_/, (route) => {
+    if (lookupMode === 'offline') return route.fulfill({ status: 503, json: { message: 'Unavailable' } });
+    if (lookupMode === 'missing') return route.fulfill({ status: 404, json: { message: 'Account not found' } });
+    return route.fulfill({ json: { links: lookupMode === 'linked' ? { nostr: linkedNpub } : {} } });
+  });
+  await page.route('**/api/address-links/nostr/claim', (route) => {
+    const { address, value } = route.request().postDataJSON();
+    linkedNpub = value;
+    return route.fulfill({ json: { message: `link:${address}:nostr:${value}:0`, nonce: 0, value } });
+  });
+  await page.route('**/api/address-links/nostr/submit', (route) => {
+    submissions += 1;
+    return route.fulfill({ status: 201, json: { txHash: 'th_browser_test' } });
+  });
+  await onboard(page, true);
+  const modes = ['stale', 'missing', 'offline'] as const;
+  for (let index = 0; index < modes.length; index += 1) {
+    lookupMode = modes[index];
+    const checked = page.waitForResponse(/\/api\/accounts\/ak_/);
+    // eslint-disable-next-line no-await-in-loop
+    await page.reload();
+    // eslint-disable-next-line no-await-in-loop
+    await checked;
+    // eslint-disable-next-line no-await-in-loop
+    await expect(page.getByRole('button', { name: 'Unlock chat', exact: true })).toBeVisible();
+    // Unlock is a separate session grant; it must not trigger registration again.
+    // eslint-disable-next-line no-await-in-loop
+    await unlock(page);
+    // eslint-disable-next-line no-await-in-loop
+    await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
+    expect(submissions).toBe(1);
+  }
+  // Prolonged indexing must also offer a check, never a duplicate registration.
+  await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((item) => item.startsWith('nostr_link_submitted:'))!;
+    const receipt = JSON.parse(localStorage.getItem(key)!);
+    receipt.submittedAt = Date.now() - 16 * 60_000;
+    localStorage.setItem(key, JSON.stringify(receipt));
+  });
+  lookupMode = 'stale';
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText('Could not check your chat registration');
+  await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
+  lookupMode = 'linked';
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(page.getByRole('alert')).toBeHidden();
+  // Once confirmed by the backend, a later network failure is unknown, not unlinked.
+  lookupMode = 'offline';
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText('Could not check your chat registration');
+  await expect(page.getByRole('heading', { name: 'Enable Chat', exact: true })).toBeHidden();
+  lookupMode = 'linked';
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(page.getByRole('alert')).toBeHidden();
+  expect(submissions).toBe(1);
 });

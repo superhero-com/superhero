@@ -1,5 +1,4 @@
 /* eslint-disable
-  @typescript-eslint/no-unused-vars,
   import/no-named-as-default,
   react/function-component-definition,
   no-nested-ternary,
@@ -18,12 +17,10 @@ import { TokensService } from '@/api/generated/services/TokensService';
 import { TokenHolderDto } from '@/api/generated/models/TokenHolderDto';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { Decimal } from '@/libs/decimal';
-import { toAe } from '@aeternity/aepp-sdk';
 import TokenPriceFormatter from '@/features/shared/components/TokenPriceFormatter';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';
-import AddressChip from '../AddressChip';
 
 // Pagination response interface
 interface PaginatedHoldersResponse {

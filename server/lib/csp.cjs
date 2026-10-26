@@ -50,21 +50,6 @@ const CONNECT_SRC_ALLOWLIST = [
   'https://api.openverse.org',
 ];
 
-// The AE<->ETH bridge and Buy-AE widget. Their routes redirect to /defi/swap (src/routes.tsx),
-// so the code is tree-shaken out of the bundle and these origins stay off the header. Turn
-// AE_ETH_BRIDGE_ENABLED on in the same change that restores those routes: Ethplorer is a literal
-// in our own source, but the Reown/WalletConnect origins live inside @reown/appkit-common, so
-// nothing in src/ reveals them and the wallet modal would come up empty.
-// pulse.walletconnect.org is deliberately excluded — AppKit still posts INITIALIZE and
-// CONNECT_SUCCESS there despite `analytics: false`, and blocking it costs no functionality.
-const BRIDGE_CONNECT_SRC = [
-  'https://api.ethplorer.io',
-  'https://api.web3modal.org',
-  'wss://relay.walletconnect.org',
-  'https://rpc.walletconnect.org',
-];
-const BRIDGE_FRAME_SRC = ['https://verify.walletconnect.org'];
-
 /**
  * Mirrors the scheme guard in src/features/chat/nostr/relay-url.ts, so the header and the
  * client's origin gate accept exactly the same set — a relay one allows and the other refuses
@@ -105,11 +90,8 @@ const CHAT_RELAY_ALLOWLIST = ['wss://relay.superhero.chat'];
  * calls this once at startup rather than rebuilding the directives on every response.
  */
 function createCspPolicy(env = process.env) {
-  const bridgeEnabled = env.AE_ETH_BRIDGE_ENABLED === 'true';
-
   const connectSrc = Array.from(new Set([
     ...CONNECT_SRC_ALLOWLIST,
-    ...(bridgeEnabled ? BRIDGE_CONNECT_SRC : []),
     ...RUNTIME_CONNECT_ENV_KEYS.map((k) => originOf(env[k])).filter(Boolean),
     ...CHAT_RELAY_ALLOWLIST,
     ...relayConnectOrigins(env),
@@ -122,7 +104,6 @@ function createCspPolicy(env = process.env) {
     'https://www.youtube-nocookie.com',
     'https://open.spotify.com',
     `https://${env.JITSI_DOMAIN || 'meet.jit.si'}`,
-    ...(bridgeEnabled ? BRIDGE_FRAME_SRC : []),
   ].join(' ');
 
   const buildCsp = (nonce) => [
@@ -160,8 +141,6 @@ module.exports = {
   CSP_REPORT_PATH,
   CONNECT_SRC_ALLOWLIST,
   CHAT_RELAY_ALLOWLIST,
-  BRIDGE_CONNECT_SRC,
-  BRIDGE_FRAME_SRC,
   RUNTIME_CONNECT_ENV_KEYS,
   createCspPolicy,
   isSecureRelayUrl,

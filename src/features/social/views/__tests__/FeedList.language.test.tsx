@@ -22,6 +22,7 @@ vi.mock('@/libs/WebSocketClient', () => ({ default: { subscribeToNewTokenSales: 
 vi.mock('@/seo/Head', () => ({ Head: () => null }));
 vi.mock('@/components/layout/Shell', () => ({ default: ({ children }: any) => children }));
 vi.mock('@/components/layout/RightRail', () => ({ default: () => null }));
+vi.mock('@/components/layout/MobileNetworkStats', () => ({ default: () => null }));
 vi.mock('@/components/hero-banner/HeroBannerCarousel', () => ({ default: () => null }));
 vi.mock('@/components/onboarding/RewardsOnboarding', () => ({ default: () => null }));
 vi.mock('../../components/CreatePost', () => ({ default: () => null }));
@@ -30,6 +31,9 @@ vi.mock('../../components/ReplyToFeedItem', () => ({ default: ({ item }: any) =>
 vi.mock('../../components/TokenCreatedActivityItem', () => ({ default: () => <p>Token activity</p> }));
 vi.mock('../../components/TradeActivityItem', () => ({ default: () => <p>Trade activity</p> }));
 vi.mock('../../components/TrendingAssetsFeedItem', () => ({ default: () => null }));
+vi.mock('../../hooks/useNewPostsWatcher', () => ({
+  useNewPostsWatcher: () => ({ count: 0, acknowledge: () => {} }),
+}));
 
 const page = (items: any[] = []) => ({ items, meta: { currentPage: 1, totalPages: 1 } });
 const post = (id: string) => ({ id, content: id, created_at: '2026-09-20T12:00:00Z' });

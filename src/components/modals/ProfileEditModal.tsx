@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import {
   getLinkedBio,
   getLinkedPreferredAensName,
@@ -20,7 +20,9 @@ import {
   SuperheroApi,
 } from '@/api/backend';
 import { CONFIG } from '@/config';
-import { chainNamesAtom } from '@/atoms/walletAtoms';
+import { chainNamesAtom, preferredChainNamesAtom } from '@/atoms/walletAtoms';
+import { useApplyPendingChainName } from '@/hooks/usePreferredChainName';
+import { isPreferredChainNamePending } from '@/utils/preferredChainName';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useModal } from '@/hooks/useModal';
 import { useProfile } from '@/hooks/useProfile';
@@ -46,7 +48,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
-  Globe, HelpCircle, Link2,
+  Globe, HelpCircle, Link2, Plus,
 } from 'lucide-react';
 import IconDiamond from '@/svg/iconDiamond.svg?react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
@@ -380,6 +382,13 @@ const ProfileEditModal = ({
     notifyError,
   } = useTransactionNotification();
   const setChainNames = useSetAtom(chainNamesAtom);
+  const applyPendingChainName = useApplyPendingChainName();
+  const preferredChainNames = useAtomValue(preferredChainNamesAtom);
+  const preferredChainNamesRef = useRef(preferredChainNames);
+  preferredChainNamesRef.current = preferredChainNames;
+  // Whether the account had a preferred name linked when the editor loaded: a
+  // newly claimed name only becomes the display name when none is linked.
+  const hasLinkedPreferredNameRef = useRef(false);
   const [connectingX, setConnectingX] = useState(false);
   const { push } = useToast();
   const { activeAccount } = useAeSdk();
@@ -398,6 +407,9 @@ const ProfileEditModal = ({
   const [xUsername, setXUsername] = useState<string | null>(null);
   const [xSectionReady, setXSectionReady] = useState(false);
   const [availableChainNames, setAvailableChainNames] = useState<OwnedChainNameOption[]>([]);
+  // Owners pick their preferred name from a dropdown; this opens the claim
+  // field next to it so they can register another one.
+  const [claimFormOpen, setClaimFormOpen] = useState(false);
   const [claiming, setClaiming] = useState(false);
   // Stays true for the whole claim operation, including the background polling that runs after
   // `claiming` is turned off in onSubmitted. Used to keep the claim button disabled so a second
@@ -462,6 +474,9 @@ const ProfileEditModal = ({
         if (linkedSite) site = linkedSite;
         const linkedPreferredName = getLinkedPreferredAensName(accountRecord);
         if (linkedPreferredName) chainName = linkedPreferredName;
+        hasLinkedPreferredNameRef.current = Boolean(
+          accountRecord?.links?.prefaens || accountRecord?.links?.prefered_aens_name,
+        );
       } catch {
         // ignore account fetch errors; X section falls back to unlinked
       }
@@ -490,6 +505,12 @@ const ProfileEditModal = ({
       }
       if (chainName === '' && chainProfile?.chain_name) {
         chainName = normalizeChainName(chainProfile.chain_name);
+      }
+
+      // A name picked or claimed moments ago that the API has not indexed yet.
+      const pendingEntry = preferredChainNamesRef.current[targetAddress];
+      if (isPreferredChainNamePending(pendingEntry)) {
+        chainName = pendingEntry?.name ?? '';
       }
 
       let ownedChainNames: OwnedChainNameOption[] = [];
@@ -547,6 +568,7 @@ const ProfileEditModal = ({
       setSponsorshipStatus('idle');
       setShowSuperheroIdInfo(false);
       setShowChainNameInfo(false);
+      setClaimFormOpen(false);
     }
   }, [open]);
 
@@ -613,9 +635,12 @@ const ProfileEditModal = ({
     }
   }, [normalizedClaimValue, claimValidationError]);
 
+  const hasOwnedChainNames = availableChainNames.length > 0;
+  const showClaimForm = !hasOwnedChainNames || claimFormOpen;
+
   // Throttled availability check for the typed name (only relevant while claiming a new name).
   useEffect(() => {
-    if (!open || availableChainNames.length > 0) return undefined;
+    if (!open || !showClaimForm) return undefined;
 
     availabilityRequestIdRef.current += 1;
     const requestId = availabilityRequestIdRef.current;
@@ -656,7 +681,7 @@ const ProfileEditModal = ({
       window.clearTimeout(timeoutId);
     };
   }, [
-    availableChainNames.length,
+    showClaimForm,
     checkNameAvailability,
     normalizedClaimValue,
     open,
@@ -667,7 +692,7 @@ const ProfileEditModal = ({
   // Throttled check of whether the sponsor account can fund this name. Drives the
   // "Free" / price hint and decides whether the claim is sponsored or self-funded.
   useEffect(() => {
-    if (!open || availableChainNames.length > 0) return undefined;
+    if (!open || !showClaimForm) return undefined;
 
     sponsorshipRequestIdRef.current += 1;
     const requestId = sponsorshipRequestIdRef.current;
@@ -697,7 +722,7 @@ const ProfileEditModal = ({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [availableChainNames.length, normalizedClaimValue, open, claimValidationError]);
+  }, [showClaimForm, normalizedClaimValue, open, claimValidationError]);
 
   const getClaimNotificationPayload = (
     name: string,
@@ -719,13 +744,28 @@ const ProfileEditModal = ({
         : [{ name: claimedName, expiresAt: null }, ...prev]
           .sort((a, b) => a.name.localeCompare(b.name))
     ));
-    setForm((prev) => ({ ...prev, chain_name: claimedName }));
+    // Pre-select it to save as the preferred name, unless the owner already
+    // has one selected: registering another name should not replace it.
+    setForm((prev) => (prev.chain_name ? prev : { ...prev, chain_name: claimedName }));
+    setClaimFormOpen(false);
     setClaimValue('');
     setClaimError(null);
     setAvailabilityStatus('idle');
     setLastCheckedValue('');
     setSponsorship(null);
     setSponsorshipStatus('idle');
+  };
+
+  // A claimed name only becomes the display name when no preferred name is
+  // linked; otherwise it just joins the owned names and the profile refreshes.
+  const showClaimedName = (claimAddressValue: string, claimedName: string) => {
+    setChainNames((prev) => ({ ...prev, [claimAddressValue]: claimedName }));
+    if (!hasLinkedPreferredNameRef.current) {
+      applyPendingChainName(claimAddressValue, claimedName);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', claimAddressValue] });
+    queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', claimAddressValue] });
   };
 
   const onClaim = async () => {
@@ -823,12 +863,7 @@ const ProfileEditModal = ({
             }),
           });
           const claimedName = String(result.name || `${normalizedClaimValue}.chain`).trim().toLowerCase();
-          setChainNames((prev) => ({
-            ...prev,
-            [targetClaimAddress]: claimedName,
-          }));
-          queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', targetClaimAddress] });
-          queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', targetClaimAddress] });
+          showClaimedName(targetClaimAddress, claimedName);
           notifyConfirmed({
             type: TxPayloadType.ClaimChainName,
             name: normalizedClaimValue,
@@ -868,12 +903,7 @@ const ProfileEditModal = ({
 
       claimPromise.then((finalStatus) => {
         const claimedName = String(finalStatus.name || `${normalizedClaimValue}.chain`).trim().toLowerCase();
-        setChainNames((prev) => ({
-          ...prev,
-          [targetClaimAddress]: claimedName,
-        }));
-        queryClient.invalidateQueries({ queryKey: ['SuperheroApi.getProfile', targetClaimAddress] });
-        queryClient.invalidateQueries({ queryKey: ['AccountsService.getAccount', targetClaimAddress] });
+        showClaimedName(targetClaimAddress, claimedName);
         notifyConfirmed({
           type: TxPayloadType.ClaimChainName,
           name: normalizedClaimValue,
@@ -1004,6 +1034,10 @@ const ProfileEditModal = ({
         } else {
           await unlinkPreferredAensName(targetAddress);
         }
+        // The link lands on chain first and in the API later: show the new
+        // name right away and keep re-reading the account until it catches up.
+        hasLinkedPreferredNameRef.current = Boolean(trimmedForm.chain_name);
+        applyPendingChainName(targetAddress, trimmedForm.chain_name || null);
       }
       if (websiteChanged) {
         if (trimmedForm.website) {
@@ -1127,7 +1161,6 @@ const ProfileEditModal = ({
   }
 
   const targetAddress = (address as string) || (activeAccount as string);
-  const hasOwnedChainNames = availableChainNames.length > 0;
   // Guest: no wallet connected. The modal stays usable but every primary action funnels the
   // visitor into onboarding instead of attempting a real edit/link.
   const isGuest = !activeAccount;
@@ -1279,9 +1312,20 @@ const ProfileEditModal = ({
                     <span>AENS</span>
                     <span className="text-blue-400">{t('labels.preferredName')}</span>
                   </div>
+                  {!claimFormOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setClaimFormOpen(true)}
+                      className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/20 py-2 font-sans text-xs text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.04] transition-all"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('labels.claimChainName')}
+                    </button>
+                  )}
                 </div>
-              ) : (
-              // The user owns no names — let them type one to claim it directly.
+              ) : null}
+              {showClaimForm ? (
+              // No names yet, or the owner asked to register another one.
                 <>
                   <div className="mt-2 rounded-xl border border-white/[0.08] bg-black/35 p-2 font-mono">
                     <div className="flex items-center gap-2">
@@ -1332,11 +1376,13 @@ const ProfileEditModal = ({
                         {claimButtonLabel}
                       </Button>
                     </div>
-                    <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] px-1 pt-2 text-[9px] text-white/40">
-                      <span>{t('messages.chainNameClaimHint')}</span>
-                      <span className={availabilityStatus === 'available' ? 'text-green-400' : 'text-blue-400'}>
-                        {availabilityStatus === 'available' ? t('labels.available') : ''}
-                      </span>
+                    <div className="mt-2 flex items-start justify-between gap-3 border-t border-white/[0.05] px-1 pt-2 text-[11px] leading-snug text-white/50">
+                      <p className="m-0 min-w-0 flex-1 text-left">{t('messages.chainNameClaimHint')}</p>
+                      {availabilityStatus === 'available' && (
+                        <span className="shrink-0 whitespace-nowrap font-semibold text-green-400">
+                          {t('labels.available')}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isClaimTooShort && (
@@ -1362,9 +1408,14 @@ const ProfileEditModal = ({
                       </div>
                     )
                   )}
+                  {claimInFlight && !claiming && (
+                    <p className="mt-2 text-xs text-blue-300" role="status">
+                      {t('messages.chainNameClaimProcessing')}
+                    </p>
+                  )}
                   {claimError && <p className="mt-2 text-xs text-red-300">{claimError}</p>}
                 </>
-              )}
+              ) : null}
             </div>
 
             {(CONFIG as any).X_OAUTH_CLIENT_ID ? (

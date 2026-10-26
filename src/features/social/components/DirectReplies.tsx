@@ -31,6 +31,9 @@ const DirectReplies = ({
       return undefined;
     },
     initialPageParam: 1,
+    // No websocket event for new replies: refresh while the tab is visible.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 
   const list: PostDto[] = useMemo(
@@ -87,7 +90,8 @@ const DirectReplies = ({
           item={reply}
           commentCount={reply.total_comments ?? 0}
           hideParentContext
-          allowInlineRepliesToggle={false}
+          allowInlineRepliesToggle={(reply.total_comments ?? 0) > 0}
+          threadDepth={0}
           onOpenPost={(replyId) => onOpenPost(String(replyId).replace(/_v3$/, ''))}
         />
       ))}

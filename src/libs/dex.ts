@@ -150,6 +150,7 @@ export interface Aex9ContractApi extends ContractMethodsBase {
 
 interface PairContractApi extends ContractMethodsBase {
   token0: () => ContractCallResult<string>;
+  token1: () => ContractCallResult<string>;
   get_reserves: () => ContractCallResult<{ reserve0: bigint | string; reserve1: bigint | string }>;
   allowance: (
     params: { from_account: string; for_account: string },
@@ -327,6 +328,44 @@ export async function ensurePairAllowanceForRouter(
   }
 }
 
+/** Reads the owner's LP balance straight from the pair contract (not the indexer). */
+export async function getPairBalance(
+  sdk: any,
+  pairAddress: string,
+  owner: string,
+): Promise<bigint> {
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
+  const { decodedResult } = await pair.balance(owner);
+  return BigInt(decodedResult ?? 0);
+}
+
+/** Reads token order, reserves and LP supply straight from the pair contract (not the indexer). */
+export async function getPairState(sdk: any, pairAddress: string): Promise<{
+  token0: string;
+  token1: string;
+  reserve0: bigint;
+  reserve1: bigint;
+  totalSupply: bigint;
+}> {
+  const pair = await initializeContractTyped<PairContractApi>(
+    sdk,
+    { aci: ACI.Pair, address: pairAddress },
+  );
+  const [token0, token1, reserves, supply] = await Promise.all([
+    pair.token0(), pair.token1(), pair.get_reserves(), pair.total_supply(),
+  ]);
+  return {
+    token0: token0.decodedResult,
+    token1: token1.decodedResult,
+    reserve0: BigInt(reserves.decodedResult.reserve0),
+    reserve1: BigInt(reserves.decodedResult.reserve1),
+    totalSupply: BigInt(supply.decodedResult),
+  };
+}
+
 // Pair helpers and liquidity flows
 export async function getPairAddress(
   sdk: any,
@@ -378,114 +417,4 @@ export async function getPairInfo(
   return {
     pairAddress: addr, totalSupply, reserveA, reserveB,
   };
-}
-
-type AddLiquidityParams = {
-  tokenA: string; // ct_
-  tokenB: string; // ct_
-  amountADesired: bigint;
-  amountBDesired: bigint;
-  slippagePct: number;
-  minimumLiquidity?: bigint | null;
-  toAccount: string; // ak_
-  deadlineMs: number; // Date.now() + mins*60k
-};
-
-export async function addLiquidity(
-  sdk: any,
-  router: any,
-  params: AddLiquidityParams,
-): Promise<any> {
-  const minA = subSlippage(params.amountADesired, params.slippagePct);
-  const minB = subSlippage(params.amountBDesired, params.slippagePct);
-  const minL = params.minimumLiquidity ?? MINIMUM_LIQUIDITY;
-  return router.add_liquidity(
-    params.tokenA,
-    params.tokenB,
-    params.amountADesired,
-    params.amountBDesired,
-    minA,
-    minB,
-    params.toAccount,
-    minL,
-    BigInt(params.deadlineMs),
-  );
-}
-
-type AddLiquidityAeParams = {
-  token: string; // ct_ for the non-AE token
-  amountTokenDesired: bigint;
-  amountAeDesired: bigint;
-  slippagePct: number;
-  minimumLiquidity?: bigint | null;
-  toAccount: string; // ak_
-  deadlineMs: number;
-};
-
-export async function addLiquidityAe(
-  sdk: any,
-  router: any,
-  params: AddLiquidityAeParams,
-): Promise<any> {
-  const minT = subSlippage(params.amountTokenDesired, params.slippagePct);
-  const minAe = subSlippage(params.amountAeDesired, params.slippagePct);
-  const minL = params.minimumLiquidity ?? MINIMUM_LIQUIDITY;
-  return router.add_liquidity_ae(
-    params.token,
-    params.amountTokenDesired,
-    minT,
-    minAe,
-    params.toAccount,
-    minL,
-    BigInt(params.deadlineMs),
-    { amount: params.amountAeDesired.toString() },
-  );
-}
-
-type RemoveLiquidityParams = {
-  tokenA: string;
-  tokenB: string;
-  liquidity: bigint;
-  minAmountA: bigint;
-  minAmountB: bigint;
-  toAccount: string;
-  deadlineMs: number;
-};
-
-export async function removeLiquidity(
-  router: any,
-  params: RemoveLiquidityParams,
-): Promise<any> {
-  return router.remove_liquidity(
-    params.tokenA,
-    params.tokenB,
-    params.liquidity,
-    params.minAmountA,
-    params.minAmountB,
-    params.toAccount,
-    BigInt(params.deadlineMs),
-  );
-}
-
-type RemoveLiquidityAeParams = {
-  token: string;
-  liquidity: bigint;
-  minAmountToken: bigint;
-  minAmountAe: bigint;
-  toAccount: string;
-  deadlineMs: number;
-};
-
-export async function removeLiquidityAe(
-  router: any,
-  params: RemoveLiquidityAeParams,
-): Promise<any> {
-  return router.remove_liquidity_ae(
-    params.token,
-    params.liquidity,
-    params.minAmountToken,
-    params.minAmountAe,
-    params.toAccount,
-    BigInt(params.deadlineMs),
-  );
 }

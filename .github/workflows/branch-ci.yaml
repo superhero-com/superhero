@@ -42,6 +42,8 @@ jobs:
 
       - name: Run tests
         run: npm run test
+        env:
+          DM_LOCAL_E2E: '1'
 
   # The CSP is the backstop in front of seed custody, so it needs a gate that fails the build
   # rather than a manual soak. The origin check catches an allowlist that has fallen behind the
@@ -75,13 +77,16 @@ jobs:
         run: npm run test:e2e:csp
 
       # Which way in each surface offers — passkey on both, seed import in the app
-      # only, external-wallet connect on the web only, chat in the app only. Every
+      # only, external-wallet connect on the web only, chat in both mobile surfaces. Every
       # one of these regresses invisibly (an option that should not be there works
       # right up until the user needs the key back), and they are the only e2e that
       # drives a real WebAuthn ceremony, so they run here rather than in the Docker
       # suite nothing gates on.
       - name: Pin the per-surface wallet and chat rules
         run: npm run test:e2e:wallet-surfaces
+
+      - name: Verify two-wallet chat and token-room delivery
+        run: npm run test:e2e:chat
 
   screenshots:
     runs-on: ubuntu-latest

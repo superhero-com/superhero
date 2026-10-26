@@ -4,6 +4,8 @@ import React, {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
+import { activeAccountAtom } from '../../../atoms/accountAtoms';
 import type { PostDto } from '../../../api/generated';
 import { SuperheroApi } from '../../../api/backend';
 import { usePostLanguageFilter } from '../../../hooks/usePostLanguageFilter';
@@ -12,12 +14,16 @@ import PostLanguageEmptyState from '../components/PostLanguageEmptyState';
 import PostLanguageErrorState from '../components/PostLanguageErrorState';
 import WebSocketClient from '../../../libs/WebSocketClient';
 import AeButton from '../../../components/AeButton';
+import Spinner from '../../../components/Spinner';
 import HeroBannerCarousel from '../../../components/hero-banner/HeroBannerCarousel';
 import Shell from '../../../components/layout/Shell';
 import RightRail from '../../../components/layout/RightRail';
+import MobileNetworkStats from '../../../components/layout/MobileNetworkStats';
 import CreatePost, { CreatePostRef } from '../components/CreatePost';
 import SortControls, { type PopularWeights } from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
+import NewPostsPill from '../components/NewPostsPill';
+import { useNewPostsWatcher } from '../hooks/useNewPostsWatcher';
 import PostSkeleton from '../components/PostSkeleton';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
@@ -29,6 +35,7 @@ import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
 import { useLatestTransactions } from '../../../hooks/useLatestTransactions';
 import type { TokenDto } from '../../../api/generated/models/TokenDto';
+import { useFollowingFeed } from '../hooks/useFollowingFeed';
 
 // Custom hook
 function useUrlQuery() {
@@ -80,8 +87,15 @@ const FeedList = ({
 
   // URL parameters
   const urlSortBy = urlQuery.get('sortBy');
+  const activeAccount = useAtomValue(activeAccountAtom);
+  // "following" needs a connected wallet; without one it falls back to the default feed.
+  const followingAvailable = !!activeAccount;
+  let sortBy: string;
+  if (urlSortBy === 'following' && followingAvailable) sortBy = 'following';
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
-  const sortBy = !popularFeedEnabled ? 'latest' : (urlSortBy || 'hot');
+  else if (!popularFeedEnabled) sortBy = 'latest';
+  else sortBy = urlSortBy && urlSortBy !== 'following' ? urlSortBy : 'hot';
+  const isFollowingFeed = sortBy === 'following';
   const filterBy = urlQuery.get('filterBy') || 'all';
   const shouldAutoFocusPost = urlQuery.get('post') === 'new';
 
@@ -163,7 +177,7 @@ const FeedList = ({
     refetch: refetchActivities,
   } = useInfiniteQuery<PostDto[], Error>({
     queryKey: ['home-activities'],
-    enabled: sortBy !== 'hot' && !languageParam,
+    enabled: sortBy === 'latest' && !languageParam,
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const resp = await SuperheroApi.listTokens({
@@ -237,7 +251,7 @@ const FeedList = ({
 
   // Live updates for token-created via websocket
   useEffect(() => {
-    if (sortBy === 'hot' || languageParam) return;
+    if (sortBy !== 'latest' || languageParam) return;
     const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
       const mapped = mapTokenCreatedToPost(payload);
       queryClient.setQueryData(['home-activities'], (prev: any) => {
@@ -268,7 +282,7 @@ const FeedList = ({
     isFetchingNextPage: fetchingMoreLatest,
     refetch: refetchLatest,
   } = useInfiniteQuery({
-    enabled: sortBy !== 'hot',
+    enabled: sortBy === 'latest',
     queryKey: ['posts', {
       limit: 10, sortBy, filterBy, language: languageParam,
     }],
@@ -300,7 +314,7 @@ const FeedList = ({
   const prevSortByForPrefetch = useRef<string | undefined>(undefined);
   useEffect(() => {
     // Only prefetch when switching TO "latest" from another feed or on initial mount
-    const shouldPrefetch = sortBy !== 'hot' && (
+    const shouldPrefetch = sortBy === 'latest' && (
       prevSortByForPrefetch.current === 'hot'
       || prevSortByForPrefetch.current === undefined
     );
@@ -635,6 +649,9 @@ const FeedList = ({
     hasEnoughPopularPosts,
   ]);
 
+  // Following: posts from accounts the connected wallet follows (merged client-side).
+  const followingFeed = useFollowingFeed(activeAccount, languageParam, isFollowingFeed);
+
   // Track if we have data from both queries (cached or fresh)
   // This ensures posts and activities appear together, not incrementally
   // Show cached data immediately if available
@@ -672,6 +689,7 @@ const FeedList = ({
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo<FeedItem[]>(() => {
+    if (sortBy === 'following') return followingFeed.items;
     if (sortBy === 'hot') {
       // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
       const combined = [...popularList, ...latestListForHot];
@@ -744,6 +762,7 @@ const FeedList = ({
     bothQueriesReady,
     latestData,
     activitiesPages, queryClient, filterBy, languageParam,
+    followingFeed.items,
   ]);
 
   // Memoized filtered list
@@ -795,6 +814,31 @@ const FeedList = ({
     [navigate, queryClient, popularFeedEnabled, sortBy],
   );
 
+  // New posts by others: poll the newest page and offer a pill instead of
+  // inserting them, so the feed never jumps under the reader.
+  const feedPostsShown = useMemo(
+    () => (sortBy === 'hot' ? [...popularList, ...latestListForHot] : list),
+    [sortBy, popularList, latestListForHot, list],
+  );
+  const { count: newPostsCount, acknowledge: acknowledgeNewPosts } = useNewPostsWatcher({
+    enabled: sortBy === 'hot' ? !!popularData?.pages.length : !!latestData?.pages.length,
+    language: languageParam,
+    knownPosts: feedPostsShown as any[],
+  });
+  const handleShowNewPosts = useCallback(() => {
+    acknowledgeNewPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (sortBy === 'hot') {
+      // New posts have no ranking yet: show them in the chronological feed.
+      handleSortChange('latest');
+      return;
+    }
+    refetchLatest();
+    if (!languageParam) refetchActivities();
+  }, [
+    acknowledgeNewPosts, sortBy, handleSortChange, refetchLatest, refetchActivities, languageParam,
+  ]);
+
   const handlePopularWeightsChange = useCallback((weights: PopularWeights) => {
     setPopularWeights(weights);
     queryClient.removeQueries({ queryKey: ['popular-posts'], exact: false });
@@ -838,25 +882,35 @@ const FeedList = ({
   const latestInitialLoading = languageParam
     ? latestLoading
     : (!bothQueriesReady && (latestLoading || activitiesLoading));
-  const initialLoading = sortBy === 'hot' ? hotInitialLoading : latestInitialLoading;
+  let initialLoading = sortBy === 'hot' ? hotInitialLoading : latestInitialLoading;
+  if (isFollowingFeed) initialLoading = followingFeed.isLoading;
 
   // Hot's latest-post backfill only runs once popular is exhausted, so its
   // failure is a feed error only while nothing is on screen. With popular items
   // already rendered it must not paint an error state over them — and leaving
   // `feedError` clear here keeps the load-more button, which is how it retries.
-  const feedError = sortBy === 'hot'
+  let feedError = sortBy === 'hot'
     ? popularError || (popularList.length === 0 ? latestForHotError : undefined)
     : latestError;
-  const hasMoreFeedItems = sortBy === 'hot'
+  let hasMoreFeedItems = sortBy === 'hot'
     ? hasMorePopular || hasMoreLatestForHot
     : hasMoreLatest || (!languageParam && hasMoreActivities);
+  let fetchingMoreFeedItems = sortBy === 'hot'
+    ? fetchingMorePopular || fetchingMoreLatestForHot
+    : fetchingMoreLatest || fetchingMoreActivities;
+  if (isFollowingFeed) {
+    feedError = followingFeed.error;
+    hasMoreFeedItems = followingFeed.hasNextPage;
+    fetchingMoreFeedItems = followingFeed.isFetchingNextPage;
+  }
 
   // An empty response is distinct from a pending or failed request, including
   // Hot's latest-post backfill. Keep the language control available in every state.
   const renderEmptyState = () => {
     if (feedError) {
       const onRetry = () => {
-        if (sortBy !== 'hot') refetchLatest();
+        if (isFollowingFeed) followingFeed.refetch();
+        else if (sortBy !== 'hot') refetchLatest();
         else if (popularError) refetchPopular();
         else refetchLatestForHot();
       };
@@ -874,6 +928,14 @@ const FeedList = ({
         <div className="w-full flex flex-col gap-2" role="status" aria-label={t('emptyState.loadingPosts')}>
           {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-${i}`} />)}
         </div>
+      );
+    }
+    if (isFollowingFeed) {
+      return (
+        <EmptyState
+          type="empty"
+          title={followingFeed.followsNobody ? t('sortControls.followingEmptyNoFollows') : t('sortControls.followingEmptyNoPosts')}
+        />
       );
     }
     if (languageParam) {
@@ -1148,7 +1210,11 @@ const FeedList = ({
       setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
-      if (sortBy === 'hot') {
+      if (isFollowingFeed) {
+        if (followingFeed.hasNextPage && !followingFeed.isFetchingNextPage) {
+          tasks.push(followingFeed.fetchNextPage());
+        }
+      } else if (sortBy === 'hot') {
         const lastPage = popularData?.pages?.[popularData.pages.length - 1];
         const manualHasMore = (
           lastPage?.meta?.currentPage
@@ -1193,6 +1259,8 @@ const FeedList = ({
     hasMoreFeedItems,
     sortBy,
     languageParam,
+    isFollowingFeed,
+    followingFeed,
     // latest
     hasMoreLatest,
     fetchingMoreLatest,
@@ -1232,6 +1300,8 @@ const FeedList = ({
           />
         </div>
       )}
+      {/* The right rail (AE price, block height) is hidden below lg */}
+      {isHomepage && <MobileNetworkStats className="mb-3" />}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
         <CreatePost
@@ -1243,7 +1313,7 @@ const FeedList = ({
             const currentSortBy = sortByRef.current;
             if (currentSortBy === 'hot') {
               refetchPopular();
-            } else {
+            } else if (currentSortBy !== 'following') {
               refetchLatest();
             }
           }}
@@ -1265,6 +1335,7 @@ const FeedList = ({
             onSortChange={handleSortChange}
             className="sticky top-0 z-10 w-full"
             popularFeedEnabled={popularFeedEnabled}
+            showFollowing={followingAvailable}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
             filters={(
@@ -1281,6 +1352,7 @@ const FeedList = ({
             sortBy={sortBy}
             onSortChange={handleSortChange}
             popularFeedEnabled={popularFeedEnabled}
+            showFollowing={followingAvailable}
             popularWeights={popularWeights}
             onPopularWeightsChange={handlePopularWeightsChange}
             filters={(
@@ -1295,10 +1367,14 @@ const FeedList = ({
 
       </div>
 
+      <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
       <div className="w-full flex flex-col gap-0 md:mx-0">
         {renderEmptyState()}
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
-        {sortBy !== 'hot' && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
+        {sortBy === 'latest' && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
+
+        {/* Following: plain newest-first posts from followed accounts */}
+        {isFollowingFeed && filteredAndSortedList.map((item) => renderPostItem(item as PostDto))}
 
         {/* Hot: render popular posts (which seamlessly includes
         recent posts after popular posts are exhausted) */}
@@ -1310,16 +1386,28 @@ const FeedList = ({
       {/* Load more button (desktop) */}
       {!initialLoading && !feedError && hasMoreFeedItems && (
         <>
+          {/* The desktop load more button shows its own spinner */}
+          {fetchingMoreFeedItems && (
+            <div
+              className={`flex justify-center py-4${showLoadMore ? ' md:hidden' : ''}`}
+              role="status"
+              aria-label={t('emptyState.loadingPosts')}
+            >
+              <Spinner className="w-6 h-6" />
+            </div>
+          )}
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
             <div className="hidden md:block p-4 md:p-6 text-center">
               <AeButton
-                loading={
-                  sortBy === 'hot'
-                    ? (fetchingMorePopular || fetchingMoreLatestForHot)
-                    : (fetchingMoreLatest || fetchingMoreActivities)
-                }
+                loading={fetchingMoreFeedItems}
                 onClick={async () => {
+                  if (isFollowingFeed) {
+                    if (followingFeed.hasNextPage && !followingFeed.isFetchingNextPage) {
+                      await followingFeed.fetchNextPage();
+                    }
+                    return;
+                  }
                   if (sortBy === 'hot') {
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];
                     const manualHasMore = (

@@ -27,7 +27,6 @@
 .token-chart[dir=rtl] .chart-detail-grid dd { text-align:right; }
 .chart-plot-wrap { position:relative;margin:0 8px; }
 .chart-plot { height:280px;width:100%; }
-.chart-plot.is-unavailable { background:repeating-linear-gradient(0deg,transparent,transparent 59px,var(--chart-line) 60px,transparent 61px);mask-image:linear-gradient(transparent,#0005); }
 .chart-footer { padding:0 16px 10px; }
 .chart-footer-top { display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;padding-block:4px; }
 .chart-footer-controls,.chart-footer-options { display:flex;align-items:center;gap:8px; }

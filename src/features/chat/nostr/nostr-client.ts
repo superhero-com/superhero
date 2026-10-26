@@ -11,12 +11,14 @@
  * signs via `identity.signEvent`, so once the session is locked the provider
  * rejects and this client can no longer sign — no retained private key.
  */
-import { SimplePool } from 'nostr-tools/pool';
+import { SimplePool, type SubscribeManyParams } from 'nostr-tools/pool';
 import type { EventTemplate, VerifiedEvent } from 'nostr-tools/pure';
+import type { Filter } from 'nostr-tools/filter';
 import type {
   NostrEvent, NostrFilter, RelayDict,
 } from '../core/types';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
+import { RelayPublishError, type RelayRejection } from './relay-publish-error';
 
 export type NostrClientEvents = {
   event: (event: NostrEvent) => void;
@@ -26,14 +28,12 @@ export type NostrClientEvents = {
   eose: (subId: string) => void;
 };
 
-type AnyFilter = Record<string, unknown>;
-
 /** Copy only the known filter fields into a fresh plain object. */
-function cleanFilters(filters: NostrFilter[]): AnyFilter[] {
+function cleanFilters(filters: NostrFilter[]): Filter[] {
   return filters
     .filter((f) => f && typeof f === 'object')
     .map((f) => {
-      const clean: AnyFilter = {};
+      const clean: Filter = {};
       if (f.ids) clean.ids = f.ids;
       if (f.authors) clean.authors = f.authors;
       if (f.kinds) clean.kinds = f.kinds;
@@ -53,19 +53,28 @@ function generateSubscriptionId(): string {
 }
 
 /**
- * Resolve as soon as ANY input promise fulfills; reject only when they all
- * reject. `Promise.any` equivalent for the repo's pre-ES2021 TS lib target.
+ * Resolve as soon as ANY relay's publish fulfills; reject only when they all
+ * reject, with a {@link RelayPublishError} that keeps each relay's own reason.
+ * `promises[i]` belongs to `relays[i]` (the pool maps them in order).
+ * `Promise.any` equivalent for the repo's pre-ES2021 TS lib target.
  */
-function firstResolved<T>(promises: Promise<T>[]): Promise<T> {
+function firstResolved<T>(relays: string[], promises: Promise<T>[]): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     if (promises.length === 0) {
       reject(new Error('no relays to publish to'));
       return;
     }
+    const rejections: RelayRejection[] = [];
     let pending = promises.length;
-    promises.forEach((p) => p.then(resolve, () => {
+    promises.forEach((p, i) => p.then(resolve, (error: unknown) => {
+      // The pool rejects with an Error for a relay's `OK false` and with a plain
+      // string ("connection failure: …") when the socket never opened.
+      rejections[i] = {
+        relay: relays[i],
+        reason: error instanceof Error ? error.message : String(error),
+      };
       pending -= 1;
-      if (pending === 0) reject(new Error('all relays rejected the event'));
+      if (pending === 0) reject(new RelayPublishError(rejections));
     }));
   });
 }
@@ -84,10 +93,16 @@ export class NostrClient {
   constructor(identity: NostrIdentityProvider, relays: RelayDict) {
     this.identity = identity;
     this.relays = relays;
-    this.pool = new SimplePool();
     this.subscriptions = new Map();
     this.eventHandlers = new Map();
+    this.pool = new SimplePool({ enableReconnect: true });
+    this.pool.onRelayConnectionSuccess = (url) => this.emit('connected', url);
+    this.pool.onRelayConnectionFailure = (url) => this.emit('disconnected', url);
   }
+
+  private signAuth = async (template: EventTemplate): Promise<VerifiedEvent> => (
+    await this.identity.signEvent(template) as unknown as VerifiedEvent
+  );
 
   on<K extends keyof NostrClientEvents>(event: K, handler: NostrClientEvents[K]): void {
     if (!this.eventHandlers.has(event)) {
@@ -132,9 +147,33 @@ export class NostrClient {
   /** Fetch stored events for the given filters (one query per filter). */
   async fetchEvents(filters: NostrFilter[]): Promise<NostrEvent[]> {
     const readRelays = this.getReadRelays();
+    if (!readRelays.length) throw new Error('No chat relays enabled for reading.');
     const valid = cleanFilters(filters);
     const results = await Promise.all(
-      valid.map((filter) => this.pool.querySync(readRelays, filter as never).catch(() => [])),
+      valid.map((filter) => new Promise<NostrEvent[]>((resolve, reject) => {
+        const events: NostrEvent[] = [];
+        const id = generateSubscriptionId();
+        const abort = new AbortController();
+        let settled = false;
+        const params: SubscribeManyParams = {
+          abort: abort.signal,
+          onauth: this.signAuth,
+          onevent: (event) => events.push(event as NostrEvent),
+          onclose: (reasons) => {
+            if (settled) return;
+            settled = true;
+            abort.abort();
+            this.subscriptions.delete(id);
+            // The pool closes normally after EOSE. A rejected REQ must not be
+            // presented as an empty, successfully synchronized inbox.
+            if (!events.length && reasons.every(({ reason }) => reason !== 'closed automatically on eose')) {
+              reject(new RelayPublishError(reasons.map(({ url, reason }) => ({ relay: url, reason }))));
+            } else resolve(events);
+          },
+        };
+        const sub = this.pool.subscribeEose(readRelays, filter, params);
+        this.subscriptions.set(id, { close: () => { abort.abort(); sub.close(); } });
+      })),
     );
     return results.flat() as NostrEvent[];
   }
@@ -148,7 +187,14 @@ export class NostrClient {
       return subId;
     }
 
-    const sub = this.pool.subscribeMany(readRelays, valid as never, {
+    // subscribeMany takes ONE filter in nostr-tools 2.x. subscribeMap groups
+    // these entries into a valid REQ with multiple filter objects per relay.
+    const abort = new AbortController();
+    const sub = this.pool.subscribeMap(readRelays.flatMap(
+      (url) => valid.map((filter) => ({ url, filter })),
+    ), {
+      abort: abort.signal,
+      onauth: this.signAuth,
       onevent: (event: unknown) => {
         const nostrEvent = event as NostrEvent;
         this.emit('event', nostrEvent);
@@ -157,9 +203,14 @@ export class NostrClient {
       oneose: () => {
         this.emit('eose', subId);
       },
+      onclose: (reasons) => {
+        if (!abort.signal.aborted) {
+          this.emit('error', new Error(reasons.map(({ reason }) => reason).join('; ')));
+        }
+      },
     });
 
-    this.subscriptions.set(subId, sub);
+    this.subscriptions.set(subId, { close: () => { abort.abort(); sub.close(); } });
     return subId;
   }
 
@@ -171,11 +222,19 @@ export class NostrClient {
     }
   }
 
-  /** Sign (via the revocable identity) and publish an event. Returns its id. */
+  /**
+   * Sign (via the revocable identity) and publish an event. Returns its id.
+   * A relay that answers `auth-required:` gets a NIP-42 AUTH signed by the same
+   * identity and then the event once more (the pool's own retry). When no relay
+   * accepts, rejects with a {@link RelayPublishError} naming each relay's reason.
+   */
   async publishEvent(eventTemplate: EventTemplate): Promise<string> {
     const writeRelays = this.getWriteRelays();
     const event = await this.identity.signEvent(eventTemplate);
-    await firstResolved(this.pool.publish(writeRelays, event as unknown as VerifiedEvent));
+    await firstResolved(
+      writeRelays,
+      this.pool.publish(writeRelays, event as unknown as VerifiedEvent, { onauth: this.signAuth }),
+    );
     return event.id;
   }
 

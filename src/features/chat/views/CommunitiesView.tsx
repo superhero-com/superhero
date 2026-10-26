@@ -62,8 +62,7 @@ const CommunitiesView = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium text-foreground">
-                      #
-                      {room.symbol}
+                      {`#${room.symbol}`}
                     </span>
                     {room.is_private && (
                       <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />
@@ -75,8 +74,7 @@ const CommunitiesView = () => {
                       {' '}
                       {threshold}
                       {' '}
-                      #
-                      {room.symbol}
+                      {`#${room.symbol}`}
                     </span>
                   )}
                 </div>

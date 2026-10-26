@@ -121,7 +121,7 @@ const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) =>
       key: 'c',
       text: `${tBanners('bannerC.title')} ${tBanners('bannerC.titleAccent')}`,
       cta: tBanners('bannerC.primaryButton'),
-      link: '/trends/create',
+      link: '/trends/daos',
     },
     {
       key: 'd',

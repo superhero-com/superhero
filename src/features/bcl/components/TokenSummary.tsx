@@ -52,7 +52,7 @@ const TokenSummary = ({
                 {t('common.views.tokenSummary.tokenName')}
               </div>
               <div className="text-lg font-bold text-white font-mono tracking-tight">
-                {token.symbol || token.name || t('common.views.tokenSummary.unknown')}
+                {token.symbol || token.name ? `#${token.symbol || token.name}` : t('common.views.tokenSummary.unknown')}
               </div>
             </div>
           </div>

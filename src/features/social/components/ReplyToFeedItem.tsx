@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { MessageCircle } from 'lucide-react';
+import { Languages, MessageCircle } from 'lucide-react';
 import { AspectMedia } from '@/components/AspectMedia';
 import { PostDto, PostsService } from '../../../api/generated';
 import { linkify } from '../../../utils/linkify';
@@ -19,6 +19,8 @@ import { compactTime, fullTimestamp } from '../../../utils/time';
 import { useCompactFeedItemLayout } from './useCompactFeedItemLayout';
 import { useLinkDetection } from '../hooks/useLinkDetection';
 import { DetectedLinkPreview } from './DetectedLinkPreview';
+import { extractParentId } from '../utils/postParent';
+import { shouldOfferTranslation, translateUrl } from '../utils/translate';
 import PostAuthorHeader from './PostAuthorHeader';
 import PostContent from './PostContent';
 import './FeedPost.css';
@@ -46,7 +48,14 @@ interface ReplyToFeedItemProps {
    * "123.45 TOKEN".
    */
   tokenHolderLabel?: string;
+  /**
+   * When set, replies are shown as a thread: replies that have their own replies
+   * open nested under them (indented), down to MAX_THREAD_DEPTH levels.
+   */
+  threadDepth?: number;
 }
+
+const MAX_THREAD_DEPTH = 3;
 
 function useParentId(item: PostDto): string | null {
   return useMemo(() => {
@@ -92,6 +101,7 @@ const ReplyToFeedItem = memo(({
   onReply,
   presentation = 'feed',
   tokenHolderLabel,
+  threadDepth,
 }: ReplyToFeedItemProps) => {
   const { t, i18n } = useTranslation('social');
   const postId = item.id;
@@ -110,7 +120,10 @@ const ReplyToFeedItem = memo(({
   const [parentError, setParentError] = useState<Error | null>(null);
 
   // Nested replies state for this item
-  const [showReplies, setShowReplies] = useState(false);
+  const isThreaded = threadDepth !== undefined;
+  const [showReplies, setShowReplies] = useState(
+    isThreaded && threadDepth < MAX_THREAD_DEPTH && (item.total_comments ?? 0) > 0,
+  );
   const {
     data: childReplies = [],
     isLoading: childLoading,
@@ -126,9 +139,27 @@ const ReplyToFeedItem = memo(({
     enabled: showReplies,
     refetchInterval: 120 * 1000,
   });
+  // A reply to a reply: also show the post that started the thread, so the
+  // original post stays visible however deep the conversation goes.
+  const grandparentId = useMemo(() => (parent ? extractParentId(parent) : null), [parent]);
+  const { data: rootPost = null } = useQuery<PostDto | null>({
+    queryKey: ['post-thread-root', grandparentId],
+    enabled: !!grandparentId && !hideParentContext,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const walkUp = async (id: string, seen: Set<string>): Promise<PostDto> => {
+        seen.add(id);
+        const post = (await PostsService.getById({ id })) as unknown as PostDto;
+        const nextId = extractParentId(post);
+        if (!nextId || seen.has(nextId) || seen.size >= 20) return post;
+        return walkUp(nextId, seen);
+      };
+      return walkUp(grandparentId as string, new Set<string>());
+    },
+  });
   const postsWithSenderNames = useMemo(
-    () => [item, parent, ...childReplies],
-    [item, parent, childReplies],
+    () => [item, parent, rootPost, ...childReplies],
+    [item, parent, rootPost, childReplies],
   );
   useStorePostSenderChainNames(postsWithSenderNames);
 
@@ -203,7 +234,7 @@ const ReplyToFeedItem = memo(({
     },
   });
 
-  const isContextMuted = !isActive && allowInlineRepliesToggle === false;
+  const isContextMuted = !isActive && (allowInlineRepliesToggle === false || isThreaded);
 
   return (
     <article
@@ -243,6 +274,40 @@ const ReplyToFeedItem = memo(({
         </div>
         )}
 
+        {rootPost && parentId && !hideParentContext && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenPost((rootPost as any)?.slug || String(rootPost.id).replace(/_v3$/, ''));
+          }}
+          className="mt-3 block w-full text-left bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2 transition-none shadow-none hover:bg-white/[0.02] hover:border-white/40 hover:shadow-none"
+          title={t('openParent')}
+        >
+          <div className="flex items-center mb-0.5 min-w-0 text-[11px] text-white/65">
+            <span className="shrink-0 mr-1">{t('originalPost')}</span>
+            <span className="font-semibold text-white/90 truncate whitespace-nowrap">
+              {(profileDisplayNames?.[rootPost.sender_address] ?? chainNames?.[rootPost.sender_address] ?? '').trim() || formatAddress(rootPost.sender_address, 6, true)}
+            </span>
+            <span className="mx-2 text-white/50 shrink-0">·</span>
+            <span className="text-white/60 whitespace-nowrap shrink-0" title={fullTimestamp(rootPost.created_at)}>
+              {compactTime(rootPost.created_at, i18n.resolvedLanguage)}
+            </span>
+          </div>
+          <div className="text-[12px] text-white/90 line-clamp-2">
+            {linkify(rootPost.content, {
+              knownChainNames: new Set(
+                Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
+              ),
+              hashtagVariant: 'post-inline',
+              tokenTagInline: true,
+              trendMentions: (rootPost as any)?.trend_mentions,
+              hashtagAllowedChars,
+            })}
+          </div>
+        </button>
+        )}
+
         {/* Parent context header placed under author row, before reply text */}
         {parentId && !hideParentContext && (
         <button
@@ -252,7 +317,7 @@ const ReplyToFeedItem = memo(({
             const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, '');
             onOpenPost(slugOrId);
           }}
-          className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
+          className={cn(rootPost ? 'mt-2' : 'mt-3', 'mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none')}
           title={t('openParent')}
         >
           <div className="flex items-end mb-1 min-w-0">
@@ -274,7 +339,7 @@ const ReplyToFeedItem = memo(({
             <div className="text-[11px] text-white/60 whitespace-nowrap shrink-0">
               {parent?.created_at ? (
                 <span title={fullTimestamp(parent.created_at as unknown as string)}>
-                  {compactTime(parent.created_at as unknown as string)}
+                  {compactTime(parent.created_at as unknown as string, i18n.resolvedLanguage)}
                 </span>
               ) : '—'}
             </div>
@@ -308,6 +373,19 @@ const ReplyToFeedItem = memo(({
             hashtagAllowedChars,
           }}
         />
+
+        {item.content && shouldOfferTranslation((item as any)?.language, i18n.resolvedLanguage) && (
+          <a
+            href={translateUrl(item.content, i18n.resolvedLanguage || 'en')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex items-center gap-1 text-[12px] text-white/60 no-underline hover:text-white hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Languages className="w-3.5 h-3.5" aria-hidden="true" />
+            {t('translatePost')}
+          </a>
+        )}
 
         {/* Link preview (YouTube embed or OG card) */}
         <PostLinkPreview content={item.content || ''} />
@@ -400,7 +478,12 @@ const ReplyToFeedItem = memo(({
               item={reply}
               commentCount={reply.total_comments ?? 0}
               hideParentContext
-              allowInlineRepliesToggle={false}
+              allowInlineRepliesToggle={
+                isThreaded
+                && threadDepth + 1 < MAX_THREAD_DEPTH
+                && (reply.total_comments ?? 0) > 0
+              }
+              threadDepth={isThreaded ? threadDepth + 1 : undefined}
               onOpenPost={() => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/, ''))}
             />
           ))}

@@ -70,7 +70,6 @@ export const TrendFeatureCard = () => {
     <FeatureScene kind="trend" icon={Hash} note={t('cards.everyHashtag')} caption={t('cards.createDiscoverTrade')}>
       <div className="hero-feature-card">
         <header>
-          <span className="hero-feature-icon"><Hash aria-hidden="true" /></span>
           <div>
             <strong><bdi>#Solar</bdi></strong>
             <small>{t('cards.tokenizedSignal')}</small>
@@ -181,7 +180,7 @@ export const CommunityFeatureCard = () => {
             {t('cards.communityDao')}
           </span>
           <Link to="/trends/daos">
-            {t('bannerC.secondaryButton')}
+            {t('bannerC.primaryButton')}
             <ArrowUpRight aria-hidden="true" />
           </Link>
         </footer>

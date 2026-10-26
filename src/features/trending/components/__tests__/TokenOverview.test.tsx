@@ -47,7 +47,7 @@ afterEach(() => { vi.restoreAllMocks(); currency.rate = 0.01; });
 describe('Token overview', () => {
   it('keeps AE, aetto and token units distinct and respects explicit performance direction', () => {
     mount({ owned: true });
-    expect(screen.getByRole('heading', { name: 'SUPERHERO' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '#SUPERHERO' })).toBeInTheDocument();
     expect(screen.getByTitle('1,500')).toHaveTextContent('1,500');
     expect(screen.getByTitle('2,000,000')).toHaveTextContent('2,000,000');
     expect(screen.getByTitle('26')).toHaveTextContent('26');
@@ -82,7 +82,7 @@ describe('Token overview', () => {
   ])('distinguishes loading, confirmation and unavailable data', (state, message) => {
     mount({ token: null, tokenName: 'NEW-TREND', ...state });
     expect(screen.getByRole('status')).toHaveTextContent(message);
-    expect(screen.getByRole('heading', { name: 'NEW-TREND' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '#NEW-TREND' })).toBeInTheDocument();
     expect(screen.queryByText('Rank #2')).not.toBeInTheDocument();
     expect(document.querySelector('.token-overview-price__value')).toHaveTextContent('—');
     expect(document.querySelector('.token-overview-fiat')).toBeNull();

@@ -4,15 +4,15 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeftRight, Box, Droplets, MessageCircle, Rocket, Search, Zap,
+  ArrowLeftRight, Droplets, MessageCircle, Package, Rocket, Zap,
 } from 'lucide-react';
 import { usePointerHighlight } from '@/hooks/usePointerHighlight';
 import './QuickActionsCard.css';
 
+// "Explore" and "DeFi" already live in the main navigation, so this card only
+// holds shortcuts. DeFi actions follow the same order as the DeFi tabs
+// (Swap, Pool, Wrap); Chat is the only non-DeFi destination and stays last.
 const actions = [
-  {
-    key: 'exploreTrends', to: '/trends/tokens', title: 'exploreTrends', tone: 'explore', Icon: Search,
-  },
   {
     key: 'tokenizeATrend', to: '/trends/create', title: 'tokenizeATrend', tone: 'create', Icon: Rocket,
   },
@@ -20,13 +20,13 @@ const actions = [
     key: 'swapTokens', to: '/defi/swap', title: 'swapTokensOnDex', tone: 'swap', Icon: ArrowLeftRight,
   },
   {
-    key: 'wrapAe', to: '/defi/wrap', title: 'wrapOrUnwrapAe', tone: 'wrap', Icon: Box,
-  },
-  {
-    key: 'chat', to: 'https://quali.chat', title: 'openChat', tone: 'chat', Icon: MessageCircle,
-  },
-  {
     key: 'provideLiquidity', to: '/defi/pool', title: 'provideLiquidityToPools', tone: 'pool', Icon: Droplets,
+  },
+  {
+    key: 'wrapAe', to: '/defi/wrap', title: 'wrapOrUnwrapAe', tone: 'wrap', Icon: Package,
+  },
+  {
+    key: 'chat', to: '/chat', title: 'openChat', tone: 'chat', Icon: MessageCircle,
   },
 ] as const;
 

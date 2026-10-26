@@ -8,11 +8,49 @@ type ErrorContext = {
   deadlineMins?: number;
 };
 
+type Translate = (key: string, options?: any) => string;
+
+/**
+ * Error codes raised by the DEX contracts. Each code has its own message in
+ * `errors.dexContract.<Contract>_<CODE>`, written from the contract-side reason
+ * in aeternity/dex-contracts-v2 test/shared/utilities/errors.js.
+ */
+const DEX_CONTRACT_ERROR_RE = (
+  /\b(AedexV2(?:Library|Router|Factory|Pair)|WAE)\s*:\s*([A-Z][A-Z0-9_]*)/
+);
+
+/** Codes whose message ends with a slippage hint. */
+const SLIPPAGE_CODES = new Set([
+  'AedexV2Router_INSUFFICIENT_A_AMOUNT',
+  'AedexV2Router_INSUFFICIENT_B_AMOUNT',
+  'AedexV2Router_EXCESSIVE_INPUT_AMOUNT',
+  'AedexV2Router_INSUFFICIENT_OUTPUT_AMOUNT',
+]);
+
+/** Codes whose message ends with a deadline hint. */
+const DEADLINE_CODES = new Set(['AedexV2Router_EXPIRED']);
+
+function dexContractErrorMessage(raw: string, ctx: ErrorContext, t: Translate): string | null {
+  const match = raw.match(DEX_CONTRACT_ERROR_RE);
+  if (!match) return null;
+  const code = `${match[1]}: ${match[2]}`;
+  const id = `${match[1]}_${match[2]}`;
+  const key = `dexContract.${id}`;
+  if (!i18n.exists(key, { ns: 'errors' })) return null;
+  let hint = '';
+  if (SLIPPAGE_CODES.has(id)) {
+    hint = ctx.slippagePct != null ? t('slippageHint', { slippagePct: ctx.slippagePct }) : t('slippageHintGeneric');
+  } else if (DEADLINE_CODES.has(id)) {
+    hint = ctx.deadlineMins != null ? t('deadlineHint', { deadlineMins: ctx.deadlineMins }) : t('deadlineHintGeneric');
+  }
+  return `${t(key, { hint })} (${code})`;
+}
+
 /**
  * Convert low-level SDK/contract errors into concise, user-friendly messages.
  */
 export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string {
-  const t = (key: string, options?: any) => String(i18n.t(key, { ns: 'errors', ...options }));
+  const t: Translate = (key, options) => String(i18n.t(key, { ns: 'errors', ...options }));
   const raw = String((err as any)?.message || String(err || ''));
   const lc = raw.toLowerCase();
 
@@ -20,6 +58,10 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
     return t('userRejected');
   }
+
+  // Known DEX contract error codes
+  const contractMessage = dexContractErrorMessage(raw, ctx, t);
+  if (contractMessage) return contractMessage;
 
   // No route / pair
   if (lc.includes('no route') || lc.includes('pair not found') || lc.includes('no pair')) {
@@ -125,6 +167,12 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
       default:
         break;
     }
+  }
+
+  // Unknown DEX contract code: show it instead of a generic failure
+  const unknownCode = raw.match(DEX_CONTRACT_ERROR_RE);
+  if (unknownCode) {
+    return t('dexContractFallback', { code: `${unknownCode[1]}: ${unknownCode[2]}` });
   }
 
   // Fallbacks by action

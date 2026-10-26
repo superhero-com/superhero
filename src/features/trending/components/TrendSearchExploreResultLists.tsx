@@ -1,10 +1,11 @@
 import AddressAvatar from '@/components/AddressAvatar';
 import type { TFunction } from 'i18next';
+import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { formatAddress } from '@/utils/address';
 import { formatCompactNumber } from '@/utils/number';
-import type { LeaderboardItem } from '../api/leaderboard';
+import { isRoiMeaningful, type LeaderboardItem } from '../api/leaderboard';
 import type { TrendPostItem, TrendTokenItem, TrendUserItem } from '../api/trendsSearch';
 import ReplyToFeedItem from '../../social/components/ReplyToFeedItem';
 import TokenListTable from './TokenListTable';
@@ -27,7 +28,11 @@ function getUserStats(
   if (isLeaderboardItem(item)) {
     return [
       { label: t('exploreSearch.userStats.pnl'), value: `$${formatCompactNumber(item.pnl_usd, 2, 1)}` },
-      { label: t('exploreSearch.userStats.roi'), value: `${formatCompactNumber(item.roi_pct, 2, 1)}%` },
+      {
+        label: t('exploreSearch.userStats.roi'),
+        value: isRoiMeaningful(Number(item.pnl_usd ?? 0), Number(item.roi_pct ?? 0))
+          ? `${formatCompactNumber(item.roi_pct, 2, 1)}%` : '--',
+      },
       { label: t('exploreSearch.userStats.aum'), value: `$${formatCompactNumber(item.aum_usd, 2, 1)}` },
     ];
   }
@@ -39,13 +44,22 @@ function getUserStats(
   ];
 }
 
-export const TokenResultsList = ({ items }: { items: TrendTokenItem[] }) => (
+type TokenListTableProps = ComponentProps<typeof TokenListTable>;
+
+export const TokenResultsList = ({
+  items,
+  orderBy = 'market_cap',
+  orderDirection = 'DESC',
+  onSort = () => {},
+}: {
+  items: TrendTokenItem[];
+} & Partial<Pick<TokenListTableProps, 'orderBy' | 'orderDirection' | 'onSort'>>) => (
   <TokenListTable
     pages={[{ items }]}
     loading={false}
-    orderBy="market_cap"
-    orderDirection="DESC"
-    onSort={() => {}}
+    orderBy={orderBy}
+    orderDirection={orderDirection}
+    onSort={onSort}
   />
 );
 

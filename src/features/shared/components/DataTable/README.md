@@ -107,6 +107,8 @@ function AdvancedComponent() {
 | `initialParams` | `DataTableParams` | `{}` | Initial query parameters |
 | `className` | `string` | `''` | Additional CSS classes |
 | `emptyMessage` | `string` | `'No data found'` | Message when no data |
+| `emptyComponent` | `React.ReactNode` | `undefined` | Replaces the whole table, `renderFrame` included, when no data |
+| `renderFrame` | `(content: React.ReactNode) => React.ReactNode` | `undefined` | Wraps the table in every state except `emptyComponent`, e.g. with a column header |
 | `loadingComponent` | `React.ReactNode` | `undefined` | Custom loading component |
 | `errorComponent` | `(error: Error) => React.ReactNode` | `undefined` | Custom error component |
 | `showPagination` | `boolean` | `true` | Show/hide pagination |

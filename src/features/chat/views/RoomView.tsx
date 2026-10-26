@@ -28,6 +28,7 @@ import { MessageBubble } from '../components/MessageBubble';
 import { PostingBannerCard } from '../components/PostingBannerCard';
 import { isChatRelayConfigured } from '../core/relay-config';
 import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
+import InboxView from './InboxView';
 
 const RoomView = () => {
   const { saleAddress = '' } = useParams();
@@ -46,6 +47,8 @@ const RoomView = () => {
     canPost,
     needsUnlock,
     isReady,
+    error: roomError,
+    retry,
     loadEarlier,
     hasEarlier,
     isLoadingEarlier,
@@ -61,6 +64,7 @@ const RoomView = () => {
 
   const session = useRoomSession();
   const [draft, setDraft] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -71,14 +75,18 @@ const RoomView = () => {
   }, [messages.length]);
 
   const onSend = async () => {
+    const submittedDraft = draft;
     const text = draft.trim();
-    if (!text) return;
+    if (!text || isSending || !isReady) return;
+    setIsSending(true);
     setSendError(null);
-    setDraft('');
     try {
       await sendMessage(text);
+      setDraft((current) => (current === submittedDraft ? '' : current));
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -110,7 +118,7 @@ const RoomView = () => {
             onClick={() => {
               session.unlock();
             }}
-            disabled={session.isUnlocking}
+            disabled={session.isUnlocking || !session.canUnlock}
           >
             {session.isUnlocking ? (
               <>
@@ -126,7 +134,7 @@ const RoomView = () => {
     }
     return (
       <form
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 rounded-full border border-border bg-card p-1 focus-within:border-primary"
         onSubmit={(e) => {
           e.preventDefault();
           onSend();
@@ -137,47 +145,59 @@ const RoomView = () => {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={`Message #${room?.symbol ?? 'room'}`}
           aria-label="Message"
+          disabled={isSending}
+          className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="sm" disabled={!draft.trim()}>
-          <Send className="h-4 w-4" />
+        <Button type="submit" size="icon" disabled={!draft.trim() || !isReady || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
     );
   };
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-3">
-        <Link
-          to="/chat"
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Back to communities"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 truncate text-lg font-semibold text-foreground">
-          {title}
-        </h1>
-        <Link
-          to={`/chat/${saleAddress}/info`}
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Room info"
-        >
-          <Info className="h-5 w-5" />
-        </Link>
-      </header>
+    <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
+      <div className="hidden h-full lg:block"><InboxView embedded /></div>
+      <section className="chat-conversation flex min-w-0 flex-1 flex-col" aria-label="Conversation">
+        <header className="flex items-center gap-2 border-b border-border px-3 py-3">
+          <Link
+            to="/chat"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            aria-label="Back to communities"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="flex-1 truncate text-lg font-semibold text-foreground">
+            {title}
+          </h1>
+          <Link
+            to={`/chat/${saleAddress}/info`}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+            aria-label="Room info"
+          >
+            <Info className="h-5 w-5" />
+          </Link>
+        </header>
 
-      <div
-        ref={listRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4"
-      >
-        {!isReady && (
+        <div
+          ref={listRef}
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6"
+        >
+          {roomError && (
+          <div role="alert" className="py-8 text-center text-sm text-muted-foreground">
+            <p>{roomError.message}</p>
+            <Button variant="outline" size="sm" onClick={retry} className="mt-3 min-h-11">
+              Retry connection
+            </Button>
+          </div>
+          )}
+          {!isReady && !roomError && !needsUnlock && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Connecting…
           </div>
-        )}
-        {isReady && hasEarlier && messages.length > 0 && (
+          )}
+          {isReady && hasEarlier && messages.length > 0 && (
           <button
             type="button"
             onClick={() => {
@@ -188,24 +208,25 @@ const RoomView = () => {
           >
             {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
           </button>
-        )}
-        {isReady && messages.length === 0 && (
+          )}
+          {isReady && messages.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             No messages yet.
           </p>
-        )}
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-      </div>
+          )}
+          {messages.map((message) => (
+            <MessageBubble key={message.id} message={message} />
+          ))}
+        </div>
 
-      <div className="border-t border-border p-3">
-        {renderComposer()}
-        {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
-      </div>
+        <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
+          {renderComposer()}
+          {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
+        </div>
 
-      {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
-      <NostrLinkGate />
+        {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
+        <NostrLinkGate />
+      </section>
     </div>
   );
 };

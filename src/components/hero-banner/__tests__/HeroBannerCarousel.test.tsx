@@ -82,6 +82,15 @@ describe('HeroBannerCarousel', () => {
     expect(screen.queryByRole('link', { name: 'Launch a #trend' })).not.toBeInTheDocument();
   });
 
+  it('sends the DAO call to action to the DAO list instead of the trend launcher', () => {
+    showCarousel();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 3' }));
+    const daoLinks = screen.getAllByRole('link', { name: 'Explore DAOs' });
+    expect(daoLinks.length).toBeGreaterThan(0);
+    daoLinks.forEach((link) => expect(link).toHaveAttribute('href', '/trends/daos'));
+    expect(screen.getByRole('link', { name: 'Launch a #trend' })).toHaveAttribute('href', '/trends/create');
+  });
+
   it('retains all language collection destinations', () => {
     showCarousel();
     fireEvent.click(screen.getByRole('button', { name: 'Go to slide 5' }));

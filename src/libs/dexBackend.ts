@@ -292,14 +292,6 @@ export async function getPairs(onlyListed = false): Promise<any[] | null> {
   return items.map(adaptPair);
 }
 
-export async function getPairsByTokenUsd(tokenId: string): Promise<any[] | null> {
-  const items = await apiGetAllPages<ApiPair>(
-    `dex/pairs?token_address=${encodeURIComponent(tokenId)}`,
-  );
-  if (!items) return null;
-  return items.map(adaptPair);
-}
-
 export async function getSwapRoutes(
   tokenA: string,
   tokenB: string,

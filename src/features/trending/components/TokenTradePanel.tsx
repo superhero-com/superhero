@@ -47,7 +47,7 @@ const TokenTradePanel = ({
     else if (isAllowSelling) setAllowanceStarted(true);
   }, [loadingTransaction, isAllowSelling]);
   const sellStep = isAllowSelling || !allowanceStarted ? '1/2' : '2/2';
-  const symbol = token.symbol || token.name;
+  const symbol = `#${token.symbol || token.name}`;
   const hasAmount = Number.isFinite(tokenA) && tokenA > 0 && Number.isFinite(tokenB) && tokenB > 0;
   const parsedSlippage = Number(draft);
   const validDraft = /^\d*(?:\.\d*)?$/.test(draft) && draft !== '' && draft !== '.'

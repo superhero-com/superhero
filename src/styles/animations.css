@@ -46,16 +46,6 @@
   }
 }
 
-/* Pulse glow */
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
-  }
-}
-
 /* Bounce */
 @keyframes bounce {
   0%, 100% {
@@ -90,63 +80,6 @@
 @keyframes progressFill {
   from {
     width: 0%;
-  }
-}
-
-/* Number counter */
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Confetti explosion */
-@keyframes confetti {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-/* Trophy shine */
-@keyframes trophyShine {
-  0% {
-    transform: translateX(-100%) rotate(-45deg);
-  }
-  100% {
-    transform: translateX(200%) rotate(-45deg);
-  }
-}
-
-/* Gradient shift */
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Glow pulse for rewards */
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(139, 92, 246, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(139, 92, 246, 0.4);
   }
 }
 
@@ -207,10 +140,6 @@
   animation: float 3s ease-in-out infinite;
 }
 
-.animate-pulseGlow {
-  animation: pulseGlow 2s ease-in-out infinite;
-}
-
 .animate-shimmer {
   background: linear-gradient(
     90deg,
@@ -220,19 +149,6 @@
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
-}
-
-.animate-gradientShift {
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-.animate-glowPulse {
-  animation: glowPulse 2s ease-in-out infinite;
-}
-
-.animate-sparkle {
-  animation: sparkle 1.5s ease-in-out infinite;
 }
 
 .animate-celebrationPop {
@@ -246,18 +162,6 @@
 
 .animate-delay-200 {
   animation-delay: 200ms;
-}
-
-.animate-delay-300 {
-  animation-delay: 300ms;
-}
-
-.animate-delay-400 {
-  animation-delay: 400ms;
-}
-
-.animate-delay-500 {
-  animation-delay: 500ms;
 }
 
 /* Stagger children */
@@ -281,22 +185,6 @@
 .hover-lift:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-.hover-glow {
-  transition: box-shadow 0.3s ease;
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
-}
-
-.hover-scale {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
 }
 
 /* Success celebration */

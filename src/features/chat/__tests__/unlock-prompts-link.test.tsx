@@ -27,6 +27,8 @@ vi.mock('@/features/nostr-link/link-flow', () => ({
 vi.mock('../session/room-session', () => ({
   unlockRoomSession: (address: string) => mocks.unlockRoomSession(address),
   lockRoomSession: vi.fn(),
+  isRoomSessionUnlocked: () => false,
+  retainRoomSessionForAccount: vi.fn(),
   subscribeRoomSession: () => () => {},
   roomKeySession: { isUnlocked: false, keys: null },
   roomRevocableIdentity: {},

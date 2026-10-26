@@ -66,6 +66,7 @@ export const getNavigationItems = (): NavigationItem[] => [
   DEFI_ITEM,
   TRENDING_ENABLED && DAO_ITEM,
   TRENDING_ENABLED && REFER_EARN_ITEM,
+  CHAT_ITEM,
 ].filter(Boolean) as NavigationItem[];
 
 export const getAppNavigationItems = (activeAccount?: string | null): NavigationItem[] => [
@@ -82,16 +83,14 @@ export const getAppNavigationItems = (activeAccount?: string | null): Navigation
  * Items rendered directly in the mobile footer bar. DeFi and DAO are moved
  * into the "More" dropdown to keep the bar compact on small screens.
  *
- * In PWA standalone mode, the Chat item is always shown.
- * In browser mode, Chat may be omitted to prioritize other actions.
+ * Chat remains a primary destination in browsers as well as installed PWAs.
  */
 export const getMobileFooterNavigationItems = (
   activeAccount?: string | null,
-  pwaMode?: boolean,
 ): NavigationItem[] => [
   HOME_ITEM,
   ...(TRENDING_ENABLED ? [EXPLORE_ITEM] : []),
-  ...(pwaMode ? [CHAT_ITEM] : []),
+  CHAT_ITEM,
   {
     id: 'account',
     labelKey: 'nav.superheroId',

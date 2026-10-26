@@ -30,6 +30,7 @@ import { DmThreadHeader } from '../components/DmThreadHeader';
 import { DmMessageBubble } from '../components/DmMessageBubble';
 import { isChatRelayConfigured } from '../core/relay-config';
 import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
+import InboxView from './InboxView';
 
 const DmThreadView = () => {
   const { address = '' } = useParams();
@@ -50,6 +51,7 @@ const DmThreadView = () => {
   const { messages, sendMessage, markAsRead } = useMessages(conversationId);
 
   const [draft, setDraft] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -78,13 +80,16 @@ const DmThreadView = () => {
 
   const onSend = async () => {
     const text = draft.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     setSendError(null);
-    setDraft('');
+    setIsSending(true);
     try {
       await sendMessage(text);
+      setDraft('');
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -107,17 +112,19 @@ const DmThreadView = () => {
     }
     return (
       <form
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 rounded-full border border-border bg-card p-1 focus-within:border-primary"
         onSubmit={(e) => { e.preventDefault(); onSend(); }}
       >
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Type a message…"
+          placeholder="Start a message"
           aria-label="Message"
+          disabled={isSending}
+          className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="sm" disabled={!draft.trim()}>
-          <Send className="h-4 w-4" />
+        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
     );
@@ -126,17 +133,19 @@ const DmThreadView = () => {
   if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
-      <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
+    <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
+      <div className="hidden h-full lg:block"><InboxView embedded /></div>
+      <section className="chat-conversation flex min-w-0 flex-1 flex-col">
+        <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
-      {!isConnected && session.isUnlocked && (
+        {!isConnected && session.isUnlocked && (
         <div className="border-b border-border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground">
           Connecting to the chat network…
         </div>
-      )}
+        )}
 
-      <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4">
-        {session.isUnlocked && messages.length === 0 && (
+        <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6">
+          {session.isUnlocked && messages.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <Identicon address={npub} size={72} />
             <p className="text-lg font-semibold text-foreground">{displayName}</p>
@@ -144,24 +153,25 @@ const DmThreadView = () => {
               Start a conversation. Your messages are end-to-end encrypted (NIP-04).
             </p>
           </div>
-        )}
-        {!session.isUnlocked && (
+          )}
+          {!session.isUnlocked && (
           <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Chat is locked.
           </div>
-        )}
-        {messages.map((message) => (
-          <DmMessageBubble key={message.id} message={message} />
-        ))}
-      </div>
+          )}
+          {messages.map((message) => (
+            <DmMessageBubble key={message.id} message={message} />
+          ))}
+        </div>
 
-      <div className="border-t border-border p-3">
-        {renderComposer()}
-        {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
-      </div>
+        <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
+          {renderComposer()}
+          {sendError && <p role="alert" className="mt-2 text-xs text-error">{sendError}</p>}
+        </div>
 
-      <NostrLinkGate />
+        <NostrLinkGate />
+      </section>
     </div>
   );
 };

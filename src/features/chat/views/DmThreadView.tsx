@@ -136,7 +136,7 @@ const DmThreadView = () => {
   return (
     <div className="chat-workspace ui-page chat-page mx-auto flex h-[calc(100dvh-8rem)] min-h-[28rem] w-full max-w-6xl overflow-hidden border-x border-border lg:h-[100dvh]">
       <div className="hidden h-full lg:block"><InboxView embedded /></div>
-      <section className="chat-conversation flex min-w-0 flex-1 flex-col">
+      <section className="chat-conversation flex min-w-0 flex-1 flex-col" aria-label="Conversation">
         <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
         {!isConnected && session.isUnlocked && (

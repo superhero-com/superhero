@@ -31,3 +31,13 @@ test('First chat viewport prioritizes the inbox over the browser safety explanat
   assert.ok(inbox.indexOf('<h1') < inbox.indexOf('<WebChatSafetyNotice'));
   assert.match(notice, /<details/);
 });
+
+test('Chat composer and room header actions have touch-sized targets', () => {
+  for (const file of ['DmThreadView.tsx', 'RoomView.tsx']) {
+    const view = src(`src/features/chat/views/${file}`);
+    assert.match(view, /className="h-11 w-11[^>]*aria-label="Send message"/);
+  }
+  const room = src('src/features/chat/views/RoomView.tsx');
+  assert.match(room, /className="[^"]*min-h-11 min-w-11[^"]*"\s+aria-label="Back to communities"/);
+  assert.match(room, /className="[^"]*min-h-11 min-w-11[^"]*"\s+aria-label="Room info"/);
+});

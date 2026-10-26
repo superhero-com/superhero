@@ -18,10 +18,8 @@ import { forceBrowserTab, forceStandalone } from './helpers/display-mode';
  *     redirect out of an installed PWA does not come back cleanly.
  *  3. Wallet card in a browser tab — CONNECT the extension or wallet app,
  *     which signs; this page never sees a secret. No import on the web.
- *  4. Chat — PWA ONLY. It derives a Nostr identity from the wallet seed and
- *     keeps key material in client storage; a browser tab has no durable store
- *     for it (Safari's 7-day ITP eviction, "clear browsing data"), and losing
- *     that key silently loses the ability to decrypt your own history.
+ *  4. Chat — visible in browser tabs and installed PWAs. The web chat key is
+ *     kept in memory while unlocked; local history is stored as ciphertext.
  *
  * Every one of these fails INVISIBLY when it regresses — an option that should
  * not be there works right up until the user needs the key back, and an option
@@ -139,25 +137,55 @@ test.describe('the wallet card is the one thing that differs', () => {
   });
 });
 
-test.describe('chat is PWA-only', () => {
+test.describe('chat is reachable on both mobile surfaces', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the installed app shows Chat in the footer', async ({ page }) => {
+  test('the installed app opens Chat from the footer', async ({ page }) => {
     await forceStandalone(page);
     await page.goto('/');
 
-    await expect(page.getByRole('link', { name: /^chat$/i })).toBeVisible();
+    const chat = page.getByRole('link', { name: /^chat$/i });
+    await expect(chat).toBeVisible();
+    await chat.click();
+    await expect(page).toHaveURL(/\/chat$/);
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
   });
 
-  test('a mobile browser tab does not', async ({ page }) => {
-    // The unsafe direction: a tab has no durable store for the Nostr key.
+  test('a mobile browser tab opens Chat from the same footer', async ({ page }) => {
     await forceBrowserTab(page);
     await page.goto('/');
 
     // Anchor on a sibling item so this cannot pass because the footer is missing.
     await expect(page.getByRole('link', { name: /^home$/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^chat$/i })).toHaveCount(0);
+    const chat = page.getByRole('link', { name: /^chat$/i });
+    await expect(chat).toBeVisible();
+    await chat.click();
+    await expect(page).toHaveURL(/\/chat$/);
+    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
   });
+});
+
+test('chat layout stays usable from a narrow phone to desktop', async ({ page }) => {
+  await forceBrowserTab(page);
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/chat');
+  const inbox = page.getByRole('region', { name: 'Chat inbox' });
+  await expect(inbox).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Conversation' })).toBeHidden();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+    .toBeLessThanOrEqual(320);
+  const settings = inbox.getByRole('link', { name: 'Relay settings' });
+  await expect(settings).toBeVisible();
+  const phoneTarget = await settings.boundingBox();
+  expect(phoneTarget!.width).toBeGreaterThanOrEqual(44);
+  expect(phoneTarget!.height).toBeGreaterThanOrEqual(44);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(inbox).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Conversation' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^chat$/i })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+    .toBeLessThanOrEqual(1280);
 });
 
 /**

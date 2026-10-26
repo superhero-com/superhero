@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAeSdk } from '../../hooks/useAeSdk';
 import { useXPostingReward } from '../../hooks/useXPostingReward';
 import { profileEditPath } from '../../hooks/useProfileEditDeepLink';
 import { usePendingXLinkChange } from '../../hooks/useXLinkChanges';
+import { useRewardsOnboardingDismissal } from '../../hooks/useRewardsOnboardingDismissal';
 import { XLinkChangePending } from '../XLinkChangePending';
 
 type RewardsOnboardingProps = {
@@ -19,6 +20,7 @@ type RewardsOnboardingProps = {
  * Inline onboarding nudge (never a modal / pop-up) that mirrors the rewards
  * page design. Shows which setup steps are done so the user can continue.
  * Rendered between home-feed items and as the first item in the right rail.
+ * Each account can close it; the same steps stay on the rewards page.
  */
 const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingProps) => {
   const { t } = useTranslation('trending');
@@ -35,6 +37,7 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
   // While a link or unlink is on its way the steps above still show the state
   // from before it; the wait replaces the "Connect X" / "Post on X" button.
   const pendingXChange = usePendingXLinkChange(activeAccount);
+  const { dismissed, dismiss } = useRewardsOnboardingDismissal(activeAccount);
 
   const handleContinue = useCallback(() => {
     if (!isXLinked) {
@@ -50,6 +53,7 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
   // Only nudge connected users who still have onboarding to finish. Avoid a
   // flash before the status is known.
   if (!activeAccount) return null;
+  if (dismissed) return null;
   if (statusLoading && !status) return null;
   // A failed status read is not "nothing done yet": rendering the card anyway
   // showed a fully paid user an empty two-step checklist.
@@ -81,6 +85,14 @@ const RewardsOnboarding = ({ variant = 'feed', className }: RewardsOnboardingPro
             <Sparkles className="h-3 w-3" aria-hidden />
             {t('onboarding.badge')}
           </span>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="ms-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/40 transition-all duration-200 hover:bg-white/10 hover:text-white/70"
+            aria-label={t('onboarding.dismiss')}
+          >
+            <X className="h-4 w-4" aria-hidden />
+          </button>
         </div>
 
         <h3 className={cn('m-0 font-bold text-white', isRail ? 'text-sm' : 'text-lg')}>

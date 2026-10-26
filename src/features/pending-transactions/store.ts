@@ -15,8 +15,8 @@
  *   registered for its kind says it is live.
  *
  * Any page can ask "is something of mine still on its way?" with
- * `usePendingTransactions`. The one component that shows the wait is
- * `PendingTransaction`.
+ * `listPendingTransactions`, re-rendering on `usePendingTransactionsVersion`.
+ * The one component that shows the wait is `PendingTransaction`.
  */
 
 import { isTransactionMined } from '@/utils/apiRead';

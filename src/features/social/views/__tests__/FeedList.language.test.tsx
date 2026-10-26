@@ -22,6 +22,7 @@ vi.mock('@/libs/WebSocketClient', () => ({ default: { subscribeToNewTokenSales: 
 vi.mock('@/seo/Head', () => ({ Head: () => null }));
 vi.mock('@/components/layout/Shell', () => ({ default: ({ children }: any) => children }));
 vi.mock('@/components/layout/RightRail', () => ({ default: () => null }));
+vi.mock('@/components/layout/MobileNetworkStats', () => ({ default: () => null }));
 vi.mock('@/components/hero-banner/HeroBannerCarousel', () => ({ default: () => null }));
 vi.mock('@/components/onboarding/RewardsOnboarding', () => ({ default: () => null }));
 vi.mock('../../components/CreatePost', () => ({ default: () => null }));

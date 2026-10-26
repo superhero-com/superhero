@@ -212,10 +212,11 @@ const OptionCard = ({
  * The connect modal offers the choice — passkey card, wallet card — so the
  * flow must not ask it again on a second screen. `passkey` runs the ceremony
  * the moment the vault probe confirms there is nothing here yet; `import`
- * opens straight onto the phrase field. Left unset, the flow starts on its own
- * `choose` screen (WalletLab, tests).
+ * opens straight onto the phrase field; `phrase` opens straight onto a new
+ * recovery phrase, the card's way in on a device that can't create a passkey.
+ * Left unset, the flow starts on its own `choose` screen (WalletLab, tests).
  */
-export type OnboardingEntry = 'passkey' | 'import';
+export type OnboardingEntry = 'passkey' | 'import' | 'phrase';
 
 interface Props {
   store?: VaultStore;
@@ -665,10 +666,12 @@ const WalletOnboarding = ({
       setError('');
       setImportText('');
       setStep('import-enter');
+    } else if (entry === 'phrase') {
+      startCreate();
     } else {
       createWithPasskey();
     }
-  }, [entry, probed, step, createWithPasskey]);
+  }, [entry, probed, step, createWithPasskey, startCreate]);
 
   /** DEVICE-GATED. Recovery ceremony → show the derived address; persists nothing. */
   const startRecover = useCallback(async () => {
@@ -1058,18 +1061,17 @@ const WalletOnboarding = ({
                     onClick={createWithPasskey}
                   />
 
-                  {/* Under a passkey `entry` this screen is only ever the fallback
-                      after a failed ceremony, so it offers the retry and the
-                      restore — the other ways in live on the modal that opened it. */}
-                  {entry !== 'passkey' && (
-                    <OptionCard
-                      icon={KeyRound}
-                      title="Use a recovery phrase"
-                      body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
-                      cta="Create with a phrase"
-                      onClick={startCreate}
-                    />
-                  )}
+                  {/* Also offered under a passkey `entry`, where this screen is the
+                      fallback after a failed ceremony: the error above tells the
+                      user to use a recovery phrase instead, and the modal behind
+                      this flow has no phrase option of its own. */}
+                  <OptionCard
+                    icon={KeyRound}
+                    title="Use a recovery phrase"
+                    body="Twelve words you write down and keep yourself. Works on any device, with or without biometrics."
+                    cta="Create with a phrase"
+                    onClick={startCreate}
+                  />
                   {importAllowed && entry !== 'passkey' && (
                     <AeButton variant="ghost" fullWidth onClick={() => { setError(''); setImportText(''); setStep('import-enter'); }}>Import an existing wallet</AeButton>
                   )}

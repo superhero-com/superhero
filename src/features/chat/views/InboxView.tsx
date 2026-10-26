@@ -97,7 +97,7 @@ const InboxView = () => {
           </p>
           {session.error && <p className="text-xs text-error">{session.error.message}</p>}
           <div>
-            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking}>
+            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking || !session.canUnlock}>
               {session.isUnlocking ? 'Unlocking…' : 'Unlock chat'}
             </Button>
           </div>
@@ -158,8 +158,7 @@ const InboxView = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate font-medium text-foreground">
-                            #
-                            {room.symbol}
+                            {`#${room.symbol}`}
                           </span>
                           {room.is_private && (
                             <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />

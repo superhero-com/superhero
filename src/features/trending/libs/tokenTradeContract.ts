@@ -97,11 +97,3 @@ export function getContractInstances() {
     bondingCurveInstance,
   };
 }
-
-/**
- * Clear contract instances (useful for cleanup)
- */
-export function clearContractInstances() {
-  tokenSaleInstance = undefined;
-  bondingCurveInstance = undefined;
-}

@@ -6,8 +6,9 @@ import {
 import {
   createStore, Provider, useAtomValue,
 } from 'jotai';
-import { chainNamesAtom } from '@/atoms/walletAtoms';
-import { useStorePostSenderChainNames } from '@/hooks/useChainName';
+import { chainNamesAtom, preferredChainNamesAtom } from '@/atoms/walletAtoms';
+import { useChainName, useStorePostSenderChainNames } from '@/hooks/useChainName';
+import { setPendingChainName } from '@/utils/preferredChainName';
 
 type TestPost = {
   sender_address?: string | null;
@@ -78,5 +79,58 @@ describe('useStorePostSenderChainNames', () => {
   it('ignores null/undefined posts and empty lists', () => {
     expect(renderStoreNames([]).current).toEqual({});
     expect(renderStoreNames([null, undefined]).current).toEqual({});
+  });
+});
+
+describe('useChainName', () => {
+  const ADDRESS = 'ak_2swhLkgBPeeADxVTAVCJnZLY5NZtCFiM93JxsEaMuC59euuFRQ';
+
+  function renderName(setup: (store: ReturnType<typeof createStore>) => void) {
+    const store = createStore();
+    setup(store);
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      createElement(Provider, { store }, children)
+    );
+    return renderHook(() => useChainName(ADDRESS, { lookup: false }), { wrapper }).result;
+  }
+
+  it('shows the preferred name over the newest owned name', () => {
+    const result = renderName((store) => {
+      store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
+      store.set(preferredChainNamesAtom, { [ADDRESS]: { name: 'picked.chain' } });
+    });
+    expect(result.current.chainName).toBe('picked.chain');
+  });
+
+  it('shows a just-picked name right away', () => {
+    const result = renderName((store) => {
+      store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
+      store.set(preferredChainNamesAtom, setPendingChainName({}, ADDRESS, 'other.chain'));
+    });
+    expect(result.current.chainName).toBe('other.chain');
+  });
+
+  it('falls back to the owned name when no preferred one is known', () => {
+    const result = renderName((store) => {
+      store.set(chainNamesAtom, { [ADDRESS]: 'newest.chain' });
+      store.set(preferredChainNamesAtom, {});
+    });
+    expect(result.current.chainName).toBe('newest.chain');
+  });
+});
+
+describe('useStorePostSenderChainNames preferred names', () => {
+  it('records the public name as the displayed name', () => {
+    const store = createStore();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      createElement(Provider, { store }, children)
+    );
+    renderHook(
+      () => useStorePostSenderChainNames([
+        { sender: { address: 'ak_erin', public_name: 'Picked.chain' } },
+      ]),
+      { wrapper },
+    );
+    expect(store.get(preferredChainNamesAtom)).toEqual({ ak_erin: { name: 'picked.chain' } });
   });
 });

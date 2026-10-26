@@ -10,6 +10,8 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { SuperheroApi } from '@/api/backend';
 import type { PostDto } from '@/api/generated';
+import { MessageSquare } from 'lucide-react';
+import AccountEmptyState from './AccountEmptyState';
 
 interface AccountFeedProps {
   address: string;
@@ -305,7 +307,12 @@ const AccountFeed = ({ address, tab }: AccountFeedProps) => {
             {renderItems}
             {(hasNextPage || hasMoreActivities) && <div ref={sentinelRef} className="h-10" />}
             {combinedList.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">{t('common.account.noPostsYet')}</div>
+              <AccountEmptyState
+                icon={MessageSquare}
+                title={t('common.account.noPostsYet')}
+                description={t('common.account.noPostsYetDescription')}
+                className="mt-4"
+              />
             )}
           </>
         )}

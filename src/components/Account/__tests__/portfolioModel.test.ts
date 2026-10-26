@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  portfolioChange, portfolioPeriod, portfolioPoints, portfolioValue,
+  portfolioChange, portfolioChangeSources, portfolioPeriod, portfolioPoints, portfolioValue,
+  tradingPnl,
 } from '../portfolioModel';
 
 const now = Date.parse('2026-09-20T12:00:00Z');
@@ -57,5 +58,42 @@ describe('portfolio figures', () => {
       interval: 21600,
     });
     expect(portfolioPeriod('all', now).startDate).toBe('2025-01-01T00:00:00.000Z');
+  });
+
+  it('measures trading P/L percentage against the cost basis, not portfolio value', () => {
+    const data = {
+      timestamp: '2026-09-20T12:00:00Z',
+      total_value_ae: 128.29,
+      total_pnl: { invested: { ae: 99.66, usd: 0.59 }, gain: { ae: 85.74, usd: 0.44 } },
+    };
+    expect(tradingPnl(data, 'ae')?.percentage).toBeCloseTo((85.74 / 99.66) * 100);
+    expect(tradingPnl({ ...data, total_pnl: { gain: { ae: 3 } } }, 'ae')).toEqual({ amount: 3, percentage: null });
+    expect(tradingPnl({ ...data, total_pnl: { invested: { ae: 0 }, gain: { ae: 3 } } }, 'ae')?.percentage).toBeNull();
+    expect(tradingPnl({ timestamp: data.timestamp }, 'ae')).toBeNull();
+  });
+
+  it('splits an AE change into AE balance and token revaluation', () => {
+    const at = (timestamp: string, ae: number, tokens: number) => ({
+      timestamp, ae_balance: ae, tokens_value_ae: tokens, total_value_ae: ae + tokens,
+    });
+    const sources = portfolioChangeSources(
+      [at('2026-09-19T10:00:00Z', 8.8827, 0), at('2026-09-18T10:00:00Z', 8.885, 0)],
+      at('2026-09-20T11:00:00Z', 8.8803, 0),
+      now,
+    );
+    expect(sources?.aeBalance).toBeCloseTo(8.8803 - 8.885);
+    expect(sources?.tokens).toBe(0);
+    const withTokens = portfolioChangeSources(
+      [at('2026-09-19T10:00:00Z', 10, 50)],
+      at('2026-09-20T11:00:00Z', 10, 42),
+      now,
+    );
+    expect(withTokens).toEqual({ aeBalance: 0, tokens: -8 });
+    expect(portfolioChangeSources([], at('2026-09-20T11:00:00Z', 1, 1), now)).toBeNull();
+    expect(portfolioChangeSources(
+      [at('2026-09-19T10:00:00Z', 10, 50)],
+      at('2026-09-18T10:00:00Z', 1, 1),
+      now,
+    )).toBeNull();
   });
 });

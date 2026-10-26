@@ -46,7 +46,7 @@ export type TrendPostItem = PostDto & {
 };
 
 export const SEARCH_PREVIEW_LIMIT = 3;
-export const SEARCH_FULL_LIMIT = 24;
+export const SEARCH_PAGE_LIMIT = 24;
 export const DEFAULT_TAB_LIMIT = 12;
 export const FALLBACK_LIMIT = 3;
 
@@ -89,9 +89,13 @@ function normalizeSection<T>(
   };
 }
 
-async function fetchAccountSearch(limit: number, search?: string) {
+async function fetchAccountSearch(limit: number, search?: string, page?: number) {
   const params = new URLSearchParams();
   params.set('limit', String(limit));
+
+  if (page) {
+    params.set('page', String(page));
+  }
 
   if (search?.trim()) {
     params.set('search', search.trim());
@@ -115,33 +119,37 @@ function settledValue<T>(
 // silently losing real matches for e.g. a single-character search.
 const UNIFIED_SEARCH_MIN_LENGTH = 2;
 
+async function fetchPaginatedSearch(term: string, limit: number) {
+  const [tokens, users, posts] = await Promise.allSettled([
+    SuperheroApi.listTokens({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'market_cap',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
+    fetchAccountSearch(limit, term),
+    SuperheroApi.listPosts({
+      search: term,
+      limit,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+    }) as Promise<PaginatedApiResponse<TrendPostItem>>,
+  ]);
+
+  return {
+    tokens: normalizeSection(settledValue(tokens)),
+    users: normalizeSection(settledValue(users)),
+    posts: normalizeSection(settledValue(posts)),
+  };
+}
+
 async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   const term = search.trim();
 
   if (term.length < UNIFIED_SEARCH_MIN_LENGTH) {
-    const [tokens, users, posts] = await Promise.allSettled([
-      SuperheroApi.listTokens({
-        search: term,
-        limit,
-        page: 1,
-        orderBy: 'market_cap',
-        orderDirection: 'DESC',
-      }) as Promise<PaginatedApiResponse<TrendTokenItem>>,
-      fetchAccountSearch(limit, term),
-      SuperheroApi.listPosts({
-        search: term,
-        limit,
-        page: 1,
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
-      }) as Promise<PaginatedApiResponse<TrendPostItem>>,
-    ]);
-
-    return {
-      tokens: normalizeSection(settledValue(tokens)),
-      users: normalizeSection(settledValue(users)),
-      posts: normalizeSection(settledValue(posts)),
-    };
+    return fetchPaginatedSearch(term, limit);
   }
 
   // Tokens + posts come from the unified endpoint (one request instead of
@@ -163,29 +171,43 @@ async function fetchTrendSearchPreviewWithLimit(search: string, limit: number) {
   };
 }
 
+// Explore needs real totals for its result counts and "View all" toggle, which
+// the unified endpoint can't give — it returns bare arrays capped at `limit`.
 export async function fetchTrendSearchPreview(search: string) {
-  return fetchTrendSearchPreviewWithLimit(search, SEARCH_PREVIEW_LIMIT);
+  return fetchPaginatedSearch(search.trim(), SEARCH_PREVIEW_LIMIT);
 }
 
-export async function fetchTrendSearchSection(tab: SearchTab, search: string) {
+type ListTokensParams = NonNullable<Parameters<typeof SuperheroApi.listTokens>[0]>;
+
+export type TokenSearchOptions = Pick<ListTokensParams, 'orderBy' | 'orderDirection' | 'collection'>;
+
+export async function fetchTrendSearchSection(
+  tab: SearchTab,
+  search: string,
+  page = 1,
+  tokenOptions: TokenSearchOptions = {},
+) {
   const term = search.trim();
 
   switch (tab) {
     case 'tokens':
       return normalizeSection<TrendTokenItem>(await SuperheroApi.listTokens({
         search: term,
-        limit: SEARCH_FULL_LIMIT,
-        page: 1,
-        orderBy: 'market_cap',
-        orderDirection: 'DESC',
+        limit: SEARCH_PAGE_LIMIT,
+        page,
+        orderBy: tokenOptions.orderBy ?? 'market_cap',
+        orderDirection: tokenOptions.orderDirection ?? 'DESC',
+        collection: tokenOptions.collection,
       }) as PaginatedApiResponse<TrendTokenItem>);
     case 'users':
-      return normalizeSection<TrendUserItem>(await fetchAccountSearch(SEARCH_FULL_LIMIT, term));
+      return normalizeSection<TrendUserItem>(
+        await fetchAccountSearch(SEARCH_PAGE_LIMIT, term, page),
+      );
     case 'posts':
       return normalizeSection<TrendPostItem>(await SuperheroApi.listPosts({
         search: term,
-        limit: SEARCH_FULL_LIMIT,
-        page: 1,
+        limit: SEARCH_PAGE_LIMIT,
+        page,
         orderBy: 'created_at',
         orderDirection: 'DESC',
       }) as PaginatedApiResponse<TrendPostItem>);
@@ -241,6 +263,9 @@ export const FEED_RAIL_SEARCH_DEBOUNCE_MS = 400;
 
 /** URL query param for prefilled Explore search (`/trends/tokens?q=…`). */
 export const EXPLORE_SEARCH_QUERY_KEY = 'q';
+
+/** URL query param that narrows Explore search to one category (`?q=…&type=tokens`). */
+export const EXPLORE_SEARCH_TYPE_KEY = 'type';
 
 export type FeedRailSearchItem =
   | { type: 'token'; item: TrendTokenItem }

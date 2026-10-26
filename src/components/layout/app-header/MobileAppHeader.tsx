@@ -1,6 +1,6 @@
 import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/ae-dropdown-menu';
 import { DEFAULT_PAST_TIMEFRAME } from '@/utils/constants';
 import { formatNumber } from '@/utils/number';
@@ -97,9 +97,8 @@ const MobileAppHeader = () => {
               ←
             </button>
             <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2">
-              <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
-                #
-                {String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
+              <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight truncate">
+                {`#${String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}`}
               </div>
               <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
                 <span className="text-white/90">{priceText}</span>
@@ -171,6 +170,7 @@ const MobileAppHeader = () => {
                     <User className="mr-2 h-4 w-4" />
                     {t('labels.profile')}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     {t('buttons.disconnect')}

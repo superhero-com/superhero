@@ -12,7 +12,7 @@ import { eventToProfile } from '../utils/converters';
 import type { NostrIdentityProvider } from '../identity/nostr-identity';
 
 export type EventHandlerCallbacks = {
-  onDirectMessage: (event: NostrEvent, decrypted: string, otherPubkey: string) => void;
+  onDirectMessage: (event: NostrEvent, decrypted: string, otherPubkey: string) => void | Promise<void>;
   onProfile: (pubkey: string, profile: Profile) => void;
   onReaction: (event: NostrEvent) => void;
   onEventDeleted: (event: NostrEvent) => void;
@@ -24,8 +24,6 @@ export class NostrEventHandler {
   private callbacks: EventHandlerCallbacks;
 
   private eventQueue: NostrEvent[] = [];
-
-  private eventQueueBuffer: NostrEvent[] = [];
 
   private isProcessing = false;
 
@@ -45,19 +43,11 @@ export class NostrEventHandler {
     }
     this.seenEvents.add(event.id);
 
-    if (this.isProcessing) {
-      this.eventQueueBuffer.push(event);
-      return;
-    }
-
-    if (this.eventQueueBuffer.length > 0) {
-      this.eventQueue.push(...this.eventQueueBuffer);
-      this.eventQueueBuffer = [];
-    }
+    this.eventQueue.push(event);
+    if (this.isProcessing) return;
     if (this.queueTimer) {
       clearTimeout(this.queueTimer);
     }
-    this.eventQueue.push(event);
     this.queueTimer = setTimeout(() => {
       this.processQueue();
     }, Timing.EVENT_QUEUE_DEBOUNCE_MS);
@@ -66,14 +56,21 @@ export class NostrEventHandler {
   /** Drain the queue in order (serial — DM ordering matters). */
   private async processQueue(): Promise<void> {
     this.isProcessing = true;
-    const queued = this.eventQueue;
-    this.eventQueue = [];
-    // Serial reduce keeps ordering without tripping no-await-in-loop.
-    await queued.reduce(
-      (prev, event) => prev.then(() => this.processEvent(event)),
-      Promise.resolve(),
-    );
-    this.isProcessing = false;
+    this.queueTimer = null;
+    try {
+      while (this.eventQueue.length) {
+        const event = this.eventQueue.shift()!;
+        try {
+          // Serial processing preserves order, including arrivals during decryption.
+          // eslint-disable-next-line no-await-in-loop
+          await this.processEvent(event);
+        } catch {
+          // One malformed ciphertext or a locked identity must not wedge the queue.
+        }
+      }
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   private async processEvent(event: NostrEvent): Promise<void> {
@@ -104,6 +101,7 @@ export class NostrEventHandler {
   private async handleDirectMessage(event: NostrEvent): Promise<void> {
     const myPubkey = await this.identity.getPublicKey();
     const isFromMe = event.pubkey === myPubkey;
+    if (!isFromMe && !event.tags.some(([tag, value]) => tag === 'p' && value === myPubkey)) return;
     const otherPubkey = isFromMe
       ? event.tags.find((t) => t[0] === 'p')?.[1]
       : event.pubkey;
@@ -113,7 +111,7 @@ export class NostrEventHandler {
     }
 
     const decrypted = await this.identity.nip04Decrypt(otherPubkey, event.content);
-    this.callbacks.onDirectMessage(event, decrypted, otherPubkey);
+    await this.callbacks.onDirectMessage(event, decrypted, otherPubkey);
   }
 
   /** Clear the de-duplication cache (memory management). */

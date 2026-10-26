@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { type ContractMethodsBase } from '@aeternity/aepp-sdk';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
-import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 import { initializeContractTyped } from '../libs/initializeContractTyped';
 import {
@@ -34,7 +33,6 @@ export default function AddTokens() {
   const { t } = useTranslation('addTokens');
   const { t: tDex } = useTranslation('dex');
   const { activeAccount, sdk } = useAeSdk();
-  const toast = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,8 +60,6 @@ export default function AddTokens() {
           }
           const mdw = await r.json();
           const items: any[] = Array.isArray(mdw?.data) ? mdw.data : [];
-          for (const it of items) {
-          }
           for (const it of items) {
             const ct = it?.contract_id;
             const bal = it?.amount || it?.balance;

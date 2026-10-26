@@ -21,12 +21,6 @@ const QUESTION_DEFS: QuestionDef[] = [
     id: 'what-is-superhero', categoryKey: 'categoryOverview', titleKey: 'qWhatIsSuperheroTitle', answerKey: 'qWhatIsSuperheroAnswer',
   },
   {
-    id: 'chat-powered-by-quali', categoryKey: 'categoryChatCommunity', titleKey: 'qChatPoweredByQualiTitle', answerKey: 'qChatPoweredByQualiAnswer',
-  },
-  {
-    id: 'what-is-trending', categoryKey: 'categoryOverview', titleKey: 'qWhatIsTrendingTitle', answerKey: 'qWhatIsTrendingAnswer',
-  },
-  {
     id: 'quick-start', categoryKey: 'categoryGettingStarted', titleKey: 'qQuickStartTitle', listKeys: ['qQuickStartLi1', 'qQuickStartLi2', 'qQuickStartLi3', 'qQuickStartLi4'],
   },
   {
@@ -88,7 +82,7 @@ const QUESTION_DEFS: QuestionDef[] = [
   },
 ];
 
-const CATEGORY_ORDER = ['categoryOverview', 'categoryChatCommunity', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryRewardsProgram', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryNameClaims', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
+const CATEGORY_ORDER = ['categoryOverview', 'categoryGettingStarted', 'categoryTrading', 'categoryDaoGovernance', 'categorySocialFeed', 'categoryAccountsRankings', 'categoryRewardsProgram', 'categoryInvitesRewards', 'categoryPricingAnalytics', 'categoryNameClaims', 'categoryWalletSecurity', 'categorySupport', 'categoryGlossary'];
 
 export default function FAQ() {
   const { t } = useTranslation('faq');

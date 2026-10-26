@@ -5,9 +5,6 @@ WORKDIR /app
 # Install build dependencies for node-gyp
 RUN apk add --no-cache python3 make g++
 
-# WalletConnect project id passed from GitHub Secrets via build args
-ARG VITE_WALLET_CONNECT_PROJECT_ID
-ENV VITE_WALLET_CONNECT_PROJECT_ID=$VITE_WALLET_CONNECT_PROJECT_ID
 ARG VITE_X_OAUTH_CLIENT_ID
 ENV VITE_X_OAUTH_CLIENT_ID=$VITE_X_OAUTH_CLIENT_ID
 # WebAuthn RP ID for wallet passkeys — the custody boundary, baked at build time.

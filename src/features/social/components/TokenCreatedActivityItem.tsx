@@ -6,7 +6,7 @@ import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 import { useHashtagAllowedChars } from '../../../hooks/useCommunityFactory';
 import type { PostDto } from '../../../api/generated';
-import { compactTime } from '../../../utils/time';
+import { compactTime, fullTimestamp } from '../../../utils/time';
 import { formatAddress } from '../../../utils/address';
 // SharePopover removed from activity row per design
 
@@ -91,7 +91,7 @@ const TokenCreatedActivityItem = memo(({
               </span>
             )}
             <span className="text-white/50 shrink-0">·</span>
-            <span className="text-white/60 shrink-0">{compactTime(item.created_at as unknown as string)}</span>
+            <span className="text-white/60 shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

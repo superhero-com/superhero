@@ -1,6 +1,7 @@
 import React, { lazy } from 'react';
 import { RouteObject, Navigate, useParams } from 'react-router-dom';
 import SocialLayout from './components/layout/SocialLayout';
+import { PageHead } from './seo/PageHead';
 import { postDetailPath } from './features/notifications/notificationNavigation';
 
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
@@ -45,7 +46,6 @@ const TxQueue = lazy(() => import('./views/TxQueue'));
 const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
 const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
 const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
-// const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
 const Pool = lazy(() => import('./features/dex/views/Pool'));
 const DexExploreTokens = lazy(
   () => import('./features/dex/views/DexExploreTokens'),
@@ -56,7 +56,6 @@ const DexExplorePools = lazy(
 const DexExploreTransactions = lazy(
   () => import('./features/dex/views/DexExploreTransactions'),
 );
-// const Bridge = lazy(() => import('./features/ae-eth-bridge/views/Bridge'));
 
 // Legacy DEX components (for backward compatibility)
 const Explore = lazy(() => import('./views/Explore'));
@@ -141,17 +140,23 @@ export const routes: RouteObject[] = [
   // New trends routes
   { path: '/trends/tokens', element: <TokenList /> },
   { path: '/trends', element: <Navigate to="/trends/tokens" replace /> },
-  { path: '/trends/visx', element: <TrendCloudVisx /> },
+  { path: '/trends/visx', element: <PageHead page="trendCloud"><TrendCloudVisx /></PageHead> },
   { path: '/trends/tokens/:tokenName', element: <TokenSaleDetails /> },
   { path: '/trends/leaderboard', element: <LeaderboardView /> },
-  { path: '/tx-queue/:id', element: <TxQueue /> },
-  { path: '/trends/invite', element: <TrendInvite /> },
-  { path: '/trends/daos', element: <TrendDaos /> },
-  { path: '/trends/dao/:saleAddress', element: <TrendDao /> },
-  { path: '/trends/dao/:saleAddress/vote/:voteId/:voteAddress', element: <VoteView /> },
-  { path: '/trends/accounts', element: <TrendAccounts /> },
-  { path: '/trends/accounts/:address', element: <TrendAccountDetails /> },
-  { path: '/trends/create', element: <TrendCreate /> },
+  { path: '/tx-queue/:id', element: <PageHead page="txQueue"><TxQueue /></PageHead> },
+  { path: '/trends/invite', element: <PageHead page="invite"><TrendInvite /></PageHead> },
+  { path: '/trends/daos', element: <PageHead page="daos"><TrendDaos /></PageHead> },
+  { path: '/trends/dao/:saleAddress', element: <PageHead page="dao"><TrendDao /></PageHead> },
+  {
+    path: '/trends/dao/:saleAddress/vote/:voteId/:voteAddress',
+    element: <PageHead page="daoVote"><VoteView /></PageHead>,
+  },
+  { path: '/trends/accounts', element: <PageHead page="accounts"><TrendAccounts /></PageHead> },
+  {
+    path: '/trends/accounts/:address',
+    element: <PageHead page="accountDetails"><TrendAccountDetails /></PageHead>,
+  },
+  { path: '/trends/create', element: <PageHead page="createToken"><TrendCreate /></PageHead> },
   // Legacy redirects from /trending/* -> /trends/*
   { path: '/trending', element: <Navigate to="/trends/tokens" replace /> },
   { path: '/trending/tokens', element: <Navigate to="/trends/tokens" replace /> },
@@ -174,20 +179,20 @@ export const routes: RouteObject[] = [
   { path: '/profile/x/callback', element: <ProfileXCallback /> },
   // Chat — inbox, DM threads (2-segment `dm/` never collides with the 1-segment
   // room `:saleAddress`), and token-gated rooms.
-  { path: '/chat', element: <ChatInbox /> },
+  { path: '/chat', element: <PageHead page="chat"><ChatInbox /></PageHead> },
   // Two-segment literal `settings/relays` outranks and never collides with the
   // 1-segment room `:saleAddress`.
-  { path: '/chat/settings/relays', element: <ChatRelaySettings /> },
-  { path: '/chat/dm/:address', element: <DmThread /> },
-  { path: '/chat/:saleAddress', element: <ChatRoom /> },
-  { path: '/chat/:saleAddress/info', element: <ChatRoomInfo /> },
-  { path: '/landing', element: <Landing /> },
-  { path: '/wallet', element: <Wallet /> },
-  { path: '/meet/:room?', element: <Conference /> },
-  { path: '/voting', element: <Governance /> },
-  { path: '/voting/p/:id', element: <Governance /> },
-  { path: '/voting/account', element: <Governance /> },
-  { path: '/voting/create', element: <Governance /> },
+  { path: '/chat/settings/relays', element: <PageHead page="chatRelays"><ChatRelaySettings /></PageHead> },
+  { path: '/chat/dm/:address', element: <PageHead page="chatDm"><DmThread /></PageHead> },
+  { path: '/chat/:saleAddress', element: <PageHead page="chatRoom"><ChatRoom /></PageHead> },
+  { path: '/chat/:saleAddress/info', element: <PageHead page="chatRoomInfo"><ChatRoomInfo /></PageHead> },
+  { path: '/landing', element: <PageHead page="landing"><Landing /></PageHead> },
+  { path: '/wallet', element: <PageHead page="wallet"><Wallet /></PageHead> },
+  { path: '/meet/:room?', element: <PageHead page="meet"><Conference /></PageHead> },
+  { path: '/voting', element: <PageHead page="governance"><Governance /></PageHead> },
+  { path: '/voting/p/:id', element: <PageHead page="governance"><Governance /></PageHead> },
+  { path: '/voting/account', element: <PageHead page="governance"><Governance /></PageHead> },
+  { path: '/voting/create', element: <PageHead page="governance"><Governance /></PageHead> },
 
   // New DEX Routes with Layout
   {
@@ -206,34 +211,19 @@ export const routes: RouteObject[] = [
     path: '/defi/wrap',
     element: (
       <DexLayout>
+        <PageHead page="dexWrap" />
         <DexWrap />
       </DexLayout>
     ),
   },
-  {
-    path: '/defi/buy-ae-with-eth',
-    // Re-enable: uncomment DexBridge lazy import above, then swap `element` for the block below.
-    element: <Navigate to="/defi/swap" replace />,
-    // element: (
-    //   <DexLayout>
-    //     <DexBridge />
-    //   </DexLayout>
-    // ),
-  },
-  {
-    path: '/defi/bridge',
-    // Re-enable: uncomment Bridge lazy import above, then swap `element` for the block below.
-    element: <Navigate to="/defi/swap" replace />,
-    // element: (
-    //   <DexLayout>
-    //     <Bridge />
-    //   </DexLayout>
-    // ),
-  },
+  // The ETH bridge was removed; keep old links landing somewhere useful.
+  { path: '/defi/buy-ae-with-eth', element: <Navigate to="/defi/swap" replace /> },
+  { path: '/defi/bridge', element: <Navigate to="/defi/swap" replace /> },
   {
     path: '/defi/pool',
     element: (
       <DexLayout>
+        <PageHead page="dexPool" />
         <Pool />
       </DexLayout>
     ),
@@ -242,6 +232,7 @@ export const routes: RouteObject[] = [
     path: '/defi/pool/add-tokens',
     element: (
       <DexLayout>
+        <PageHead page="dexAddTokens" />
         <AddTokens />
       </DexLayout>
     ),
@@ -250,6 +241,7 @@ export const routes: RouteObject[] = [
     path: '/defi/explore/tokens',
     element: (
       <DexLayout>
+        <PageHead page="dexExploreTokens" />
         <DexExploreTokens />
       </DexLayout>
     ),
@@ -258,6 +250,7 @@ export const routes: RouteObject[] = [
     path: '/defi/explore/tokens/:tokenAddress',
     element: (
       <DexLayout>
+        <PageHead page="tokenDetail" />
         <TokenDetail />
       </DexLayout>
     ),
@@ -266,6 +259,7 @@ export const routes: RouteObject[] = [
     path: '/defi/explore/pools',
     element: (
       <DexLayout>
+        <PageHead page="dexExplorePools" />
         <DexExplorePools />
       </DexLayout>
     ),
@@ -274,6 +268,7 @@ export const routes: RouteObject[] = [
     path: '/defi/explore/pools/:poolAddress',
     element: (
       <DexLayout>
+        <PageHead page="dexPoolDetail" />
         <PoolDetail />
       </DexLayout>
     ),
@@ -282,6 +277,7 @@ export const routes: RouteObject[] = [
     path: '/defi/explore/transactions',
     element: (
       <DexLayout>
+        <PageHead page="dexExploreTransactions" />
         <DexExploreTransactions />
       </DexLayout>
     ),
@@ -289,19 +285,22 @@ export const routes: RouteObject[] = [
 
   // Legacy DEX Routes (for backward compatibility)
   { path: '/swap', element: <Navigate to="/defi/swap" replace /> },
-  { path: '/pool', element: <Pool /> },
-  { path: '/explore', element: <Explore /> },
-  { path: '/explore/tokens/:id', element: <TokenDetail /> },
-  { path: '/explore/pools/:id', element: <PoolDetail /> },
-  { path: '/pool/add-tokens', element: <AddTokens /> },
+  { path: '/pool', element: <PageHead page="dexPool" canonicalPath="/defi/pool"><Pool /></PageHead> },
+  { path: '/explore', element: <PageHead page="dexExplore"><Explore /></PageHead> },
+  { path: '/explore/tokens/:id', element: <PageHead page="tokenDetail"><TokenDetail /></PageHead> },
+  { path: '/explore/pools/:id', element: <PageHead page="dexPoolDetail"><PoolDetail /></PageHead> },
+  {
+    path: '/pool/add-tokens',
+    element: <PageHead page="dexAddTokens" canonicalPath="/defi/pool/add-tokens"><AddTokens /></PageHead>,
+  },
 
-  { path: '/terms', element: <Terms /> },
-  { path: '/privacy', element: <Privacy /> },
-  { path: '/faq', element: <FAQ /> },
-  { path: '/branding', element: <Branding /> },
+  { path: '/terms', element: <PageHead page="terms"><Terms /></PageHead> },
+  { path: '/privacy', element: <PageHead page="privacy"><Privacy /></PageHead> },
+  { path: '/faq', element: <PageHead page="faq"><FAQ /></PageHead> },
+  { path: '/branding', element: <PageHead page="branding"><Branding /></PageHead> },
   { path: '/get-ae', element: <BuyAe /> },
   { path: '/buy-ae', element: <Navigate to="/get-ae" replace /> },
-  { path: '/whitepaper', element: <Whitepaper /> },
+  { path: '/whitepaper', element: <PageHead page="whitepaper"><Whitepaper /></PageHead> },
   ...devRoutes,
   {
     path: '*',

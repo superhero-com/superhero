@@ -63,8 +63,6 @@
 .swap-inline-state p{margin:0}
 .swap-inline-state span{display:block;color:var(--swap-muted);font-size:10px;margin-top:2px}
 .swap-inline-state.is-error{background:light-dark(#fcf3f6,#2b1b2533);border-color:light-dark(#eccbd5,#75425555);color:light-dark(#a14660,#dda1b4)}
-.swap-loading{display:flex;align-items:center;gap:6px}
-.swap-loading svg{width:12px;height:12px}
 
 .swap-settings{background:light-dark(#f5f8fc,#0c121b);border:1px solid var(--swap-line);border-radius:13px;padding:12px;margin:0 0 14px}
 .swap-settings__heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
@@ -120,9 +118,6 @@
 }
 
 @media(prefers-reduced-motion:no-preference){.swap-field,.swap-asset-select,.swap-settings-trigger,.swap-primary,.swap-direction{transition:border-color 180ms,background 180ms,box-shadow 180ms}
-.swap-loading svg{animation:swap-quote-spin 1.2s linear infinite}
-@keyframes swap-quote-spin{to{transform:rotate(360deg)}
-}
 }
 
 

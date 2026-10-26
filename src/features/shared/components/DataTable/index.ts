@@ -1,4 +1,4 @@
-export { DataTable, useDataTable } from './DataTable';
+export { DataTable } from './DataTable';
 export { DataTablePagination } from './DataTablePagination';
 export type {
   DataTableProps,

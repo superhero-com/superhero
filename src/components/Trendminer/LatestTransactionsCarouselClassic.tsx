@@ -304,7 +304,7 @@ const LatestTransactionsCarousel = () => {
               </div>
             )}
             <div className={`transaction-token-name ${type.textGradient} bg-clip-text text-transparent`}>
-              {tokenName}
+              {`#${tokenName}`}
             </div>
           </div>
         </div>

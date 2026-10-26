@@ -23,6 +23,15 @@ import { createRevocableNostrIdentity } from '../identity/revocable-identity';
 
 /** Subscribers notified whenever the session locks or unlocks. */
 const changeListeners = new Set<() => void>();
+let sessionAddress: string | null = null;
+let unlockVersion = 0;
+let pendingUnlock: { address: string; promise: Promise<string> } | null = null;
+
+function invalidateUnlock(): void {
+  sessionAddress = null;
+  pendingUnlock = null;
+  unlockVersion += 1;
+}
 
 function notifyChange(): void {
   changeListeners.forEach((listener) => listener());
@@ -35,7 +44,28 @@ export function subscribeRoomSession(listener: () => void): () => void {
 }
 
 /** The tab-scoped session that custodies the room signing key. */
-export const roomKeySession = new NostrKeySession({ onLock: () => notifyChange() });
+export const roomKeySession = new NostrKeySession({
+  onLock: () => {
+    invalidateUnlock();
+    notifyChange();
+  },
+});
+
+/** Explicitly lock the room session and invalidate any pending verification. */
+export function lockRoomSession(): void {
+  if (roomKeySession.isUnlocked) roomKeySession.lock('explicit');
+  else invalidateUnlock();
+}
+
+export function isRoomSessionUnlocked(address?: string): boolean {
+  return !!address && sessionAddress === address && roomKeySession.isUnlocked;
+}
+
+/** Account changes also cancel verification that has not produced a key yet. */
+export function retainRoomSessionForAccount(address?: string): void {
+  if ((sessionAddress && sessionAddress !== address)
+    || (pendingUnlock && pendingUnlock.address !== address)) lockRoomSession();
+}
 
 /**
  * The single revocable identity every DM and room transport signs through. Holds
@@ -65,28 +95,45 @@ export function ensureRoomSessionTeardown(): void {
  * device has no in-app wallet vault.
  */
 export async function unlockRoomSession(address: string): Promise<string> {
-  const record = await createIndexedDbVaultStore().load();
-  if (!record) {
-    throw new Error('Chat needs the in-app wallet on this device.');
+  const accountIndex = indexForAddress(address);
+  if (accountIndex === null) {
+    throw new Error('Chat needs the in-app wallet for this account on this device.');
   }
-  const accountIndex = indexForAddress(address) ?? 0;
-  // Name the grant: this approval yields a key cached for a rolling idle window,
-  // not the single signature the prompt otherwise describes.
-  const keys = await deriveNostrIdentity(
-    record,
-    (r) => requestUnlock(r, {
-      kind: 'chat-session',
-      idleMinutes: Math.round(DEFAULT_NOSTR_IDLE_TIMEOUT_MS / 60_000),
-    }),
-    accountIndex,
-  );
-  roomKeySession.unlock(keys);
-  ensureRoomSessionTeardown();
-  notifyChange();
-  return keys.publicKey;
-}
+  if (isRoomSessionUnlocked(address)) {
+    roomKeySession.touch();
+    return roomKeySession.keys!.publicKey;
+  }
+  if (pendingUnlock?.address === address) return pendingUnlock.promise;
 
-/** Explicitly lock the room session (drops the key; notifies subscribers). */
-export function lockRoomSession(): void {
-  roomKeySession.lock('explicit');
+  lockRoomSession();
+  const version = unlockVersion;
+  const assertCurrent = () => {
+    if (version !== unlockVersion) throw new Error('Chat unlock was cancelled.');
+  };
+  const promise = (async () => {
+    const record = await createIndexedDbVaultStore().load();
+    assertCurrent();
+    if (!record) throw new Error('Chat needs the in-app wallet on this device.');
+    // Every chat entry point shares this one verification and its derived key.
+    const keys = await deriveNostrIdentity(
+      record,
+      (r) => requestUnlock(r, {
+        kind: 'chat-session',
+        idleMinutes: Math.round(DEFAULT_NOSTR_IDLE_TIMEOUT_MS / 60_000),
+      }),
+      accountIndex,
+    );
+    assertCurrent();
+    sessionAddress = address;
+    roomKeySession.unlock(keys);
+    ensureRoomSessionTeardown();
+    notifyChange();
+    return keys.publicKey;
+  })();
+  pendingUnlock = { address, promise };
+  try {
+    return await promise;
+  } finally {
+    if (pendingUnlock?.promise === promise) pendingUnlock = null;
+  }
 }

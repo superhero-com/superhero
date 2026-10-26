@@ -10,8 +10,6 @@
 .hero-feature-card header>div{display:grid;gap:2px;min-width:0}
 .hero-feature-card header strong{font-size:13px;line-height:18px;font-weight:650;letter-spacing:0;color:#e9f1fc}
 .hero-feature-card header small{font-size:10px;line-height:15px;color:#8fa6c5}
-.hero-feature-live{display:flex;gap:5px;align-items:center;font-size:9px;color:#8bcbbf;margin-inline-start:auto}
-.hero-feature-live>i{width:4px;height:4px;border-radius:50%;background:#77cab8}
 .hero-feature-quote{display:flex;align-items:baseline;justify-content:space-between;margin-top:15px}
 .hero-feature-quote>strong{font-size:29px;line-height:32px;font-weight:650;letter-spacing:-.7px}
 .hero-feature-quote>span{display:flex;gap:4px;align-items:center;font-size:11px;color:#82d1ba;font-weight:600}
@@ -20,7 +18,6 @@
 .hero-chart-guide{stroke:#a0c7ff10;stroke-dasharray:3 5;fill:none;stroke-width:1}
 .hero-feature-card footer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #b4cfee14;min-height:42px;font-size:9px;color:#9cb1cf}
 .hero-feature-card footer>span{display:flex;gap:6px;align-items:center}
-.hero-curve-icon{color:#8eadd8;font-size:14px}
 .hero-feature-card footer>a{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 0 0 9px;background:none;border:0;color:#b8d5ff;font-size:10px;font-weight:550}
 .hero-feature-card footer svg{width:12px;height:12px}
 .hero-feature-note{position:relative;display:flex;align-items:center;gap:9px;min-height:57px;margin:-1px 12px -20px;padding:10px 12px;border:1px solid #83a9df2e;border-radius:0 0 13px 13px;background:linear-gradient(110deg,#152941f5,#15253bf2);box-shadow:0 12px 24px -17px #000a;color:#d6e6fc;z-index:-1}
@@ -30,7 +27,6 @@
 .hero-feature-note strong{font-size:10px;line-height:14px;font-weight:550}
 .hero-feature-note>div>span{font-size:9px;line-height:13px;color:#8fa7c8}
 .hero-feature-card--post{padding-bottom:17px}
-.hero-post-verified{width:16px;height:16px;color:#7fa6d3;margin-inline-start:auto}
 .hero-feature-card--post>p{font-size:15px;line-height:24px;letter-spacing:-.15px;margin:22px 0 23px;max-width:245px;color:#e0eafa}
 .hero-feature-card--post>p>span{color:#a4caff}
 .hero-post-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:14px;border-top:1px solid #c6dcff14}
@@ -38,10 +34,8 @@
 .hero-tip-demo>img{width:16px;filter:brightness(2.5) saturate(.3)}
 .hero-post-bottom>span:not(.hero-tip-demo){display:flex;gap:4px;align-items:center;color:#93abc9;font-size:9px}
 .hero-post-bottom>span:not(.hero-tip-demo)>svg{width:12px;height:12px;flex:none}
-.hero-feature-note--receipt .hero-note-icon{color:#9ad6c8;background:#284d4d55;border-color:#70c3b526}
 .hero-receipt-amount{font-size:16px;font-weight:600;color:#97d5c4;white-space:nowrap}
 .hero-receipt-amount small{font-size:9px;font-weight:500}
-.hero-feature-note--receipt.is-confirmed{border-color:#76c9b966}
 
 .hero-feature-status{margin-inline-start:auto;color:#96afce;font-size:8px;line-height:16px;padding:1px 6px;border:1px solid #95b8ed22;border-radius:5px;white-space:nowrap}
 .hero-feature-card footer>span>svg{width:12px;height:12px;flex:none}

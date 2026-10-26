@@ -20,10 +20,8 @@
 
 .token-ranking-row-heading{display:flex;align-items:center;gap:7px;min-height:24px;margin-bottom:9px}
 .token-ranking-position{color:var(--token-ranking-muted);font-size:10px;font-weight:550;min-width:20px;flex:none;font-variant-numeric:tabular-nums}
-.token-ranking-token-mark{width:24px;height:24px;display:grid;place-items:center;flex:none;border-radius:7px;background:light-dark(#f1f4f9,#ffffff05);color:light-dark(#69809e,#778da9)}
-.token-ranking-token-mark svg{width:14px;height:14px;stroke-width:1.6}
 .token-ranking-identity{min-width:0;flex:1}
-.token-ranking-identity strong{display:block;font-size:12px;font-weight:600;line-height:17px;overflow-wrap:anywhere}
+.token-ranking-identity strong{display:block;font-size:12px;font-weight:600;line-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .token-ranking-current{flex:none;font-size:9px;line-height:15px;color:light-dark(#3666ab,#accbf4);padding:2px 5px;border-radius:5px;background:light-dark(#dde9fb,#aacfff0b)}
 .token-ranking-row-arrow{width:13px;height:13px;flex:none;color:var(--token-ranking-muted);opacity:.6}
 
@@ -45,7 +43,6 @@
 
 .token-ranking-row.is-current{background:light-dark(#eef4fd,#19273b);border-color:light-dark(#cfdef4,#355171)}
 .token-ranking-row.is-current .token-ranking-position{color:light-dark(#2458a1,#b3cff5)}
-.token-ranking-row.is-current .token-ranking-token-mark{color:light-dark(#3b73bb,#a0c6ff);background:light-dark(#dde9fb,#294060)}
 .token-ranking-row.is-current .token-ranking-market dd{color:light-dark(#1c4f9a,#bdd6ff)}
 
 .token-ranking-help{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;margin-top:8px;padding:4px 0 0;border:0;border-top:1px solid var(--token-ranking-line);background:none;color:var(--token-ranking-muted);font-size:11px;text-align:start}
@@ -68,7 +65,6 @@
 @container token-ranking (max-width:330px){.token-ranking-card{padding:14px;border-radius:18px}
 .token-ranking-row{padding-inline:8px}
 .token-ranking-row-heading{gap:6px}
-.token-ranking-token-mark{width:22px;height:22px}
 .token-ranking-identity strong{font-size:11px}
 .token-ranking-current{font-size:8px;padding-inline:4px}
 .token-ranking-metrics{column-gap:12px}

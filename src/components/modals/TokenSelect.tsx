@@ -58,9 +58,8 @@ const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
                   {info?.symbol?.slice(0, 2) || '??'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium">
-                    #
-                    {info?.symbol || t('common.modals.tokenSelect.unknown')}
+                  <div className="font-medium whitespace-nowrap">
+                    {`#${info?.symbol || t('common.modals.tokenSelect.unknown')}`}
                   </div>
                   <div className="text-xs text-gray-400 truncate">{address}</div>
                 </div>

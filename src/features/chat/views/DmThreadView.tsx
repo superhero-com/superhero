@@ -79,13 +79,14 @@ const DmThreadView = () => {
   }, [messages, markAsRead]);
 
   const onSend = async () => {
+    const submittedDraft = draft;
     const text = draft.trim();
-    if (!text || isSending) return;
-    setSendError(null);
+    if (!text || isSending || !isConnected) return;
     setIsSending(true);
+    setSendError(null);
     try {
       await sendMessage(text);
-      setDraft('');
+      setDraft((current) => (current === submittedDraft ? '' : current));
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
     } finally {
@@ -99,7 +100,7 @@ const DmThreadView = () => {
         <div className="flex flex-col gap-2 rounded-xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-sm text-foreground">Unlock chat to read and send messages.</p>
           {session.error && <p className="text-xs text-error">{session.error.message}</p>}
-          <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking}>
+          <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking || !session.canUnlock}>
             {session.isUnlocking ? (
               <>
                 <Loader2 className="mr-1 h-4 w-4 animate-spin" />
@@ -123,7 +124,7 @@ const DmThreadView = () => {
           disabled={isSending}
           className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
+        <Button type="submit" size="icon" disabled={!draft.trim() || !isConnected || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
           {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>

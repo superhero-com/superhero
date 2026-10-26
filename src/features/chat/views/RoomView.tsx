@@ -47,6 +47,8 @@ const RoomView = () => {
     canPost,
     needsUnlock,
     isReady,
+    error: roomError,
+    retry,
     loadEarlier,
     hasEarlier,
     isLoadingEarlier,
@@ -73,13 +75,14 @@ const RoomView = () => {
   }, [messages.length]);
 
   const onSend = async () => {
+    const submittedDraft = draft;
     const text = draft.trim();
-    if (!text || isSending) return;
-    setSendError(null);
+    if (!text || isSending || !isReady) return;
     setIsSending(true);
+    setSendError(null);
     try {
       await sendMessage(text);
-      setDraft('');
+      setDraft((current) => (current === submittedDraft ? '' : current));
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Message failed to send.');
     } finally {
@@ -115,7 +118,7 @@ const RoomView = () => {
             onClick={() => {
               session.unlock();
             }}
-            disabled={session.isUnlocking}
+            disabled={session.isUnlocking || !session.canUnlock}
           >
             {session.isUnlocking ? (
               <>
@@ -145,7 +148,7 @@ const RoomView = () => {
           disabled={isSending}
           className="h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="icon" disabled={!draft.trim() || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
+        <Button type="submit" size="icon" disabled={!draft.trim() || !isReady || isSending} className="h-11 w-11 shrink-0 rounded-full" aria-label="Send message">
           {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
@@ -180,7 +183,15 @@ const RoomView = () => {
           ref={listRef}
           className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6"
         >
-          {!isReady && (
+          {roomError && (
+          <div role="alert" className="py-8 text-center text-sm text-muted-foreground">
+            <p>{roomError.message}</p>
+            <Button variant="outline" size="sm" onClick={retry} className="mt-3 min-h-11">
+              Retry connection
+            </Button>
+          </div>
+          )}
+          {!isReady && !roomError && !needsUnlock && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
             <Spinner className="h-4 w-4" />
             Connecting…

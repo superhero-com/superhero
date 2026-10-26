@@ -111,7 +111,7 @@ const InboxView = ({ embedded = false }: { embedded?: boolean }) => {
           <div className="m-4 rounded-xl border border-border bg-card p-4">
             <p className="mb-3 text-sm text-foreground">Unlock chat to read your direct messages.</p>
             {session.error && <p role="alert" className="mb-3 text-xs text-error">{session.error.message}</p>}
-            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking}>
+            <Button size="sm" onClick={() => { session.unlock(); }} disabled={session.isUnlocking || !session.canUnlock}>
               {session.isUnlocking ? 'Unlocking…' : 'Unlock chat'}
             </Button>
           </div>

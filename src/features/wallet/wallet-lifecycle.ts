@@ -176,8 +176,7 @@ export async function addPasskeyFactor(
 }
 
 /**
- * DEVICE-GATED. Create a wallet whose seed IS the passkey — the web (non-PWA)
- * path, where there is no seed-phrase screen.
+ * DEVICE-GATED. Create a wallet whose seed is derived from the passkey.
  *
  * One ceremony does everything: enroll a platform passkey, derive the BIP39
  * mnemonic from its PRF output at the FIXED seed salt (`passkey-seed.ts`), seal
@@ -185,21 +184,15 @@ export async function addPasskeyFactor(
  * the same PRF output — under a DIFFERENT HKDF `info`, so the wrapping key and
  * the seed material are cryptographically independent.
  *
- * Why the mnemonic is not shown: it does not need to be written down, because it
- * is recoverable from the passkey alone (a fixed salt, no stored per-enrollment
- * randomness). It is a normal BIP39 phrase on the standard derivation path, so
- * the account can be imported into the extension or native wallet like any other.
- *
- * The caveat the onboarding copy now states: this holds only for a passkey that
- * SYNCS (iCloud Keychain, Google Password Manager). A device-bound platform
- * credential — Windows Hello — dies with its device, and there is no reveal or
- * export screen anywhere in the app, so for those users this really is the only
- * copy. A UV-gated phrase reveal is the fix; until it exists, do not describe the
- * mnemonic as exportable.
+ * The mnemonic can be recovered from the same passkey and stable PRF output
+ * using the fixed salt, without stored per-enrollment randomness. A passkey that
+ * does not sync is only available on its original device. Onboarding therefore
+ * offers the existing mnemonic as an optional backup after this ceremony, kept
+ * hidden until explicitly revealed. That standard BIP39 phrase also restores
+ * the wallet in the extension or native app without the passkey.
  *
  * `mnemonicBackedUpAt` is deliberately left null: no VERIFIED written backup
- * happened. Callers that want a durable off-device copy should still enroll a
- * recovery code (onboarding does).
+ * happened. Revealing or exporting a phrase is not proof of a verified backup.
  *
  * Refuses if a vault already exists on this device.
  */
@@ -326,8 +319,8 @@ export function hasFactor(record: VaultRecord, type: FactorEnrollment['type']): 
  * Was this wallet's seed DERIVED from a passkey (the "Use a passkey" path), as
  * opposed to a phrase wallet that later added a device passkey? Told apart by
  * the PRF salt: only the seed path uses the fixed, public `seedPrfSalt()`;
- * `addPasskeyFactor` wraps with a random one. A passkey-derived wallet's backup
- * is the derived main key shown at onboarding, not a recovery code.
+ * `addPasskeyFactor` wraps with a random one. A passkey-derived wallet offers
+ * its existing mnemonic as an optional onboarding backup, not a recovery code.
  */
 export function isPasskeyDerived(record: VaultRecord): boolean {
   const seedSalt = toB64(seedPrfSalt());

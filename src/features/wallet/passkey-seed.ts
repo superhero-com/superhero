@@ -1,12 +1,11 @@
 /**
  * Passkey-derived seed — the "Use a passkey" wallet creation path.
  *
- * That flow has no seed-phrase screen: the user taps "Continue with
- * passkey" and a wallet exists. That is only safe because the mnemonic is not
- * *discarded*, it is DERIVED — deterministically, from the passkey's own PRF
- * output — so it can be re-derived from scratch on any device the passkey is
- * available on. Note there is no export/reveal screen today, so a passkey that
- * does not sync off its device leaves no other copy of the seed.
+ * The user taps "Continue with passkey" and a wallet exists. Its mnemonic is
+ * DERIVED deterministically from the passkey's own PRF output, so it can be
+ * re-derived wherever the same passkey and PRF output are available. Onboarding
+ * also offers an optional mnemonic backup, hidden until explicitly revealed,
+ * which can restore the wallet independently of the passkey.
  *
  * Two properties make that work, and both are load-bearing:
  *

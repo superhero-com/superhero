@@ -13,13 +13,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Info, Loader2, Send,
+  ArrowLeft, Info, Loader2,
 } from 'lucide-react';
 
 import Spinner from '@/components/Spinner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { NostrLinkGate, useRequestNostrLinkPrompt } from '@/features/nostr-link';
+import { useRequestNostrLinkPrompt } from '@/features/nostr-link';
+import { MessageComposer } from '../components/MessageComposer';
 import { useGatedRoomSummary } from '../hooks/useGatedRooms';
 import { useGatedRoom } from '../hooks/useGatedRoom';
 import { useEnablePosting } from '../hooks/useEnablePosting';
@@ -31,7 +31,7 @@ import ChatUnavailableNotice from '../components/ChatUnavailableNotice';
 
 const RoomView = () => {
   const { saleAddress = '' } = useParams();
-  // Mount the canonical link dialog so `requestLink()` can open it.
+  // The canonical link dialog is hosted by the persistent ChatLayout.
   useRequestNostrLinkPrompt();
 
   const { room, isLoading: roomsLoading } = useGatedRoomSummary(saleAddress);
@@ -132,42 +132,35 @@ const RoomView = () => {
       );
     }
     return (
-      <form
-        className="flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSend();
-        }}
-      >
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={`Message #${room?.symbol ?? 'room'}`}
-          aria-label="Message"
-        />
-        <Button type="submit" size="sm" aria-label="Send message" disabled={!draft.trim() || !isReady || isSending}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      <MessageComposer
+        value={draft}
+        onChange={setDraft}
+        onSend={onSend}
+        disabled={!draft.trim() || !isReady || isSending}
+        isSending={isSending}
+        placeholder={`Message #${room?.symbol ?? 'room'}`}
+      />
     );
   };
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
-      <header className="flex items-center gap-2 border-b border-border px-3 py-3">
+    <div className="chat-conversation">
+      <header className="chat-thread-header">
         <Link
           to="/chat"
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+          className="chat-header-button chat-back"
           aria-label="Back to communities"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="flex-1 truncate text-lg font-semibold text-foreground">
-          {title}
-        </h1>
+        <div className="chat-room-avatar" aria-hidden>#</div>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
+          <p className="text-xs text-muted-foreground">{isPrivate ? 'Token-gated community' : 'Community conversation'}</p>
+        </div>
         <Link
           to={`/chat/${saleAddress}/info`}
-          className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+          className="chat-header-button"
           aria-label="Room info"
         >
           <Info className="h-5 w-5" />
@@ -176,7 +169,7 @@ const RoomView = () => {
 
       <div
         ref={listRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4"
+        className="chat-message-list"
       >
         {roomError && (
           <div role="alert" className="py-8 text-center text-sm text-muted-foreground">
@@ -214,13 +207,10 @@ const RoomView = () => {
         ))}
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="chat-composer-area">
         {renderComposer()}
         {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
       </div>
-
-      {/* Canonical AE↔Nostr link dialog — opened by the `link-required` banner. */}
-      <NostrLinkGate />
     </div>
   );
 };

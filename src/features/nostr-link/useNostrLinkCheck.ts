@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { useAtom } from 'jotai';
 
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -11,6 +13,7 @@ import { nostrLinkStatusAtom } from './state';
 export type NostrLinkStatus =
   | 'idle'
   | 'checking'
+  | 'check-error'
   | 'linked'
   | 'prompt'
   | 'linking'
@@ -29,48 +32,59 @@ export function useNostrLinkCheck(
   deriveIdentity: DeriveLinkIdentity = deriveInlineLinkIdentity,
 ) {
   const [status, setStatus] = useAtom(nostrLinkStatusAtom);
-  // The account the current status reflects. Re-check when it changes so a
-  // second wallet never inherits the first's `linked` state; a plain boolean
-  // "checked once" would skip the recheck and hide the prompt on switch.
-  const checkedAccount = useRef<string | null>(null);
+  const [checkAttempt, setCheckAttempt] = useState(0);
+  const generation = useRef(0);
 
   const { activeAccount, signMessage } = useAeSdk();
   const { notifyError } = useTransactionNotification();
 
   useEffect(() => {
-    if (!activeAccount || checkedAccount.current === activeAccount) return;
-    checkedAccount.current = activeAccount;
-
+    generation.current += 1;
+    const { current } = generation;
+    if (!activeAccount) {
+      setStatus('idle');
+      return undefined;
+    }
+    setStatus('checking');
     (async () => {
-      setStatus('checking');
       try {
         const linked = await fetchNostrLink(activeAccount);
-        if (linked) {
-          setStatus('linked');
-          return;
-        }
-        if (wasDismissedRecently(activeAccount)) {
-          setStatus('done');
-          return;
-        }
-        setStatus('prompt');
+        if (generation.current !== current) return;
+        setStatus((previous) => {
+          if (previous === 'linked' || previous === 'linking') return previous;
+          if (linked) return 'linked';
+          return wasDismissedRecently(activeAccount) ? 'done' : 'prompt';
+        });
       } catch {
-        setStatus('done');
+        if (generation.current === current) {
+          setStatus((previous) => (previous === 'linked' || previous === 'linking' ? previous : 'check-error'));
+        }
       }
     })();
-  }, [activeAccount, setStatus]);
+    return () => { generation.current += 1; };
+  }, [activeAccount, checkAttempt, setStatus]);
+
+  const retry = useCallback(() => setCheckAttempt((attempt) => attempt + 1), []);
+  useEffect(() => {
+    if (status !== 'check-error') return undefined;
+    window.addEventListener('online', retry);
+    return () => window.removeEventListener('online', retry);
+  }, [status, retry]);
 
   const linkNostr = useCallback(async () => {
-    if (!activeAccount) return;
-
+    if (!activeAccount || status === 'linking' || status === 'linked') return;
+    generation.current += 1;
+    const { current } = generation;
     setStatus('linking');
     try {
       const { npub, identity } = await deriveIdentity(activeAccount);
+      if (generation.current !== current) return;
       // `signMessage` routes through the current wallet session — inline or
       // extension / WalletConnect — so the link works for whichever the user has.
       await linkNostrIdentity({
         address: activeAccount, npub, identity, signMessage,
       });
+      if (generation.current !== current) return;
       clearDismissal(activeAccount);
       // `linked`, not `done`: `done` means "unlinked, but resolved for now", and
       // every re-prompt path (`useRequestNostrLinkPrompt`, the unlock check in
@@ -78,19 +92,16 @@ export function useNostrLinkCheck(
       // would be asked to enable chat again while the link tx is still settling.
       setStatus('linked');
     } catch (err) {
+      if (generation.current !== current) return;
       notifyError(err instanceof Error ? err.message : 'Failed to link Nostr identity.');
       setStatus('error');
     }
-  }, [activeAccount, signMessage, deriveIdentity, notifyError, setStatus]);
+  }, [activeAccount, status, signMessage, deriveIdentity, notifyError, setStatus]);
 
   const dismiss = useCallback(() => {
     if (activeAccount) markDismissed(activeAccount);
     setStatus('done');
   }, [activeAccount, setStatus]);
-
-  const retry = useCallback(() => {
-    setStatus('prompt');
-  }, [setStatus]);
 
   return {
     status, linkNostr, dismiss, retry,

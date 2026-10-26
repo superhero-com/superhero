@@ -11,13 +11,11 @@ import {
 } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAtom, useSetAtom } from 'jotai';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Spinner from '@/components/Spinner';
 import Identicon from '@/components/Identicon';
-import { NostrLinkGate } from '@/features/nostr-link';
+import { MessageComposer } from '../components/MessageComposer';
 
 import { contactsAtom } from '../domains/contacts/contacts.state';
 import { profilesAtom } from '../domains/profiles/profiles.state';
@@ -111,27 +109,20 @@ const DmThreadView = () => {
       );
     }
     return (
-      <form
-        className="flex items-center gap-2"
-        onSubmit={(e) => { e.preventDefault(); onSend(); }}
-      >
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Type a message…"
-          aria-label="Message"
-        />
-        <Button type="submit" size="sm" aria-label="Send message" disabled={!draft.trim() || !isConnected || isSending}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      <MessageComposer
+        value={draft}
+        onChange={setDraft}
+        onSend={onSend}
+        disabled={!draft.trim() || !isConnected || isSending}
+        isSending={isSending}
+      />
     );
   };
 
   if (!isChatRelayConfigured()) return <ChatUnavailableNotice />;
 
   return (
-    <div className="ui-page chat-page chat-conversation mx-auto flex h-[calc(100dvh-9rem)] min-h-[28rem] w-full max-w-2xl flex-col">
+    <div className="chat-conversation">
       <DmThreadHeader pubkey={pubkey} contact={contact} profile={profile} />
 
       {!isConnected && session.isUnlocked && (
@@ -140,7 +131,7 @@ const DmThreadView = () => {
         </div>
       )}
 
-      <div ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-4">
+      <div ref={listRef} className="chat-message-list">
         {session.isUnlocked && messages.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <Identicon address={npub} size={72} />
@@ -152,7 +143,6 @@ const DmThreadView = () => {
         )}
         {!session.isUnlocked && (
           <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Spinner className="h-4 w-4" />
             Chat is locked.
           </div>
         )}
@@ -161,12 +151,10 @@ const DmThreadView = () => {
         ))}
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="chat-composer-area">
         {renderComposer()}
         {sendError && <p className="mt-2 text-xs text-error">{sendError}</p>}
       </div>
-
-      <NostrLinkGate />
     </div>
   );
 };

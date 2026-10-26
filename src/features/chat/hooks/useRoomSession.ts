@@ -5,7 +5,7 @@
  * via `useSyncExternalStore`.
  */
 import {
-  useCallback, useEffect, useState, useSyncExternalStore,
+  useCallback, useEffect, useRef, useState, useSyncExternalStore,
 } from 'react';
 import { useAtomCallback } from 'jotai/utils';
 
@@ -45,6 +45,8 @@ export interface UseRoomSessionResult {
 
 export function useRoomSession(): UseRoomSessionResult {
   const { activeAccount } = useAccount();
+  const accountRef = useRef(activeAccount);
+  accountRef.current = activeAccount;
   const canUnlock = useSyncExternalStore(subscribeUnlockPrompt, isUnlockPromptMounted, () => false);
   const isUnlocked = useSyncExternalStore(
     subscribeRoomSession,
@@ -63,8 +65,14 @@ export function useRoomSession(): UseRoomSessionResult {
   const promptLinkIfUnlinked = useAtomCallback(
     useCallback(async (get, set, address: string) => {
       const status = get(nostrLinkStatusAtom);
-      if (status === 'linked' || status === 'linking' || status === 'prompt') return;
-      set(nostrLinkStatusAtom, (await fetchNostrLink(address)) ? 'linked' : 'prompt');
+      if (accountRef.current !== address || status === 'checking'
+        || status === 'linked' || status === 'linking' || status === 'prompt') return;
+      const linked = await fetchNostrLink(address);
+      if (accountRef.current !== address) return;
+      set(nostrLinkStatusAtom, (previous) => {
+        if (previous === 'linked' || previous === 'linking') return previous;
+        return linked ? 'linked' : 'prompt';
+      });
     }, []),
   );
 

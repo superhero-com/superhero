@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  render, screen, waitFor, fireEvent,
+  act, render, screen, waitFor, fireEvent,
 } from '@testing-library/react';
 import { Provider, createStore, useAtomValue } from 'jotai';
 import {
@@ -54,6 +54,26 @@ beforeEach(() => {
 });
 
 describe('useNostrLinkCheck — account switch', () => {
+  it('ignores an old unlinked response after switching to a linked wallet', async () => {
+    let resolveFirst!: (value: null) => void;
+    mocks.fetchNostrLink.mockImplementation((address: string) => (address === 'ak_first'
+      ? new Promise((resolve) => { resolveFirst = resolve; }) : Promise.resolve('npub1linked')));
+    const store = createStore();
+    const { rerender } = render(<Provider store={store}><Harness /></Provider>);
+    mocks.activeAccount = 'ak_second';
+    rerender(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('linked'));
+    await act(async () => { resolveFirst(null); });
+    expect(store.get(nostrLinkStatusAtom)).toBe('linked');
+  });
+
+  it('does not reopen registration when the lookup fails', async () => {
+    mocks.fetchNostrLink.mockRejectedValue(new Error('offline'));
+    const store = createStore();
+    render(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('check-error'));
+  });
+
   it('rechecks the link and re-prompts when the active account changes', async () => {
     const store = createStore();
     const { rerender } = render(<Provider store={store}><Harness /></Provider>);
@@ -68,6 +88,19 @@ describe('useNostrLinkCheck — account switch', () => {
 
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('prompt'));
     expect(mocks.fetchNostrLink).toHaveBeenCalledWith('ak_second');
+    expect(mocks.fetchNostrLink).toHaveBeenCalledTimes(2);
+  });
+
+  it('resets status on disconnect and rechecks when the same account reconnects', async () => {
+    const store = createStore();
+    const { rerender } = render(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('linked'));
+    mocks.activeAccount = undefined;
+    rerender(<Provider store={store}><Harness /></Provider>);
+    expect(store.get(nostrLinkStatusAtom)).toBe('idle');
+    mocks.activeAccount = 'ak_first';
+    rerender(<Provider store={store}><Harness /></Provider>);
+    await waitFor(() => expect(store.get(nostrLinkStatusAtom)).toBe('linked'));
     expect(mocks.fetchNostrLink).toHaveBeenCalledTimes(2);
   });
 

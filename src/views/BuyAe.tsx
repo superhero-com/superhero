@@ -109,7 +109,6 @@ export default function BuyAe() {
         </div>
         <div className="flex gap-2.5 mt-5 flex-wrap">
           <Badge label={t('badgeBuy')} />
-          <Badge label={t('badgeBridge')} />
           <Badge label={t('badgeEarn')} />
         </div>
       </div>

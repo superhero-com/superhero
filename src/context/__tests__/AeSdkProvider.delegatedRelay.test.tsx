@@ -211,6 +211,27 @@ describe('AeSdkProvider delegated signing relay', () => {
       expect(store.get(transactionsQueueAtom)).toEqual({});
     });
 
+    it.each([
+      ['Escape', () => fireEvent.keyDown(document.body, { key: 'Escape' })],
+      // The dialog defers an outside press until its click, so send both halves.
+      ['a click outside it', () => {
+        fireEvent.pointerDown(document.body);
+        fireEvent.click(document.body);
+      }],
+    ])('rejects when the confirm modal is dismissed with %s', async (_label, dismiss) => {
+      const { store, signing } = await startSigning();
+      // Radix starts listening for outside clicks a tick after the dialog opens.
+      await advance(0);
+
+      dismiss();
+      await advance(0);
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(signing).toEqual({ status: 'rejected', reason: 'Transaction cancelled' });
+      expect(window.open).not.toHaveBeenCalled();
+      expect(store.get(transactionsQueueAtom)).toEqual({});
+    });
+
     it('gives up and closes the wallet popup after five minutes without an answer', async () => {
       const { signing } = await startSigning();
 
